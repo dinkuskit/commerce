@@ -50,16 +50,16 @@ jobs:
     permissions:
       actions: read
       contents: read
-    # Bootstrap pin: exact public head of dinkuskit/clawsweeper#10. Keep the
-    # branch reachable until that allowlist commit is promoted to main.
-    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@6d5c13f70f76f0ef5a45c172287cb618a4653986
+    # Exact public repair commit that registers Commerce in the native engine
+    # after the canary workflow admission landed on main.
+    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@c33ff4fdc677afa742d01fbd2a99e285fcc61f76
     with:
       target_repository: commerce
       target_repository_id: "1347692514"
       pr_number: ${{ needs.admit.outputs.pr_number }}
       expected_base_sha: ${{ needs.admit.outputs.base_sha }}
       expected_head_sha: ${{ needs.admit.outputs.head_sha }}
-      engine_sha: 6d5c13f70f76f0ef5a45c172287cb618a4653986
+      engine_sha: c33ff4fdc677afa742d01fbd2a99e285fcc61f76
       publish: true
     secrets:
       CLAWSWEEPER_APP_PRIVATE_KEY: ${{ secrets.CLAWSWEEPER_APP_PRIVATE_KEY }}
