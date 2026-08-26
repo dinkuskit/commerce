@@ -1,0 +1,16 @@
+{
+  "name": "@dinkuskit/commerce",
+  "version": "0.0.0",
+  "description": "The open-source commerce layer for EmDash sites",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinkuskit/commerce.git"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs tests/workflows/*.test.mjs",
+    "audit:repo": "node scripts/repo-contract.mjs"
+  }
+}
