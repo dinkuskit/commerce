@@ -61,12 +61,15 @@ export function commentCandidate(event) {
 	return { number, actorLogin, association, command };
 }
 
-export function admitCandidate(candidate, pullRequest) {
+export function admitCandidate(candidate, pullRequest, defaultBranchReference) {
 	const pull = record(pullRequest);
 	const base = record(pull.base);
 	const baseRepository = record(base.repo);
 	const head = record(pull.head);
-	const baseSha = typeof base.sha === "string" ? base.sha : "";
+	const reference = record(defaultBranchReference);
+	const referenceObject = record(reference.object);
+	const pullBaseSha = typeof base.sha === "string" ? base.sha : "";
+	const baseSha = typeof referenceObject.sha === "string" ? referenceObject.sha : "";
 	const headSha = typeof head.sha === "string" ? head.sha : "";
 	const pullAuthor = login(pull.user);
 
@@ -74,7 +77,11 @@ export function admitCandidate(candidate, pullRequest) {
 	if (pull.state !== "open") return null;
 	if (baseRepository.full_name !== TARGET_REPOSITORY) return null;
 	if (base.ref !== TARGET_DEFAULT_BRANCH) return null;
-	if (!SHA.test(baseSha) || !SHA.test(headSha) || !pullAuthor) return null;
+	if (reference.ref !== `refs/heads/${TARGET_DEFAULT_BRANCH}`) return null;
+	if (referenceObject.type !== "commit") return null;
+	if (!SHA.test(pullBaseSha) || !SHA.test(baseSha) || !SHA.test(headSha) || !pullAuthor) {
+		return null;
+	}
 
 	const maintainer = MAINTAINER_ASSOCIATIONS.has(candidate.association);
 	const authorRerun =
@@ -105,6 +112,25 @@ async function fetchPullRequest(number, token) {
 	);
 	if (!response.ok) {
 		throw new Error(`GitHub pull request lookup returned status ${response.status}`);
+	}
+	return response.json();
+}
+
+async function fetchDefaultBranchReference(token) {
+	const response = await fetch(
+		`https://api.github.com/repos/${TARGET_REPOSITORY}/git/ref/heads/${encodeURIComponent(TARGET_DEFAULT_BRANCH)}`,
+		{
+			signal: AbortSignal.timeout(30_000),
+			headers: {
+				Accept: "application/vnd.github+json",
+				Authorization: `Bearer ${token}`,
+				"User-Agent": "dinkuskit-clawsweeper-comment-admission",
+				"X-GitHub-Api-Version": "2022-11-28",
+			},
+		},
+	);
+	if (!response.ok) {
+		throw new Error(`GitHub default branch ref lookup returned status ${response.status}`);
 	}
 	return response.json();
 }
@@ -143,7 +169,11 @@ async function main() {
 	}
 
 	const pullRequest = await fetchPullRequest(candidate.number, token);
-	await appendOutputs(outputPath, admitCandidate(candidate, pullRequest));
+	const defaultBranchReference = await fetchDefaultBranchReference(token);
+	await appendOutputs(
+		outputPath,
+		admitCandidate(candidate, pullRequest, defaultBranchReference),
+	);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
