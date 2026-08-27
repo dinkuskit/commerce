@@ -50,16 +50,16 @@ jobs:
     permissions:
       actions: read
       contents: read
-    # Exact public repair commit that registers Commerce in the native engine
-    # after the canary workflow admission landed on main.
-    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@c33ff4fdc677afa742d01fbd2a99e285fcc61f76
+    # Exact reviewed commit that uses the GitHub App Client ID for every token
+    # mint while retaining the existing public canary contract.
+    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@6c476b0485ab5d4e999c7f629bb8a4b0777890f1
     with:
       target_repository: commerce
       target_repository_id: "1347692514"
       pr_number: ${{ needs.admit.outputs.pr_number }}
       expected_base_sha: ${{ needs.admit.outputs.base_sha }}
       expected_head_sha: ${{ needs.admit.outputs.head_sha }}
-      engine_sha: c33ff4fdc677afa742d01fbd2a99e285fcc61f76
+      engine_sha: 6c476b0485ab5d4e999c7f629bb8a4b0777890f1
       publish: true
     secrets:
       CLAWSWEEPER_APP_PRIVATE_KEY: ${{ secrets.CLAWSWEEPER_APP_PRIVATE_KEY }}
