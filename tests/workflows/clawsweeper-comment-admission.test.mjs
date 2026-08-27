@@ -7,8 +7,9 @@ import {
 	parseReviewCommand,
 } from "../../scripts/clawsweeper-comment-admission.mjs";
 
-const baseSha = "a".repeat(40);
+const pullBaseSha = "a".repeat(40);
 const headSha = "b".repeat(40);
+const liveBaseSha = "c".repeat(40);
 
 function event(overrides = {}) {
 	return {
@@ -35,10 +36,18 @@ function pull(overrides = {}) {
 		user: { login: "contributor" },
 		base: {
 			ref: "main",
-			sha: baseSha,
+			sha: pullBaseSha,
 			repo: { full_name: "dinkuskit/commerce" },
 		},
 		head: { sha: headSha },
+		...overrides,
+	};
+}
+
+function defaultBranchReference(overrides = {}) {
+	return {
+		ref: "refs/heads/main",
+		object: { type: "commit", sha: liveBaseSha },
 		...overrides,
 	};
 }
@@ -52,13 +61,13 @@ test("recognizes one exact command line inside a longer comment", () => {
 	);
 });
 
-test("accepts a maintainer review request and binds the live PR tuple", () => {
+test("binds the live default-branch SHA when the pull request base snapshot is stale", () => {
 	const candidate = commentCandidate(event());
 	assert.ok(candidate);
-	assert.deepEqual(admitCandidate(candidate, pull()), {
+	assert.deepEqual(admitCandidate(candidate, pull(), defaultBranchReference()), {
 		requested: true,
 		prNumber: 22,
-		baseSha,
+		baseSha: liveBaseSha,
 		headSha,
 	});
 });
@@ -74,7 +83,7 @@ test("lets the exact PR author request a fresh read-only re-review", () => {
 		}),
 	);
 	assert.ok(candidate);
-	assert.ok(admitCandidate(candidate, pull()));
+	assert.ok(admitCandidate(candidate, pull(), defaultBranchReference()));
 });
 
 test("does not let an untrusted contributor start review or rerun another PR", () => {
@@ -98,8 +107,8 @@ test("does not let an untrusted contributor start review or rerun another PR", (
 	);
 	assert.ok(review);
 	assert.ok(rerun);
-	assert.equal(admitCandidate(review, pull()), null);
-	assert.equal(admitCandidate(rerun, pull()), null);
+	assert.equal(admitCandidate(review, pull(), defaultBranchReference()), null);
+	assert.equal(admitCandidate(rerun, pull(), defaultBranchReference()), null);
 });
 
 test("ignores bots, non-PR comments, wrong repository identity, and edited comments", () => {
@@ -158,19 +167,60 @@ test("ignores bots, non-PR comments, wrong repository identity, and edited comme
 test("fails closed when the live PR is closed, moved, or malformed", () => {
 	const candidate = commentCandidate(event());
 	assert.ok(candidate);
-	assert.equal(admitCandidate(candidate, pull({ state: "closed" })), null);
+	assert.equal(
+		admitCandidate(candidate, pull({ state: "closed" }), defaultBranchReference()),
+		null,
+	);
 	assert.equal(
 		admitCandidate(
 			candidate,
 			pull({
 				base: {
 					ref: "release",
-					sha: baseSha,
+					sha: pullBaseSha,
 					repo: { full_name: "dinkuskit/commerce" },
 				},
 			}),
+			defaultBranchReference(),
 		),
 		null,
 	);
-	assert.equal(admitCandidate(candidate, pull({ head: { sha: "not-a-sha" } })), null);
+	assert.equal(
+		admitCandidate(
+			candidate,
+			pull({ head: { sha: "not-a-sha" } }),
+			defaultBranchReference(),
+		),
+		null,
+	);
+});
+
+test("fails closed when the live default-branch ref is missing or malformed", () => {
+	const candidate = commentCandidate(event());
+	assert.ok(candidate);
+	assert.equal(admitCandidate(candidate, pull(), undefined), null);
+	assert.equal(
+		admitCandidate(
+			candidate,
+			pull(),
+			defaultBranchReference({ ref: "refs/heads/release" }),
+		),
+		null,
+	);
+	assert.equal(
+		admitCandidate(
+			candidate,
+			pull(),
+			defaultBranchReference({ object: { type: "commit", sha: "not-a-sha" } }),
+		),
+		null,
+	);
+	assert.equal(
+		admitCandidate(
+			candidate,
+			pull(),
+			defaultBranchReference({ object: { type: "tag", sha: liveBaseSha } }),
+		),
+		null,
+	);
 });
