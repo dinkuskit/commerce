@@ -23,6 +23,9 @@ The source manifest covers the implementation, tests, repository contracts, depe
 - Two independent server processes claiming the same SKU produce one row, one success, and one `SKU_CONFLICT`.
 - If either declared unique index is absent, or a storage error cannot be bound to the exact expected unique index, product creation fails closed before the product row is written.
 - Local Wrangler/D1 reproduces the exact EmDash JSON-expression SKU index violation, and the application classifier recognizes that observed failure as `skuKey` authority.
+- The D1 process harness retries only transient `SQLITE_BUSY` emulator
+  contention. A terminal losing contender must still name the exact SKU unique
+  index; a busy lock is never accepted as atomicity proof.
 - The feature map, import boundary audit, public-repository audit, quick/full verifier, pinned Node runtime, and read-only CI workflow form a deterministic conductor-compatible entry point.
 
 ## Commands and results
@@ -40,6 +43,11 @@ The exact Node runtime completed installation with zero audit vulnerabilities. T
 bundled dependencies. The archive contains only compiled `dist/` output plus
 `package.json`, `README.md`, and `LICENSE`; source, tests, proof, and local
 fixtures are excluded.
+
+The first GitHub Actions run exposed a harness-only `SQLITE_BUSY` race between
+the two Wrangler CLI processes. The bounded retry repair preserved both
+independent processes and tightened the terminal assertion to require one
+success and one exact `skuKey` unique-index failure.
 
 ## Gates and exclusions
 

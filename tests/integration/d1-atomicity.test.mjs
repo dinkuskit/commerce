@@ -50,6 +50,17 @@ function runD1(persistTo, command) {
   });
 }
 
+async function runD1Contender(persistTo, command) {
+  const maxAttempts = 5;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const result = await runD1(persistTo, command);
+    const retryableBusy = result.code !== 0 && /SQLITE_BUSY/.test(result.output);
+    if (!retryableBusy || attempt === maxAttempts) return result;
+    await new Promise((resolve) => setTimeout(resolve, attempt * 100));
+  }
+  throw new Error("unreachable D1 contender retry state");
+}
+
 function sqlLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
@@ -97,8 +108,8 @@ test("two local Wrangler/D1 processes enforce the EmDash JSON-expression SKU ind
   assert.equal(initialized.code, 0, initialized.output);
 
   const results = await Promise.all([
-    runD1(persistTo, emdashPut("left", "cmd:d1-left", "D1-RACE-SKU")),
-    runD1(persistTo, emdashPut("right", "cmd:d1-right", "D1-RACE-SKU")),
+    runD1Contender(persistTo, emdashPut("left", "cmd:d1-left", "D1-RACE-SKU")),
+    runD1Contender(persistTo, emdashPut("right", "cmd:d1-right", "D1-RACE-SKU")),
   ]);
   assert.equal(results.filter((result) => result.code === 0).length, 1, JSON.stringify(results));
   const rejected = results.find((result) => result.code !== 0);
