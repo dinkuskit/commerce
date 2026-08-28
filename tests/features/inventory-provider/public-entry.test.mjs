@@ -12,6 +12,22 @@ test("the package root and feature entry expose the same inventory-provider cont
   );
   assert.equal(inventoryProvider.setManageStock, commerce.setManageStock);
   assert.equal(
+    inventoryProvider.createManagedSkuRegistrationRequest,
+    commerce.createManagedSkuRegistrationRequest,
+  );
+  assert.equal(
+    inventoryProvider.normalizeManagedSkuRegistrationResult,
+    commerce.normalizeManagedSkuRegistrationResult,
+  );
+  assert.equal(
+    inventoryProvider.applyManagedSkuRegistrationResult,
+    commerce.applyManagedSkuRegistrationResult,
+  );
+  assert.equal(
+    inventoryProvider.confirmExistingManagedSku,
+    commerce.confirmExistingManagedSku,
+  );
+  assert.equal(
     inventoryProvider.normalizeInventoryProviderBinding,
     commerce.normalizeInventoryProviderBinding,
   );

@@ -21,8 +21,13 @@ The `dinkus.inventory-provider` foundation now gives Commerce one opaque
 store-binding value—provider reference, pool ID, and default fulfillment
 location ID—and pure managed-stock state transitions. A catalog item created
 with `manageStock: true` is persisted as `managed` and `setup-required`, with
-no Commerce-local quantity. Live Inventory calls, pool discovery, SKU
-reconciliation, and admin UI remain later slices.
+no Commerce-local quantity. Its provider-neutral registration contract then
+builds a pool-scoped identity request from the canonical Commerce SKU and uses
+the current Commerce title once as the new Inventory display-name default,
+falling back to the SKU when the title is absent. A newly registered SKU stores
+only its permanent Inventory identity; an existing pooled SKU remains
+`needs-review` until explicit confirmation. Live Inventory calls, current-stock
+review, pool discovery, persisted updates, and admin UI remain later slices.
 
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not

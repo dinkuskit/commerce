@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-28T20:11:55+00:00",
-    "domain": "managed stock setup foundation delivery",
-    "started_at": "2026-08-28T20:11:55+00:00",
-    "status": "confirmed",
-    "summary": "The managed-stock foundation adds explicit creation intent, persists setup-required state without a Commerce-local quantity, defines the provider, pool, and default-location binding contract, and supplies non-destructive enable and disable transitions. It includes public-safe GrillTrack decisions, runtime proof, and strict input validation while excluding UI, live Inventory RPC, reconciliation execution, checkout, order timers, and shipping."
+    "confirmed_at": "2026-08-28T21:41:28+00:00",
+    "domain": "managed SKU registration handshake",
+    "started_at": "2026-08-28T21:39:59+00:00",
+    "status": "inspected",
+    "summary": "The managed-SKU registration slice keeps unmanaged products entirely in Commerce. After Manage Stock is enabled and pool setup is explicitly confirmed, Commerce registers the canonical SKU once at pool scope with logical stock zero and no location balance. Inventory returns a permanent opaque SKU identity while the visible SKU remains the unique pool lookup key. A newly registered Inventory item initializes its display name from the current Commerce Product Title, falling back to the SKU when no title exists; later Inventory and Commerce title changes remain independent. Existing pooled SKUs are never overwritten and continue through the already-locked human review and revalidation path. Set Initial Stock remains a separate location-scoped quantity action. The implementation is limited to the provider-neutral Commerce registration contract, pure state transitions, tests, documentation, and proof; it adds no admin UI, OAuth/discovery, live Inventory transport, stock mutation, checkout, deployment, or production change."
   },
   "decisions": [
     {
@@ -1712,26 +1712,300 @@
       "superseded_by": null,
       "updated_at": "2026-08-28T20:12:37+00:00",
       "verification_ref": "file:proof/managed-stock-foundation/PROOF.md;file:proof/managed-stock-foundation/live-runtime.txt;file:proof/managed-stock-foundation/source-manifest.sha256;command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:efd4832aac20080bd983028ad9dd4b2220e2ad9b",
+      "candidate_refs": [
+        "url:https://github.com/dinkuskit/inventory/pull/11",
+        "git:e32ac165cae5efd78390bee1f0306754aa7fabbb"
+      ],
+      "choice": "Register a managed SKU once in the selected Inventory pool, independent of any location, with logical stock at zero. Registration establishes pool-wide SKU identity only: it creates no stock mutation, balance, or receipt. Every active location presents explicit zero for the registered SKU until stock exists. Commerce retains the store default fulfillment-location binding separately and uses that location only when a later Set Initial Stock action is confirmed. Stores sharing the pool reuse the same registered SKU identity.",
+      "context_ref": "url:https://github.com/dinkuskit/inventory/pull/11;decision:inventory-provider-binding-011;decision:managed-stock-foundation-pr-019",
+      "created_at": "2026-08-28T21:26:42+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "inventory-provider-binding-011",
+        "managed-stock-foundation-pr-019"
+      ],
+      "domain": "managed SKU registration handshake",
+      "history": [
+        {
+          "at": "2026-08-28T21:26:42+00:00",
+          "choice": "Register a managed SKU once in the selected Inventory pool, independent of any location, with logical stock at zero. Registration establishes pool-wide SKU identity only: it creates no stock mutation, balance, or receipt. Every active location presents explicit zero for the registered SKU until stock exists. Commerce retains the store default fulfillment-location binding separately and uses that location only when a later Set Initial Stock action is confirmed. Stores sharing the pool reuse the same registered SKU identity.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:49:04+00:00",
+          "choice": "Register a managed SKU once in the selected Inventory pool, independent of any location, with logical stock at zero. Registration establishes pool-wide SKU identity only: it creates no stock mutation, balance, or receipt. Every active location presents explicit zero for the registered SKU until stock exists. Commerce retains the store default fulfillment-location binding separately and uses that location only when a later Set Initial Stock action is confirmed. Stores sharing the pool reuse the same registered SKU identity.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:49:05+00:00",
+          "choice": "Register a managed SKU once in the selected Inventory pool, independent of any location, with logical stock at zero. Registration establishes pool-wide SKU identity only: it creates no stock mutation, balance, or receipt. Every active location presents explicit zero for the registered SKU until stock exists. Commerce retains the store default fulfillment-location binding separately and uses that location only when a later Set Initial Stock action is confirmed. Stores sharing the pool reuse the same registered SKU identity.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/types.ts;file:docs/implementation/managed-sku-registration-contract.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "managed-sku-pool-registration-020",
+      "implementation_ref": "file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/types.ts;file:docs/implementation/managed-sku-registration-contract.md",
+      "question": "At what scope does Inventory register a Commerce-managed SKU, and when does location-specific stock begin?",
+      "rationale": "Separating pool-wide SKU identity from location balances prevents duplicate product identities per location, preserves stock receipts for real quantity changes, and lets multiple stores and locations share one authoritative pool record.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/managed-sku-registration/REVIEW.md;file:proof/managed-sku-registration/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T21:50:35+00:00",
+          "source_identity": "sha256:4292f3e2743809cfa81867292a49a0a5f43a283ad51f29294c3a686ba8f05725"
+        }
+      ],
+      "review_ref": "file:proof/managed-sku-registration/REVIEW.md;file:proof/managed-sku-registration/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:4292f3e2743809cfa81867292a49a0a5f43a283ad51f29294c3a686ba8f05725",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T21:50:35+00:00",
+      "verification_ref": "file:proof/managed-sku-registration/PROOF.md;file:proof/managed-sku-registration/source-manifest.sha256;command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:efd4832aac20080bd983028ad9dd4b2220e2ad9b",
+      "candidate_refs": [
+        "git:e32ac165cae5efd78390bee1f0306754aa7fabbb"
+      ],
+      "choice": "Inventory mints one permanent opaque inventory SKU ID when the pool-wide SKU is registered. The human-visible canonical SKU is a unique lookup key within that pool, not the permanent record identity. An explicit confirmed rename may change the visible SKU while retaining the same Inventory SKU ID, balances, and complete history. Receipts preserve the visible SKU snapshot used when each mutation committed. A connected store cannot silently rename a shared pool SKU, and a rename that collides with another registered SKU fails closed.",
+      "context_ref": "decision:managed-sku-pool-registration-020;file:docs/CHARTER.md",
+      "created_at": "2026-08-28T21:31:39+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "managed-sku-pool-registration-020"
+      ],
+      "domain": "managed SKU registration handshake",
+      "history": [
+        {
+          "at": "2026-08-28T21:31:39+00:00",
+          "choice": "Inventory mints one permanent opaque inventory SKU ID when the pool-wide SKU is registered. The human-visible canonical SKU is a unique lookup key within that pool, not the permanent record identity. An explicit confirmed rename may change the visible SKU while retaining the same Inventory SKU ID, balances, and complete history. Receipts preserve the visible SKU snapshot used when each mutation committed. A connected store cannot silently rename a shared pool SKU, and a rename that collides with another registered SKU fails closed.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:49:05+00:00",
+          "choice": "Inventory mints one permanent opaque inventory SKU ID when the pool-wide SKU is registered. The human-visible canonical SKU is a unique lookup key within that pool, not the permanent record identity. An explicit confirmed rename may change the visible SKU while retaining the same Inventory SKU ID, balances, and complete history. Receipts preserve the visible SKU snapshot used when each mutation committed. A connected store cannot silently rename a shared pool SKU, and a rename that collides with another registered SKU fails closed.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:49:05+00:00",
+          "choice": "Inventory mints one permanent opaque inventory SKU ID when the pool-wide SKU is registered. The human-visible canonical SKU is a unique lookup key within that pool, not the permanent record identity. An explicit confirmed rename may change the visible SKU while retaining the same Inventory SKU ID, balances, and complete history. Receipts preserve the visible SKU snapshot used when each mutation committed. A connected store cannot silently rename a shared pool SKU, and a rename that collides with another registered SKU fails closed.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/types.ts;file:docs/implementation/managed-sku-registration-contract.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "managed-sku-stable-identity-021",
+      "implementation_ref": "file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/types.ts;file:docs/implementation/managed-sku-registration-contract.md",
+      "question": "What happens to Inventory identity and history when a canonical SKU is corrected?",
+      "rationale": "A stable hidden identity lets merchants correct a visible SKU without losing stock or breaking receipt history, while explicit confirmation and pool-wide uniqueness protect stores that share the Inventory record.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/managed-sku-registration/REVIEW.md;file:proof/managed-sku-registration/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T21:50:36+00:00",
+          "source_identity": "sha256:4292f3e2743809cfa81867292a49a0a5f43a283ad51f29294c3a686ba8f05725"
+        }
+      ],
+      "review_ref": "file:proof/managed-sku-registration/REVIEW.md;file:proof/managed-sku-registration/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:4292f3e2743809cfa81867292a49a0a5f43a283ad51f29294c3a686ba8f05725",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T21:50:36+00:00",
+      "verification_ref": "file:proof/managed-sku-registration/PROOF.md;file:proof/managed-sku-registration/source-manifest.sha256;command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:efd4832aac20080bd983028ad9dd4b2220e2ad9b",
+      "candidate_refs": [
+        "git:e32ac165cae5efd78390bee1f0306754aa7fabbb"
+      ],
+      "choice": "When a Commerce product is connected to Inventory for managed stock, a newly registered pooled SKU initializes its Inventory display name from the current Commerce Product Title. If the Commerce product has no title, Inventory temporarily displays the canonical SKU until an authorized Inventory administrator supplies a name. The initial value is a one-time default: later Commerce or storefront title changes do not rename Inventory, another store connecting the pooled SKU does not overwrite it, and an explicit Inventory rename does not change any connected Commerce admin or storefront title. Set Initial Stock remains a separate location-scoped quantity action and does not own naming.",
+      "context_ref": "decision:managed-sku-pool-registration-020;decision:managed-sku-stable-identity-021",
+      "created_at": "2026-08-28T21:37:00+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "managed-sku-pool-registration-020",
+        "managed-sku-stable-identity-021"
+      ],
+      "domain": "managed SKU registration handshake",
+      "history": [
+        {
+          "at": "2026-08-28T21:37:00+00:00",
+          "choice": "The first Commerce store that successfully commits Set Initial Stock for a registered pooled SKU supplies its current Commerce Product Title as the initial Inventory display name. That name then belongs to the Inventory pool record. Other stores may connect the same pooled SKU while keeping different Commerce and storefront titles; those titles never rename Inventory. An authorized Inventory administrator may explicitly rename the Inventory display name without changing any connected Commerce admin title, storefront title, permanent Inventory SKU ID, balance, or history.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:39:59+00:00",
+          "choice": "The first Commerce store that successfully commits Set Initial Stock for a registered pooled SKU supplies its current Commerce Product Title as the initial Inventory display name. That name then belongs to the Inventory pool record. Other stores may connect the same pooled SKU while keeping different Commerce and storefront titles; those titles never rename Inventory. An authorized Inventory administrator may explicitly rename the Inventory display name without changing any connected Commerce admin title, storefront title, permanent Inventory SKU ID, balance, or history.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Clarify that Inventory initializes its display name when the Commerce product is connected for managed stock, rather than waiting for the first stock mutation.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:39:59+00:00",
+          "choice": "The first Commerce store that successfully commits Set Initial Stock for a registered pooled SKU supplies its current Commerce Product Title as the initial Inventory display name. That name then belongs to the Inventory pool record. Other stores may connect the same pooled SKU while keeping different Commerce and storefront titles; those titles never rename Inventory. An authorized Inventory administrator may explicitly rename the Inventory display name without changing any connected Commerce admin title, storefront title, permanent Inventory SKU ID, balance, or history.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:49:06+00:00",
+          "choice": "When a Commerce product is connected to Inventory for managed stock, a newly registered pooled SKU initializes its Inventory display name from the current Commerce Product Title. If the Commerce product has no title, Inventory temporarily displays the canonical SKU until an authorized Inventory administrator supplies a name. The initial value is a one-time default: later Commerce or storefront title changes do not rename Inventory, another store connecting the pooled SKU does not overwrite it, and an explicit Inventory rename does not change any connected Commerce admin or storefront title. Set Initial Stock remains a separate location-scoped quantity action and does not own naming.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T21:49:06+00:00",
+          "choice": "When a Commerce product is connected to Inventory for managed stock, a newly registered pooled SKU initializes its Inventory display name from the current Commerce Product Title. If the Commerce product has no title, Inventory temporarily displays the canonical SKU until an authorized Inventory administrator supplies a name. The initial value is a one-time default: later Commerce or storefront title changes do not rename Inventory, another store connecting the pooled SKU does not overwrite it, and an explicit Inventory rename does not change any connected Commerce admin or storefront title. Set Initial Stock remains a separate location-scoped quantity action and does not own naming.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/types.ts;file:docs/implementation/managed-sku-registration-contract.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "managed-sku-display-name-022",
+      "implementation_ref": "file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/types.ts;file:docs/implementation/managed-sku-registration-contract.md",
+      "question": "Who owns the Inventory display name for a pooled SKU, and how is its initial value chosen?",
+      "rationale": "Commerce already owns the product title before stock management begins, so using it at registration gives Inventory a useful operational name without delaying naming until a stock mutation. One-time initialization plus independent later ownership preserves each storefront title and prevents shared-pool stores from renaming one another.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/managed-sku-registration/REVIEW.md;file:proof/managed-sku-registration/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T21:50:36+00:00",
+          "source_identity": "sha256:4292f3e2743809cfa81867292a49a0a5f43a283ad51f29294c3a686ba8f05725"
+        }
+      ],
+      "review_ref": "file:proof/managed-sku-registration/REVIEW.md;file:proof/managed-sku-registration/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:4292f3e2743809cfa81867292a49a0a5f43a283ad51f29294c3a686ba8f05725",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T21:50:36+00:00",
+      "verification_ref": "file:proof/managed-sku-registration/PROOF.md;file:proof/managed-sku-registration/source-manifest.sha256;command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full"
     }
   ],
   "last_activation": {
-    "at": "2026-08-28T14:34:25+00:00",
+    "at": "2026-08-28T21:39:59+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
   "recommendation": {
     "alternatives": [
-      "Use a generic Commerce-owned EmDash fixture instead of SmokyClub for the first runtime proof.",
-      "Move directly to the managed-stock and Inventory provider-binding grill, carrying the unproven site-runtime boundary as explicit risk."
+      "Persist Commerce managed-stock setup transitions with an explicit idempotent command after Inventory exposes the registration operation.",
+      "Design the EmDash Configure Inventory setup UI around the now-typed setup-required, needs-review, and active states without adding live transport yet."
     ],
-    "reason": "The current slice proves the application, exact EmDash storage repository, SQLite concurrency, and local D1 semantics, but it deliberately does not claim a mounted-site compatibility result; the smallest next cross-stack proof is the real SmokyClub EmDash route and scheduler boundary.",
-    "recommended": "After the Commerce slice is reviewed and merged, mount it in one local SmokyClub site on exact EmDash 0.35.0 and prove plugin registration, live index materialization, authenticated HTTP create, idempotent replay, and SKU conflict through the real catch-all route before adding Inventory provider binding.",
-    "recorded_at": "2026-08-28T02:34:16+00:00"
+    "reason": "Commerce now has a verified provider-neutral handshake, but a live cross-stack proof cannot exist until Inventory can atomically create or return the pool-wide SKU identity. That operation is the narrowest dependency and can be built without deciding OAuth or EmDash plugin transport.",
+    "recommended": "Implement Inventory-owned atomic register-or-return for one pool-wide canonical SKU, minting the permanent inventorySkuId and preserving the first displayNameIfNew without creating balances or receipts.",
+    "recorded_at": "2026-08-28T21:50:36+00:00"
   },
   "schema_version": "grilltrack/v0.1",
   "status": "active",
   "title": "DinkusKit Commerce v1",
   "track_id": "dinkuskit-commerce-v1",
-  "updated_at": "2026-08-28T20:12:37+00:00"
+  "updated_at": "2026-08-28T21:50:36+00:00"
 }

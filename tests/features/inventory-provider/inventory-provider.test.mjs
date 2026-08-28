@@ -3,8 +3,13 @@ import test from "node:test";
 
 import {
   InventoryProviderBindingError,
+  ManagedSkuRegistrationError,
+  applyManagedSkuRegistrationResult,
+  confirmExistingManagedSku,
   createInitialStockManagement,
+  createManagedSkuRegistrationRequest,
   normalizeInventoryProviderBinding,
+  normalizeManagedSkuRegistrationResult,
   setManageStock,
 } from "../../../dist/features/inventory-provider/index.js";
 
@@ -49,12 +54,227 @@ test("managed intent starts fail-closed and contains no local quantity", () => {
 });
 
 test("disabling management is Commerce-only and re-enabling requires fresh setup", () => {
-  const active = { mode: "managed", status: "active" };
+  const active = {
+    mode: "managed",
+    status: "active",
+    inventorySkuId: "inventory-sku-1",
+  };
   const disabled = setManageStock(active, false);
   assert.deepEqual(disabled, { mode: "unmanaged" });
-  assert.deepEqual(active, { mode: "managed", status: "active" });
+  assert.deepEqual(active, {
+    mode: "managed",
+    status: "active",
+    inventorySkuId: "inventory-sku-1",
+  });
 
   const reenabled = setManageStock(disabled, true);
   assert.deepEqual(reenabled, { mode: "managed", status: "setup-required" });
   assert.equal(setManageStock(active, true), active);
+});
+
+test("registration request uses the Commerce title once and carries no stock or location", () => {
+  const binding = normalizeInventoryProviderBinding({
+    providerRef: "dinkuskit-inventory",
+    poolId: " pool-1 ",
+    defaultFulfillmentLocationId: "murphy-nc",
+  });
+
+  const request = createManagedSkuRegistrationRequest(binding, {
+    sku: " GRILL-1 ",
+    productTitle: "  Smoky Grill  ",
+  });
+
+  assert.deepEqual(request, {
+    poolId: "pool-1",
+    sku: "GRILL-1",
+    displayNameIfNew: "Smoky Grill",
+  });
+  assert.equal("defaultFulfillmentLocationId" in request, false);
+  assert.equal("locationId" in request, false);
+  assert.equal("quantity" in request, false);
+  assert.equal("unit" in request, false);
+
+  for (const productTitle of [undefined, null, "   "]) {
+    assert.deepEqual(
+      createManagedSkuRegistrationRequest(binding, {
+        sku: "GRILL-1",
+        productTitle,
+      }),
+      {
+        poolId: "pool-1",
+        sku: "GRILL-1",
+        displayNameIfNew: "GRILL-1",
+      },
+    );
+  }
+});
+
+test("registration requests fail closed on malformed identities or titles", () => {
+  const binding = {
+    providerRef: "dinkuskit-inventory",
+    poolId: "pool-1",
+    defaultFulfillmentLocationId: "murphy-nc",
+  };
+
+  for (const input of [
+    null,
+    {},
+    { sku: "" },
+    { sku: 7 },
+    { sku: "GRILL-1", productTitle: 7 },
+  ]) {
+    assert.throws(
+      () => createManagedSkuRegistrationRequest(binding, input),
+      (error) =>
+        error instanceof ManagedSkuRegistrationError &&
+        error.code === "INVALID_REGISTRATION",
+    );
+  }
+});
+
+test("registration results retain only the provider-neutral Inventory SKU identity", () => {
+  assert.deepEqual(
+    normalizeManagedSkuRegistrationResult({
+      outcome: "registered",
+      inventorySku: {
+        inventorySkuId: " inventory-sku-1 ",
+        sku: " GRILL-1 ",
+        displayName: " Smoky Grill ",
+        quantity: 99,
+      },
+      accessToken: "must-not-survive",
+    }),
+    {
+      outcome: "registered",
+      inventorySku: {
+        inventorySkuId: "inventory-sku-1",
+        sku: "GRILL-1",
+        displayName: "Smoky Grill",
+      },
+    },
+  );
+
+  for (const result of [
+    null,
+    {},
+    { outcome: "unknown", inventorySku: {} },
+    {
+      outcome: "existing",
+      inventorySku: { inventorySkuId: "", sku: "GRILL-1", displayName: "Grill" },
+    },
+    {
+      outcome: "existing",
+      inventorySku: {
+        inventorySkuId: "inventory-sku-1",
+        sku: "",
+        displayName: "Grill",
+      },
+    },
+    {
+      outcome: "existing",
+      inventorySku: {
+        inventorySkuId: "inventory-sku-1",
+        sku: "GRILL-1",
+        displayName: "",
+      },
+    },
+  ]) {
+    assert.throws(
+      () => normalizeManagedSkuRegistrationResult(result),
+      (error) =>
+        error instanceof ManagedSkuRegistrationError &&
+        error.code === "INVALID_REGISTRATION",
+    );
+  }
+});
+
+test("a newly registered SKU activates only its permanent Inventory identity", () => {
+  assert.deepEqual(
+    applyManagedSkuRegistrationResult(
+      { mode: "managed", status: "setup-required" },
+      "GRILL-1",
+      {
+        outcome: "registered",
+        inventorySku: {
+          inventorySkuId: "inventory-sku-1",
+          sku: "GRILL-1",
+          displayName: "Smoky Grill",
+        },
+      },
+    ),
+    {
+      mode: "managed",
+      status: "active",
+      inventorySkuId: "inventory-sku-1",
+    },
+  );
+});
+
+test("an existing pooled SKU requires review before its permanent identity activates", () => {
+  const needsReview = applyManagedSkuRegistrationResult(
+    { mode: "managed", status: "setup-required" },
+    "GRILL-1",
+    {
+      outcome: "existing",
+      inventorySku: {
+        inventorySkuId: "inventory-sku-1",
+        sku: "GRILL-1",
+        displayName: "Inventory Grill",
+      },
+    },
+  );
+
+  assert.deepEqual(needsReview, {
+    mode: "managed",
+    status: "needs-review",
+    candidate: {
+      inventorySkuId: "inventory-sku-1",
+      sku: "GRILL-1",
+      displayName: "Inventory Grill",
+    },
+  });
+  assert.deepEqual(confirmExistingManagedSku(needsReview), {
+    mode: "managed",
+    status: "active",
+    inventorySkuId: "inventory-sku-1",
+  });
+});
+
+test("registration rejects wrong-SKU and out-of-order state transitions", () => {
+  const result = {
+    outcome: "registered",
+    inventorySku: {
+      inventorySkuId: "inventory-sku-1",
+      sku: "OTHER-SKU",
+      displayName: "Other Grill",
+    },
+  };
+
+  for (const operation of [
+    () =>
+      applyManagedSkuRegistrationResult(
+        { mode: "managed", status: "setup-required" },
+        "GRILL-1",
+        result,
+      ),
+    () => applyManagedSkuRegistrationResult({ mode: "unmanaged" }, "OTHER-SKU", result),
+    () =>
+      applyManagedSkuRegistrationResult(
+        {
+          mode: "managed",
+          status: "active",
+          inventorySkuId: "inventory-sku-1",
+        },
+        "OTHER-SKU",
+        result,
+      ),
+    () => confirmExistingManagedSku({ mode: "managed", status: "setup-required" }),
+  ]) {
+    assert.throws(
+      operation,
+      (error) =>
+        error instanceof ManagedSkuRegistrationError &&
+        error.code === "INVALID_TRANSITION",
+    );
+  }
 });
