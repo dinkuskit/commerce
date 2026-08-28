@@ -77,8 +77,9 @@ export async function auditRepository(root = repositoryRoot) {
   const compatibility = manifest.dinkuskit?.emdashCompatibility;
   const requiredCompatibility = {
     apiPeer: "0.35.0",
-    mountedSitePilot: "private-fork",
-    requiredFork: "saariuslystoned/emdash",
+    mountedSitePilot: "private",
+    requiredSourceVisibility: "public",
+    requiredSourceRepository: "https://github.com/saariuslystoned/emdash",
     requiredCommit: "dbf11d1138dbd5c6e4e00195e9c99b0904c90799",
     upstreamPullRequest: "https://github.com/emdash-cms/emdash/pull/2768",
     stockReleaseBehavior: "fail-closed",
