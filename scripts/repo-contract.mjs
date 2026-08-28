@@ -74,6 +74,21 @@ export async function auditRepository(root = repositoryRoot) {
   if (manifest.peerDependencies?.emdash !== "0.35.0") {
     findings.push("runtime peer must pin exact emdash 0.35.0");
   }
+  const compatibility = manifest.dinkuskit?.emdashCompatibility;
+  const requiredCompatibility = {
+    apiPeer: "0.35.0",
+    mountedSitePilot: "private-fork",
+    requiredFork: "saariuslystoned/emdash",
+    requiredCommit: "dbf11d1138dbd5c6e4e00195e9c99b0904c90799",
+    upstreamPullRequest: "https://github.com/emdash-cms/emdash/pull/2768",
+    stockReleaseBehavior: "fail-closed",
+    stableReleaseExit: "repin-and-rerun-smokyclub-proof",
+  };
+  if (JSON.stringify(compatibility) !== JSON.stringify(requiredCompatibility)) {
+    findings.push(
+      "private mounted-site pilot must retain the exact EmDash fork compatibility contract",
+    );
+  }
   if (JSON.stringify(manifest.files) !== JSON.stringify(["dist"])) {
     findings.push("package files must contain only dist");
   }

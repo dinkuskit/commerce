@@ -24,6 +24,17 @@
     "type": "git",
     "url": "git+https://github.com/dinkuskit/commerce.git"
   },
+  "dinkuskit": {
+    "emdashCompatibility": {
+      "apiPeer": "0.35.0",
+      "mountedSitePilot": "private-fork",
+      "requiredFork": "saariuslystoned/emdash",
+      "requiredCommit": "dbf11d1138dbd5c6e4e00195e9c99b0904c90799",
+      "upstreamPullRequest": "https://github.com/emdash-cms/emdash/pull/2768",
+      "stockReleaseBehavior": "fail-closed",
+      "stableReleaseExit": "repin-and-rerun-smokyclub-proof"
+    }
+  },
   "peerDependencies": {
     "emdash": "0.35.0"
   },

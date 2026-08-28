@@ -17,6 +17,15 @@ pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
 writes unless the live EmDash storage collection proves unique `commandId`
 and site-wide canonical `skuKey` constraints.
 
+Mounted-site work is currently a private fork-backed pilot, not a stock 0.35.0
+compatibility claim. It requires `saariuslystoned/emdash` at exact commit
+`dbf11d1138dbd5c6e4e00195e9c99b0904c90799`, the head of
+[EmDash PR #2768](https://github.com/emdash-cms/emdash/pull/2768). Stock
+`emdash@0.35.0` cannot materialize the required indexes through the mounted
+Cloudflare development runtime, so Commerce fails writes closed there. After
+the fix reaches a stable EmDash release, Commerce must repin and rerun the
+SmokyClub mounted-site proof before expanding its compatibility claim.
+
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
 ## Direction
@@ -41,8 +50,9 @@ bin/verify-commerce full
 ```
 
 The quick verifier covers types, unit contracts, feature boundaries, public
-repository hygiene, and the exact EmDash pin. The full verifier additionally
-runs cross-process SQLite atomicity proof against EmDash's real 0.35 storage
-repository and a two-process local Wrangler/D1 expression-index proof.
+repository hygiene, the exact EmDash API peer, and the exact private-pilot fork
+contract. The full verifier additionally runs cross-process SQLite atomicity
+proof against EmDash's real 0.35 storage repository and a two-process local
+Wrangler/D1 expression-index proof.
 
 Under construction. MIT licensed.

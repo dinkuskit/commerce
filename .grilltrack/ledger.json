@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-28T13:41:22+00:00",
-    "domain": "cross-process product and SKU creation",
-    "started_at": "2026-08-28T02:45:43+00:00",
+    "confirmed_at": "2026-08-28T14:24:25+00:00",
+    "domain": "EmDash fork-backed mounted-site pilot",
+    "started_at": "2026-08-28T14:24:25+00:00",
     "status": "confirmed",
-    "summary": "Under the authorized PR and review-rail repair, retry only transient Wrangler SQLITE_BUSY contention; continue to require one success and one exact skuKey unique-index loser, with no Commerce production behavior change."
+    "summary": "Commerce remains a private fork-backed pilot: exact 0.35.0 API peer, exact patched fork runtime for mounted-site proof, stock 0.35.0 fails closed, no publication or deployment, and a fresh stable-release repin plus SmokyClub proof is required before compatibility expands."
   },
   "decisions": [
     {
@@ -985,7 +985,9 @@
       "question": "How does the local SmokyClub consumer share EmDash runtime identity with Commerce?",
       "rationale": "A local tarball fixture must exercise the same single EmDash module identity a future install uses; loading Commerce from its source worktree would create a second EmDash class graph and make structured route errors unfaithful.",
       "repair_required": false,
-      "review_classifications": [],
+      "review_classifications": [
+        "human_gate"
+      ],
       "review_history": [
         {
           "classifications": [
@@ -995,15 +997,99 @@
           "result": "findings",
           "reviewed_at": "2026-08-28T02:45:43+00:00",
           "source_identity": "sha256:3a05c6acfd4e956134ce64f4ae55c01c927827c124354385bbbbbc73e07ed47d"
+        },
+        {
+          "classifications": [
+            "human_gate"
+          ],
+          "ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T14:24:24+00:00",
+          "source_identity": "git:bf7986a114cf795abddc6af49112f90d96a5e95b"
         }
       ],
+      "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+      "review_result": "findings",
+      "review_source_identity": "git:bf7986a114cf795abddc6af49112f90d96a5e95b",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T14:24:24+00:00",
+      "verification_ref": "command:PATH=node-22.23.2 bin/verify-commerce full (18 unit/contract, 6 integration, repo and feature audits);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;note:first full rerun hit transient Wrangler/D1 SQLITE_BUSY and unchanged immediate rerun passed"
+    },
+    {
+      "baseline_ref": "git:bf7986a114cf795abddc6af49112f90d96a5e95b",
+      "candidate_refs": [
+        "git:saariuslystoned/emdash@dbf11d1138dbd5c6e4e00195e9c99b0904c90799",
+        "url:https://github.com/emdash-cms/emdash/pull/2768",
+        "repo:smokyclub:proof/first-managed-sku-live-20260828/PROOF.md"
+      ],
+      "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+      "context_ref": "user:2026-08-28 explicit private fork pilot authorization and lock",
+      "created_at": "2026-08-28T14:24:25+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "emdash-035-runtime-peer-009"
+      ],
+      "domain": "EmDash fork-backed mounted-site pilot",
+      "history": [
+        {
+          "at": "2026-08-28T14:24:25+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T14:25:28+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T14:25:28+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-fork-private-pilot-010",
+      "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+      "question": "What EmDash runtime is supported for the private mounted-site Commerce pilot while upstream PR 2768 remains unreleased?",
+      "rationale": "The exact fork head passed the live SmokyClub mounted route while stock 0.35.0 could not materialize the required storage indexes. Separating API peer identity from the operational pilot runtime keeps the package honest and avoids an un-installable preview dependency.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-28T02:58:01+00:00",
-      "verification_ref": "command:PATH=node-22.23.2 bin/verify-commerce full (18 unit/contract, 6 integration, repo and feature audits);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;note:first full rerun hit transient Wrangler/D1 SQLITE_BUSY and unchanged immediate rerun passed"
+      "updated_at": "2026-08-28T14:25:28+00:00",
+      "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
     }
   ],
   "last_activation": {
@@ -1025,5 +1111,5 @@
   "status": "active",
   "title": "DinkusKit Commerce v1",
   "track_id": "dinkuskit-commerce-v1",
-  "updated_at": "2026-08-28T13:51:27+00:00"
+  "updated_at": "2026-08-28T14:25:28+00:00"
 }

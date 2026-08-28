@@ -3,7 +3,10 @@
 ## Source identity
 
 - Base: `c35f611909309dd8d461d99c1d28c563a90d1a0a`
-- EmDash: exact `0.35.0`
+- EmDash API peer: exact `0.35.0`
+- Mounted-site pilot runtime: private `saariuslystoned/emdash` fork at exact
+  commit `dbf11d1138dbd5c6e4e00195e9c99b0904c90799`, tracked by
+  [upstream PR #2768](https://github.com/emdash-cms/emdash/pull/2768)
 - Runtime packaging: exact `emdash@0.35.0` peer; publishable implementation
   code is limited to `dist/` alongside npm's package metadata, README, and
   license files
@@ -12,6 +15,14 @@
 - Reviewed implementation inventory: `proof/catalog-first-managed-sku/source-manifest.sha256`
 
 The source manifest covers the implementation, tests, repository contracts, dependency lock, and CI definition. It excludes this explanatory proof document and GrillTrack's decision ledger so review evidence can evolve without changing the reviewed implementation identity.
+
+The API peer and mounted-site runtime are intentionally separate. The public
+package contract remains exact `emdash@0.35.0`; the private pilot additionally
+pins the fork source identity above. Stock 0.35.0 cannot materialize the
+declared storage indexes through the mounted Cloudflare development runtime,
+so it is unsupported for live pilot writes and Commerce fails closed. A future
+stable EmDash release must be repinned and pass a fresh SmokyClub mounted-site
+proof before this restriction can be removed.
 
 ## Claims proved
 
@@ -85,3 +96,9 @@ Commit, push, and pull-request delivery were authorized separately after this
 local result was verified. Price, currency, stock policy, provider binding,
 update/delete, admin UI, MCP exposure, checkout, and publication remain outside
 this slice.
+
+The private fork pilot is an explicit maintainer acceptance of the compatibility
+gate raised on Commerce PR #7. It does not claim that stock `emdash@0.35.0` is
+mounted-site compatible, and it does not authorize weakening package-manager
+dependency guards to consume preview packages. The local SmokyClub proof is
+kept in its own worktree and is not delivered by this Commerce PR.
