@@ -90,6 +90,8 @@ test("one command writes one complete draft row and a retry returns the original
     createdAt: "2026-08-28T00:00:00.000Z",
   });
   assert.equal(storage.puts.filter(({ data }) => data.recordKind === "catalog-item").length, 1);
+  assert.equal(storage.records.size, 1);
+  assert.deepEqual([...storage.records.values()], [first.item]);
 });
 
 test("a reused command with changed input is a command conflict", async () => {
@@ -125,11 +127,24 @@ test("creation fails closed before a product write when either unique index is a
       createCatalogItem(storage, { commandId: "cmd:one", name: "First", sku: "FIRST" }),
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
     );
-    assert.equal(
-      [...storage.records.values()].filter((record) => record.recordKind === "catalog-item").length,
-      0,
-    );
+    assert.deepEqual([...storage.records.values()], []);
   }
+});
+
+test("creation fails closed when an integrity probe cannot be cleaned up", async () => {
+  const storage = new MemoryCatalogStorage();
+  storage.delete = async () => {
+    throw new Error("probe delete unavailable");
+  };
+
+  await rejectsWithCode(
+    createCatalogItem(storage, { commandId: "cmd:one", name: "First", sku: "FIRST" }),
+    "STORAGE_CONSTRAINTS_UNAVAILABLE",
+  );
+  assert.equal(
+    [...storage.records.values()].filter((record) => record.recordKind === "catalog-item").length,
+    0,
+  );
 });
 
 test("only an exact named unique violation is classified as atomic proof", () => {

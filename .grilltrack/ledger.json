@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-28T14:34:38+00:00",
-    "domain": "EmDash fork-backed mounted-site pilot",
-    "started_at": "2026-08-28T14:34:25+00:00",
+    "confirmed_at": "2026-08-28T15:04:48+00:00",
+    "domain": "catalog integrity probe lifecycle",
+    "started_at": "2026-08-28T15:04:48+00:00",
     "status": "confirmed",
-    "summary": "The original user-confirmed runtime decision is unchanged: Commerce is a private mounted-site pilot backed by an exact public EmDash fork commit; stock 0.35.0 fails closed, no publication or deployment is authorized, and stable release adoption still requires a fresh SmokyClub proof."
+    "summary": "The authorized repair will first prove raw catalog storage contains leaked integrity probes, then make every owned temporary probe unique per invocation and clean it on success and missing-index paths, fail closed on cleanup errors, prove concurrent SQLite races leave exactly one catalog item and no probe rows, rerun the full suite, and return the exact pushed head through both review rails without merging."
   },
   "decisions": [
     {
@@ -555,10 +555,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "command:mise x node@22.23.2 -- node --test tests/integration/d1-atomicity.test.mjs (5 consecutive passes);command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration, repo and feature audits);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T15:04:48+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "verified",
+          "implementation_ref": "file:tests/integration/sqlite-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T15:08:34+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:tests/integration/sqlite-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "review_result": "findings",
+          "review_source_identity": "git:131afd83c5f25f4ec33ab86504168af71fbe0d77",
+          "to": "implemented",
+          "verification_ref": "command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T15:08:35+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/storage-constraints.ts; tests/features/catalog/catalog.test.mjs; tests/integration/sqlite-atomicity.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:git diff --check"
         }
       ],
       "id": "emdash-native-atomic-authority-006",
-      "implementation_ref": "file:tests/integration/sqlite-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "implementation_ref": "src/features/catalog/storage-constraints.ts; tests/features/catalog/catalog.test.mjs; tests/integration/sqlite-atomicity.test.mjs",
       "question": "Which durable boundary receives first write-authority proof for concurrent catalog creation?",
       "rationale": "EmDash 0.35 now exposes database unique indexes that can adjudicate independent processes in one statement, but its index-sync path logs failures without failing activation, so declaration must be paired with live constraint proof.",
       "repair_required": false,
@@ -588,6 +632,15 @@
           "result": "findings",
           "reviewed_at": "2026-08-28T13:51:27+00:00",
           "source_identity": "git:e82ce5ce6bdc5d17816e28b0867f4101f967e023"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T15:04:48+00:00",
+          "source_identity": "git:131afd83c5f25f4ec33ab86504168af71fbe0d77"
         }
       ],
       "review_ref": null,
@@ -595,8 +648,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-28T13:51:27+00:00",
-      "verification_ref": "command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:git diff --check"
+      "updated_at": "2026-08-28T15:08:35+00:00",
+      "verification_ref": "proof/catalog-first-managed-sku/PROOF.md; mise x node@22.23.2 -- bin/verify-commerce full; sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256; mise x node@22.23.2 -- npm pack --dry-run --json"
     },
     {
       "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
@@ -1197,5 +1250,5 @@
   "status": "active",
   "title": "DinkusKit Commerce v1",
   "track_id": "dinkuskit-commerce-v1",
-  "updated_at": "2026-08-28T14:35:28+00:00"
+  "updated_at": "2026-08-28T15:08:35+00:00"
 }

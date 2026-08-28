@@ -47,15 +47,18 @@ export function openCatalogRepository(path) {
   return { db, storage };
 }
 
-export function readCatalogItems(path) {
+export function readCatalogRecords(path) {
   const database = new BetterSqlite3(path, { readonly: true });
   const rows = database
     .prepare(
       "SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? ORDER BY id",
     )
     .all(COMMERCE_PLUGIN_ID, CATALOG_COLLECTION)
-    .map(({ data }) => JSON.parse(data))
-    .filter((record) => record.recordKind === "catalog-item");
+    .map(({ data }) => JSON.parse(data));
   database.close();
   return rows;
+}
+
+export function readCatalogItems(path) {
+  return readCatalogRecords(path).filter((record) => record.recordKind === "catalog-item");
 }

@@ -29,11 +29,11 @@ proof before this restriction can be removed.
 
 - `dinkus.catalog` owns the first catalog-item creation boundary. The scoped npm package `@dinkuskit/commerce` exports the EmDash 0.35 native descriptor plus `createPlugin` runtime factory, registers with the EmDash-safe runtime slug `dinkus-commerce`, and exposes one private route requiring `content:create`.
 - SKU input is trimmed, Unicode NFKC-normalized, uppercased from ASCII, and accepted only as 1-64 uppercase alphanumeric segments separated by single hyphens.
-- One accepted command writes one complete draft simple-product row. The live-constraint guard uses internal sentinel writes, but it does not create a SKU registry or split the user item across multiple writes.
+- One accepted command writes one complete draft simple-product row. The live-constraint guard uses invocation-owned internal sentinel writes and removes every attempted sentinel on success and failure paths; it does not create a SKU registry or split the user item across multiple writes.
 - The `catalogItems` row carries both unique `commandId` and unique site-wide `skuKey` values.
 - Same-command/same-normalized-payload retries return the original row; changed input returns `COMMAND_CONFLICT`.
-- Two independent server processes claiming the same SKU produce one row, one success, and one `SKU_CONFLICT`.
-- If either declared unique index is absent, or a storage error cannot be bound to the exact expected unique index, product creation fails closed before the product row is written.
+- Two independent server processes claiming the same SKU produce one catalog record, one success, one `SKU_CONFLICT`, and no integrity-probe residue.
+- If either declared unique index is absent, a probe cannot be cleaned up, or a storage error cannot be bound to the exact expected unique index, product creation fails closed before the product row is written. Missing-index paths leave no probe records behind.
 - Local Wrangler/D1 reproduces the exact EmDash JSON-expression SKU index violation, and the application classifier recognizes that observed failure as `skuKey` authority.
 - The D1 process harness retries only transient `SQLITE_BUSY` emulator
   contention. A terminal losing contender must still name the exact SKU unique
@@ -49,9 +49,13 @@ npm ls emdash wrangler typescript better-sqlite3 kysely --depth=0
 git diff --check
 ```
 
-The exact Node runtime completed installation with zero audit vulnerabilities. The full verifier passed typechecking, 18 unit/contract tests, both repository audits, the two local Wrangler/D1 process proof, both real EmDash 0.35 missing-index cases, the two-process competing-SKU proof, and the two-process idempotent-retry proof.
+The exact Node runtime completed installation with zero audit vulnerabilities. The full verifier passed typechecking, 19 unit/contract tests, both repository audits, the two-local-process Wrangler/D1 proof, both real EmDash 0.35 missing-index cases, the two-process competing-SKU proof, and the two-process idempotent-retry proof. The EmDash SQLite proofs inspect all raw catalog records rather than filtering out integrity probes.
 
-`npm pack --dry-run --json` reported 27 entries, 8,169 packed bytes, and no
+After the full verifier, the exact SQLite integration file passed five
+additional consecutive runs. Every run retained exactly one raw catalog record
+for both the competing-SKU and idempotent-replay races.
+
+`npm pack --dry-run --json` reported 27 entries, 8,927 packed bytes, and no
 bundled dependencies. The archive contains only compiled `dist/` output plus
 `package.json`, `README.md`, and `LICENSE`; source, tests, proof, and local
 fixtures are excluded.
@@ -60,6 +64,12 @@ The first GitHub Actions run exposed a harness-only `SQLITE_BUSY` race between
 the two Wrangler CLI processes. The bounded retry repair preserved both
 independent processes and tightened the terminal assertion to require one
 success and one exact `skuKey` unique-index failure.
+
+ClawSweeper then identified that the successful integrity checks retained each
+left sentinel. The repair began with failing raw-storage assertions, assigns a
+fresh identity to each probe invocation so concurrent servers cannot clean up
+one another's records, deletes every owned attempted probe in a `finally` path,
+and fails closed if cleanup itself errors.
 
 ## Inspectable live runtime transcript
 
@@ -74,9 +84,9 @@ $ CI=1 mise x node@22.23.2 -- npm run build --silent && CI=1 mise x node@22.23.2
   ✔ only commandId is active
   ✔ only skuKey is active
 ✔ exact EmDash 0.35 storage fails closed when either declared unique index is not live
-LIVE_PROOF {"case":"competing-sku","emdash":"0.35.0","processes":2,"created":1,"rejected":1,"rejectionCode":"SKU_CONFLICT","persistedRows":1}
+LIVE_PROOF {"case":"competing-sku","emdash":"0.35.0","processes":2,"created":1,"rejected":1,"rejectionCode":"SKU_CONFLICT","persistedRecords":1,"persistedRows":1}
 ✔ two server processes claiming one SKU produce one row and one SKU_CONFLICT
-LIVE_PROOF {"case":"idempotent-replay","emdash":"0.35.0","processes":2,"created":1,"replayed":1,"sameItem":true,"persistedRows":1}
+LIVE_PROOF {"case":"idempotent-replay","emdash":"0.35.0","processes":2,"created":1,"replayed":1,"sameItem":true,"persistedRecords":1,"persistedRows":1}
 ✔ two server processes retrying one command converge on the original row
 ℹ tests 5
 ℹ pass 5
@@ -84,10 +94,12 @@ LIVE_PROOF {"case":"idempotent-replay","emdash":"0.35.0","processes":2,"created"
 ```
 
 The first live record proves one successful creation plus one competing-SKU
-rejection, with one persisted row. The second proves that one creation and one
-same-command replay converge on one item and one persisted row. The public CI
-job runs this same verifier on the exact pull-request head, providing the linked
-independent transcript for review.
+rejection, with exactly one raw persisted record and one catalog item. The
+second proves that one creation and one same-command replay converge on exactly
+one raw persisted record and one catalog item. Because the raw count equals the
+catalog-item count in both cases, neither race leaves an integrity probe behind.
+The public CI job runs this same verifier on the exact pull-request head,
+providing the linked independent transcript for review.
 
 ## Gates and exclusions
 

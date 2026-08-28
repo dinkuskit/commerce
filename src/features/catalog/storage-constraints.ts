@@ -16,25 +16,16 @@ const INDEX_NAMES: Record<CatalogUniqueField, string> = {
 // These values are deliberately outside the caller-valid command and SKU grammars,
 // so an operator-supplied identity can never collide with an integrity sentinel.
 const PROBE_PREFIX = "__DINKUS_CATALOG_INTEGRITY_PROBE__";
-const PROBES: Record<CatalogUniqueField, [CatalogIntegrityProbeRecord, CatalogIntegrityProbeRecord]> = {
-  commandId: [
-    makeProbe("command-left", `${PROBE_PREFIX}:COMMAND`, `${PROBE_PREFIX}-COMMAND-LEFT`),
-    makeProbe("command-right", `${PROBE_PREFIX}:COMMAND`, `${PROBE_PREFIX}-COMMAND-RIGHT`),
-  ],
-  skuKey: [
-    makeProbe("sku-left", `${PROBE_PREFIX}:SKU:LEFT`, `${PROBE_PREFIX}-SKU`),
-    makeProbe("sku-right", `${PROBE_PREFIX}:SKU:RIGHT`, `${PROBE_PREFIX}-SKU`),
-  ],
-};
 
 function makeProbe(
   suffix: string,
+  token: string,
   commandId: string,
   skuKey: string,
 ): CatalogIntegrityProbeRecord {
   return {
     recordKind: "integrity-probe",
-    itemId: `__dinkus_catalog_${suffix}`,
+    itemId: `__dinkus_catalog_${suffix}_${token}`,
     commandId,
     kind: "integrity-probe",
     name: "DinkusKit catalog storage integrity probe",
@@ -43,6 +34,25 @@ function makeProbe(
     state: "internal",
     createdAt: "1970-01-01T00:00:00.000Z",
   };
+}
+
+function makeProbes(
+  field: CatalogUniqueField,
+): [CatalogIntegrityProbeRecord, CatalogIntegrityProbeRecord] {
+  const token = globalThis.crypto.randomUUID();
+  if (field === "commandId") {
+    const commandId = `${PROBE_PREFIX}:COMMAND:${token}`;
+    return [
+      makeProbe("command-left", token, commandId, `${PROBE_PREFIX}-COMMAND-LEFT-${token}`),
+      makeProbe("command-right", token, commandId, `${PROBE_PREFIX}-COMMAND-RIGHT-${token}`),
+    ];
+  }
+
+  const skuKey = `${PROBE_PREFIX}-SKU-${token}`;
+  return [
+    makeProbe("sku-left", token, `${PROBE_PREFIX}:SKU:LEFT:${token}`, skuKey),
+    makeProbe("sku-right", token, `${PROBE_PREFIX}:SKU:RIGHT:${token}`, skuKey),
+  ];
 }
 
 function errorChain(error: unknown): unknown[] {
@@ -105,44 +115,57 @@ export function identifyConfirmedUniqueViolation(error: unknown): CatalogUniqueF
 }
 
 async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueField): Promise<void> {
-  const [left, right] = PROBES[field];
+  const [left, right] = makeProbes(field);
+  const attempted: CatalogIntegrityProbeRecord[] = [];
 
   try {
-    await storage.put(left.itemId, left);
-  } catch (error) {
-    if (isConfirmedUniqueViolation(error, field)) return;
+    attempted.push(left);
+    try {
+      await storage.put(left.itemId, left);
+    } catch (error) {
+      if (isConfirmedUniqueViolation(error, field)) return;
+      throw new CatalogError(
+        "STORAGE_CONSTRAINTS_UNAVAILABLE",
+        `catalog ${field} uniqueness could not be proven`,
+        { cause: error },
+      );
+    }
+
+    attempted.push(right);
+    try {
+      await storage.put(right.itemId, right);
+    } catch (error) {
+      if (isConfirmedUniqueViolation(error, field)) return;
+      throw new CatalogError(
+        "STORAGE_CONSTRAINTS_UNAVAILABLE",
+        `catalog ${field} uniqueness could not be proven`,
+        { cause: error },
+      );
+    }
+
     throw new CatalogError(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      `catalog ${field} uniqueness could not be proven`,
-      { cause: error },
+      `catalog ${field} unique constraint is not active`,
     );
+  } finally {
+    let cleanupFailed = false;
+    let cleanupCause: unknown;
+    for (const probe of attempted.reverse()) {
+      try {
+        await storage.delete(probe.itemId);
+      } catch (error) {
+        if (!cleanupFailed) cleanupCause = error;
+        cleanupFailed = true;
+      }
+    }
+    if (cleanupFailed) {
+      throw new CatalogError(
+        "STORAGE_CONSTRAINTS_UNAVAILABLE",
+        `catalog ${field} uniqueness probe cleanup failed`,
+        { cause: cleanupCause },
+      );
+    }
   }
-
-  try {
-    await storage.put(right.itemId, right);
-  } catch (error) {
-    if (isConfirmedUniqueViolation(error, field)) return;
-    throw new CatalogError(
-      "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      `catalog ${field} uniqueness could not be proven`,
-      { cause: error },
-    );
-  }
-
-  try {
-    await storage.delete(right.itemId);
-  } catch (error) {
-    throw new CatalogError(
-      "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      `catalog ${field} uniqueness probe cleanup failed`,
-      { cause: error },
-    );
-  }
-
-  throw new CatalogError(
-    "STORAGE_CONSTRAINTS_UNAVAILABLE",
-    `catalog ${field} unique constraint is not active`,
-  );
 }
 
 export async function assertCatalogStorageConstraints(storage: CatalogStorage): Promise<void> {

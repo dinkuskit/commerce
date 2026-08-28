@@ -10,6 +10,7 @@ import {
   initializeCatalogDatabase,
   openCatalogRepository,
   readCatalogItems,
+  readCatalogRecords,
 } from "./sqlite-fixture.mjs";
 
 const workerPath = new URL("./catalog-process-worker.mjs", import.meta.url);
@@ -80,7 +81,7 @@ test("exact EmDash 0.35 storage fails closed when either declared unique index i
         (error) =>
           error instanceof CatalogError && error.code === "STORAGE_CONSTRAINTS_UNAVAILABLE",
       );
-      assert.deepEqual(readCatalogItems(databasePath), []);
+      assert.deepEqual(readCatalogRecords(databasePath), []);
     });
   }
 });
@@ -101,7 +102,10 @@ test("two server processes claiming one SKU produce one row and one SKU_CONFLICT
     results.filter((result) => !result.ok).map((result) => result.code),
     ["SKU_CONFLICT"],
   );
+  const persistedRecords = readCatalogRecords(databasePath);
   const persistedRows = readCatalogItems(databasePath).length;
+  assert.equal(persistedRecords.length, 1);
+  assert.equal(persistedRecords[0].recordKind, "catalog-item");
   assert.equal(persistedRows, 1);
 
   console.log(
@@ -113,6 +117,7 @@ test("two server processes claiming one SKU produce one row and one SKU_CONFLICT
         created: results.filter((result) => result.ok).length,
         rejected: results.filter((result) => !result.ok).length,
         rejectionCode: results.find((result) => !result.ok)?.code,
+        persistedRecords: persistedRecords.length,
         persistedRows,
       }),
   );
@@ -133,10 +138,13 @@ test("two server processes retrying one command converge on the original row", a
   const created = results.filter((result) => result.result.created).length;
   const replayed = results.filter((result) => !result.result.created).length;
   const sameItem = new Set(results.map((result) => result.result.item.itemId)).size === 1;
+  const persistedRecords = readCatalogRecords(databasePath);
   const persistedRows = readCatalogItems(databasePath).length;
   assert.equal(created, 1);
   assert.equal(replayed, 1);
   assert.equal(sameItem, true);
+  assert.equal(persistedRecords.length, 1);
+  assert.equal(persistedRecords[0].recordKind, "catalog-item");
   assert.equal(persistedRows, 1);
 
   console.log(
@@ -148,6 +156,7 @@ test("two server processes retrying one command converge on the original row", a
         created,
         replayed,
         sameItem,
+        persistedRecords: persistedRecords.length,
         persistedRows,
       }),
   );
