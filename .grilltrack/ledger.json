@@ -1,5 +1,27 @@
 {
-  "closeout": null,
+  "closeout": {
+    "closed_at": "2026-08-28T23:15:14+00:00",
+    "confirmed_by": "user",
+    "deferred_decisions": [],
+    "proof_refs": [
+      "file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_PROOF.md;file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_REVIEW.md;file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_RUNTIME.txt;file:proof/managed-sku-registration/compatibility-repair-source-manifest.sha256;url:https://github.com/dinkuskit/commerce/pull/9;git:7b09a25749ce2c650f294a0bd5ab7d99132d2ce5"
+    ],
+    "reason": "The compatibility repair was verified, independently reviewed, merged through Commerce PR #9, and the user explicitly requested closure.",
+    "reviews": [
+      {
+        "classifications": [],
+        "decision_id": "legacy-managed-state-upgrade-023",
+        "ref": "file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_REVIEW.md;file:proof/managed-sku-registration/compatibility-repair-source-manifest.sha256",
+        "result": "clean",
+        "source_identity": "sha256:7c7e7170c8c86cfe02c0aa815ba86d2a1da55546507edc4787786de8df12b14e"
+      }
+    ],
+    "summary": "Closed the managed SKU compatibility repair: valid identity-bearing managed state is preserved; legacy, identity-less, or malformed managed state returns to setup-required; malformed confirmation input is rejected. Delivered by Commerce PR #9 at source fc14de74bb217e8803c9441cdb27797c778b820a and merge 7b09a25749ce2c650f294a0bd5ab7d99132d2ce5. The next recommended grill is retry-safe Commerce-to-Inventory registration orchestration.",
+    "superseded_decisions": [],
+    "verified_decisions": [
+      "legacy-managed-state-upgrade-023"
+    ]
+  },
   "created_at": "2026-08-28T22:15:34+00:00",
   "current_focus": {
     "cadence": "sequential",
@@ -7,7 +29,7 @@
     "confirmed_at": "2026-08-28T22:15:35+00:00",
     "domain": "persisted managed-stock compatibility",
     "started_at": "2026-08-28T22:15:34+00:00",
-    "status": "confirmed",
+    "status": "closed",
     "summary": "Repair Commerce PR #9 by preserving valid identity-bearing stock states, returning identity-less or malformed managed persisted states as setup-required, and rejecting malformed needs-review confirmation input. Verify legacy replay, valid replay, malformed confirmation, full repository contracts, runtime behavior, and exact-head independent review. No live Inventory mutation, deployment, or merge is included."
   },
   "decisions": [
@@ -98,10 +120,17 @@
   "last_pause": null,
   "pause": null,
   "predecessor_track_id": "dinkuskit-commerce-v1",
-  "recommendation": null,
+  "recommendation": {
+    "alternatives": [
+      "Use a new commandId for each retry, accepting that an ambiguous timeout may return existing and require unnecessary user confirmation."
+    ],
+    "reason": "A stable hidden retry identity preserves idempotency across network uncertainty without changing the customer-visible SKU or Inventory SKU identity.",
+    "recommended": "Make Commerce registration retries reuse one durable operation ID as the Inventory commandId so a timed-out successful registration remains the same request.",
+    "recorded_at": "2026-08-28T23:15:07+00:00"
+  },
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
+  "status": "closed",
   "title": "Managed SKU compatibility repair",
   "track_id": "managed-sku-compatibility-repair-20260828",
-  "updated_at": "2026-08-28T22:18:19+00:00"
+  "updated_at": "2026-08-28T23:15:14+00:00"
 }
