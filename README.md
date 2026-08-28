@@ -7,13 +7,15 @@ explicit contracts.
 
 ## Status
 
-Charter stage. The package name is reserved in source as
-`@dinkuskit/commerce`, but the manifest is private at `0.0.0`: there is no
-installable package, release, deployment, or compatibility promise yet.
+Pilot stage. The package name is reserved in source as
+`@dinkuskit/commerce`, but the manifest remains private at `0.0.0`: there is
+no installable package, release, deployment, or compatibility promise yet.
 
-Scaffold development is pinned to exact `emdash@0.35.0` with a lockfile. This
-is a build target, not a runtime compatibility claim; that claim starts only
-with a real Commerce adapter and fixture.
+Development and the private package's runtime peer are pinned to exact
+`emdash@0.35.0`. The first feature is the `dinkus.catalog` draft-item creation
+pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
+writes unless the live EmDash storage collection proves unique `commandId`
+and site-wide canonical `skuKey` constraints.
 
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
@@ -34,9 +36,13 @@ The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
 ```bash
 npm ci
-npm test
-npm run audit:repo
-npm ls emdash --depth=0
+bin/verify-commerce quick
+bin/verify-commerce full
 ```
+
+The quick verifier covers types, unit contracts, feature boundaries, public
+repository hygiene, and the exact EmDash pin. The full verifier additionally
+runs cross-process SQLite atomicity proof against EmDash's real 0.35 storage
+repository and a two-process local Wrangler/D1 expression-index proof.
 
 Under construction. MIT licensed.
