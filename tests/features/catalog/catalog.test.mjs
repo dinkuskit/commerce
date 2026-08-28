@@ -82,16 +82,91 @@ test("one command writes one complete draft row and a retry returns the original
     recordKind: "catalog-item",
     itemId: "item-1",
     commandId: "cmd:grill-42",
+    creationIntent: { manageStock: false },
     kind: "simple-product",
     name: "Grill 42",
     sku: "GRILL-42",
     skuKey: "GRILL-42",
+    stockManagement: { mode: "unmanaged" },
     state: "draft",
     createdAt: "2026-08-28T00:00:00.000Z",
   });
   assert.equal(storage.puts.filter(({ data }) => data.recordKind === "catalog-item").length, 1);
   assert.equal(storage.records.size, 1);
   assert.deepEqual([...storage.records.values()], [first.item]);
+});
+
+test("an existing pre-policy row replays as explicitly unmanaged", async () => {
+  const storage = new MemoryCatalogStorage();
+  storage.records.set("legacy-item", {
+    recordKind: "catalog-item",
+    itemId: "legacy-item",
+    commandId: "cmd:legacy",
+    kind: "simple-product",
+    name: "Legacy Grill",
+    sku: "LEGACY-GRILL",
+    skuKey: "LEGACY-GRILL",
+    state: "draft",
+    createdAt: "2026-08-27T00:00:00.000Z",
+  });
+
+  const replay = await createCatalogItem(storage, {
+    commandId: "cmd:legacy",
+    name: "Legacy Grill",
+    sku: "LEGACY-GRILL",
+  });
+
+  assert.equal(replay.created, false);
+  assert.deepEqual(replay.item.stockManagement, { mode: "unmanaged" });
+  assert.equal(
+    storage.puts.filter(({ data }) => data.recordKind === "catalog-item").length,
+    0,
+  );
+});
+
+test("managed catalog creation persists setup-required intent without a quantity", async () => {
+  const storage = new MemoryCatalogStorage();
+  const result = await createCatalogItem(
+    storage,
+    {
+      commandId: "cmd:managed",
+      name: "Managed Grill",
+      sku: "MANAGED-GRILL",
+      manageStock: true,
+    },
+    {
+      createId: () => "item-managed",
+      now: () => new Date("2026-08-28T00:00:00.000Z"),
+    },
+  );
+
+  assert.deepEqual(result.item.stockManagement, {
+    mode: "managed",
+    status: "setup-required",
+  });
+  assert.deepEqual(result.item.creationIntent, { manageStock: true });
+  assert.equal("quantity" in result.item, false);
+  assert.equal("stockQuantity" in result.item, false);
+});
+
+test("manageStock must be a boolean when supplied", async () => {
+  const storage = new MemoryCatalogStorage();
+  for (const [suffix, manageStock] of [
+    ["string", "yes"],
+    ["null", null],
+    ["undefined", undefined],
+  ]) {
+    await rejectsWithCode(
+      createCatalogItem(storage, {
+        commandId: `cmd:invalid-managed-${suffix}`,
+        name: "Invalid Managed Grill",
+        sku: `INVALID-MANAGED-GRILL-${suffix}`,
+        manageStock,
+      }),
+      "INVALID_INPUT",
+    );
+  }
+  assert.equal(storage.records.size, 0);
 });
 
 test("a reused command with changed input is a command conflict", async () => {
@@ -105,6 +180,51 @@ test("a reused command with changed input is a command conflict", async () => {
     createCatalogItem(storage, { commandId: "cmd:one", name: "Changed", sku: "SECOND" }),
     "COMMAND_CONFLICT",
   );
+});
+
+test("a reused command cannot change managed-stock intent", async () => {
+  const storage = new MemoryCatalogStorage();
+  await createCatalogItem(
+    storage,
+    { commandId: "cmd:stock-intent", name: "First", sku: "STOCK-INTENT" },
+    { createId: () => "item-1" },
+  );
+  await rejectsWithCode(
+    createCatalogItem(storage, {
+      commandId: "cmd:stock-intent",
+      name: "First",
+      sku: "STOCK-INTENT",
+      manageStock: true,
+    }),
+    "COMMAND_CONFLICT",
+  );
+});
+
+test("a managed create retry remains idempotent after stock setup advances", async () => {
+  const storage = new MemoryCatalogStorage();
+  storage.records.set("managed-item", {
+    recordKind: "catalog-item",
+    itemId: "managed-item",
+    commandId: "cmd:managed-active",
+    creationIntent: { manageStock: true },
+    kind: "simple-product",
+    name: "Managed Active",
+    sku: "MANAGED-ACTIVE",
+    skuKey: "MANAGED-ACTIVE",
+    stockManagement: { mode: "managed", status: "active" },
+    state: "draft",
+    createdAt: "2026-08-28T00:00:00.000Z",
+  });
+
+  const replay = await createCatalogItem(storage, {
+    commandId: "cmd:managed-active",
+    name: "Managed Active",
+    sku: "MANAGED-ACTIVE",
+    manageStock: true,
+  });
+
+  assert.equal(replay.created, false);
+  assert.deepEqual(replay.item.stockManagement, { mode: "managed", status: "active" });
 });
 
 test("distinct commands cannot claim the same canonical SKU", async () => {

@@ -1,0 +1,12 @@
+Managed-stock persistence runtime proof
+
+Runtime: Node.js 22.23.2, EmDash 0.35.0 PluginStorageRepository, temporary SQLite
+Data classification: synthetic; no tenant, customer, environment, path, or credential data
+
+Command:
+mise x node@22.23.2 -- npm run build
+mise x node@22.23.2 -- node --test --test-name-pattern='exact EmDash 0.35 storage persists managed setup intent' tests/integration/sqlite-atomicity.test.mjs
+
+Redacted runtime output:
+LIVE_PROOF {"case":"managed-setup-persistence","emdash":"0.35.0","created":true,"persistedRecords":1,"creationIntent":{"manageStock":true},"stockManagement":{"mode":"managed","status":"setup-required"},"hasQuantity":false,"hasStockQuantity":false,"dataClassification":"synthetic"}
+result=pass

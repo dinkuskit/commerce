@@ -17,6 +17,10 @@
     "./features/catalog": {
       "types": "./dist/features/catalog/index.d.ts",
       "default": "./dist/features/catalog/index.js"
+    },
+    "./features/inventory-provider": {
+      "types": "./dist/features/inventory-provider/index.d.ts",
+      "default": "./dist/features/inventory-provider/index.js"
     }
   },
   "license": "MIT",
@@ -43,7 +47,7 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs",
+    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs",
     "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
     "audit:features": "node scripts/check-features.mjs",
     "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features",
