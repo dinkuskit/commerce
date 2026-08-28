@@ -13,7 +13,11 @@ export {
   createManagedSkuRegistrationRequest,
   normalizeManagedSkuRegistrationResult,
 } from "./registration.js";
-export { createInitialStockManagement, setManageStock } from "./stock-management.js";
+export {
+  createInitialStockManagement,
+  normalizeStoredStockManagement,
+  setManageStock,
+} from "./stock-management.js";
 export { INVENTORY_PROVIDER_FEATURE_ID } from "./types.js";
 export type {
   ActiveManagedStockManagement,

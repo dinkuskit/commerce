@@ -78,9 +78,25 @@ only the permanent `inventorySkuId`. An existing SKU becomes `needs-review`
 and retains the candidate identity for an explicit human decision.
 
 `confirmExistingManagedSku(current)` accepts only `needs-review` and promotes
-the candidate's permanent identity to `active`. The later UI/adapter must show
-the current Inventory stock read and revalidate it before invoking this
-confirmation. That stock read is deliberately not copied into Commerce state.
+the candidate's permanent identity to `active`. It validates every candidate
+identity field at runtime before activation, including values restored from
+untyped persisted data. The later UI/adapter must show the current Inventory
+stock read and revalidate it before invoking this confirmation. That stock read
+is deliberately not copied into Commerce state.
+
+## Persisted-state compatibility
+
+The identity-bearing `active` representation supersedes the pre-release
+status-only representation. Catalog reads preserve valid managed states. A
+legacy `active` record without a non-empty `inventorySkuId`, or another
+malformed managed state that cannot satisfy the current union, is returned as
+`managed` / `setup-required`. Commerce never invents an Inventory identity and
+never exposes malformed state as active. The user must complete explicit fresh
+registration before stock management becomes active again.
+
+Missing stock-management state on a pre-policy catalog record retains the
+existing unmanaged compatibility behavior. Valid identity-bearing `active`
+records and valid `needs-review` candidates are preserved.
 
 ## Lifecycle and invariants
 
@@ -103,6 +119,8 @@ active
 ```
 
 - `active` is impossible without a non-empty permanent Inventory SKU identity.
+- Legacy identity-less active state fails safe to `setup-required` on read.
+- A malformed review candidate cannot be promoted to active.
 - `existing` never becomes authoritative without explicit confirmation.
 - A result for a different visible SKU fails closed.
 - Re-enabling Manage Stock starts fresh at `setup-required`; Commerce does not
@@ -138,6 +156,9 @@ Required regression proof is:
 - rejection of wrong-SKU and out-of-order transitions;
 - disable/re-enable behavior with an identity-bearing active state;
 - package-root and feature-entry export parity;
+- legacy identity-less active replay to `setup-required` while valid active
+  replay remains active;
+- malformed persisted review-candidate rejection before activation;
 - the full Commerce verifier after focused tests pass.
 
 ## Explicit exclusions

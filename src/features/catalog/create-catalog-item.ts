@@ -10,7 +10,10 @@ import type {
   CreateCatalogItemResult,
   NormalizedCreateCatalogItemInput,
 } from "./types.js";
-import { createInitialStockManagement } from "../inventory-provider/index.js";
+import {
+  createInitialStockManagement,
+  normalizeStoredStockManagement,
+} from "../inventory-provider/index.js";
 
 export interface CreateCatalogItemOptions {
   createId?: () => string;
@@ -50,7 +53,10 @@ async function findCommand(
     .map((record) => ({
       ...record,
       creationIntent: record.creationIntent ?? { manageStock: false },
-      stockManagement: record.stockManagement ?? createInitialStockManagement(false),
+      stockManagement:
+        record.stockManagement === undefined
+          ? createInitialStockManagement(false)
+          : normalizeStoredStockManagement(record.stockManagement),
     }));
   if (items.length > 1) {
     throw new CatalogError(

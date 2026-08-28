@@ -26,8 +26,10 @@ builds a pool-scoped identity request from the canonical Commerce SKU and uses
 the current Commerce title once as the new Inventory display-name default,
 falling back to the SKU when the title is absent. A newly registered SKU stores
 only its permanent Inventory identity; an existing pooled SKU remains
-`needs-review` until explicit confirmation. Live Inventory calls, current-stock
-review, pool discovery, persisted updates, and admin UI remain later slices.
+`needs-review` until explicit confirmation. Legacy managed records without that
+identity fail safe to `setup-required` on read, and malformed review candidates
+cannot activate. Live Inventory calls, current-stock review, pool discovery,
+persisted updates, and admin UI remain later slices.
 
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not

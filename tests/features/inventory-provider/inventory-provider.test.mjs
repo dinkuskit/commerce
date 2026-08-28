@@ -240,6 +240,28 @@ test("an existing pooled SKU requires review before its permanent identity activ
   });
 });
 
+test("existing SKU confirmation rejects malformed persisted candidates", () => {
+  for (const candidate of [
+    undefined,
+    {},
+    { inventorySkuId: "", sku: "GRILL-1", displayName: "Inventory Grill" },
+    { inventorySkuId: "inventory-sku-1", sku: "", displayName: "Inventory Grill" },
+    { inventorySkuId: "inventory-sku-1", sku: "GRILL-1", displayName: "" },
+  ]) {
+    assert.throws(
+      () =>
+        confirmExistingManagedSku({
+          mode: "managed",
+          status: "needs-review",
+          candidate,
+        }),
+      (error) =>
+        error instanceof ManagedSkuRegistrationError &&
+        error.code === "INVALID_REGISTRATION",
+    );
+  }
+});
+
 test("registration rejects wrong-SKU and out-of-order state transitions", () => {
   const result = {
     outcome: "registered",

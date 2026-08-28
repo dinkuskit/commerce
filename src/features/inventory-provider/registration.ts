@@ -140,9 +140,11 @@ export function confirmExistingManagedSku(
     );
   }
 
+  const candidate = normalizeInventorySkuIdentity(current.candidate);
+
   return {
     mode: "managed",
     status: "active",
-    inventorySkuId: current.candidate.inventorySkuId,
+    inventorySkuId: candidate.inventorySkuId,
   };
 }
