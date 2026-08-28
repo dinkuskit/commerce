@@ -1,0 +1,99 @@
+Managed-SKU registration built public-entry runtime proof
+Captured: 2026-08-28
+Runtime: Node.js 22.23.2
+Data classification: synthetic and public-safe
+
+$ mise x node@22.23.2 -- npm run build
+
+> @dinkuskit/commerce@0.0.0 build
+> node scripts/build.mjs
+
+exit=0
+
+$ mise x node@22.23.2 -- node --input-type=module <<'NODE'
+import {
+  applyManagedSkuRegistrationResult,
+  confirmExistingManagedSku,
+  createManagedSkuRegistrationRequest,
+  normalizeInventoryProviderBinding,
+  normalizeManagedSkuRegistrationResult,
+} from "@dinkuskit/commerce";
+
+const binding = normalizeInventoryProviderBinding({
+  providerRef: "provider-demo",
+  poolId: "pool-demo",
+  defaultFulfillmentLocationId: "location-demo",
+});
+const request = createManagedSkuRegistrationRequest(binding, {
+  sku: "GRILL-1",
+  productTitle: "Demo Grill",
+});
+const registered = normalizeManagedSkuRegistrationResult({
+  outcome: "registered",
+  inventorySku: {
+    inventorySkuId: "inventory-sku-demo",
+    sku: "GRILL-1",
+    displayName: "Demo Grill",
+    quantity: "redacted-extra",
+  },
+});
+const active = applyManagedSkuRegistrationResult(
+  { mode: "managed", status: "setup-required" },
+  request.sku,
+  registered,
+);
+const existing = normalizeManagedSkuRegistrationResult({
+  outcome: "existing",
+  inventorySku: {
+    inventorySkuId: "inventory-sku-existing",
+    sku: "GRILL-1",
+    displayName: "Existing Demo Grill",
+  },
+});
+const needsReview = applyManagedSkuRegistrationResult(
+  { mode: "managed", status: "setup-required" },
+  request.sku,
+  existing,
+);
+const confirmed = confirmExistingManagedSku(needsReview);
+
+console.log(JSON.stringify({
+  case: "registration-request",
+  request,
+  carriesLocation:
+    "locationId" in request || "defaultFulfillmentLocationId" in request,
+  carriesQuantity: "quantity" in request,
+}));
+console.log(JSON.stringify({
+  case: "registered",
+  normalized: registered,
+  state: active,
+}));
+console.log(JSON.stringify({
+  case: "existing-review",
+  normalized: existing,
+  state: needsReview,
+}));
+console.log(JSON.stringify({ case: "existing-confirmed", state: confirmed }));
+NODE
+{"case":"registration-request","request":{"poolId":"pool-demo","sku":"GRILL-1","displayNameIfNew":"Demo Grill"},"carriesLocation":false,"carriesQuantity":false}
+{"case":"registered","normalized":{"outcome":"registered","inventorySku":{"inventorySkuId":"inventory-sku-demo","sku":"GRILL-1","displayName":"Demo Grill"}},"state":{"mode":"managed","status":"active","inventorySkuId":"inventory-sku-demo"}}
+{"case":"existing-review","normalized":{"outcome":"existing","inventorySku":{"inventorySkuId":"inventory-sku-existing","sku":"GRILL-1","displayName":"Existing Demo Grill"}},"state":{"mode":"managed","status":"needs-review","candidate":{"inventorySkuId":"inventory-sku-existing","sku":"GRILL-1","displayName":"Existing Demo Grill"}}}
+{"case":"existing-confirmed","state":{"mode":"managed","status":"active","inventorySkuId":"inventory-sku-existing"}}
+
+exit=0
+
+Invocation details:
+
+- Imported the built package root using the package's public self-reference:
+  `@dinkuskit/commerce`.
+- Called `createManagedSkuRegistrationRequest` after normalizing a synthetic
+  provider binding.
+- Called `normalizeManagedSkuRegistrationResult` and
+  `applyManagedSkuRegistrationResult` for both `registered` and `existing`
+  outcomes.
+- Called `confirmExistingManagedSku` on the resulting `needs-review` state.
+- Supplied a synthetic provider-only `quantity` extra in the registered result;
+  normalization removed it before the state transition.
+- No provider transport, credentials, customer data, stock read, stock
+  mutation, deployment, or production service was used.

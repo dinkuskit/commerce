@@ -1,0 +1,87 @@
+Managed-SKU compatibility repair runtime transcript
+===================================================
+
+Environment
+-----------
+
+- Node.js: 22.23.2
+- Package entry: @dinkuskit/commerce public self-reference
+- Data: synthetic, public-safe identities only
+- Secrets/auth/customer data: none
+
+Command
+-------
+
+mise x node@22.23.2 -- node --input-type=module -e '
+  import {
+    ManagedSkuRegistrationError,
+    confirmExistingManagedSku,
+    normalizeStoredStockManagement,
+  } from "@dinkuskit/commerce";
+
+  const cases = [
+    {
+      name: "valid-active",
+      input: {
+        mode: "managed",
+        status: "active",
+        inventorySkuId: " inventory-sku-1 ",
+      },
+    },
+    {
+      name: "legacy-active",
+      input: { mode: "managed", status: "active" },
+    },
+    {
+      name: "malformed-review",
+      input: {
+        mode: "managed",
+        status: "needs-review",
+        candidate: {
+          inventorySkuId: "",
+          sku: "GRILL-1",
+          displayName: "Demo Grill",
+        },
+      },
+    },
+  ];
+
+  for (const value of cases.slice(0, 2)) {
+    console.log(JSON.stringify({
+      case: value.name,
+      result: normalizeStoredStockManagement(value.input),
+    }));
+  }
+
+  try {
+    confirmExistingManagedSku(cases[2].input);
+  } catch (error) {
+    console.log(JSON.stringify({
+      case: "malformed-review-confirmation",
+      error: {
+        name: error.name,
+        code: error.code,
+        message: error.message,
+        isManagedSkuRegistrationError:
+          error instanceof ManagedSkuRegistrationError,
+      },
+    }));
+  }
+'
+
+Output
+------
+
+{"case":"valid-active","result":{"mode":"managed","status":"active","inventorySkuId":"inventory-sku-1"}}
+{"case":"legacy-active","result":{"mode":"managed","status":"setup-required"}}
+{"case":"malformed-review-confirmation","error":{"name":"ManagedSkuRegistrationError","code":"INVALID_REGISTRATION","message":"inventorySku.inventorySkuId must be a non-empty string","isManagedSkuRegistrationError":true}}
+
+Exit status: 0
+
+Claims
+------
+
+- A valid identity-bearing active record stays active.
+- A legacy identity-less active record fails safe to setup-required.
+- A malformed needs-review candidate cannot be activated and returns the
+  package's typed public registration error.

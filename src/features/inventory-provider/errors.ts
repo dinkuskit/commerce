@@ -9,3 +9,17 @@ export class InventoryProviderBindingError extends Error {
     this.code = "INVALID_BINDING";
   }
 }
+
+export type ManagedSkuRegistrationErrorCode =
+  | "INVALID_REGISTRATION"
+  | "INVALID_TRANSITION";
+
+export class ManagedSkuRegistrationError extends Error {
+  readonly code: ManagedSkuRegistrationErrorCode;
+
+  constructor(code: ManagedSkuRegistrationErrorCode, message: string) {
+    super(message);
+    this.name = "ManagedSkuRegistrationError";
+    this.code = code;
+  }
+}

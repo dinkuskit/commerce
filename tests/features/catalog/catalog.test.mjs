@@ -211,7 +211,11 @@ test("a managed create retry remains idempotent after stock setup advances", asy
     name: "Managed Active",
     sku: "MANAGED-ACTIVE",
     skuKey: "MANAGED-ACTIVE",
-    stockManagement: { mode: "managed", status: "active" },
+    stockManagement: {
+      mode: "managed",
+      status: "active",
+      inventorySkuId: "inventory-sku-managed-active",
+    },
     state: "draft",
     createdAt: "2026-08-28T00:00:00.000Z",
   });
@@ -224,7 +228,44 @@ test("a managed create retry remains idempotent after stock setup advances", asy
   });
 
   assert.equal(replay.created, false);
-  assert.deepEqual(replay.item.stockManagement, { mode: "managed", status: "active" });
+  assert.deepEqual(replay.item.stockManagement, {
+    mode: "managed",
+    status: "active",
+    inventorySkuId: "inventory-sku-managed-active",
+  });
+});
+
+test("a legacy active managed record without Inventory identity downgrades to setup-required", async () => {
+  const storage = new MemoryCatalogStorage();
+  storage.records.set("legacy-managed-item", {
+    recordKind: "catalog-item",
+    itemId: "legacy-managed-item",
+    commandId: "cmd:legacy-managed-active",
+    creationIntent: { manageStock: true },
+    kind: "simple-product",
+    name: "Legacy Managed Active",
+    sku: "LEGACY-MANAGED-ACTIVE",
+    skuKey: "LEGACY-MANAGED-ACTIVE",
+    stockManagement: {
+      mode: "managed",
+      status: "active",
+    },
+    state: "draft",
+    createdAt: "2026-08-28T00:00:00.000Z",
+  });
+
+  const replay = await createCatalogItem(storage, {
+    commandId: "cmd:legacy-managed-active",
+    name: "Legacy Managed Active",
+    sku: "LEGACY-MANAGED-ACTIVE",
+    manageStock: true,
+  });
+
+  assert.equal(replay.created, false);
+  assert.deepEqual(replay.item.stockManagement, {
+    mode: "managed",
+    status: "setup-required",
+  });
 });
 
 test("distinct commands cannot claim the same canonical SKU", async () => {
