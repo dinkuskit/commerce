@@ -7,6 +7,8 @@ import {
   createCatalogItemRoute,
 } from "./features/catalog/index.js";
 
+export * from "./features/inventory-provider/index.js";
+
 export * from "./features/catalog/index.js";
 
 const COMMERCE_PLUGIN_VERSION = "0.0.0";

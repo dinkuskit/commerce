@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-28T15:04:48+00:00",
-    "domain": "catalog integrity probe lifecycle",
-    "started_at": "2026-08-28T15:04:48+00:00",
+    "confirmed_at": "2026-08-28T19:46:12+00:00",
+    "domain": "managed stock setup foundation delivery",
+    "started_at": "2026-08-28T19:46:08+00:00",
     "status": "confirmed",
-    "summary": "The authorized repair will first prove raw catalog storage contains leaked integrity probes, then make every owned temporary probe unique per invocation and clean it on success and missing-index paths, fail closed on cleanup errors, prove concurrent SQLite races leave exactly one catalog item and no probe rows, rerun the full suite, and return the exact pushed head through both review rails without merging."
+    "summary": "The next PR adds managed-stock intent to catalog creation, persists Managed \u2014 setup required without any Commerce-local quantity, defines the provider/pool/default-location binding contract, and supplies pure non-destructive enable/disable transitions. It includes tests, feature-map/proof updates, and the full GrillTrack ledger. It excludes admin UI, live Inventory RPC, pool discovery/reconciliation, checkout, order timers, and shipping."
   },
   "decisions": [
     {
@@ -1229,10 +1229,465 @@
       "superseded_by": null,
       "updated_at": "2026-08-28T14:35:28+00:00",
       "verification_ref": "command:gh repo view saariuslystoned/emdash (PUBLIC);command:gh pr view emdash-cms/emdash#2768 (exact public fork head dbf11d1);command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [
+        "url:https://github.com/emdash-cms/emdash/pull/2162",
+        "url:https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/"
+      ],
+      "choice": "Use one explicitly configured private Inventory service binding for the current same-account Commerce pilot. Persist only the provider reference, selected pool ID, and default fulfillment location ID; perform stock operations through a provider-neutral asynchronous port and fail closed when the binding is absent or unhealthy. Treat Cloudflare OAuth discovery and the future cross-store Inventory Central dashboard as separate, replaceable adapters, and introduce no dependency on EmDash PR 2162.",
+      "context_ref": "user:2026-08-28 explicit lock after upstream OAuth and PR 2162 research",
+      "created_at": "2026-08-28T19:15:41+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "managed stock activation and Inventory binding",
+      "history": [
+        {
+          "at": "2026-08-28T19:15:42+00:00",
+          "choice": "Use one explicitly configured private Inventory service binding for the current same-account Commerce pilot. Persist only the provider reference, selected pool ID, and default fulfillment location ID; perform stock operations through a provider-neutral asynchronous port and fail closed when the binding is absent or unhealthy. Treat Cloudflare OAuth discovery and the future cross-store Inventory Central dashboard as separate, replaceable adapters, and introduce no dependency on EmDash PR 2162.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "inventory-provider-binding-011",
+      "implementation_ref": null,
+      "question": "How does the current Commerce pilot reach Inventory while Cloudflare OAuth discovery and EmDash 1.0 plugin decisions remain unsettled?",
+      "rationale": "This uses stable Cloudflare binding machinery, keeps Commerce and Inventory domain contracts independent of EmDash 1.0 decisions, stores no Cloudflare OAuth credentials in EmDash, and lets future discovery or dashboard surfaces replace setup mechanics without changing managed-SKU behavior.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:15:42+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [],
+      "choice": "Preserve the product and canonical SKU in a managed setup-required state that is unavailable for purchase and never falls back to unmanaged stock. Immediately present a setup prompt explaining that Manage Stock requires the DinkusKit Inventory plugin, with a Configure Inventory action that drives pool and default fulfillment-location setup before SKU reconciliation can begin. If the merchant dismisses the prompt, Manage Stock remains checked, the product remains Managed \u2014 setup required, and a persistent Configure Inventory action remains visible. The interface must clearly state that unchecking Manage Stock is the explicit way to leave this state and remove the setup-required status and Configure Inventory action.",
+      "context_ref": "user:2026-08-28 explicit confirmation and setup-popup preference",
+      "created_at": "2026-08-28T19:18:59+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "inventory-provider-binding-011"
+      ],
+      "domain": "managed stock activation and Inventory binding",
+      "history": [
+        {
+          "at": "2026-08-28T19:18:59+00:00",
+          "choice": "Preserve the product and canonical SKU in a managed setup-required state that is unavailable for purchase and never falls back to unmanaged stock. Immediately present a setup prompt explaining that Manage stock requires the DinkusKit Inventory plugin, with a Configure Inventory action that drives pool and default fulfillment-location setup before SKU reconciliation can begin.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T19:20:32+00:00",
+          "choice": "Preserve the product and canonical SKU in a managed setup-required state that is unavailable for purchase and never falls back to unmanaged stock. Immediately present a setup prompt explaining that Manage stock requires the DinkusKit Inventory plugin, with a Configure Inventory action that drives pool and default fulfillment-location setup before SKU reconciliation can begin.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Clarify the merchant-controlled exit path after dismissing Inventory setup: only unchecking Manage Stock removes setup-required state and its persistent Configure Inventory action.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T19:20:36+00:00",
+          "choice": "Preserve the product and canonical SKU in a managed setup-required state that is unavailable for purchase and never falls back to unmanaged stock. Immediately present a setup prompt explaining that Manage stock requires the DinkusKit Inventory plugin, with a Configure Inventory action that drives pool and default fulfillment-location setup before SKU reconciliation can begin.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "managed-inventory-setup-012",
+      "implementation_ref": null,
+      "question": "What happens when a merchant enables Manage stock before DinkusKit Inventory is configured?",
+      "rationale": "This preserves merchant intent, keeps the product fail-closed, provides a durable recovery path, and makes the only exit from Inventory-managed intent explicit rather than allowing dismissal to silently change stock authority.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:20:36+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [],
+      "choice": "Early in store-level configuration, ask: Already have a DinkusKit Inventory pool? A yes answer enters a separate existing-user setup that connects the store to an existing pool, selects its default fulfillment location, and proceeds to SKU reconciliation. A no answer enters first-time setup to create the required pool and default fulfillment location before returning to SKU reconciliation. After either path succeeds, later managed products reuse the store configuration and go directly to SKU reconciliation.",
+      "context_ref": "user:2026-08-28 explicit confirmation and existing-pool setup requirement",
+      "created_at": "2026-08-28T19:22:32+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "managed-inventory-setup-012",
+        "inventory-provider-binding-011"
+      ],
+      "domain": "managed stock activation and Inventory binding",
+      "history": [
+        {
+          "at": "2026-08-28T19:22:35+00:00",
+          "choice": "Early in store-level configuration, ask: Already have a DinkusKit Inventory pool? A yes answer enters a separate existing-user setup that connects the store to an existing pool, selects its default fulfillment location, and proceeds to SKU reconciliation. A no answer enters first-time setup to create the required pool and default fulfillment location before returning to SKU reconciliation. After either path succeeds, later managed products reuse the store configuration and go directly to SKU reconciliation.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "inventory-setup-entry-013",
+      "implementation_ref": null,
+      "question": "How does Configure Inventory distinguish first-time setup from an existing DinkusKit Inventory user with a pool?",
+      "rationale": "The early branch avoids forcing existing Inventory users through pool creation while keeping first-time setup guided and preserving one store-level connection flow.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:22:35+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [],
+      "choice": "Pool selection is read-only and causes no connection or Inventory mutation. Before connecting, show a review screen with the selected pool, chosen default fulfillment location, and SKU reconciliation results grouped as new, matching, or conflicting. Connect the store only after the merchant explicitly confirms with Connect this store; conflicting products remain fail-closed under the existing reconciliation contract.",
+      "context_ref": "user:2026-08-28 explicit confirmation of existing-pool review and confirmation",
+      "created_at": "2026-08-28T19:25:23+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "inventory-setup-entry-013"
+      ],
+      "domain": "managed stock activation and Inventory binding",
+      "history": [
+        {
+          "at": "2026-08-28T19:25:25+00:00",
+          "choice": "Pool selection is read-only and causes no connection or Inventory mutation. Before connecting, show a review screen with the selected pool, chosen default fulfillment location, and SKU reconciliation results grouped as new, matching, or conflicting. Connect the store only after the merchant explicitly confirms with Connect this store; conflicting products remain fail-closed under the existing reconciliation contract.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "existing-pool-review-014",
+      "implementation_ref": null,
+      "question": "When does the existing-pool setup path actually connect the Commerce store to the selected Inventory pool?",
+      "rationale": "An explicit review boundary prevents accidental pool sharing or location selection while letting merchants understand SKU consequences before the store connection becomes authoritative.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:25:25+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [],
+      "choice": "Treat the review screen as a non-authoritative preview. When the merchant selects Connect this store, re-read and reconcile against the current Inventory pool state. If the pool, default fulfillment location, SKU classifications, or displayed quantities changed since the preview, do not connect from the stale confirmation; display the refreshed results and require explicit confirmation again. Only an unchanged, freshly validated result may proceed to the authoritative connection operation.",
+      "context_ref": "user:2026-08-28 explicit confirmation of race-safe connection revalidation",
+      "created_at": "2026-08-28T19:25:56+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "existing-pool-review-014"
+      ],
+      "domain": "managed stock activation and Inventory binding",
+      "history": [
+        {
+          "at": "2026-08-28T19:25:59+00:00",
+          "choice": "Treat the review screen as a non-authoritative preview. When the merchant selects Connect this store, re-read and reconcile against the current Inventory pool state. If the pool, default fulfillment location, SKU classifications, or displayed quantities changed since the preview, do not connect from the stale confirmation; display the refreshed results and require explicit confirmation again. Only an unchanged, freshly validated result may proceed to the authoritative connection operation.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "existing-pool-revalidation-015",
+      "implementation_ref": null,
+      "question": "How does Connect this store remain safe if the Inventory pool changes after the merchant reviewed the preview?",
+      "rationale": "This closes the time-of-check/time-of-use gap and prevents concurrent pool or SKU changes from turning an earlier human confirmation into an incorrect store connection.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:25:59+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [],
+      "choice": "Switch only that Commerce product to unmanaged availability and remove its managed/setup-required Inventory UI. Do not delete, rename, or adjust the Inventory pool SKU or quantity because the pool record may be shared by other stores. If Manage Stock is enabled again later, perform fresh reconciliation against current Inventory state before restoring managed authority.",
+      "context_ref": "user:2026-08-28 explicit confirmation of non-destructive managed-stock disablement",
+      "created_at": "2026-08-28T19:27:04+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "managed-inventory-setup-012",
+        "existing-pool-revalidation-015"
+      ],
+      "domain": "managed stock activation and Inventory binding",
+      "history": [
+        {
+          "at": "2026-08-28T19:27:07+00:00",
+          "choice": "Switch only that Commerce product to unmanaged availability and remove its managed/setup-required Inventory UI. Do not delete, rename, or adjust the Inventory pool SKU or quantity because the pool record may be shared by other stores. If Manage Stock is enabled again later, perform fresh reconciliation against current Inventory state before restoring managed authority.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "managed-stock-disable-016",
+      "implementation_ref": null,
+      "question": "What happens when a merchant unchecks Manage Stock after the Commerce product is already connected to Inventory?",
+      "rationale": "The checkbox controls Commerce product behavior, not shared Inventory ownership. Non-destructive disablement protects pool truth and fresh reconciliation prevents stale assumptions on re-entry.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:27:07+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [
+        "https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/src/Checkout/Helpers/ReserveStock.php",
+        "https://woocommerce.com/document/managing-orders/order-statuses/",
+        "https://support.katanamrp.com/en/articles/5968218-how-to-sync-stock-levels-from-katana-to-woocommerce"
+      ],
+      "choice": "Adding a product to a cart does not reserve or mutate Inventory. When the customer selects Place Order, Commerce sends one idempotent request for Inventory to atomically reserve all managed line-item quantities for a limited time. Inventory is the sole authority that either creates the reservation or rejects it for insufficient availability, so only one concurrent checkout can reserve the final unit. A failed checkout or expired reservation releases the held quantity. The reservation duration is a separate decision.",
+      "context_ref": "user:2026-08-28 explicit confirmation after official WooCommerce and Katana research",
+      "created_at": "2026-08-28T19:33:55+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "inventory-provider-binding-011"
+      ],
+      "domain": "checkout reservation lifecycle",
+      "history": [
+        {
+          "at": "2026-08-28T19:33:58+00:00",
+          "choice": "Adding a product to a cart does not reserve or mutate Inventory. When the customer selects Place Order, Commerce sends one idempotent request for Inventory to atomically reserve all managed line-item quantities for a limited time. Inventory is the sole authority that either creates the reservation or rejects it for insufficient availability, so only one concurrent checkout can reserve the final unit. A failed checkout or expired reservation releases the held quantity. The reservation duration is a separate decision.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-reservation-boundary-017",
+      "implementation_ref": null,
+      "question": "At what customer action does a managed SKU become unavailable to competing checkouts?",
+      "rationale": "This avoids abandoned carts locking stock while closing the concurrent-checkout race at the order-submission boundary, following the proven reservation pattern used by WooCommerce without duplicating pool authority in Commerce.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:33:58+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [
+        "https://woocommerce.com/document/configuring-woocommerce-settings/products/",
+        "https://support.katanamrp.com/en/articles/5968231-how-sales-orders-sos-sync-between-woocommerce-and-katana"
+      ],
+      "choice": "Do not select or hard-code a duration yet. Decide it only after Commerce order states, payment acknowledgement, reservation-to-commitment transitions, cancellation, and relevant payment-provider timing are defined. Preserve duration as an explicit future store policy rather than inheriting WooCommerce's 60-minute value without proof.",
+      "context_ref": "user:2026-08-28 explicit hold due to unresolved payment and fulfillment lifecycle",
+      "created_at": "2026-08-28T19:43:06+00:00",
+      "deferred_reason": "Payment acknowledgement, Commerce order states, reservation-to-commitment conversion, cancellation, fulfillment timing, and gateway-specific behavior are not yet defined; choosing 60 minutes now would be unsupported. Reopen after the order/payment lifecycle is proven.",
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-reservation-boundary-017"
+      ],
+      "domain": "checkout reservation lifecycle",
+      "history": [
+        {
+          "at": "2026-08-28T19:43:09+00:00",
+          "choice": "Do not select or hard-code a duration yet. Decide it only after Commerce order states, payment acknowledgement, reservation-to-commitment transitions, cancellation, and relevant payment-provider timing are defined. Preserve duration as an explicit future store policy rather than inheriting WooCommerce's 60-minute value without proof.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "Payment acknowledgement, Commerce order states, reservation-to-commitment conversion, cancellation, fulfillment timing, and gateway-specific behavior are not yet defined; choosing 60 minutes now would be unsupported. Reopen after the order/payment lifecycle is proven.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "deferred",
+          "verification_ref": null
+        }
+      ],
+      "id": "reservation-duration-policy-018",
+      "implementation_ref": null,
+      "question": "What default duration should a Place Order stock reservation use?",
+      "rationale": "A timer is meaningful only in the surrounding payment and order lifecycle; choosing 60 minutes now would create an unsupported product contract and could hold stock too long or expire a legitimate payment too early.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "deferred",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:43:09+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:d186dc13b517832c8838d5f2dba570dc4ef0380e",
+      "candidate_refs": [],
+      "choice": "Extend catalog creation with an explicit Manage Stock intent while preserving omitted-input compatibility as unmanaged. Persist managed products as setup-required with no Commerce-local quantity. Add a public, provider-neutral store binding value containing only provider reference, pool ID, and default fulfillment-location ID. Add pure stock-management transitions in which disabling management affects only the Commerce product and enabling or re-enabling enters setup-required pending fresh reconciliation. Update feature ownership, public exports, tests, verification proof, and commit the complete GrillTrack ledger. Exclude admin UI and popup rendering, live Inventory RPC/service binding wiring, pool discovery and reconciliation execution, checkout, order states, reservation duration, fulfillment, shipping, publication, deployment, and production mutation.",
+      "context_ref": "user:2026-08-28 explicit PR-scope confirmation and requirement to preserve GrillTrack decisions on main",
+      "created_at": "2026-08-28T19:46:19+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "inventory-provider-binding-011",
+        "managed-inventory-setup-012",
+        "managed-stock-disable-016"
+      ],
+      "domain": "managed stock setup foundation delivery",
+      "history": [
+        {
+          "at": "2026-08-28T19:46:22+00:00",
+          "choice": "Extend catalog creation with an explicit Manage Stock intent while preserving omitted-input compatibility as unmanaged. Persist managed products as setup-required with no Commerce-local quantity. Add a public, provider-neutral store binding value containing only provider reference, pool ID, and default fulfillment-location ID. Add pure stock-management transitions in which disabling management affects only the Commerce product and enabling or re-enabling enters setup-required pending fresh reconciliation. Update feature ownership, public exports, tests, verification proof, and commit the complete GrillTrack ledger. Exclude admin UI and popup rendering, live Inventory RPC/service binding wiring, pool discovery and reconciliation execution, checkout, order states, reservation duration, fulfillment, shipping, publication, deployment, and production mutation.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T19:54:23+00:00",
+          "choice": "Extend catalog creation with an explicit Manage Stock intent while preserving omitted-input compatibility as unmanaged. Persist managed products as setup-required with no Commerce-local quantity. Add a public, provider-neutral store binding value containing only provider reference, pool ID, and default fulfillment-location ID. Add pure stock-management transitions in which disabling management affects only the Commerce product and enabling or re-enabling enters setup-required pending fresh reconciliation. Update feature ownership, public exports, tests, verification proof, and commit the complete GrillTrack ledger. Exclude admin UI and popup rendering, live Inventory RPC/service binding wiring, pool discovery and reconciliation execution, checkout, order states, reservation duration, fulfillment, shipping, publication, deployment, and production mutation.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T19:54:23+00:00",
+          "choice": "Extend catalog creation with an explicit Manage Stock intent while preserving omitted-input compatibility as unmanaged. Persist managed products as setup-required with no Commerce-local quantity. Add a public, provider-neutral store binding value containing only provider reference, pool ID, and default fulfillment-location ID. Add pure stock-management transitions in which disabling management affects only the Commerce product and enabling or re-enabling enters setup-required pending fresh reconciliation. Update feature ownership, public exports, tests, verification proof, and commit the complete GrillTrack ledger. Exclude admin UI and popup rendering, live Inventory RPC/service binding wiring, pool discovery and reconciliation execution, checkout, order states, reservation duration, fulfillment, shipping, publication, deployment, and production mutation.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/inventory-provider/index.ts;file:src/features/catalog/create-catalog-item.ts;file:docs/implementation/managed-stock-foundation.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "managed-stock-foundation-pr-019",
+      "implementation_ref": "file:src/features/inventory-provider/index.ts;file:src/features/catalog/create-catalog-item.ts;file:docs/implementation/managed-stock-foundation.md",
+      "question": "What exact code and proof belong in the first Commerce managed-stock foundation PR?",
+      "rationale": "This is the smallest reviewable Commerce-owned foundation that makes the locked product behavior durable without racing the independently evolving Inventory service or EmDash 1.0 UI and OAuth decisions.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T19:54:23+00:00",
+      "verification_ref": "file:proof/managed-stock-foundation/PROOF.md;file:proof/managed-stock-foundation/source-manifest.sha256"
     }
   ],
   "last_activation": {
-    "at": "2026-08-28T14:34:25+00:00",
+    "at": "2026-08-28T19:20:32+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
@@ -1250,5 +1705,5 @@
   "status": "active",
   "title": "DinkusKit Commerce v1",
   "track_id": "dinkuskit-commerce-v1",
-  "updated_at": "2026-08-28T15:08:35+00:00"
+  "updated_at": "2026-08-28T19:54:23+00:00"
 }

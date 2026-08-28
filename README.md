@@ -17,6 +17,13 @@ pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
 writes unless the live EmDash storage collection proves unique `commandId`
 and site-wide canonical `skuKey` constraints.
 
+The `dinkus.inventory-provider` foundation now gives Commerce one opaque
+store-binding value—provider reference, pool ID, and default fulfillment
+location ID—and pure managed-stock state transitions. A catalog item created
+with `manageStock: true` is persisted as `managed` and `setup-required`, with
+no Commerce-local quantity. Live Inventory calls, pool discovery, SKU
+reconciliation, and admin UI remain later slices.
+
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
 a stock 0.35.0 compatibility claim. It requires exact commit

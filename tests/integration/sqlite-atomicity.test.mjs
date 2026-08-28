@@ -86,6 +86,31 @@ test("exact EmDash 0.35 storage fails closed when either declared unique index i
   }
 });
 
+test("exact EmDash 0.35 storage persists managed setup intent without local quantity", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "commerce-sqlite-managed-"));
+  t.after(() => rm(directory, { force: true, recursive: true }));
+  const databasePath = join(directory, "catalog.db");
+  initializeCatalogDatabase(databasePath);
+  const { db, storage } = openCatalogRepository(databasePath);
+  t.after(() => db.destroy());
+
+  const created = await createCatalogItem(storage, {
+    commandId: "cmd:managed-storage",
+    name: "Managed Storage Grill",
+    sku: "MANAGED-STORAGE-GRILL",
+    manageStock: true,
+  });
+  const [persisted] = readCatalogItems(databasePath);
+
+  assert.deepEqual(created.item.stockManagement, {
+    mode: "managed",
+    status: "setup-required",
+  });
+  assert.deepEqual(persisted.stockManagement, created.item.stockManagement);
+  assert.equal("quantity" in persisted, false);
+  assert.equal("stockQuantity" in persisted, false);
+});
+
 test("two server processes claiming one SKU produce one row and one SKU_CONFLICT", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "commerce-sqlite-race-"));
   t.after(() => rm(directory, { force: true, recursive: true }));

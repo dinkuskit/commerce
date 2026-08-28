@@ -10,6 +10,7 @@ import type {
   CreateCatalogItemResult,
   NormalizedCreateCatalogItemInput,
 } from "./types.js";
+import { createInitialStockManagement } from "../inventory-provider/index.js";
 
 export interface CreateCatalogItemOptions {
   createId?: () => string;
@@ -25,7 +26,8 @@ function sameCommandPayload(
     item.kind === input.kind &&
     item.name === input.name &&
     item.sku === input.sku &&
-    item.skuKey === input.skuKey
+    item.skuKey === input.skuKey &&
+    (item.creationIntent?.manageStock ?? false) === input.creationIntent.manageStock
   );
 }
 
@@ -44,7 +46,12 @@ async function findCommand(
 
   const items = result.items
     .map(({ data }) => data)
-    .filter((record): record is CatalogItemRecord => record.recordKind === "catalog-item");
+    .filter((record): record is CatalogItemRecord => record.recordKind === "catalog-item")
+    .map((record) => ({
+      ...record,
+      creationIntent: record.creationIntent ?? { manageStock: false },
+      stockManagement: record.stockManagement ?? createInitialStockManagement(false),
+    }));
   if (items.length > 1) {
     throw new CatalogError(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",

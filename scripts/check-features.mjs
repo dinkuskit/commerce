@@ -3,16 +3,21 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const featureRoot = "src/features/catalog";
 const requiredFiles = [
   "FEATURE_MAP.md",
   "bin/verify-commerce",
   "proof/catalog-first-managed-sku/PROOF.md",
   "proof/catalog-first-managed-sku/source-manifest.sha256",
+  "proof/managed-stock-foundation/PROOF.md",
+  "proof/managed-stock-foundation/source-manifest.sha256",
   "src/index.ts",
-  `${featureRoot}/index.ts`,
-  `${featureRoot}/create-catalog-item.ts`,
-  `${featureRoot}/storage-constraints.ts`,
+  "src/features/catalog/index.ts",
+  "src/features/catalog/create-catalog-item.ts",
+  "src/features/catalog/storage-constraints.ts",
+  "src/features/inventory-provider/index.ts",
+  "src/features/inventory-provider/binding.ts",
+  "src/features/inventory-provider/stock-management.ts",
+  "docs/implementation/managed-stock-foundation.md",
 ];
 
 async function walk(directory) {
@@ -36,7 +41,9 @@ export async function auditFeatures(repositoryRoot = root) {
   const map = await readFile(join(repositoryRoot, "FEATURE_MAP.md"), "utf8");
   for (const requiredText of [
     "`dinkus.catalog`",
+    "`dinkus.inventory-provider`",
     "`src/features/catalog/`",
+    "`src/features/inventory-provider/`",
     "`bin/verify-commerce quick`",
     "`bin/verify-commerce full`",
     "`proof/catalog-first-managed-sku/PROOF.md`",
@@ -48,18 +55,35 @@ export async function auditFeatures(repositoryRoot = root) {
   if (manifest.exports?.["./features/catalog"]?.default !== "./dist/features/catalog/index.js") {
     findings.push("package export ./features/catalog must resolve to the catalog public entry");
   }
+  if (
+    manifest.exports?.["./features/inventory-provider"]?.default !==
+    "./dist/features/inventory-provider/index.js"
+  ) {
+    findings.push(
+      "package export ./features/inventory-provider must resolve to the inventory-provider public entry",
+    );
+  }
   if (manifest.devDependencies?.emdash !== "0.35.0") {
     findings.push("catalog pilot must remain pinned to exact emdash 0.35.0");
   }
 
   const sourceFiles = allFiles.filter((path) => path.startsWith("src/") && path.endsWith(".ts"));
   for (const path of sourceFiles) {
-    if (path.startsWith(`${featureRoot}/`)) continue;
     const source = await readFile(join(repositoryRoot, path), "utf8");
-    const internalImports = source.matchAll(/from\s+["']([^"']*features\/catalog\/[^"']+)["']/g);
-    for (const match of internalImports) {
-      if (!match[1].endsWith("/index.js")) {
-        findings.push(`${path} bypasses the dinkus.catalog public entry: ${match[1]}`);
+    const sourceFeature = path.match(/^src\/features\/([^/]+)\//)?.[1];
+    const imports = source.matchAll(/from\s+["']([^"']+)["']/g);
+    for (const match of imports) {
+      const importPath = match[1];
+      const importedFeature = ["catalog", "inventory-provider"].find(
+        (feature) =>
+          importPath.includes(`/features/${feature}/`) || importPath.includes(`/${feature}/`),
+      );
+      if (
+        importedFeature &&
+        importedFeature !== sourceFeature &&
+        !importPath.endsWith("/index.js")
+      ) {
+        findings.push(`${path} bypasses the ${importedFeature} public entry: ${importPath}`);
       }
     }
   }
