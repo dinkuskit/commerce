@@ -61,7 +61,9 @@ export function normalizeCreateCatalogItemInput(
   }
 
   const sku = normalizeSku(candidate.sku);
-  const manageStock = candidate.manageStock ?? false;
+  const manageStock = Object.hasOwn(candidate, "manageStock")
+    ? candidate.manageStock
+    : false;
   if (typeof manageStock !== "boolean") {
     throw new CatalogError("INVALID_INPUT", "manageStock must be a boolean");
   }

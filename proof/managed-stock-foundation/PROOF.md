@@ -18,7 +18,8 @@ reviewed implementation identity.
 ## Claims proved
 
 - Catalog creation accepts an optional boolean `manageStock`. Omission is
-  backward-compatible and persists an explicit `unmanaged` policy.
+  backward-compatible and persists an explicit `unmanaged` policy. Explicit
+  `null`, `undefined`, and non-boolean values reject before storage.
 - `manageStock: true` persists `managed` / `setup-required` in EmDash's real
   0.35 storage repository without a quantity or fallback stock counter.
 - A catalog record retains immutable `creationIntent.manageStock` separately
@@ -71,13 +72,19 @@ The full verifier passed:
 - one winner for two processes claiming the same SKU; and
 - one durable row for two processes retrying the same command.
 
+The redacted runtime transcript at
+`proof/managed-stock-foundation/live-runtime.txt` records the actual output of
+the exact EmDash 0.35 `PluginStorageRepository` persistence path using only
+synthetic data. It shows one durable managed record in `setup-required` state,
+the immutable managed creation intent, and the absence of both quantity fields.
+
 The first full invocation exposed only a local native-module mismatch because
 the machine-wide Node 26 had installed `better-sqlite3` before verification
 switched to the repository's pinned Node 22.23.2. Rebuilding that ignored
 dependency under Node 22 fixed the environment; the unchanged source then
 passed the complete verifier.
 
-The package dry run reported 42 entries, 10,894 packed bytes, no bundled
+The package dry run reported 42 entries, 10,916 packed bytes, no bundled
 dependencies, compiled output for both feature entries, and no source, tests,
 proof, GrillTrack data, credentials, or local runtime files.
 

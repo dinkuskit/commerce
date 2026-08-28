@@ -151,15 +151,21 @@ test("managed catalog creation persists setup-required intent without a quantity
 
 test("manageStock must be a boolean when supplied", async () => {
   const storage = new MemoryCatalogStorage();
-  await rejectsWithCode(
-    createCatalogItem(storage, {
-      commandId: "cmd:invalid-managed",
-      name: "Invalid Managed Grill",
-      sku: "INVALID-MANAGED-GRILL",
-      manageStock: "yes",
-    }),
-    "INVALID_INPUT",
-  );
+  for (const [suffix, manageStock] of [
+    ["string", "yes"],
+    ["null", null],
+    ["undefined", undefined],
+  ]) {
+    await rejectsWithCode(
+      createCatalogItem(storage, {
+        commandId: `cmd:invalid-managed-${suffix}`,
+        name: "Invalid Managed Grill",
+        sku: `INVALID-MANAGED-GRILL-${suffix}`,
+        manageStock,
+      }),
+      "INVALID_INPUT",
+    );
+  }
   assert.equal(storage.records.size, 0);
 });
 

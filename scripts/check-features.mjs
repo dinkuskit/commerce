@@ -9,6 +9,7 @@ const requiredFiles = [
   "proof/catalog-first-managed-sku/PROOF.md",
   "proof/catalog-first-managed-sku/source-manifest.sha256",
   "proof/managed-stock-foundation/PROOF.md",
+  "proof/managed-stock-foundation/live-runtime.txt",
   "proof/managed-stock-foundation/source-manifest.sha256",
   "src/index.ts",
   "src/features/catalog/index.ts",

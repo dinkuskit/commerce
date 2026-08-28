@@ -109,6 +109,21 @@ test("exact EmDash 0.35 storage persists managed setup intent without local quan
   assert.deepEqual(persisted.stockManagement, created.item.stockManagement);
   assert.equal("quantity" in persisted, false);
   assert.equal("stockQuantity" in persisted, false);
+
+  console.log(
+    "LIVE_PROOF " +
+      JSON.stringify({
+        case: "managed-setup-persistence",
+        emdash: emdashVersion,
+        created: created.created,
+        persistedRecords: readCatalogRecords(databasePath).length,
+        creationIntent: persisted.creationIntent,
+        stockManagement: persisted.stockManagement,
+        hasQuantity: "quantity" in persisted,
+        hasStockQuantity: "stockQuantity" in persisted,
+        dataClassification: "synthetic",
+      }),
+  );
 });
 
 test("two server processes claiming one SKU produce one row and one SKU_CONFLICT", async (t) => {
