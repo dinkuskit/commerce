@@ -73,6 +73,40 @@ Focused green result after the minimal implementation:
 25 tests passed; 0 failed
 ```
 
+## Built public-entry runtime receipt
+
+ClawSweeper requested after-change terminal evidence that invokes the built
+package through both registration outcomes and the explicit confirmation
+transition. The redacted, synthetic transcript is retained at:
+
+```text
+proof/managed-sku-registration/BUILT_PUBLIC_ENTRY_TRANSCRIPT.txt
+```
+
+Artifact integrity:
+
+- bytes: `3652`
+- SHA-256: `ce4ef3b236fb27987f491ccf5748e17c958be41c62017ee93d037c561eddf35b`
+
+The transcript builds the package under exact Node.js `22.23.2`, imports the
+package root through its public self-reference `@dinkuskit/commerce`, and then
+executes:
+
+- request creation with no location or quantity in the output;
+- `registered` result normalization and activation;
+- `existing` result normalization into `needs-review`; and
+- explicit confirmation into `active`.
+
+All commands exited `0`. The values are synthetic and public-safe. This is real
+runtime proof of the built Commerce public entry; it remains intentionally
+distinct from a live DinkusKit Inventory transport proof.
+
+The repository owner confirmed GrillTrack decisions 020–022 and separately
+authorized closing the grill and opening this pull request. That is the
+maintainer decision to accept this bounded provider-neutral API as the current
+pre-release Commerce contract. It is not merge authorization; merge remains a
+separate human gate.
+
 ## Verification receipt
 
 Command:
