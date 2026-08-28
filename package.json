@@ -12,5 +12,8 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs tests/workflows/*.test.mjs",
     "audit:repo": "node scripts/repo-contract.mjs"
+  },
+  "devDependencies": {
+    "emdash": "0.35.0"
   }
 }

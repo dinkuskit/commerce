@@ -11,6 +11,10 @@ Charter stage. The package name is reserved in source as
 `@dinkuskit/commerce`, but the manifest is private at `0.0.0`: there is no
 installable package, release, deployment, or compatibility promise yet.
 
+Scaffold development is pinned to exact `emdash@0.35.0` with a lockfile. This
+is a build target, not a runtime compatibility claim; that claim starts only
+with a real Commerce adapter and fixture.
+
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
 ## Direction
@@ -29,8 +33,10 @@ The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 ## Development
 
 ```bash
+npm ci
 npm test
 npm run audit:repo
+npm ls emdash --depth=0
 ```
 
 Under construction. MIT licensed.
