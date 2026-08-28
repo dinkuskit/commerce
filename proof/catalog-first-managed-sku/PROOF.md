@@ -49,6 +49,34 @@ the two Wrangler CLI processes. The bounded retry repair preserved both
 independent processes and tightened the terminal assertion to require one
 success and one exact `skuKey` unique-index failure.
 
+## Inspectable live runtime transcript
+
+This post-repair run used the installed `emdash@0.35.0`
+`PluginStorageRepository`, a real SQLite database, and two independent Node.js
+server processes. The emitted records contain aggregate outcomes only: no
+credentials, customer data, persistent identifiers, or temporary paths.
+
+```text
+$ CI=1 mise x node@22.23.2 -- npm run build --silent && CI=1 mise x node@22.23.2 -- node --test --test-reporter=spec tests/integration/sqlite-atomicity.test.mjs
+▶ exact EmDash 0.35 storage fails closed when either declared unique index is not live
+  ✔ only commandId is active
+  ✔ only skuKey is active
+✔ exact EmDash 0.35 storage fails closed when either declared unique index is not live
+LIVE_PROOF {"case":"competing-sku","emdash":"0.35.0","processes":2,"created":1,"rejected":1,"rejectionCode":"SKU_CONFLICT","persistedRows":1}
+✔ two server processes claiming one SKU produce one row and one SKU_CONFLICT
+LIVE_PROOF {"case":"idempotent-replay","emdash":"0.35.0","processes":2,"created":1,"replayed":1,"sameItem":true,"persistedRows":1}
+✔ two server processes retrying one command converge on the original row
+ℹ tests 5
+ℹ pass 5
+ℹ fail 0
+```
+
+The first live record proves one successful creation plus one competing-SKU
+rejection, with one persisted row. The second proves that one creation and one
+same-command replay converge on one item and one persisted row. The public CI
+job runs this same verifier on the exact pull-request head, providing the linked
+independent transcript for review.
+
 ## Gates and exclusions
 
 This proof does not authorize or claim package publication, plugin activation,

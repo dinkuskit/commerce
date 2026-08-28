@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { fork } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -13,6 +13,12 @@ import {
 } from "./sqlite-fixture.mjs";
 
 const workerPath = new URL("./catalog-process-worker.mjs", import.meta.url);
+const emdashPackage = JSON.parse(
+  await readFile(new URL("../../node_modules/emdash/package.json", import.meta.url), "utf8"),
+);
+const emdashVersion = emdashPackage.version;
+
+assert.equal(emdashVersion, "0.35.0");
 
 async function runContenders(databasePath, contenders) {
   const children = contenders.map((input) =>
@@ -95,7 +101,21 @@ test("two server processes claiming one SKU produce one row and one SKU_CONFLICT
     results.filter((result) => !result.ok).map((result) => result.code),
     ["SKU_CONFLICT"],
   );
-  assert.equal(readCatalogItems(databasePath).length, 1);
+  const persistedRows = readCatalogItems(databasePath).length;
+  assert.equal(persistedRows, 1);
+
+  console.log(
+    "LIVE_PROOF " +
+      JSON.stringify({
+        case: "competing-sku",
+        emdash: emdashVersion,
+        processes: results.length,
+        created: results.filter((result) => result.ok).length,
+        rejected: results.filter((result) => !result.ok).length,
+        rejectionCode: results.find((result) => !result.ok)?.code,
+        persistedRows,
+      }),
+  );
 });
 
 test("two server processes retrying one command converge on the original row", async (t) => {
@@ -110,7 +130,25 @@ test("two server processes retrying one command converge on the original row", a
   ]);
 
   assert.equal(results.every((result) => result.ok), true);
-  assert.equal(results.filter((result) => result.result.created).length, 1);
-  assert.equal(new Set(results.map((result) => result.result.item.itemId)).size, 1);
-  assert.equal(readCatalogItems(databasePath).length, 1);
+  const created = results.filter((result) => result.result.created).length;
+  const replayed = results.filter((result) => !result.result.created).length;
+  const sameItem = new Set(results.map((result) => result.result.item.itemId)).size === 1;
+  const persistedRows = readCatalogItems(databasePath).length;
+  assert.equal(created, 1);
+  assert.equal(replayed, 1);
+  assert.equal(sameItem, true);
+  assert.equal(persistedRows, 1);
+
+  console.log(
+    "LIVE_PROOF " +
+      JSON.stringify({
+        case: "idempotent-replay",
+        emdash: emdashVersion,
+        processes: results.length,
+        created,
+        replayed,
+        sameItem,
+        persistedRows,
+      }),
+  );
 });
