@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-27T23:51:23+00:00",
-    "domain": "EmDash 0.35 scaffold baseline",
-    "started_at": "2026-08-27T23:51:22+00:00",
-    "status": "inspected",
-    "summary": "Commerce records exact EmDash 0.35.0 as its scaffold development baseline. The repository remains private at 0.0.0 with no installable runtime or compatibility promise; the atomic product/SKU write grill follows separately."
+    "confirmed_at": "2026-08-28T15:04:48+00:00",
+    "domain": "catalog integrity probe lifecycle",
+    "started_at": "2026-08-28T15:04:48+00:00",
+    "status": "confirmed",
+    "summary": "The authorized repair will first prove raw catalog storage contains leaked integrity probes, then make every owned temporary probe unique per invocation and clean it on success and missing-index paths, fail closed on cleanup errors, prove concurrent SQLite races leave exactly one catalog item and no probe rows, rerun the full suite, and return the exact pushed head through both review rails without merging."
   },
   "decisions": [
     {
@@ -71,34 +71,1184 @@
       "rationale": "The scaffold must track current stable EmDash without pretending charter-only code has passed a runtime matrix.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:56+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        }
+      ],
+      "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T02:33:56+00:00",
+      "verification_ref": "command:npm ci && npm test && npm run audit:repo && npm ls emdash --depth=0"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [
+        "npm:emdash@0.35.0:src/plugins/storage-indexes.ts",
+        "git:dinkuskit/blocks@15c3684a85a98f8717b3c5a80f1bff9034241c62:FEATURE_MAP.md"
+      ],
+      "choice": "Within one Commerce site, every normalized SKU belongs to one site-wide namespace shared by simple products and future variants and independent of inventory-provider binding. The same normalized key cannot identify two catalog items; provider changes and relinks do not change SKU identity or scope.",
+      "context_ref": "user:2026-08-27 site-wide SKU namespace confirmation",
+      "created_at": "2026-08-28T02:02:26+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:02:26+00:00",
+          "choice": "Within one Commerce site, every normalized SKU belongs to one site-wide namespace shared by simple products and future variants and independent of inventory-provider binding. The same normalized key cannot identify two catalog items; provider changes and relinks do not change SKU identity or scope.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:22+00:00",
+          "choice": "Within one Commerce site, every normalized SKU belongs to one site-wide namespace shared by simple products and future variants and independent of inventory-provider binding. The same normalized key cannot identify two catalog items; provider changes and relinks do not change SKU identity or scope.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:30+00:00",
+          "choice": "Within one Commerce site, every normalized SKU belongs to one site-wide namespace shared by simple products and future variants and independent of inventory-provider binding. The same normalized key cannot identify two catalog items; provider changes and relinks do not change SKU identity or scope.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/types.ts;file:src/index.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "sku-namespace-002",
+      "implementation_ref": "file:src/features/catalog/types.ts;file:src/index.ts",
+      "question": "What uniqueness scope does one Commerce SKU use?",
+      "rationale": "A single site-wide namespace gives Commerce, Inventory, and later order receipts one unambiguous sellable identity and permits one durable database constraint to adjudicate concurrent creates.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:56+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        }
+      ],
+      "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T02:33:56+00:00",
+      "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [],
+      "choice": "Trim surrounding whitespace, apply Unicode NFKC, uppercase ASCII letters, and store/display one canonical value of 1 to 64 characters using only A-Z, 0-9, and hyphen. Underscore, period, other punctuation, whitespace, and non-ASCII characters are invalid.",
+      "context_ref": "user:2026-08-27 remove underscore and period from strict canonical SKU format",
+      "created_at": "2026-08-28T02:08:51+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "sku-namespace-002"
+      ],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:08:51+00:00",
+          "choice": "Trim surrounding whitespace, apply Unicode NFKC, uppercase ASCII letters, and store/display one canonical value of 1 to 64 characters using only A-Z, 0-9, and hyphen. Underscore, period, other punctuation, whitespace, and non-ASCII characters are invalid.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:22+00:00",
+          "choice": "Trim surrounding whitespace, apply Unicode NFKC, uppercase ASCII letters, and store/display one canonical value of 1 to 64 characters using only A-Z, 0-9, and hyphen. Underscore, period, other punctuation, whitespace, and non-ASCII characters are invalid.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:30+00:00",
+          "choice": "Trim surrounding whitespace, apply Unicode NFKC, uppercase ASCII letters, and store/display one canonical value of 1 to 64 characters using only A-Z, 0-9, and hyphen. Underscore, period, other punctuation, whitespace, and non-ASCII characters are invalid.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/normalize.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "sku-normalization-003",
+      "implementation_ref": "file:src/features/catalog/normalize.ts",
+      "question": "What canonical character and normalization contract does a Commerce SKU use?",
+      "rationale": "A small canonical alphabet produces deterministic keys across JavaScript, SQLite, D1, Inventory, logs, receipts, and operator input without locale-sensitive collation or confusable punctuation.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:56+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        }
+      ],
+      "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T02:33:56+00:00",
+      "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [],
+      "choice": "A canonical SKU is one or more uppercase ASCII alphanumeric segments separated by single hyphens. It starts and ends with A-Z or 0-9 and rejects leading, trailing, or consecutive hyphens.",
+      "context_ref": "user:2026-08-27 hyphen separator confirmation",
+      "created_at": "2026-08-28T02:09:42+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "sku-normalization-003"
+      ],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:09:43+00:00",
+          "choice": "A canonical SKU is one or more uppercase ASCII alphanumeric segments separated by single hyphens. It starts and ends with A-Z or 0-9 and rejects leading, trailing, or consecutive hyphens.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:22+00:00",
+          "choice": "A canonical SKU is one or more uppercase ASCII alphanumeric segments separated by single hyphens. It starts and ends with A-Z or 0-9 and rejects leading, trailing, or consecutive hyphens.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:30+00:00",
+          "choice": "A canonical SKU is one or more uppercase ASCII alphanumeric segments separated by single hyphens. It starts and ends with A-Z or 0-9 and rejects leading, trailing, or consecutive hyphens.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/normalize.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "sku-hyphen-grammar-004",
+      "implementation_ref": "file:src/features/catalog/normalize.ts",
+      "question": "Where may hyphens appear in a canonical Commerce SKU?",
+      "rationale": "Treating hyphen as a separator prevents visually broken operator identifiers while preserving simple compound SKU families.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:56+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        }
+      ],
+      "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T02:33:56+00:00",
+      "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [
+        "git:dinkuskit/blocks@15c3684a85a98f8717b3c5a80f1bff9034241c62:FEATURE_MAP.md",
+        "npm:emdash@0.35.0:src/database/repositories/plugin-storage.ts"
+      ],
+      "choice": "Use stable feature ID dinkus.catalog at src/features/catalog/. Its pilot command creates one complete SKU-bearing catalog item; the initial item is a simple product draft. Simple products and future variants share one catalogItems storage collection so the site-wide SKU constraint is enforced in one place. Do not add a separate SKU-registry row or a second write.",
+      "context_ref": "user:2026-08-27 dinkus.catalog pilot boundary confirmation",
+      "created_at": "2026-08-28T02:11:04+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "sku-namespace-002",
+        "sku-normalization-003"
+      ],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:11:04+00:00",
+          "choice": "Use stable feature ID dinkus.catalog at src/features/catalog/. Its pilot command creates one complete SKU-bearing catalog item; the initial item is a simple product draft. Simple products and future variants share one catalogItems storage collection so the site-wide SKU constraint is enforced in one place. Do not add a separate SKU-registry row or a second write.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:22+00:00",
+          "choice": "Use stable feature ID dinkus.catalog at src/features/catalog/. Its pilot command creates one complete SKU-bearing catalog item; the initial item is a simple product draft. Simple products and future variants share one catalogItems storage collection so the site-wide SKU constraint is enforced in one place. Do not add a separate SKU-registry row or a second write.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:30+00:00",
+          "choice": "Use stable feature ID dinkus.catalog at src/features/catalog/. Its pilot command creates one complete SKU-bearing catalog item; the initial item is a simple product draft. Simple products and future variants share one catalogItems storage collection so the site-wide SKU constraint is enforced in one place. Do not add a separate SKU-registry row or a second write.",
+          "from": "implemented",
+          "implementation_ref": "file:FEATURE_MAP.md;file:src/features/catalog/index.ts;file:src/features/catalog/create-catalog-item.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-feature-boundary-005",
+      "implementation_ref": "file:FEATURE_MAP.md;file:src/features/catalog/index.ts;file:src/features/catalog/create-catalog-item.ts",
+      "question": "Which durable Dune feature owns the first SKU-bearing product write?",
+      "rationale": "Catalog is the durable domain grain, while a one-row SKU-bearing item lets one database statement commit identity and the unique key without a claim-versus-product gap.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:56+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        }
+      ],
+      "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T02:33:56+00:00",
+      "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [
+        "npm:emdash@0.35.0:src/plugins/storage-indexes.ts",
+        "npm:emdash@0.35.0:src/database/repositories/plugin-storage.ts",
+        "npm:emdash@0.35.0:src/emdash-runtime.ts"
+      ],
+      "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+      "context_ref": "user:2026-08-27 conditional EmDash-native atomic authority confirmation",
+      "created_at": "2026-08-28T02:12:40+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-feature-boundary-005"
+      ],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:12:40+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:23+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:30+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/storage-constraints.ts;file:src/index.ts;file:tests/integration/sqlite-atomicity.test.mjs;file:tests/integration/d1-atomicity.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T13:40:11+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/catalog/storage-constraints.ts;file:src/index.ts;file:tests/integration/sqlite-atomicity.test.mjs;file:tests/integration/d1-atomicity.test.mjs",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "review_result": "clean",
+          "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+          "to": "needs_reverification",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T13:41:22+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/catalog/storage-constraints.ts;file:src/index.ts;file:tests/integration/sqlite-atomicity.test.mjs;file:tests/integration/d1-atomicity.test.mjs",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://github.com/dinkuskit/commerce/actions/runs/33176241053/job/98865474987",
+          "review_result": "findings",
+          "review_source_identity": "git:84c667826a635e15c423e07a779f2b47e226506c",
+          "to": "implemented",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T13:41:46+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "implemented",
+          "implementation_ref": "file:tests/integration/d1-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T13:51:27+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "verified",
+          "implementation_ref": "file:tests/integration/d1-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "command:mise x node@22.23.2 -- node --test tests/integration/d1-atomicity.test.mjs (5 consecutive passes);command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration, repo and feature audits);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T13:51:27+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:tests/integration/d1-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "review_result": "findings",
+          "review_source_identity": "git:e82ce5ce6bdc5d17816e28b0867f4101f967e023",
+          "to": "implemented",
+          "verification_ref": "command:mise x node@22.23.2 -- node --test tests/integration/d1-atomicity.test.mjs (5 consecutive passes);command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration, repo and feature audits);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T13:51:27+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "implemented",
+          "implementation_ref": "file:tests/integration/sqlite-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "command:mise x node@22.23.2 -- node --test tests/integration/d1-atomicity.test.mjs (5 consecutive passes);command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration, repo and feature audits);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T15:04:48+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "verified",
+          "implementation_ref": "file:tests/integration/sqlite-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T15:08:34+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:tests/integration/sqlite-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "review_result": "findings",
+          "review_source_identity": "git:131afd83c5f25f4ec33ab86504168af71fbe0d77",
+          "to": "implemented",
+          "verification_ref": "command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T15:08:35+00:00",
+          "choice": "Attempt EmDash 0.35-native authority first. Declare a unique skuKey index on catalogItems, but accept no catalog write until Commerce proves the live database constraint is active. Create the complete item in one storage put and map only a confirmed uniqueness violation to deterministic SKU_CONFLICT. Missing constraints, ambiguous errors, or failed SQLite or local Wrangler/D1 two-process proof fail closed and reopen the decision for one serialized Commerce-owned service; no process mutex or last-write-wins fallback is allowed.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/storage-constraints.ts; tests/features/catalog/catalog.test.mjs; tests/integration/sqlite-atomicity.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:git diff --check"
+        }
+      ],
+      "id": "emdash-native-atomic-authority-006",
+      "implementation_ref": "src/features/catalog/storage-constraints.ts; tests/features/catalog/catalog.test.mjs; tests/integration/sqlite-atomicity.test.mjs",
+      "question": "Which durable boundary receives first write-authority proof for concurrent catalog creation?",
+      "rationale": "EmDash 0.35 now exposes database unique indexes that can adjudicate independent processes in one statement, but its index-sync path logs failures without failing activation, so declaration must be paired with live constraint proof.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:57+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "url:https://github.com/dinkuskit/commerce/actions/runs/33176241053/job/98865474987",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T13:40:11+00:00",
+          "source_identity": "git:84c667826a635e15c423e07a779f2b47e226506c"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T13:51:27+00:00",
+          "source_identity": "git:e82ce5ce6bdc5d17816e28b0867f4101f967e023"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T15:04:48+00:00",
+          "source_identity": "git:131afd83c5f25f4ec33ab86504168af71fbe0d77"
+        }
+      ],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-27T23:54:09+00:00",
-      "verification_ref": "command:npm ci && npm test && npm run audit:repo && npm ls emdash --depth=0"
+      "updated_at": "2026-08-28T15:08:35+00:00",
+      "verification_ref": "proof/catalog-first-managed-sku/PROOF.md; mise x node@22.23.2 -- bin/verify-commerce full; sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256; mise x node@22.23.2 -- npm pack --dry-run --json"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [
+        "npm:emdash@0.35.0:src/database/repositories/plugin-storage.ts"
+      ],
+      "choice": "Every CreateCatalogItem command carries a stable caller-generated commandId. Store commandId and skuKey as unique fields on the same catalogItems row. The same commandId with the same normalized payload returns the original catalog item; the same commandId with different normalized input returns COMMAND_CONFLICT; different command IDs claiming the same skuKey produce exactly one success and one SKU_CONFLICT. Admin and agent callers reuse commandId after timeout or unknown result.",
+      "context_ref": "user:2026-08-27 catalog create idempotency confirmation",
+      "created_at": "2026-08-28T02:14:19+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "emdash-native-atomic-authority-006"
+      ],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:14:19+00:00",
+          "choice": "Every CreateCatalogItem command carries a stable caller-generated commandId. Store commandId and skuKey as unique fields on the same catalogItems row. The same commandId with the same normalized payload returns the original catalog item; the same commandId with different normalized input returns COMMAND_CONFLICT; different command IDs claiming the same skuKey produce exactly one success and one SKU_CONFLICT. Admin and agent callers reuse commandId after timeout or unknown result.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:23+00:00",
+          "choice": "Every CreateCatalogItem command carries a stable caller-generated commandId. Store commandId and skuKey as unique fields on the same catalogItems row. The same commandId with the same normalized payload returns the original catalog item; the same commandId with different normalized input returns COMMAND_CONFLICT; different command IDs claiming the same skuKey produce exactly one success and one SKU_CONFLICT. Admin and agent callers reuse commandId after timeout or unknown result.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:31+00:00",
+          "choice": "Every CreateCatalogItem command carries a stable caller-generated commandId. Store commandId and skuKey as unique fields on the same catalogItems row. The same commandId with the same normalized payload returns the original catalog item; the same commandId with different normalized input returns COMMAND_CONFLICT; different command IDs claiming the same skuKey produce exactly one success and one SKU_CONFLICT. Admin and agent callers reuse commandId after timeout or unknown result.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/create-catalog-item.ts;file:src/features/catalog/types.ts;file:tests/integration/sqlite-atomicity.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-create-idempotency-007",
+      "implementation_ref": "file:src/features/catalog/create-catalog-item.ts;file:src/features/catalog/types.ts;file:tests/integration/sqlite-atomicity.test.mjs",
+      "question": "How does CreateCatalogItem distinguish a safe retry from a competing SKU claim?",
+      "rationale": "A separate command identity resolves unknown-success retries without a second receipt write, while the independent SKU key still distinguishes competing actors.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:57+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        }
+      ],
+      "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T02:33:57+00:00",
+      "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [
+        "git:dinkuskit/blocks@15c3684a85a98f8717b3c5a80f1bff9034241c62:FEATURE_MAP.md",
+        "npm:emdash@0.35.0:src/plugins/types.ts"
+      ],
+      "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+      "context_ref": "user:2026-08-27 bounded catalog pilot confirmation",
+      "created_at": "2026-08-28T02:15:56+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-create-idempotency-007"
+      ],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:15:56+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:23+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:33:31+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/route.ts;file:FEATURE_MAP.md;file:bin/verify-commerce;file:.github/workflows/repo-contract.yml;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:39:33+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/catalog/route.ts;file:FEATURE_MAP.md;file:bin/verify-commerce;file:.github/workflows/repo-contract.yml;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "review_result": "clean",
+          "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+          "to": "needs_reverification",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:39:34+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/catalog/route.ts;file:FEATURE_MAP.md;file:bin/verify-commerce;file:.github/workflows/repo-contract.yml;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "Live SmokyClub inspection found the scoped npm plugin id cannot occupy one EmDash route segment and is rejected by storage-index provisioning; use a distinct unscoped runtime slug while preserving the package name and feature id.",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://docs.emdashcms.com/plugins/creating-plugins/api-routes/;npm:emdash@0.35.0:src/plugins/storage-indexes.ts",
+          "review_result": "findings",
+          "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+          "to": "reopened",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:40:28+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "reopened",
+          "implementation_ref": "file:src/features/catalog/route.ts;file:FEATURE_MAP.md;file:bin/verify-commerce;file:.github/workflows/repo-contract.yml;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://docs.emdashcms.com/plugins/creating-plugins/api-routes/;npm:emdash@0.35.0:src/plugins/storage-indexes.ts",
+          "review_result": "findings",
+          "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+          "to": "locked",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:40:29+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "locked",
+          "implementation_ref": "file:src/features/catalog/route.ts;file:FEATURE_MAP.md;file:bin/verify-commerce;file:.github/workflows/repo-contract.yml;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://docs.emdashcms.com/plugins/creating-plugins/api-routes/;npm:emdash@0.35.0:src/plugins/storage-indexes.ts",
+          "review_result": "findings",
+          "review_source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea",
+          "to": "implemented",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:40:29+00:00",
+          "choice": "Implement one authenticated EmDash plugin route backed by the dinkus.catalog application service. Create one draft catalogItems row containing a generated catalog item ID, caller commandId, kind simple-product, product name, canonical SKU/skuKey, draft state, and creation timestamp. Establish FEATURE_MAP.md, feature/import architecture checks, bin/verify-commerce quick/full, and deterministic conductor-compatible CI. Exclude price, currency, Manage stock, provider binding, Inventory calls, update/delete, admin UI, MCP exposure, checkout, publication, package publication, deployment, and production mutation.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/types.ts;file:tests/features/catalog/catalog.test.mjs;file:tests/integration/d1-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        }
+      ],
+      "id": "catalog-pilot-scope-008",
+      "implementation_ref": "file:src/features/catalog/types.ts;file:tests/features/catalog/catalog.test.mjs;file:tests/integration/d1-atomicity.test.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+      "question": "What is the bounded first implementation and its explicit exclusions?",
+      "rationale": "The slice is a real server entry point and Dune pilot that can prove cross-process identity correctness without mixing in the later Commerce-Inventory or human-interface decisions.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/catalog-first-managed-sku/PROOF.md;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T02:33:57+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "url:https://docs.emdashcms.com/plugins/creating-plugins/api-routes/;npm:emdash@0.35.0:src/plugins/storage-indexes.ts",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T02:39:33+00:00",
+          "source_identity": "sha256:1ec729590584fc9231f4f21ff0367a13de3c07353818e053137aa274a26d64ea"
+        }
+      ],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T02:40:29+00:00",
+      "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+    },
+    {
+      "baseline_ref": "git:c35f611909309dd8d461d99c1d28c563a90d1a0a",
+      "candidate_refs": [
+        "npm:emdash@0.35.0"
+      ],
+      "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+      "context_ref": "user:continue with live SmokyClub proof after 0.35 migration",
+      "created_at": "2026-08-28T02:41:32+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-pilot-scope-008"
+      ],
+      "domain": "cross-process product and SKU creation",
+      "history": [
+        {
+          "at": "2026-08-28T02:41:32+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:42:25+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:42:25+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json;file:package-lock.json;file:scripts/repo-contract.mjs;file:README.md;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T02:45:43+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "verified",
+          "implementation_ref": "file:package.json;file:package-lock.json;file:scripts/repo-contract.mjs;file:README.md;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:mise x node@22.23.2 -- npm pack --dry-run --json;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:45:43+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:package.json;file:package-lock.json;file:scripts/repo-contract.mjs;file:README.md;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "The exact EmDash 0.35 Astro integration rejects a raw definePlugin result in plugins[]. Commerce must export a descriptor factory with package entrypoint plus createPlugin runtime factory, matching the official native-plugin contract.",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://docs.emdashcms.com/plugins/creating-native-plugins/your-first-native-plugin/;smokyclub:local-runtime-boot:missing-entrypoint",
+          "review_result": "findings",
+          "review_source_identity": "sha256:3a05c6acfd4e956134ce64f4ae55c01c927827c124354385bbbbbc73e07ed47d",
+          "to": "reopened",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:mise x node@22.23.2 -- npm pack --dry-run --json;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:45:44+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "reopened",
+          "implementation_ref": "file:package.json;file:package-lock.json;file:scripts/repo-contract.mjs;file:README.md;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://docs.emdashcms.com/plugins/creating-native-plugins/your-first-native-plugin/;smokyclub:local-runtime-boot:missing-entrypoint",
+          "review_result": "findings",
+          "review_source_identity": "sha256:3a05c6acfd4e956134ce64f4ae55c01c927827c124354385bbbbbc73e07ed47d",
+          "to": "locked",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:mise x node@22.23.2 -- npm pack --dry-run --json;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:58:01+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "locked",
+          "implementation_ref": "file:package.json;file:package-lock.json;file:scripts/repo-contract.mjs;file:README.md;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://docs.emdashcms.com/plugins/creating-native-plugins/your-first-native-plugin/;smokyclub:local-runtime-boot:missing-entrypoint",
+          "review_result": "findings",
+          "review_source_identity": "sha256:3a05c6acfd4e956134ce64f4ae55c01c927827c124354385bbbbbc73e07ed47d",
+          "to": "implemented",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:mise x node@22.23.2 -- npm pack --dry-run --json;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        },
+        {
+          "at": "2026-08-28T02:58:01+00:00",
+          "choice": "Keep @dinkuskit/commerce private at 0.0.0, publish no package, declare exact emdash 0.35.0 as both the development dependency and runtime peer, and restrict local package contents to built dist output plus package metadata. This lets the consuming SmokyClub site supply the one EmDash runtime that owns plugin errors, routes, and storage.",
+          "from": "implemented",
+          "implementation_ref": "file:src/index.ts;file:tests/features/catalog/catalog.test.mjs;file:tests/features/catalog/public-entry.test.mjs;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full;command:mise x node@22.23.2 -- npm pack --dry-run --json;command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256"
+        }
+      ],
+      "id": "emdash-035-runtime-peer-009",
+      "implementation_ref": "file:src/index.ts;file:tests/features/catalog/catalog.test.mjs;file:tests/features/catalog/public-entry.test.mjs;file:proof/catalog-first-managed-sku/source-manifest.sha256",
+      "question": "How does the local SmokyClub consumer share EmDash runtime identity with Commerce?",
+      "rationale": "A local tarball fixture must exercise the same single EmDash module identity a future install uses; loading Commerce from its source worktree would create a second EmDash class graph and make structured route errors unfaithful.",
+      "repair_required": false,
+      "review_classifications": [
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "url:https://docs.emdashcms.com/plugins/creating-native-plugins/your-first-native-plugin/;smokyclub:local-runtime-boot:missing-entrypoint",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T02:45:43+00:00",
+          "source_identity": "sha256:3a05c6acfd4e956134ce64f4ae55c01c927827c124354385bbbbbc73e07ed47d"
+        },
+        {
+          "classifications": [
+            "human_gate"
+          ],
+          "ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T14:24:24+00:00",
+          "source_identity": "git:bf7986a114cf795abddc6af49112f90d96a5e95b"
+        }
+      ],
+      "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+      "review_result": "findings",
+      "review_source_identity": "git:bf7986a114cf795abddc6af49112f90d96a5e95b",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T14:24:24+00:00",
+      "verification_ref": "command:PATH=node-22.23.2 bin/verify-commerce full (18 unit/contract, 6 integration, repo and feature audits);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;note:first full rerun hit transient Wrangler/D1 SQLITE_BUSY and unchanged immediate rerun passed"
+    },
+    {
+      "baseline_ref": "git:bf7986a114cf795abddc6af49112f90d96a5e95b",
+      "candidate_refs": [
+        "git:saariuslystoned/emdash@dbf11d1138dbd5c6e4e00195e9c99b0904c90799",
+        "url:https://github.com/emdash-cms/emdash/pull/2768",
+        "repo:smokyclub:proof/first-managed-sku-live-20260828/PROOF.md"
+      ],
+      "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the public saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+      "context_ref": "user:2026-08-28 explicit private fork pilot authorization and lock",
+      "created_at": "2026-08-28T14:24:25+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "emdash-035-runtime-peer-009"
+      ],
+      "domain": "EmDash fork-backed mounted-site pilot",
+      "history": [
+        {
+          "at": "2026-08-28T14:24:25+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T14:25:28+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T14:25:28+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T14:34:14+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "verified",
+          "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T14:34:25+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "ClawSweeper correctly exposed misleading private-fork wording; GitHub proves the fork is public, so repair the wording without removing the required public source identity.",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "review_result": "findings",
+          "review_source_identity": "git:1bf24e19c1179e83a247a972985fea378ccdce8d",
+          "to": "reopened",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T14:34:25+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "reopened",
+          "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "review_result": "findings",
+          "review_source_identity": "git:1bf24e19c1179e83a247a972985fea378ccdce8d",
+          "to": "locked",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T14:35:28+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the public saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "locked",
+          "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "review_result": "findings",
+          "review_source_identity": "git:1bf24e19c1179e83a247a972985fea378ccdce8d",
+          "to": "implemented",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
+        },
+        {
+          "at": "2026-08-28T14:35:28+00:00",
+          "choice": "Keep exact emdash 0.35.0 as Commerce's API peer, but require the private mounted-site pilot to run the public saariuslystoned/emdash fork at exact commit dbf11d1138dbd5c6e4e00195e9c99b0904c90799 from upstream PR 2768. Stock 0.35.0 mounted-site writes remain unsupported and fail closed. Publish no package and deploy nothing. After an upstream stable release contains the fix, repin and rerun the SmokyClub mounted-site proof before making any broader compatibility claim.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
+        }
+      ],
+      "id": "emdash-fork-private-pilot-010",
+      "implementation_ref": "file:package.json;file:README.md;file:scripts/repo-contract.mjs;file:proof/catalog-first-managed-sku/PROOF.md",
+      "question": "What EmDash runtime is supported for the private mounted-site Commerce pilot while upstream PR 2768 remains unreleased?",
+      "rationale": "The fork is public, verified by GitHub repository visibility and upstream PR provenance. The package contract must state that the pilot is private without falsely describing its public fork as private; the exact public source remains necessary for reproducibility until a stable release contains the fix.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "url:https://github.com/dinkuskit/commerce/pull/7#issuecomment-5453306869",
+          "result": "findings",
+          "reviewed_at": "2026-08-28T14:34:14+00:00",
+          "source_identity": "git:1bf24e19c1179e83a247a972985fea378ccdce8d"
+        }
+      ],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T14:35:28+00:00",
+      "verification_ref": "command:gh repo view saariuslystoned/emdash (PUBLIC);command:gh pr view emdash-cms/emdash#2768 (exact public fork head dbf11d1);command:mise x node@22.23.2 -- bin/verify-commerce full (18 unit/contract, 6 integration);command:sha256sum -c proof/catalog-first-managed-sku/source-manifest.sha256;command:npm pack --dry-run --json (27 entries, no bundled dependencies);command:grilltrack ledger validate;command:git diff --check"
     }
   ],
   "last_activation": {
-    "at": "2026-08-27T23:51:22+00:00",
-    "mechanism": "$grilltrack"
+    "at": "2026-08-28T14:34:25+00:00",
+    "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
   "recommendation": {
     "alternatives": [
-      "Prove an upstream EmDash insert-only or compare-and-swap storage primitive",
-      "Use one serialized Commerce-owned write service only if upstream atomic storage cannot be proven"
+      "Use a generic Commerce-owned EmDash fixture instead of SmokyClub for the first runtime proof.",
+      "Move directly to the managed-stock and Inventory provider-binding grill, carrying the unproven site-runtime boundary as explicit risk."
     ],
-    "reason": "The public scaffold now has an exact current-stable build baseline; the next unresolved correctness boundary is preventing two server copies from accepting the same SKU concurrently.",
-    "recommended": "Resume the atomic cross-process product and SKU write grill against exact EmDash 0.35.0 source",
-    "recorded_at": "2026-08-27T23:54:09+00:00"
+    "reason": "The current slice proves the application, exact EmDash storage repository, SQLite concurrency, and local D1 semantics, but it deliberately does not claim a mounted-site compatibility result; the smallest next cross-stack proof is the real SmokyClub EmDash route and scheduler boundary.",
+    "recommended": "After the Commerce slice is reviewed and merged, mount it in one local SmokyClub site on exact EmDash 0.35.0 and prove plugin registration, live index materialization, authenticated HTTP create, idempotent replay, and SKU conflict through the real catch-all route before adding Inventory provider binding.",
+    "recorded_at": "2026-08-28T02:34:16+00:00"
   },
   "schema_version": "grilltrack/v0.1",
   "status": "active",
   "title": "DinkusKit Commerce v1",
   "track_id": "dinkuskit-commerce-v1",
-  "updated_at": "2026-08-27T23:54:09+00:00"
+  "updated_at": "2026-08-28T15:08:35+00:00"
 }

@@ -7,13 +7,25 @@ explicit contracts.
 
 ## Status
 
-Charter stage. The package name is reserved in source as
-`@dinkuskit/commerce`, but the manifest is private at `0.0.0`: there is no
-installable package, release, deployment, or compatibility promise yet.
+Pilot stage. The package name is reserved in source as
+`@dinkuskit/commerce`, but the manifest remains private at `0.0.0`: there is
+no installable package, release, deployment, or compatibility promise yet.
 
-Scaffold development is pinned to exact `emdash@0.35.0` with a lockfile. This
-is a build target, not a runtime compatibility claim; that claim starts only
-with a real Commerce adapter and fixture.
+Development and the private package's runtime peer are pinned to exact
+`emdash@0.35.0`. The first feature is the `dinkus.catalog` draft-item creation
+pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
+writes unless the live EmDash storage collection proves unique `commandId`
+and site-wide canonical `skuKey` constraints.
+
+Mounted-site work is currently a private pilot backed by the public
+[`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
+a stock 0.35.0 compatibility claim. It requires exact commit
+`dbf11d1138dbd5c6e4e00195e9c99b0904c90799`, the public head of
+[EmDash PR #2768](https://github.com/emdash-cms/emdash/pull/2768). Stock
+`emdash@0.35.0` cannot materialize the required indexes through the mounted
+Cloudflare development runtime, so Commerce fails writes closed there. After
+the fix reaches a stable EmDash release, Commerce must repin and rerun the
+SmokyClub mounted-site proof before expanding its compatibility claim.
 
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
@@ -34,9 +46,14 @@ The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
 ```bash
 npm ci
-npm test
-npm run audit:repo
-npm ls emdash --depth=0
+bin/verify-commerce quick
+bin/verify-commerce full
 ```
+
+The quick verifier covers types, unit contracts, feature boundaries, public
+repository hygiene, the exact EmDash API peer, and the exact private-pilot fork
+contract. The full verifier additionally runs cross-process SQLite atomicity
+proof against EmDash's real 0.35 storage repository and a two-process local
+Wrangler/D1 expression-index proof.
 
 Under construction. MIT licensed.

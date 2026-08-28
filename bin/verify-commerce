@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+set -eu
+
+mode="${1:-quick}"
+
+case "$mode" in
+  quick)
+    npm run typecheck
+    npm run test:unit
+    npm run audit:repo
+    ;;
+  full)
+    "$0" quick
+    npm run test:integration
+    ;;
+  *)
+    echo "Usage: bin/verify-commerce [quick|full]" >&2
+    exit 64
+    ;;
+esac

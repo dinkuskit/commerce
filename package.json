@@ -4,16 +4,57 @@
   "description": "The open-source commerce layer for EmDash sites",
   "type": "module",
   "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./features/catalog": {
+      "types": "./dist/features/catalog/index.d.ts",
+      "default": "./dist/features/catalog/index.js"
+    }
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dinkuskit/commerce.git"
   },
+  "dinkuskit": {
+    "emdashCompatibility": {
+      "apiPeer": "0.35.0",
+      "mountedSitePilot": "private",
+      "requiredSourceVisibility": "public",
+      "requiredSourceRepository": "https://github.com/saariuslystoned/emdash",
+      "requiredCommit": "dbf11d1138dbd5c6e4e00195e9c99b0904c90799",
+      "upstreamPullRequest": "https://github.com/emdash-cms/emdash/pull/2768",
+      "stockReleaseBehavior": "fail-closed",
+      "stableReleaseExit": "repin-and-rerun-smokyclub-proof"
+    }
+  },
+  "peerDependencies": {
+    "emdash": "0.35.0"
+  },
   "scripts": {
-    "test": "node --test tests/*.test.mjs tests/workflows/*.test.mjs",
-    "audit:repo": "node scripts/repo-contract.mjs"
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:unit",
+    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs",
+    "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
+    "audit:features": "node scripts/check-features.mjs",
+    "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features",
+    "verify:quick": "bin/verify-commerce quick",
+    "verify:full": "bin/verify-commerce full"
   },
   "devDependencies": {
-    "emdash": "0.35.0"
+    "better-sqlite3": "12.11.1",
+    "emdash": "0.35.0",
+    "kysely": "0.29.5",
+    "typescript": "6.0.3",
+    "wrangler": "4.127.0"
   }
 }
