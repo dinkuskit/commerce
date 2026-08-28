@@ -32,7 +32,7 @@ const forbiddenSegments = new Set([
 async function walk(root, directory = root) {
   const paths = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
-    if (entry.name === ".git") continue;
+    if (entry.name === ".git" || entry.name === "node_modules") continue;
     const absolute = join(directory, entry.name);
     if (entry.isDirectory()) paths.push(...(await walk(root, absolute)));
     else paths.push(relative(root, absolute));

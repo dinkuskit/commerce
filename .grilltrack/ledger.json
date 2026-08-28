@@ -1,0 +1,104 @@
+{
+  "closeout": null,
+  "created_at": "2026-08-27T23:51:22+00:00",
+  "current_focus": {
+    "cadence": "sequential",
+    "confirmed": true,
+    "confirmed_at": "2026-08-27T23:51:23+00:00",
+    "domain": "EmDash 0.35 scaffold baseline",
+    "started_at": "2026-08-27T23:51:22+00:00",
+    "status": "inspected",
+    "summary": "Commerce records exact EmDash 0.35.0 as its scaffold development baseline. The repository remains private at 0.0.0 with no installable runtime or compatibility promise; the atomic product/SKU write grill follows separately."
+  },
+  "decisions": [
+    {
+      "baseline_ref": "git:354fc4224966ab1243c93e48e34893c3a2744877",
+      "candidate_refs": [],
+      "choice": "Use exact EmDash 0.35.0 as a development-only dependency with a lockfile; do not add a peer/runtime compatibility claim until a real Commerce adapter and fixture exist.",
+      "context_ref": "user:latest stable EmDash 0.35 confirmation",
+      "created_at": "2026-08-27T23:51:23+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "EmDash 0.35 scaffold baseline",
+      "history": [
+        {
+          "at": "2026-08-27T23:51:23+00:00",
+          "choice": "Use exact EmDash 0.35.0 as a development-only dependency with a lockfile; do not add a peer/runtime compatibility claim until a real Commerce adapter and fixture exist.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-27T23:54:09+00:00",
+          "choice": "Use exact EmDash 0.35.0 as a development-only dependency with a lockfile; do not add a peer/runtime compatibility claim until a real Commerce adapter and fixture exist.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-27T23:54:09+00:00",
+          "choice": "Use exact EmDash 0.35.0 as a development-only dependency with a lockfile; do not add a peer/runtime compatibility claim until a real Commerce adapter and fixture exist.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json;file:package-lock.json;file:README.md;file:scripts/repo-contract.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-035-scaffold",
+      "implementation_ref": "file:package.json;file:package-lock.json;file:README.md;file:scripts/repo-contract.mjs",
+      "question": "Which exact EmDash release should Commerce scaffold work build against?",
+      "rationale": "The scaffold must track current stable EmDash without pretending charter-only code has passed a runtime matrix.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-27T23:54:09+00:00",
+      "verification_ref": "command:npm ci && npm test && npm run audit:repo && npm ls emdash --depth=0"
+    }
+  ],
+  "last_activation": {
+    "at": "2026-08-27T23:51:22+00:00",
+    "mechanism": "$grilltrack"
+  },
+  "last_pause": null,
+  "pause": null,
+  "recommendation": {
+    "alternatives": [
+      "Prove an upstream EmDash insert-only or compare-and-swap storage primitive",
+      "Use one serialized Commerce-owned write service only if upstream atomic storage cannot be proven"
+    ],
+    "reason": "The public scaffold now has an exact current-stable build baseline; the next unresolved correctness boundary is preventing two server copies from accepting the same SKU concurrently.",
+    "recommended": "Resume the atomic cross-process product and SKU write grill against exact EmDash 0.35.0 source",
+    "recorded_at": "2026-08-27T23:54:09+00:00"
+  },
+  "schema_version": "grilltrack/v0.1",
+  "status": "active",
+  "title": "DinkusKit Commerce v1",
+  "track_id": "dinkuskit-commerce-v1",
+  "updated_at": "2026-08-27T23:54:09+00:00"
+}
