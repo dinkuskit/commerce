@@ -50,16 +50,16 @@ jobs:
     permissions:
       actions: read
       contents: read
-    # Exact reviewed commit that uses the GitHub App Client ID for every token
-    # mint while retaining the existing public canary contract.
-    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@6c476b0485ab5d4e999c7f629bb8a4b0777890f1
+    # Exact reviewed commit that uploads sanitized failure packets on native
+    # review failure while retaining the existing public canary contract.
+    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@80cdeb241ab529008b1082749584be28a318e9ca
     with:
       target_repository: commerce
       target_repository_id: "1347692514"
       pr_number: ${{ needs.admit.outputs.pr_number }}
       expected_base_sha: ${{ needs.admit.outputs.base_sha }}
       expected_head_sha: ${{ needs.admit.outputs.head_sha }}
-      engine_sha: 6c476b0485ab5d4e999c7f629bb8a4b0777890f1
+      engine_sha: 80cdeb241ab529008b1082749584be28a318e9ca
       publish: true
     secrets:
       CLAWSWEEPER_APP_PRIVATE_KEY: ${{ secrets.CLAWSWEEPER_APP_PRIVATE_KEY }}
