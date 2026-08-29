@@ -66,14 +66,26 @@ type ManagedStockManagement =
     };
 ```
 
-`startManagedSkuRegistration` creates a hidden operation ID and a normalized,
-pool-scoped request snapshot. It awaits the caller-supplied `persist` function
-with `setup-pending` before invoking `InventoryProviderPort`. The persistence
-function must durably update the owning catalog item; Commerce supplies and
-enforces the ordering but does not invent another stock or catalog store.
-This slice does not yet provide the cross-process compare-and-set adapter needed
-to choose one operation when two first submissions race. The persistence seam
-is where that atomic claim must be implemented and proven before live use.
+`startManagedSkuRegistration` creates a proposed hidden operation ID and a
+normalized, pool-scoped request snapshot, then requires a Commerce-owned
+`ManagedSkuRegistrationClaimPort` before invoking `InventoryProviderPort`. The
+claim is append-only and keyed to one catalog product setup generation. Its
+EmDash adapter declares and actively proves unique `claimKey` and `operationId`
+indexes. Exactly one contender receives `claimed`; every loser receives the
+same stored winner as `already-claimed` and performs no persistence callback or
+provider call.
+
+The winning path persists `setup-pending` to the owning catalog item before
+provider contact. If claim authority is absent, malformed, ambiguous, or cannot
+prove its exact named unique constraints, Commerce throws
+`REGISTRATION_CLAIM_UNAVAILABLE` before changing the prior state or contacting
+Inventory. There is no in-process mutex or last-write-wins fallback.
+
+Initial registration derives its generation key from the catalog item ID.
+Corrected submission after a definitive rejection derives a distinct key from
+the catalog item ID and rejected operation ID. Both generations retain their
+append-only claim records, and the corrected request still requires a new
+operation ID.
 
 `retryManagedSkuRegistration` accepts only `setup-pending`, persists that same
 snapshot again, and sends the same operation ID and request. It is the contract
@@ -99,8 +111,9 @@ candidate contract evaluated here is exact head
 - `rejected` becomes `setup-needs-attention` and preserves the operation plus
   normalized code and message.
 - Corrected resubmission starts from `setup-needs-attention`, must mint a
-  different operation ID, and persists the new snapshot before calling the
-  provider. Changed payload is never sent under the rejected ID.
+  different operation ID and claim generation, and persists the new snapshot
+  before calling the provider. Changed payload is never sent under the rejected
+  ID.
 - If persisting a terminal result fails after Inventory succeeds, the durable
   pending snapshot remains safe to retry. Inventory's command replay returns
   the original terminal result.
@@ -138,6 +151,20 @@ The active link stores only the permanent Inventory identity. Commerce title
 changes never rename Inventory, and Inventory display-name changes never alter
 Commerce or storefront titles.
 
+## Concurrent feedback
+
+The concurrent result reports whether the losing request matches the winner.
+Different settings never overwrite or replace the winning pool. A future UI
+resolves the winning opaque pool ID to its current display name and presents:
+
+- pending: `This product is already being connected to {poolName} in another
+  session. Refresh to check its status.`
+- complete: `This product was connected to {poolName} in another session.
+  Refresh to review its inventory settings.`
+- action: `Refresh status`.
+
+Pool display names are not persisted as binding or stock authority.
+
 ## Verification contract
 
 The executable proof covers:
@@ -149,11 +176,15 @@ The executable proof covers:
 - rejection of reused IDs, wrong-SKU results, malformed results, malformed
   stored attempts, and out-of-order transitions;
 - omission of stock and location data from registration;
+- same-request and different-pool contenders converging on one operation and
+  one provider call;
+- missing or ambiguous claim authority failing before provider contact;
+- separate-process exact EmDash 0.35 and local Wrangler/D1 uniqueness proof;
 - package-root and feature-entry export parity; and
 - the complete Commerce verifier.
 
-The proof does not claim a live Inventory call or a cross-process atomic first
-operation claim. Those remain separate integration work.
+The proof does not claim live Inventory service-binding transport or an admin
+setup surface. Those remain separate integration work.
 
 ## Explicit exclusions
 

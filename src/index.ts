@@ -6,6 +6,10 @@ import {
   CREATE_CATALOG_ITEM_ROUTE,
   createCatalogItemRoute,
 } from "./features/catalog/index.js";
+import {
+  MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
+  MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES,
+} from "./features/inventory-provider/index.js";
 
 export * from "./features/inventory-provider/index.js";
 
@@ -29,6 +33,10 @@ export function createPlugin(): ResolvedPlugin {
       catalogItems: {
         indexes: [],
         uniqueIndexes: [...CATALOG_UNIQUE_INDEXES],
+      },
+      [MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [...MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES],
       },
     },
     routes: {

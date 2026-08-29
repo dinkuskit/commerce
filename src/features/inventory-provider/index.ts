@@ -8,6 +8,26 @@ export type {
   ManagedSkuRegistrationErrorCode,
 } from "./errors.js";
 export {
+  createConcurrentManagedSkuRegistrationFeedback,
+  createManagedSkuRegistrationClaimKey,
+  createManagedSkuRegistrationUnavailableFeedback,
+  normalizeManagedSkuRegistrationClaimRecord,
+  sameManagedSkuRegistrationRequest,
+} from "./claim.js";
+export {
+  MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
+  MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES,
+  assertManagedSkuRegistrationClaimStorageConstraints,
+  createManagedSkuRegistrationClaimPort,
+  identifyManagedSkuRegistrationClaimUniqueViolation,
+  managedSkuRegistrationClaimUniqueIndexName,
+} from "./claim-storage.js";
+export type {
+  ManagedSkuRegistrationClaimPortOptions,
+  ManagedSkuRegistrationClaimStorage,
+  ManagedSkuRegistrationClaimUniqueField,
+} from "./claim-storage.js";
+export {
   applyManagedSkuRegistrationResult,
   confirmExistingManagedSku,
   createManagedSkuRegistrationRequest,
@@ -29,10 +49,16 @@ export type {
   InventoryProviderBinding,
   InventoryProviderBindingInput,
   InventorySkuIdentity,
+  ConcurrentManagedSkuRegistrationFeedback,
   ManagedSkuRegistration,
+  ManagedSkuRegistrationClaimInput,
+  ManagedSkuRegistrationClaimPort,
+  ManagedSkuRegistrationClaimRecord,
+  ManagedSkuRegistrationClaimResult,
   ManagedSkuRegistrationExecution,
   ManagedSkuRegistrationInput,
   ManagedSkuRegistrationRequest,
+  ManagedSkuRegistrationUnavailableFeedback,
   ManagedSkuRegistrationRejection,
   ManagedSkuRegistrationResult,
   ManagedStockManagement,
@@ -43,6 +69,7 @@ export type {
   SetupPendingManagedStockManagement,
   SetupRequiredManagedStockManagement,
   StartManagedSkuRegistrationExecution,
+  StartManagedSkuRegistrationResult,
   StockManagement,
   UnmanagedStockManagement,
 } from "./types.js";

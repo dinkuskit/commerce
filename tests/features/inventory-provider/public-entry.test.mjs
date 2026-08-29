@@ -40,6 +40,26 @@ test("the package root and feature entry expose the same inventory-provider cont
     commerce.retryManagedSkuRegistration,
   );
   assert.equal(
+    inventoryProvider.createManagedSkuRegistrationClaimPort,
+    commerce.createManagedSkuRegistrationClaimPort,
+  );
+  assert.equal(
+    inventoryProvider.createManagedSkuRegistrationClaimKey,
+    commerce.createManagedSkuRegistrationClaimKey,
+  );
+  assert.equal(
+    inventoryProvider.createConcurrentManagedSkuRegistrationFeedback,
+    commerce.createConcurrentManagedSkuRegistrationFeedback,
+  );
+  assert.equal(
+    inventoryProvider.createManagedSkuRegistrationUnavailableFeedback,
+    commerce.createManagedSkuRegistrationUnavailableFeedback,
+  );
+  assert.equal(
+    inventoryProvider.MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
+    commerce.MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
+  );
+  assert.equal(
     inventoryProvider.normalizeInventoryProviderBinding,
     commerce.normalizeInventoryProviderBinding,
   );

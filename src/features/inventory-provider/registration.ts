@@ -1,4 +1,8 @@
 import { normalizeInventoryProviderBinding } from "./binding.js";
+import {
+  normalizeManagedSkuRegistrationClaimRecord,
+  sameManagedSkuRegistrationRequest,
+} from "./claim.js";
 import { ManagedSkuRegistrationError } from "./errors.js";
 import type {
   InventoryProviderBinding,
@@ -12,6 +16,7 @@ import type {
   ManagedStockManagement,
   SetupPendingManagedStockManagement,
   StartManagedSkuRegistrationExecution,
+  StartManagedSkuRegistrationResult,
   StockManagement,
 } from "./types.js";
 
@@ -213,6 +218,21 @@ function createOperationId(
   return asNonEmptyString(createId(), "operationId");
 }
 
+function normalizeStartExecution(
+  value: StartManagedSkuRegistrationExecution,
+): StartManagedSkuRegistrationExecution {
+  const execution = normalizeExecution(value) as StartManagedSkuRegistrationExecution;
+  if (typeof execution.claim !== "function") {
+    throw new ManagedSkuRegistrationError(
+      "REGISTRATION_CLAIM_UNAVAILABLE",
+      "registration claim authority is unavailable",
+    );
+  }
+  asNonEmptyString(execution.catalogItemId, "catalogItemId");
+  asNonEmptyString(execution.claimKey, "claimKey");
+  return execution;
+}
+
 async function executePendingRegistration(
   pending: SetupPendingManagedStockManagement,
   rawExecution: ManagedSkuRegistrationExecution,
@@ -232,7 +252,7 @@ export async function startManagedSkuRegistration(
   binding: InventoryProviderBinding,
   input: ManagedSkuRegistrationInput,
   rawExecution: StartManagedSkuRegistrationExecution,
-): Promise<ManagedStockManagement> {
+): Promise<StartManagedSkuRegistrationResult> {
   if (
     current.mode !== "managed" ||
     (current.status !== "setup-required" &&
@@ -244,9 +264,7 @@ export async function startManagedSkuRegistration(
     );
   }
 
-  const execution = normalizeExecution(
-    rawExecution,
-  ) as StartManagedSkuRegistrationExecution;
+  const execution = normalizeStartExecution(rawExecution);
   const operationId = createOperationId(execution);
   if (
     current.status === "setup-needs-attention" &&
@@ -267,7 +285,74 @@ export async function startManagedSkuRegistration(
     },
   };
 
-  return executePendingRegistration(pending, execution);
+  let claimResult;
+  try {
+    claimResult = await execution.claim({
+      claimKey: execution.claimKey,
+      catalogItemId: execution.catalogItemId,
+      registration: pending.registration,
+    });
+  } catch (error) {
+    if (
+      error instanceof ManagedSkuRegistrationError &&
+      error.code === "REGISTRATION_CLAIM_UNAVAILABLE"
+    ) {
+      throw error;
+    }
+    throw new ManagedSkuRegistrationError(
+      "REGISTRATION_CLAIM_UNAVAILABLE",
+      "registration claim authority is unavailable",
+    );
+  }
+
+  if (claimResult.outcome !== "claimed" && claimResult.outcome !== "existing") {
+    throw new ManagedSkuRegistrationError(
+      "REGISTRATION_CLAIM_UNAVAILABLE",
+      "registration claim authority returned an invalid outcome",
+    );
+  }
+  const claim = normalizeManagedSkuRegistrationClaimRecord(claimResult.claim);
+  if (
+    claim.claimKey !== execution.claimKey ||
+    claim.catalogItemId !== execution.catalogItemId
+  ) {
+    throw new ManagedSkuRegistrationError(
+      "REGISTRATION_CLAIM_UNAVAILABLE",
+      "registration claim authority returned a different claim scope",
+    );
+  }
+
+  const claimedPending: SetupPendingManagedStockManagement = {
+    mode: "managed",
+    status: "setup-pending",
+    registration: {
+      operationId: claim.operationId,
+      request: claim.request,
+    },
+  };
+  const sameRequest = sameManagedSkuRegistrationRequest(
+    claim.request,
+    pending.registration.request,
+  );
+
+  if (claimResult.outcome === "existing") {
+    return {
+      outcome: "already-claimed",
+      state: claimedPending,
+      sameRequest,
+    };
+  }
+  if (claim.operationId !== pending.registration.operationId || !sameRequest) {
+    throw new ManagedSkuRegistrationError(
+      "REGISTRATION_CLAIM_UNAVAILABLE",
+      "registration claim authority changed the winning operation",
+    );
+  }
+
+  return {
+    outcome: "started",
+    state: await executePendingRegistration(claimedPending, execution),
+  };
 }
 
 export async function retryManagedSkuRegistration(

@@ -1,0 +1,7 @@
+LIVE_PROOF {"case":"wrangler-d1-atomic-managed-sku-registration-claim","emdash":"0.35.0","processes":2,"writesSucceeded":1,"writesRejected":1,"persistedClaims":1,"rejectedConstraint":"uidx_plugin_dinkus-commerce_managedSkuClaims_claimKey","dataClassification":"synthetic-local"}
+LIVE_PROOF {"case":"atomic-managed-sku-registration-claim","emdash":"0.35.0","processes":2,"claimed":1,"joined":1,"persistedClaims":1,"oneOperation":true,"onePool":true,"dataClassification":"synthetic"}
+LIVE_PROOF {"case":"emdash-inventory-registration-retry","emdash":"0.35.0","inventoryHead":"670c539303ba77db916f50012070bdd83ead4e4e","firstProviderCalls":1,"automaticProviderCallsOnReload":0,"pendingPersistedAcrossReopen":true,"retryOperationIdReused":true,"retryProviderCalls":1,"inventoryIdsMintedOnRetry":0,"terminalInventoryOutcome":"registered","finalStockManagement":{"mode":"managed","status":"active","inventorySkuId":"inventory_registration_retry_proof"},"commerceCatalogItems":1,"commerceRegistrationClaims":1,"inventorySkuRows":1,"commandResultRows":1,"balanceRows":0,"receiptRows":0,"commerceStoreReopens":2,"inventoryStoreReopens":2,"dataClassification":"synthetic-local"}
+
+All records are synthetic and redacted. The receipts used local disposable
+SQLite/D1 state and no credentials, tenant data, production resource, deploy,
+or live network transport.

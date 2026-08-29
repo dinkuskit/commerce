@@ -1,70 +1,70 @@
 {
   "closeout": {
-    "closed_at": "2026-08-29T02:56:03+00:00",
+    "closed_at": "2026-08-29T16:04:17+00:00",
     "confirmed_by": "user",
     "deferred_decisions": [],
     "proof_refs": [
-      "file:proof/retry-safe-registration/PROOF.md;file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/RUNTIME.txt;file:proof/retry-safe-registration/source-manifest.sha256;sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11;branch:codex/retry-safe-registration-grill-20260828"
+      "proof/atomic-managed-sku-registration-claim/PROOF.md"
     ],
-    "reason": "The retry-safe registration slice is implemented, fully verified, cleanly reviewed, and the user explicitly requested closure and pull-request delivery.",
+    "reason": "User confirmed closure after implementation, full verification, exact-source review, and inspection.",
     "reviews": [
       {
         "classifications": [],
-        "decision_id": "registration-retry-identity-024",
-        "ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+        "decision_id": "registration-atomic-claim-027",
+        "ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
         "result": "clean",
-        "source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11"
+        "source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223"
       },
       {
         "classifications": [],
-        "decision_id": "registration-retry-trigger-025",
-        "ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+        "decision_id": "registration-concurrent-feedback-028",
+        "ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
         "result": "clean",
-        "source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11"
+        "source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223"
       },
       {
         "classifications": [],
-        "decision_id": "registration-definitive-rejection-026",
-        "ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+        "decision_id": "registration-claim-unavailable-029",
+        "ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
         "result": "clean",
-        "source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11"
+        "source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223"
       }
     ],
-    "summary": "Closed retry-safe Inventory registration: Commerce persists one hidden setup-pending operation before provider contact, reloads without automatic provider calls, explicitly retries the same operation, activates only a valid identity-bearing registered result, preserves genuine existing-SKU confirmation, and moves terminal rejection to setup-needs-attention with corrected resubmission requiring a new operation ID. The unresolved cross-process simultaneous-first-submission claim is intentionally excluded and recommended as the next grill. Delivery is separately authorized on codex/retry-safe-registration-grill-20260828; no merge is authorized.",
+    "summary": "Verified one Commerce-owned append-only atomic first-registration claim per catalog product setup generation; simultaneous contenders converge on one hidden operation and winning pool, losing requests cannot overwrite it, and unavailable or ambiguous claim authority fails closed before Commerce persistence or Inventory contact. The exact pool-specific feedback and temporary-unavailability copy are exported. EmDash 0.35 and Wrangler/D1 multi-process proofs passed, as did exact Inventory PR 12 retry compatibility, 56 unit/contract tests, 12 integration tests, TypeScript, public-repository and feature audits. Review was clean at sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223. No choices were superseded and none were deferred. Remaining disclosed integration work is later disable/re-enable generation ownership and catalog-route reconciliation if a winner stops after claim commit; live Inventory transport, UI, deployment, and production behavior remain excluded. No delivery action was authorized or performed.",
     "superseded_decisions": [],
     "verified_decisions": [
-      "registration-retry-identity-024",
-      "registration-retry-trigger-025",
-      "registration-definitive-rejection-026"
+      "registration-atomic-claim-027",
+      "registration-concurrent-feedback-028",
+      "registration-claim-unavailable-029"
     ]
   },
-  "created_at": "2026-08-29T00:48:11+00:00",
+  "created_at": "2026-08-29T12:29:09+00:00",
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-29T02:44:19+00:00",
-    "domain": "ambiguous managed-SKU registration outcomes",
-    "started_at": "2026-08-29T00:48:12+00:00",
+    "confirmed_at": "2026-08-29T15:11:33+00:00",
+    "domain": "simultaneous first managed-SKU registration",
+    "started_at": "2026-08-29T12:42:55+00:00",
     "status": "closed",
-    "summary": "Implement Commerce-owned retry-safe managed-SKU registration: persist one hidden operation ID before the first provider call; keep ambiguous outcomes setup-pending across reloads; retry only through an explicit Retry connection action using the same ID; activate only from a valid identity-bearing Inventory result; and turn definitive rejection into Inventory setup needs attention, with corrected resubmission using a new operation ID. Preserve the existing genuine-SKU confirmation flow. Verify first attempt, timeout replay, reload persistence, definitive rejection, corrected resubmission, existing-SKU confirmation, and malformed responses. Exclude live Cloudflare transport, background scheduling, visual UI design, stock adjustment, and order reservations."
+    "summary": "Implement a Commerce-owned atomic first-registration claim behind a provider-neutral persistence port. Persist one append-only claim per product/setup generation before Inventory contact, let exactly one contender call Inventory, return every loser to the winning operation with pool-specific pending or complete feedback and a Refresh status action, reject conflicting winner replacement, and fail closed with no provider call when atomic uniqueness cannot be proven. Preserve rejected-operation resubmission with a new operation ID. Prove same-input and conflicting-input races across separate processes on exact EmDash 0.35 storage plus missing-constraint failure; exclude admin UI, live Inventory transport, pool discovery, stock mutation, checkout, delivery, and production changes."
   },
   "decisions": [
     {
-      "baseline_ref": "git:1bd201fd828ef27f5f0561a1de45df29e8bb0e5d",
+      "baseline_ref": "git:4d8cd830d4aed625db54c2a79aaba3fbc75fe15a",
       "candidate_refs": [
-        "inventory-pr-12:670c539303ba77db916f50012070bdd83ead4e4e"
+        "inventory-main:d31fbfda982ad669f638a222f0cb1caa7592c095"
       ],
-      "choice": "Commerce creates and durably stores one hidden registration operation ID before the first provider call, reuses it as Inventory commandId for every retry, and keeps the product setup-pending rather than managed-active until Inventory returns a valid identity-bearing result. A retry of the same operation must recover the original result and must not create a false existing-SKU confirmation.",
-      "context_ref": "user:2026-08-28 lock-it confirmation",
-      "created_at": "2026-08-29T00:48:12+00:00",
+      "choice": "Commerce must atomically converge every simultaneous first-enable attempt for one catalog product on one persisted hidden registration operation ID. Exactly one operation ID wins; all competing attempts resolve to that same winner and may not create a second logical Inventory registration.",
+      "context_ref": "user:2026-08-29 explicit agreement",
+      "created_at": "2026-08-29T12:29:10+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
-      "domain": "ambiguous managed-SKU registration outcomes",
+      "domain": "simultaneous first managed-SKU registration",
       "history": [
         {
-          "at": "2026-08-29T00:48:12+00:00",
-          "choice": "Commerce creates and durably stores one hidden registration operation ID before the first provider call, reuses it as Inventory commandId for every retry, and keeps the product setup-pending rather than managed-active until Inventory returns a valid identity-bearing result. A retry of the same operation must recover the original result and must not create a false existing-SKU confirmation.",
+          "at": "2026-08-29T12:29:10+00:00",
+          "choice": "Commerce must atomically converge every simultaneous first-enable attempt for one catalog product on one persisted hidden registration operation ID. Exactly one operation ID wins; all competing attempts resolve to that same winner and may not create a second logical Inventory registration.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -77,8 +77,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-29T02:54:36+00:00",
-          "choice": "Commerce creates and durably stores one hidden registration operation ID before the first provider call, reuses it as Inventory commandId for every retry, and keeps the product setup-pending rather than managed-active until Inventory returns a valid identity-bearing result. A retry of the same operation must recover the original result and must not create a false existing-SKU confirmation.",
+          "at": "2026-08-29T15:30:34+00:00",
+          "choice": "Commerce must atomically converge every simultaneous first-enable attempt for one catalog product on one persisted hidden registration operation ID. Exactly one operation ID wins; all competing attempts resolve to that same winner and may not create a second logical Inventory registration.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -91,10 +91,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-29T02:54:37+00:00",
-          "choice": "Commerce creates and durably stores one hidden registration operation ID before the first provider call, reuses it as Inventory commandId for every retry, and keeps the product setup-pending rather than managed-active until Inventory returns a valid identity-bearing result. A retry of the same operation must recover the original result and must not create a false existing-SKU confirmation.",
+          "at": "2026-08-29T15:30:34+00:00",
+          "choice": "Commerce must atomically converge every simultaneous first-enable attempt for one catalog product on one persisted hidden registration operation ID. Exactly one operation ID wins; all competing attempts resolve to that same winner and may not create a second logical Inventory registration.",
           "from": "implemented",
-          "implementation_ref": "file:src/features/inventory-provider/types.ts;file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/index.ts;file:tests/features/inventory-provider/registration-orchestration.test.mjs;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/inventory-provider/public-entry.test.mjs;file:docs/implementation/managed-sku-registration-contract.md",
+          "implementation_ref": "docs/implementation/atomic-managed-sku-registration-plan.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -105,47 +105,45 @@
           "verification_ref": null
         }
       ],
-      "id": "registration-retry-identity-024",
-      "implementation_ref": "file:src/features/inventory-provider/types.ts;file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/index.ts;file:tests/features/inventory-provider/registration-orchestration.test.mjs;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/inventory-provider/public-entry.test.mjs;file:docs/implementation/managed-sku-registration-contract.md",
-      "question": "What identity and state should Commerce preserve when an Inventory registration result is lost or unreachable?",
-      "rationale": "This makes an ambiguous network outcome safe: retries remain one logical registration, while the visible SKU and hidden Inventory SKU identity retain their separate roles.",
+      "id": "registration-atomic-claim-027",
+      "implementation_ref": "docs/implementation/atomic-managed-sku-registration-plan.md",
+      "question": "What identity may persist when simultaneous requests first enable managed stock for the same Commerce catalog product?",
+      "rationale": "The Commerce catalog product is the ownership boundary. A single durable winning identity prevents duplicate registrations while preserving safe retries under the already-locked Inventory command-id contract.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [
         {
           "classifications": [],
-          "ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+          "ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
           "result": "clean",
-          "reviewed_at": "2026-08-29T02:54:38+00:00",
-          "source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11"
+          "reviewed_at": "2026-08-29T15:30:34+00:00",
+          "source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223"
         }
       ],
-      "review_ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+      "review_ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11",
+      "review_source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-29T02:54:38+00:00",
-      "verification_ref": "file:proof/retry-safe-registration/PROOF.md;file:proof/retry-safe-registration/RUNTIME.txt;file:proof/retry-safe-registration/source-manifest.sha256;command:mise x node@22.23.2 -- bin/verify-commerce full (43 unit/contract, 7 integration);command:sha256sum -c proof/retry-safe-registration/source-manifest.sha256;command:git diff --check"
+      "updated_at": "2026-08-29T15:30:34+00:00",
+      "verification_ref": "proof/atomic-managed-sku-registration-claim/PROOF.md"
     },
     {
-      "baseline_ref": "git:1bd201fd828ef27f5f0561a1de45df29e8bb0e5d",
-      "candidate_refs": [
-        "ui-action:Retry connection"
-      ],
-      "choice": "For the first version, the pending registration survives reloads and Commerce presents a visible Retry connection action that resubmits the same durable operation ID. Loading or reopening the admin must not automatically call Inventory, and Commerce has no background retry loop in this slice.",
-      "context_ref": "user:2026-08-28 yes confirmation",
-      "created_at": "2026-08-29T02:39:52+00:00",
+      "baseline_ref": "git:4d8cd830d4aed625db54c2a79aaba3fbc75fe15a",
+      "candidate_refs": [],
+      "choice": "When a simultaneous managed-stock request resolves to another request's winning operation, Commerce retains the winner and creates no second logical registration. The feedback must name the winning pool. When complete: 'This product was connected to {poolName} in another session. Refresh to review its inventory settings.' When pending: 'This product is already being connected to {poolName} in another session. Refresh to check its status.' A Refresh status action reloads the authoritative Commerce state. If the losing request proposed different settings, it must not overwrite or silently replace the winning pool configuration.",
+      "context_ref": "user:2026-08-29 requested clearer already-complete and refresh wording",
+      "created_at": "2026-08-29T12:32:58+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "registration-retry-identity-024"
+        "registration-atomic-claim-027"
       ],
-      "domain": "ambiguous managed-SKU registration outcomes",
+      "domain": "simultaneous first managed-SKU registration",
       "history": [
         {
-          "at": "2026-08-29T02:39:52+00:00",
-          "choice": "For the first version, the pending registration survives reloads and Commerce presents a visible Retry connection action that resubmits the same durable operation ID. Loading or reopening the admin must not automatically call Inventory, and Commerce has no background retry loop in this slice.",
+          "at": "2026-08-29T12:38:00+00:00",
+          "choice": "Commerce should join the existing winning operation instead of showing an error, then present state-specific feedback with a Refresh status action. When complete: 'Inventory setup for this SKU was completed in another session. Refresh to see the current stock settings.' When pending: 'Inventory setup for this SKU was started in another session and is still in progress. Refresh to check its status.'",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -158,8 +156,36 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-29T02:54:36+00:00",
-          "choice": "For the first version, the pending registration survives reloads and Commerce presents a visible Retry connection action that resubmits the same durable operation ID. Loading or reopening the admin must not automatically call Inventory, and Commerce has no background retry loop in this slice.",
+          "at": "2026-08-29T12:42:55+00:00",
+          "choice": "Commerce should join the existing winning operation instead of showing an error, then present state-specific feedback with a Refresh status action. When complete: 'Inventory setup for this SKU was completed in another session. Refresh to see the current stock settings.' When pending: 'Inventory setup for this SKU was started in another session and is still in progress. Refresh to check its status.'",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Replace generic SKU setup feedback with the user-approved winning-pool-specific wording and preserve the one-active-pool-per-store context.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-29T12:42:55+00:00",
+          "choice": "Commerce should join the existing winning operation instead of showing an error, then present state-specific feedback with a Refresh status action. When complete: 'Inventory setup for this SKU was completed in another session. Refresh to see the current stock settings.' When pending: 'Inventory setup for this SKU was started in another session and is still in progress. Refresh to check its status.'",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-29T15:30:35+00:00",
+          "choice": "When a simultaneous managed-stock request resolves to another request's winning operation, Commerce retains the winner and creates no second logical registration. The feedback must name the winning pool. When complete: 'This product was connected to {poolName} in another session. Refresh to review its inventory settings.' When pending: 'This product is already being connected to {poolName} in another session. Refresh to check its status.' A Refresh status action reloads the authoritative Commerce state. If the losing request proposed different settings, it must not overwrite or silently replace the winning pool configuration.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -172,10 +198,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-29T02:54:37+00:00",
-          "choice": "For the first version, the pending registration survives reloads and Commerce presents a visible Retry connection action that resubmits the same durable operation ID. Loading or reopening the admin must not automatically call Inventory, and Commerce has no background retry loop in this slice.",
+          "at": "2026-08-29T15:30:35+00:00",
+          "choice": "When a simultaneous managed-stock request resolves to another request's winning operation, Commerce retains the winner and creates no second logical registration. The feedback must name the winning pool. When complete: 'This product was connected to {poolName} in another session. Refresh to review its inventory settings.' When pending: 'This product is already being connected to {poolName} in another session. Refresh to check its status.' A Refresh status action reloads the authoritative Commerce state. If the losing request proposed different settings, it must not overwrite or silently replace the winning pool configuration.",
           "from": "implemented",
-          "implementation_ref": "file:src/features/inventory-provider/types.ts;file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/index.ts;file:tests/features/inventory-provider/registration-orchestration.test.mjs;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/inventory-provider/public-entry.test.mjs;file:docs/implementation/managed-sku-registration-contract.md",
+          "implementation_ref": "docs/implementation/atomic-managed-sku-registration-plan.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -186,47 +212,45 @@
           "verification_ref": null
         }
       ],
-      "id": "registration-retry-trigger-025",
-      "implementation_ref": "file:src/features/inventory-provider/types.ts;file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/index.ts;file:tests/features/inventory-provider/registration-orchestration.test.mjs;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/inventory-provider/public-entry.test.mjs;file:docs/implementation/managed-sku-registration-contract.md",
-      "question": "Who should trigger a retry while managed-SKU registration remains setup-pending?",
-      "rationale": "An explicit retry is observable and safe for the first proof, avoids introducing scheduler or queue infrastructure, and still preserves idempotency through the locked operation ID.",
+      "id": "registration-concurrent-feedback-028",
+      "implementation_ref": "docs/implementation/atomic-managed-sku-registration-plan.md",
+      "question": "What should an agent see after its simultaneous managed-stock request resolves to another request's winning operation?",
+      "rationale": "Naming the actual pool tells the agent what became authoritative. State-specific language avoids falsely claiming completion, and requiring refresh/review protects the one-active-pool-per-store binding when simultaneous requests disagree.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [
         {
           "classifications": [],
-          "ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+          "ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
           "result": "clean",
-          "reviewed_at": "2026-08-29T02:54:38+00:00",
-          "source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11"
+          "reviewed_at": "2026-08-29T15:30:36+00:00",
+          "source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223"
         }
       ],
-      "review_ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+      "review_ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11",
+      "review_source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-29T02:54:38+00:00",
-      "verification_ref": "file:proof/retry-safe-registration/PROOF.md;file:proof/retry-safe-registration/RUNTIME.txt;file:proof/retry-safe-registration/source-manifest.sha256;command:mise x node@22.23.2 -- bin/verify-commerce full (43 unit/contract, 7 integration);command:sha256sum -c proof/retry-safe-registration/source-manifest.sha256;command:git diff --check"
+      "updated_at": "2026-08-29T15:30:36+00:00",
+      "verification_ref": "proof/atomic-managed-sku-registration-claim/PROOF.md"
     },
     {
-      "baseline_ref": "git:1bd201fd828ef27f5f0561a1de45df29e8bb0e5d",
-      "candidate_refs": [
-        "inventory-pr-12:670c539303ba77db916f50012070bdd83ead4e4e"
-      ],
-      "choice": "Commerce stops treating the operation as retry-pending, presents Inventory setup needs attention, and preserves the rejection without activating managed stock. After the user corrects the rejected registration input and resubmits, Commerce creates a new hidden operation ID; it never reuses the rejected ID with changed payload.",
-      "context_ref": "user:2026-08-28 yes confirmation",
-      "created_at": "2026-08-29T02:41:12+00:00",
+      "baseline_ref": "git:4d8cd830d4aed625db54c2a79aaba3fbc75fe15a",
+      "candidate_refs": [],
+      "choice": "Fail closed before contacting Inventory. Create and send no new operation ID, do not transition the product beyond its last durable state, and show: 'Inventory setup is temporarily unavailable. Please try again.' A later explicit retry may attempt the atomic claim again; Commerce must not substitute an in-process-only mutex or best-effort save.",
+      "context_ref": "user:2026-08-29 explicit yes after concrete two-server explanation",
+      "created_at": "2026-08-29T13:17:10+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "registration-retry-identity-024"
+        "registration-atomic-claim-027"
       ],
-      "domain": "ambiguous managed-SKU registration outcomes",
+      "domain": "simultaneous first managed-SKU registration",
       "history": [
         {
-          "at": "2026-08-29T02:41:12+00:00",
-          "choice": "Commerce stops treating the operation as retry-pending, presents Inventory setup needs attention, and preserves the rejection without activating managed stock. After the user corrects the rejected registration input and resubmits, Commerce creates a new hidden operation ID; it never reuses the rejected ID with changed payload.",
+          "at": "2026-08-29T13:17:10+00:00",
+          "choice": "Fail closed before contacting Inventory. Create and send no new operation ID, do not transition the product beyond its last durable state, and show: 'Inventory setup is temporarily unavailable. Please try again.' A later explicit retry may attempt the atomic claim again; Commerce must not substitute an in-process-only mutex or best-effort save.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -239,8 +263,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-29T02:54:36+00:00",
-          "choice": "Commerce stops treating the operation as retry-pending, presents Inventory setup needs attention, and preserves the rejection without activating managed stock. After the user corrects the rejected registration input and resubmits, Commerce creates a new hidden operation ID; it never reuses the rejected ID with changed payload.",
+          "at": "2026-08-29T15:30:36+00:00",
+          "choice": "Fail closed before contacting Inventory. Create and send no new operation ID, do not transition the product beyond its last durable state, and show: 'Inventory setup is temporarily unavailable. Please try again.' A later explicit retry may attempt the atomic claim again; Commerce must not substitute an in-process-only mutex or best-effort save.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -253,10 +277,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-29T02:54:37+00:00",
-          "choice": "Commerce stops treating the operation as retry-pending, presents Inventory setup needs attention, and preserves the rejection without activating managed stock. After the user corrects the rejected registration input and resubmits, Commerce creates a new hidden operation ID; it never reuses the rejected ID with changed payload.",
+          "at": "2026-08-29T15:30:36+00:00",
+          "choice": "Fail closed before contacting Inventory. Create and send no new operation ID, do not transition the product beyond its last durable state, and show: 'Inventory setup is temporarily unavailable. Please try again.' A later explicit retry may attempt the atomic claim again; Commerce must not substitute an in-process-only mutex or best-effort save.",
           "from": "implemented",
-          "implementation_ref": "file:src/features/inventory-provider/types.ts;file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/index.ts;file:tests/features/inventory-provider/registration-orchestration.test.mjs;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/inventory-provider/public-entry.test.mjs;file:docs/implementation/managed-sku-registration-contract.md",
+          "implementation_ref": "docs/implementation/atomic-managed-sku-registration-plan.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -267,48 +291,48 @@
           "verification_ref": null
         }
       ],
-      "id": "registration-definitive-rejection-026",
-      "implementation_ref": "file:src/features/inventory-provider/types.ts;file:src/features/inventory-provider/registration.ts;file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/index.ts;file:tests/features/inventory-provider/registration-orchestration.test.mjs;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/inventory-provider/public-entry.test.mjs;file:docs/implementation/managed-sku-registration-contract.md",
-      "question": "What should Commerce do when Inventory definitively rejects a registration request rather than timing out?",
-      "rationale": "A definitive rejection is not an ambiguous network outcome. Reusing its command ID with corrected data would violate idempotency and can create an Inventory command conflict.",
+      "id": "registration-claim-unavailable-029",
+      "implementation_ref": "docs/implementation/atomic-managed-sku-registration-plan.md",
+      "question": "What should Commerce do when its active persistence surface cannot guarantee one atomic registration claim for the product?",
+      "rationale": "Temporarily blocking setup is safer than allowing separate server copies to create duplicate logical registrations. The restriction applies only to beginning managed-stock setup when atomic authority is unavailable.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [
         {
           "classifications": [],
-          "ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+          "ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
           "result": "clean",
-          "reviewed_at": "2026-08-29T02:54:38+00:00",
-          "source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11"
+          "reviewed_at": "2026-08-29T15:30:37+00:00",
+          "source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223"
         }
       ],
-      "review_ref": "file:proof/retry-safe-registration/REVIEW.md;file:proof/retry-safe-registration/source-manifest.sha256",
+      "review_ref": "proof/atomic-managed-sku-registration-claim/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11",
+      "review_source_identity": "sha256:59ae7b56d8e41c458e380d225fb335ed07edbc95a0d164ccbe0db5010d0aa223",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-29T02:54:38+00:00",
-      "verification_ref": "file:proof/retry-safe-registration/PROOF.md;file:proof/retry-safe-registration/RUNTIME.txt;file:proof/retry-safe-registration/source-manifest.sha256;command:mise x node@22.23.2 -- bin/verify-commerce full (43 unit/contract, 7 integration);command:sha256sum -c proof/retry-safe-registration/source-manifest.sha256;command:git diff --check"
+      "updated_at": "2026-08-29T15:30:37+00:00",
+      "verification_ref": "proof/atomic-managed-sku-registration-claim/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-08-29T00:48:11+00:00",
+    "at": "2026-08-29T12:42:55+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
-  "predecessor_track_id": "managed-sku-compatibility-repair-20260828",
+  "predecessor_track_id": "retry-safe-inventory-registration-20260828",
   "recommendation": {
     "alternatives": [
-      "Implement the live Inventory adapter after Inventory PR #12 merges, but keep managed setup under an explicit single-writer development gate until the atomic claim exists."
+      "Begin the private Commerce-to-Inventory service-binding adapter first."
     ],
-    "reason": "The verified slice makes retries safe after one durable operation is established; simultaneous first submissions remain the exact unresolved multi-writer boundary.",
-    "recommended": "Define and prove a Commerce catalog persistence adapter that atomically claims one pending registration operation per item across server copies, or fails closed when the storage surface cannot provide that guarantee.",
-    "recorded_at": "2026-08-29T02:54:39+00:00"
+    "reason": "The route makes the proven claim callable from a catalog product, owns durable setup-generation selection, and recovers a committed winner into authoritative Commerce state while keeping the live Inventory transport replaceable during EmDash 1.0 changes.",
+    "recommended": "Grill the authenticated Commerce managed-stock setup route and winner reconciliation against the atomic claim port.",
+    "recorded_at": "2026-08-29T15:31:23+00:00"
   },
   "schema_version": "grilltrack/v0.1",
   "status": "closed",
-  "title": "Retry-safe inventory registration",
-  "track_id": "retry-safe-inventory-registration-20260828",
-  "updated_at": "2026-08-29T02:56:03+00:00"
+  "title": "Atomic managed-SKU registration claim",
+  "track_id": "atomic-managed-sku-registration-claim-20260829",
+  "updated_at": "2026-08-29T16:04:17+00:00"
 }
