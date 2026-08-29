@@ -13,6 +13,21 @@ import {
   setManageStock,
 } from "../../../dist/features/inventory-provider/index.js";
 
+function pendingRegistration(sku = "GRILL-1") {
+  return {
+    mode: "managed",
+    status: "setup-pending",
+    registration: {
+      operationId: "register-grill-1",
+      request: {
+        poolId: "pool-1",
+        sku,
+        displayNameIfNew: "Smoky Grill",
+      },
+    },
+  };
+}
+
 test("the provider binding retains only opaque provider, pool, and default-location identities", () => {
   assert.deepEqual(
     normalizeInventoryProviderBinding({
@@ -136,6 +151,7 @@ test("registration results retain only the provider-neutral Inventory SKU identi
   assert.deepEqual(
     normalizeManagedSkuRegistrationResult({
       outcome: "registered",
+      commandId: "register-grill-1",
       inventorySku: {
         inventorySkuId: " inventory-sku-1 ",
         sku: " GRILL-1 ",
@@ -151,6 +167,21 @@ test("registration results retain only the provider-neutral Inventory SKU identi
         sku: "GRILL-1",
         displayName: "Smoky Grill",
       },
+    },
+  );
+
+  assert.deepEqual(
+    normalizeManagedSkuRegistrationResult({
+      outcome: "rejected",
+      commandId: "register-grill-1",
+      code: " command_id_conflict ",
+      message: " The command ID is already bound to different contents. ",
+      providerTrace: "must-not-survive",
+    }),
+    {
+      outcome: "rejected",
+      code: "command_id_conflict",
+      message: "The command ID is already bound to different contents.",
     },
   );
 
@@ -191,8 +222,7 @@ test("registration results retain only the provider-neutral Inventory SKU identi
 test("a newly registered SKU activates only its permanent Inventory identity", () => {
   assert.deepEqual(
     applyManagedSkuRegistrationResult(
-      { mode: "managed", status: "setup-required" },
-      "GRILL-1",
+      pendingRegistration(),
       {
         outcome: "registered",
         inventorySku: {
@@ -212,8 +242,7 @@ test("a newly registered SKU activates only its permanent Inventory identity", (
 
 test("an existing pooled SKU requires review before its permanent identity activates", () => {
   const needsReview = applyManagedSkuRegistrationResult(
-    { mode: "managed", status: "setup-required" },
-    "GRILL-1",
+    pendingRegistration(),
     {
       outcome: "existing",
       inventorySku: {
@@ -275,11 +304,10 @@ test("registration rejects wrong-SKU and out-of-order state transitions", () => 
   for (const operation of [
     () =>
       applyManagedSkuRegistrationResult(
-        { mode: "managed", status: "setup-required" },
-        "GRILL-1",
+        pendingRegistration(),
         result,
       ),
-    () => applyManagedSkuRegistrationResult({ mode: "unmanaged" }, "OTHER-SKU", result),
+    () => applyManagedSkuRegistrationResult({ mode: "unmanaged" }, result),
     () =>
       applyManagedSkuRegistrationResult(
         {
@@ -287,7 +315,6 @@ test("registration rejects wrong-SKU and out-of-order state transitions", () => 
           status: "active",
           inventorySkuId: "inventory-sku-1",
         },
-        "OTHER-SKU",
         result,
       ),
     () => confirmExistingManagedSku({ mode: "managed", status: "setup-required" }),

@@ -49,6 +49,7 @@
     "test": "npm run test:unit",
     "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs",
     "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
+    "proof:registration-retry:real": "npm run build && node --no-warnings --experimental-sqlite --experimental-strip-types tools/prove-registration-retry-real.mjs",
     "audit:features": "node scripts/check-features.mjs",
     "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features",
     "verify:quick": "bin/verify-commerce quick",

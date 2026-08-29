@@ -1,0 +1,136 @@
+{
+  "closeout": {
+    "closed_at": "2026-08-28T23:15:14+00:00",
+    "confirmed_by": "user",
+    "deferred_decisions": [],
+    "proof_refs": [
+      "file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_PROOF.md;file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_REVIEW.md;file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_RUNTIME.txt;file:proof/managed-sku-registration/compatibility-repair-source-manifest.sha256;url:https://github.com/dinkuskit/commerce/pull/9;git:7b09a25749ce2c650f294a0bd5ab7d99132d2ce5"
+    ],
+    "reason": "The compatibility repair was verified, independently reviewed, merged through Commerce PR #9, and the user explicitly requested closure.",
+    "reviews": [
+      {
+        "classifications": [],
+        "decision_id": "legacy-managed-state-upgrade-023",
+        "ref": "file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_REVIEW.md;file:proof/managed-sku-registration/compatibility-repair-source-manifest.sha256",
+        "result": "clean",
+        "source_identity": "sha256:7c7e7170c8c86cfe02c0aa815ba86d2a1da55546507edc4787786de8df12b14e"
+      }
+    ],
+    "summary": "Closed the managed SKU compatibility repair: valid identity-bearing managed state is preserved; legacy, identity-less, or malformed managed state returns to setup-required; malformed confirmation input is rejected. Delivered by Commerce PR #9 at source fc14de74bb217e8803c9441cdb27797c778b820a and merge 7b09a25749ce2c650f294a0bd5ab7d99132d2ce5. The next recommended grill is retry-safe Commerce-to-Inventory registration orchestration.",
+    "superseded_decisions": [],
+    "verified_decisions": [
+      "legacy-managed-state-upgrade-023"
+    ]
+  },
+  "created_at": "2026-08-28T22:15:34+00:00",
+  "current_focus": {
+    "cadence": "sequential",
+    "confirmed": true,
+    "confirmed_at": "2026-08-28T22:15:35+00:00",
+    "domain": "persisted managed-stock compatibility",
+    "started_at": "2026-08-28T22:15:34+00:00",
+    "status": "closed",
+    "summary": "Repair Commerce PR #9 by preserving valid identity-bearing stock states, returning identity-less or malformed managed persisted states as setup-required, and rejecting malformed needs-review confirmation input. Verify legacy replay, valid replay, malformed confirmation, full repository contracts, runtime behavior, and exact-head independent review. No live Inventory mutation, deployment, or merge is included."
+  },
+  "decisions": [
+    {
+      "baseline_ref": "git:8198a59524f384cdd69a6de0b0e9e22801edaae0",
+      "candidate_refs": [
+        "review:recommended-safe-downgrade"
+      ],
+      "choice": "On read, preserve valid identity-bearing managed states; downgrade legacy or malformed managed states that cannot satisfy the contract to setup-required, requiring explicit fresh registration. Independently reject malformed needs-review candidates before activation.",
+      "context_ref": "user:2026-08-28 required-fix directive;url:https://github.com/dinkuskit/commerce/pull/9#issuecomment-5458226387",
+      "created_at": "2026-08-28T22:15:34+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "persisted managed-stock compatibility",
+      "history": [
+        {
+          "at": "2026-08-28T22:15:35+00:00",
+          "choice": "On read, preserve valid identity-bearing managed states; downgrade legacy or malformed managed states that cannot satisfy the contract to setup-required, requiring explicit fresh registration. Independently reject malformed needs-review candidates before activation.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T22:17:41+00:00",
+          "choice": "On read, preserve valid identity-bearing managed states; downgrade legacy or malformed managed states that cannot satisfy the contract to setup-required, requiring explicit fresh registration. Independently reject malformed needs-review candidates before activation.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-28T22:17:41+00:00",
+          "choice": "On read, preserve valid identity-bearing managed states; downgrade legacy or malformed managed states that cannot satisfy the contract to setup-required, requiring explicit fresh registration. Independently reject malformed needs-review candidates before activation.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/registration.ts;file:src/features/catalog/create-catalog-item.ts;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/catalog/catalog.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "legacy-managed-state-upgrade-023",
+      "implementation_ref": "file:src/features/inventory-provider/stock-management.ts;file:src/features/inventory-provider/registration.ts;file:src/features/catalog/create-catalog-item.ts;file:tests/features/inventory-provider/inventory-provider.test.mjs;file:tests/features/catalog/catalog.test.mjs",
+      "question": "How should persisted managed state that cannot satisfy the identity-bearing Inventory SKU contract behave?",
+      "rationale": "This is the fail-safe pre-release upgrade path recommended by exact-head review: Commerce never invents an Inventory identity, never leaves an invalid active state, and never silently activates malformed persisted input.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_REVIEW.md;file:proof/managed-sku-registration/compatibility-repair-source-manifest.sha256",
+          "result": "clean",
+          "reviewed_at": "2026-08-28T22:18:19+00:00",
+          "source_identity": "sha256:7c7e7170c8c86cfe02c0aa815ba86d2a1da55546507edc4787786de8df12b14e"
+        }
+      ],
+      "review_ref": "file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_REVIEW.md;file:proof/managed-sku-registration/compatibility-repair-source-manifest.sha256",
+      "review_result": "clean",
+      "review_source_identity": "sha256:7c7e7170c8c86cfe02c0aa815ba86d2a1da55546507edc4787786de8df12b14e",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-28T22:18:19+00:00",
+      "verification_ref": "file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_PROOF.md;file:proof/managed-sku-registration/COMPATIBILITY_REPAIR_RUNTIME.txt;file:proof/managed-sku-registration/compatibility-repair-source-manifest.sha256;command:CI=1 mise x node@22.23.2 -- bin/verify-commerce full (37 unit/contract, 7 integration);command:sha256sum -c proof/managed-sku-registration/compatibility-repair-source-manifest.sha256;command:grilltrack ledger validate;command:git diff --check"
+    }
+  ],
+  "last_activation": {
+    "at": "2026-08-28T22:15:34+00:00",
+    "mechanism": "implicit"
+  },
+  "last_pause": null,
+  "pause": null,
+  "predecessor_track_id": "dinkuskit-commerce-v1",
+  "recommendation": {
+    "alternatives": [
+      "Use a new commandId for each retry, accepting that an ambiguous timeout may return existing and require unnecessary user confirmation."
+    ],
+    "reason": "A stable hidden retry identity preserves idempotency across network uncertainty without changing the customer-visible SKU or Inventory SKU identity.",
+    "recommended": "Make Commerce registration retries reuse one durable operation ID as the Inventory commandId so a timed-out successful registration remains the same request.",
+    "recorded_at": "2026-08-28T23:15:07+00:00"
+  },
+  "schema_version": "grilltrack/v0.1",
+  "status": "closed",
+  "title": "Managed SKU compatibility repair",
+  "track_id": "managed-sku-compatibility-repair-20260828",
+  "updated_at": "2026-08-28T23:15:14+00:00"
+}

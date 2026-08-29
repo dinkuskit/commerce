@@ -29,12 +29,23 @@ no Inventory side effect. Enabling it again after that transition creates a
 fresh `setup-required` state. Enabling an already-managed product is
 idempotent and preserves its current status.
 
-The later provider-neutral registration contract advances that foundation with
-two identity-bearing states:
+The provider-neutral registration contract advances that foundation with
+durable setup and identity-bearing states:
 
 ```ts
 type ManagedStockManagement =
   | { mode: "managed"; status: "setup-required" }
+  | {
+      mode: "managed";
+      status: "setup-pending";
+      registration: ManagedSkuRegistration;
+    }
+  | {
+      mode: "managed";
+      status: "setup-needs-attention";
+      registration: ManagedSkuRegistration;
+      rejection: ManagedSkuRegistrationRejection;
+    }
   | {
       mode: "managed";
       status: "needs-review";
@@ -48,8 +59,10 @@ type ManagedStockManagement =
 ```
 
 An active managed item therefore cannot exist without its permanent Inventory
-SKU identity. See [managed-sku-registration-contract.md](managed-sku-registration-contract.md)
-for the registration and existing-SKU confirmation transitions.
+SKU identity. Pending and needs-attention states preserve the exact hidden
+registration operation needed for safe recovery. See
+[managed-sku-registration-contract.md](managed-sku-registration-contract.md)
+for the full registration lifecycle.
 
 ## Store binding value
 
