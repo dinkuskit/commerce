@@ -1,54 +1,59 @@
-# Managed-SKU registration contract
+# Retry-safe managed-SKU registration contract
 
-This slice defines the provider-neutral Commerce contract for connecting a
-managed catalog item to one SKU record in the store's selected inventory pool.
-It does not call DinkusKit Inventory. A later adapter will translate this
-contract to Inventory's transport and persistence APIs.
+This slice defines Commerce's provider-neutral orchestration for connecting a
+managed catalog item to one SKU record in the selected inventory pool. The
+provider port is executable, but live transport, authentication, and adapter
+deployment remain separate work.
 
 ## Ownership boundary
 
-Commerce owns the catalog item's canonical SKU, product title, `Manage stock?`
-choice, store-level provider binding, and persisted setup state. Inventory owns
-the pool-wide SKU record, its permanent opaque identity, its operational
-display name, and every stock quantity and receipt.
+Commerce owns the catalog SKU, product title, `Manage stock?` choice, provider
+binding, hidden registration operation identity, and persisted setup state.
+Inventory owns the pool-wide SKU record, permanent opaque `inventorySkuId`,
+operational display name, and every stock quantity and receipt.
 
 Registration establishes identity only. It carries no location, quantity,
-unit, balance, reservation, receipt, or stock mutation. The store's default
-fulfillment location remains in `InventoryProviderBinding` for a later,
-separate Set Initial Stock action.
+balance, reservation, receipt, or stock mutation. The default fulfillment
+location remains in `InventoryProviderBinding` for later stock operations.
 
 ## Public contract
 
 ```ts
-interface ManagedSkuRegistrationInput {
-  sku: string;
-  productTitle?: string | null;
-}
-
 interface ManagedSkuRegistrationRequest {
   poolId: string;
   sku: string;
   displayNameIfNew: string;
 }
 
-interface InventorySkuIdentity {
-  inventorySkuId: string;
-  sku: string;
-  displayName: string;
+interface ManagedSkuRegistration {
+  operationId: string;
+  request: ManagedSkuRegistrationRequest;
 }
 
 type ManagedSkuRegistrationResult =
   | { outcome: "registered"; inventorySku: InventorySkuIdentity }
-  | { outcome: "existing"; inventorySku: InventorySkuIdentity };
+  | { outcome: "existing"; inventorySku: InventorySkuIdentity }
+  | { outcome: "rejected"; code: string; message: string };
 
 interface InventoryProviderPort {
   registerManagedSku(
-    request: ManagedSkuRegistrationRequest,
+    registration: ManagedSkuRegistration,
   ): Promise<ManagedSkuRegistrationResult>;
 }
 
 type ManagedStockManagement =
   | { mode: "managed"; status: "setup-required" }
+  | {
+      mode: "managed";
+      status: "setup-pending";
+      registration: ManagedSkuRegistration;
+    }
+  | {
+      mode: "managed";
+      status: "setup-needs-attention";
+      registration: ManagedSkuRegistration;
+      rejection: { code: string; message: string };
+    }
   | {
       mode: "managed";
       status: "needs-review";
@@ -61,109 +66,98 @@ type ManagedStockManagement =
     };
 ```
 
-`createManagedSkuRegistrationRequest(binding, input)` returns only `poolId`,
-the Commerce canonical SKU, and `displayNameIfNew`. A non-blank trimmed product
-title supplies the one-time initial name; an absent or blank title falls back
-to the SKU. An existing Inventory SKU ignores `displayNameIfNew`, so a second
-store cannot rename the pooled item by connecting to it.
+`startManagedSkuRegistration` creates a hidden operation ID and a normalized,
+pool-scoped request snapshot. It awaits the caller-supplied `persist` function
+with `setup-pending` before invoking `InventoryProviderPort`. The persistence
+function must durably update the owning catalog item; Commerce supplies and
+enforces the ordering but does not invent another stock or catalog store.
+This slice does not yet provide the cross-process compare-and-set adapter needed
+to choose one operation when two first submissions race. The persistence seam
+is where that atomic claim must be implemented and proven before live use.
 
-`normalizeManagedSkuRegistrationResult(value)` accepts only a known outcome
-and non-empty opaque identity fields. It returns a clean value containing no
-provider extras.
+`retryManagedSkuRegistration` accepts only `setup-pending`, persists that same
+snapshot again, and sends the same operation ID and request. It is the contract
+behind the explicit **Retry connection** action. Reading or normalizing pending
+state performs no provider call, and this slice contains no background retry
+loop.
 
-`applyManagedSkuRegistrationResult(current, expectedSku, result)` accepts only
-`setup-required` managed state and a result whose visible SKU equals the
-Commerce SKU being connected. A new registration becomes `active` and stores
-only the permanent `inventorySkuId`. An existing SKU becomes `needs-review`
-and retains the candidate identity for an explicit human decision.
+An adapter for
+[Inventory PR #12](https://github.com/dinkuskit/inventory/pull/12) maps
+`operationId` to Inventory `commandId`, adds Inventory-owned command envelope
+fields, and maps the terminal result back to this provider-neutral union. The
+candidate contract evaluated here is exact head
+`670c539303ba77db916f50012070bdd83ead4e4e`.
 
-`confirmExistingManagedSku(current)` accepts only `needs-review` and promotes
-the candidate's permanent identity to `active`. It validates every candidate
-identity field at runtime before activation, including values restored from
-untyped persisted data. The later UI/adapter must show the current Inventory
-stock read and revalidate it before invoking this confirmation. That stock read
-is deliberately not copied into Commerce state.
+## Outcome handling
 
-## Persisted-state compatibility
+- A thrown transport error or malformed result leaves the already-persisted
+  operation `setup-pending`. The caller may present **Retry connection**.
+- `registered` activates only the permanent `inventorySkuId` after validating
+  that Inventory returned the requested visible SKU.
+- `existing` becomes `needs-review`; `confirmExistingManagedSku` remains the
+  only promotion from that state to active.
+- `rejected` becomes `setup-needs-attention` and preserves the operation plus
+  normalized code and message.
+- Corrected resubmission starts from `setup-needs-attention`, must mint a
+  different operation ID, and persists the new snapshot before calling the
+  provider. Changed payload is never sent under the rejected ID.
+- If persisting a terminal result fails after Inventory succeeds, the durable
+  pending snapshot remains safe to retry. Inventory's command replay returns
+  the original terminal result.
 
-The identity-bearing `active` representation supersedes the pre-release
-status-only representation. Catalog reads preserve valid managed states. A
-legacy `active` record without a non-empty `inventorySkuId`, or another
-malformed managed state that cannot satisfy the current union, is returned as
-`managed` / `setup-required`. Commerce never invents an Inventory identity and
-never exposes malformed state as active. The user must complete explicit fresh
-registration before stock management becomes active again.
-
-Missing stock-management state on a pre-policy catalog record retains the
-existing unmanaged compatibility behavior. Valid identity-bearing `active`
-records and valid `needs-review` candidates are preserved.
-
-## Lifecycle and invariants
+## Persisted compatibility and lifecycle
 
 ```text
-unmanaged
-  -> setup-required             enable Manage Stock
-  -> unmanaged                  disable Manage Stock
-
 setup-required
-  -> active                     Inventory registered a new SKU
-  -> needs-review               Inventory found the SKU already in the pool
-  -> unmanaged                  disable Manage Stock
+  -> setup-pending             persist a new operation before provider call
+
+setup-pending
+  -> setup-pending             transport ambiguity, malformed response, reload
+  -> active                    Inventory registered the SKU
+  -> needs-review              Inventory returned an existing pooled SKU
+  -> setup-needs-attention     Inventory definitively rejected the operation
+
+setup-needs-attention
+  -> setup-pending             corrected submission with a new operation ID
 
 needs-review
-  -> active                     user confirms the same pooled item
-  -> unmanaged                  disable Manage Stock
+  -> active                    user confirms the same pooled item
 
-active
-  -> unmanaged                  disable Manage Stock
+any managed state
+  -> unmanaged                 disable Manage Stock
 ```
 
-- `active` is impossible without a non-empty permanent Inventory SKU identity.
-- Legacy identity-less active state fails safe to `setup-required` on read.
-- A malformed review candidate cannot be promoted to active.
-- `existing` never becomes authoritative without explicit confirmation.
-- A result for a different visible SKU fails closed.
-- Re-enabling Manage Stock starts fresh at `setup-required`; Commerce does not
-  silently reuse a discarded link.
-- Later Commerce title changes do not rename Inventory. Later Inventory name
-  changes do not alter Commerce or storefront titles.
-- The active link stores the stable identity, not a copy of Inventory's name or
-  visible SKU, so either display value can evolve without breaking the link.
-- Registration and every state transition contain no Commerce-local stock.
+Stored pending and needs-attention states are preserved only when every
+operation, request, and rejection field is a non-empty string of the expected
+shape. Malformed state fails safe to `setup-required`. Valid active and
+needs-review compatibility behavior remains unchanged. Re-enabling after
+disabling starts fresh; if an earlier ambiguous call actually registered the
+SKU, Inventory returns `existing` and Commerce requires confirmation.
 
-## Zero-implementation review
+The active link stores only the permanent Inventory identity. Commerce title
+changes never rename Inventory, and Inventory display-name changes never alter
+Commerce or storefront titles.
 
-The change affects the exported and persisted `StockManagement` union, the
-catalog replay fixture that represents an advanced managed item, both package
-entry points, the inventory-provider tests, feature ownership documentation,
-and proof. This is a high-risk public-state change even though the functions
-are local and pure.
+## Verification contract
 
-Inventory `origin/main` at
-`e32ac165cae5efd78390bee1f0306754aa7fabbb` already accepts opaque `skuId`
-values in location and aggregate stock reads but intentionally has no SKU
-registration API. The future adapter may map Commerce's `inventorySkuId` to
-that provider field. This slice makes no cross-repository compatibility claim
-and does not change Inventory.
+The executable proof covers:
 
-Required regression proof is:
+- pending persistence before the first provider call;
+- ambiguous failure followed by reload and exact-operation retry;
+- terminal registration and genuine-existing confirmation paths;
+- definitive rejection, needs-attention persistence, and new-ID resubmission;
+- rejection of reused IDs, wrong-SKU results, malformed results, malformed
+  stored attempts, and out-of-order transitions;
+- omission of stock and location data from registration;
+- package-root and feature-entry export parity; and
+- the complete Commerce verifier.
 
-- unchanged unmanaged and `setup-required` creation behavior;
-- request naming fallback and omission of location/quantity fields;
-- strict result validation and provider-extra stripping;
-- new registration to active identity;
-- existing registration to review, then explicit confirmation;
-- rejection of wrong-SKU and out-of-order transitions;
-- disable/re-enable behavior with an identity-bearing active state;
-- package-root and feature-entry export parity;
-- legacy identity-less active replay to `setup-required` while valid active
-  replay remains active;
-- malformed persisted review-candidate rejection before activation;
-- the full Commerce verifier after focused tests pass.
+The proof does not claim a live Inventory call or a cross-process atomic first
+operation claim. Those remain separate integration work.
 
 ## Explicit exclusions
 
-No admin UI, popup, OAuth, pool discovery, binding persistence, live Inventory
-transport, SKU creation inside Inventory, quantity read, location selection,
-opening balance, stock mutation, checkout, deployment, or production change is
-implemented here.
+No admin UI rendering, OAuth, pool discovery, binding persistence, live
+Inventory transport, automatic retry scheduler, quantity read, location
+selection, opening balance, stock mutation, checkout, deployment, or production
+change is implemented here.

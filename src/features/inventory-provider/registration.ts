@@ -3,10 +3,15 @@ import { ManagedSkuRegistrationError } from "./errors.js";
 import type {
   InventoryProviderBinding,
   InventorySkuIdentity,
+  ManagedSkuRegistration,
+  ManagedSkuRegistrationExecution,
   ManagedSkuRegistrationInput,
   ManagedSkuRegistrationRequest,
+  ManagedSkuRegistrationRejection,
   ManagedSkuRegistrationResult,
   ManagedStockManagement,
+  SetupPendingManagedStockManagement,
+  StartManagedSkuRegistrationExecution,
   StockManagement,
 } from "./types.js";
 
@@ -68,14 +73,53 @@ export function createManagedSkuRegistrationRequest(
   };
 }
 
+export function normalizeManagedSkuRegistration(
+  value: unknown,
+): ManagedSkuRegistration {
+  const candidate = asRecord(value, "managed SKU registration");
+  const request = asRecord(
+    candidate.request,
+    "managed SKU registration request",
+  );
+
+  return {
+    operationId: asNonEmptyString(candidate.operationId, "operationId"),
+    request: {
+      poolId: asNonEmptyString(request.poolId, "request.poolId"),
+      sku: asNonEmptyString(request.sku, "request.sku"),
+      displayNameIfNew: asNonEmptyString(
+        request.displayNameIfNew,
+        "request.displayNameIfNew",
+      ),
+    },
+  };
+}
+
+export function normalizeManagedSkuRegistrationRejection(
+  value: unknown,
+): ManagedSkuRegistrationRejection {
+  const candidate = asRecord(value, "managed SKU registration rejection");
+  return {
+    code: asNonEmptyString(candidate.code, "rejection.code"),
+    message: asNonEmptyString(candidate.message, "rejection.message"),
+  };
+}
+
 export function normalizeManagedSkuRegistrationResult(
   value: unknown,
 ): ManagedSkuRegistrationResult {
   const candidate = asRecord(value, "managed SKU registration result");
+  if (candidate.outcome === "rejected") {
+    return {
+      outcome: "rejected",
+      ...normalizeManagedSkuRegistrationRejection(candidate),
+    };
+  }
+
   if (candidate.outcome !== "registered" && candidate.outcome !== "existing") {
     throw new ManagedSkuRegistrationError(
       "INVALID_REGISTRATION",
-      "registration outcome must be registered or existing",
+      "registration outcome must be registered, existing, or rejected",
     );
   }
 
@@ -87,28 +131,30 @@ export function normalizeManagedSkuRegistrationResult(
 
 export function applyManagedSkuRegistrationResult(
   current: StockManagement,
-  expectedSku: string,
   result: ManagedSkuRegistrationResult,
 ): ManagedStockManagement {
-  if (current.mode !== "managed" || current.status !== "setup-required") {
+  if (current.mode !== "managed" || current.status !== "setup-pending") {
     throw new ManagedSkuRegistrationError(
       "INVALID_TRANSITION",
-      "managed SKU registration requires setup-required stock state",
+      "managed SKU registration result requires setup-pending stock state",
     );
   }
 
-  let normalizedExpectedSku: string;
-  try {
-    normalizedExpectedSku = asNonEmptyString(expectedSku, "expectedSku");
-  } catch {
-    throw new ManagedSkuRegistrationError(
-      "INVALID_TRANSITION",
-      "managed SKU registration requires the expected Commerce SKU",
-    );
-  }
-
+  const registration = normalizeManagedSkuRegistration(current.registration);
   const normalizedResult = normalizeManagedSkuRegistrationResult(result);
-  if (normalizedResult.inventorySku.sku !== normalizedExpectedSku) {
+  if (normalizedResult.outcome === "rejected") {
+    return {
+      mode: "managed",
+      status: "setup-needs-attention",
+      registration,
+      rejection: {
+        code: normalizedResult.code,
+        message: normalizedResult.message,
+      },
+    };
+  }
+
+  if (normalizedResult.inventorySku.sku !== registration.request.sku) {
     throw new ManagedSkuRegistrationError(
       "INVALID_TRANSITION",
       "Inventory returned a different SKU than Commerce requested",
@@ -128,6 +174,121 @@ export function applyManagedSkuRegistrationResult(
     status: "needs-review",
     candidate: normalizedResult.inventorySku,
   };
+}
+
+function normalizeExecution(
+  value: ManagedSkuRegistrationExecution,
+): ManagedSkuRegistrationExecution {
+  const candidate = asRecord(value, "managed SKU registration execution");
+  const provider = asRecord(candidate.provider, "inventory provider");
+  if (typeof provider.registerManagedSku !== "function") {
+    throw new ManagedSkuRegistrationError(
+      "INVALID_REGISTRATION",
+      "inventory provider must implement registerManagedSku",
+    );
+  }
+  if (typeof candidate.persist !== "function") {
+    throw new ManagedSkuRegistrationError(
+      "INVALID_REGISTRATION",
+      "persist must be a function",
+    );
+  }
+  return value;
+}
+
+function createOperationId(
+  execution: StartManagedSkuRegistrationExecution,
+): string {
+  if (
+    execution.createOperationId !== undefined &&
+    typeof execution.createOperationId !== "function"
+  ) {
+    throw new ManagedSkuRegistrationError(
+      "INVALID_REGISTRATION",
+      "createOperationId must be a function when supplied",
+    );
+  }
+  const createId =
+    execution.createOperationId ?? (() => globalThis.crypto.randomUUID());
+  return asNonEmptyString(createId(), "operationId");
+}
+
+async function executePendingRegistration(
+  pending: SetupPendingManagedStockManagement,
+  rawExecution: ManagedSkuRegistrationExecution,
+): Promise<ManagedStockManagement> {
+  const execution = normalizeExecution(rawExecution);
+  await execution.persist(pending);
+  const result = await execution.provider.registerManagedSku(
+    pending.registration,
+  );
+  const next = applyManagedSkuRegistrationResult(pending, result);
+  await execution.persist(next);
+  return next;
+}
+
+export async function startManagedSkuRegistration(
+  current: StockManagement,
+  binding: InventoryProviderBinding,
+  input: ManagedSkuRegistrationInput,
+  rawExecution: StartManagedSkuRegistrationExecution,
+): Promise<ManagedStockManagement> {
+  if (
+    current.mode !== "managed" ||
+    (current.status !== "setup-required" &&
+      current.status !== "setup-needs-attention")
+  ) {
+    throw new ManagedSkuRegistrationError(
+      "INVALID_TRANSITION",
+      "managed SKU registration can start only from setup-required or setup-needs-attention",
+    );
+  }
+
+  const execution = normalizeExecution(
+    rawExecution,
+  ) as StartManagedSkuRegistrationExecution;
+  const operationId = createOperationId(execution);
+  if (
+    current.status === "setup-needs-attention" &&
+    normalizeManagedSkuRegistration(current.registration).operationId === operationId
+  ) {
+    throw new ManagedSkuRegistrationError(
+      "INVALID_TRANSITION",
+      "corrected registration requires a new operationId",
+    );
+  }
+
+  const pending: SetupPendingManagedStockManagement = {
+    mode: "managed",
+    status: "setup-pending",
+    registration: {
+      operationId,
+      request: createManagedSkuRegistrationRequest(binding, input),
+    },
+  };
+
+  return executePendingRegistration(pending, execution);
+}
+
+export async function retryManagedSkuRegistration(
+  current: StockManagement,
+  execution: ManagedSkuRegistrationExecution,
+): Promise<ManagedStockManagement> {
+  if (current.mode !== "managed" || current.status !== "setup-pending") {
+    throw new ManagedSkuRegistrationError(
+      "INVALID_TRANSITION",
+      "managed SKU registration retry requires setup-pending stock state",
+    );
+  }
+
+  return executePendingRegistration(
+    {
+      mode: "managed",
+      status: "setup-pending",
+      registration: normalizeManagedSkuRegistration(current.registration),
+    },
+    execution,
+  );
 }
 
 export function confirmExistingManagedSku(

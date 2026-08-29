@@ -1,0 +1,3 @@
+RUNTIME_PROOF {"case":"ambiguous-timeout","persistedStatus":"setup-pending","operationId":"register-grill-proof","providerCallsOnReload":0,"dataClassification":"synthetic"}
+RUNTIME_PROOF {"case":"explicit-retry","originalOperationId":"register-grill-proof","retriedOperationId":"register-grill-proof","sameOperation":true,"finalStatus":"active","inventorySkuId":"inventory-sku-proof","dataClassification":"synthetic"}
+RUNTIME_PROOF {"case":"definitive-rejection","finalStatus":"setup-needs-attention","preservedOperationId":"register-grill-rejected","rejectionCode":"command_id_conflict","dataClassification":"synthetic"}

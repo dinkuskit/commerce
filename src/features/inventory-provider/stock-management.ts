@@ -1,4 +1,8 @@
 import type { InventorySkuIdentity, StockManagement } from "./types.js";
+import {
+  normalizeManagedSkuRegistration,
+  normalizeManagedSkuRegistrationRejection,
+} from "./registration.js";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -28,6 +32,31 @@ export function normalizeStoredStockManagement(value: unknown): StockManagement 
   if (stored?.mode === "managed") {
     if (stored.status === "setup-required") {
       return { mode: "managed", status: "setup-required" };
+    }
+
+    if (stored.status === "setup-pending") {
+      try {
+        return {
+          mode: "managed",
+          status: "setup-pending",
+          registration: normalizeManagedSkuRegistration(stored.registration),
+        };
+      } catch {
+        return { mode: "managed", status: "setup-required" };
+      }
+    }
+
+    if (stored.status === "setup-needs-attention") {
+      try {
+        return {
+          mode: "managed",
+          status: "setup-needs-attention",
+          registration: normalizeManagedSkuRegistration(stored.registration),
+          rejection: normalizeManagedSkuRegistrationRejection(stored.rejection),
+        };
+      } catch {
+        return { mode: "managed", status: "setup-required" };
+      }
     }
 
     if (stored.status === "active") {
