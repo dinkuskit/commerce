@@ -81,9 +81,57 @@ shows that an ambiguous call left one persisted pending operation, a reload
 made zero provider calls, explicit retry reused the exact operation and became
 active, and terminal rejection preserved its operation in needs-attention.
 
+[`REAL_RUNTIME.txt`](REAL_RUNTIME.txt) is the after-fix durable compatibility
+receipt requested during PR #11 review. It uses EmDash 0.35.0's real
+`PluginStorageRepository` over SQLite for the Commerce catalog and Inventory
+PR #12's exact reviewed head `670c539303ba77db916f50012070bdd83ead4e4e`
+with its real local SQLite store and `createRegisterManagedSku` implementation.
+The harness loses the first response only after Inventory commits, closes both
+stores, reopens them, observes Commerce still setup-pending without calling the
+provider, and explicitly retries the same operation. Inventory replays the
+stored `registered` result without minting another identity; Commerce persists
+active state, and a second full reopen observes one catalog item and one
+Inventory SKU.
+
+Command:
+
+```text
+mise x node@22.23.2 -- npm run proof:registration-retry:real -- <exact-inventory-pr12-worktree>
+```
+
+Result:
+
+```text
+LIVE_PROOF {"case":"emdash-inventory-registration-retry","emdash":"0.35.0","inventoryHead":"670c539303ba77db916f50012070bdd83ead4e4e","firstProviderCalls":1,"automaticProviderCallsOnReload":0,"pendingPersistedAcrossReopen":true,"retryOperationIdReused":true,"retryProviderCalls":1,"inventoryIdsMintedOnRetry":0,"terminalInventoryOutcome":"registered","finalStockManagement":{"mode":"managed","status":"active","inventorySkuId":"inventory_registration_retry_proof"},"commerceCatalogItems":1,"inventorySkuRows":1,"commandResultRows":1,"balanceRows":0,"receiptRows":0,"commerceStoreReopens":2,"inventoryStoreReopens":2,"dataClassification":"synthetic-local"}
+```
+
+The product data and principal are synthetic and redacted. No credential,
+tenant, production resource, deployment, or live network transport was used.
+The storage and provider implementations are real exact-source components, not
+in-memory doubles.
+
+## External review adjudication
+
+ClawSweeper reviewed exact PR head
+`f1c3645cd01e07bf1b05e6fabee7190d35024531` and requested two changes.
+
+- `required_fix`: accepted the missing real durable behavior proof. The
+  EmDash-plus-Inventory receipt above and its reusable exact-head harness close
+  that evidence gap.
+- `reject_false_positive`: the requested wholesale deletion of
+  `.grilltrack/archive/managed-sku-compatibility-repair-20260828` is not a
+  private-ledger cleanup. GrillTrack generated it from already-public Commerce
+  state when this successor track began. The repository contract explicitly
+  makes `.grilltrack/ledger.json` source-priority authority, and the archive
+  preserves that same repository's public product-decision lineage. It contains
+  no credentials, tenant/customer data, private repository coordinates, or
+  private operating rationale.
+
 ## Fidelity and remaining risk
 
-The provider is a deterministic in-memory test double; no live Inventory or
+The unit receipt still uses a deterministic in-memory test double, while the
+after-fix receipt additionally proves exact real EmDash persistence and the
+real Inventory PR #12 implementation across process-local store reopen. No live
 Cloudflare transport is claimed. The orchestration awaits a caller-supplied
 durable persistence function before every provider call, but this slice does
 not implement or prove the cross-process compare-and-set adapter needed to

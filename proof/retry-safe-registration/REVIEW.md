@@ -1,9 +1,9 @@
 # Retry-safe managed-SKU registration review
 
-Result: clean
+Result: repair verified locally; exact-head external re-review pending
 
 Source identity:
-`sha256:ff489d7780ad9c402073f4172e1ee19cbd689d2a741d5aa48d3d24dcca3b6e11`
+`sha256:71fb97b4613ac8e39921c139bf92e50bebf0b0a32911064c0f3ca0d0397134d0`
 
 Manifest: [`source-manifest.sha256`](source-manifest.sha256)
 
@@ -37,8 +37,23 @@ Manifest: [`source-manifest.sha256`](source-manifest.sha256)
 
 ## Adjudication
 
-No required fix was found within the confirmed slice. The persistence function
-is an application seam, not a proven cross-process compare-and-set adapter.
-That limitation is disclosed in the contract and proof and remains the next
-recommended grill; this review does not claim simultaneous first-submission
-atomicity, live Inventory transport, or admin UI fidelity.
+ClawSweeper's exact-head review of
+`f1c3645cd01e07bf1b05e6fabee7190d35024531` produced two findings.
+
+- `required_fix`: accepted. The original runtime receipt proved orchestration
+  only with an in-memory provider. `REAL_RUNTIME.txt` now proves the changed
+  path with EmDash 0.35.0's real `PluginStorageRepository`, Inventory PR #12's
+  exact durable SQLite implementation, full close/reopen, one automatic reload
+  with zero provider calls, and explicit same-command replay to active state.
+- `reject_false_positive`: the archive-removal request conflates an imported
+  private ledger with GrillTrack's same-repository public lineage. The named
+  archive was generated from already-public Commerce state by the required
+  GrillTrack transition and supports the contract's source-priority ledger. It
+  contains no prohibited private data or rationale, so deleting it would erase
+  authoritative public product history without repairing a security boundary.
+
+The persistence function remains an application seam, not a proven
+cross-process compare-and-set adapter. That limitation is disclosed in the
+contract and proof and remains the next recommended grill; this review does not
+claim simultaneous first-submission atomicity, live Inventory network
+transport, or admin UI fidelity.
