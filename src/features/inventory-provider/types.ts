@@ -89,6 +89,58 @@ export interface ManagedSkuRegistrationRequest {
   displayNameIfNew: string;
 }
 
+export interface ManagedSkuRegistrationClaimRecord {
+  recordKind: "managed-sku-registration-claim";
+  recordId: string;
+  claimKey: string;
+  catalogItemId: string;
+  operationId: string;
+  request: ManagedSkuRegistrationRequest;
+  createdAt: string;
+}
+
+export interface ManagedSkuRegistrationClaimInput {
+  claimKey: string;
+  catalogItemId: string;
+  registration: ManagedSkuRegistration;
+}
+
+export type ManagedSkuRegistrationClaimResult =
+  | {
+      outcome: "claimed";
+      claim: ManagedSkuRegistrationClaimRecord;
+    }
+  | {
+      outcome: "existing";
+      claim: ManagedSkuRegistrationClaimRecord;
+    };
+
+export interface ManagedSkuRegistrationClaimPort {
+  claim(
+    input: ManagedSkuRegistrationClaimInput,
+  ): Promise<ManagedSkuRegistrationClaimResult>;
+}
+
+export type StartManagedSkuRegistrationResult =
+  | {
+      outcome: "started";
+      state: ManagedStockManagement;
+    }
+  | {
+      outcome: "already-claimed";
+      state: SetupPendingManagedStockManagement;
+      sameRequest: boolean;
+    };
+
+export interface ConcurrentManagedSkuRegistrationFeedback {
+  message: string;
+  actionLabel: "Refresh status";
+}
+
+export interface ManagedSkuRegistrationUnavailableFeedback {
+  message: "Inventory setup is temporarily unavailable. Please try again.";
+}
+
 export type ManagedSkuRegistrationResult =
   | {
       outcome: "registered";
@@ -121,5 +173,8 @@ export interface ManagedSkuRegistrationExecution {
 
 export interface StartManagedSkuRegistrationExecution
   extends ManagedSkuRegistrationExecution {
+  catalogItemId: string;
+  claimKey: string;
+  claim: ManagedSkuRegistrationClaimPort["claim"];
   createOperationId?: () => string;
 }

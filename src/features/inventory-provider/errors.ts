@@ -12,7 +12,8 @@ export class InventoryProviderBindingError extends Error {
 
 export type ManagedSkuRegistrationErrorCode =
   | "INVALID_REGISTRATION"
-  | "INVALID_TRANSITION";
+  | "INVALID_TRANSITION"
+  | "REGISTRATION_CLAIM_UNAVAILABLE";
 
 export class ManagedSkuRegistrationError extends Error {
   readonly code: ManagedSkuRegistrationErrorCode;

@@ -9,13 +9,18 @@ import { pathToFileURL } from "node:url";
 
 import {
   createCatalogItem,
+  createManagedSkuRegistrationClaimKey,
+  createManagedSkuRegistrationClaimPort,
   retryManagedSkuRegistration,
   startManagedSkuRegistration,
 } from "../dist/index.js";
 import {
   initializeCatalogDatabase,
+  initializeClaimDatabase,
   openCatalogRepository,
+  openClaimRepository,
   readCatalogItems,
+  readClaimRecords,
 } from "../tests/integration/sqlite-fixture.mjs";
 
 const EXPECTED_INVENTORY_HEAD = "670c539303ba77db916f50012070bdd83ead4e4e";
@@ -142,8 +147,14 @@ const inventoryDatabasePath = join(directory, "inventory.db");
 
 try {
   initializeCatalogDatabase(commerceDatabasePath);
+  initializeClaimDatabase(commerceDatabasePath);
 
   let commerce = openCatalogRepository(commerceDatabasePath);
+  const claims = openClaimRepository(commerceDatabasePath);
+  const claimPort = createManagedSkuRegistrationClaimPort(claims.storage, {
+    createRecordId: () => "claim_record_registration_retry_proof",
+    now: () => new Date("2026-08-29T00:00:30.000Z"),
+  });
   const created = await createCatalogItem(
     commerce.storage,
     {
@@ -176,6 +187,9 @@ try {
       },
       { sku: created.item.sku, productTitle: created.item.name },
       {
+        catalogItemId: ITEM_ID,
+        claimKey: createManagedSkuRegistrationClaimKey({ catalogItemId: ITEM_ID }),
+        claim: claimPort.claim.bind(claimPort),
         createOperationId: () => OPERATION_ID,
         persist: persistStockManagement(commerce.storage, ITEM_ID),
         provider: createProvider(firstRegister, firstCounters, true),
@@ -184,8 +198,10 @@ try {
     /lost the response after the provider commit/,
   );
   assert.equal(firstCounters.providerCalls, 1);
+  assert.equal(readClaimRecords(commerceDatabasePath).length, 1);
 
   await commerce.db.destroy();
+  await claims.db.destroy();
   await inventory.close();
 
   commerce = openCatalogRepository(commerceDatabasePath);
@@ -275,6 +291,7 @@ try {
         terminalInventoryOutcome: storedCommand.result.outcome,
         finalStockManagement: activeAfterSecondReopen.stockManagement,
         commerceCatalogItems: readCatalogItems(commerceDatabasePath).length,
+        commerceRegistrationClaims: readClaimRecords(commerceDatabasePath).length,
         ...inventoryCounts,
         commerceStoreReopens: 2,
         inventoryStoreReopens: 2,

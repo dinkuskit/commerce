@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   ManagedSkuRegistrationError,
   confirmExistingManagedSku,
+  createManagedSkuRegistrationClaimKey,
   normalizeStoredStockManagement,
   retryManagedSkuRegistration,
   startManagedSkuRegistration,
@@ -33,6 +34,31 @@ function clone(value) {
   return structuredClone(value);
 }
 
+function withAtomicClaim(execution, options = {}) {
+  const catalogItemId = options.catalogItemId ?? "product-grill-1";
+  const claimKey = createManagedSkuRegistrationClaimKey({
+    catalogItemId,
+    rejectedOperationId: options.rejectedOperationId,
+  });
+  return {
+    ...execution,
+    catalogItemId,
+    claimKey,
+    claim: async ({ registration }) => ({
+      outcome: "claimed",
+      claim: {
+        recordKind: "managed-sku-registration-claim",
+        recordId: `claim:${registration.operationId}`,
+        claimKey,
+        catalogItemId,
+        operationId: registration.operationId,
+        request: clone(registration.request),
+        createdAt: "2026-08-29T00:00:00.000Z",
+      },
+    }),
+  };
+}
+
 test("an ambiguous first call persists one retryable operation before contacting Inventory", async () => {
   const timeline = [];
   const unavailable = new Error("inventory unavailable");
@@ -42,7 +68,7 @@ test("an ambiguous first call persists one retryable operation before contacting
       { mode: "managed", status: "setup-required" },
       binding,
       input,
-      {
+      withAtomicClaim({
         createOperationId: () => "register-grill-1",
         persist: async (state) => timeline.push(["persist", clone(state)]),
         provider: {
@@ -51,7 +77,7 @@ test("an ambiguous first call persists one retryable operation before contacting
             throw unavailable;
           },
         },
-      },
+      }),
     ),
     unavailable,
   );
@@ -108,11 +134,11 @@ test("a pending operation survives reload and an explicit retry reuses its ident
 
 test("a genuine existing SKU still waits for explicit confirmation", async () => {
   const persisted = [];
-  const result = await startManagedSkuRegistration(
+  const started = await startManagedSkuRegistration(
     { mode: "managed", status: "setup-required" },
     binding,
     input,
-    {
+    withAtomicClaim({
       createOperationId: () => "register-grill-1",
       persist: async (state) => persisted.push(clone(state)),
       provider: {
@@ -125,8 +151,10 @@ test("a genuine existing SKU still waits for explicit confirmation", async () =>
           },
         }),
       },
-    },
+    }),
   );
+  assert.equal(started.outcome, "started");
+  const result = started.state;
 
   assert.deepEqual(result, {
     mode: "managed",
@@ -147,11 +175,11 @@ test("a genuine existing SKU still waits for explicit confirmation", async () =>
 
 test("a definitive rejection needs attention and corrected resubmission uses a new operation", async () => {
   const persisted = [];
-  const rejected = await startManagedSkuRegistration(
+  const rejectedStart = await startManagedSkuRegistration(
     { mode: "managed", status: "setup-required" },
     binding,
     input,
-    {
+    withAtomicClaim({
       createOperationId: () => "register-grill-1",
       persist: async (state) => persisted.push(clone(state)),
       provider: {
@@ -161,8 +189,10 @@ test("a definitive rejection needs attention and corrected resubmission uses a n
           message: "The command ID is already bound to different contents.",
         }),
       },
-    },
+    }),
   );
+  assert.equal(rejectedStart.outcome, "started");
+  const rejected = rejectedStart.state;
 
   assert.deepEqual(rejected, {
     mode: "managed",
@@ -176,23 +206,33 @@ test("a definitive rejection needs attention and corrected resubmission uses a n
   assert.deepEqual(normalizeStoredStockManagement(rejected), rejected);
 
   const registrations = [];
-  const corrected = await startManagedSkuRegistration(rejected, binding, input, {
-    createOperationId: () => "register-grill-1-corrected",
-    persist: async (state) => persisted.push(clone(state)),
-    provider: {
-      registerManagedSku: async (registration) => {
-        registrations.push(clone(registration));
-        return {
-          outcome: "registered",
-          inventorySku: {
-            inventorySkuId: "inventory-sku-corrected",
-            sku: "GRILL-1",
-            displayName: "Smoky Grill",
+  const correctedStart = await startManagedSkuRegistration(
+    rejected,
+    binding,
+    input,
+    withAtomicClaim(
+      {
+        createOperationId: () => "register-grill-1-corrected",
+        persist: async (state) => persisted.push(clone(state)),
+        provider: {
+          registerManagedSku: async (registration) => {
+            registrations.push(clone(registration));
+            return {
+              outcome: "registered",
+              inventorySku: {
+                inventorySkuId: "inventory-sku-corrected",
+                sku: "GRILL-1",
+                displayName: "Smoky Grill",
+              },
+            };
           },
-        };
+        },
       },
-    },
-  });
+      { rejectedOperationId: "register-grill-1" },
+    ),
+  );
+  assert.equal(correctedStart.outcome, "started");
+  const corrected = correctedStart.state;
 
   assert.equal(registrations[0].operationId, "register-grill-1-corrected");
   assert.deepEqual(corrected, {
@@ -203,15 +243,23 @@ test("a definitive rejection needs attention and corrected resubmission uses a n
 
   let providerCalled = false;
   await assert.rejects(
-    startManagedSkuRegistration(rejected, binding, input, {
-      createOperationId: () => "register-grill-1",
-      persist: async () => assert.fail("reused operation must not be persisted"),
-      provider: {
-        registerManagedSku: async () => {
-          providerCalled = true;
+    startManagedSkuRegistration(
+      rejected,
+      binding,
+      input,
+      withAtomicClaim(
+        {
+          createOperationId: () => "register-grill-1",
+          persist: async () => assert.fail("reused operation must not be persisted"),
+          provider: {
+            registerManagedSku: async () => {
+              providerCalled = true;
+            },
+          },
         },
-      },
-    }),
+        { rejectedOperationId: "register-grill-1" },
+      ),
+    ),
     (error) =>
       error instanceof ManagedSkuRegistrationError && error.code === "INVALID_TRANSITION",
   );
@@ -225,13 +273,13 @@ test("malformed provider output leaves the persisted operation pending", async (
       { mode: "managed", status: "setup-required" },
       binding,
       input,
-      {
+      withAtomicClaim({
         createOperationId: () => "register-grill-1",
         persist: async (state) => persisted.push(clone(state)),
         provider: {
           registerManagedSku: async () => ({ outcome: "registered" }),
         },
-      },
+      }),
     ),
     (error) =>
       error instanceof ManagedSkuRegistrationError &&
