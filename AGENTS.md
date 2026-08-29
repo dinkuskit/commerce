@@ -15,6 +15,10 @@ for EmDash sites. Assume every committed byte is immediately public.
 - Never commit credentials, environment files, customer or tenant data,
   business addresses or figures, production configuration, private repository
   coordinates, or private operating rationale.
+- The CLI-maintained `.grilltrack/ledger.json`, event log, and same-repository
+  closed-track archives are public Commerce product-decision lineage. Keep
+  them public-safe and preserve them through the GrillTrack lifecycle; they are
+  not imported private ledgers or unrelated archived documents.
 - This repository has an independent Git root. Never merge, cherry-pick,
   subtree, fork, bundle, or otherwise import unrelated repository history.
 - Reuse from prior private work is source-by-source only: classify the slice,
