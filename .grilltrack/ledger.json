@@ -1,5 +1,59 @@
 {
-  "closeout": null,
+  "closeout": {
+    "closed_at": "2026-08-30T21:30:10+00:00",
+    "confirmed_by": "user",
+    "deferred_decisions": [],
+    "proof_refs": [
+      "file:proof/unmanaged-product-sellability/PROOF.md"
+    ],
+    "reason": "The confirmed unmanaged-product sellability backend slice is implemented, fully verified, cleanly reviewed, and authorized for pull-request delivery; visual administration and later transaction surfaces belong to future focused tracks.",
+    "reviews": [
+      {
+        "classifications": [],
+        "decision_id": "unmanaged-availability-model-044",
+        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+      },
+      {
+        "classifications": [],
+        "decision_id": "unmanaged-availability-default-045",
+        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+      },
+      {
+        "classifications": [],
+        "decision_id": "unmanaged-state-transition-046",
+        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+      },
+      {
+        "classifications": [],
+        "decision_id": "manual-control-managed-boundary-047",
+        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+      },
+      {
+        "classifications": [],
+        "decision_id": "unmanaged-quantity-display-boundary-048",
+        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+      }
+    ],
+    "summary": "Closed with all five decisions verified: Commerce persists one of three manual unmanaged availability states in isolated storage, defaults missing new and legacy state to In stock, preserves the dormant value through managed operation, rejects manual mutation whenever Manage Stock is enabled, and returns the shared structured storefront result without Inventory contact, quantity, or low-stock output for unmanaged products. No choice was superseded or deferred. Full verification passed 89 unit tests and 18 integration tests, including exact EmDash 0.35 storage close/reopen proof; exact-source review is clean at sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37. Remaining work is outside this track: a persisted Manage Stock toggle and its cross-record concurrency contract, visual EmDash UI, live transport, Blocks rendering, checkout and order enforcement, reservations, pool migration, and deployment. Pull-request delivery is separately authorized; merge and deployment remain unapproved.",
+    "superseded_decisions": [],
+    "verified_decisions": [
+      "unmanaged-availability-model-044",
+      "unmanaged-availability-default-045",
+      "unmanaged-state-transition-046",
+      "manual-control-managed-boundary-047",
+      "unmanaged-quantity-display-boundary-048"
+    ]
+  },
   "created_at": "2026-08-30T20:57:54+00:00",
   "current_focus": {
     "cadence": "sequential",
@@ -7,7 +61,7 @@
     "confirmed_at": "2026-08-30T21:10:39+00:00",
     "domain": "unmanaged product sellability",
     "started_at": "2026-08-30T20:57:54+00:00",
-    "status": "confirmed",
+    "status": "closed",
     "summary": "Commerce owns manual unmanaged availability with In stock, Out of stock, and Available on backorder states. New and legacy products default to In stock. A product's last manual choice remains dormant while Manage Stock is enabled and returns when management is disabled; Inventory state is never copied into it. Manual availability cannot be changed while managed, while the separate managed-product backorder policy remains available. Unmanaged storefront output uses the existing structured status and sellable contract without quantity or low-stock output, regardless of store-wide quantity display policy. This slice adds backend persistence, an authenticated mutation action, unified resolution, tests, and proof; it excludes visual EmDash UI, Inventory changes, live transport changes, Blocks rendering, checkout, and deployment."
   },
   "decisions": [
@@ -414,8 +468,8 @@
   "predecessor_track_id": "gt-20260830194146-7a94e6",
   "recommendation": null,
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
+  "status": "closed",
   "title": "Unmanaged product sellability",
   "track_id": "gt-20260830205754-677931",
-  "updated_at": "2026-08-30T21:23:48+00:00"
+  "updated_at": "2026-08-30T21:30:10+00:00"
 }
