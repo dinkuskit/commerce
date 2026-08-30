@@ -3,14 +3,42 @@ import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 
 import {
+  CATALOG_BACKORDER_POLICIES_COLLECTION,
   CATALOG_COLLECTION,
   COMMERCE_PLUGIN_ID,
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
+  STOREFRONT_AVAILABILITY_SETTINGS_COLLECTION,
   catalogUniqueIndexName,
   managedSkuRegistrationClaimUniqueIndexName,
   storeInventoryConfigurationUniqueIndexName,
 } from "../../dist/index.js";
+
+function openUnindexedRepository(path, collection) {
+  const database = new BetterSqlite3(path);
+  database.pragma("journal_mode = WAL");
+  database.pragma("busy_timeout = 5000");
+  const db = new Kysely({ dialect: new SqliteDialect({ database }) });
+  const storage = new PluginStorageRepository(
+    db,
+    COMMERCE_PLUGIN_ID,
+    collection,
+    [],
+  );
+  return { db, storage };
+}
+
+function readCollectionRecords(path, collection) {
+  const database = new BetterSqlite3(path, { readonly: true });
+  const rows = database
+    .prepare(
+      "SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? ORDER BY id",
+    )
+    .all(COMMERCE_PLUGIN_ID, collection)
+    .map(({ data }) => JSON.parse(data));
+  database.close();
+  return rows;
+}
 
 export function initializeCatalogDatabase(path, uniqueFields = ["commandId", "skuKey"]) {
   const database = new BetterSqlite3(path);
@@ -65,6 +93,26 @@ export function readCatalogRecords(path) {
 
 export function readCatalogItems(path) {
   return readCatalogRecords(path).filter((record) => record.recordKind === "catalog-item");
+}
+
+export function openCatalogBackorderPolicyRepository(path) {
+  return openUnindexedRepository(path, CATALOG_BACKORDER_POLICIES_COLLECTION);
+}
+
+export function readCatalogBackorderPolicies(path) {
+  return readCollectionRecords(path, CATALOG_BACKORDER_POLICIES_COLLECTION).filter(
+    (record) => record.recordKind === "catalog-backorder-policy",
+  );
+}
+
+export function openStorefrontAvailabilitySettingsRepository(path) {
+  return openUnindexedRepository(path, STOREFRONT_AVAILABILITY_SETTINGS_COLLECTION);
+}
+
+export function readStorefrontAvailabilitySettings(path) {
+  return readCollectionRecords(path, STOREFRONT_AVAILABILITY_SETTINGS_COLLECTION).filter(
+    (record) => record.recordKind === "storefront-availability-settings",
+  );
 }
 
 export function initializeClaimDatabase(

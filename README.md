@@ -44,6 +44,16 @@ Configure Inventory action without contacting a provider or creating a claim.
 Provider or pool changes require a future explicit migration; they never
 silently repoint managed products.
 
+The `dinkus.storefront-availability` backend resolves an active managed
+product into stable `status`, `sellable`, and optional `displayQuantity`
+facts. Commerce reads only Inventory's authoritative `available` quantity at
+the store's configured default fulfillment location. Status-only display is
+the compatibility default; store owners may opt into exact quantities or a
+positive low-stock threshold. Backorders are a separate per-product policy
+that defaults off. Missing setup, missing stock, malformed provider output, or
+an unavailable provider returns `availability-unavailable` and is never
+treated as zero stock or a backorder. The package stores no fallback quantity.
+
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
 a stock 0.35.0 compatibility claim. It requires exact commit
@@ -62,6 +72,8 @@ The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
   cart, checkout orchestration, receipts, and orders.
 - A product may opt into managed stock. Commerce then uses one configured
   inventory provider and never stores a fallback quantity.
+- Storefront display and backorder behavior are Commerce policy. Inventory
+  remains the only authority for the quantity those rules evaluate.
 - DinkusKit Inventory is the default first-party inventory system; it remains
   the authority for physical quantities, locations, reservations, and stock
   movements.

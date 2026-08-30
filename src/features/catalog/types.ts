@@ -4,6 +4,7 @@ import type { StockManagement } from "../inventory-provider/index.js";
 
 export const CATALOG_FEATURE_ID = "dinkus.catalog";
 export const CATALOG_COLLECTION = "catalogItems";
+export const CATALOG_BACKORDER_POLICIES_COLLECTION = "catalogBackorderPolicies";
 // EmDash mounts plugin IDs as one URL segment and uses them in storage-index
 // provisioning. Keep the scoped npm package identity separate from this
 // runtime slug so both the HTTP route and declared unique indexes materialize.
@@ -55,6 +56,38 @@ export type CatalogStorage = Pick<
   StorageCollection<CatalogStorageRecord>,
   "delete" | "put" | "query"
 >;
+
+export type CatalogItemReadStorage = Pick<
+  StorageCollection<CatalogStorageRecord>,
+  "get"
+>;
+
+export interface CatalogBackorderPolicyRecord {
+  recordKind: "catalog-backorder-policy";
+  recordId: string;
+  catalogItemId: string;
+  allowBackorders: boolean;
+}
+
+export type CatalogBackorderPolicyStorage = Pick<
+  StorageCollection<CatalogBackorderPolicyRecord>,
+  "get" | "put"
+>;
+
+export interface SetCatalogItemBackordersStorage {
+  catalog: CatalogItemReadStorage;
+  policies: CatalogBackorderPolicyStorage;
+}
+
+export interface SetCatalogItemBackordersInput {
+  catalogItemId: string;
+  allowBackorders: boolean;
+}
+
+export interface SetCatalogItemBackordersResult {
+  changed: boolean;
+  policy: CatalogBackorderPolicyRecord;
+}
 
 export interface CreateCatalogItemResult {
   created: boolean;

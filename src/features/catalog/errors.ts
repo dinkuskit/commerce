@@ -1,4 +1,5 @@
 export type CatalogErrorCode =
+  | "CATALOG_ITEM_NOT_FOUND"
   | "COMMAND_CONFLICT"
   | "INVALID_INPUT"
   | "SKU_CONFLICT"
@@ -6,6 +7,7 @@ export type CatalogErrorCode =
   | "STORAGE_UNAVAILABLE";
 
 const STATUS_BY_CODE: Record<CatalogErrorCode, number> = {
+  CATALOG_ITEM_NOT_FOUND: 404,
   COMMAND_CONFLICT: 409,
   INVALID_INPUT: 400,
   SKU_CONFLICT: 409,

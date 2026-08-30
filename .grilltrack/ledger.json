@@ -1,30 +1,102 @@
 {
-  "closeout": null,
-  "created_at": "2026-08-29T17:17:25+00:00",
+  "closeout": {
+    "closed_at": "2026-08-30T20:28:18+00:00",
+    "confirmed_by": "user",
+    "deferred_decisions": [],
+    "proof_refs": [
+      "proof/managed-storefront-availability/PROOF.md",
+      "proof/managed-storefront-availability/REVIEW.md",
+      "proof/managed-storefront-availability/source-manifest.sha256"
+    ],
+    "reason": "The confirmed managed storefront availability backend is implemented, verified, cleanly reviewed, and the user explicitly confirmed closure before PR delivery.",
+    "reviews": [
+      {
+        "classifications": [],
+        "decision_id": "storefront-stock-display-policy-037",
+        "ref": "proof/managed-storefront-availability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+      },
+      {
+        "classifications": [],
+        "decision_id": "product-backorder-policy-038",
+        "ref": "proof/managed-storefront-availability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+      },
+      {
+        "classifications": [],
+        "decision_id": "managed-inventory-unavailable-policy-039",
+        "ref": "proof/managed-storefront-availability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+      },
+      {
+        "classifications": [],
+        "decision_id": "incomplete-managed-setup-availability-040",
+        "ref": "proof/managed-storefront-availability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+      },
+      {
+        "classifications": [],
+        "decision_id": "structured-storefront-availability-041",
+        "ref": "proof/managed-storefront-availability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+      },
+      {
+        "classifications": [],
+        "decision_id": "default-fulfillment-location-availability-042",
+        "ref": "proof/managed-storefront-availability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+      },
+      {
+        "classifications": [],
+        "decision_id": "backorders-opt-in-default-043",
+        "ref": "proof/managed-storefront-availability/REVIEW.md",
+        "result": "clean",
+        "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+      }
+    ],
+    "summary": "Closed with all seven decisions verified: status/exact/threshold display policy; isolated per-product backorder policy defaulting off; strict Inventory v1 location-scoped available-quantity validation at the default fulfillment location; structured status, sellable, and optional displayQuantity output; and fail-closed behavior for incomplete setup or unprovable Inventory truth. No choices were superseded and no decision was deferred. Remaining work is deliberately outside this track: live cross-plugin transport, EmDash UI, Blocks/template-store rendering, unmanaged-product sellability, cart/order enforcement, reservations, pool migration, and deployment. Exact-source review is clean at sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4.",
+    "superseded_decisions": [],
+    "verified_decisions": [
+      "storefront-stock-display-policy-037",
+      "product-backorder-policy-038",
+      "managed-inventory-unavailable-policy-039",
+      "incomplete-managed-setup-availability-040",
+      "structured-storefront-availability-041",
+      "default-fulfillment-location-availability-042",
+      "backorders-opt-in-default-043"
+    ]
+  },
+  "created_at": "2026-08-30T19:41:46+00:00",
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-30T18:17:06+00:00",
-    "domain": "authenticated managed-stock setup action",
-    "started_at": "2026-08-29T17:17:25+00:00",
-    "status": "confirmed",
-    "summary": "Implement the Commerce half of Configure Inventory: persist one store-level Inventory configuration containing a permanent server-generated Commerce site ID plus provider, pool, and default location; keep EmDash site name and URL as human-facing metadata only; expose one authenticated product action accepting only catalogItemId; load all canonical product and binding data server-side; return inventory-setup-required without claim/provider contact when setup is incomplete; otherwise execute the existing atomic managed-SKU registration flow through the provider-neutral port. Remain compatible with Inventory main d31fbfda982ad669f638a222f0cb1caa7592c095. Exclude live cross-plugin transport, OAuth, visual UI, stock mutation, and pool migration."
+    "confirmed_at": "2026-08-30T20:03:31+00:00",
+    "domain": "managed storefront availability policy",
+    "started_at": "2026-08-30T19:41:46+00:00",
+    "status": "closed",
+    "summary": "Implement the Commerce backend half of managed storefront availability: persist a store-wide status-only, exact, or low-stock-threshold display policy with status-only as the compatibility default; persist per-product allowBackorders with false as the new and legacy default and provide authenticated admin mutation actions; read Inventory's authoritative available quantity through a provider-neutral port using only the store binding's default fulfillment location; return stable structured status, sellable, and policy-permitted displayQuantity facts; and fail closed for non-active setup, provider failure, missing SKU or location, and otherwise untrustworthy stock truth. Align the read boundary to DinkusKit Inventory main 86da623e0a21f174636cd833f8faf932ba219721. Verify the full policy, backorder, setup, provider-failure, and location-scope matrix plus persistent storage compatibility. Exclude visual EmDash UI, live cross-plugin transport, Blocks/template-store rendering, cart/order enforcement, and pool migration."
   },
   "decisions": [
     {
-      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "baseline_ref": "git:530348c07769a010b0fa4ef24604292a4254eda0",
       "candidate_refs": [],
-      "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
-      "context_ref": "predecessor:atomic-managed-sku-registration-claim-20260829;recommendation:authenticated setup action",
-      "created_at": "2026-08-29T17:17:56+00:00",
+      "choice": "Use one store-wide Commerce setting. Default to status-only: show In stock when available quantity is positive and Out of stock at zero unless backorders are allowed. Store admins may instead choose always-exact quantity or a low-stock threshold mode that shows In stock above the configured threshold and the exact available count at or below it. Inventory supplies the authoritative available quantity; Commerce owns this display policy.",
+      "context_ref": "predecessor:gt-20260829171724-494811",
+      "created_at": "2026-08-30T19:41:46+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
-      "domain": "authenticated managed-stock setup action",
+      "domain": "managed storefront availability policy",
       "history": [
         {
-          "at": "2026-08-29T17:18:41+00:00",
-          "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
+          "at": "2026-08-30T19:41:46+00:00",
+          "choice": "Use one store-wide Commerce setting. Default to status-only: show In stock when available quantity is positive and Out of stock at zero unless backorders are allowed. Store admins may instead choose always-exact quantity or a low-stock threshold mode that shows In stock above the configured threshold and the exact available count at or below it. Inventory supplies the authoritative available quantity; Commerce owns this display policy.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -37,8 +109,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:45+00:00",
-          "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
+          "at": "2026-08-30T20:26:33+00:00",
+          "choice": "Use one store-wide Commerce setting. Default to status-only: show In stock when available quantity is positive and Out of stock at zero unless backorders are allowed. Store admins may instead choose always-exact quantity or a low-stock threshold mode that shows In stock above the configured threshold and the exact available count at or below it. Inventory supplies the authoritative available quantity; Commerce owns this display policy.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -51,10 +123,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:47+00:00",
-          "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
+          "at": "2026-08-30T20:26:34+00:00",
+          "choice": "Use one store-wide Commerce setting. Default to status-only: show In stock when available quantity is positive and Out of stock at zero unless backorders are allowed. Store admins may instead choose always-exact quantity or a low-stock threshold mode that shows In stock above the configured threshold and the exact available count at or below it. Inventory supplies the authoritative available quantity; Commerce owns this display policy.",
           "from": "implemented",
-          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -65,37 +137,45 @@
           "verification_ref": null
         }
       ],
-      "id": "configure-inventory-entry-030",
-      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
-      "question": "What should Configure Inventory do when the store-level Inventory pool setup is complete or missing?",
-      "rationale": "This keeps the product action simple, preserves one active pool per store, and prevents a product-level request from silently changing store-wide Inventory configuration.",
+      "id": "storefront-stock-display-policy-037",
+      "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+      "question": "How should a store display managed-product availability to customers?",
+      "rationale": "A safe simple default avoids exposing business-sensitive counts, while explicit admin-controlled modes support stores that want urgency or full quantity transparency.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/managed-storefront-availability/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T20:26:35+00:00",
+          "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+        }
+      ],
+      "review_ref": "proof/managed-storefront-availability/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T18:30:47+00:00",
-      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+      "updated_at": "2026-08-30T20:26:35+00:00",
+      "verification_ref": "proof/managed-storefront-availability/PROOF.md"
     },
     {
-      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "baseline_ref": "git:530348c07769a010b0fa4ef24604292a4254eda0",
       "candidate_refs": [],
-      "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
-      "context_ref": "predecessor-lock:one-active-pool-per-store",
-      "created_at": "2026-08-29T17:18:41+00:00",
+      "choice": "Commerce stores Allow backorders as a per-product SKU policy. At zero available stock, an item with backorders disabled is Out of stock and not sellable; an item with backorders enabled is Available on backorder and remains sellable. Positive available stock follows the store-wide display setting. This track defines the availability contract; cart and order enforcement remain deferred until those Commerce surfaces exist.",
+      "context_ref": "predecessor:gt-20260829171724-494811",
+      "created_at": "2026-08-30T19:41:47+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "configure-inventory-entry-030"
+        "storefront-stock-display-policy-037"
       ],
-      "domain": "authenticated managed-stock setup action",
+      "domain": "managed storefront availability policy",
       "history": [
         {
-          "at": "2026-08-29T17:23:49+00:00",
-          "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
+          "at": "2026-08-30T19:41:47+00:00",
+          "choice": "Commerce stores Allow backorders as a per-product SKU policy. At zero available stock, an item with backorders disabled is Out of stock and not sellable; an item with backorders enabled is Available on backorder and remains sellable. Positive available stock follows the store-wide display setting. This track defines the availability contract; cart and order enforcement remain deferred until those Commerce surfaces exist.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -108,8 +188,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:46+00:00",
-          "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
+          "at": "2026-08-30T20:26:33+00:00",
+          "choice": "Commerce stores Allow backorders as a per-product SKU policy. At zero available stock, an item with backorders disabled is Out of stock and not sellable; an item with backorders enabled is Available on backorder and remains sellable. Positive available stock follows the store-wide display setting. This track defines the availability contract; cart and order enforcement remain deferred until those Commerce surfaces exist.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -122,10 +202,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:47+00:00",
-          "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
+          "at": "2026-08-30T20:26:34+00:00",
+          "choice": "Commerce stores Allow backorders as a per-product SKU policy. At zero available stock, an item with backorders disabled is Out of stock and not sellable; an item with backorders enabled is Available on backorder and remains sellable. Positive available stock follows the store-wide display setting. This track defines the availability contract; cart and order enforcement remain deferred until those Commerce surfaces exist.",
           "from": "implemented",
-          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -136,37 +216,46 @@
           "verification_ref": null
         }
       ],
-      "id": "store-inventory-binding-storage-031",
-      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
-      "question": "Where should Commerce remember the store's selected Inventory pool and default fulfillment location?",
-      "rationale": "The store has one active pool configuration, while many products consume it. One durable record prevents products from drifting onto inconsistent pool or location settings.",
+      "id": "product-backorder-policy-038",
+      "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+      "question": "What should happen when a managed product reaches zero available stock?",
+      "rationale": "Backordering is a selling decision that varies by product, while physical quantity remains Inventory truth. Separating the policy preserves ownership and lets the storefront communicate the correct state before checkout is built.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/managed-storefront-availability/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T20:26:35+00:00",
+          "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+        }
+      ],
+      "review_ref": "proof/managed-storefront-availability/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T18:30:47+00:00",
-      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+      "updated_at": "2026-08-30T20:26:35+00:00",
+      "verification_ref": "proof/managed-storefront-availability/PROOF.md"
     },
     {
-      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "baseline_ref": "git:530348c07769a010b0fa4ef24604292a4254eda0",
       "candidate_refs": [],
-      "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. Defer the dedicated pool-migration workflow until after the Commerce, Inventory, and Blocks stack is proven on a real website; that later workflow must reconcile SKU links and stock before the store binding can change.",
-      "context_ref": null,
-      "created_at": "2026-08-29T17:23:49+00:00",
+      "choice": "Fail closed for every managed SKU, including products that allow backorders. Commerce returns a distinct availability-unavailable state, presents Availability temporarily unavailable to the customer, and marks the product not sellable until Inventory responds again. Do not call it Out of stock, do not expose a stale or local fallback quantity, and do not apply the store display mode or backorder policy while stock truth is unavailable.",
+      "context_ref": "docs/CHARTER.md:managed-products-fail-closed",
+      "created_at": "2026-08-30T19:44:24+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "store-inventory-binding-storage-031"
+        "storefront-stock-display-policy-037",
+        "product-backorder-policy-038"
       ],
-      "domain": "authenticated managed-stock setup action",
+      "domain": "managed storefront availability policy",
       "history": [
         {
-          "at": "2026-08-29T17:26:42+00:00",
-          "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. A future explicit pool-migration workflow must reconcile SKU links and stock before the store binding can change; this slice does not build that migration workflow.",
+          "at": "2026-08-30T19:44:24+00:00",
+          "choice": "Fail closed for every managed SKU, including products that allow backorders. Commerce returns a distinct availability-unavailable state, presents Availability temporarily unavailable to the customer, and marks the product not sellable until Inventory responds again. Do not call it Out of stock, do not expose a stale or local fallback quantity, and do not apply the store display mode or backorder policy while stock truth is unavailable.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -179,8 +268,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:46+00:00",
-          "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. Defer the dedicated pool-migration workflow until after the Commerce, Inventory, and Blocks stack is proven on a real website; that later workflow must reconcile SKU links and stock before the store binding can change.",
+          "at": "2026-08-30T20:26:33+00:00",
+          "choice": "Fail closed for every managed SKU, including products that allow backorders. Commerce returns a distinct availability-unavailable state, presents Availability temporarily unavailable to the customer, and marks the product not sellable until Inventory responds again. Do not call it Out of stock, do not expose a stale or local fallback quantity, and do not apply the store display mode or backorder policy while stock truth is unavailable.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -193,10 +282,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:47+00:00",
-          "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. Defer the dedicated pool-migration workflow until after the Commerce, Inventory, and Blocks stack is proven on a real website; that later workflow must reconcile SKU links and stock before the store binding can change.",
+          "at": "2026-08-30T20:26:34+00:00",
+          "choice": "Fail closed for every managed SKU, including products that allow backorders. Commerce returns a distinct availability-unavailable state, presents Availability temporarily unavailable to the customer, and marks the product not sellable until Inventory responds again. Do not call it Out of stock, do not expose a stale or local fallback quantity, and do not apply the store display mode or backorder policy while stock truth is unavailable.",
           "from": "implemented",
-          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -207,38 +296,45 @@
           "verification_ref": null
         }
       ],
-      "id": "store-inventory-pool-change-032",
-      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
-      "question": "What should happen if an owner tries to change the store's active Inventory pool after managed products are already connected?",
-      "rationale": "Automatically switching the store binding would make existing Inventory SKU identities appear to belong to a different pool, risking incorrect stock truth or duplicate SKU links. Deferring migration keeps the proof slice focused without weakening the safety boundary.",
+      "id": "managed-inventory-unavailable-policy-039",
+      "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+      "question": "What should Commerce tell the customer when a managed SKU's Inventory provider cannot supply authoritative availability?",
+      "rationale": "An unavailable provider means Commerce does not know the quantity; treating that as zero or permitting a backorder could misrepresent stock truth and oversell. The distinct state explains a temporary system condition without claiming the item has no stock.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/managed-storefront-availability/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T20:26:35+00:00",
+          "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+        }
+      ],
+      "review_ref": "proof/managed-storefront-availability/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T18:30:47+00:00",
-      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+      "updated_at": "2026-08-30T20:26:35+00:00",
+      "verification_ref": "proof/managed-storefront-availability/PROOF.md"
     },
     {
-      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "baseline_ref": "git:530348c07769a010b0fa4ef24604292a4254eda0",
       "candidate_refs": [],
-      "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
-      "context_ref": null,
-      "created_at": "2026-08-29T17:27:04+00:00",
+      "choice": "Treat every non-active managed-stock setup state as availability unavailable. While the product is setup-required, setup-pending, setup-needs-attention, or needs-review, Commerce presents Availability temporarily unavailable and marks it not sellable. Commerce requests live availability only after the managed SKU connection reaches active; once active, the normal stock display and backorder policies apply automatically.",
+      "context_ref": "src/features/inventory-provider/types.ts:ManagedStockStatus",
+      "created_at": "2026-08-30T19:47:14+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "configure-inventory-entry-030",
-        "store-inventory-binding-storage-031"
+        "managed-inventory-unavailable-policy-039"
       ],
-      "domain": "authenticated managed-stock setup action",
+      "domain": "managed storefront availability policy",
       "history": [
         {
-          "at": "2026-08-29T17:28:48+00:00",
-          "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
+          "at": "2026-08-30T19:47:14+00:00",
+          "choice": "Treat every non-active managed-stock setup state as availability unavailable. While the product is setup-required, setup-pending, setup-needs-attention, or needs-review, Commerce presents Availability temporarily unavailable and marks it not sellable. Commerce requests live availability only after the managed SKU connection reaches active; once active, the normal stock display and backorder policies apply automatically.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -251,8 +347,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:46+00:00",
-          "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
+          "at": "2026-08-30T20:26:33+00:00",
+          "choice": "Treat every non-active managed-stock setup state as availability unavailable. While the product is setup-required, setup-pending, setup-needs-attention, or needs-review, Commerce presents Availability temporarily unavailable and marks it not sellable. Commerce requests live availability only after the managed SKU connection reaches active; once active, the normal stock display and backorder policies apply automatically.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -265,10 +361,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:47+00:00",
-          "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
+          "at": "2026-08-30T20:26:34+00:00",
+          "choice": "Treat every non-active managed-stock setup state as availability unavailable. While the product is setup-required, setup-pending, setup-needs-attention, or needs-review, Commerce presents Availability temporarily unavailable and marks it not sellable. Commerce requests live availability only after the managed SKU connection reaches active; once active, the normal stock display and backorder policies apply automatically.",
           "from": "implemented",
-          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -279,81 +375,48 @@
           "verification_ref": null
         }
       ],
-      "id": "configure-inventory-runtime-boundary-033",
-      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
-      "question": "Should this Commerce slice hard-wire Configure Inventory to one live cross-plugin transport?",
-      "rationale": "The Commerce behavior and safety rules can become durable now while EmDash 1.0 plugin connection and authorization surfaces are still moving. A narrow provider port lets the later live connector change without rewriting product state or atomic registration rules.",
+      "id": "incomplete-managed-setup-availability-040",
+      "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+      "question": "What should the storefront do when Manage Stock is enabled but the product's Inventory setup is not active yet?",
+      "rationale": "Checking Manage Stock declares Inventory authoritative immediately. Allowing sales before the SKU connection is active would create an untracked gap where Commerce cannot prove or reserve the product's stock.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-08-30T18:30:47+00:00",
-      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
-    },
-    {
-      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
-      "candidate_refs": [],
-      "choice": "The authenticated server runtime supplies the canonical EmDash site ID to the Commerce action. Never accept siteId from the browser request or let a product override it. The later Inventory connector maps Commerce's hidden registration operationId to Inventory commandId, the trusted runtime site ID to context.siteId, the saved store pool to context.poolId, the catalog SKU and one-time title fallback to the Inventory payload, and the catalog item identity to an external reference.",
-      "context_ref": "inventory:git:d31fbfda982ad669f638a222f0cb1caa7592c095",
-      "created_at": "2026-08-29T17:28:49+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "configure-inventory-runtime-boundary-033"
-      ],
-      "domain": "authenticated managed-stock setup action",
-      "history": [
+      "review_history": [
         {
-          "at": "2026-08-29T17:31:18+00:00",
-          "choice": "The authenticated server runtime supplies the canonical EmDash site ID to the Commerce action. Never accept siteId from the browser request or let a product override it. The later Inventory connector maps Commerce's hidden registration operationId to Inventory commandId, the trusted runtime site ID to context.siteId, the saved store pool to context.poolId, the catalog SKU and one-time title fallback to the Inventory payload, and the catalog item identity to an external reference.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "Exact EmDash 0.35 and current-main inspection found no canonical opaque siteId in PluginContext; only mutable site metadata is exposed.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "superseded",
-          "verification_ref": null
+          "classifications": [],
+          "ref": "proof/managed-storefront-availability/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T20:26:35+00:00",
+          "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
         }
       ],
-      "id": "trusted-inventory-site-context-034",
-      "implementation_ref": null,
-      "question": "Where should Configure Inventory obtain Inventory's required siteId?",
-      "rationale": "Inventory's merged command contract requires siteId, and trusting a browser-supplied value could attribute a registration to the wrong site. Server-owned context aligns Commerce to Inventory PR #12 without expanding the saved provider binding or coupling Commerce to Inventory's storage.",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "superseded",
-      "superseded_by": "stable-commerce-site-identity-035",
-      "updated_at": "2026-08-29T17:31:18+00:00",
-      "verification_ref": null
+      "review_ref": "proof/managed-storefront-availability/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T20:26:35+00:00",
+      "verification_ref": "proof/managed-storefront-availability/PROOF.md"
     },
     {
-      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "baseline_ref": "git:530348c07769a010b0fa4ef24604292a4254eda0",
       "candidate_refs": [],
-      "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
-      "context_ref": "emdash:0.35:PluginContext.site",
-      "created_at": "2026-08-29T17:31:18+00:00",
+      "choice": "Return structured availability facts rather than a final English sentence. The result contains a stable status (in-stock, low-stock, out-of-stock, available-on-backorder, or availability-unavailable), a sellable boolean, and displayQuantity only when the store's exact or threshold policy permits showing a count. Commerce determines the status, sellability, and whether quantity may be exposed; Blocks or the storefront renders and localizes the corresponding customer wording without reinterpreting stock rules.",
+      "context_ref": "consumer:blocks-and-template-store",
+      "created_at": "2026-08-30T19:47:58+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "store-inventory-binding-storage-031",
-        "configure-inventory-runtime-boundary-033"
+        "storefront-stock-display-policy-037",
+        "product-backorder-policy-038",
+        "managed-inventory-unavailable-policy-039",
+        "incomplete-managed-setup-availability-040"
       ],
-      "domain": "authenticated managed-stock setup action",
+      "domain": "managed storefront availability policy",
       "history": [
         {
-          "at": "2026-08-29T17:36:02+00:00",
-          "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
+          "at": "2026-08-30T19:47:58+00:00",
+          "choice": "Return structured availability facts rather than a final English sentence. The result contains a stable status (in-stock, low-stock, out-of-stock, available-on-backorder, or availability-unavailable), a sellable boolean, and displayQuantity only when the store's exact or threshold policy permits showing a count. Commerce determines the status, sellability, and whether quantity may be exposed; Blocks or the storefront renders and localizes the corresponding customer wording without reinterpreting stock rules.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -366,8 +429,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:46+00:00",
-          "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
+          "at": "2026-08-30T20:26:33+00:00",
+          "choice": "Return structured availability facts rather than a final English sentence. The result contains a stable status (in-stock, low-stock, out-of-stock, available-on-backorder, or availability-unavailable), a sellable boolean, and displayQuantity only when the store's exact or threshold policy permits showing a count. Commerce determines the status, sellability, and whether quantity may be exposed; Blocks or the storefront renders and localizes the corresponding customer wording without reinterpreting stock rules.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -380,10 +443,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:47+00:00",
-          "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
+          "at": "2026-08-30T20:26:34+00:00",
+          "choice": "Return structured availability facts rather than a final English sentence. The result contains a stable status (in-stock, low-stock, out-of-stock, available-on-backorder, or availability-unavailable), a sellable boolean, and displayQuantity only when the store's exact or threshold policy permits showing a count. Commerce determines the status, sellability, and whether quantity may be exposed; Blocks or the storefront renders and localizes the corresponding customer wording without reinterpreting stock rules.",
           "from": "implemented",
-          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -394,39 +457,45 @@
           "verification_ref": null
         }
       ],
-      "id": "stable-commerce-site-identity-035",
-      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
-      "question": "What stable website identity should Commerce send when EmDash does not expose an opaque site ID?",
-      "rationale": "EmDash 0.35 and current upstream main expose ctx.site name, URL, locale, and trailing-slash policy but no opaque site ID. A durable Commerce-generated ID is concrete, domain-independent, and keeps today's contract adaptable to a future upstream identity surface.",
+      "id": "structured-storefront-availability-041",
+      "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+      "question": "What should Commerce return to the customer-facing website for a product's availability?",
+      "rationale": "A structured contract lets every storefront style and translate availability consistently while preventing frontend code from duplicating or weakening Commerce's inventory and backorder policy.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/managed-storefront-availability/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T20:26:35+00:00",
+          "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+        }
+      ],
+      "review_ref": "proof/managed-storefront-availability/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T18:30:47+00:00",
-      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+      "updated_at": "2026-08-30T20:26:35+00:00",
+      "verification_ref": "proof/managed-storefront-availability/PROOF.md"
     },
     {
-      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "baseline_ref": "git:530348c07769a010b0fa4ef24604292a4254eda0",
       "candidate_refs": [],
-      "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
-      "context_ref": null,
-      "created_at": "2026-08-29T17:36:02+00:00",
+      "choice": "Read available quantity only from the store binding's default fulfillment location, never from the all-locations pool aggregate. Stock at another location does not make the product sellable for this store; the operator must transfer stock into the default fulfillment location first. If the configured location is missing, inactive, or unreadable, fail closed as availability unavailable.",
+      "context_ref": "inventory:git:86da623e0a21f174636cd833f8faf932ba219721:SkuStockScope.location",
+      "created_at": "2026-08-30T19:49:23+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "configure-inventory-entry-030",
-        "store-inventory-binding-storage-031",
-        "stable-commerce-site-identity-035"
+        "structured-storefront-availability-041"
       ],
-      "domain": "authenticated managed-stock setup action",
+      "domain": "managed storefront availability policy",
       "history": [
         {
-          "at": "2026-08-29T17:36:39+00:00",
-          "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
+          "at": "2026-08-30T19:49:23+00:00",
+          "choice": "Read available quantity only from the store binding's default fulfillment location, never from the all-locations pool aggregate. Stock at another location does not make the product sellable for this store; the operator must transfer stock into the default fulfillment location first. If the configured location is missing, inactive, or unreadable, fail closed as availability unavailable.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -439,8 +508,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:46+00:00",
-          "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
+          "at": "2026-08-30T20:26:33+00:00",
+          "choice": "Read available quantity only from the store binding's default fulfillment location, never from the all-locations pool aggregate. Stock at another location does not make the product sellable for this store; the operator must transfer stock into the default fulfillment location first. If the configured location is missing, inactive, or unreadable, fail closed as availability unavailable.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -453,10 +522,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T18:30:47+00:00",
-          "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
+          "at": "2026-08-30T20:26:34+00:00",
+          "choice": "Read available quantity only from the store binding's default fulfillment location, never from the all-locations pool aggregate. Stock at another location does not make the product sellable for this store; the operator must transfer stock into the default fulfillment location first. If the configured location is missing, inactive, or unreadable, fail closed as availability unavailable.",
           "from": "implemented",
-          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -467,33 +536,125 @@
           "verification_ref": null
         }
       ],
-      "id": "configure-inventory-command-input-036",
-      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
-      "question": "What data may the browser send when an owner clicks Configure Inventory?",
-      "rationale": "A narrow command prevents stale forms or tampered requests from registering the wrong SKU in the wrong pool, while ensuring the atomic claim is built from the same canonical state Commerce will persist.",
+      "id": "default-fulfillment-location-availability-042",
+      "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+      "question": "Which Inventory location should Commerce use when deciding whether a managed product is available for this store?",
+      "rationale": "Storefront availability must match the location that will actually fulfill the order. Counting inventory that cannot fulfill the sale would oversell the selected location and bypass the previously accepted transfer-first workflow.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/managed-storefront-availability/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T20:26:36+00:00",
+          "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+        }
+      ],
+      "review_ref": "proof/managed-storefront-availability/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T18:30:47+00:00",
-      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+      "updated_at": "2026-08-30T20:26:36+00:00",
+      "verification_ref": "proof/managed-storefront-availability/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:530348c07769a010b0fa4ef24604292a4254eda0",
+      "candidate_refs": [],
+      "choice": "Allow backorders defaults to false. New products begin with the checkbox unchecked, and existing catalog records that do not yet contain the field normalize to false. A store owner must deliberately enable backorders per product SKU.",
+      "context_ref": "compatibility:existing-catalog-records",
+      "created_at": "2026-08-30T19:49:57+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-backorder-policy-038"
+      ],
+      "domain": "managed storefront availability policy",
+      "history": [
+        {
+          "at": "2026-08-30T19:49:57+00:00",
+          "choice": "Allow backorders defaults to false. New products begin with the checkbox unchecked, and existing catalog records that do not yet contain the field normalize to false. A store owner must deliberately enable backorders per product SKU.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T20:26:34+00:00",
+          "choice": "Allow backorders defaults to false. New products begin with the checkbox unchecked, and existing catalog records that do not yet contain the field normalize to false. A store owner must deliberately enable backorders per product SKU.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T20:26:35+00:00",
+          "choice": "Allow backorders defaults to false. New products begin with the checkbox unchecked, and existing catalog records that do not yet contain the field normalize to false. A store owner must deliberately enable backorders per product SKU.",
+          "from": "implemented",
+          "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "backorders-opt-in-default-043",
+      "implementation_ref": "proof/managed-storefront-availability/source-manifest.sha256",
+      "question": "What should the default Allow backorders value be for new and existing products?",
+      "rationale": "Backorders create a deliberate oversell commitment and must never become active through omission, migration, or a new default. Opt-in behavior preserves the safest existing-product interpretation.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/managed-storefront-availability/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T20:26:36+00:00",
+          "source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4"
+        }
+      ],
+      "review_ref": "proof/managed-storefront-availability/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0a7c8379c571bedf6ff9315d50e99a5a38e72142db60990058dd31cc8b2636b4",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T20:26:36+00:00",
+      "verification_ref": "proof/managed-storefront-availability/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-08-29T17:17:25+00:00",
+    "at": "2026-08-30T19:41:46+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
-  "predecessor_track_id": "atomic-managed-sku-registration-claim-20260829",
-  "recommendation": null,
+  "predecessor_track_id": "gt-20260829171724-494811",
+  "recommendation": {
+    "alternatives": [],
+    "reason": "The managed path is now complete at the Commerce backend boundary, while unmanaged products still have no structured storefront availability. Defining their manual in-stock, out-of-stock, and backorder states next completes the storefront contract without colliding with the active Inventory or template-store tracks.",
+    "recommended": "Unmanaged product sellability",
+    "recorded_at": "2026-08-30T20:26:59+00:00"
+  },
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
-  "title": "Configure Inventory action",
-  "track_id": "gt-20260829171724-494811",
-  "updated_at": "2026-08-30T18:30:47+00:00"
+  "status": "closed",
+  "title": "Managed storefront availability policy",
+  "track_id": "gt-20260830194146-7a94e6",
+  "updated_at": "2026-08-30T20:28:18+00:00"
 }
