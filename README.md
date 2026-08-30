@@ -35,6 +35,15 @@ malformed managed records fail safe to `setup-required` on read. Live Inventory
 transport, current-stock review, pool discovery, and admin UI remain later
 slices.
 
+The `dinkus.inventory-setup` slice persists one store-level provider binding
+with a permanent Commerce-generated site ID. Its private Configure Inventory
+route accepts only a catalog item ID, loads the canonical product and binding
+server-side, and starts the existing atomic registration flow through an
+injected `InventoryProviderPort`. Missing store setup returns a structured
+Configure Inventory action without contacting a provider or creating a claim.
+Provider or pool changes require a future explicit migration; they never
+silently repoint managed products.
+
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
 a stock 0.35.0 compatibility claim. It requires exact commit

@@ -21,6 +21,10 @@
     "./features/inventory-provider": {
       "types": "./dist/features/inventory-provider/index.d.ts",
       "default": "./dist/features/inventory-provider/index.js"
+    },
+    "./features/inventory-setup": {
+      "types": "./dist/features/inventory-setup/index.d.ts",
+      "default": "./dist/features/inventory-setup/index.js"
     }
   },
   "license": "MIT",
@@ -47,7 +51,7 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs",
+    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs",
     "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
     "proof:registration-retry:real": "npm run build && node --no-warnings --experimental-sqlite --experimental-strip-types tools/prove-registration-retry-real.mjs",
     "audit:features": "node scripts/check-features.mjs",

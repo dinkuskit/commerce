@@ -9,9 +9,11 @@ import { fileURLToPath } from "node:url";
 import {
   COMMERCE_PLUGIN_ID,
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
+  STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
   catalogUniqueIndexName,
   identifyConfirmedUniqueViolation,
   managedSkuRegistrationClaimUniqueIndexName,
+  storeInventoryConfigurationUniqueIndexName,
 } from "../../dist/index.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -106,6 +108,37 @@ function emdashClaimPut(id, claimKey, operationId, poolId) {
     VALUES (
       ${sqlLiteral(COMMERCE_PLUGIN_ID)},
       ${sqlLiteral(MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION)},
+      ${sqlLiteral(id)},
+      ${sqlLiteral(data)},
+      '${now}',
+      '${now}'
+    )
+    ON CONFLICT(plugin_id, collection, id) DO UPDATE SET
+      data = excluded.data,
+      updated_at = excluded.updated_at
+  `;
+}
+
+function emdashConfigurationPut(id, siteId) {
+  const data = JSON.stringify({
+    recordKind: "store-inventory-configuration",
+    recordId: id,
+    configurationKey: "active",
+    siteId,
+    binding: {
+      providerRef: "dinkuskit.inventory",
+      poolId: "pool-smoky",
+      defaultFulfillmentLocationId: "murphy-nc",
+    },
+    configuredAt: "2026-08-30T00:00:00.000Z",
+    updatedAt: "2026-08-30T00:00:00.000Z",
+  });
+  const now = "2026-08-30T00:00:00.000Z";
+  return `
+    INSERT INTO _plugin_storage(plugin_id, collection, id, data, created_at, updated_at)
+    VALUES (
+      ${sqlLiteral(COMMERCE_PLUGIN_ID)},
+      ${sqlLiteral(STORE_INVENTORY_CONFIGURATIONS_COLLECTION)},
       ${sqlLiteral(id)},
       ${sqlLiteral(data)},
       '${now}',
@@ -215,6 +248,64 @@ test("two local Wrangler/D1 processes enforce one managed-SKU registration claim
         writesRejected: results.filter((result) => result.code !== 0).length,
         persistedClaims: 1,
         rejectedConstraint: claimKeyIndex,
+        dataClassification: "synthetic-local",
+      }),
+  );
+});
+
+test("two local Wrangler/D1 processes enforce one permanent store identity", async (t) => {
+  const persistTo = await mkdtemp(join(tmpdir(), "commerce-d1-store-configuration-race-"));
+  t.after(() => rm(persistTo, { force: true, recursive: true }));
+  const configurationIndex =
+    storeInventoryConfigurationUniqueIndexName("configurationKey");
+  const schema = `
+    CREATE TABLE _plugin_storage (
+      plugin_id TEXT NOT NULL,
+      collection TEXT NOT NULL,
+      id TEXT NOT NULL,
+      data TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (plugin_id, collection, id)
+    );
+    CREATE UNIQUE INDEX "${configurationIndex}"
+      ON _plugin_storage(plugin_id, collection, json_extract(data, '$.configurationKey'));
+  `;
+  const initialized = await runD1(persistTo, schema);
+  assert.equal(initialized.code, 0, initialized.output);
+
+  const results = await Promise.all([
+    runD1Contender(
+      persistTo,
+      emdashConfigurationPut("configuration-left", "site-left"),
+    ),
+    runD1Contender(
+      persistTo,
+      emdashConfigurationPut("configuration-right", "site-right"),
+    ),
+  ]);
+  assert.equal(results.filter((result) => result.code === 0).length, 1, JSON.stringify(results));
+  const rejected = results.find((result) => result.code !== 0);
+  assert.match(rejected.output, new RegExp(configurationIndex.replaceAll("/", "\\/")));
+  assert.match(rejected.output, /SQLITE_CONSTRAINT_UNIQUE/);
+
+  const count = await runD1(
+    persistTo,
+    `SELECT COUNT(*) AS configuration_count FROM _plugin_storage WHERE plugin_id = ${sqlLiteral(COMMERCE_PLUGIN_ID)} AND collection = ${sqlLiteral(STORE_INVENTORY_CONFIGURATIONS_COLLECTION)}`,
+  );
+  assert.equal(count.code, 0, count.output);
+  assert.match(count.output, /"configuration_count":\s*1/);
+
+  console.log(
+    "LIVE_PROOF " +
+      JSON.stringify({
+        case: "wrangler-d1-atomic-store-inventory-configuration",
+        emdash: "0.35.0",
+        processes: results.length,
+        writesSucceeded: results.filter((result) => result.code === 0).length,
+        writesRejected: results.filter((result) => result.code !== 0).length,
+        persistedConfigurations: 1,
+        rejectedConstraint: configurationIndex,
         dataClassification: "synthetic-local",
       }),
   );

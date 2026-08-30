@@ -18,7 +18,13 @@ const requiredFiles = [
   "src/features/inventory-provider/index.ts",
   "src/features/inventory-provider/binding.ts",
   "src/features/inventory-provider/stock-management.ts",
+  "src/features/inventory-setup/index.ts",
+  "src/features/inventory-setup/configure-inventory.ts",
+  "src/features/inventory-setup/store-configuration.ts",
   "docs/implementation/managed-stock-foundation.md",
+  "docs/implementation/configure-inventory-action.md",
+  "proof/configure-inventory-action/PROOF.md",
+  "proof/configure-inventory-action/source-manifest.sha256",
 ];
 
 async function walk(directory) {
@@ -43,11 +49,14 @@ export async function auditFeatures(repositoryRoot = root) {
   for (const requiredText of [
     "`dinkus.catalog`",
     "`dinkus.inventory-provider`",
+    "`dinkus.inventory-setup`",
     "`src/features/catalog/`",
     "`src/features/inventory-provider/`",
+    "`src/features/inventory-setup/`",
     "`bin/verify-commerce quick`",
     "`bin/verify-commerce full`",
     "`proof/catalog-first-managed-sku/PROOF.md`",
+    "`proof/configure-inventory-action/PROOF.md`",
   ]) {
     if (!map.includes(requiredText)) findings.push(`FEATURE_MAP.md is missing ${requiredText}`);
   }
@@ -64,6 +73,14 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/inventory-provider must resolve to the inventory-provider public entry",
     );
   }
+  if (
+    manifest.exports?.["./features/inventory-setup"]?.default !==
+    "./dist/features/inventory-setup/index.js"
+  ) {
+    findings.push(
+      "package export ./features/inventory-setup must resolve to the inventory-setup public entry",
+    );
+  }
   if (manifest.devDependencies?.emdash !== "0.35.0") {
     findings.push("catalog pilot must remain pinned to exact emdash 0.35.0");
   }
@@ -75,7 +92,7 @@ export async function auditFeatures(repositoryRoot = root) {
     const imports = source.matchAll(/from\s+["']([^"']+)["']/g);
     for (const match of imports) {
       const importPath = match[1];
-      const importedFeature = ["catalog", "inventory-provider"].find(
+      const importedFeature = ["catalog", "inventory-provider", "inventory-setup"].find(
         (feature) =>
           importPath.includes(`/features/${feature}/`) || importPath.includes(`/${feature}/`),
       );
