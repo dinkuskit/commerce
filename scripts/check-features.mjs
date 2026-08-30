@@ -21,10 +21,17 @@ const requiredFiles = [
   "src/features/inventory-setup/index.ts",
   "src/features/inventory-setup/configure-inventory.ts",
   "src/features/inventory-setup/store-configuration.ts",
+  "src/features/storefront-availability/index.ts",
+  "src/features/storefront-availability/policy.ts",
+  "src/features/storefront-availability/resolve.ts",
+  "src/features/storefront-availability/settings.ts",
   "docs/implementation/managed-stock-foundation.md",
   "docs/implementation/configure-inventory-action.md",
+  "docs/implementation/managed-storefront-availability.md",
   "proof/configure-inventory-action/PROOF.md",
   "proof/configure-inventory-action/source-manifest.sha256",
+  "proof/managed-storefront-availability/PROOF.md",
+  "proof/managed-storefront-availability/source-manifest.sha256",
 ];
 
 async function walk(directory) {
@@ -50,13 +57,16 @@ export async function auditFeatures(repositoryRoot = root) {
     "`dinkus.catalog`",
     "`dinkus.inventory-provider`",
     "`dinkus.inventory-setup`",
+    "`dinkus.storefront-availability`",
     "`src/features/catalog/`",
     "`src/features/inventory-provider/`",
     "`src/features/inventory-setup/`",
+    "`src/features/storefront-availability/`",
     "`bin/verify-commerce quick`",
     "`bin/verify-commerce full`",
     "`proof/catalog-first-managed-sku/PROOF.md`",
     "`proof/configure-inventory-action/PROOF.md`",
+    "`proof/managed-storefront-availability/PROOF.md`",
   ]) {
     if (!map.includes(requiredText)) findings.push(`FEATURE_MAP.md is missing ${requiredText}`);
   }
@@ -71,6 +81,14 @@ export async function auditFeatures(repositoryRoot = root) {
   ) {
     findings.push(
       "package export ./features/inventory-provider must resolve to the inventory-provider public entry",
+    );
+  }
+  if (
+    manifest.exports?.["./features/storefront-availability"]?.default !==
+    "./dist/features/storefront-availability/index.js"
+  ) {
+    findings.push(
+      "package export ./features/storefront-availability must resolve to the storefront-availability public entry",
     );
   }
   if (
@@ -92,7 +110,12 @@ export async function auditFeatures(repositoryRoot = root) {
     const imports = source.matchAll(/from\s+["']([^"']+)["']/g);
     for (const match of imports) {
       const importPath = match[1];
-      const importedFeature = ["catalog", "inventory-provider", "inventory-setup"].find(
+      const importedFeature = [
+        "catalog",
+        "inventory-provider",
+        "inventory-setup",
+        "storefront-availability",
+      ].find(
         (feature) =>
           importPath.includes(`/features/${feature}/`) || importPath.includes(`/${feature}/`),
       );

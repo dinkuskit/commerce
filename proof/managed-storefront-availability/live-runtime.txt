@@ -1,0 +1,27 @@
+Managed storefront availability — redacted local proof
+Date: 2026-08-30
+Data classification: synthetic local test data only
+
+Runtime:
+node v22.23.2
+emdash 0.35.0
+
+Command:
+CI=1 mise x node@22.23.2 -- bin/verify-commerce full
+
+Final result:
+exit 0
+TypeScript typecheck passed.
+Unit suite: 78 passed, 0 failed.
+public_repository_contract=clean
+feature_contract=clean
+Integration suite: 17 passed, 0 failed.
+
+Feature persistence receipt:
+LIVE_PROOF {"case":"storefront-availability-policy-persistence","emdash":"0.35.0","storageReopened":true,"displayMode":"threshold","threshold":5,"allowBackorders":true,"inventoryScope":"location","inventoryLocation":"murphy-nc","resolvedStatus":"low-stock","dataClassification":"synthetic"}
+
+The first pinned-Node full-verification attempt encountered an ignored
+node_modules ABI mismatch because better-sqlite3 had been installed under Node
+26.7.0. No repository source failed or changed. Rebuilding better-sqlite3 under
+Node 22.23.2 repaired the environment; the complete command above was rerun
+from the start and passed.

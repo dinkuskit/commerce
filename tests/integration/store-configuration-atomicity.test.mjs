@@ -10,17 +10,24 @@ import {
   configureCatalogItemInventory,
   createCatalogItem,
   createStoreInventoryConfiguration,
+  resolveManagedStorefrontAvailability,
+  setCatalogItemBackorders,
+  setStorefrontAvailabilityPolicy,
 } from "../../dist/index.js";
 import {
   initializeCatalogDatabase,
   initializeClaimDatabase,
   initializeStoreInventoryConfigurationDatabase,
+  openCatalogBackorderPolicyRepository,
   openCatalogRepository,
   openClaimRepository,
   openStoreInventoryConfigurationRepository,
+  openStorefrontAvailabilitySettingsRepository,
+  readCatalogBackorderPolicies,
   readCatalogItems,
   readClaimRecords,
   readStoreInventoryConfigurations,
+  readStorefrontAvailabilitySettings,
 } from "./sqlite-fixture.mjs";
 
 const workerPath = new URL("./store-configuration-process-worker.mjs", import.meta.url);
@@ -218,6 +225,173 @@ test("Configure Inventory persists one active SKU through exact EmDash 0.35 stor
         persistedConfigurations: readStoreInventoryConfigurations(databasePath).length,
         persistedClaims: readClaimRecords(databasePath).length,
         providerContract: "InventoryProviderPort",
+        dataClassification: "synthetic",
+      }),
+  );
+});
+
+test("storefront policy and backorders survive EmDash storage reopen", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "commerce-storefront-policy-live-"));
+  t.after(() => rm(directory, { force: true, recursive: true }));
+  const databasePath = join(directory, "commerce.db");
+  initializeCatalogDatabase(databasePath);
+  initializeClaimDatabase(databasePath);
+  initializeStoreInventoryConfigurationDatabase(databasePath);
+
+  const firstCatalog = openCatalogRepository(databasePath);
+  const firstBackorderPolicies = openCatalogBackorderPolicyRepository(databasePath);
+  const firstClaims = openClaimRepository(databasePath);
+  const firstConfigurations = openStoreInventoryConfigurationRepository(databasePath);
+  const firstSettings = openStorefrontAvailabilitySettingsRepository(databasePath);
+  const created = await createCatalogItem(
+    firstCatalog.storage,
+    {
+      commandId: "cmd:storefront-policy-live",
+      name: "Storefront Policy Grill",
+      sku: "STOREFRONT-POLICY-GRILL",
+      manageStock: true,
+    },
+    { createId: () => "catalog-storefront-policy" },
+  );
+  await createStoreInventoryConfiguration(
+    firstConfigurations.storage,
+    {
+      providerRef: "dinkuskit.inventory",
+      poolId: "pool-smoky",
+      defaultFulfillmentLocationId: "murphy-nc",
+    },
+    {
+      createRecordId: () => "configuration-storefront-policy",
+      createSiteId: () => "site-storefront-policy",
+    },
+  );
+  await configureCatalogItemInventory(
+    {
+      catalog: firstCatalog.storage,
+      configurations: firstConfigurations.storage,
+      claims: firstClaims.storage,
+    },
+    { catalogItemId: created.item.itemId },
+    {
+      createClaimRecordId: () => "claim-storefront-policy",
+      createOperationId: () => "operation-storefront-policy",
+      resolveProvider: async () => ({
+        async registerManagedSku(registration) {
+          return {
+            outcome: "registered",
+            inventorySku: {
+              inventorySkuId: "inventory-storefront-policy",
+              sku: registration.request.sku,
+              displayName: registration.request.displayNameIfNew,
+            },
+          };
+        },
+      }),
+    },
+  );
+  await setStorefrontAvailabilityPolicy(firstSettings.storage, {
+    mode: "threshold",
+    threshold: 5,
+  });
+  await setCatalogItemBackorders(
+    {
+      catalog: firstCatalog.storage,
+      policies: firstBackorderPolicies.storage,
+    },
+    { catalogItemId: created.item.itemId, allowBackorders: true },
+  );
+  await Promise.all([
+    firstBackorderPolicies.db.destroy(),
+    firstCatalog.db.destroy(),
+    firstClaims.db.destroy(),
+    firstConfigurations.db.destroy(),
+    firstSettings.db.destroy(),
+  ]);
+
+  const catalog = openCatalogRepository(databasePath);
+  const backorderPolicies = openCatalogBackorderPolicyRepository(databasePath);
+  const configurations = openStoreInventoryConfigurationRepository(databasePath);
+  const settings = openStorefrontAvailabilitySettingsRepository(databasePath);
+  t.after(() =>
+    Promise.all([
+      backorderPolicies.db.destroy(),
+      catalog.db.destroy(),
+      configurations.db.destroy(),
+      settings.db.destroy(),
+    ]),
+  );
+  const providerInputs = [];
+  const result = await resolveManagedStorefrontAvailability(
+    {
+      backorderPolicies: backorderPolicies.storage,
+      catalog: catalog.storage,
+      configurations: configurations.storage,
+      settings: settings.storage,
+    },
+    { catalogItemId: created.item.itemId },
+    {
+      resolveProvider: async () => ({
+        async readSkuStock(input) {
+          providerInputs.push(input);
+          const zero = { value: "0", unit: "each" };
+          const available = { value: "5", unit: "each" };
+          const stock = {
+            onHand: available,
+            reserved: zero,
+            outgoingTransferCommitted: zero,
+            available,
+            expected: zero,
+            inTransit: zero,
+          };
+          return {
+            schema: "dinkuskit.inventory.sku-stock-read-result/v1",
+            outcome: "found",
+            poolId: input.poolId,
+            skuId: input.skuId,
+            scope: input.scope,
+            stock,
+            locations: [
+              {
+                locationId: input.scope.locationId,
+                name: "Murphy, NC",
+                stock,
+              },
+            ],
+          };
+        },
+      }),
+    },
+  );
+
+  const [persistedBackorderPolicy] = readCatalogBackorderPolicies(databasePath);
+  const [persistedSettings] = readStorefrontAvailabilitySettings(databasePath);
+  assert.equal(persistedBackorderPolicy.allowBackorders, true);
+  assert.deepEqual(persistedSettings.policy, {
+    mode: "threshold",
+    threshold: 5,
+  });
+  assert.deepEqual(providerInputs, [
+    {
+      poolId: "pool-smoky",
+      skuId: "inventory-storefront-policy",
+      scope: { kind: "location", locationId: "murphy-nc" },
+    },
+  ]);
+  assert.equal(result.status, "low-stock");
+  assert.deepEqual(result.displayQuantity, { value: "5", unit: "each" });
+
+  console.log(
+    "LIVE_PROOF " +
+      JSON.stringify({
+        case: "storefront-availability-policy-persistence",
+        emdash: emdashPackage.version,
+        storageReopened: true,
+        displayMode: persistedSettings.policy.mode,
+        threshold: persistedSettings.policy.threshold,
+        allowBackorders: persistedBackorderPolicy.allowBackorders,
+        inventoryScope: providerInputs[0].scope.kind,
+        inventoryLocation: providerInputs[0].scope.locationId,
+        resolvedStatus: result.status,
         dataClassification: "synthetic",
       }),
   );
