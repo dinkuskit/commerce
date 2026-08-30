@@ -5,6 +5,9 @@ import type { StockManagement } from "../inventory-provider/index.js";
 export const CATALOG_FEATURE_ID = "dinkus.catalog";
 export const CATALOG_COLLECTION = "catalogItems";
 export const CATALOG_BACKORDER_POLICIES_COLLECTION = "catalogBackorderPolicies";
+export const CATALOG_MANUAL_AVAILABILITY_COLLECTION =
+  "catalogManualAvailability";
+export const DEFAULT_CATALOG_MANUAL_AVAILABILITY = "in-stock" as const;
 // EmDash mounts plugin IDs as one URL segment and uses them in storage-index
 // provisioning. Keep the scoped npm package identity separate from this
 // runtime slug so both the HTTP route and declared unique indexes materialize.
@@ -87,6 +90,38 @@ export interface SetCatalogItemBackordersInput {
 export interface SetCatalogItemBackordersResult {
   changed: boolean;
   policy: CatalogBackorderPolicyRecord;
+}
+
+export type CatalogManualAvailabilityStatus =
+  | "in-stock"
+  | "out-of-stock"
+  | "available-on-backorder";
+
+export interface CatalogManualAvailabilityRecord {
+  recordKind: "catalog-manual-availability";
+  recordId: string;
+  catalogItemId: string;
+  status: CatalogManualAvailabilityStatus;
+}
+
+export type CatalogManualAvailabilityStorage = Pick<
+  StorageCollection<CatalogManualAvailabilityRecord>,
+  "get" | "put"
+>;
+
+export interface SetCatalogItemManualAvailabilityStorage {
+  catalog: CatalogItemReadStorage;
+  availability: CatalogManualAvailabilityStorage;
+}
+
+export interface SetCatalogItemManualAvailabilityInput {
+  catalogItemId: string;
+  status: CatalogManualAvailabilityStatus;
+}
+
+export interface SetCatalogItemManualAvailabilityResult {
+  changed: boolean;
+  availability: CatalogManualAvailabilityRecord;
 }
 
 export interface CreateCatalogItemResult {

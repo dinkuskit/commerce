@@ -2,12 +2,15 @@ import { definePlugin, type PluginDescriptor, type ResolvedPlugin } from "emdash
 
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
+  CATALOG_MANUAL_AVAILABILITY_COLLECTION,
   CATALOG_UNIQUE_INDEXES,
   COMMERCE_PLUGIN_ID,
   CREATE_CATALOG_ITEM_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   createCatalogItemRoute,
   setCatalogItemBackordersRoute,
+  setCatalogItemManualAvailabilityRoute,
 } from "./features/catalog/index.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
@@ -61,6 +64,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [CATALOG_MANUAL_AVAILABILITY_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
       [MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION]: {
         indexes: [],
         uniqueIndexes: [...MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES],
@@ -77,6 +84,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
     routes: {
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRoute,
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
+      [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:
+        setCatalogItemManualAvailabilityRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

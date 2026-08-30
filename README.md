@@ -54,6 +54,16 @@ that defaults off. Missing setup, missing stock, malformed provider output, or
 an unavailable provider returns `availability-unavailable` and is never
 treated as zero stock or a backorder. The package stores no fallback quantity.
 
+Products with Manage Stock disabled use a separate Commerce-owned manual
+availability value: `in-stock`, `out-of-stock`, or
+`available-on-backorder`. A missing value defaults to `in-stock` for new and
+legacy products. The private `catalog-items/set-manual-availability` action
+can change it only while the product is unmanaged. The value remains dormant
+while Inventory manages the product and returns if management is later
+disabled. `resolveStorefrontAvailability` selects the managed or unmanaged
+authority and always returns the same structured storefront contract;
+unmanaged products never expose an invented quantity or contact Inventory.
+
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
 a stock 0.35.0 compatibility claim. It requires exact commit

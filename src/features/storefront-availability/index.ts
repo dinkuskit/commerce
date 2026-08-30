@@ -4,7 +4,10 @@ export {
   DEFAULT_STOREFRONT_AVAILABILITY_POLICY,
   normalizeStorefrontAvailabilityPolicy,
 } from "./policy.js";
-export { resolveManagedStorefrontAvailability } from "./resolve.js";
+export {
+  resolveManagedStorefrontAvailability,
+  resolveStorefrontAvailability,
+} from "./resolve.js";
 export {
   SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
   setStorefrontAvailabilityPolicyRoute,
@@ -29,6 +32,7 @@ export type {
   InventoryStockQuantities,
   ResolveManagedStorefrontAvailabilityExecution,
   ResolveManagedStorefrontAvailabilityInput,
+  ResolveStorefrontAvailabilityExecution,
   SetStorefrontAvailabilityPolicyOptions,
   SetStorefrontAvailabilityPolicyResult,
   StorefrontAvailabilityDisplayPolicy,
@@ -37,4 +41,5 @@ export type {
   StorefrontAvailabilitySettingsStorage,
   StorefrontAvailabilityStatus,
   StorefrontAvailabilityStorage,
+  StorefrontAvailabilityResolverStorage,
 } from "./types.js";

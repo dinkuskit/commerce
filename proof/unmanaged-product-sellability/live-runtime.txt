@@ -1,0 +1,25 @@
+COMMAND
+mise exec node@22.23.2 -- npm run build && mise exec node@22.23.2 -- node --test --test-name-pattern "manual unmanaged availability survives" tests/integration/store-configuration-atomicity.test.mjs
+
+RESULT
+exit_code=0
+
+> @dinkuskit/commerce@0.0.0 build
+> node scripts/build.mjs
+
+TAP version 13
+# LIVE_PROOF {"case":"manual-unmanaged-availability-persistence","emdash":"0.35.0","storageReopened":true,"persistedStatus":"out-of-stock","resolvedStatus":"out-of-stock","sellable":false,"inventoryContacted":false,"dataClassification":"synthetic"}
+# Subtest: manual unmanaged availability survives EmDash storage reopen without Inventory
+ok 1 - manual unmanaged availability survives EmDash storage reopen without Inventory
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+
+REDACTION
+Synthetic catalog, SKU, and status values only. No customer, tenant, credential,
+account, production, or private repository data is present.

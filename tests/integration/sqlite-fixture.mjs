@@ -5,6 +5,7 @@ import { PluginStorageRepository } from "emdash";
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
   CATALOG_COLLECTION,
+  CATALOG_MANUAL_AVAILABILITY_COLLECTION,
   COMMERCE_PLUGIN_ID,
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
@@ -102,6 +103,16 @@ export function openCatalogBackorderPolicyRepository(path) {
 export function readCatalogBackorderPolicies(path) {
   return readCollectionRecords(path, CATALOG_BACKORDER_POLICIES_COLLECTION).filter(
     (record) => record.recordKind === "catalog-backorder-policy",
+  );
+}
+
+export function openCatalogManualAvailabilityRepository(path) {
+  return openUnindexedRepository(path, CATALOG_MANUAL_AVAILABILITY_COLLECTION);
+}
+
+export function readCatalogManualAvailability(path) {
+  return readCollectionRecords(path, CATALOG_MANUAL_AVAILABILITY_COLLECTION).filter(
+    (record) => record.recordKind === "catalog-manual-availability",
   );
 }
 

@@ -15,6 +15,7 @@ test("the package root and feature entry expose the same storefront availability
     "loadStorefrontAvailabilityPolicy",
     "normalizeStorefrontAvailabilityPolicy",
     "resolveManagedStorefrontAvailability",
+    "resolveStorefrontAvailability",
     "setStorefrontAvailabilityPolicy",
   ]) {
     assert.equal(storefrontAvailability[name], commerce[name], name);
