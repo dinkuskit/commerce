@@ -1,0 +1,34 @@
+Configure Inventory action — redacted synthetic runtime proof
+
+Runtime:
+  Node.js 22.23.2
+  EmDash 0.35.0
+
+Command:
+  npm run build && node --test tests/integration/store-configuration-atomicity.test.mjs
+
+LIVE_PROOF {"case":"atomic-store-inventory-configuration","emdash":"0.35.0","processes":2,"created":1,"joined":1,"persistedConfigurations":1,"onePermanentSiteId":true,"dataClassification":"synthetic"}
+PASS two EmDash 0.35 repository processes converge on one permanent site identity
+PASS EmDash 0.35 configuration storage fails closed without its unique index
+LIVE_PROOF {"case":"configure-inventory-action-persistence","emdash":"0.35.0","outcome":"inventory-active","siteIdentityPersisted":true,"catalogState":"active","persistedConfigurations":1,"persistedClaims":1,"providerContract":"InventoryProviderPort","dataClassification":"synthetic"}
+PASS Configure Inventory persists one active SKU through exact EmDash 0.35 storage
+
+Result:
+  3 tests passed
+  0 tests failed
+  exit 0
+
+Command:
+  npm run build && node --test tests/integration/d1-atomicity.test.mjs
+
+LIVE_PROOF {"case":"wrangler-d1-atomic-store-inventory-configuration","emdash":"0.35.0","processes":2,"writesSucceeded":1,"writesRejected":1,"persistedConfigurations":1,"rejectedConstraint":"uidx_plugin_dinkus-commerce_storeInventoryConfigurations_configurationKey","dataClassification":"synthetic-local"}
+PASS two local Wrangler/D1 processes enforce one permanent store identity
+
+Result:
+  3 tests passed
+  0 tests failed
+  exit 0
+
+Redaction:
+  Synthetic local data only. No secrets, credentials, customer data, tenant
+  data, production identifiers, or private repository coordinates.

@@ -76,11 +76,14 @@ These are opaque non-empty identities. Normalization returns only those three
 fields, so credentials, quantities, or unrelated provider payload cannot enter
 the normalized Commerce binding value through this contract.
 
-## Deferred integration
+## Configure Inventory continuation
 
-These foundation slices do not render the Configure Inventory UI, persist the
-store binding, call an Inventory service, discover pools, register an actual
-Inventory record, read or mutate stock, implement checkout or order states,
-choose a reservation duration, or perform fulfillment and shipping work. Those
-behaviors depend on later, separately verified adapters and do not change this
-product-state contract.
+Commerce now persists the store binding together with one permanent,
+server-generated Commerce site ID and exposes a private product action that
+drives this registration contract through an injected provider port. See
+[configure-inventory-action.md](configure-inventory-action.md).
+
+The continuation does not render the Configure Inventory UI, install a live
+Inventory transport, discover pools, read or mutate stock, implement checkout
+or order states, choose a reservation duration, or perform fulfillment and
+shipping work. Those behaviors depend on later, separately verified slices.
