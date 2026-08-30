@@ -1,4 +1,5 @@
 import {
+  loadCatalogItemManualAvailability,
   loadCatalogItemBackorderPolicy,
   type CatalogItemRecord,
   type CatalogStorageRecord,
@@ -20,10 +21,19 @@ import {
   type InventoryStockQuantities,
   type ResolveManagedStorefrontAvailabilityExecution,
   type ResolveManagedStorefrontAvailabilityInput,
+  type ResolveStorefrontAvailabilityExecution,
   type StorefrontAvailabilityResult,
   type StorefrontAvailabilityDisplayPolicy,
   type StorefrontAvailabilityStorage,
+  type StorefrontAvailabilityResolverStorage,
 } from "./types.js";
+
+type ManagedCatalogItemRecord = Omit<CatalogItemRecord, "stockManagement"> & {
+  stockManagement: Extract<
+    CatalogItemRecord["stockManagement"],
+    { mode: "managed" }
+  >;
+};
 
 function normalizeInput(value: unknown): ResolveManagedStorefrontAvailabilityInput {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -66,6 +76,31 @@ function normalizeCatalogItem(
     creationIntent: stored.creationIntent ?? { manageStock: false },
     stockManagement: normalizeStoredStockManagement(stored.stockManagement),
   };
+}
+
+function isManagedCatalogItem(
+  item: CatalogItemRecord,
+): item is ManagedCatalogItemRecord {
+  return item.stockManagement.mode === "managed";
+}
+
+async function loadCatalogItemForAvailability(
+  storage: StorefrontAvailabilityStorage["catalog"],
+  catalogItemId: string,
+): Promise<CatalogItemRecord | null> {
+  let stored: CatalogStorageRecord | null;
+  try {
+    stored = await storage.get(catalogItemId);
+  } catch {
+    return null;
+  }
+  if (stored === null || stored.recordKind !== "catalog-item") {
+    throw new StorefrontAvailabilityError(
+      "CATALOG_ITEM_NOT_FOUND",
+      "catalog item was not found",
+    );
+  }
+  return normalizeCatalogItem(stored, catalogItemId);
 }
 
 function sameScope(
@@ -195,32 +230,23 @@ function availableResult(
   };
 }
 
-export async function resolveManagedStorefrontAvailability(
+function manualResult(
+  catalogItemId: string,
+  status: "in-stock" | "out-of-stock" | "available-on-backorder",
+): StorefrontAvailabilityResult {
+  return {
+    schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
+    catalogItemId,
+    status,
+    sellable: status !== "out-of-stock",
+  };
+}
+
+async function resolveManagedItem(
   storage: StorefrontAvailabilityStorage,
-  rawInput: unknown,
-  execution: ResolveManagedStorefrontAvailabilityExecution,
+  item: ManagedCatalogItemRecord,
+  execution: ResolveStorefrontAvailabilityExecution,
 ): Promise<StorefrontAvailabilityResult> {
-  const input = normalizeInput(rawInput);
-  let stored: CatalogStorageRecord | null;
-  try {
-    stored = await storage.catalog.get(input.catalogItemId);
-  } catch {
-    return unavailable(input.catalogItemId);
-  }
-  if (stored === null || stored.recordKind !== "catalog-item") {
-    throw new StorefrontAvailabilityError(
-      "CATALOG_ITEM_NOT_FOUND",
-      "catalog item was not found",
-    );
-  }
-  const item = normalizeCatalogItem(stored, input.catalogItemId);
-  if (!item) return unavailable(input.catalogItemId);
-  if (item.stockManagement.mode !== "managed") {
-    throw new StorefrontAvailabilityError(
-      "MANAGE_STOCK_REQUIRED",
-      "catalog item does not use managed stock",
-    );
-  }
   if (item.stockManagement.status !== "active") return unavailable(item.itemId);
 
   let configuration;
@@ -261,6 +287,52 @@ export async function resolveManagedStorefrontAvailability(
       quantity,
       displayPolicy,
     );
+  } catch {
+    return unavailable(item.itemId);
+  }
+}
+
+export async function resolveManagedStorefrontAvailability(
+  storage: StorefrontAvailabilityStorage,
+  rawInput: unknown,
+  execution: ResolveManagedStorefrontAvailabilityExecution,
+): Promise<StorefrontAvailabilityResult> {
+  const input = normalizeInput(rawInput);
+  const item = await loadCatalogItemForAvailability(
+    storage.catalog,
+    input.catalogItemId,
+  );
+  if (!item) return unavailable(input.catalogItemId);
+  if (!isManagedCatalogItem(item)) {
+    throw new StorefrontAvailabilityError(
+      "MANAGE_STOCK_REQUIRED",
+      "catalog item does not use managed stock",
+    );
+  }
+  return resolveManagedItem(storage, item, execution);
+}
+
+export async function resolveStorefrontAvailability(
+  storage: StorefrontAvailabilityResolverStorage,
+  rawInput: unknown,
+  execution: ResolveStorefrontAvailabilityExecution = {},
+): Promise<StorefrontAvailabilityResult> {
+  const input = normalizeInput(rawInput);
+  const item = await loadCatalogItemForAvailability(
+    storage.catalog,
+    input.catalogItemId,
+  );
+  if (!item) return unavailable(input.catalogItemId);
+  if (isManagedCatalogItem(item)) {
+    return resolveManagedItem(storage, item, execution);
+  }
+
+  try {
+    const availability = await loadCatalogItemManualAvailability(
+      storage.manualAvailability,
+      item.itemId,
+    );
+    return manualResult(item.itemId, availability.status);
   } catch {
     return unavailable(item.itemId);
   }

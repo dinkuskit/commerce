@@ -10,6 +10,8 @@ import {
   STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
   createPlugin,
   resolveManagedStorefrontAvailability,
+  resolveStorefrontAvailability,
+  setManageStock,
   setCatalogItemBackorders,
   setStorefrontAvailabilityPolicy,
 } from "../../../dist/index.js";
@@ -18,10 +20,12 @@ class MemoryCollection {
   constructor(records = []) {
     this.records = new Map(records.map((record) => [record.recordId ?? record.itemId, structuredClone(record)]));
     this.puts = [];
+    this.gets = [];
     this.queries = [];
   }
 
   async get(id) {
+    this.gets.push(id);
     const record = this.records.get(id);
     return record === undefined ? null : structuredClone(record);
   }
@@ -97,6 +101,15 @@ function availabilitySettings(policy = { mode: "status" }) {
     recordId: "active",
     policy,
     updatedAt: "2026-08-30T00:00:00.000Z",
+  };
+}
+
+function manualAvailabilityRecord(status) {
+  return {
+    recordKind: "catalog-manual-availability",
+    recordId: "item-grill",
+    catalogItemId: "item-grill",
+    status,
   };
 }
 
@@ -303,6 +316,266 @@ test("provider failure, not-found, and malformed stock all fail closed even for 
   }
 });
 
+test("unmanaged products map all three manual states without contacting Inventory", async () => {
+  const cases = [
+    ["in-stock", true],
+    ["out-of-stock", false],
+    ["available-on-backorder", true],
+  ];
+
+  for (const [status, sellable] of cases) {
+    const catalog = new MemoryCollection([
+      catalogItem({
+        creationIntent: { manageStock: false },
+        stockManagement: { mode: "unmanaged" },
+      }),
+    ]);
+    const manualAvailability = new MemoryCollection([
+      manualAvailabilityRecord(status),
+    ]);
+    const configurations = new MemoryCollection([storeConfiguration()]);
+    const settings = new MemoryCollection([
+      availabilitySettings({ mode: "exact" }),
+    ]);
+    const backorderPolicies = new MemoryCollection([backorderPolicy(true)]);
+    let providerResolved = false;
+
+    const result = await resolveStorefrontAvailability(
+      {
+        backorderPolicies,
+        catalog,
+        configurations,
+        manualAvailability,
+        settings,
+      },
+      { catalogItemId: "item-grill" },
+      {
+        resolveProvider: async () => {
+          providerResolved = true;
+          throw new Error("must not resolve Inventory for unmanaged products");
+        },
+      },
+    );
+
+    assert.deepEqual(result, {
+      schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
+      catalogItemId: "item-grill",
+      status,
+      sellable,
+    });
+    assert.equal(providerResolved, false);
+    assert.deepEqual(configurations.gets, []);
+    assert.deepEqual(settings.gets, []);
+    assert.deepEqual(backorderPolicies.gets, []);
+    assert.deepEqual(manualAvailability.gets, ["item-grill"]);
+    assert.equal("displayQuantity" in result, false);
+  }
+});
+
+test("missing unmanaged state defaults to In stock and ignores exact or threshold display policy", async () => {
+  for (const policy of [
+    { mode: "exact" },
+    { mode: "threshold", threshold: 5 },
+  ]) {
+    const catalog = new MemoryCollection([
+      catalogItem({
+        creationIntent: { manageStock: false },
+        stockManagement: { mode: "unmanaged" },
+      }),
+    ]);
+    const manualAvailability = new MemoryCollection();
+    const settings = new MemoryCollection([availabilitySettings(policy)]);
+    const result = await resolveStorefrontAvailability(
+      {
+        backorderPolicies: new MemoryCollection([backorderPolicy(true)]),
+        catalog,
+        configurations: new MemoryCollection([storeConfiguration()]),
+        manualAvailability,
+        settings,
+      },
+      { catalogItemId: "item-grill" },
+    );
+
+    assert.deepEqual(result, {
+      schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
+      catalogItemId: "item-grill",
+      status: "in-stock",
+      sellable: true,
+    });
+    assert.deepEqual(settings.gets, []);
+    assert.equal(manualAvailability.puts.length, 0);
+  }
+});
+
+test("a dormant manual state returns after Manage Stock is disabled", async () => {
+  const active = {
+    mode: "managed",
+    status: "active",
+    inventorySkuId: "inventory-sku-grill",
+  };
+  const catalog = new MemoryCollection([
+    catalogItem({ stockManagement: { mode: "unmanaged" } }),
+  ]);
+  const manualAvailability = new MemoryCollection([
+    manualAvailabilityRecord("out-of-stock"),
+  ]);
+  const storage = {
+    backorderPolicies: new MemoryCollection(),
+    catalog,
+    configurations: new MemoryCollection([storeConfiguration()]),
+    manualAvailability,
+    settings: new MemoryCollection(),
+  };
+  let inventoryReads = 0;
+  const execution = {
+    resolveProvider: async () => ({
+      readSkuStock: async (input) => {
+        inventoryReads += 1;
+        return foundStock("7", input);
+      },
+    }),
+  };
+
+  const before = await resolveStorefrontAvailability(
+    storage,
+    { catalogItemId: "item-grill" },
+    execution,
+  );
+  catalog.records.set("item-grill", catalogItem({ stockManagement: active }));
+  const managed = await resolveStorefrontAvailability(
+    storage,
+    { catalogItemId: "item-grill" },
+    execution,
+  );
+  catalog.records.set(
+    "item-grill",
+    catalogItem({ stockManagement: setManageStock(active, false) }),
+  );
+  const restored = await resolveStorefrontAvailability(
+    storage,
+    { catalogItemId: "item-grill" },
+    execution,
+  );
+
+  assert.equal(before.status, "out-of-stock");
+  assert.equal(managed.status, "in-stock");
+  assert.equal(restored.status, "out-of-stock");
+  assert.equal(inventoryReads, 1);
+  assert.equal(manualAvailability.records.get("item-grill").status, "out-of-stock");
+  assert.equal(manualAvailability.puts.length, 0);
+});
+
+test("manual storage failure fails closed for unmanaged products but is never read for managed products", async () => {
+  const catalog = new MemoryCollection([
+    catalogItem({ stockManagement: { mode: "unmanaged" } }),
+  ]);
+  const manualAvailability = new MemoryCollection();
+  manualAvailability.get = async () => {
+    throw new Error("manual storage unavailable");
+  };
+  const storage = {
+    backorderPolicies: new MemoryCollection(),
+    catalog,
+    configurations: new MemoryCollection([storeConfiguration()]),
+    manualAvailability,
+    settings: new MemoryCollection(),
+  };
+  const execution = {
+    resolveProvider: async () => ({
+      readSkuStock: async (input) => foundStock("2", input),
+    }),
+  };
+
+  const unmanaged = await resolveStorefrontAvailability(
+    storage,
+    { catalogItemId: "item-grill" },
+    execution,
+  );
+  catalog.records.set(
+    "item-grill",
+    catalogItem({
+      stockManagement: {
+        mode: "managed",
+        status: "active",
+        inventorySkuId: "inventory-sku-grill",
+      },
+    }),
+  );
+  const managed = await resolveStorefrontAvailability(
+    storage,
+    { catalogItemId: "item-grill" },
+    execution,
+  );
+
+  assert.deepEqual(unmanaged, {
+    schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
+    catalogItemId: "item-grill",
+    status: "availability-unavailable",
+    sellable: false,
+  });
+  assert.equal(managed.status, "in-stock");
+  assert.equal(managed.sellable, true);
+});
+
+test("non-active managed setup never falls back to dormant manual availability", async () => {
+  const manualAvailability = new MemoryCollection([
+    manualAvailabilityRecord("available-on-backorder"),
+  ]);
+  let providerResolved = false;
+
+  const result = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection([backorderPolicy(true)]),
+      catalog: new MemoryCollection([
+        catalogItem({
+          stockManagement: { mode: "managed", status: "setup-required" },
+        }),
+      ]),
+      configurations: new MemoryCollection([storeConfiguration()]),
+      manualAvailability,
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+    {
+      resolveProvider: async () => {
+        providerResolved = true;
+        throw new Error("must not resolve provider");
+      },
+    },
+  );
+
+  assert.deepEqual(result, {
+    schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
+    catalogItemId: "item-grill",
+    status: "availability-unavailable",
+    sellable: false,
+  });
+  assert.equal(providerResolved, false);
+  assert.deepEqual(manualAvailability.gets, []);
+});
+
+test("the managed-only compatibility resolver still rejects unmanaged products", async () => {
+  const catalog = new MemoryCollection([
+    catalogItem({ stockManagement: { mode: "unmanaged" } }),
+  ]);
+
+  await assert.rejects(
+    resolveManagedStorefrontAvailability(
+      {
+        backorderPolicies: new MemoryCollection(),
+        catalog,
+        configurations: new MemoryCollection(),
+        settings: new MemoryCollection(),
+      },
+      { catalogItemId: "item-grill" },
+      { resolveProvider: async () => null },
+    ),
+    (error) =>
+      error instanceof StorefrontAvailabilityError &&
+      error.code === "MANAGE_STOCK_REQUIRED",
+  );
+});
+
 test("admin actions persist strict store display and product backorder settings", async () => {
   const catalog = new MemoryCollection([catalogItem()]);
   const configurations = new MemoryCollection([storeConfiguration()]);
@@ -390,7 +663,7 @@ test("admin settings reject malformed values and caller-controlled fields", asyn
   assert.equal(catalog.puts.length, 0);
 });
 
-test("the authenticated plugin actions expose only the two bounded setting mutations", async () => {
+test("the existing authenticated display and managed-backorder actions remain bounded", async () => {
   const plugin = createPlugin();
   const catalog = new MemoryCollection([catalogItem()]);
   const settings = new MemoryCollection();

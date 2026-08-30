@@ -14,6 +14,7 @@ const requiredFiles = [
   "src/index.ts",
   "src/features/catalog/index.ts",
   "src/features/catalog/create-catalog-item.ts",
+  "src/features/catalog/manual-availability.ts",
   "src/features/catalog/storage-constraints.ts",
   "src/features/inventory-provider/index.ts",
   "src/features/inventory-provider/binding.ts",
@@ -28,10 +29,14 @@ const requiredFiles = [
   "docs/implementation/managed-stock-foundation.md",
   "docs/implementation/configure-inventory-action.md",
   "docs/implementation/managed-storefront-availability.md",
+  "docs/implementation/unmanaged-product-sellability.md",
   "proof/configure-inventory-action/PROOF.md",
   "proof/configure-inventory-action/source-manifest.sha256",
   "proof/managed-storefront-availability/PROOF.md",
   "proof/managed-storefront-availability/source-manifest.sha256",
+  "proof/unmanaged-product-sellability/PROOF.md",
+  "proof/unmanaged-product-sellability/live-runtime.txt",
+  "proof/unmanaged-product-sellability/source-manifest.sha256",
 ];
 
 async function walk(directory) {
@@ -67,6 +72,7 @@ export async function auditFeatures(repositoryRoot = root) {
     "`proof/catalog-first-managed-sku/PROOF.md`",
     "`proof/configure-inventory-action/PROOF.md`",
     "`proof/managed-storefront-availability/PROOF.md`",
+    "`proof/unmanaged-product-sellability/PROOF.md`",
   ]) {
     if (!map.includes(requiredText)) findings.push(`FEATURE_MAP.md is missing ${requiredText}`);
   }

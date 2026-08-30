@@ -1,6 +1,7 @@
 import type { StorageCollection } from "emdash";
 
 import type {
+  CatalogManualAvailabilityStorage,
   CatalogBackorderPolicyStorage,
   CatalogStorageRecord,
 } from "../catalog/index.js";
@@ -105,6 +106,11 @@ export interface StorefrontAvailabilityStorage {
   settings: StorefrontAvailabilitySettingsStorage;
 }
 
+export interface StorefrontAvailabilityResolverStorage
+  extends StorefrontAvailabilityStorage {
+  manualAvailability: CatalogManualAvailabilityStorage;
+}
+
 export interface ResolveManagedStorefrontAvailabilityInput {
   catalogItemId: string;
 }
@@ -113,6 +119,10 @@ export interface ResolveManagedStorefrontAvailabilityExecution {
   resolveProvider: (
     configuration: StoreInventoryConfigurationRecord,
   ) => Promise<InventoryAvailabilityProviderPort | null | undefined>;
+}
+
+export interface ResolveStorefrontAvailabilityExecution {
+  resolveProvider?: ResolveManagedStorefrontAvailabilityExecution["resolveProvider"];
 }
 
 export type StorefrontAvailabilityStatus =
