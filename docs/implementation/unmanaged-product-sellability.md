@@ -63,8 +63,8 @@ The manual record remains dormant while Manage Stock is enabled. If management
 is disabled later, the unified resolver reads the same saved value; it never
 copies an Inventory quantity or derived managed status into Commerce.
 
-The current repository exposes `setManageStock` as a pure transition but has
-no authenticated persistence action for that toggle. A future toggle action
-must define its cross-record atomicity before it can claim concurrent mutation
-proof. This slice proves the authority switch and dormant-state restoration
-without expanding into that future action.
+The authenticated `catalog-items/set-manage-stock` action now persists that
+transition. This slice still owns only the manual-availability authority
+boundary: the toggle writes catalog stock-management state and reconstructable
+registration claims, never this isolated manual record. See
+[manage-stock-toggle.md](manage-stock-toggle.md).

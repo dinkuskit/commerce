@@ -17,11 +17,17 @@ test("the package root and feature entry expose the same catalog contract", () =
     catalog.loadCatalogItemManualAvailability,
     commerce.loadCatalogItemManualAvailability,
   );
+  assert.equal(catalog.setCatalogItemManageStock, commerce.setCatalogItemManageStock);
+  assert.equal(catalog.currentManageStockRevision, commerce.currentManageStockRevision);
   assert.equal(catalog.CREATE_CATALOG_ITEM_ROUTE, "catalog-items/create");
   assert.equal(catalog.SET_CATALOG_ITEM_BACKORDERS_ROUTE, "catalog-items/set-backorders");
   assert.equal(
     catalog.SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
     "catalog-items/set-manual-availability",
+  );
+  assert.equal(
+    catalog.SET_CATALOG_ITEM_MANAGE_STOCK_ROUTE,
+    "catalog-items/set-manage-stock",
   );
   assert.equal(catalog.DEFAULT_CATALOG_MANUAL_AVAILABILITY, "in-stock");
   assert.equal(typeof commerce.dinkusCommerce, "function");

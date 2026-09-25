@@ -1,6 +1,8 @@
-import type {
-  CatalogItemRecord,
-  CatalogStorageRecord,
+import {
+  CatalogError,
+  currentManageStockRevision,
+  type CatalogItemRecord,
+  type CatalogStorageRecord,
 } from "../catalog/index.js";
 import {
   createManagedSkuRegistrationClaimKey,
@@ -75,6 +77,19 @@ async function loadCatalogItem(
     creationIntent: stored.creationIntent ?? { manageStock: false },
     stockManagement: normalizeStoredStockManagement(stored.stockManagement),
   };
+}
+
+function readManageStockRevision(item: CatalogItemRecord): number {
+  try {
+    return currentManageStockRevision(item);
+  } catch (error) {
+    if (error instanceof CatalogError) {
+      throw new InventorySetupError("STORAGE_UNAVAILABLE", error.message, {
+        cause: error,
+      });
+    }
+    throw error;
+  }
 }
 
 function currentResult(
@@ -169,6 +184,7 @@ export async function configureCatalogItemInventory(
     now: execution.now,
   });
   let persistedItem = item;
+  const startedRevision = readManageStockRevision(item);
   const rejectedOperationId =
     item.stockManagement.status === "setup-needs-attention"
       ? item.stockManagement.registration.operationId
@@ -187,7 +203,17 @@ export async function configureCatalogItemInventory(
       claim: claimPort.claim,
       createOperationId: execution.createOperationId,
       persist: async (stockManagement) => {
-        const next: CatalogItemRecord = { ...persistedItem, stockManagement };
+        const latest = await loadCatalogItem(storage.catalog, input.catalogItemId);
+        if (
+          latest.stockManagement.mode !== "managed" ||
+          readManageStockRevision(latest) !== startedRevision
+        ) {
+          throw new InventorySetupError(
+            "MANAGE_STOCK_REQUIRED",
+            "Manage Stock changed while configuring Inventory",
+          );
+        }
+        const next: CatalogItemRecord = { ...latest, stockManagement };
         try {
           await storage.catalog.put(next.itemId, next);
         } catch (error) {

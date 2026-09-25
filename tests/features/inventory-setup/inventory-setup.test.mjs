@@ -10,6 +10,7 @@ import {
   createPlugin,
   createStoreInventoryConfiguration,
   managedSkuRegistrationClaimUniqueIndexName,
+  setCatalogItemManageStock,
   storeInventoryConfigurationUniqueIndexName,
 } from "../../../dist/index.js";
 
@@ -528,4 +529,106 @@ test("the plugin declares the singleton configuration and one private update rou
     request: new Request("https://smokyclub.test/configure-inventory", { method: "POST" }),
   });
   assert.equal(result.outcome, "inventory-active");
+});
+
+test("Configure Inventory persist aborts if Manage Stock is disabled mid-flight", async () => {
+  const catalog = new MemoryCollection();
+  const configurations = configurationStorage();
+  const claims = claimStorage();
+  catalog.records.set("item-grill", managedItem({ manageStockRevision: 1 }));
+  await configuredStore(configurations);
+  const originalPut = catalog.put.bind(catalog);
+  catalog.put = async (id, data) => {
+    await originalPut(id, data);
+    if (data.stockManagement?.status === "setup-pending") {
+      await setCatalogItemManageStock(
+        { catalog: { get: catalog.get.bind(catalog), put: originalPut }, claims },
+        { catalogItemId: "item-grill", manageStock: false },
+      );
+    }
+  };
+
+  await assert.rejects(
+    configureCatalogItemInventory(
+      { catalog, configurations, claims },
+      { catalogItemId: "item-grill" },
+      setupExecution({
+        resolveProvider: async () => ({
+          async registerManagedSku(registration) {
+            return {
+              outcome: "registered",
+              inventorySku: {
+                inventorySkuId: "inventory-sku-stale",
+                sku: registration.request.sku,
+                displayName: registration.request.displayNameIfNew,
+              },
+            };
+          },
+        }),
+      }),
+    ),
+    (error) =>
+      error instanceof InventorySetupError && error.code === "MANAGE_STOCK_REQUIRED",
+  );
+
+  assert.deepEqual(catalog.records.get("item-grill").stockManagement, {
+    mode: "unmanaged",
+  });
+  assert.equal(catalog.records.get("item-grill").manageStockRevision, 1);
+  assert.equal(claims.records.size, 0);
+});
+
+test("Configure Inventory persist aborts if Manage Stock is disabled and re-enabled mid-flight", async () => {
+  const catalog = new MemoryCollection();
+  const configurations = configurationStorage();
+  const claims = claimStorage();
+  catalog.records.set("item-grill", managedItem({ manageStockRevision: 1 }));
+  await configuredStore(configurations);
+  const originalPut = catalog.put.bind(catalog);
+  catalog.put = async (id, data) => {
+    await originalPut(id, data);
+    if (data.stockManagement?.status === "setup-pending") {
+      const toggle = {
+        catalog: { get: catalog.get.bind(catalog), put: originalPut },
+        claims,
+      };
+      await setCatalogItemManageStock(toggle, {
+        catalogItemId: "item-grill",
+        manageStock: false,
+      });
+      await setCatalogItemManageStock(toggle, {
+        catalogItemId: "item-grill",
+        manageStock: true,
+      });
+    }
+  };
+
+  await assert.rejects(
+    configureCatalogItemInventory(
+      { catalog, configurations, claims },
+      { catalogItemId: "item-grill" },
+      setupExecution({
+        resolveProvider: async () => ({
+          async registerManagedSku(registration) {
+            return {
+              outcome: "registered",
+              inventorySku: {
+                inventorySkuId: "inventory-sku-stale",
+                sku: registration.request.sku,
+                displayName: registration.request.displayNameIfNew,
+              },
+            };
+          },
+        }),
+      }),
+    ),
+    (error) =>
+      error instanceof InventorySetupError && error.code === "MANAGE_STOCK_REQUIRED",
+  );
+
+  assert.deepEqual(catalog.records.get("item-grill").stockManagement, {
+    mode: "managed",
+    status: "setup-required",
+  });
+  assert.equal(catalog.records.get("item-grill").manageStockRevision, 2);
 });

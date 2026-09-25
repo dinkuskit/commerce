@@ -7,9 +7,11 @@ import {
   COMMERCE_PLUGIN_ID,
   CREATE_CATALOG_ITEM_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  SET_CATALOG_ITEM_MANAGE_STOCK_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   createCatalogItemRoute,
   setCatalogItemBackordersRoute,
+  setCatalogItemManageStockRoute,
   setCatalogItemManualAvailabilityRoute,
 } from "./features/catalog/index.js";
 import {
@@ -86,6 +88,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
       [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:
         setCatalogItemManualAvailabilityRoute,
+      [SET_CATALOG_ITEM_MANAGE_STOCK_ROUTE]: setCatalogItemManageStockRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

@@ -64,6 +64,16 @@ disabled. `resolveStorefrontAvailability` selects the managed or unmanaged
 authority and always returns the same structured storefront contract;
 unmanaged products never expose an invented quantity or contact Inventory.
 
+After create, the private `catalog-items/set-manage-stock` action persists the
+Manage Stock choice both ways. Enabling writes `managed` / `setup-required`
+and increments `manageStockRevision` without registering a SKU or taking an
+opening balance; Configure Inventory remains the separate next action.
+Disabling writes `unmanaged` with no Inventory side effect, leaves manual
+availability and backorder policy untouched, and releases reconstructable
+registration claims so a later enable can reconcile fresh. Configure Inventory
+re-reads the catalog row before each persist and refuses a concurrent disable
+or revision change.
+
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
 a stock 0.35.0 compatibility claim. It requires exact commit

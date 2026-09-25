@@ -1,84 +1,30 @@
 {
-  "closeout": {
-    "closed_at": "2026-08-30T21:30:10+00:00",
-    "confirmed_by": "user",
-    "deferred_decisions": [],
-    "proof_refs": [
-      "file:proof/unmanaged-product-sellability/PROOF.md"
-    ],
-    "reason": "The confirmed unmanaged-product sellability backend slice is implemented, fully verified, cleanly reviewed, and authorized for pull-request delivery; visual administration and later transaction surfaces belong to future focused tracks.",
-    "reviews": [
-      {
-        "classifications": [],
-        "decision_id": "unmanaged-availability-model-044",
-        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
-        "result": "clean",
-        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
-      },
-      {
-        "classifications": [],
-        "decision_id": "unmanaged-availability-default-045",
-        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
-        "result": "clean",
-        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
-      },
-      {
-        "classifications": [],
-        "decision_id": "unmanaged-state-transition-046",
-        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
-        "result": "clean",
-        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
-      },
-      {
-        "classifications": [],
-        "decision_id": "manual-control-managed-boundary-047",
-        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
-        "result": "clean",
-        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
-      },
-      {
-        "classifications": [],
-        "decision_id": "unmanaged-quantity-display-boundary-048",
-        "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
-        "result": "clean",
-        "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
-      }
-    ],
-    "summary": "Closed with all five decisions verified: Commerce persists one of three manual unmanaged availability states in isolated storage, defaults missing new and legacy state to In stock, preserves the dormant value through managed operation, rejects manual mutation whenever Manage Stock is enabled, and returns the shared structured storefront result without Inventory contact, quantity, or low-stock output for unmanaged products. No choice was superseded or deferred. Full verification passed 89 unit tests and 18 integration tests, including exact EmDash 0.35 storage close/reopen proof; exact-source review is clean at sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37. Remaining work is outside this track: a persisted Manage Stock toggle and its cross-record concurrency contract, visual EmDash UI, live transport, Blocks rendering, checkout and order enforcement, reservations, pool migration, and deployment. Pull-request delivery is separately authorized; merge and deployment remain unapproved.",
-    "superseded_decisions": [],
-    "verified_decisions": [
-      "unmanaged-availability-model-044",
-      "unmanaged-availability-default-045",
-      "unmanaged-state-transition-046",
-      "manual-control-managed-boundary-047",
-      "unmanaged-quantity-display-boundary-048"
-    ]
-  },
-  "created_at": "2026-08-30T20:57:54+00:00",
+  "closeout": null,
+  "created_at": "2026-09-25T18:09:15+00:00",
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-08-30T21:10:39+00:00",
-    "domain": "unmanaged product sellability",
-    "started_at": "2026-08-30T20:57:54+00:00",
-    "status": "closed",
-    "summary": "Commerce owns manual unmanaged availability with In stock, Out of stock, and Available on backorder states. New and legacy products default to In stock. A product's last manual choice remains dormant while Manage Stock is enabled and returns when management is disabled; Inventory state is never copied into it. Manual availability cannot be changed while managed, while the separate managed-product backorder policy remains available. Unmanaged storefront output uses the existing structured status and sellable contract without quantity or low-stock output, regardless of store-wide quantity display policy. This slice adds backend persistence, an authenticated mutation action, unified resolution, tests, and proof; it excludes visual EmDash UI, Inventory changes, live transport changes, Blocks rendering, checkout, and deployment."
+    "confirmed_at": "2026-09-25T18:09:16+00:00",
+    "domain": "persisted Manage Stock toggle",
+    "started_at": "2026-09-25T18:09:15+00:00",
+    "status": "inspected",
+    "summary": "Commerce persists Manage Stock after create through one private catalog-items/set-manage-stock action. Enabling writes managed setup-required and increments manageStockRevision without auto-running Configure Inventory. Disabling writes unmanaged with no Inventory mutation, leaves manual availability, backorders, and store binding untouched, and releases reconstructable registration claims so re-enable can reconcile fresh. Configure Inventory persist re-reads and refuses to resurrect a changed or unmanaged catalog row. Proof is FEATURE_MAP plus bin/verify-commerce types, unit, and SQLite/D1 contract tests. Excluded: visual EmDash UI, template-store catch-up, live Inventory transport, cart/checkout/orders, payments, npm publish, and EmDash pin changes."
   },
   "decisions": [
     {
-      "baseline_ref": "git:94c9c314686807ac43ac63d0c66671f57e259453",
+      "baseline_ref": "git:8ca3e5dd14264df6db21bf4bee778158b0357bd2",
       "candidate_refs": [],
-      "choice": "Use one simple manual availability choice with exactly In stock, Out of stock, or Available on backorder. Commerce owns the choice and maps it into the same structured storefront status and sellable result established for managed products. No Inventory provider, pool, location, or quantity is required.",
-      "context_ref": "predecessor:gt-20260830194146-7a94e6;decision:managed-stock-disable-016;decision:structured-storefront-availability-041",
-      "created_at": "2026-08-30T20:57:54+00:00",
+      "choice": "Add one authenticated private POST action catalog-items/set-manage-stock requiring content:edit_any. It accepts only catalogItemId and boolean manageStock, loads the server-owned catalog row, applies the existing setManageStock transition, and persists stockManagement on that row. creationIntent.manageStock stays the immutable create input. This slice does not add visual EmDash UI.",
+      "context_ref": "predecessor:gt-20260830205754-677931;decision:managed-stock-foundation-pr-019;file:docs/implementation/unmanaged-product-sellability.md",
+      "created_at": "2026-09-25T18:09:15+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
-      "domain": "unmanaged product sellability",
+      "domain": "persisted Manage Stock toggle",
       "history": [
         {
-          "at": "2026-08-30T21:03:04+00:00",
-          "choice": "Use one simple manual availability choice with exactly In stock, Out of stock, or Available on backorder. Commerce owns the choice and maps it into the same structured storefront status and sellable result established for managed products. No Inventory provider, pool, location, or quantity is required.",
+          "at": "2026-09-25T18:09:15+00:00",
+          "choice": "Add one authenticated private POST action catalog-items/set-manage-stock requiring content:edit_any. It accepts only catalogItemId and boolean manageStock, loads the server-owned catalog row, applies the existing setManageStock transition, and persists stockManagement on that row. creationIntent.manageStock stays the immutable create input. This slice does not add visual EmDash UI.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -91,8 +37,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:46+00:00",
-          "choice": "Use one simple manual availability choice with exactly In stock, Out of stock, or Available on backorder. Commerce owns the choice and maps it into the same structured storefront status and sellable result established for managed products. No Inventory provider, pool, location, or quantity is required.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "Add one authenticated private POST action catalog-items/set-manage-stock requiring content:edit_any. It accepts only catalogItemId and boolean manageStock, loads the server-owned catalog row, applies the existing setManageStock transition, and persists stockManagement on that row. creationIntent.manageStock stays the immutable create input. This slice does not add visual EmDash UI.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -105,10 +51,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:46+00:00",
-          "choice": "Use one simple manual availability choice with exactly In stock, Out of stock, or Available on backorder. Commerce owns the choice and maps it into the same structured storefront status and sellable result established for managed products. No Inventory provider, pool, location, or quantity is required.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "Add one authenticated private POST action catalog-items/set-manage-stock requiring content:edit_any. It accepts only catalogItemId and boolean manageStock, loads the server-owned catalog row, applies the existing setManageStock transition, and persists stockManagement on that row. creationIntent.manageStock stays the immutable create input. This slice does not add visual EmDash UI.",
           "from": "implemented",
-          "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
+          "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -119,45 +65,45 @@
           "verification_ref": null
         }
       ],
-      "id": "unmanaged-availability-model-044",
-      "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
-      "question": "How should a store owner control storefront availability when Manage Stock is off?",
-      "rationale": "A direct three-state control matches the merchant mental model already discussed, avoids fake quantity, and gives managed and unmanaged products one storefront language without coupling the manual path to Inventory.",
+      "id": "manage-stock-toggle-action-049",
+      "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
+      "question": "How does a shop owner persist Manage Stock after a catalog item already exists?",
+      "rationale": "Configure Inventory is a one-way SKU registration action. The missing shop-owner control is the durable Manage Stock choice itself, persisted on the catalog item through the same permissioned-route pattern as backorders and manual availability.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [
         {
           "classifications": [],
-          "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+          "ref": "file:proof/manage-stock-toggle/REVIEW.md",
           "result": "clean",
-          "reviewed_at": "2026-08-30T21:23:46+00:00",
-          "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+          "reviewed_at": "2026-09-25T18:20:11+00:00",
+          "source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700"
         }
       ],
-      "review_ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+      "review_ref": "file:proof/manage-stock-toggle/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37",
+      "review_source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T21:23:46+00:00",
-      "verification_ref": "file:proof/unmanaged-product-sellability/PROOF.md"
+      "updated_at": "2026-09-25T18:20:11+00:00",
+      "verification_ref": "file:proof/manage-stock-toggle/PROOF.md"
     },
     {
-      "baseline_ref": "git:94c9c314686807ac43ac63d0c66671f57e259453",
+      "baseline_ref": "git:8ca3e5dd14264df6db21bf4bee778158b0357bd2",
       "candidate_refs": [],
-      "choice": "Default new products and legacy records with no saved manual state to In stock. Manage Stock off means Commerce does not count units but the product remains sellable; Out of stock and Available on backorder require deliberate merchant selection.",
-      "context_ref": "decision:unmanaged-availability-model-044;compatibility:existing-catalog-records",
-      "created_at": "2026-08-30T21:03:04+00:00",
+      "choice": "Persist managed setup-required with no Commerce-local quantity and increment the catalog item's manageStockRevision. Do not register a SKU, take an opening balance, or call Configure Inventory. An already-managed product is idempotent and keeps its current managed status and revision. Configure Inventory remains the separate next action after setup-required.",
+      "context_ref": "decision:managed-stock-foundation-pr-019;decision:managed-inventory-setup-012",
+      "created_at": "2026-09-25T18:09:15+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "unmanaged-availability-model-044"
+        "manage-stock-toggle-action-049"
       ],
-      "domain": "unmanaged product sellability",
+      "domain": "persisted Manage Stock toggle",
       "history": [
         {
-          "at": "2026-08-30T21:05:19+00:00",
-          "choice": "Default new products and legacy records with no saved manual state to In stock. Manage Stock off means Commerce does not count units but the product remains sellable; Out of stock and Available on backorder require deliberate merchant selection.",
+          "at": "2026-09-25T18:09:15+00:00",
+          "choice": "Persist managed setup-required with no Commerce-local quantity and increment the catalog item's manageStockRevision. Do not register a SKU, take an opening balance, or call Configure Inventory. An already-managed product is idempotent and keeps its current managed status and revision. Configure Inventory remains the separate next action after setup-required.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -170,8 +116,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:46+00:00",
-          "choice": "Default new products and legacy records with no saved manual state to In stock. Manage Stock off means Commerce does not count units but the product remains sellable; Out of stock and Available on backorder require deliberate merchant selection.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "Persist managed setup-required with no Commerce-local quantity and increment the catalog item's manageStockRevision. Do not register a SKU, take an opening balance, or call Configure Inventory. An already-managed product is idempotent and keeps its current managed status and revision. Configure Inventory remains the separate next action after setup-required.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -184,10 +130,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:46+00:00",
-          "choice": "Default new products and legacy records with no saved manual state to In stock. Manage Stock off means Commerce does not count units but the product remains sellable; Out of stock and Available on backorder require deliberate merchant selection.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "Persist managed setup-required with no Commerce-local quantity and increment the catalog item's manageStockRevision. Do not register a SKU, take an opening balance, or call Configure Inventory. An already-managed product is idempotent and keeps its current managed status and revision. Configure Inventory remains the separate next action after setup-required.",
           "from": "implemented",
-          "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
+          "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -198,45 +144,45 @@
           "verification_ref": null
         }
       ],
-      "id": "unmanaged-availability-default-045",
-      "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
-      "question": "What should an unmanaged product default to when no manual availability has been chosen?",
-      "rationale": "This preserves the expected meaning of untracked stock without creating a quantity or Inventory dependency, while keeping the restrictive and oversell states explicit.",
+      "id": "manage-stock-enable-path-050",
+      "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
+      "question": "What happens when Manage Stock is turned on for an unmanaged product?",
+      "rationale": "Prior foundation already defined enable as fresh setup-required. Auto-running Configure Inventory would mix two shop-owner actions and skip the existing store-setup prompt.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [
         {
           "classifications": [],
-          "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+          "ref": "file:proof/manage-stock-toggle/REVIEW.md",
           "result": "clean",
-          "reviewed_at": "2026-08-30T21:23:47+00:00",
-          "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+          "reviewed_at": "2026-09-25T18:20:11+00:00",
+          "source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700"
         }
       ],
-      "review_ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+      "review_ref": "file:proof/manage-stock-toggle/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37",
+      "review_source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T21:23:47+00:00",
-      "verification_ref": "file:proof/unmanaged-product-sellability/PROOF.md"
+      "updated_at": "2026-09-25T18:20:11+00:00",
+      "verification_ref": "file:proof/manage-stock-toggle/PROOF.md"
     },
     {
-      "baseline_ref": "git:94c9c314686807ac43ac63d0c66671f57e259453",
+      "baseline_ref": "git:8ca3e5dd14264df6db21bf4bee778158b0357bd2",
       "candidate_refs": [],
-      "choice": "Preserve a product's last saved unmanaged availability while Manage Stock is on, but do not apply it during managed operation. When Manage Stock is later turned off, restore that saved manual state; if none exists, use the In stock default. Never copy an Inventory quantity or derived managed status into the manual state.",
-      "context_ref": "decision:managed-stock-disable-016;decision:unmanaged-availability-model-044;decision:unmanaged-availability-default-045",
-      "created_at": "2026-08-30T21:05:36+00:00",
+      "choice": "Persist unmanaged on the Commerce catalog item only. Do not delete, rename, or adjust Inventory pool SKUs or quantities. Leave manual availability, managed backorder policy, and store binding untouched so dormant manual availability returns. Release reconstructable managed-SKU registration claims for that catalog item so a later enable can start fresh reconciliation. creationIntent and manageStockRevision are preserved.",
+      "context_ref": "decision:managed-stock-disable-016;decision:unmanaged-state-transition-046",
+      "created_at": "2026-09-25T18:09:15+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "unmanaged-availability-default-045"
+        "manage-stock-enable-path-050"
       ],
-      "domain": "unmanaged product sellability",
+      "domain": "persisted Manage Stock toggle",
       "history": [
         {
-          "at": "2026-08-30T21:06:19+00:00",
-          "choice": "Preserve a product's last saved unmanaged availability while Manage Stock is on, but do not apply it during managed operation. When Manage Stock is later turned off, restore that saved manual state; if none exists, use the In stock default. Never copy an Inventory quantity or derived managed status into the manual state.",
+          "at": "2026-09-25T18:09:15+00:00",
+          "choice": "Persist unmanaged on the Commerce catalog item only. Do not delete, rename, or adjust Inventory pool SKUs or quantities. Leave manual availability, managed backorder policy, and store binding untouched so dormant manual availability returns. Release reconstructable managed-SKU registration claims for that catalog item so a later enable can start fresh reconciliation. creationIntent and manageStockRevision are preserved.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -249,8 +195,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:47+00:00",
-          "choice": "Preserve a product's last saved unmanaged availability while Manage Stock is on, but do not apply it during managed operation. When Manage Stock is later turned off, restore that saved manual state; if none exists, use the In stock default. Never copy an Inventory quantity or derived managed status into the manual state.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "Persist unmanaged on the Commerce catalog item only. Do not delete, rename, or adjust Inventory pool SKUs or quantities. Leave manual availability, managed backorder policy, and store binding untouched so dormant manual availability returns. Release reconstructable managed-SKU registration claims for that catalog item so a later enable can start fresh reconciliation. creationIntent and manageStockRevision are preserved.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -263,10 +209,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:47+00:00",
-          "choice": "Preserve a product's last saved unmanaged availability while Manage Stock is on, but do not apply it during managed operation. When Manage Stock is later turned off, restore that saved manual state; if none exists, use the In stock default. Never copy an Inventory quantity or derived managed status into the manual state.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "Persist unmanaged on the Commerce catalog item only. Do not delete, rename, or adjust Inventory pool SKUs or quantities. Leave manual availability, managed backorder policy, and store binding untouched so dormant manual availability returns. Release reconstructable managed-SKU registration claims for that catalog item so a later enable can start fresh reconciliation. creationIntent and manageStockRevision are preserved.",
           "from": "implemented",
-          "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
+          "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -277,45 +223,45 @@
           "verification_ref": null
         }
       ],
-      "id": "unmanaged-state-transition-046",
-      "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
-      "question": "Which manual availability state should Commerce use when Manage Stock is turned off?",
-      "rationale": "Restoring the merchant's prior explicit choice avoids silently changing sellability, while refusing to copy Inventory truth prevents a stale shared-pool snapshot from becoming a manual Commerce claim.",
+      "id": "manage-stock-disable-path-051",
+      "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
+      "question": "What happens when Manage Stock is turned off after the product is managed or in setup?",
+      "rationale": "managed-stock-disable-016 forbids Inventory side effects. unmanaged-state-transition-046 requires restoring saved manual availability. Leftover initial claims would otherwise block fresh Configure Inventory after re-enable.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [
         {
           "classifications": [],
-          "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+          "ref": "file:proof/manage-stock-toggle/REVIEW.md",
           "result": "clean",
-          "reviewed_at": "2026-08-30T21:23:47+00:00",
-          "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+          "reviewed_at": "2026-09-25T18:20:11+00:00",
+          "source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700"
         }
       ],
-      "review_ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+      "review_ref": "file:proof/manage-stock-toggle/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37",
+      "review_source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T21:23:47+00:00",
-      "verification_ref": "file:proof/unmanaged-product-sellability/PROOF.md"
+      "updated_at": "2026-09-25T18:20:11+00:00",
+      "verification_ref": "file:proof/manage-stock-toggle/PROOF.md"
     },
     {
-      "baseline_ref": "git:94c9c314686807ac43ac63d0c66671f57e259453",
+      "baseline_ref": "git:8ca3e5dd14264df6db21bf4bee778158b0357bd2",
       "candidate_refs": [],
-      "choice": "Allow manual availability changes only while Manage Stock is off. While Manage Stock is enabled, hide or disable the manual selector, present the Inventory-derived status, and reject direct manual-status mutations. Preserve the last manual value as dormant state so it can be restored if Manage Stock is later disabled.",
-      "context_ref": "decision:unmanaged-availability-model-044;decision:managed-stock-disable-016;decision:structured-storefront-availability-041",
-      "created_at": "2026-08-30T21:06:19+00:00",
+      "choice": "The toggle read-modify-writes only catalog stockManagement and manageStockRevision, plus reconstructable claim deletes on disable. It never writes manual availability, backorder policy, or store binding. Isolated collection writes never rewrite the catalog row. Configure Inventory re-reads the catalog item before each persist and aborts with MANAGE_STOCK_REQUIRED if the product is unmanaged or manageStockRevision no longer matches the revision captured at action start, so a concurrent disable or disable-then-enable cannot be overwritten by a stale registration persist.",
+      "context_ref": "decision:unmanaged-state-transition-046;file:docs/implementation/unmanaged-product-sellability.md",
+      "created_at": "2026-09-25T18:09:15+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "unmanaged-state-transition-046"
+        "manage-stock-disable-path-051"
       ],
-      "domain": "unmanaged product sellability",
+      "domain": "persisted Manage Stock toggle",
       "history": [
         {
-          "at": "2026-08-30T21:08:48+00:00",
-          "choice": "Allow manual availability changes only while Manage Stock is off. While Manage Stock is enabled, hide or disable the manual selector, present the Inventory-derived status, and reject direct manual-status mutations. Preserve the last manual value as dormant state so it can be restored if Manage Stock is later disabled.",
+          "at": "2026-09-25T18:09:15+00:00",
+          "choice": "The toggle read-modify-writes only catalog stockManagement and manageStockRevision, plus reconstructable claim deletes on disable. It never writes manual availability, backorder policy, or store binding. Isolated collection writes never rewrite the catalog row. Configure Inventory re-reads the catalog item before each persist and aborts with MANAGE_STOCK_REQUIRED if the product is unmanaged or manageStockRevision no longer matches the revision captured at action start, so a concurrent disable or disable-then-enable cannot be overwritten by a stale registration persist.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -328,8 +274,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:47+00:00",
-          "choice": "Allow manual availability changes only while Manage Stock is off. While Manage Stock is enabled, hide or disable the manual selector, present the Inventory-derived status, and reject direct manual-status mutations. Preserve the last manual value as dormant state so it can be restored if Manage Stock is later disabled.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "The toggle read-modify-writes only catalog stockManagement and manageStockRevision, plus reconstructable claim deletes on disable. It never writes manual availability, backorder policy, or store binding. Isolated collection writes never rewrite the catalog row. Configure Inventory re-reads the catalog item before each persist and aborts with MANAGE_STOCK_REQUIRED if the product is unmanaged or manageStockRevision no longer matches the revision captured at action start, so a concurrent disable or disable-then-enable cannot be overwritten by a stale registration persist.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -342,10 +288,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-08-30T21:23:47+00:00",
-          "choice": "Allow manual availability changes only while Manage Stock is off. While Manage Stock is enabled, hide or disable the manual selector, present the Inventory-derived status, and reject direct manual-status mutations. Preserve the last manual value as dormant state so it can be restored if Manage Stock is later disabled.",
+          "at": "2026-09-25T18:20:11+00:00",
+          "choice": "The toggle read-modify-writes only catalog stockManagement and manageStockRevision, plus reconstructable claim deletes on disable. It never writes manual availability, backorder policy, or store binding. Isolated collection writes never rewrite the catalog row. Configure Inventory re-reads the catalog item before each persist and aborts with MANAGE_STOCK_REQUIRED if the product is unmanaged or manageStockRevision no longer matches the revision captured at action start, so a concurrent disable or disable-then-enable cannot be overwritten by a stale registration persist.",
           "from": "implemented",
-          "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
+          "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -356,120 +302,49 @@
           "verification_ref": null
         }
       ],
-      "id": "manual-control-managed-boundary-047",
-      "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
-      "question": "Can a merchant change manual availability while Manage Stock is enabled?",
-      "rationale": "Two simultaneously editable availability authorities would be misleading. Keeping the dormant value preserves the merchant's prior choice without allowing it to compete with Inventory truth.",
+      "id": "manage-stock-concurrency-052",
+      "implementation_ref": "file:docs/implementation/manage-stock-toggle.md",
+      "question": "How do toggle writes interact with isolated records and in-flight Configure Inventory?",
+      "rationale": "The previous slice isolated manual availability specifically so a future toggle could define this cross-record contract. Same-row Configure Inventory persist is the remaining lost-update path.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [
         {
           "classifications": [],
-          "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+          "ref": "file:proof/manage-stock-toggle/REVIEW.md",
           "result": "clean",
-          "reviewed_at": "2026-08-30T21:23:48+00:00",
-          "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
+          "reviewed_at": "2026-09-25T18:20:11+00:00",
+          "source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700"
         }
       ],
-      "review_ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
+      "review_ref": "file:proof/manage-stock-toggle/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37",
+      "review_source_identity": "sha256:c9a03e9dc27f76ab2a2b073664febf9f1d0d4b9656dd427c0cf69bf75c06b700",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-08-30T21:23:48+00:00",
-      "verification_ref": "file:proof/unmanaged-product-sellability/PROOF.md"
-    },
-    {
-      "baseline_ref": "git:94c9c314686807ac43ac63d0c66671f57e259453",
-      "candidate_refs": [],
-      "choice": "Always render an unmanaged product from its manual status only. Never emit a quantity or low-stock status for it, even when the store-wide display policy is exact or threshold, because Manage Stock is off and Commerce has no authoritative count. The store-wide quantity policy applies only to managed products.",
-      "context_ref": "decision:storefront-stock-display-037;decision:structured-storefront-availability-041;decision:unmanaged-availability-model-044",
-      "created_at": "2026-08-30T21:08:48+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "manual-control-managed-boundary-047"
-      ],
-      "domain": "unmanaged product sellability",
-      "history": [
-        {
-          "at": "2026-08-30T21:09:47+00:00",
-          "choice": "Always render an unmanaged product from its manual status only. Never emit a quantity or low-stock status for it, even when the store-wide display policy is exact or threshold, because Manage Stock is off and Commerce has no authoritative count. The store-wide quantity policy applies only to managed products.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-08-30T21:23:48+00:00",
-          "choice": "Always render an unmanaged product from its manual status only. Never emit a quantity or low-stock status for it, even when the store-wide display policy is exact or threshold, because Manage Stock is off and Commerce has no authoritative count. The store-wide quantity policy applies only to managed products.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-08-30T21:23:48+00:00",
-          "choice": "Always render an unmanaged product from its manual status only. Never emit a quantity or low-stock status for it, even when the store-wide display policy is exact or threshold, because Manage Stock is off and Commerce has no authoritative count. The store-wide quantity policy applies only to managed products.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "unmanaged-quantity-display-boundary-048",
-      "implementation_ref": "file:docs/implementation/unmanaged-product-sellability.md",
-      "question": "What should an unmanaged product show when the store is configured to display exact or low-stock quantities?",
-      "rationale": "Showing a number for an unmanaged product would invent stock truth. Status-only output keeps the manual path honest while preserving exact and threshold display behavior for Inventory-managed products.",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-08-30T21:23:48+00:00",
-          "source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37"
-        }
-      ],
-      "review_ref": "file:proof/unmanaged-product-sellability/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:dd8da6adba088acd8faafc05d6d2768dd35019eb596bda8947d7d37f38853d37",
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-08-30T21:23:48+00:00",
-      "verification_ref": "file:proof/unmanaged-product-sellability/PROOF.md"
+      "updated_at": "2026-09-25T18:20:11+00:00",
+      "verification_ref": "file:proof/manage-stock-toggle/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-08-30T20:57:54+00:00",
+    "at": "2026-09-25T18:09:15+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
-  "predecessor_track_id": "gt-20260830194146-7a94e6",
-  "recommendation": null,
+  "predecessor_track_id": "gt-20260830205754-677931",
+  "recommendation": {
+    "alternatives": [
+      "visual EmDash admin Manage Stock control in commerce",
+      "live Inventory transport for Configure Inventory"
+    ],
+    "reason": "Commerce now persists the choice both ways. The shop owner still cannot flip it from a screen; template-store catch-up is the agreed follow-on after this backend lands. Visual admin in commerce and live Inventory transport remain later slices.",
+    "recommended": "template-store catch-up of the persisted Manage Stock toggle UI",
+    "recorded_at": "2026-09-25T18:20:33+00:00"
+  },
   "schema_version": "grilltrack/v0.1",
-  "status": "closed",
-  "title": "Unmanaged product sellability",
-  "track_id": "gt-20260830205754-677931",
-  "updated_at": "2026-08-30T21:30:10+00:00"
+  "status": "active",
+  "title": "Persisted Manage Stock toggle",
+  "track_id": "gt-20260925180915-3c8350",
+  "updated_at": "2026-09-25T18:20:33+00:00"
 }

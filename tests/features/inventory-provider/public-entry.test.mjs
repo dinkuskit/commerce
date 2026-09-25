@@ -44,6 +44,10 @@ test("the package root and feature entry expose the same inventory-provider cont
     commerce.createManagedSkuRegistrationClaimPort,
   );
   assert.equal(
+    inventoryProvider.releaseManagedSkuRegistrationClaims,
+    commerce.releaseManagedSkuRegistrationClaims,
+  );
+  assert.equal(
     inventoryProvider.createManagedSkuRegistrationClaimKey,
     commerce.createManagedSkuRegistrationClaimKey,
   );

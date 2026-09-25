@@ -1,9 +1,11 @@
 import { PluginRouteError, type PluginRoute, type StorageCollection } from "emdash";
 
+import type { ManagedSkuRegistrationClaimRecord } from "../inventory-provider/index.js";
 import { createCatalogItem } from "./create-catalog-item.js";
 import { CatalogError } from "./errors.js";
 import { setCatalogItemManualAvailability } from "./manual-availability.js";
 import { setCatalogItemBackorders } from "./set-backorders.js";
+import { setCatalogItemManageStock } from "./set-manage-stock.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogManualAvailabilityRecord,
@@ -14,6 +16,8 @@ export const CREATE_CATALOG_ITEM_ROUTE = "catalog-items/create";
 export const SET_CATALOG_ITEM_BACKORDERS_ROUTE = "catalog-items/set-backorders";
 export const SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE =
   "catalog-items/set-manual-availability";
+export const SET_CATALOG_ITEM_MANAGE_STOCK_ROUTE =
+  "catalog-items/set-manage-stock";
 
 export const createCatalogItemRoute: PluginRoute = {
   permission: "content:create",
@@ -84,6 +88,34 @@ export const setCatalogItemManualAvailabilityRoute: PluginRoute = {
           catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
           availability: ctx.storage
             .catalogManualAvailability as StorageCollection<CatalogManualAvailabilityRecord>,
+        },
+        ctx.input,
+      );
+    } catch (error) {
+      if (error instanceof CatalogError) {
+        throw new PluginRouteError(error.code, error.message, error.status);
+      }
+      throw error;
+    }
+  },
+};
+
+export const setCatalogItemManageStockRoute: PluginRoute = {
+  permission: "content:edit_any",
+  handler: async (ctx) => {
+    if (ctx.request.method.toUpperCase() !== "POST") {
+      throw new PluginRouteError(
+        "METHOD_NOT_ALLOWED",
+        "Manage Stock setting requires POST",
+        405,
+      );
+    }
+    try {
+      return await setCatalogItemManageStock(
+        {
+          catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
+          claims: ctx.storage
+            .managedSkuClaims as StorageCollection<ManagedSkuRegistrationClaimRecord>,
         },
         ctx.input,
       );

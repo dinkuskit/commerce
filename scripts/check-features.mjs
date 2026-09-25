@@ -15,6 +15,7 @@ const requiredFiles = [
   "src/features/catalog/index.ts",
   "src/features/catalog/create-catalog-item.ts",
   "src/features/catalog/manual-availability.ts",
+  "src/features/catalog/set-manage-stock.ts",
   "src/features/catalog/storage-constraints.ts",
   "src/features/inventory-provider/index.ts",
   "src/features/inventory-provider/binding.ts",
@@ -30,6 +31,7 @@ const requiredFiles = [
   "docs/implementation/configure-inventory-action.md",
   "docs/implementation/managed-storefront-availability.md",
   "docs/implementation/unmanaged-product-sellability.md",
+  "docs/implementation/manage-stock-toggle.md",
   "proof/configure-inventory-action/PROOF.md",
   "proof/configure-inventory-action/source-manifest.sha256",
   "proof/managed-storefront-availability/PROOF.md",
@@ -37,6 +39,9 @@ const requiredFiles = [
   "proof/unmanaged-product-sellability/PROOF.md",
   "proof/unmanaged-product-sellability/live-runtime.txt",
   "proof/unmanaged-product-sellability/source-manifest.sha256",
+  "proof/manage-stock-toggle/PROOF.md",
+  "proof/manage-stock-toggle/live-runtime.txt",
+  "proof/manage-stock-toggle/source-manifest.sha256",
 ];
 
 async function walk(directory) {
@@ -73,6 +78,7 @@ export async function auditFeatures(repositoryRoot = root) {
     "`proof/configure-inventory-action/PROOF.md`",
     "`proof/managed-storefront-availability/PROOF.md`",
     "`proof/unmanaged-product-sellability/PROOF.md`",
+    "`proof/manage-stock-toggle/PROOF.md`",
   ]) {
     if (!map.includes(requiredText)) findings.push(`FEATURE_MAP.md is missing ${requiredText}`);
   }

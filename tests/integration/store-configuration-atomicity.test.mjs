@@ -13,6 +13,7 @@ import {
   resolveManagedStorefrontAvailability,
   resolveStorefrontAvailability,
   setCatalogItemBackorders,
+  setCatalogItemManageStock,
   setCatalogItemManualAvailability,
   setStorefrontAvailabilityPolicy,
 } from "../../dist/index.js";
@@ -475,6 +476,156 @@ test("manual unmanaged availability survives EmDash storage reopen without Inven
         persistedStatus: persisted.status,
         resolvedStatus: result.status,
         sellable: result.sellable,
+        inventoryContacted: providerResolved,
+        dataClassification: "synthetic",
+      }),
+  );
+});
+
+test("Manage Stock toggle survives EmDash storage reopen and restores dormant manual availability", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "commerce-manage-stock-toggle-live-"));
+  t.after(() => rm(directory, { force: true, recursive: true }));
+  const databasePath = join(directory, "commerce.db");
+  initializeCatalogDatabase(databasePath);
+  initializeClaimDatabase(databasePath);
+  initializeStoreInventoryConfigurationDatabase(databasePath);
+
+  const firstCatalog = openCatalogRepository(databasePath);
+  const firstClaims = openClaimRepository(databasePath);
+  const firstManualAvailability = openCatalogManualAvailabilityRepository(databasePath);
+  const firstConfigurations = openStoreInventoryConfigurationRepository(databasePath);
+  const created = await createCatalogItem(
+    firstCatalog.storage,
+    {
+      commandId: "cmd:manage-stock-toggle-live",
+      name: "Manage Stock Toggle Grill",
+      sku: "MANAGE-STOCK-TOGGLE-GRILL",
+    },
+    { createId: () => "catalog-manage-stock-toggle" },
+  );
+  await setCatalogItemManualAvailability(
+    {
+      catalog: firstCatalog.storage,
+      availability: firstManualAvailability.storage,
+    },
+    { catalogItemId: created.item.itemId, status: "out-of-stock" },
+  );
+  const enabled = await setCatalogItemManageStock(
+    { catalog: firstCatalog.storage, claims: firstClaims.storage },
+    { catalogItemId: created.item.itemId, manageStock: true },
+  );
+  await createStoreInventoryConfiguration(
+    firstConfigurations.storage,
+    {
+      providerRef: "dinkuskit.inventory",
+      poolId: "pool-smoky",
+      defaultFulfillmentLocationId: "murphy-nc",
+    },
+    {
+      createRecordId: () => "configuration-manage-stock-toggle",
+      createSiteId: () => "site-manage-stock-toggle",
+    },
+  );
+  await configureCatalogItemInventory(
+    {
+      catalog: firstCatalog.storage,
+      configurations: firstConfigurations.storage,
+      claims: firstClaims.storage,
+    },
+    { catalogItemId: created.item.itemId },
+    {
+      createClaimRecordId: () => "claim-manage-stock-toggle",
+      createOperationId: () => "operation-manage-stock-toggle",
+      resolveProvider: async () => ({
+        async registerManagedSku(registration) {
+          return {
+            outcome: "registered",
+            inventorySku: {
+              inventorySkuId: "inventory-manage-stock-toggle",
+              sku: registration.request.sku,
+              displayName: registration.request.displayNameIfNew,
+            },
+          };
+        },
+      }),
+    },
+  );
+  const disabled = await setCatalogItemManageStock(
+    { catalog: firstCatalog.storage, claims: firstClaims.storage },
+    { catalogItemId: created.item.itemId, manageStock: false },
+  );
+  await Promise.all([
+    firstCatalog.db.destroy(),
+    firstClaims.db.destroy(),
+    firstManualAvailability.db.destroy(),
+    firstConfigurations.db.destroy(),
+  ]);
+
+  const catalog = openCatalogRepository(databasePath);
+  const claims = openClaimRepository(databasePath);
+  const manualAvailability = openCatalogManualAvailabilityRepository(databasePath);
+  t.after(() =>
+    Promise.all([
+      catalog.db.destroy(),
+      claims.db.destroy(),
+      manualAvailability.db.destroy(),
+    ]),
+  );
+  const mustNotRead = {
+    async get() {
+      throw new Error("managed-only storage must not be read");
+    },
+  };
+  let providerResolved = false;
+  const result = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: mustNotRead,
+      catalog: catalog.storage,
+      configurations: mustNotRead,
+      manualAvailability: manualAvailability.storage,
+      settings: mustNotRead,
+    },
+    { catalogItemId: created.item.itemId },
+    {
+      resolveProvider: async () => {
+        providerResolved = true;
+        throw new Error("Inventory must not be resolved");
+      },
+    },
+  );
+
+  const [persistedItem] = readCatalogItems(databasePath);
+  const persistedClaims = readClaimRecords(databasePath);
+  const [persistedManual] = readCatalogManualAvailability(databasePath);
+  assert.equal(enabled.item.stockManagement.mode, "managed");
+  assert.equal(enabled.item.manageStockRevision, 1);
+  assert.deepEqual(disabled.item.stockManagement, { mode: "unmanaged" });
+  assert.equal(disabled.item.manageStockRevision, 1);
+  assert.deepEqual(persistedItem.stockManagement, { mode: "unmanaged" });
+  assert.equal(persistedItem.manageStockRevision, 1);
+  assert.equal(persistedItem.creationIntent.manageStock, false);
+  assert.equal(persistedManual.status, "out-of-stock");
+  assert.deepEqual(persistedClaims, []);
+  assert.deepEqual(result, {
+    schema: "dinkuskit.commerce.storefront-availability-result/v1",
+    catalogItemId: created.item.itemId,
+    status: "out-of-stock",
+    sellable: false,
+  });
+  assert.equal(providerResolved, false);
+
+  console.log(
+    "LIVE_PROOF " +
+      JSON.stringify({
+        case: "manage-stock-toggle-persistence",
+        emdash: emdashPackage.version,
+        storageReopened: true,
+        enabledMode: enabled.item.stockManagement.mode,
+        disabledMode: persistedItem.stockManagement.mode,
+        revision: persistedItem.manageStockRevision,
+        dormantManualStatus: persistedManual.status,
+        claimsReleased: persistedClaims.length === 0,
+        resolvedStatus: result.status,
         inventoryContacted: providerResolved,
         dataClassification: "synthetic",
       }),

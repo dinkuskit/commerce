@@ -1,6 +1,9 @@
 import type { StorageCollection } from "emdash";
 
-import type { StockManagement } from "../inventory-provider/index.js";
+import type {
+  ManagedSkuRegistrationClaimRecord,
+  StockManagement,
+} from "../inventory-provider/index.js";
 
 export const CATALOG_FEATURE_ID = "dinkus.catalog";
 export const CATALOG_COLLECTION = "catalogItems";
@@ -39,6 +42,7 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   itemId: string;
   state: "draft";
   createdAt: string;
+  manageStockRevision?: number;
 }
 
 export interface CatalogIntegrityProbeRecord {
@@ -122,6 +126,31 @@ export interface SetCatalogItemManualAvailabilityInput {
 export interface SetCatalogItemManualAvailabilityResult {
   changed: boolean;
   availability: CatalogManualAvailabilityRecord;
+}
+
+export interface SetCatalogItemManageStockInput {
+  catalogItemId: string;
+  manageStock: boolean;
+}
+
+export type CatalogItemWriteStorage = Pick<
+  StorageCollection<CatalogStorageRecord>,
+  "get" | "put"
+>;
+
+export type CatalogManageStockClaimStorage = Pick<
+  StorageCollection<ManagedSkuRegistrationClaimRecord>,
+  "delete" | "query"
+>;
+
+export interface SetCatalogItemManageStockStorage {
+  catalog: CatalogItemWriteStorage;
+  claims: CatalogManageStockClaimStorage;
+}
+
+export interface SetCatalogItemManageStockResult {
+  changed: boolean;
+  item: CatalogItemRecord;
 }
 
 export interface CreateCatalogItemResult {

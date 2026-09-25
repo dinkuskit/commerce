@@ -8,15 +8,21 @@ export {
   loadCatalogItemManualAvailability,
   setCatalogItemManualAvailability,
 } from "./manual-availability.js";
+export {
+  currentManageStockRevision,
+  setCatalogItemManageStock,
+} from "./set-manage-stock.js";
 export { CatalogError } from "./errors.js";
 export type { CatalogErrorCode } from "./errors.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "./normalize.js";
 export {
   CREATE_CATALOG_ITEM_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  SET_CATALOG_ITEM_MANAGE_STOCK_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   createCatalogItemRoute,
   setCatalogItemBackordersRoute,
+  setCatalogItemManageStockRoute,
   setCatalogItemManualAvailabilityRoute,
 } from "./route.js";
 export {
@@ -49,9 +55,14 @@ export type {
   CreateCatalogItemInput,
   CreateCatalogItemResult,
   NormalizedCreateCatalogItemInput,
+  CatalogItemWriteStorage,
+  CatalogManageStockClaimStorage,
   SetCatalogItemBackordersInput,
   SetCatalogItemBackordersResult,
   SetCatalogItemBackordersStorage,
+  SetCatalogItemManageStockInput,
+  SetCatalogItemManageStockResult,
+  SetCatalogItemManageStockStorage,
   SetCatalogItemManualAvailabilityInput,
   SetCatalogItemManualAvailabilityResult,
   SetCatalogItemManualAvailabilityStorage,

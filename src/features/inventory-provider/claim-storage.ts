@@ -1,6 +1,9 @@
 import type { StorageCollection } from "emdash";
 
-import { normalizeManagedSkuRegistrationClaimRecord } from "./claim.js";
+import {
+  createManagedSkuRegistrationClaimKey,
+  normalizeManagedSkuRegistrationClaimRecord,
+} from "./claim.js";
 import { ManagedSkuRegistrationError } from "./errors.js";
 import { normalizeManagedSkuRegistration } from "./registration.js";
 import type {
@@ -8,6 +11,7 @@ import type {
   ManagedSkuRegistrationClaimPort,
   ManagedSkuRegistrationClaimRecord,
   ManagedSkuRegistrationRequest,
+  StockManagement,
 } from "./types.js";
 
 export const MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION =
@@ -306,4 +310,78 @@ export function createManagedSkuRegistrationClaimPort(
       }
     },
   };
+}
+
+function reconstructableClaimKeys(input: {
+  catalogItemId: string;
+  stockManagement: StockManagement;
+}): string[] {
+  const catalogItemId = asNonEmptyString(input.catalogItemId, "catalogItemId");
+  const keys = [
+    createManagedSkuRegistrationClaimKey({ catalogItemId }),
+  ];
+  if (
+    input.stockManagement.mode === "managed" &&
+    (input.stockManagement.status === "setup-pending" ||
+      input.stockManagement.status === "setup-needs-attention")
+  ) {
+    keys.push(
+      createManagedSkuRegistrationClaimKey({
+        catalogItemId,
+        rejectedOperationId: input.stockManagement.registration.operationId,
+      }),
+    );
+  }
+  return [...new Set(keys)];
+}
+
+async function findClaimByKey(
+  storage: ManagedSkuRegistrationClaimReleaseStorage,
+  claimKey: string,
+): Promise<ManagedSkuRegistrationClaimRecord | null> {
+  let result;
+  try {
+    result = await storage.query({ where: { claimKey }, limit: 2 });
+  } catch (error) {
+    throw unavailable("registration claim lookup failed", error);
+  }
+  if (result.items.length === 0) return null;
+  if (result.items.length !== 1 || result.hasMore) {
+    throw unavailable("registration claim winner is ambiguous");
+  }
+  const claim = normalizeManagedSkuRegistrationClaimRecord(result.items[0]?.data);
+  if (claim.claimKey !== claimKey) {
+    throw unavailable("registration claim winner does not match its unique key");
+  }
+  return claim;
+}
+
+export type ManagedSkuRegistrationClaimReleaseStorage = Pick<
+  ManagedSkuRegistrationClaimStorage,
+  "delete" | "query"
+>;
+
+export async function releaseManagedSkuRegistrationClaims(
+  storage: ManagedSkuRegistrationClaimReleaseStorage,
+  input: { catalogItemId: string; stockManagement: StockManagement },
+): Promise<{ released: number }> {
+  const catalogItemId = asNonEmptyString(input.catalogItemId, "catalogItemId");
+  let released = 0;
+  for (const claimKey of reconstructableClaimKeys({
+    catalogItemId,
+    stockManagement: input.stockManagement,
+  })) {
+    const claim = await findClaimByKey(storage, claimKey);
+    if (!claim) continue;
+    if (claim.catalogItemId !== catalogItemId) {
+      throw unavailable("registration claim winner belongs to another catalog item");
+    }
+    try {
+      await storage.delete(claim.recordId);
+    } catch (error) {
+      throw unavailable("registration claim release failed", error);
+    }
+    released += 1;
+  }
+  return { released };
 }
