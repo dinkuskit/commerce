@@ -3,14 +3,23 @@ import { definePlugin, type PluginDescriptor, type ResolvedPlugin } from "emdash
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
   CATALOG_MANUAL_AVAILABILITY_COLLECTION,
+  CATALOG_PRICES_COLLECTION,
   CATALOG_UNIQUE_INDEXES,
+  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
   COMMERCE_PLUGIN_ID,
   CREATE_CATALOG_ITEM_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
+  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+  clearCatalogItemRegularPriceRoute,
+  clearCatalogItemSalePriceRoute,
   createCatalogItemRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
+  setCatalogItemRegularPriceRoute,
+  setCatalogItemSalePriceRoute,
 } from "./features/catalog/index.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
@@ -68,6 +77,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [CATALOG_PRICES_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
       [MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION]: {
         indexes: [],
         uniqueIndexes: [...MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES],
@@ -86,6 +99,11 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
       [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:
         setCatalogItemManualAvailabilityRoute,
+      [SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE]: setCatalogItemRegularPriceRoute,
+      [SET_CATALOG_ITEM_SALE_PRICE_ROUTE]: setCatalogItemSalePriceRoute,
+      [CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE]: clearCatalogItemSalePriceRoute,
+      [CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE]:
+        clearCatalogItemRegularPriceRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

@@ -14,6 +14,7 @@ import {
   resolveStorefrontAvailability,
   setCatalogItemBackorders,
   setCatalogItemManualAvailability,
+  setCatalogItemRegularPrice,
   setStorefrontAvailabilityPolicy,
 } from "../../dist/index.js";
 import {
@@ -22,6 +23,7 @@ import {
   initializeStoreInventoryConfigurationDatabase,
   openCatalogBackorderPolicyRepository,
   openCatalogManualAvailabilityRepository,
+  openCatalogPriceRepository,
   openCatalogRepository,
   openClaimRepository,
   openStoreInventoryConfigurationRepository,
@@ -304,23 +306,37 @@ test("storefront policy and backorders survive EmDash storage reopen", async (t)
     },
     { catalogItemId: created.item.itemId, allowBackorders: true },
   );
+  const firstPrices = openCatalogPriceRepository(databasePath);
+  await setCatalogItemRegularPrice(
+    {
+      catalog: firstCatalog.storage,
+      prices: firstPrices.storage,
+    },
+    {
+      catalogItemId: created.item.itemId,
+      amount: { currency: "USD", minor: "1200" },
+    },
+  );
   await Promise.all([
     firstBackorderPolicies.db.destroy(),
     firstCatalog.db.destroy(),
     firstClaims.db.destroy(),
     firstConfigurations.db.destroy(),
+    firstPrices.db.destroy(),
     firstSettings.db.destroy(),
   ]);
 
   const catalog = openCatalogRepository(databasePath);
   const backorderPolicies = openCatalogBackorderPolicyRepository(databasePath);
   const configurations = openStoreInventoryConfigurationRepository(databasePath);
+  const prices = openCatalogPriceRepository(databasePath);
   const settings = openStorefrontAvailabilitySettingsRepository(databasePath);
   t.after(() =>
     Promise.all([
       backorderPolicies.db.destroy(),
       catalog.db.destroy(),
       configurations.db.destroy(),
+      prices.db.destroy(),
       settings.db.destroy(),
     ]),
   );
@@ -330,6 +346,7 @@ test("storefront policy and backorders survive EmDash storage reopen", async (t)
       backorderPolicies: backorderPolicies.storage,
       catalog: catalog.storage,
       configurations: configurations.storage,
+      prices: prices.storage,
       settings: settings.storage,
     },
     { catalogItemId: created.item.itemId },
@@ -382,6 +399,7 @@ test("storefront policy and backorders survive EmDash storage reopen", async (t)
     },
   ]);
   assert.equal(result.status, "low-stock");
+  assert.equal(result.listable, true);
   assert.deepEqual(result.displayQuantity, { value: "5", unit: "each" });
 
   console.log(
@@ -425,14 +443,33 @@ test("manual unmanaged availability survives EmDash storage reopen without Inven
     },
     { catalogItemId: created.item.itemId, status: "out-of-stock" },
   );
+  const firstPrices = openCatalogPriceRepository(databasePath);
+  await setCatalogItemRegularPrice(
+    {
+      catalog: firstCatalog.storage,
+      prices: firstPrices.storage,
+    },
+    {
+      catalogItemId: created.item.itemId,
+      amount: { currency: "USD", minor: "1200" },
+    },
+  );
   await Promise.all([
     firstCatalog.db.destroy(),
     firstManualAvailability.db.destroy(),
+    firstPrices.db.destroy(),
   ]);
 
   const catalog = openCatalogRepository(databasePath);
   const manualAvailability = openCatalogManualAvailabilityRepository(databasePath);
-  t.after(() => Promise.all([catalog.db.destroy(), manualAvailability.db.destroy()]));
+  const prices = openCatalogPriceRepository(databasePath);
+  t.after(() =>
+    Promise.all([
+      catalog.db.destroy(),
+      manualAvailability.db.destroy(),
+      prices.db.destroy(),
+    ]),
+  );
   let providerResolved = false;
   const mustNotRead = {
     async get() {
@@ -445,6 +482,7 @@ test("manual unmanaged availability survives EmDash storage reopen without Inven
       catalog: catalog.storage,
       configurations: mustNotRead,
       manualAvailability: manualAvailability.storage,
+      prices: prices.storage,
       settings: mustNotRead,
     },
     { catalogItemId: created.item.itemId },
@@ -463,6 +501,7 @@ test("manual unmanaged availability survives EmDash storage reopen without Inven
     catalogItemId: created.item.itemId,
     status: "out-of-stock",
     sellable: false,
+    listable: true,
   });
   assert.equal(providerResolved, false);
 

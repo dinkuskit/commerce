@@ -3,10 +3,17 @@ import { PluginRouteError, type PluginRoute, type StorageCollection } from "emda
 import { createCatalogItem } from "./create-catalog-item.js";
 import { CatalogError } from "./errors.js";
 import { setCatalogItemManualAvailability } from "./manual-availability.js";
+import {
+  clearCatalogItemRegularPrice,
+  clearCatalogItemSalePrice,
+  setCatalogItemRegularPrice,
+  setCatalogItemSalePrice,
+} from "./price.js";
 import { setCatalogItemBackorders } from "./set-backorders.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogManualAvailabilityRecord,
+  CatalogPriceRecord,
   CatalogStorageRecord,
 } from "./types.js";
 
@@ -14,6 +21,13 @@ export const CREATE_CATALOG_ITEM_ROUTE = "catalog-items/create";
 export const SET_CATALOG_ITEM_BACKORDERS_ROUTE = "catalog-items/set-backorders";
 export const SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE =
   "catalog-items/set-manual-availability";
+export const SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE =
+  "catalog-items/set-regular-price";
+export const SET_CATALOG_ITEM_SALE_PRICE_ROUTE = "catalog-items/set-sale-price";
+export const CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE =
+  "catalog-items/clear-sale-price";
+export const CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE =
+  "catalog-items/clear-regular-price";
 
 export const createCatalogItemRoute: PluginRoute = {
   permission: "content:create",
@@ -95,3 +109,49 @@ export const setCatalogItemManualAvailabilityRoute: PluginRoute = {
     }
   },
 };
+
+function priceStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
+  return {
+    catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
+    prices: ctx.storage.catalogPrices as StorageCollection<CatalogPriceRecord>,
+  };
+}
+
+function catalogPriceRoute(
+  action: typeof setCatalogItemRegularPrice,
+  methodMessage: string,
+): PluginRoute {
+  return {
+    permission: "content:edit_any",
+    handler: async (ctx) => {
+      if (ctx.request.method.toUpperCase() !== "POST") {
+        throw new PluginRouteError("METHOD_NOT_ALLOWED", methodMessage, 405);
+      }
+      try {
+        return await action(priceStorage(ctx), ctx.input);
+      } catch (error) {
+        if (error instanceof CatalogError) {
+          throw new PluginRouteError(error.code, error.message, error.status);
+        }
+        throw error;
+      }
+    },
+  };
+}
+
+export const setCatalogItemRegularPriceRoute = catalogPriceRoute(
+  setCatalogItemRegularPrice,
+  "regular price setting requires POST",
+);
+export const setCatalogItemSalePriceRoute = catalogPriceRoute(
+  setCatalogItemSalePrice,
+  "sale price setting requires POST",
+);
+export const clearCatalogItemSalePriceRoute = catalogPriceRoute(
+  clearCatalogItemSalePrice,
+  "sale price clear requires POST",
+);
+export const clearCatalogItemRegularPriceRoute = catalogPriceRoute(
+  clearCatalogItemRegularPrice,
+  "regular price clear requires POST",
+);

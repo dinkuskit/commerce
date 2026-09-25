@@ -64,6 +64,13 @@ disabled. `resolveStorefrontAvailability` selects the managed or unmanaged
 authority and always returns the same structured storefront contract;
 unmanaged products never expose an invented quantity or contact Inventory.
 
+Catalog products persist an isolated Regular price and optional Sale as Money
+`{ currency: "USD", minor }`. Missing Regular is not listable and is never
+`$0`. An explicit `$0` Regular is a free product that may appear on the
+storefront. Sale requires Regular and must be strictly lower; invalid Sale is
+refused rather than silently cleared. `resolveStorefrontAvailability` returns
+`listable: false` when Regular is missing.
+
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
 a stock 0.40.1 compatibility claim. It requires exact commit

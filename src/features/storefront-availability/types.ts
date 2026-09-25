@@ -3,6 +3,7 @@ import type { StorageCollection } from "emdash";
 import type {
   CatalogManualAvailabilityStorage,
   CatalogBackorderPolicyStorage,
+  CatalogPriceStorage,
   CatalogStorageRecord,
 } from "../catalog/index.js";
 import type {
@@ -103,6 +104,7 @@ export interface StorefrontAvailabilityStorage {
   backorderPolicies: CatalogBackorderPolicyStorage;
   catalog: Pick<StorageCollection<CatalogStorageRecord>, "get">;
   configurations: StoreInventoryConfigurationStorage;
+  prices: CatalogPriceStorage;
   settings: StorefrontAvailabilitySettingsStorage;
 }
 
@@ -137,5 +139,6 @@ export type StorefrontAvailabilityResult = {
   catalogItemId: string;
   status: StorefrontAvailabilityStatus;
   sellable: boolean;
+  listable: boolean;
   displayQuantity?: ExactQuantity;
 };

@@ -1,6 +1,7 @@
 import {
   loadCatalogItemManualAvailability,
   loadCatalogItemBackorderPolicy,
+  resolveCatalogItemPrice,
   type CatalogItemRecord,
   type CatalogStorageRecord,
 } from "../catalog/index.js";
@@ -56,13 +57,23 @@ function normalizeInput(value: unknown): ResolveManagedStorefrontAvailabilityInp
   return { catalogItemId: input.catalogItemId.trim() };
 }
 
-function unavailable(catalogItemId: string): StorefrontAvailabilityResult {
+function unavailable(
+  catalogItemId: string,
+  listable = true,
+): StorefrontAvailabilityResult {
   return {
     schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
     catalogItemId,
     status: "availability-unavailable",
     sellable: false,
+    listable,
   };
+}
+
+function withListable(
+  result: Omit<StorefrontAvailabilityResult, "listable">,
+): StorefrontAvailabilityResult {
+  return { ...result, listable: true };
 }
 
 function normalizeCatalogItem(
@@ -194,52 +205,52 @@ function availableResult(
   policy: StorefrontAvailabilityDisplayPolicy,
 ): StorefrontAvailabilityResult {
   if (exactQuantitySign(quantity.value) !== 1) {
-    return {
+    return withListable({
       schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
       catalogItemId: item.itemId,
       status: allowBackorders ? "available-on-backorder" : "out-of-stock",
       sellable: allowBackorders,
-    };
+    });
   }
   if (policy.mode === "exact") {
-    return {
+    return withListable({
       schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
       catalogItemId: item.itemId,
       status: "in-stock",
       sellable: true,
       displayQuantity: quantity,
-    };
+    });
   }
   if (
     policy.mode === "threshold" &&
     positiveQuantityAtOrBelowInteger(quantity.value, policy.threshold)
   ) {
-    return {
+    return withListable({
       schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
       catalogItemId: item.itemId,
       status: "low-stock",
       sellable: true,
       displayQuantity: quantity,
-    };
+    });
   }
-  return {
+  return withListable({
     schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
     catalogItemId: item.itemId,
     status: "in-stock",
     sellable: true,
-  };
+  });
 }
 
 function manualResult(
   catalogItemId: string,
   status: "in-stock" | "out-of-stock" | "available-on-backorder",
 ): StorefrontAvailabilityResult {
-  return {
+  return withListable({
     schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
     catalogItemId,
     status,
     sellable: status !== "out-of-stock",
-  };
+  });
 }
 
 async function resolveManagedItem(
@@ -292,6 +303,19 @@ async function resolveManagedItem(
   }
 }
 
+async function unlistIfUnpriced(
+  storage: StorefrontAvailabilityStorage,
+  catalogItemId: string,
+): Promise<StorefrontAvailabilityResult | null> {
+  try {
+    const price = await resolveCatalogItemPrice(storage.prices, catalogItemId);
+    if (!price.listable) return unavailable(catalogItemId, false);
+    return null;
+  } catch {
+    return unavailable(catalogItemId, false);
+  }
+}
+
 export async function resolveManagedStorefrontAvailability(
   storage: StorefrontAvailabilityStorage,
   rawInput: unknown,
@@ -309,6 +333,8 @@ export async function resolveManagedStorefrontAvailability(
       "catalog item does not use managed stock",
     );
   }
+  const unlisted = await unlistIfUnpriced(storage, item.itemId);
+  if (unlisted) return unlisted;
   return resolveManagedItem(storage, item, execution);
 }
 
@@ -323,6 +349,8 @@ export async function resolveStorefrontAvailability(
     input.catalogItemId,
   );
   if (!item) return unavailable(input.catalogItemId);
+  const unlisted = await unlistIfUnpriced(storage, item.itemId);
+  if (unlisted) return unlisted;
   if (isManagedCatalogItem(item)) {
     return resolveManagedItem(storage, item, execution);
   }
