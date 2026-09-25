@@ -105,8 +105,8 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/inventory-setup must resolve to the inventory-setup public entry",
     );
   }
-  if (manifest.devDependencies?.emdash !== "0.35.0") {
-    findings.push("catalog pilot must remain pinned to exact emdash 0.35.0");
+  if (manifest.devDependencies?.emdash !== "0.40.1") {
+    findings.push("catalog pilot must remain pinned to exact emdash 0.40.1");
   }
 
   const sourceFiles = allFiles.filter((path) => path.startsWith("src/") && path.endsWith(".ts"));

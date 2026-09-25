@@ -20,7 +20,7 @@ const emdashPackage = JSON.parse(
   await readFile(new URL("../../node_modules/emdash/package.json", import.meta.url), "utf8"),
 );
 
-assert.equal(emdashPackage.version, "0.35.0");
+assert.equal(emdashPackage.version, "0.40.1");
 
 async function runContenders(databasePath, contenders) {
   const children = contenders.map(({ operationId, poolId }) =>

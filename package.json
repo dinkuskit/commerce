@@ -38,18 +38,18 @@
   },
   "dinkuskit": {
     "emdashCompatibility": {
-      "apiPeer": "0.35.0",
+      "apiPeer": "0.40.1",
       "mountedSitePilot": "private",
       "requiredSourceVisibility": "public",
       "requiredSourceRepository": "https://github.com/saariuslystoned/emdash",
-      "requiredCommit": "dbf11d1138dbd5c6e4e00195e9c99b0904c90799",
+      "requiredCommit": "4c1f21900f3a28e9a270e64111f4979bce74926e",
       "upstreamPullRequest": "https://github.com/emdash-cms/emdash/pull/2768",
       "stockReleaseBehavior": "fail-closed",
       "stableReleaseExit": "repin-and-rerun-smokyclub-proof"
     }
   },
   "peerDependencies": {
-    "emdash": "0.35.0"
+    "emdash": "0.40.1"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -65,7 +65,7 @@
   },
   "devDependencies": {
     "better-sqlite3": "12.11.1",
-    "emdash": "0.35.0",
+    "emdash": "0.40.1",
     "kysely": "0.29.5",
     "typescript": "6.0.3",
     "wrangler": "4.127.0"
