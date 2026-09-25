@@ -40,7 +40,7 @@ const emdashPackage = JSON.parse(
   await readFile(new URL("../../node_modules/emdash/package.json", import.meta.url), "utf8"),
 );
 
-assert.equal(emdashPackage.version, "0.35.0");
+assert.equal(emdashPackage.version, "0.40.1");
 
 async function runContenders(databasePath) {
   const children = ["left", "right"].map((contender) =>
@@ -80,7 +80,7 @@ async function runContenders(databasePath) {
   );
 }
 
-test("two EmDash 0.35 repository processes converge on one permanent site identity", async (t) => {
+test("two EmDash 0.40.1 repository processes converge on one permanent site identity", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "commerce-store-configuration-race-"));
   t.after(() => rm(directory, { force: true, recursive: true }));
   const databasePath = join(directory, "commerce.db");
@@ -112,7 +112,7 @@ test("two EmDash 0.35 repository processes converge on one permanent site identi
   );
 });
 
-test("EmDash 0.35 configuration storage fails closed without its unique index", async (t) => {
+test("EmDash 0.40.1 configuration storage fails closed without its unique index", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "commerce-store-configuration-missing-"));
   t.after(() => rm(directory, { force: true, recursive: true }));
   const databasePath = join(directory, "commerce.db");
@@ -140,7 +140,7 @@ test("EmDash 0.35 configuration storage fails closed without its unique index", 
   assert.deepEqual(readStoreInventoryConfigurations(databasePath), []);
 });
 
-test("Configure Inventory persists one active SKU through exact EmDash 0.35 storage", async (t) => {
+test("Configure Inventory persists one active SKU through exact EmDash 0.40.1 storage", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "commerce-configure-inventory-live-"));
   t.after(() => rm(directory, { force: true, recursive: true }));
   const databasePath = join(directory, "commerce.db");

@@ -146,6 +146,6 @@ Required proof:
 - missing or ambiguous atomic authority causes zero provider calls and leaves
   the prior state untouched;
 - corrected resubmission uses a distinct generation key and operation ID;
-- exact EmDash 0.35 `PluginStorageRepository` multi-process proof;
+- exact EmDash 0.40.1 `PluginStorageRepository` multi-process proof;
 - local Wrangler/D1 unique-index proof;
 - complete `bin/verify-commerce full`, feature audit, and diff checks.

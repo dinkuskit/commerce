@@ -20,6 +20,21 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const wrangler = join(root, "node_modules/.bin/wrangler");
 const config = join(root, "tests/fixtures/d1/wrangler.jsonc");
 
+function wranglerEnv() {
+  const env = { ...process.env, CI: "1", NO_COLOR: "1" };
+  for (const key of [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+  ]) {
+    delete env[key];
+  }
+  return env;
+}
+
 function runD1(persistTo, command) {
   const child = spawn(
     wrangler,
@@ -38,7 +53,7 @@ function runD1(persistTo, command) {
     ],
     {
       cwd: root,
-      env: { ...process.env, CI: "1", NO_COLOR: "1" },
+      env: wranglerEnv(),
     },
   );
   let stdout = "";
@@ -58,7 +73,9 @@ async function runD1Contender(persistTo, command) {
   const maxAttempts = 5;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const result = await runD1(persistTo, command);
-    const retryableBusy = result.code !== 0 && /SQLITE_BUSY/.test(result.output);
+    const retryableBusy =
+      result.code !== 0 &&
+      (/SQLITE_BUSY/.test(result.output) || /internal error; reference =/.test(result.output));
     if (!retryableBusy || attempt === maxAttempts) return result;
     await new Promise((resolve) => setTimeout(resolve, attempt * 100));
   }
@@ -242,7 +259,7 @@ test("two local Wrangler/D1 processes enforce one managed-SKU registration claim
     "LIVE_PROOF " +
       JSON.stringify({
         case: "wrangler-d1-atomic-managed-sku-registration-claim",
-        emdash: "0.35.0",
+        emdash: "0.40.1",
         processes: results.length,
         writesSucceeded: results.filter((result) => result.code === 0).length,
         writesRejected: results.filter((result) => result.code !== 0).length,
@@ -300,7 +317,7 @@ test("two local Wrangler/D1 processes enforce one permanent store identity", asy
     "LIVE_PROOF " +
       JSON.stringify({
         case: "wrangler-d1-atomic-store-inventory-configuration",
-        emdash: "0.35.0",
+        emdash: "0.40.1",
         processes: results.length,
         writesSucceeded: results.filter((result) => result.code === 0).length,
         writesRejected: results.filter((result) => result.code !== 0).length,

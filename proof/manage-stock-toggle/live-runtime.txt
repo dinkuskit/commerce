@@ -8,7 +8,7 @@ exit_code=0
 > node scripts/build.mjs
 
 TAP version 13
-# LIVE_PROOF {"case":"manage-stock-toggle-persistence","emdash":"0.35.0","storageReopened":true,"enabledMode":"managed","disabledMode":"unmanaged","revision":1,"dormantManualStatus":"out-of-stock","claimsReleased":true,"resolvedStatus":"out-of-stock","inventoryContacted":false,"dataClassification":"synthetic"}
+# LIVE_PROOF {"case":"manage-stock-toggle-persistence","emdash":"0.40.1","storageReopened":true,"enabledMode":"managed","disabledMode":"unmanaged","revision":1,"dormantManualStatus":"out-of-stock","claimsReleased":true,"resolvedStatus":"out-of-stock","inventoryContacted":false,"dataClassification":"synthetic"}
 # Subtest: Manage Stock toggle survives EmDash storage reopen and restores dormant manual availability
 ok 1 - Manage Stock toggle survives EmDash storage reopen and restores dormant manual availability
 1..1

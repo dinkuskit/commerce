@@ -179,7 +179,7 @@ The executable proof covers:
 - same-request and different-pool contenders converging on one operation and
   one provider call;
 - missing or ambiguous claim authority failing before provider contact;
-- separate-process exact EmDash 0.35 and local Wrangler/D1 uniqueness proof;
+- separate-process exact EmDash 0.40.1 and local Wrangler/D1 uniqueness proof;
 - package-root and feature-entry export parity; and
 - the complete Commerce verifier.
 

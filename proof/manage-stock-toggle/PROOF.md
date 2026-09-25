@@ -27,7 +27,7 @@ Commerce baseline:
 - Configure Inventory re-reads the catalog row before persist and aborts with
   `MANAGE_STOCK_REQUIRED` when the product is unmanaged or the revision no
   longer matches the revision captured at action start.
-- Exact EmDash 0.35 storage reopen restores dormant manual `out-of-stock`
+- Exact EmDash 0.40.1 storage reopen restores dormant manual `out-of-stock`
   after a live enable, Configure Inventory, and disable cycle without
   contacting Inventory.
 
@@ -53,7 +53,7 @@ The redacted synthetic transcript is retained at:
 proof/manage-stock-toggle/live-runtime.txt
 ```
 
-The exact EmDash 0.35 storage repository persisted enable, Inventory
+The exact EmDash 0.40.1 storage repository persisted enable, Inventory
 registration, disable, claim release, and dormant manual availability across
 close/reopen.
 
@@ -80,7 +80,7 @@ Final result: exit `0`.
 - Public repository contract: clean.
 - Feature boundary contract: clean.
 - Integration suite: 19 passed, 0 failed.
-- Exact EmDash 0.35 storage proved enable, Configure Inventory, disable, claim
+- Exact EmDash 0.40.1 storage proved enable, Configure Inventory, disable, claim
   release, and dormant manual `out-of-stock` across repository close/reopen
   without Inventory contact.
 - Existing catalog, managed availability, atomic claim, permanent site

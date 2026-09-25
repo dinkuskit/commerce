@@ -45,7 +45,7 @@ Result: clean; no open findings.
   production mutation was introduced.
 - Typecheck, unit and integration suites, repository and feature audits,
   manifest verification, and `git diff --check` are clean.
-- EmDash 0.35 pin and mounted-site fork contract are unchanged.
+- EmDash 0.40.1 pin and mounted-site fork contract are unchanged.
 
 ## Source-intent review
 

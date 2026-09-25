@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-09-25T18:09:16+00:00",
-    "domain": "persisted Manage Stock toggle",
-    "started_at": "2026-09-25T18:09:15+00:00",
-    "status": "inspected",
-    "summary": "Commerce persists Manage Stock after create through one private catalog-items/set-manage-stock action. Enabling writes managed setup-required and increments manageStockRevision without auto-running Configure Inventory. Disabling writes unmanaged with no Inventory mutation, leaves manual availability, backorders, and store binding untouched, and releases reconstructable registration claims so re-enable can reconcile fresh. Configure Inventory persist re-reads and refuses to resurrect a changed or unmanaged catalog row. Proof is FEATURE_MAP plus bin/verify-commerce types, unit, and SQLite/D1 contract tests. Excluded: visual EmDash UI, template-store catch-up, live Inventory transport, cart/checkout/orders, payments, npm publish, and EmDash pin changes."
+    "confirmed_at": "2026-09-25T19:06:24+00:00",
+    "domain": "EmDash 0.40.1 pin",
+    "started_at": "2026-09-25T19:06:24+00:00",
+    "status": "confirmed",
+    "summary": "Pin @dinkuskit/commerce to exact emdash@0.40.1. Rebase the public 2768 fork onto that tag and record the new requiredCommit. Keep stock 0.40.1 fail-closed for mounted-site writes. Prove with bin/verify-commerce full. Do not merge 2768, publish npm, deploy, or move the lab EmDash worktree."
   },
   "decisions": [
     {
@@ -324,6 +324,77 @@
       "superseded_by": null,
       "updated_at": "2026-09-25T18:20:11+00:00",
       "verification_ref": "file:proof/manage-stock-toggle/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:0ecc15225255b0fc1ad431df5a7213c8829dfad7",
+      "candidate_refs": [],
+      "choice": "Exact emdash@0.40.1 as API peer and development dependency. The private mounted-site pilot still requires the public saariuslystoned/emdash fork at the 2768 head rebased onto emdash@0.40.1. Stock 0.40.1 mounted-site writes remain fail-closed. No package publish or deployment.",
+      "context_ref": "user:carry-2768-fork-pin-to-LSR;release:emdash@0.40.1;pr:emdash-cms/emdash#2768",
+      "created_at": "2026-09-25T19:06:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-concurrency-052"
+      ],
+      "domain": "EmDash 0.40.1 pin",
+      "history": [
+        {
+          "at": "2026-09-25T19:06:24+00:00",
+          "choice": "Exact emdash@0.40.1 as API peer and development dependency. The private mounted-site pilot still requires the public saariuslystoned/emdash fork at the 2768 head rebased onto emdash@0.40.1. Stock 0.40.1 mounted-site writes remain fail-closed. No package publish or deployment.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-25T19:13:20+00:00",
+          "choice": "Exact emdash@0.40.1 as API peer and development dependency. The private mounted-site pilot still requires the public saariuslystoned/emdash fork at the 2768 head rebased onto emdash@0.40.1. Stock 0.40.1 mounted-site writes remain fail-closed. No package publish or deployment.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-25T19:13:20+00:00",
+          "choice": "Exact emdash@0.40.1 as API peer and development dependency. The private mounted-site pilot still requires the public saariuslystoned/emdash fork at the 2768 head rebased onto emdash@0.40.1. Stock 0.40.1 mounted-site writes remain fail-closed. No package publish or deployment.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-0401-pin-053",
+      "implementation_ref": "file:package.json",
+      "question": "What EmDash version does Commerce pin while PR 2768 remains unreleased?",
+      "rationale": "Bobby directed the pin to LSR so the toggle can use the 0.38+ compareAndSet/updateIf storage API. 2768 is still required for Cloudflare dev index materialization.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-25T19:13:20+00:00",
+      "verification_ref": "command:CI=1 bin/verify-commerce full"
     }
   ],
   "last_activation": {
@@ -346,5 +417,5 @@
   "status": "active",
   "title": "Persisted Manage Stock toggle",
   "track_id": "gt-20260925180915-3c8350",
-  "updated_at": "2026-09-25T18:20:33+00:00"
+  "updated_at": "2026-09-25T19:13:20+00:00"
 }

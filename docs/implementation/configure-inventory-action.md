@@ -25,7 +25,7 @@ interface StoreInventoryConfigurationRecord {
 ```
 
 `siteId` is generated once by Commerce. A browser cannot provide or replace
-it, and site name or URL changes do not alter it. EmDash 0.35 exposes site name
+it, and site name or URL changes do not alter it. EmDash 0.40.1 exposes site name
 and URL as useful display metadata, but it does not provide a permanent opaque
 site identity suitable for this key.
 
