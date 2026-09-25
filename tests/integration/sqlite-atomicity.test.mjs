@@ -19,7 +19,7 @@ const emdashPackage = JSON.parse(
 );
 const emdashVersion = emdashPackage.version;
 
-assert.equal(emdashVersion, "0.35.0");
+assert.equal(emdashVersion, "0.40.1");
 
 async function runContenders(databasePath, contenders) {
   const children = contenders.map((input) =>

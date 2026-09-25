@@ -12,7 +12,7 @@ Pilot stage. The package name is reserved in source as
 no installable package, release, deployment, or compatibility promise yet.
 
 Development and the private package's runtime peer are pinned to exact
-`emdash@0.35.0`. The first feature is the `dinkus.catalog` draft-item creation
+`emdash@0.40.1`. The first feature is the `dinkus.catalog` draft-item creation
 pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
 writes unless the live EmDash storage collection proves unique `commandId`
 and site-wide canonical `skuKey` constraints.
@@ -66,10 +66,10 @@ unmanaged products never expose an invented quantity or contact Inventory.
 
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
-a stock 0.35.0 compatibility claim. It requires exact commit
-`dbf11d1138dbd5c6e4e00195e9c99b0904c90799`, the public head of
+a stock 0.40.1 compatibility claim. It requires exact commit
+`4c1f21900f3a28e9a270e64111f4979bce74926e`, the public head of
 [EmDash PR #2768](https://github.com/emdash-cms/emdash/pull/2768). Stock
-`emdash@0.35.0` cannot materialize the required indexes through the mounted
+`emdash@0.40.1` cannot materialize the required indexes through the mounted
 Cloudflare development runtime, so Commerce fails writes closed there. After
 the fix reaches a stable EmDash release, Commerce must repin and rerun the
 SmokyClub mounted-site proof before expanding its compatibility claim.
@@ -102,7 +102,7 @@ bin/verify-commerce full
 The quick verifier covers types, unit contracts, feature boundaries, public
 repository hygiene, the exact EmDash API peer, and the exact private-pilot fork
 contract. The full verifier additionally runs cross-process SQLite atomicity
-proof against EmDash's real 0.35 storage repository and a two-process local
+proof against EmDash's real 0.40.1 storage repository and a two-process local
 Wrangler/D1 expression-index proof.
 
 Under construction. MIT licensed.

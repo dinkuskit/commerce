@@ -15,6 +15,19 @@ import {
   storeInventoryConfigurationUniqueIndexName,
 } from "../../dist/index.js";
 
+const PLUGIN_STORAGE_TABLE = `
+    CREATE TABLE IF NOT EXISTS _plugin_storage (
+      plugin_id TEXT NOT NULL,
+      collection TEXT NOT NULL,
+      id TEXT NOT NULL,
+      data TEXT NOT NULL,
+      revision TEXT NOT NULL DEFAULT '0',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (plugin_id, collection, id)
+    )
+  `;
+
 function openUnindexedRepository(path, collection) {
   const database = new BetterSqlite3(path);
   database.pragma("journal_mode = WAL");
@@ -45,17 +58,7 @@ export function initializeCatalogDatabase(path, uniqueFields = ["commandId", "sk
   const database = new BetterSqlite3(path);
   database.pragma("journal_mode = WAL");
   database.pragma("busy_timeout = 5000");
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS _plugin_storage (
-      plugin_id TEXT NOT NULL,
-      collection TEXT NOT NULL,
-      id TEXT NOT NULL,
-      data TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      PRIMARY KEY (plugin_id, collection, id)
-    )
-  `);
+  database.exec(PLUGIN_STORAGE_TABLE);
   for (const field of uniqueFields) {
     const indexName = catalogUniqueIndexName(field);
     database.exec(`
@@ -133,17 +136,7 @@ export function initializeClaimDatabase(
   const database = new BetterSqlite3(path);
   database.pragma("journal_mode = WAL");
   database.pragma("busy_timeout = 5000");
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS _plugin_storage (
-      plugin_id TEXT NOT NULL,
-      collection TEXT NOT NULL,
-      id TEXT NOT NULL,
-      data TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      PRIMARY KEY (plugin_id, collection, id)
-    )
-  `);
+  database.exec(PLUGIN_STORAGE_TABLE);
   for (const field of uniqueFields) {
     const indexName = managedSkuRegistrationClaimUniqueIndexName(field);
     database.exec(`
@@ -190,17 +183,7 @@ export function initializeStoreInventoryConfigurationDatabase(
   const database = new BetterSqlite3(path);
   database.pragma("journal_mode = WAL");
   database.pragma("busy_timeout = 5000");
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS _plugin_storage (
-      plugin_id TEXT NOT NULL,
-      collection TEXT NOT NULL,
-      id TEXT NOT NULL,
-      data TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      PRIMARY KEY (plugin_id, collection, id)
-    )
-  `);
+  database.exec(PLUGIN_STORAGE_TABLE);
   if (withUniqueIndex) {
     const indexName = storeInventoryConfigurationUniqueIndexName("configurationKey");
     database.exec(`
