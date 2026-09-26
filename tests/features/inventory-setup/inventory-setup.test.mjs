@@ -29,6 +29,7 @@ class MemoryCollection {
   constructor(uniqueIndexes = {}) {
     this.uniqueIndexes = uniqueIndexes;
     this.records = new Map();
+    this.revisions = new Map();
     this.puts = [];
     this.queries = [];
   }
@@ -36,6 +37,16 @@ class MemoryCollection {
   async get(id) {
     const value = this.records.get(id);
     return value === undefined ? null : structuredClone(value);
+  }
+
+  async getVersioned(id) {
+    const value = this.records.get(id);
+    if (value === undefined) return null;
+    if (!this.revisions.has(id)) this.revisions.set(id, crypto.randomUUID());
+    return {
+      value: structuredClone(value),
+      revision: this.revisions.get(id),
+    };
   }
 
   async put(id, data) {
@@ -46,7 +57,16 @@ class MemoryCollection {
       if (collision) throw uniqueViolation(indexName);
     }
     this.records.set(id, structuredClone(data));
+    this.revisions.set(id, crypto.randomUUID());
     this.puts.push({ id, data: structuredClone(data) });
+  }
+
+  async compareAndSet(id, expectedRevision, data) {
+    if (this.revisions.get(id) !== expectedRevision) return { applied: false };
+    this.records.set(id, structuredClone(data));
+    const revision = crypto.randomUUID();
+    this.revisions.set(id, revision);
+    return { applied: true, revision };
   }
 
   async delete(id) {
@@ -528,4 +548,48 @@ test("the plugin declares the singleton configuration and one private update rou
     request: new Request("https://smokyclub.test/configure-inventory", { method: "POST" }),
   });
   assert.equal(result.outcome, "inventory-active");
+});
+
+test("Configure Inventory does not overwrite a concurrent disable", async () => {
+  const catalog = new MemoryCollection();
+  const configurations = configurationStorage();
+  const claims = claimStorage();
+  catalog.records.set("item-grill", managedItem());
+  await configuredStore(configurations);
+  const originalGetVersioned = catalog.getVersioned.bind(catalog);
+  let intercepted = false;
+  catalog.getVersioned = async (id) => {
+    const latest = await originalGetVersioned(id);
+    if (!intercepted && latest !== null) {
+      intercepted = true;
+      catalog.records.set(id, {
+        ...latest.value,
+        stockManagement: { mode: "unmanaged" },
+      });
+      catalog.revisions.set(id, crypto.randomUUID());
+      claims.records.clear();
+      return originalGetVersioned(id);
+    }
+    return latest;
+  };
+
+  await assert.rejects(
+    configureCatalogItemInventory(
+      { catalog, configurations, claims },
+      { catalogItemId: "item-grill" },
+      setupExecution({
+        resolveProvider: async () => ({
+          async registerManagedSku() {
+            throw new Error("must not contact Inventory after disable");
+          },
+        }),
+      }),
+    ),
+    (error) =>
+      error instanceof InventorySetupError && error.code === "MANAGE_STOCK_REQUIRED",
+  );
+  assert.deepEqual(catalog.records.get("item-grill").stockManagement, {
+    mode: "unmanaged",
+  });
+  assert.equal(claims.records.size, 0);
 });

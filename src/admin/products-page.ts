@@ -59,7 +59,7 @@ export function ProductsPage() {
     setRegular(selected.regular ?? "");
     setSale(selected.sale ?? "");
     setManageStock(selected.manageStock);
-    setStockStatus(selected.stockStatus ?? "in-stock");
+    if (selected.stockStatus !== null) setStockStatus(selected.stockStatus);
   }
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function ProductsPage() {
     setRegular(product.regular ?? "");
     setSale(product.sale ?? "");
     setManageStock(product.manageStock);
-    setStockStatus(product.stockStatus ?? "in-stock");
+    if (product.stockStatus !== null) setStockStatus(product.stockStatus);
     setMessage(null);
   }
 
@@ -103,17 +103,22 @@ export function ProductsPage() {
     setPending(true);
     setMessage(null);
     try {
+      const listedManaged =
+        products.find((product) => product.catalogItemId === selectedId)?.manageStock ===
+        true;
       const saved = await postPlugin<CatalogProductPriceForm>(
         SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
         manageStock
           ? { catalogItemId: selectedId, regular, sale, manageStock: true }
-          : {
-              catalogItemId: selectedId,
-              regular,
-              sale,
-              manageStock: false,
-              stockStatus,
-            },
+          : listedManaged
+            ? { catalogItemId: selectedId, regular, sale, manageStock: false }
+            : {
+                catalogItemId: selectedId,
+                regular,
+                sale,
+                manageStock: false,
+                stockStatus,
+              },
         "Could not save the product",
       );
       if (!saved.saved) {
