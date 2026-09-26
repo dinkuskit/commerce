@@ -378,20 +378,6 @@ async function persistManageStock(
   const current = normalizeStoredStockManagement(item.stockManagement);
   const nextStockManagement = setManageStock(current, manageStock);
   if (JSON.stringify(current) === JSON.stringify(nextStockManagement)) return;
-  if (!manageStock) {
-    try {
-      await releaseManagedSkuRegistrationClaims(storage.claims, {
-        catalogItemId: item.itemId,
-        stockManagement: current,
-      });
-    } catch (error) {
-      throw new CatalogError(
-        "STORAGE_UNAVAILABLE",
-        "managed SKU registration claim release failed",
-        { cause: error },
-      );
-    }
-  }
   let latest;
   try {
     latest = await storage.catalog.getVersioned(item.itemId);
@@ -435,6 +421,20 @@ async function persistManageStock(
       "STORAGE_UNAVAILABLE",
       "Manage Stock update lost to a concurrent write",
     );
+  }
+  if (!manageStock) {
+    try {
+      await releaseManagedSkuRegistrationClaims(storage.claims, {
+        catalogItemId: item.itemId,
+        stockManagement: latestState,
+      });
+    } catch (error) {
+      throw new CatalogError(
+        "STORAGE_UNAVAILABLE",
+        "managed SKU registration claim release failed",
+        { cause: error },
+      );
+    }
   }
 }
 

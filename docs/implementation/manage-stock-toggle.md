@@ -9,5 +9,6 @@ value, drops reconstructable Commerce registration claims with
 the Inventory SKU. The catalog row uses `compareAndSet` so a concurrent
 Configure Inventory write cannot overwrite a disable. Uncheck is refused while
 setup is still running so that in-flight registration can finish talking to
-Inventory; the clerk retries Save after it finishes. A refused Manage stock
+Inventory; the clerk retries Save after it finishes. Claim release runs only
+after the catalog row is unmanaged. A refused Manage stock
 write leaves stored prices unchanged.

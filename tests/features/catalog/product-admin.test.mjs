@@ -628,3 +628,50 @@ test("unchecking Manage stock is refused while Inventory setup is pending", asyn
   assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-pending");
   assert.equal(stores.claims.records.size, 0);
 });
+
+test("a refused disable does not drop a claim that became pending after the save started", async () => {
+  const pending = {
+    mode: "managed",
+    status: "setup-pending",
+    registration: {
+      operationId: "op-pending",
+      request: { poolId: "pool-1", sku: "BAG-1", displayNameIfNew: "Bag" },
+    },
+  };
+  const stores = storage([
+    item({
+      stockManagement: { mode: "managed", status: "setup-required" },
+      creationIntent: { manageStock: true },
+    }),
+  ]);
+  const claimKey = createManagedSkuRegistrationClaimKey({ catalogItemId: "item-bag" });
+  const originalGetVersioned = stores.catalog.getVersioned.bind(stores.catalog);
+  stores.catalog.getVersioned = async (id) => {
+    const current = stores.catalog.records.get(id);
+    stores.catalog.records.set(id, { ...current, stockManagement: pending });
+    stores.catalog.revisions.set(id, crypto.randomUUID());
+    stores.claims.records.set("claim-1", {
+      recordKind: "managed-sku-registration-claim",
+      recordId: "claim-1",
+      claimKey,
+      catalogItemId: "item-bag",
+      operationId: "op-pending",
+      request: pending.registration.request,
+      createdAt: "2026-09-26T00:00:00.000Z",
+    });
+    stores.catalog.getVersioned = originalGetVersioned;
+    return originalGetVersioned(id);
+  };
+  await assert.rejects(
+    saveCatalogProductPrices(stores, {
+      catalogItemId: "item-bag",
+      regular: "",
+      sale: "",
+      manageStock: false,
+    }),
+    (error) =>
+      error instanceof CatalogError && error.code === "MANAGE_STOCK_SETUP_PENDING",
+  );
+  assert.equal(stores.claims.records.size, 1);
+  assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-pending");
+});
