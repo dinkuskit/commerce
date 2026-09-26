@@ -71,12 +71,12 @@ export async function auditRepository(root = repositoryRoot) {
   if (manifest.repository?.url !== "git+https://github.com/dinkuskit/commerce.git") {
     findings.push("package repository must be dinkuskit/commerce");
   }
-  if (manifest.peerDependencies?.emdash !== "0.40.1") {
-    findings.push("runtime peer must pin exact emdash 0.40.1");
+  if (manifest.peerDependencies?.emdash !== "0.41.0") {
+    findings.push("runtime peer must pin exact emdash 0.41.0");
   }
   const compatibility = manifest.dinkuskit?.emdashCompatibility;
   const requiredCompatibility = {
-    apiPeer: "0.40.1",
+    apiPeer: "0.41.0",
     mountedSitePilot: "private",
     requiredSourceVisibility: "public",
     requiredSourceRepository: "https://github.com/saariuslystoned/emdash",

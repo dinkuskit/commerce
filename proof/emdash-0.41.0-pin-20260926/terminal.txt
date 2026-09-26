@@ -1,0 +1,32 @@
+# redacted pin proof — commerce emdash@0.41.0
+# host node v24.16.0 npm 11.13.0
+# ignore-scripts=false
+# proxies stripped: HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy
+
+$ npm ls emdash --depth=0
+@dinkuskit/commerce@0.0.0
+`-- emdash@0.41.0
+
+$ CI=1 bin/verify-commerce full
+public_repository_contract=clean
+feature_contract=clean
+ℹ tests 105
+ℹ pass 105
+ℹ fail 0
+# unit duration_ms 1187.204708
+LIVE_PROOF {"case":"wrangler-d1-atomic-managed-sku-registration-claim","emdash":"0.41.0","processes":2,"writesSucceeded":1,"writesRejected":1,"persistedClaims":1,"rejectedConstraint":"uidx_plugin_dinkus-commerce_managedSkuClaims_claimKey","dataClassification":"synthetic-local"}
+LIVE_PROOF {"case":"wrangler-d1-atomic-store-inventory-configuration","emdash":"0.41.0","processes":2,"writesSucceeded":1,"writesRejected":1,"persistedConfigurations":1,"rejectedConstraint":"uidx_plugin_dinkus-commerce_storeInventoryConfigurations_configurationKey","dataClassification":"synthetic-local"}
+LIVE_PROOF {"case":"atomic-managed-sku-registration-claim","emdash":"0.41.0","processes":2,"claimed":1,"joined":1,"persistedClaims":1,"oneOperation":true,"onePool":true,"dataClassification":"synthetic"}
+LIVE_PROOF {"case":"managed-setup-persistence","emdash":"0.41.0","created":true,"persistedRecords":1,"creationIntent":{"manageStock":true},"stockManagement":{"mode":"managed","status":"setup-required"},"hasQuantity":false,"hasStockQuantity":false,"dataClassification":"synthetic"}
+LIVE_PROOF {"case":"competing-sku","emdash":"0.41.0","processes":2,"created":1,"rejected":1,"rejectionCode":"SKU_CONFLICT","persistedRecords":1,"persistedRows":1}
+LIVE_PROOF {"case":"idempotent-replay","emdash":"0.41.0","processes":2,"created":1,"replayed":1,"sameItem":true,"persistedRecords":1,"persistedRows":1}
+LIVE_PROOF {"case":"atomic-store-inventory-configuration","emdash":"0.41.0","processes":2,"created":1,"joined":1,"persistedConfigurations":1,"onePermanentSiteId":true,"dataClassification":"synthetic"}
+LIVE_PROOF {"case":"configure-inventory-action-persistence","emdash":"0.41.0","outcome":"inventory-active","siteIdentityPersisted":true,"catalogState":"active","persistedConfigurations":1,"persistedClaims":1,"providerContract":"InventoryProviderPort","dataClassification":"synthetic"}
+LIVE_PROOF {"case":"storefront-availability-policy-persistence","emdash":"0.41.0","storageReopened":true,"displayMode":"threshold","threshold":5,"allowBackorders":true,"inventoryScope":"location","inventoryLocation":"murphy-nc","resolvedStatus":"low-stock","dataClassification":"synthetic"}
+LIVE_PROOF {"case":"manual-unmanaged-availability-persistence","emdash":"0.41.0","storageReopened":true,"persistedStatus":"out-of-stock","resolvedStatus":"out-of-stock","sellable":false,"inventoryContacted":false,"dataClassification":"synthetic"}
+LIVE_PROOF {"case":"pre-price-catalog-upgrade-delisting","emdash":"0.41.0","storageReopened":true,"catalogRowPersisted":true,"priceRows":0,"listable":false,"sellable":false,"resolvedStatus":"availability-unavailable","inventoryContacted":false,"operatorRemediation":"catalog-items/set-regular-price","dataClassification":"synthetic"}
+ℹ tests 19
+ℹ pass 19
+ℹ fail 0
+# integration duration_ms 13211.870083
+# verifier exit 0
