@@ -11,5 +11,6 @@ Configure Inventory write cannot overwrite a disable. Uncheck is refused while
 setup is still running so that in-flight registration can finish talking to
 Inventory; the clerk retries Save after it finishes. Claim release runs only
 after the catalog row is unmanaged. If that cleanup fails, the next unmanaged
-Save retries it so re-enable can start a fresh setup. A refused Manage stock
+Save retries it so re-enable can start a fresh setup. A stale enable does not
+overwrite a concurrent pending registration or drop its claim. A refused Manage stock
 write leaves stored prices unchanged.

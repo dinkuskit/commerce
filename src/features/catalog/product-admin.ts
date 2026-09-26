@@ -403,9 +403,7 @@ async function persistManageStock(
       MANAGE_STOCK_SETUP_PENDING_MESSAGE,
     );
   }
-  if (manageStock && latestState.mode === "unmanaged") {
-    await releaseUnmanagedRegistrationClaims(storage, item.itemId);
-  }
+  if (manageStock && latestState.mode === "managed") return;
   const nextItem: CatalogItemRecord = {
     ...latest.value,
     stockManagement: nextStockManagement,

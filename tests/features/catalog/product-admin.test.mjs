@@ -735,3 +735,42 @@ test("a failed claim release after disable is cleaned up on the next unmanaged s
   assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-required");
   assert.equal(stores.claims.records.size, 0);
 });
+
+test("a stale enable does not overwrite a concurrent pending registration", async () => {
+  const pending = {
+    mode: "managed",
+    status: "setup-pending",
+    registration: {
+      operationId: "op-pending",
+      request: { poolId: "pool-1", sku: "BAG-1", displayNameIfNew: "Bag" },
+    },
+  };
+  const stores = storage([item()]);
+  const claimKey = createManagedSkuRegistrationClaimKey({ catalogItemId: "item-bag" });
+  stores.claims.records.set("claim-1", {
+    recordKind: "managed-sku-registration-claim",
+    recordId: "claim-1",
+    claimKey,
+    catalogItemId: "item-bag",
+    operationId: "op-pending",
+    request: pending.registration.request,
+    createdAt: "2026-09-26T00:00:00.000Z",
+  });
+  const originalGetVersioned = stores.catalog.getVersioned.bind(stores.catalog);
+  stores.catalog.getVersioned = async (id) => {
+    const current = stores.catalog.records.get(id);
+    stores.catalog.records.set(id, { ...current, stockManagement: pending });
+    stores.catalog.revisions.set(id, crypto.randomUUID());
+    stores.catalog.getVersioned = originalGetVersioned;
+    return originalGetVersioned(id);
+  };
+  const saved = await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag",
+    regular: "",
+    sale: "",
+    manageStock: true,
+  });
+  assert.equal(saved.saved, true);
+  assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-pending");
+  assert.equal(stores.claims.records.size, 1);
+});
