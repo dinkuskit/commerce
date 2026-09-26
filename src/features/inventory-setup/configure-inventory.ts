@@ -99,6 +99,56 @@ function currentResult(
   return null;
 }
 
+async function persistManagedCatalogState(
+  storage: InventorySetupStorage["catalog"],
+  catalogItemId: string,
+  stockManagement: ManagedStockManagement,
+): Promise<CatalogItemRecord> {
+  let latest;
+  try {
+    latest = await storage.getVersioned(catalogItemId);
+  } catch (error) {
+    throw new InventorySetupError(
+      "STORAGE_UNAVAILABLE",
+      "catalog inventory state update failed",
+      { cause: error },
+    );
+  }
+  if (latest === null || latest.value.recordKind !== "catalog-item") {
+    throw new InventorySetupError(
+      "CATALOG_ITEM_NOT_FOUND",
+      "catalog item was not found",
+    );
+  }
+  if (normalizeStoredStockManagement(latest.value.stockManagement).mode !== "managed") {
+    throw new InventorySetupError(
+      "MANAGE_STOCK_REQUIRED",
+      "Manage Stock was disabled before Inventory setup finished",
+    );
+  }
+  const next: CatalogItemRecord = {
+    ...latest.value,
+    stockManagement,
+  };
+  let applied;
+  try {
+    applied = await storage.compareAndSet(catalogItemId, latest.revision, next);
+  } catch (error) {
+    throw new InventorySetupError(
+      "STORAGE_UNAVAILABLE",
+      "catalog inventory state update failed",
+      { cause: error },
+    );
+  }
+  if (!applied.applied) {
+    throw new InventorySetupError(
+      "STORAGE_UNAVAILABLE",
+      "catalog inventory state update lost to a concurrent write",
+    );
+  }
+  return next;
+}
+
 function outcomeForState(state: ManagedStockManagement) {
   if (state.status === "active") return "inventory-active" as const;
   if (state.status === "needs-review") return "existing-sku-review-required" as const;
@@ -187,17 +237,11 @@ export async function configureCatalogItemInventory(
       claim: claimPort.claim,
       createOperationId: execution.createOperationId,
       persist: async (stockManagement) => {
-        const next: CatalogItemRecord = { ...persistedItem, stockManagement };
-        try {
-          await storage.catalog.put(next.itemId, next);
-        } catch (error) {
-          throw new InventorySetupError(
-            "STORAGE_UNAVAILABLE",
-            "catalog inventory state update failed",
-            { cause: error },
-          );
-        }
-        persistedItem = next;
+        persistedItem = await persistManagedCatalogState(
+          storage.catalog,
+          item.itemId,
+          stockManagement,
+        );
       },
     },
   );

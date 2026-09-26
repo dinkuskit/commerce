@@ -59,7 +59,7 @@ export function ProductsPage() {
     setRegular(selected.regular ?? "");
     setSale(selected.sale ?? "");
     setManageStock(selected.manageStock);
-    setStockStatus(selected.stockStatus ?? "in-stock");
+    if (selected.stockStatus !== null) setStockStatus(selected.stockStatus);
   }
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function ProductsPage() {
     setRegular(product.regular ?? "");
     setSale(product.sale ?? "");
     setManageStock(product.manageStock);
-    setStockStatus(product.stockStatus ?? "in-stock");
+    if (product.stockStatus !== null) setStockStatus(product.stockStatus);
     setMessage(null);
   }
 
@@ -103,15 +103,28 @@ export function ProductsPage() {
     setPending(true);
     setMessage(null);
     try {
+      const listedManaged =
+        products.find((product) => product.catalogItemId === selectedId)?.manageStock ===
+        true;
       const saved = await postPlugin<CatalogProductPriceForm>(
         SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
         manageStock
-          ? { catalogItemId: selectedId, regular, sale }
-          : { catalogItemId: selectedId, regular, sale, stockStatus },
+          ? { catalogItemId: selectedId, regular, sale, manageStock: true }
+          : listedManaged
+            ? { catalogItemId: selectedId, regular, sale, manageStock: false }
+            : {
+                catalogItemId: selectedId,
+                regular,
+                sale,
+                manageStock: false,
+                stockStatus,
+              },
         "Could not save the product",
       );
       if (!saved.saved) {
         setMessage(saved.message);
+        setManageStock(saved.manageStock);
+        if (saved.stockStatus !== null) setStockStatus(saved.stockStatus);
         return;
       }
       setRegular(saved.regular);
@@ -172,9 +185,29 @@ export function ProductsPage() {
           createElement("h2", { className: "text-lg font-semibold" }, "Price"),
           labeledField("Regular", "regular-price", regular, setRegular),
           labeledField("Sale", "sale-price", sale, setSale),
+          manageStockCheckbox(manageStock, setManageStock),
           manageStock ? null : stockStatusFields(stockStatus, setStockStatus),
           createElement("button", { type: "submit", disabled: pending }, "Save"),
         ),
+  );
+}
+
+function manageStockCheckbox(
+  value: boolean,
+  setValue: (value: boolean) => void,
+) {
+  return createElement(
+    "label",
+    { htmlFor: "manage-stock", className: "block" },
+    createElement("input", {
+      id: "manage-stock",
+      type: "checkbox",
+      checked: value,
+      onChange: (event: ChangeEvent<HTMLInputElement>) => {
+        setValue(event.currentTarget.checked);
+      },
+    }),
+    " Manage stock",
   );
 }
 

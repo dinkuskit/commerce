@@ -1,30 +1,30 @@
 {
   "closeout": null,
-  "created_at": "2026-09-26T15:17:31+00:00",
+  "created_at": "2026-09-26T18:35:03+00:00",
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-09-26T15:33:46+00:00",
-    "domain": "a clerk marks In stock, Out of stock, or On backorder",
-    "started_at": "2026-09-26T15:17:31+00:00",
-    "status": "inspected",
-    "summary": "Products page: In stock / Out of stock / On backorder when Manage Stock is off; all three hide when Manage Stock is on. On backorder is that third status, not Allow backorders. One Save writes Regular, Sale, and stock status; a refused stock write leaves stored status unchanged. New products stay In stock. Commerce store setting (not on the product) shows out-of-stock on the shop or hides them; default is show. Hide covers clerk Out of stock and Inventory-at-zero; On backorder stays visible; unpriced stays hidden; admin still lists every product. Manage Stock, Allow backorders, checkout, shipping, taxes, and description stay later."
+    "confirmed_at": "2026-09-26T18:36:00+00:00",
+    "domain": "a clerk turns Manage stock on or off on a product",
+    "started_at": "2026-09-26T18:35:59+00:00",
+    "status": "confirmed",
+    "summary": "Products page same Save as Regular and Sale: clerk checks or unchecks Manage stock. New products default off. On hides In stock/Out of stock/On backorder and persists setup-required with no auto Configure Inventory, no quantity, no install popup. Off restores dormant stock status, drops the Commerce setup claim, does not contact Inventory, and leaves pool quantity (the 6 red hats) in place. Later enable is not already-claimed; existing SKU is needs-review confirm; title does not remap. Toggle does not rewrite Regular or Sale. A refused Manage stock write leaves prices unchanged. Out: Allow backorders admin, Configure Inventory walk, marketplace install, auto-link, title remap, live quantity on this page. Proof: bin/verify-commerce full plus Products admin check/uncheck/recheck with prices unchanged."
   },
   "decisions": [
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "Yes. The same Products page gets In stock, Out of stock, and On backorder. That is Woo stock status when Manage Stock is off. Manage Stock, shipping, taxes, and a description stay later. Commerce #17 stays parked.",
-      "context_ref": "predecessor:gt-20260926123539-d964d3;file:docs/implementation/unmanaged-product-sellability.md;file:src/admin/products-page.ts",
-      "created_at": "2026-09-26T15:17:31+00:00",
+      "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+      "context_ref": "woo:product-inventory-manage-stock;file:src/features/inventory-provider/stock-management.ts;predecessor:gt-20260926123539-d964d3",
+      "created_at": "2026-09-26T18:35:59+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:17:31+00:00",
-          "choice": "Yes. The same Products page gets In stock, Out of stock, and On backorder. That is Woo stock status when Manage Stock is off. Manage Stock, shipping, taxes, and a description stay later. Commerce #17 stays parked.",
+          "at": "2026-09-26T18:35:59+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -37,8 +37,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "Yes. The same Products page gets In stock, Out of stock, and On backorder. That is Woo stock status when Manage Stock is off. Manage Stock, shipping, taxes, and a description stay later. Commerce #17 stays parked.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -51,10 +51,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:13+00:00",
-          "choice": "Yes. The same Products page gets In stock, Out of stock, and On backorder. That is Woo stock status when Manage Stock is off. Manage Stock, shipping, taxes, and a description stay later. Commerce #17 stays parked.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -65,10 +65,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-001",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "When Manage Stock is off, should the clerk mark the product In stock, Out of stock, or On backorder from the Products page?",
-      "rationale": "Bobby said yes to that field after Regular and Sale shipped.",
+      "id": "manage-stock-checkbox-001",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "After the product exists, can the clerk check or uncheck Manage stock on that product?",
+      "rationale": "Bobby confirmed Q1. Woo Inventory is a per-product checkbox after create. Create on main already defaults unmanaged. This slice is flipping it later, not a second create form.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -77,25 +77,25 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:13+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "In stock and Out of stock are hidden when Manage Stock is on. On backorder is not decided yet.",
-      "context_ref": "decision:stock-status-001;file:docs/implementation/unmanaged-product-sellability.md;file:docs/implementation/managed-storefront-availability.md",
-      "created_at": "2026-09-26T15:22:07+00:00",
+      "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
+      "context_ref": "decision:manage-stock-checkbox-001;file:README.md;file:docs/implementation/managed-storefront-availability.md;predecessor:product-backorder-policy-038",
+      "created_at": "2026-09-26T18:35:59+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "stock-status-001"
+        "manage-stock-checkbox-001"
       ],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:22:07+00:00",
-          "choice": "In stock and Out of stock are hidden when Manage Stock is on. On backorder is not decided yet.",
+          "at": "2026-09-26T18:35:59+00:00",
+          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -108,8 +108,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "In stock and Out of stock are hidden when Manage Stock is on. On backorder is not decided yet.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -122,10 +122,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:13+00:00",
-          "choice": "In stock and Out of stock are hidden when Manage Stock is on. On backorder is not decided yet.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -136,10 +136,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-002",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "If Inventory is already counting that product, should In stock, Out of stock, and On backorder be hidden?",
-      "rationale": "Bobby said yes: if Manage Stock is checked, In stock and Out of stock disappear. He is unsure whether On backorder should stay visible when Inventory is enabled.",
+      "id": "manage-stock-hide-status-002",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When Manage stock is on, do In stock / Out of stock / On backorder hide?",
+      "rationale": "Bobby confirmed Q2. Woo hides stock status when Track stock quantity is on. On backorder is unmanaged stock status. Allow backorders is the settled managed-zero policy (product-backorder-policy-038), Commerce not Inventory.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -148,25 +148,25 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:13+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "On backorder is the third stock status with In stock and Out of stock. All three hide when Manage Stock is on. Allow backorders when Inventory is at zero stays a later field.",
-      "context_ref": "decision:stock-status-002;file:docs/implementation/unmanaged-product-sellability.md;file:docs/implementation/managed-storefront-availability.md",
-      "created_at": "2026-09-26T15:23:49+00:00",
+      "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
+      "context_ref": "decision:manage-stock-hide-status-002;file:docs/implementation/configure-inventory-action.md;file:src/features/inventory-provider/stock-management.ts",
+      "created_at": "2026-09-26T18:35:59+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "stock-status-002"
+        "manage-stock-hide-status-002"
       ],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:23:49+00:00",
-          "choice": "On backorder is the third stock status with In stock and Out of stock. All three hide when Manage Stock is on. Allow backorders when Inventory is at zero stays a later field.",
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -179,8 +179,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "On backorder is the third stock status with In stock and Out of stock. All three hide when Manage Stock is on. Allow backorders when Inventory is at zero stays a later field.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -193,10 +193,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:14+00:00",
-          "choice": "On backorder is the third stock status with In stock and Out of stock. All three hide when Manage Stock is on. Allow backorders when Inventory is at zero stays a later field.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -207,10 +207,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-003",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "Keep On backorder as the third stock status on this page?",
-      "rationale": "Bobby said yes after the two Woo fields were split. A toggle that stays on while Inventory is counting is Allow backorders, not this status.",
+      "id": "manage-stock-setup-required-003",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When the clerk checks Manage stock, does Configure Inventory run immediately?",
+      "rationale": "Bobby confirmed. Marketplace browse/install exists on emdash 0.41.0, but @dinkuskit/inventory is private 0.0.0 and cannot be one-click installed. This slice is the persist toggle, not the install wizard.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -219,25 +219,25 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:14+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "Neither is hardcoded. A store-level Commerce admin setting lets the shop owner show out-of-stock products on the live site as out of stock, or hide them. It is not a per-product control. Unpriced products stay hidden. Admin still lists every product.",
-      "context_ref": "decision:stock-status-003;file:docs/implementation/unmanaged-product-sellability.md;file:src/features/storefront-availability/settings.ts",
-      "created_at": "2026-09-26T15:25:24+00:00",
+      "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
+      "context_ref": "decision:manage-stock-setup-required-003;file:README.md;file:src/features/catalog/manual-availability.ts;file:src/features/inventory-provider/stock-management.ts",
+      "created_at": "2026-09-26T18:36:00+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "stock-status-003"
+        "manage-stock-setup-required-003"
       ],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:25:24+00:00",
-          "choice": "Neither is hardcoded. A store-level Commerce admin setting lets the shop owner show out-of-stock products on the live site as out of stock, or hide them. It is not a per-product control. Unpriced products stay hidden. Admin still lists every product.",
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -250,8 +250,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "Neither is hardcoded. A store-level Commerce admin setting lets the shop owner show out-of-stock products on the live site as out of stock, or hide them. It is not a per-product control. Unpriced products stay hidden. Admin still lists every product.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -264,10 +264,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:14+00:00",
-          "choice": "Neither is hardcoded. A store-level Commerce admin setting lets the shop owner show out-of-stock products on the live site as out of stock, or hide them. It is not a per-product control. Unpriced products stay hidden. Admin still lists every product.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -278,10 +278,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-004",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "If the clerk marks a product Out of stock, should the shop still show it as not for sale, or hide it like an unpriced product?",
-      "rationale": "Bobby rejected a single hardcoded shop rule. He wants a Commerce admin setting for show-as-out-of-stock vs do-not-show.",
+      "id": "manage-stock-uncheck-restores-004",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When the clerk unchecks Manage stock, do In stock / Out of stock / On backorder come back as they were?",
+      "rationale": "Bobby confirmed Q4. Matches Woo: turning off Track stock quantity returns stock status. Commerce already keeps that manual value dormant while managed.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -290,25 +290,25 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:14+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "Show out-of-stock products on the live site as out of stock. Hide is opt-in.",
-      "context_ref": "decision:stock-status-004;file:docs/implementation/unmanaged-product-sellability.md",
-      "created_at": "2026-09-26T15:26:28+00:00",
+      "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
+      "context_ref": "decision:manage-stock-uncheck-restores-004;file:docs/implementation/managed-sku-registration-contract.md;inventory:docs/CHARTER.md#managed-sku-registration-036",
+      "created_at": "2026-09-26T18:36:00+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "stock-status-004"
+        "manage-stock-uncheck-restores-004"
       ],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:26:28+00:00",
-          "choice": "Show out-of-stock products on the live site as out of stock. Hide is opt-in.",
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -321,8 +321,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "Show out-of-stock products on the live site as out of stock. Hide is opt-in.",
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -335,10 +335,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:14+00:00",
-          "choice": "Show out-of-stock products on the live site as out of stock. Hide is opt-in.",
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -349,10 +349,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-005",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "What is the default before anyone touches the out-of-stock shop setting?",
-      "rationale": "Bobby agreed. That matches Woo. Unpriced products stay hidden regardless.",
+      "id": "manage-stock-reenable-fresh-005",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "After uncheck, can the clerk check Manage stock again without getting stuck already-claimed?",
+      "rationale": "Needed for reconnect. Bobby's red-hat-6 stays in Inventory. Shared-pool SKU is not marked disconnected from all stores. Commerce claim leftover is what caused already-claimed on parked #17.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -361,25 +361,25 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:14+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "Yes. Hide applies to clerk-marked Out of stock and to Inventory-at-zero Out of stock. On backorder stays visible. Unpriced stays hidden.",
-      "context_ref": "decision:stock-status-005;file:docs/implementation/unmanaged-product-sellability.md;file:docs/implementation/managed-storefront-availability.md",
-      "created_at": "2026-09-26T15:27:23+00:00",
+      "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
+      "context_ref": "decision:manage-stock-reenable-fresh-005;file:docs/implementation/managed-sku-registration-contract.md;inventory:docs/CHARTER.md#managed-sku-registration-036",
+      "created_at": "2026-09-26T18:36:00+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "stock-status-005"
+        "manage-stock-reenable-fresh-005"
       ],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:27:23+00:00",
-          "choice": "Yes. Hide applies to clerk-marked Out of stock and to Inventory-at-zero Out of stock. On backorder stays visible. Unpriced stays hidden.",
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -392,8 +392,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "Yes. Hide applies to clerk-marked Out of stock and to Inventory-at-zero Out of stock. On backorder stays visible. Unpriced stays hidden.",
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -406,10 +406,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:14+00:00",
-          "choice": "Yes. Hide applies to clerk-marked Out of stock and to Inventory-at-zero Out of stock. On backorder stays visible. Unpriced stays hidden.",
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -420,10 +420,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-006",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "Does the out-of-stock shop setting apply whenever the shop would say Out of stock, and leave On backorder visible?",
-      "rationale": "Bobby said yes. Woo hides out-of-stock items, not backorder items.",
+      "id": "manage-stock-existing-sku-confirm-006",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When Inventory already has that SKU, does Configure Inventory auto-link it or wait for the clerk to confirm?",
+      "rationale": "Bobby: keep confirm for now. Matches main: existing -> needs-review; confirmExistingManagedSku is the only promotion to active. Title remap later.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -432,25 +432,25 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:14+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "A Commerce store setting, not on the product form. This slice ships that setting plus In stock / Out of stock / On backorder on the Products page.",
-      "context_ref": "decision:stock-status-006;file:src/admin/products-page.ts",
-      "created_at": "2026-09-26T15:28:50+00:00",
+      "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
+      "context_ref": "decision:manage-stock-existing-sku-confirm-006;file:docs/implementation/commerce-owned-product-price.md;predecessor:admin-entry-004",
+      "created_at": "2026-09-26T18:36:00+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "stock-status-006"
+        "manage-stock-existing-sku-confirm-006"
       ],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:28:50+00:00",
-          "choice": "A Commerce store setting, not on the product form. This slice ships that setting plus In stock / Out of stock / On backorder on the Products page.",
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -463,8 +463,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "A Commerce store setting, not on the product form. This slice ships that setting plus In stock / Out of stock / On backorder on the Products page.",
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -477,10 +477,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:14+00:00",
-          "choice": "A Commerce store setting, not on the product form. This slice ships that setting plus In stock / Out of stock / On backorder on the Products page.",
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -491,10 +491,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-007",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "Where does the shop owner set show-vs-hide for out-of-stock products?",
-      "rationale": "Bobby agreed. Woo keeps Hide out of stock items off the product form.",
+      "id": "manage-stock-no-price-rewrite-007",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "Does checking or unchecking Manage stock change Regular or Sale?",
+      "rationale": "Bobby confirmed Q7. Woo Inventory is not General. Matches locked price isolation and the concurrent-save lesson from commerce #23.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -503,25 +503,25 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:14+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:81a6f571b5ad3dcc73ba6af9a89bdb438c6a8e06",
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "Yes. One Save writes Regular, Sale, and stock status. A refused stock write leaves the stored status unchanged, same as a bad price.",
-      "context_ref": "decision:stock-status-007;file:src/admin/products-page.ts;file:src/features/catalog/manual-availability.ts",
-      "created_at": "2026-09-26T15:32:42+00:00",
+      "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
+      "context_ref": "decision:manage-stock-no-price-rewrite-007;file:src/admin/products-page.ts;predecessor:admin-entry-004",
+      "created_at": "2026-09-26T18:36:00+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "stock-status-007"
+        "manage-stock-no-price-rewrite-007"
       ],
-      "domain": "a clerk marks In stock, Out of stock, or On backorder",
+      "domain": "a clerk turns Manage stock on or off on a product",
       "history": [
         {
-          "at": "2026-09-26T15:32:42+00:00",
-          "choice": "Yes. One Save writes Regular, Sale, and stock status. A refused stock write leaves the stored status unchanged, same as a bad price.",
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -534,8 +534,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:43:42+00:00",
-          "choice": "Yes. One Save writes Regular, Sale, and stock status. A refused stock write leaves the stored status unchanged, same as a bad price.",
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -548,10 +548,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-26T15:46:14+00:00",
-          "choice": "Yes. One Save writes Regular, Sale, and stock status. A refused stock write leaves the stored status unchanged, same as a bad price.",
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
           "from": "implemented",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -562,10 +562,10 @@
           "verification_ref": null
         }
       ],
-      "id": "stock-status-008",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/admin/store-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/storefront-availability/listing.ts;file:src/features/storefront-availability/resolve.ts",
-      "question": "Does the product Save that already writes Regular and Sale also write In stock / Out of stock / On backorder?",
-      "rationale": "Bobby said yes.",
+      "id": "manage-stock-same-save-008",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "Is Manage stock part of the same Save as Regular and Sale?",
+      "rationale": "Bobby confirmed same Save. Matches Woo one Update and commerce #23 one Save for prices and stock status.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -574,38 +574,21 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-26T15:46:14+00:00",
-      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;test:tests/features/storefront-availability/storefront-availability.test.mjs;cmd:npm run test:unit;file:proof/commerce-admin-stock-status/browser/chromium-desktop"
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     }
   ],
   "last_activation": {
-    "at": "2026-09-26T15:17:31+00:00",
+    "at": "2026-09-26T18:35:03+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
-  "pause": {
-    "artifact_refs": [
-      "https://github.com/dinkuskit/commerce/pull/23",
-      "git:e6a9278df5c6b34d09d4965ce5364ed83d0c5b71",
-      "https://github.com/dinkuskit/dinkus-pr-assets/releases/tag/commerce-pr-23-114e203fa52c",
-      "session:agent:dinkuskong:dashboard:9eb97089-c7e5-45b0-94c4-6cc278d09e65"
-    ],
-    "next_safe_action": "Resume this track. Repair the 2026-09-26 1:18 ClawSweeper P1: if a Save clears Regular then the stock write fails, compareAndSet must recreate the previous price when that cleared revision is still current. Then carry https://github.com/dinkuskit/commerce/pull/23 to merge.",
-    "paused_at": "2026-09-26T17:21:14+00:00",
-    "reason": "Operator is switching to the managed-stock session and wants to bounce back to this admin slice."
-  },
-  "predecessor_track_id": "gt-20260926123539-d964d3",
-  "recommendation": {
-    "alternatives": [
-      "Persisted Manage Stock toggle in a separate isolated worktree from origin/main."
-    ],
-    "reason": "The clerk stock-status slice is implemented and proofed. Merge is blocked on a remaining restore path. Bobby is switching sessions and wants to bounce back.",
-    "recommended": "Resume this track: repair ClawSweeper 1:18 P1 on commerce PR 23, then merge.",
-    "recorded_at": "2026-09-26T17:21:14+00:00"
-  },
+  "pause": null,
+  "predecessor_track_id": "gt-20260926151731-84df4c",
+  "recommendation": null,
   "schema_version": "grilltrack/v0.1",
-  "status": "paused",
-  "title": "Clerk marks In stock, Out of stock, or On backorder",
-  "track_id": "gt-20260926151731-84df4c",
-  "updated_at": "2026-09-26T17:21:14+00:00"
+  "status": "active",
+  "title": "Clerk turns Manage stock on or off on a product",
+  "track_id": "gt-20260926183503-6113fc",
+  "updated_at": "2026-09-26T19:11:36+00:00"
 }

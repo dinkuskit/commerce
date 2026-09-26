@@ -48,7 +48,7 @@ export type StoreInventoryConfigurationStorage = Pick<
 
 export type ConfigureInventoryCatalogStorage = Pick<
   StorageCollection<CatalogStorageRecord>,
-  "get" | "put"
+  "compareAndSet" | "get" | "getVersioned" | "put"
 >;
 
 export type ConfigureInventoryClaimStorage = Pick<
