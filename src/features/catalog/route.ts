@@ -9,7 +9,19 @@ import {
   setCatalogItemRegularPrice,
   setCatalogItemSalePrice,
 } from "./price.js";
+import { listCatalogProducts, saveCatalogProductPrices } from "./product-admin.js";
 import { setCatalogItemBackorders } from "./set-backorders.js";
+import {
+  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
+  CREATE_CATALOG_ITEM_ROUTE,
+  LIST_CATALOG_PRODUCTS_ROUTE,
+  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
+  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+} from "./route-ids.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogManualAvailabilityRecord,
@@ -17,17 +29,17 @@ import type {
   CatalogStorageRecord,
 } from "./types.js";
 
-export const CREATE_CATALOG_ITEM_ROUTE = "catalog-items/create";
-export const SET_CATALOG_ITEM_BACKORDERS_ROUTE = "catalog-items/set-backorders";
-export const SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE =
-  "catalog-items/set-manual-availability";
-export const SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE =
-  "catalog-items/set-regular-price";
-export const SET_CATALOG_ITEM_SALE_PRICE_ROUTE = "catalog-items/set-sale-price";
-export const CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE =
-  "catalog-items/clear-sale-price";
-export const CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE =
-  "catalog-items/clear-regular-price";
+export {
+  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
+  CREATE_CATALOG_ITEM_ROUTE,
+  LIST_CATALOG_PRODUCTS_ROUTE,
+  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
+  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+};
 
 export const createCatalogItemRoute: PluginRoute = {
   permission: "content:create",
@@ -155,3 +167,49 @@ export const clearCatalogItemRegularPriceRoute = catalogPriceRoute(
   clearCatalogItemRegularPrice,
   "regular price clear requires POST",
 );
+
+export const listCatalogProductsRoute: PluginRoute = {
+  permission: "content:edit_any",
+  handler: async (ctx) => {
+    const method = ctx.request.method.toUpperCase();
+    if (method !== "GET" && method !== "POST") {
+      throw new PluginRouteError(
+        "METHOD_NOT_ALLOWED",
+        "product list requires GET or POST",
+        405,
+      );
+    }
+    try {
+      return await listCatalogProducts({
+        catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
+        prices: ctx.storage.catalogPrices as StorageCollection<CatalogPriceRecord>,
+      });
+    } catch (error) {
+      if (error instanceof CatalogError) {
+        throw new PluginRouteError(error.code, error.message, error.status);
+      }
+      throw error;
+    }
+  },
+};
+
+export const saveCatalogProductPricesRoute: PluginRoute = {
+  permission: "content:edit_any",
+  handler: async (ctx) => {
+    if (ctx.request.method.toUpperCase() !== "POST") {
+      throw new PluginRouteError(
+        "METHOD_NOT_ALLOWED",
+        "price save requires POST",
+        405,
+      );
+    }
+    try {
+      return await saveCatalogProductPrices(priceStorage(ctx), ctx.input);
+    } catch (error) {
+      if (error instanceof CatalogError) {
+        throw new PluginRouteError(error.code, error.message, error.status);
+      }
+      throw error;
+    }
+  },
+};

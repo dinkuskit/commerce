@@ -18,6 +18,10 @@
       "types": "./dist/features/catalog/index.d.ts",
       "default": "./dist/features/catalog/index.js"
     },
+    "./features/catalog/browser": {
+      "types": "./dist/features/catalog/browser/index.d.ts",
+      "default": "./dist/features/catalog/browser/index.js"
+    },
     "./features/inventory-provider": {
       "types": "./dist/features/inventory-provider/index.d.ts",
       "default": "./dist/features/inventory-provider/index.js"
@@ -29,6 +33,10 @@
     "./features/storefront-availability": {
       "types": "./dist/features/storefront-availability/index.d.ts",
       "default": "./dist/features/storefront-availability/index.js"
+    },
+    "./admin": {
+      "types": "./dist/admin/index.d.ts",
+      "default": "./dist/admin/index.js"
     }
   },
   "license": "MIT",
@@ -49,7 +57,8 @@
     }
   },
   "peerDependencies": {
-    "emdash": "0.40.1"
+    "emdash": "0.40.1",
+    "react": "^18.0.0 || ^19.0.0"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -64,9 +73,11 @@
     "verify:full": "bin/verify-commerce full"
   },
   "devDependencies": {
+    "@types/react": "19.2.2",
     "better-sqlite3": "12.11.1",
     "emdash": "0.40.1",
     "kysely": "0.29.5",
+    "react": "19.2.8",
     "typescript": "6.0.3",
     "wrangler": "4.127.0"
   }

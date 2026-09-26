@@ -5,6 +5,7 @@ import type {
   CatalogPriceRecord,
   CatalogPriceStorage,
   ClearCatalogItemPriceInput,
+  Money,
   SetCatalogItemPriceInput,
   SetCatalogItemPriceResult,
   SetCatalogItemPriceStorage,
@@ -201,6 +202,54 @@ export async function resolveCatalogItemPrice(
   }
   const price = await readPrice(storage, catalogItemId.trim());
   return toResolution(catalogItemId.trim(), price);
+}
+
+export async function commitCatalogItemPrice(
+  storage: SetCatalogItemPriceStorage,
+  input: { catalogItemId: string; regular: Money | null; sale: Money | null },
+): Promise<CatalogPriceRecord | null> {
+  await requireCatalogItem(storage.catalog, input.catalogItemId);
+  if (input.sale !== null && input.regular === null) {
+    throw new CatalogError(
+      "SALE_REQUIRES_REGULAR",
+      "Sale cannot be set until Regular exists",
+    );
+  }
+  if (
+    input.sale !== null &&
+    input.regular !== null &&
+    !saleIsStrictlyLower(input.sale, input.regular)
+  ) {
+    throw new CatalogError(
+      "SALE_NOT_LOWER_THAN_REGULAR",
+      "Sale must be strictly lower than Regular in the same currency",
+    );
+  }
+  const existing = await readPrice(storage.prices, input.catalogItemId);
+  if (input.regular === null) {
+    if (existing === null) return null;
+    await deletePrice(storage.prices, input.catalogItemId);
+    return null;
+  }
+  const price: CatalogPriceRecord = {
+    recordKind: "catalog-price",
+    recordId: input.catalogItemId,
+    catalogItemId: input.catalogItemId,
+    regular: input.regular,
+    ...(input.sale === null ? {} : { sale: input.sale }),
+  };
+  if (
+    existing !== null &&
+    moneyEquals(existing.regular, price.regular) &&
+    ((existing.sale === undefined && price.sale === undefined) ||
+      (existing.sale !== undefined &&
+        price.sale !== undefined &&
+        moneyEquals(existing.sale, price.sale)))
+  ) {
+    return existing;
+  }
+  await writePrice(storage.prices, price);
+  return price;
 }
 
 export async function setCatalogItemRegularPrice(
