@@ -53,6 +53,11 @@ Both paths return
 `resolveManagedStorefrontAvailability` export remains unchanged for current
 consumers that deliberately accept managed products only.
 
+A separate store-level listing record can hide `out-of-stock` products from
+the shop (`listable: false`) without changing sellability. Missing listing
+means show. `available-on-backorder` stays listable. Missing Regular still
+hides the product first.
+
 Manual-record lookup failure or malformed persisted state returns
 `availability-unavailable` with `sellable: false`; it is not confused with a
 missing record, which safely means `in-stock`.

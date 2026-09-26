@@ -37,8 +37,11 @@ import {
   type ConfigureInventoryExecution,
 } from "./features/inventory-setup/index.js";
 import {
+  OUT_OF_STOCK_LISTING_ROUTE,
   SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
   STOREFRONT_AVAILABILITY_SETTINGS_COLLECTION,
+  STOREFRONT_OUT_OF_STOCK_LISTING_COLLECTION,
+  outOfStockListingRoute,
   setStorefrontAvailabilityPolicyRoute,
 } from "./features/storefront-availability/index.js";
 
@@ -58,6 +61,11 @@ const COMMERCE_PRODUCTS_PAGE = {
   label: "Products",
   icon: "storefront",
 } as const;
+const COMMERCE_STORE_PAGE = {
+  path: "/store",
+  label: "Store",
+  icon: "storefront",
+} as const;
 
 export function dinkusCommerce(): PluginDescriptor {
   return {
@@ -66,7 +74,7 @@ export function dinkusCommerce(): PluginDescriptor {
     format: "native",
     entrypoint: "@dinkuskit/commerce",
     adminEntry: COMMERCE_ADMIN_ENTRY,
-    adminPages: [COMMERCE_PRODUCTS_PAGE],
+    adminPages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
   };
 }
 
@@ -107,10 +115,14 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [STOREFRONT_OUT_OF_STOCK_LISTING_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
     },
     admin: {
       entry: COMMERCE_ADMIN_ENTRY,
-      pages: [COMMERCE_PRODUCTS_PAGE],
+      pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
     },
     routes: {
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRoute,
@@ -129,6 +141,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       ),
       [SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE]:
         setStorefrontAvailabilityPolicyRoute,
+      [OUT_OF_STOCK_LISTING_ROUTE]: outOfStockListingRoute,
     },
   });
 }

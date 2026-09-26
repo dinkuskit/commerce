@@ -6,6 +6,7 @@ import {
   CatalogError,
   StorefrontAvailabilityError,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  OUT_OF_STOCK_LISTING_ROUTE,
   SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
   STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
   createPlugin,
@@ -13,6 +14,7 @@ import {
   resolveStorefrontAvailability,
   setManageStock,
   setCatalogItemBackorders,
+  setOutOfStockListing,
   setStorefrontAvailabilityPolicy,
 } from "../../../dist/index.js";
 
@@ -778,4 +780,167 @@ test("a free Regular remains listable", async () => {
   assert.equal(result.listable, true);
   assert.equal(result.sellable, true);
   assert.equal(result.status, "in-stock");
+});
+
+function listingRecord(hideOutOfStock = false) {
+  return {
+    recordKind: "storefront-out-of-stock-listing",
+    recordId: "active",
+    hideOutOfStock,
+    updatedAt: "2026-09-26T00:00:00.000Z",
+  };
+}
+
+test("hide out-of-stock unlist clerk Out of stock and Inventory-at-zero, and leaves On backorder visible", async () => {
+  const listing = new MemoryCollection([listingRecord(true)]);
+  const unmanaged = catalogItem({
+    creationIntent: { manageStock: false },
+    stockManagement: { mode: "unmanaged" },
+  });
+  const out = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing,
+      manualAvailability: new MemoryCollection([manualAvailabilityRecord("out-of-stock")]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(out.status, "out-of-stock");
+  assert.equal(out.sellable, false);
+  assert.equal(out.listable, false);
+
+  const backorder = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing,
+      manualAvailability: new MemoryCollection([
+        manualAvailabilityRecord("available-on-backorder"),
+      ]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(backorder.status, "available-on-backorder");
+  assert.equal(backorder.sellable, true);
+  assert.equal(backorder.listable, true);
+
+  const { result: zero } = await resolve({
+    allowBackorders: false,
+    read: (input) => foundStock("0", input),
+  });
+  const hiddenZero = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection([backorderPolicy(false)]),
+      catalog: new MemoryCollection([catalogItem()]),
+      configurations: new MemoryCollection([storeConfiguration()]),
+      listing,
+      manualAvailability: new MemoryCollection(),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection([availabilitySettings()]),
+    },
+    { catalogItemId: "item-grill" },
+    {
+      resolveProvider: async () => ({
+        readSkuStock: async (input) => foundStock("0", input),
+      }),
+    },
+  );
+  assert.equal(zero.listable, true);
+  assert.equal(hiddenZero.status, "out-of-stock");
+  assert.equal(hiddenZero.listable, false);
+});
+
+test("a listing lookup or malformed record does not re-list out-of-stock products", async () => {
+  const unmanaged = catalogItem({
+    creationIntent: { manageStock: false },
+    stockManagement: { mode: "unmanaged" },
+  });
+  const failing = new MemoryCollection([listingRecord(true)]);
+  failing.get = async () => {
+    throw new Error("disk full");
+  };
+  const lookupFailed = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing: failing,
+      manualAvailability: new MemoryCollection([manualAvailabilityRecord("out-of-stock")]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(lookupFailed.status, "out-of-stock");
+  assert.equal(lookupFailed.listable, false);
+
+  const malformed = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing: new MemoryCollection([
+        {
+          recordKind: "storefront-out-of-stock-listing",
+          recordId: "active",
+          hideOutOfStock: "yes",
+          updatedAt: "2026-09-26T00:00:00.000Z",
+        },
+      ]),
+      manualAvailability: new MemoryCollection([manualAvailabilityRecord("out-of-stock")]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(malformed.status, "out-of-stock");
+  assert.equal(malformed.listable, false);
+});
+
+test("a missing listing collection keeps out-of-stock products on the shop", async () => {
+  const unmanaged = catalogItem({
+    creationIntent: { manageStock: false },
+    stockManagement: { mode: "unmanaged" },
+  });
+  const shown = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing: new MemoryCollection(),
+      manualAvailability: new MemoryCollection([manualAvailabilityRecord("out-of-stock")]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(shown.status, "out-of-stock");
+  assert.equal(shown.listable, true);
+});
+
+test("the store listing defaults to show out-of-stock and persists hide", async () => {
+  const listing = new MemoryCollection();
+  const loaded = await setOutOfStockListing(listing, { hideOutOfStock: false });
+  assert.equal(loaded.changed, false);
+  assert.equal(loaded.listing.hideOutOfStock, false);
+  const hidden = await setOutOfStockListing(listing, { hideOutOfStock: true });
+  assert.equal(hidden.changed, true);
+  assert.equal(hidden.listing.hideOutOfStock, true);
+
+  const plugin = createPlugin();
+  const route = plugin.routes[OUT_OF_STOCK_LISTING_ROUTE];
+  assert.equal(route.permission, "content:edit_any");
+  const fromGet = await route.handler({
+    input: {},
+    storage: { storefrontOutOfStockListing: listing },
+    request: new Request("https://example.test/out-of-stock-listing", { method: "GET" }),
+  });
+  assert.equal(fromGet.hideOutOfStock, true);
 });

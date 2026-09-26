@@ -5,11 +5,17 @@ import {
 } from "emdash";
 
 import { StorefrontAvailabilityError } from "./errors.js";
+import { loadOutOfStockListing, setOutOfStockListing } from "./listing.js";
 import { setStorefrontAvailabilityPolicy } from "./settings.js";
-import type { StorefrontAvailabilitySettingsRecord } from "./types.js";
+import type {
+  StorefrontAvailabilitySettingsRecord,
+  StorefrontOutOfStockListingRecord,
+} from "./types.js";
 
-export const SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE =
-  "settings/storefront-availability";
+export {
+  OUT_OF_STOCK_LISTING_ROUTE,
+  SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
+} from "./route-ids.js";
 
 export const setStorefrontAvailabilityPolicyRoute: PluginRoute = {
   permission: "content:edit_any",
@@ -36,6 +42,50 @@ export const setStorefrontAvailabilityPolicyRoute: PluginRoute = {
         );
       }
       throw error;
+    }
+  },
+};
+
+function listingStorage(
+  ctx: { storage: Record<string, unknown> },
+): StorageCollection<StorefrontOutOfStockListingRecord> {
+  return ctx.storage
+    .storefrontOutOfStockListing as StorageCollection<StorefrontOutOfStockListingRecord>;
+}
+
+function listingError(error: unknown): never {
+  if (error instanceof StorefrontAvailabilityError) {
+    throw new PluginRouteError(
+      error.code,
+      error.message,
+      error.code === "INVALID_INPUT" ? 400 : 503,
+    );
+  }
+  throw error;
+}
+
+export const outOfStockListingRoute: PluginRoute = {
+  permission: "content:edit_any",
+  handler: async (ctx) => {
+    const method = ctx.request.method.toUpperCase();
+    if (method === "GET") {
+      try {
+        return await loadOutOfStockListing(listingStorage(ctx));
+      } catch (error) {
+        listingError(error);
+      }
+    }
+    if (method !== "POST") {
+      throw new PluginRouteError(
+        "METHOD_NOT_ALLOWED",
+        "out-of-stock listing requires GET or POST",
+        405,
+      );
+    }
+    try {
+      return await setOutOfStockListing(listingStorage(ctx), ctx.input);
+    } catch (error) {
+      listingError(error);
     }
   },
 };

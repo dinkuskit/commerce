@@ -1,4 +1,6 @@
 export { catalogProductCreateInput } from "../product-create-input.js";
+export { CLERK_STOCK_STATUSES } from "../clerk-stock.js";
+export type { ClerkStockStatus } from "../clerk-stock.js";
 export {
   CREATE_CATALOG_ITEM_ROUTE,
   LIST_CATALOG_PRODUCTS_ROUTE,

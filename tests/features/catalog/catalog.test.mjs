@@ -332,7 +332,10 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
     format: "native",
     entrypoint: "@dinkuskit/commerce",
     adminEntry: "@dinkuskit/commerce/admin",
-    adminPages: [{ path: "/products", label: "Products", icon: "storefront" }],
+    adminPages: [
+      { path: "/products", label: "Products", icon: "storefront" },
+      { path: "/store", label: "Store", icon: "storefront" },
+    ],
   });
   assert.equal(commercePlugin.id, "dinkus-commerce");
   assert.deepEqual(commercePlugin.storage.catalogItems, {

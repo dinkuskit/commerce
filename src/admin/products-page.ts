@@ -2,6 +2,7 @@ import { createElement, useEffect, useState, type ChangeEvent, type FormEvent } 
 import { apiFetch, parseApiResponse } from "emdash/plugin-utils";
 
 import {
+  CLERK_STOCK_STATUSES,
   COMMERCE_PLUGIN_ID,
   CREATE_CATALOG_ITEM_ROUTE,
   LIST_CATALOG_PRODUCTS_ROUTE,
@@ -9,6 +10,7 @@ import {
   catalogProductCreateInput,
   type CatalogProductListItem,
   type CatalogProductPriceForm,
+  type ClerkStockStatus,
 } from "../features/catalog/browser/index.js";
 
 function pluginRoute(route: string): string {
@@ -31,6 +33,8 @@ export function ProductsPage() {
   const [sku, setSku] = useState("");
   const [regular, setRegular] = useState("");
   const [sale, setSale] = useState("");
+  const [stockStatus, setStockStatus] = useState<ClerkStockStatus>("in-stock");
+  const [manageStock, setManageStock] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -47,11 +51,15 @@ export function ProductsPage() {
       setSelectedId(null);
       setRegular("");
       setSale("");
+      setStockStatus("in-stock");
+      setManageStock(false);
       return;
     }
     setSelectedId(selected.catalogItemId);
     setRegular(selected.regular ?? "");
     setSale(selected.sale ?? "");
+    setManageStock(selected.manageStock);
+    setStockStatus(selected.stockStatus ?? "in-stock");
   }
 
   useEffect(() => {
@@ -64,6 +72,8 @@ export function ProductsPage() {
     setSelectedId(product.catalogItemId);
     setRegular(product.regular ?? "");
     setSale(product.sale ?? "");
+    setManageStock(product.manageStock);
+    setStockStatus(product.stockStatus ?? "in-stock");
     setMessage(null);
   }
 
@@ -95,8 +105,10 @@ export function ProductsPage() {
     try {
       const saved = await postPlugin<CatalogProductPriceForm>(
         SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
-        { catalogItemId: selectedId, regular, sale },
-        "Could not save the price",
+        manageStock
+          ? { catalogItemId: selectedId, regular, sale }
+          : { catalogItemId: selectedId, regular, sale, stockStatus },
+        "Could not save the product",
       );
       if (!saved.saved) {
         setMessage(saved.message);
@@ -104,6 +116,8 @@ export function ProductsPage() {
       }
       setRegular(saved.regular);
       setSale(saved.sale);
+      setManageStock(saved.manageStock);
+      if (saved.stockStatus !== null) setStockStatus(saved.stockStatus);
       await loadProducts(selectedId);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save the price");
@@ -158,8 +172,41 @@ export function ProductsPage() {
           createElement("h2", { className: "text-lg font-semibold" }, "Price"),
           labeledField("Regular", "regular-price", regular, setRegular),
           labeledField("Sale", "sale-price", sale, setSale),
+          manageStock ? null : stockStatusFields(stockStatus, setStockStatus),
           createElement("button", { type: "submit", disabled: pending }, "Save"),
         ),
+  );
+}
+
+const STOCK_STATUS_LABELS: Record<ClerkStockStatus, string> = {
+  "in-stock": "In stock",
+  "out-of-stock": "Out of stock",
+  "on-backorder": "On backorder",
+};
+
+function stockStatusFields(
+  value: ClerkStockStatus,
+  setValue: (value: ClerkStockStatus) => void,
+) {
+  return createElement(
+    "fieldset",
+    { className: "space-y-2" },
+    createElement("legend", null, "Stock status"),
+    ...CLERK_STOCK_STATUSES.map((status) =>
+      createElement(
+        "label",
+        { key: status, className: "block" },
+        createElement("input", {
+          type: "radio",
+          name: "stock-status",
+          checked: value === status,
+          onChange: () => {
+            setValue(status);
+          },
+        }),
+        ` ${STOCK_STATUS_LABELS[status]}`,
+      ),
+    ),
   );
 }
 

@@ -20,6 +20,10 @@ export const INVENTORY_SKU_STOCK_READ_RESULT_SCHEMA =
 export const STOREFRONT_AVAILABILITY_SETTINGS_COLLECTION =
   "storefrontAvailabilitySettings";
 export const STOREFRONT_AVAILABILITY_SETTINGS_RECORD_ID = "active";
+export const STOREFRONT_OUT_OF_STOCK_LISTING_COLLECTION =
+  "storefrontOutOfStockListing";
+export const STOREFRONT_OUT_OF_STOCK_LISTING_RECORD_ID = "active";
+export const DEFAULT_HIDE_OUT_OF_STOCK = false;
 
 export type StorefrontAvailabilityDisplayPolicy =
   | { mode: "status" }
@@ -45,6 +49,27 @@ export interface SetStorefrontAvailabilityPolicyOptions {
 export interface SetStorefrontAvailabilityPolicyResult {
   changed: boolean;
   settings: StorefrontAvailabilitySettingsRecord;
+}
+
+export interface StorefrontOutOfStockListingRecord {
+  recordKind: "storefront-out-of-stock-listing";
+  recordId: typeof STOREFRONT_OUT_OF_STOCK_LISTING_RECORD_ID;
+  hideOutOfStock: boolean;
+  updatedAt: string;
+}
+
+export type StorefrontOutOfStockListingStorage = Pick<
+  StorageCollection<StorefrontOutOfStockListingRecord>,
+  "get" | "put"
+>;
+
+export interface SetOutOfStockListingOptions {
+  now?: () => Date;
+}
+
+export interface SetOutOfStockListingResult {
+  changed: boolean;
+  listing: StorefrontOutOfStockListingRecord;
 }
 
 export interface ExactQuantity {
@@ -104,6 +129,7 @@ export interface StorefrontAvailabilityStorage {
   backorderPolicies: CatalogBackorderPolicyStorage;
   catalog: Pick<StorageCollection<CatalogStorageRecord>, "get">;
   configurations: StoreInventoryConfigurationStorage;
+  listing?: StorefrontOutOfStockListingStorage;
   prices: CatalogPriceStorage;
   settings: StorefrontAvailabilitySettingsStorage;
 }
