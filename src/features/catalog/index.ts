@@ -29,6 +29,8 @@ export {
 export type { ParsedClerkDollar } from "./clerk-price.js";
 export { normalizeMoney, parseMinorUnits } from "./money.js";
 export { catalogProductCreateInput } from "./product-create-input.js";
+export { CLERK_STOCK_STATUSES } from "./clerk-stock.js";
+export type { ClerkStockStatus } from "./clerk-stock.js";
 export { listCatalogProducts, saveCatalogProductPrices } from "./product-admin.js";
 export type {
   CatalogProductListItem,

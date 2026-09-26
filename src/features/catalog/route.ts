@@ -129,6 +129,14 @@ function priceStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
   };
 }
 
+function productSaveStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
+  return {
+    ...priceStorage(ctx),
+    availability: ctx.storage
+      .catalogManualAvailability as StorageCollection<CatalogManualAvailabilityRecord>,
+  };
+}
+
 function catalogPriceRoute(
   action: typeof setCatalogItemRegularPrice,
   methodMessage: string,
@@ -180,10 +188,7 @@ export const listCatalogProductsRoute: PluginRoute = {
       );
     }
     try {
-      return await listCatalogProducts({
-        catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
-        prices: ctx.storage.catalogPrices as StorageCollection<CatalogPriceRecord>,
-      });
+      return await listCatalogProducts(productSaveStorage(ctx));
     } catch (error) {
       if (error instanceof CatalogError) {
         throw new PluginRouteError(error.code, error.message, error.status);
@@ -204,7 +209,7 @@ export const saveCatalogProductPricesRoute: PluginRoute = {
       );
     }
     try {
-      return await saveCatalogProductPrices(priceStorage(ctx), ctx.input);
+      return await saveCatalogProductPrices(productSaveStorage(ctx), ctx.input);
     } catch (error) {
       if (error instanceof CatalogError) {
         throw new PluginRouteError(error.code, error.message, error.status);

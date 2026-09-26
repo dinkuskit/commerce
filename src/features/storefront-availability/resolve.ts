@@ -13,6 +13,7 @@ import {
   normalizeExactQuantity,
   positiveQuantityAtOrBelowInteger,
 } from "./quantity.js";
+import { loadOutOfStockListing } from "./listing.js";
 import { loadStorefrontAvailabilityPolicy } from "./settings.js";
 import {
   INVENTORY_SKU_STOCK_READ_RESULT_SCHEMA,
@@ -74,6 +75,26 @@ function withListable(
   result: Omit<StorefrontAvailabilityResult, "listable">,
 ): StorefrontAvailabilityResult {
   return { ...result, listable: true };
+}
+
+async function hideOutOfStockEnabled(
+  storage: StorefrontAvailabilityStorage,
+): Promise<boolean> {
+  if (!storage.listing) return false;
+  try {
+    return (await loadOutOfStockListing(storage.listing)).hideOutOfStock;
+  } catch {
+    return false;
+  }
+}
+
+async function applyOutOfStockListing(
+  storage: StorefrontAvailabilityStorage,
+  result: StorefrontAvailabilityResult,
+): Promise<StorefrontAvailabilityResult> {
+  if (result.status !== "out-of-stock" || !result.listable) return result;
+  if (!(await hideOutOfStockEnabled(storage))) return result;
+  return { ...result, listable: false };
 }
 
 function normalizeCatalogItem(
@@ -335,7 +356,10 @@ export async function resolveManagedStorefrontAvailability(
   }
   const unlisted = await unlistIfUnpriced(storage, item.itemId);
   if (unlisted) return unlisted;
-  return resolveManagedItem(storage, item, execution);
+  return applyOutOfStockListing(
+    storage,
+    await resolveManagedItem(storage, item, execution),
+  );
 }
 
 export async function resolveStorefrontAvailability(
@@ -352,7 +376,10 @@ export async function resolveStorefrontAvailability(
   const unlisted = await unlistIfUnpriced(storage, item.itemId);
   if (unlisted) return unlisted;
   if (isManagedCatalogItem(item)) {
-    return resolveManagedItem(storage, item, execution);
+    return applyOutOfStockListing(
+      storage,
+      await resolveManagedItem(storage, item, execution),
+    );
   }
 
   try {
@@ -360,7 +387,10 @@ export async function resolveStorefrontAvailability(
       storage.manualAvailability,
       item.itemId,
     );
-    return manualResult(item.itemId, availability.status);
+    return applyOutOfStockListing(
+      storage,
+      manualResult(item.itemId, availability.status),
+    );
   } catch {
     return unavailable(item.itemId);
   }

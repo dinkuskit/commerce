@@ -34,6 +34,10 @@
       "types": "./dist/features/storefront-availability/index.d.ts",
       "default": "./dist/features/storefront-availability/index.js"
     },
+    "./features/storefront-availability/browser": {
+      "types": "./dist/features/storefront-availability/browser/index.d.ts",
+      "default": "./dist/features/storefront-availability/browser/index.js"
+    },
     "./admin": {
       "types": "./dist/admin/index.d.ts",
       "default": "./dist/admin/index.js"

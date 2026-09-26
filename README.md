@@ -72,8 +72,14 @@ refused rather than silently cleared. `resolveStorefrontAvailability` returns
 `listable: false` when Regular is missing.
 
 The EmDash admin Products page lists those catalog products by name and
-lets a clerk add one with a name and SKU. Opening a product shows Regular
-and Sale. The clerk types dollars. Commerce still stores Money.
+lets a clerk add one with a name and SKU. Opening a product shows Regular,
+Sale, and In stock / Out of stock / On backorder when Manage Stock is off.
+Those three stock statuses hide when Manage Stock is on. The clerk types
+dollars. One Save writes prices and stock status. Commerce still stores Money.
+The Store admin page lets the shop owner show out-of-stock products on the
+live site or hide them. The default is to show them. Hide is opt-in and
+applies to clerk Out of stock and Inventory-at-zero. On backorder stays
+visible. Unpriced products stay hidden. Admin still lists every product.
 
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
