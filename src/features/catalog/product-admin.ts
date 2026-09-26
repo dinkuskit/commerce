@@ -1,4 +1,9 @@
-import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
+import {
+  normalizeStoredStockManagement,
+  releaseManagedSkuRegistrationClaims,
+  setManageStock,
+  type ManagedSkuRegistrationClaimReleaseStorage,
+} from "../inventory-provider/index.js";
 import { CatalogError } from "./errors.js";
 import {
   CLERK_DOLLAR_MESSAGE,
@@ -22,7 +27,7 @@ import {
 import { moneyEquals, saleIsStrictlyLower } from "./money.js";
 import { commitCatalogItemPrice, resolveCatalogItemPrice } from "./price.js";
 import type {
-  CatalogItemReadStorage,
+  CatalogItemRecord,
   CatalogManualAvailabilityStatus,
   CatalogManualAvailabilityStorage,
   CatalogPriceRecord,
@@ -67,6 +72,7 @@ export interface SaveCatalogProductPricesInput {
   catalogItemId: string;
   regular: string;
   sale: string;
+  manageStock?: boolean;
   stockStatus?: string;
 }
 
@@ -79,10 +85,23 @@ export interface CatalogProductPriceForm {
   message: string | null;
 }
 
+interface CatalogProductSaveCatalogStorage {
+  get(id: string): Promise<CatalogStorageRecord | null>;
+  getVersioned(
+    id: string,
+  ): Promise<{ value: CatalogStorageRecord; revision: string } | null>;
+  compareAndSet(
+    id: string,
+    expectedRevision: string | null,
+    record: CatalogStorageRecord,
+  ): Promise<{ applied: boolean }>;
+}
+
 interface SaveStorage {
-  catalog: CatalogItemReadStorage;
+  catalog: CatalogProductSaveCatalogStorage;
   prices: CatalogPriceStorage;
   availability: CatalogManualAvailabilityStorage;
+  claims: ManagedSkuRegistrationClaimReleaseStorage;
 }
 
 function isClerkStockStatus(value: string): value is ClerkStockStatus {
@@ -214,10 +233,14 @@ function normalizeSaveInput(value: unknown): SaveCatalogProductPricesInput {
   if (input.stockStatus !== undefined && typeof input.stockStatus !== "string") {
     throw new CatalogError("INVALID_INPUT", "stock status must be a string");
   }
+  if (input.manageStock !== undefined && typeof input.manageStock !== "boolean") {
+    throw new CatalogError("INVALID_INPUT", "manageStock must be a boolean");
+  }
   return {
     catalogItemId: input.catalogItemId,
     regular: input.regular,
     sale: input.sale,
+    manageStock: input.manageStock,
     stockStatus: input.stockStatus,
   };
 }
@@ -233,26 +256,26 @@ export async function saveCatalogProductPrices(
     throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
   }
 
-  const managed =
-    normalizeStoredStockManagement(item.stockManagement).mode === "managed";
-  const currentAvailability = managed
-    ? null
-    : await loadCatalogItemManualAvailability(storage.availability, catalogItemId);
-  const currentStockStatus =
-    currentAvailability === null
-      ? null
-      : toClerkStockStatus(currentAvailability.status);
+  const currentStockManagement = normalizeStoredStockManagement(item.stockManagement);
+  const managed = currentStockManagement.mode === "managed";
+  const nextManaged = input.manageStock ?? managed;
+  const dormantAvailability = await loadCatalogItemManualAvailability(
+    storage.availability,
+    catalogItemId,
+  );
+  const dormantStockStatus = toClerkStockStatus(dormantAvailability.status);
+  const currentStockStatus = managed ? null : dormantStockStatus;
 
-  let nextStockStatus = currentStockStatus;
-  if (managed && input.stockStatus !== undefined) {
+  let nextStockStatus = nextManaged ? null : dormantStockStatus;
+  if (nextManaged && managed && input.stockStatus !== undefined) {
     return refused(input, MANAGED_STOCK_STATUS_MESSAGE, true, null);
   }
-  if (!managed && input.stockStatus !== undefined) {
+  if (!nextManaged && input.stockStatus !== undefined) {
     if (!isClerkStockStatus(input.stockStatus)) {
       return refused(
         input,
         CLERK_STOCK_STATUS_MESSAGE,
-        false,
+        nextManaged,
         currentStockStatus,
       );
     }
@@ -263,7 +286,7 @@ export async function saveCatalogProductPrices(
   const sale = parseClerkDollar(input.sale);
   const invalid = invalidMessage(regular, sale);
   if (invalid !== null) {
-    return refused(input, invalid, managed, currentStockStatus);
+    return refused(input, invalid, nextManaged, currentStockStatus);
   }
 
   const targetRegular = regular.status === "amount" ? regular.amount : null;
@@ -278,7 +301,7 @@ export async function saveCatalogProductPrices(
       currentSale !== null || currentRegular !== null
         ? CLERK_END_SALE_MESSAGE
         : CLERK_SALE_NEEDS_REGULAR_MESSAGE,
-      managed,
+      nextManaged,
       currentStockStatus,
     );
   }
@@ -287,13 +310,14 @@ export async function saveCatalogProductPrices(
     targetRegular !== null &&
     !saleIsStrictlyLower(targetSale, targetRegular)
   ) {
-    return refused(input, CLERK_SALE_LOWER_MESSAGE, managed, currentStockStatus);
+    return refused(input, CLERK_SALE_LOWER_MESSAGE, nextManaged, currentStockStatus);
   }
   const priceUnchanged =
     moneySame(currentRegular, targetRegular) && moneySame(currentSale, targetSale);
+  const manageUnchanged = nextManaged === managed;
   const stockUnchanged = nextStockStatus === currentStockStatus;
-  if (priceUnchanged && stockUnchanged) {
-    return displayForm(targetRegular, targetSale, managed, nextStockStatus);
+  if (priceUnchanged && stockUnchanged && manageUnchanged) {
+    return displayForm(targetRegular, targetSale, nextManaged, nextStockStatus);
   }
 
   let priceCommitted = false;
@@ -306,7 +330,10 @@ export async function saveCatalogProductPrices(
       });
       priceCommitted = true;
     }
-    if (!managed && nextStockStatus !== null && !stockUnchanged) {
+    if (!manageUnchanged) {
+      await persistManageStock(storage, item, nextManaged);
+    }
+    if (!nextManaged && nextStockStatus !== null && !stockUnchanged) {
       await setCatalogItemManualAvailability(
         { catalog: storage.catalog, availability: storage.availability },
         {
@@ -332,7 +359,64 @@ export async function saveCatalogProductPrices(
     }
     throw error;
   }
-  return displayForm(targetRegular, targetSale, managed, nextStockStatus);
+  return displayForm(targetRegular, targetSale, nextManaged, nextStockStatus);
+}
+
+async function persistManageStock(
+  storage: SaveStorage,
+  item: CatalogItemRecord,
+  manageStock: boolean,
+): Promise<void> {
+  const current = normalizeStoredStockManagement(item.stockManagement);
+  const nextStockManagement = setManageStock(current, manageStock);
+  if (JSON.stringify(current) === JSON.stringify(nextStockManagement)) return;
+  if (!manageStock) {
+    try {
+      await releaseManagedSkuRegistrationClaims(storage.claims, {
+        catalogItemId: item.itemId,
+        stockManagement: current,
+      });
+    } catch (error) {
+      throw new CatalogError(
+        "STORAGE_UNAVAILABLE",
+        "managed SKU registration claim release failed",
+        { cause: error },
+      );
+    }
+  }
+  let latest;
+  try {
+    latest = await storage.catalog.getVersioned(item.itemId);
+  } catch (error) {
+    throw new CatalogError("STORAGE_UNAVAILABLE", "Manage Stock update failed", {
+      cause: error,
+    });
+  }
+  if (latest === null || latest.value.recordKind !== "catalog-item") {
+    throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
+  }
+  const nextItem: CatalogItemRecord = {
+    ...latest.value,
+    stockManagement: nextStockManagement,
+  };
+  let applied;
+  try {
+    applied = await storage.catalog.compareAndSet(
+      item.itemId,
+      latest.revision,
+      nextItem,
+    );
+  } catch (error) {
+    throw new CatalogError("STORAGE_UNAVAILABLE", "Manage Stock update failed", {
+      cause: error,
+    });
+  }
+  if (!applied.applied) {
+    throw new CatalogError(
+      "STORAGE_UNAVAILABLE",
+      "Manage Stock update lost to a concurrent write",
+    );
+  }
 }
 
 function moneySame(left: Money | null, right: Money | null): boolean {

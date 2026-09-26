@@ -22,6 +22,7 @@ import {
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
 } from "./route-ids.js";
+import type { ManagedSkuRegistrationClaimRecord } from "../inventory-provider/index.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogManualAvailabilityRecord,
@@ -134,6 +135,7 @@ function productSaveStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
     ...priceStorage(ctx),
     availability: ctx.storage
       .catalogManualAvailability as StorageCollection<CatalogManualAvailabilityRecord>,
+    claims: ctx.storage.managedSkuClaims as StorageCollection<ManagedSkuRegistrationClaimRecord>,
   };
 }
 

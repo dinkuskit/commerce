@@ -21,9 +21,11 @@ export {
   createManagedSkuRegistrationClaimPort,
   identifyManagedSkuRegistrationClaimUniqueViolation,
   managedSkuRegistrationClaimUniqueIndexName,
+  releaseManagedSkuRegistrationClaims,
 } from "./claim-storage.js";
 export type {
   ManagedSkuRegistrationClaimPortOptions,
+  ManagedSkuRegistrationClaimReleaseStorage,
   ManagedSkuRegistrationClaimStorage,
   ManagedSkuRegistrationClaimUniqueField,
 } from "./claim-storage.js";
