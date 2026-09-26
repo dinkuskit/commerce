@@ -3,6 +3,7 @@ import test from "node:test";
 import { PluginRouteError } from "emdash";
 
 import {
+  CatalogError,
   LIST_CATALOG_PRODUCTS_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   catalogProductCreateInput,
@@ -159,18 +160,21 @@ test("one decimal and a dollar sign save as cents, and a bad sale does not chang
   });
 });
 
-test("lowering Regular below the current Sale stores the new lower Sale", async () => {
+test("lowering Regular below the current Sale stores the new lower Sale in one write", async () => {
   const stores = storage();
   await saveCatalogProductPrices(stores, {
     catalogItemId: "item-bag",
     regular: "20",
     sale: "12",
   });
+  const writesBefore = stores.prices.puts.length;
   const saved = await saveCatalogProductPrices(stores, {
     catalogItemId: "item-bag",
     regular: "11",
     sale: "10",
   });
+  assert.equal(stores.prices.puts.length, writesBefore + 1);
+  assert.equal(stores.prices.deletes.length, 0);
   assert.deepEqual(saved, { saved: true, regular: "11.00", sale: "10.00", message: null });
   assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
     catalogItemId: "item-bag",
@@ -178,6 +182,33 @@ test("lowering Regular below the current Sale stores the new lower Sale", async 
     regular: { currency: "USD", minor: "1100" },
     sale: { currency: "USD", minor: "1000" },
     customerPays: { currency: "USD", minor: "1000" },
+  });
+});
+
+test("a failed price write leaves the stored Regular and Sale unchanged", async () => {
+  const stores = storage();
+  await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag",
+    regular: "20",
+    sale: "12",
+  });
+  stores.prices.put = async () => {
+    throw new Error("disk full");
+  };
+  await assert.rejects(
+    saveCatalogProductPrices(stores, {
+      catalogItemId: "item-bag",
+      regular: "11",
+      sale: "10",
+    }),
+    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
+  );
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+    catalogItemId: "item-bag",
+    listable: true,
+    regular: { currency: "USD", minor: "2000" },
+    sale: { currency: "USD", minor: "1200" },
+    customerPays: { currency: "USD", minor: "1200" },
   });
 });
 

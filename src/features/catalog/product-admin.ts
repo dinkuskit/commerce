@@ -9,13 +9,7 @@ import {
   type ParsedClerkDollar,
 } from "./clerk-price.js";
 import { moneyEquals, saleIsStrictlyLower } from "./money.js";
-import {
-  clearCatalogItemRegularPrice,
-  clearCatalogItemSalePrice,
-  resolveCatalogItemPrice,
-  setCatalogItemRegularPrice,
-  setCatalogItemSalePrice,
-} from "./price.js";
+import { commitCatalogItemPrice, resolveCatalogItemPrice } from "./price.js";
 import type {
   CatalogItemReadStorage,
   CatalogPriceStorage,
@@ -221,24 +215,11 @@ export async function saveCatalogProductPrices(
     return displayForm(targetRegular, targetSale);
   }
 
-  const regularBlockedByCurrentSale =
-    currentSale !== null &&
-    targetRegular !== null &&
-    !saleIsStrictlyLower(currentSale, targetRegular);
-  if (currentSale !== null && (targetSale === null || regularBlockedByCurrentSale)) {
-    await clearCatalogItemSalePrice(storage, { catalogItemId });
-  }
-  if (targetRegular === null) {
-    await clearCatalogItemRegularPrice(storage, { catalogItemId });
-  } else if (!moneySame(currentRegular, targetRegular)) {
-    await setCatalogItemRegularPrice(storage, { catalogItemId, amount: targetRegular });
-  }
-  if (
-    targetSale !== null &&
-    (regularBlockedByCurrentSale || !moneySame(currentSale, targetSale))
-  ) {
-    await setCatalogItemSalePrice(storage, { catalogItemId, amount: targetSale });
-  }
+  await commitCatalogItemPrice(storage, {
+    catalogItemId,
+    regular: targetRegular,
+    sale: targetSale,
+  });
   return displayForm(targetRegular, targetSale);
 }
 

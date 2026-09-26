@@ -14,7 +14,7 @@ Clerk behavior covered by `tests/features/catalog/product-admin.test.mjs`:
 - Clearing Regular while a Sale remains is refused.
 - Blanking both fields ends the sale and unprices the product.
 - `$0` lists as `0.00`.
-- Lowering Regular below the current Sale stores the new lower Sale.
+- Lowering Regular below the current Sale stores the new lower Sale in one price write. A failed write leaves the stored Regular and Sale unchanged.
 - The Products page is declared on the native plugin, and the list and save routes require `content:edit_any`.
 
 The EmDash admin screen was not opened in a browser. The page posts these same routes.
