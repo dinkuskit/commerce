@@ -316,11 +316,17 @@ export async function saveCatalogProductPrices(
     }
   } catch (error) {
     if (priceCommitted) {
-      await commitCatalogItemPrice(storage, {
-        catalogItemId,
-        regular: currentRegular,
-        sale: currentSale,
-      });
+      const latest = await resolveCatalogItemPrice(storage.prices, catalogItemId);
+      if (
+        moneySame(latest.regular ?? null, targetRegular) &&
+        moneySame(latest.sale ?? null, targetSale)
+      ) {
+        await commitCatalogItemPrice(storage, {
+          catalogItemId,
+          regular: currentRegular,
+          sale: currentSale,
+        });
+      }
     }
     throw error;
   }
