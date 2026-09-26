@@ -18,6 +18,9 @@ class MemoryCollection {
     this.records = new Map(
       records.map((record) => [record.recordId ?? record.itemId, structuredClone(record)]),
     );
+    this.revisions = new Map(
+      [...this.records.keys()].map((id) => [id, crypto.randomUUID()]),
+    );
     this.puts = [];
     this.deletes = [];
   }
@@ -27,13 +30,49 @@ class MemoryCollection {
     return record === undefined ? null : structuredClone(record);
   }
 
+  async getVersioned(id) {
+    const record = this.records.get(id);
+    if (record === undefined) return null;
+    return {
+      value: structuredClone(record),
+      revision: this.revisions.get(id),
+    };
+  }
+
   async put(id, record) {
     this.records.set(id, structuredClone(record));
+    this.revisions.set(id, crypto.randomUUID());
     this.puts.push(id);
+  }
+
+  async compareAndSet(id, expectedRevision, record) {
+    if (expectedRevision === null) {
+      if (this.records.has(id)) return { applied: false };
+      this.records.set(id, structuredClone(record));
+      const revision = crypto.randomUUID();
+      this.revisions.set(id, revision);
+      this.puts.push(id);
+      return { applied: true, revision };
+    }
+    if (this.revisions.get(id) !== expectedRevision) return { applied: false };
+    this.records.set(id, structuredClone(record));
+    const revision = crypto.randomUUID();
+    this.revisions.set(id, revision);
+    this.puts.push(id);
+    return { applied: true, revision };
+  }
+
+  async compareAndDelete(id, expectedRevision) {
+    if (this.revisions.get(id) !== expectedRevision) return { applied: false };
+    this.deletes.push(id);
+    this.records.delete(id);
+    this.revisions.delete(id);
+    return { applied: true };
   }
 
   async delete(id) {
     this.deletes.push(id);
+    this.revisions.delete(id);
     return this.records.delete(id);
   }
 
@@ -387,6 +426,48 @@ test("a failed stock write does not restore over a later clerk price save", asyn
       stockStatus: "in-stock",
     });
     throw new Error("disk full");
+  };
+  await assert.rejects(
+    saveCatalogProductPrices(stores, {
+      catalogItemId: "item-bag",
+      regular: "20",
+      sale: "8",
+      stockStatus: "out-of-stock",
+    }),
+    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
+  );
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+    catalogItemId: "item-bag",
+    listable: true,
+    regular: { currency: "USD", minor: "1500" },
+    sale: { currency: "USD", minor: "900" },
+    customerPays: { currency: "USD", minor: "900" },
+  });
+  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "in-stock");
+});
+
+test("a failed stock write does not restore after a later save between verify and restore", async () => {
+  const stores = storage();
+  await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag",
+    regular: "12",
+    sale: "10",
+    stockStatus: "in-stock",
+  });
+  stores.availability.put = async () => {
+    throw new Error("disk full");
+  };
+  const originalGetVersioned = stores.prices.getVersioned.bind(stores.prices);
+  stores.prices.getVersioned = async (id) => {
+    const latest = await originalGetVersioned(id);
+    stores.prices.getVersioned = originalGetVersioned;
+    await saveCatalogProductPrices(stores, {
+      catalogItemId: "item-bag",
+      regular: "15",
+      sale: "9",
+      stockStatus: "in-stock",
+    });
+    return latest;
   };
   await assert.rejects(
     saveCatalogProductPrices(stores, {

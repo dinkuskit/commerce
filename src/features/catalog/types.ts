@@ -141,7 +141,7 @@ export interface CatalogPriceRecord {
 
 export type CatalogPriceStorage = Pick<
   StorageCollection<CatalogPriceRecord>,
-  "delete" | "get" | "put"
+  "compareAndDelete" | "compareAndSet" | "delete" | "get" | "getVersioned" | "put"
 >;
 
 export interface SetCatalogItemPriceStorage {

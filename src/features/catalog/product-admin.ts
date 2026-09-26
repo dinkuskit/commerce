@@ -25,6 +25,7 @@ import type {
   CatalogItemReadStorage,
   CatalogManualAvailabilityStatus,
   CatalogManualAvailabilityStorage,
+  CatalogPriceRecord,
   CatalogPriceStorage,
   CatalogStorageRecord,
   Money,
@@ -316,16 +317,17 @@ export async function saveCatalogProductPrices(
     }
   } catch (error) {
     if (priceCommitted) {
-      const latest = await resolveCatalogItemPrice(storage.prices, catalogItemId);
-      if (
-        moneySame(latest.regular ?? null, targetRegular) &&
-        moneySame(latest.sale ?? null, targetSale)
-      ) {
-        await commitCatalogItemPrice(storage, {
+      try {
+        await restoreCommittedPrice(
+          storage,
           catalogItemId,
-          regular: currentRegular,
-          sale: currentSale,
-        });
+          targetRegular,
+          targetSale,
+          currentRegular,
+          currentSale,
+        );
+      } catch {
+        // Keep the original stock-write error.
       }
     }
     throw error;
@@ -336,4 +338,34 @@ export async function saveCatalogProductPrices(
 function moneySame(left: Money | null, right: Money | null): boolean {
   if (left === null || right === null) return left === right;
   return moneyEquals(left, right);
+}
+
+async function restoreCommittedPrice(
+  storage: SaveStorage,
+  catalogItemId: string,
+  committedRegular: Money | null,
+  committedSale: Money | null,
+  previousRegular: Money | null,
+  previousSale: Money | null,
+): Promise<void> {
+  const latest = await storage.prices.getVersioned(catalogItemId);
+  if (latest === null) return;
+  if (
+    !moneySame(latest.value.regular, committedRegular) ||
+    !moneySame(latest.value.sale ?? null, committedSale)
+  ) {
+    return;
+  }
+  if (previousRegular === null) {
+    await storage.prices.compareAndDelete(catalogItemId, latest.revision);
+    return;
+  }
+  const record: CatalogPriceRecord = {
+    recordKind: "catalog-price",
+    recordId: catalogItemId,
+    catalogItemId,
+    regular: previousRegular,
+    ...(previousSale === null ? {} : { sale: previousSale }),
+  };
+  await storage.prices.compareAndSet(catalogItemId, latest.revision, record);
 }
