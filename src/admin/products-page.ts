@@ -1,17 +1,15 @@
 import { createElement, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { apiFetch, parseApiResponse } from "emdash/plugin-utils";
 
-import { catalogProductCreateInput } from "../features/catalog/product-create-input.js";
 import {
+  COMMERCE_PLUGIN_ID,
   CREATE_CATALOG_ITEM_ROUTE,
   LIST_CATALOG_PRODUCTS_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
-} from "../features/catalog/route-ids.js";
-import { COMMERCE_PLUGIN_ID } from "../features/catalog/types.js";
-import type {
-  CatalogProductListItem,
-  CatalogProductPriceForm,
-} from "../features/catalog/product-admin.js";
+  catalogProductCreateInput,
+  type CatalogProductListItem,
+  type CatalogProductPriceForm,
+} from "../features/catalog/index.js";
 
 function pluginRoute(route: string): string {
   return `/_emdash/api/plugins/${COMMERCE_PLUGIN_ID}/${route}`;

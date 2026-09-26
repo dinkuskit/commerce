@@ -47,6 +47,8 @@ export {
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+} from "./route-ids.js";
+export {
   clearCatalogItemRegularPriceRoute,
   clearCatalogItemSalePriceRoute,
   createCatalogItemRoute,
