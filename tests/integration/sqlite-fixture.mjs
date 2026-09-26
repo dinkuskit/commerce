@@ -6,6 +6,7 @@ import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
   CATALOG_COLLECTION,
   CATALOG_MANUAL_AVAILABILITY_COLLECTION,
+  CATALOG_PRICES_COLLECTION,
   COMMERCE_PLUGIN_ID,
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
@@ -116,6 +117,16 @@ export function openCatalogManualAvailabilityRepository(path) {
 export function readCatalogManualAvailability(path) {
   return readCollectionRecords(path, CATALOG_MANUAL_AVAILABILITY_COLLECTION).filter(
     (record) => record.recordKind === "catalog-manual-availability",
+  );
+}
+
+export function openCatalogPriceRepository(path) {
+  return openUnindexedRepository(path, CATALOG_PRICES_COLLECTION);
+}
+
+export function readCatalogPrices(path) {
+  return readCollectionRecords(path, CATALOG_PRICES_COLLECTION).filter(
+    (record) => record.recordKind === "catalog-price",
   );
 }
 

@@ -7,6 +7,8 @@ export const CATALOG_COLLECTION = "catalogItems";
 export const CATALOG_BACKORDER_POLICIES_COLLECTION = "catalogBackorderPolicies";
 export const CATALOG_MANUAL_AVAILABILITY_COLLECTION =
   "catalogManualAvailability";
+export const CATALOG_PRICES_COLLECTION = "catalogPrices";
+export const COMMERCE_CURRENCY_USD = "USD" as const;
 export const DEFAULT_CATALOG_MANUAL_AVAILABILITY = "in-stock" as const;
 // EmDash mounts plugin IDs as one URL segment and uses them in storage-index
 // provisioning. Keep the scoped npm package identity separate from this
@@ -122,6 +124,51 @@ export interface SetCatalogItemManualAvailabilityInput {
 export interface SetCatalogItemManualAvailabilityResult {
   changed: boolean;
   availability: CatalogManualAvailabilityRecord;
+}
+
+export interface Money {
+  currency: typeof COMMERCE_CURRENCY_USD;
+  minor: string;
+}
+
+export interface CatalogPriceRecord {
+  recordKind: "catalog-price";
+  recordId: string;
+  catalogItemId: string;
+  regular: Money;
+  sale?: Money;
+}
+
+export type CatalogPriceStorage = Pick<
+  StorageCollection<CatalogPriceRecord>,
+  "delete" | "get" | "put"
+>;
+
+export interface SetCatalogItemPriceStorage {
+  catalog: CatalogItemReadStorage;
+  prices: CatalogPriceStorage;
+}
+
+export interface SetCatalogItemPriceInput {
+  catalogItemId: string;
+  amount: Money;
+}
+
+export interface ClearCatalogItemPriceInput {
+  catalogItemId: string;
+}
+
+export interface SetCatalogItemPriceResult {
+  changed: boolean;
+  price: CatalogPriceRecord | null;
+}
+
+export interface CatalogItemPriceResolution {
+  catalogItemId: string;
+  listable: boolean;
+  regular?: Money;
+  sale?: Money;
+  customerPays?: Money;
 }
 
 export interface CreateCatalogItemResult {

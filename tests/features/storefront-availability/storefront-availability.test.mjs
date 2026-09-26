@@ -113,6 +113,16 @@ function manualAvailabilityRecord(status) {
   };
 }
 
+function catalogPrice(overrides = {}) {
+  return {
+    recordKind: "catalog-price",
+    recordId: "item-grill",
+    catalogItemId: "item-grill",
+    regular: { currency: "USD", minor: "1200" },
+    ...overrides,
+  };
+}
+
 function foundStock(value, input, unit = "each") {
   const zero = { value: "0", unit };
   return {
@@ -151,6 +161,7 @@ async function resolve({
   configuration = storeConfiguration(),
   policy,
   allowBackorders,
+  prices: priceRecords = [catalogPrice()],
   read,
 }) {
   const catalog = new MemoryCollection([item]);
@@ -162,8 +173,9 @@ async function resolve({
     allowBackorders === undefined ? [] : [backorderPolicy(allowBackorders)],
   );
   const reads = [];
+  const prices = new MemoryCollection(priceRecords);
   const result = await resolveManagedStorefrontAvailability(
-    { backorderPolicies, catalog, configurations, settings },
+    { backorderPolicies, catalog, configurations, prices, settings },
     { catalogItemId: item.itemId },
     {
       resolveProvider: async () => ({
@@ -192,6 +204,7 @@ test("status-only availability uses Inventory available at the default fulfillme
     catalogItemId: "item-grill",
     status: "in-stock",
     sellable: true,
+    listable: true,
   });
 });
 
@@ -214,6 +227,7 @@ test("exact and threshold policies expose quantity only when the policy permits 
     catalogItemId: "item-grill",
     status: "in-stock",
     sellable: true,
+    listable: true,
     displayQuantity: { value: "8", unit: "each" },
   });
   assert.deepEqual(low.result, {
@@ -221,6 +235,7 @@ test("exact and threshold policies expose quantity only when the policy permits 
     catalogItemId: "item-grill",
     status: "low-stock",
     sellable: true,
+    listable: true,
     displayQuantity: { value: "5", unit: "each" },
   });
   assert.deepEqual(above.result, {
@@ -228,6 +243,7 @@ test("exact and threshold policies expose quantity only when the policy permits 
     catalogItemId: "item-grill",
     status: "in-stock",
     sellable: true,
+    listable: true,
   });
 });
 
@@ -254,8 +270,9 @@ test("non-active managed setup fails closed without contacting Inventory", async
   const settings = new MemoryCollection();
   const backorderPolicies = new MemoryCollection();
 
+  const prices = new MemoryCollection([catalogPrice()]);
   const result = await resolveManagedStorefrontAvailability(
-    { backorderPolicies, catalog, configurations, settings },
+    { backorderPolicies, catalog, configurations, prices, settings },
     { catalogItemId: "item-grill" },
     {
       resolveProvider: async () => {
@@ -271,6 +288,7 @@ test("non-active managed setup fails closed without contacting Inventory", async
     catalogItemId: "item-grill",
     status: "availability-unavailable",
     sellable: false,
+    listable: true,
   });
 });
 
@@ -346,6 +364,7 @@ test("unmanaged products map all three manual states without contacting Inventor
         catalog,
         configurations,
         manualAvailability,
+        prices: new MemoryCollection([catalogPrice()]),
         settings,
       },
       { catalogItemId: "item-grill" },
@@ -362,6 +381,7 @@ test("unmanaged products map all three manual states without contacting Inventor
       catalogItemId: "item-grill",
       status,
       sellable,
+      listable: true,
     });
     assert.equal(providerResolved, false);
     assert.deepEqual(configurations.gets, []);
@@ -391,6 +411,7 @@ test("missing unmanaged state defaults to In stock and ignores exact or threshol
         catalog,
         configurations: new MemoryCollection([storeConfiguration()]),
         manualAvailability,
+        prices: new MemoryCollection([catalogPrice()]),
         settings,
       },
       { catalogItemId: "item-grill" },
@@ -401,6 +422,7 @@ test("missing unmanaged state defaults to In stock and ignores exact or threshol
       catalogItemId: "item-grill",
       status: "in-stock",
       sellable: true,
+      listable: true,
     });
     assert.deepEqual(settings.gets, []);
     assert.equal(manualAvailability.puts.length, 0);
@@ -424,6 +446,7 @@ test("a dormant manual state returns after Manage Stock is disabled", async () =
     catalog,
     configurations: new MemoryCollection([storeConfiguration()]),
     manualAvailability,
+    prices: new MemoryCollection([catalogPrice()]),
     settings: new MemoryCollection(),
   };
   let inventoryReads = 0;
@@ -478,6 +501,7 @@ test("manual storage failure fails closed for unmanaged products but is never re
     catalog,
     configurations: new MemoryCollection([storeConfiguration()]),
     manualAvailability,
+    prices: new MemoryCollection([catalogPrice()]),
     settings: new MemoryCollection(),
   };
   const execution = {
@@ -512,6 +536,7 @@ test("manual storage failure fails closed for unmanaged products but is never re
     catalogItemId: "item-grill",
     status: "availability-unavailable",
     sellable: false,
+    listable: true,
   });
   assert.equal(managed.status, "in-stock");
   assert.equal(managed.sellable, true);
@@ -533,6 +558,7 @@ test("non-active managed setup never falls back to dormant manual availability",
       ]),
       configurations: new MemoryCollection([storeConfiguration()]),
       manualAvailability,
+      prices: new MemoryCollection([catalogPrice()]),
       settings: new MemoryCollection(),
     },
     { catalogItemId: "item-grill" },
@@ -549,6 +575,7 @@ test("non-active managed setup never falls back to dormant manual availability",
     catalogItemId: "item-grill",
     status: "availability-unavailable",
     sellable: false,
+    listable: true,
   });
   assert.equal(providerResolved, false);
   assert.deepEqual(manualAvailability.gets, []);
@@ -565,6 +592,7 @@ test("the managed-only compatibility resolver still rejects unmanaged products",
         backorderPolicies: new MemoryCollection(),
         catalog,
         configurations: new MemoryCollection(),
+        prices: new MemoryCollection([catalogPrice()]),
         settings: new MemoryCollection(),
       },
       { catalogItemId: "item-grill" },
@@ -625,6 +653,7 @@ test("legacy persisted records normalize to safe status-only and no-backorder de
     catalogItemId: "item-grill",
     status: "in-stock",
     sellable: true,
+    listable: true,
   });
   assert.equal(updated.changed, false);
   assert.equal(updated.policy.allowBackorders, false);
@@ -699,4 +728,54 @@ test("the existing authenticated display and managed-backorder actions remain bo
   assert.equal(backorderPolicies.records.get("item-grill").allowBackorders, true);
   assert.deepEqual(settings.records.get("active").policy, { mode: "exact" });
   assert.equal(catalog.puts.length, 0);
+});
+
+test("unpriced products are not listable and never contact Inventory", async () => {
+  let providerResolved = false;
+  const catalog = new MemoryCollection([
+    catalogItem({
+      creationIntent: { manageStock: false },
+      stockManagement: { mode: "unmanaged" },
+    }),
+  ]);
+  const manualAvailability = new MemoryCollection([
+    manualAvailabilityRecord("in-stock"),
+  ]);
+  const result = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog,
+      configurations: new MemoryCollection([storeConfiguration()]),
+      manualAvailability,
+      prices: new MemoryCollection(),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+    {
+      resolveProvider: async () => {
+        providerResolved = true;
+        throw new Error("must not resolve Inventory for unpriced products");
+      },
+    },
+  );
+
+  assert.deepEqual(result, {
+    schema: STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
+    catalogItemId: "item-grill",
+    status: "availability-unavailable",
+    sellable: false,
+    listable: false,
+  });
+  assert.equal(providerResolved, false);
+  assert.deepEqual(manualAvailability.gets, []);
+});
+
+test("a free Regular remains listable", async () => {
+  const { result } = await resolve({
+    prices: [catalogPrice({ regular: { currency: "USD", minor: "0" } })],
+    read: (input) => foundStock("8", input),
+  });
+  assert.equal(result.listable, true);
+  assert.equal(result.sellable, true);
+  assert.equal(result.status, "in-stock");
 });
