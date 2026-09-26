@@ -28,11 +28,8 @@ export {
 } from "./clerk-price.js";
 export type { ParsedClerkDollar } from "./clerk-price.js";
 export { normalizeMoney, parseMinorUnits } from "./money.js";
-export {
-  catalogProductCreateInput,
-  listCatalogProducts,
-  saveCatalogProductPrices,
-} from "./product-admin.js";
+export { catalogProductCreateInput } from "./product-create-input.js";
+export { listCatalogProducts, saveCatalogProductPrices } from "./product-admin.js";
 export type {
   CatalogProductListItem,
   CatalogProductListStorage,

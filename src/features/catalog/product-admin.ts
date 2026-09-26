@@ -62,14 +62,6 @@ interface SaveStorage {
   prices: CatalogPriceStorage;
 }
 
-export function catalogProductCreateInput(
-  name: string,
-  sku: string,
-  commandId: string,
-): { commandId: string; name: string; sku: string } {
-  return { commandId, name, sku };
-}
-
 async function readPages<T>(
   query: (options?: { limit?: number; cursor?: string }) => Promise<PageResult<T>>,
   failure: string,

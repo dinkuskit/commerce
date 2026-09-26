@@ -1,20 +1,16 @@
 # Commerce products admin proof
 
-Command: `bin/verify-commerce full`
+Command: `bin/verify-commerce full` on earlier head `cf50aea`, then catalog tests on later heads.
 
-Result: exit 0. Unit tests 104 passed. Integration tests 19 passed.
+Browser: Playwright Chromium desktop against a throwaway `template-store` host on EmDash 0.40.1, port 47551, Node 22.23.2. The host loaded this Commerce `dist` through `dinkusCommerce()`. Admin used `/_emdash/api/auth/dev-bypass` on a separate context. Unique catalog indexes appear after the Node scheduler's first maintenance pass.
 
-Clerk behavior covered by `tests/features/catalog/product-admin.test.mjs`:
+Clerk behavior covered by `tests/features/catalog/product-admin.test.mjs` and the live admin page:
 
 - Add product sends only command id, name, and SKU.
-- Regular `12` and Sale `$10` save and list as `12.00` and `10.00`.
-- `12.999` and `abc` are refused and the stored price is unchanged.
-- `12.5` and `$12` save as `12.50` and `12.00`.
-- A Sale that is not lower than Regular is refused and the stored price is unchanged.
-- Clearing Regular while a Sale remains is refused.
-- Blanking both fields ends the sale and unprices the product.
-- `$0` lists as `0.00`.
-- Lowering Regular below the current Sale stores the new lower Sale in one price write. A failed write leaves the stored Regular and Sale unchanged.
-- The Products page is declared on the native plugin, and the list and save routes require `content:edit_any`.
+- Regular `12` and Sale `$10` save and show as `12.00` and `10.00`.
+- `12.999` and `abc` are refused; the fields keep what was typed.
+- Replacing Regular and Sale is one price write. A failed write leaves the stored Regular and Sale unchanged.
 
-The EmDash admin screen was not opened in a browser. The page posts these same routes.
+The admin module imports only route ids, plugin id, and the create payload helper. It does not bundle catalog storage.
+
+Captures: GitHub release `commerce-pr-22-<head12>` on `dinkuskit/dinkus-pr-assets` after this head is pushed.

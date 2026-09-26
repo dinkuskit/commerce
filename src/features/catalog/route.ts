@@ -11,6 +11,17 @@ import {
 } from "./price.js";
 import { listCatalogProducts, saveCatalogProductPrices } from "./product-admin.js";
 import { setCatalogItemBackorders } from "./set-backorders.js";
+import {
+  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
+  CREATE_CATALOG_ITEM_ROUTE,
+  LIST_CATALOG_PRODUCTS_ROUTE,
+  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
+  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+} from "./route-ids.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogManualAvailabilityRecord,
@@ -18,19 +29,17 @@ import type {
   CatalogStorageRecord,
 } from "./types.js";
 
-export const CREATE_CATALOG_ITEM_ROUTE = "catalog-items/create";
-export const SET_CATALOG_ITEM_BACKORDERS_ROUTE = "catalog-items/set-backorders";
-export const SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE =
-  "catalog-items/set-manual-availability";
-export const SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE =
-  "catalog-items/set-regular-price";
-export const SET_CATALOG_ITEM_SALE_PRICE_ROUTE = "catalog-items/set-sale-price";
-export const CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE =
-  "catalog-items/clear-sale-price";
-export const CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE =
-  "catalog-items/clear-regular-price";
-export const LIST_CATALOG_PRODUCTS_ROUTE = "catalog-items/list";
-export const SAVE_CATALOG_PRODUCT_PRICES_ROUTE = "catalog-items/save-prices";
+export {
+  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
+  CREATE_CATALOG_ITEM_ROUTE,
+  LIST_CATALOG_PRODUCTS_ROUTE,
+  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  SET_CATALOG_ITEM_BACKORDERS_ROUTE,
+  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
+  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
+  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+};
 
 export const createCatalogItemRoute: PluginRoute = {
   permission: "content:create",
