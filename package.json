@@ -18,6 +18,10 @@
       "types": "./dist/features/catalog/index.d.ts",
       "default": "./dist/features/catalog/index.js"
     },
+    "./features/catalog/browser": {
+      "types": "./dist/features/catalog/browser/index.d.ts",
+      "default": "./dist/features/catalog/browser/index.js"
+    },
     "./features/inventory-provider": {
       "types": "./dist/features/inventory-provider/index.d.ts",
       "default": "./dist/features/inventory-provider/index.js"

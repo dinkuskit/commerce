@@ -9,7 +9,7 @@ import {
   catalogProductCreateInput,
   type CatalogProductListItem,
   type CatalogProductPriceForm,
-} from "../features/catalog/index.js";
+} from "../features/catalog/browser/index.js";
 
 function pluginRoute(route: string): string {
   return `/_emdash/api/plugins/${COMMERCE_PLUGIN_ID}/${route}`;
