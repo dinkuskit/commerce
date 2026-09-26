@@ -123,6 +123,8 @@ export function ProductsPage() {
       );
       if (!saved.saved) {
         setMessage(saved.message);
+        setManageStock(saved.manageStock);
+        if (saved.stockStatus !== null) setStockStatus(saved.stockStatus);
         return;
       }
       setRegular(saved.regular);

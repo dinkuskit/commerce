@@ -86,7 +86,8 @@ stock is off. Those three stock statuses hide when Manage stock is on. New
 products still default Manage stock off. Checking it persists setup-required
 and does not run Configure Inventory or invent a quantity. Unchecking restores
 the dormant stock status, drops the Commerce setup claim, and does not contact
-Inventory. One Save writes prices, Manage stock, and stock status. A refused
+Inventory. Uncheck is refused while Inventory setup is still running; the clerk
+retries Save after it finishes. One Save writes prices, Manage stock, and stock status. A refused
 Manage stock write leaves stored prices unchanged. Commerce still stores Money.
 The Store admin page lets the shop owner show out-of-stock products on the
 live site or hide them. The default is to show them. Hide is opt-in and

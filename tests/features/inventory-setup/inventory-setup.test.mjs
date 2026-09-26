@@ -9,6 +9,7 @@ import {
   configureCatalogItemInventory,
   createPlugin,
   createStoreInventoryConfiguration,
+  saveCatalogProductPrices,
   managedSkuRegistrationClaimUniqueIndexName,
   storeInventoryConfigurationUniqueIndexName,
 } from "../../../dist/index.js";
@@ -592,4 +593,53 @@ test("Configure Inventory does not overwrite a concurrent disable", async () => 
     mode: "unmanaged",
   });
   assert.equal(claims.records.size, 0);
+});
+
+test("disable after setup-pending is refused so registration can still contact Inventory", async () => {
+  const catalog = new MemoryCollection();
+  const configurations = configurationStorage();
+  const claims = claimStorage();
+  const prices = new MemoryCollection();
+  const availability = new MemoryCollection();
+  catalog.records.set("item-grill", managedItem());
+  await configuredStore(configurations);
+  let disable;
+  let providerCalls = 0;
+  const result = await configureCatalogItemInventory(
+    { catalog, configurations, claims },
+    { catalogItemId: "item-grill" },
+    setupExecution({
+      resolveProvider: async () => ({
+        async registerManagedSku(registration) {
+          providerCalls += 1;
+          disable = await saveCatalogProductPrices(
+            { catalog, prices, availability, claims },
+            {
+              catalogItemId: "item-grill",
+              regular: "",
+              sale: "",
+              manageStock: false,
+            },
+          );
+          return {
+            outcome: "registered",
+            inventorySku: {
+              inventorySkuId: "inventory-grill",
+              sku: registration.request.sku,
+              displayName: registration.request.displayNameIfNew,
+            },
+          };
+        },
+      }),
+    }),
+  );
+  assert.equal(disable.saved, false);
+  assert.equal(disable.manageStock, true);
+  assert.equal(
+    disable.message,
+    "Inventory setup is still running. Try Save again in a moment.",
+  );
+  assert.equal(providerCalls, 1);
+  assert.equal(result.outcome, "inventory-active");
+  assert.equal(catalog.records.get("item-grill").stockManagement.status, "active");
 });

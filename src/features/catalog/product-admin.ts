@@ -18,6 +18,7 @@ import {
   CLERK_STOCK_STATUSES,
   CLERK_STOCK_STATUS_MESSAGE,
   MANAGED_STOCK_STATUS_MESSAGE,
+  MANAGE_STOCK_SETUP_PENDING_MESSAGE,
   type ClerkStockStatus,
 } from "./clerk-stock.js";
 import {
@@ -267,6 +268,13 @@ export async function saveCatalogProductPrices(
   const currentStockStatus = managed ? null : dormantStockStatus;
 
   let nextStockStatus = nextManaged ? null : dormantStockStatus;
+  if (
+    !nextManaged &&
+    currentStockManagement.mode === "managed" &&
+    currentStockManagement.status === "setup-pending"
+  ) {
+    return refused(input, MANAGE_STOCK_SETUP_PENDING_MESSAGE, true, null);
+  }
   if (nextManaged && managed && input.stockStatus !== undefined) {
     return refused(input, MANAGED_STOCK_STATUS_MESSAGE, true, null);
   }
@@ -394,6 +402,17 @@ async function persistManageStock(
   }
   if (latest === null || latest.value.recordKind !== "catalog-item") {
     throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
+  }
+  const latestState = normalizeStoredStockManagement(latest.value.stockManagement);
+  if (
+    !manageStock &&
+    latestState.mode === "managed" &&
+    latestState.status === "setup-pending"
+  ) {
+    throw new CatalogError(
+      "MANAGE_STOCK_SETUP_PENDING",
+      MANAGE_STOCK_SETUP_PENDING_MESSAGE,
+    );
   }
   const nextItem: CatalogItemRecord = {
     ...latest.value,

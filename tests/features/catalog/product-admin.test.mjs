@@ -594,3 +594,37 @@ test("unchecking Manage stock restores dormant status and drops the setup claim"
     mode: "unmanaged",
   });
 });
+
+test("unchecking Manage stock is refused while Inventory setup is pending", async () => {
+  const stores = storage([
+    item({
+      stockManagement: {
+        mode: "managed",
+        status: "setup-pending",
+        registration: {
+          operationId: "op-pending",
+          request: {
+            poolId: "pool-1",
+            sku: "BAG-1",
+            displayNameIfNew: "Bag",
+          },
+        },
+      },
+      creationIntent: { manageStock: true },
+    }),
+  ]);
+  const refused = await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag",
+    regular: "",
+    sale: "",
+    manageStock: false,
+  });
+  assert.equal(refused.saved, false);
+  assert.equal(refused.manageStock, true);
+  assert.equal(
+    refused.message,
+    "Inventory setup is still running. Try Save again in a moment.",
+  );
+  assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-pending");
+  assert.equal(stores.claims.records.size, 0);
+});

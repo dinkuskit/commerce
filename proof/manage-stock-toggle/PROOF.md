@@ -9,6 +9,7 @@
 - On: persist setup-required; hide In stock / Out of stock / On backorder; no Configure Inventory; no quantity.
 - Off: dormant stock status returns; Commerce setup claim is compareAndDelete'd; Inventory is not contacted.
 - Configure Inventory persist uses compareAndSet and aborts if the product is already unmanaged.
+- Uncheck while `setup-pending` is refused; Inventory setup can still contact Inventory. Clerk retries Save after it finishes.
 - Prices are not rewritten.
 
 ## Verification

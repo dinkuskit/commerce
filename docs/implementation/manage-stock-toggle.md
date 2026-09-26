@@ -7,5 +7,7 @@ walk. Unchecking restores the dormant In stock / Out of stock / On backorder
 value, drops reconstructable Commerce registration claims with
 `compareAndDelete`, and does not contact Inventory. Pool quantity stays on
 the Inventory SKU. The catalog row uses `compareAndSet` so a concurrent
-Configure Inventory write cannot overwrite a disable. A refused Manage stock
+Configure Inventory write cannot overwrite a disable. Uncheck is refused while
+setup is still running so that in-flight registration can finish talking to
+Inventory; the clerk retries Save after it finishes. A refused Manage stock
 write leaves stored prices unchanged.
