@@ -10,5 +10,6 @@ the Inventory SKU. The catalog row uses `compareAndSet` so a concurrent
 Configure Inventory write cannot overwrite a disable. Uncheck is refused while
 setup is still running so that in-flight registration can finish talking to
 Inventory; the clerk retries Save after it finishes. Claim release runs only
-after the catalog row is unmanaged. A refused Manage stock
+after the catalog row is unmanaged. If that cleanup fails, the next unmanaged
+Save retries it so re-enable can start a fresh setup. A refused Manage stock
 write leaves stored prices unchanged.

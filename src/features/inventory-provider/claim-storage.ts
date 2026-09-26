@@ -359,38 +359,78 @@ async function findClaimByKey(
   return claim;
 }
 
-export async function releaseManagedSkuRegistrationClaims(
+async function findClaimsForCatalogItem(
   storage: ManagedSkuRegistrationClaimReleaseStorage,
-  input: { catalogItemId: string; stockManagement: StockManagement },
-): Promise<{ released: number }> {
-  const catalogItemId = asNonEmptyString(input.catalogItemId, "catalogItemId");
-  let released = 0;
-  for (const claimKey of reconstructableClaimKeys({
-    catalogItemId,
-    stockManagement: input.stockManagement,
-  })) {
-    const claim = await findClaimByKey(storage, claimKey);
-    if (!claim) continue;
+  catalogItemId: string,
+): Promise<ManagedSkuRegistrationClaimRecord[]> {
+  let result;
+  try {
+    result = await storage.query({ where: { catalogItemId }, limit: 50 });
+  } catch (error) {
+    throw unavailable("registration claim lookup failed", error);
+  }
+  if (result.hasMore) {
+    throw unavailable("registration claim winner is ambiguous");
+  }
+  const claims: ManagedSkuRegistrationClaimRecord[] = [];
+  for (const item of result.items) {
+    const claim = normalizeManagedSkuRegistrationClaimRecord(item.data);
     if (claim.catalogItemId !== catalogItemId) {
       throw unavailable("registration claim winner belongs to another catalog item");
     }
-    let latest;
-    try {
-      latest = await storage.getVersioned(claim.recordId);
-    } catch (error) {
-      throw unavailable("registration claim release failed", error);
+    claims.push(claim);
+  }
+  return claims;
+}
+
+async function deleteClaimRecord(
+  storage: ManagedSkuRegistrationClaimReleaseStorage,
+  recordId: string,
+): Promise<boolean> {
+  let latest;
+  try {
+    latest = await storage.getVersioned(recordId);
+  } catch (error) {
+    throw unavailable("registration claim release failed", error);
+  }
+  if (latest === null) return false;
+  let result;
+  try {
+    result = await storage.compareAndDelete(recordId, latest.revision);
+  } catch (error) {
+    throw unavailable("registration claim release failed", error);
+  }
+  if (!result.applied) {
+    throw unavailable("registration claim release lost to a concurrent write");
+  }
+  return true;
+}
+
+export async function releaseManagedSkuRegistrationClaims(
+  storage: ManagedSkuRegistrationClaimReleaseStorage,
+  input: { catalogItemId: string; stockManagement?: StockManagement },
+): Promise<{ released: number }> {
+  const catalogItemId = asNonEmptyString(input.catalogItemId, "catalogItemId");
+  const claims = new Map<string, ManagedSkuRegistrationClaimRecord>();
+  for (const claim of await findClaimsForCatalogItem(storage, catalogItemId)) {
+    claims.set(claim.recordId, claim);
+  }
+  if (input.stockManagement !== undefined) {
+    for (const claimKey of reconstructableClaimKeys({
+      catalogItemId,
+      stockManagement: input.stockManagement,
+    })) {
+      const claim = await findClaimByKey(storage, claimKey);
+      if (!claim) continue;
+      if (claim.catalogItemId !== catalogItemId) {
+        throw unavailable("registration claim winner belongs to another catalog item");
+      }
+      claims.set(claim.recordId, claim);
     }
-    if (latest === null) continue;
-    let result;
-    try {
-      result = await storage.compareAndDelete(claim.recordId, latest.revision);
-    } catch (error) {
-      throw unavailable("registration claim release failed", error);
-    }
-    if (!result.applied) {
-      throw unavailable("registration claim release lost to a concurrent write");
-    }
-    released += 1;
+  }
+  let released = 0;
+  for (const claim of claims.values()) {
+    if (await deleteClaimRecord(storage, claim.recordId)) released += 1;
   }
   return { released };
 }

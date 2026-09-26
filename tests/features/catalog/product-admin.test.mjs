@@ -336,6 +336,7 @@ test("the product list is by name and the admin routes stay private", async () =
       catalogItems: stores.catalog,
       catalogPrices: stores.prices,
       catalogManualAvailability: stores.availability,
+      managedSkuClaims: stores.claims,
     },
   };
   await assert.rejects(
@@ -674,4 +675,63 @@ test("a refused disable does not drop a claim that became pending after the save
   );
   assert.equal(stores.claims.records.size, 1);
   assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-pending");
+});
+
+test("a failed claim release after disable is cleaned up on the next unmanaged save", async () => {
+  const stores = storage([
+    item({
+      stockManagement: { mode: "managed", status: "setup-required" },
+      creationIntent: { manageStock: true },
+    }),
+  ]);
+  const claimKey = createManagedSkuRegistrationClaimKey({ catalogItemId: "item-bag" });
+  stores.claims.records.set("claim-1", {
+    recordKind: "managed-sku-registration-claim",
+    recordId: "claim-1",
+    claimKey,
+    catalogItemId: "item-bag",
+    operationId: "op-stale",
+    request: { poolId: "pool-1", sku: "BAG-1", displayNameIfNew: "Bag" },
+    createdAt: "2026-09-26T00:00:00.000Z",
+  });
+  const originalDelete = stores.claims.compareAndDelete.bind(stores.claims);
+  let failOnce = true;
+  stores.claims.compareAndDelete = async (id, revision) => {
+    if (failOnce) {
+      failOnce = false;
+      throw new Error("claim store down");
+    }
+    return originalDelete(id, revision);
+  };
+  await assert.rejects(
+    saveCatalogProductPrices(stores, {
+      catalogItemId: "item-bag",
+      regular: "",
+      sale: "",
+      manageStock: false,
+    }),
+    (error) =>
+      error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
+  );
+  assert.deepEqual(stores.catalog.records.get("item-bag").stockManagement, {
+    mode: "unmanaged",
+  });
+  assert.equal(stores.claims.records.size, 1);
+  const retried = await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag",
+    regular: "",
+    sale: "",
+    manageStock: false,
+  });
+  assert.equal(retried.saved, true);
+  assert.equal(stores.claims.records.size, 0);
+  const enabled = await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag",
+    regular: "",
+    sale: "",
+    manageStock: true,
+  });
+  assert.equal(enabled.saved, true);
+  assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-required");
+  assert.equal(stores.claims.records.size, 0);
 });

@@ -324,7 +324,7 @@ export async function saveCatalogProductPrices(
     moneySame(currentRegular, targetRegular) && moneySame(currentSale, targetSale);
   const manageUnchanged = nextManaged === managed;
   const stockUnchanged = nextStockStatus === currentStockStatus;
-  if (priceUnchanged && stockUnchanged && manageUnchanged) {
+  if (priceUnchanged && stockUnchanged && manageUnchanged && nextManaged) {
     return displayForm(targetRegular, targetSale, nextManaged, nextStockStatus);
   }
 
@@ -340,6 +340,9 @@ export async function saveCatalogProductPrices(
     }
     if (!manageUnchanged) {
       await persistManageStock(storage, item, nextManaged);
+    }
+    if (!nextManaged) {
+      await releaseUnmanagedRegistrationClaims(storage, catalogItemId);
     }
     if (!nextManaged && nextStockStatus !== null && !stockUnchanged) {
       await setCatalogItemManualAvailability(
@@ -400,6 +403,9 @@ async function persistManageStock(
       MANAGE_STOCK_SETUP_PENDING_MESSAGE,
     );
   }
+  if (manageStock && latestState.mode === "unmanaged") {
+    await releaseUnmanagedRegistrationClaims(storage, item.itemId);
+  }
   const nextItem: CatalogItemRecord = {
     ...latest.value,
     stockManagement: nextStockManagement,
@@ -422,19 +428,20 @@ async function persistManageStock(
       "Manage Stock update lost to a concurrent write",
     );
   }
-  if (!manageStock) {
-    try {
-      await releaseManagedSkuRegistrationClaims(storage.claims, {
-        catalogItemId: item.itemId,
-        stockManagement: latestState,
-      });
-    } catch (error) {
-      throw new CatalogError(
-        "STORAGE_UNAVAILABLE",
-        "managed SKU registration claim release failed",
-        { cause: error },
-      );
-    }
+}
+
+async function releaseUnmanagedRegistrationClaims(
+  storage: SaveStorage,
+  catalogItemId: string,
+): Promise<void> {
+  try {
+    await releaseManagedSkuRegistrationClaims(storage.claims, { catalogItemId });
+  } catch (error) {
+    throw new CatalogError(
+      "STORAGE_UNAVAILABLE",
+      "managed SKU registration claim release failed",
+      { cause: error },
+    );
   }
 }
 

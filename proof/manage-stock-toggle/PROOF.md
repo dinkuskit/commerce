@@ -10,7 +10,7 @@
 - Off: dormant stock status returns; Commerce setup claim is compareAndDelete'd; Inventory is not contacted.
 - Configure Inventory persist uses compareAndSet and aborts if the product is already unmanaged.
 - Uncheck while `setup-pending` is refused; Inventory setup can still contact Inventory. Clerk retries Save after it finishes.
-- Claim release runs only after the catalog row is unmanaged, so a refused disable cannot drop an in-flight registration claim.
+- Claim release runs only after the catalog row is unmanaged. If that cleanup fails, the next unmanaged Save retries it so re-enable can start a fresh setup.
 - Prices are not rewritten.
 
 ## Verification
