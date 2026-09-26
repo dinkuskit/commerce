@@ -1,0 +1,25 @@
+COMMAND
+npm run build && node --test --test-name-pattern "pre-price catalog item stays persisted" tests/integration/store-configuration-atomicity.test.mjs
+
+RESULT
+exit_code=0
+
+> @dinkuskit/commerce@0.0.0 build
+> node scripts/build.mjs
+
+TAP version 13
+# LIVE_PROOF {"case":"pre-price-catalog-upgrade-delisting","emdash":"0.40.1","storageReopened":true,"catalogRowPersisted":true,"priceRows":0,"listable":false,"sellable":false,"resolvedStatus":"availability-unavailable","inventoryContacted":false,"operatorRemediation":"catalog-items/set-regular-price","dataClassification":"synthetic"}
+# Subtest: a pre-price catalog item stays persisted and is not listable after reopen
+ok 1 - a pre-price catalog item stays persisted and is not listable after reopen
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+
+REDACTION
+Synthetic catalog, SKU, and status values only. No customer, tenant, credential,
+account, production, or private repository data is present.

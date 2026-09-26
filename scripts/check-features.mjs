@@ -41,6 +41,7 @@ const requiredFiles = [
   "proof/unmanaged-product-sellability/live-runtime.txt",
   "proof/unmanaged-product-sellability/source-manifest.sha256",
   "proof/commerce-owned-product-price/PROOF.md",
+  "proof/commerce-owned-product-price/live-runtime.txt",
   "proof/commerce-owned-product-price/source-manifest.sha256",
 ];
 

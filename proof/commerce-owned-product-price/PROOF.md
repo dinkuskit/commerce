@@ -51,6 +51,15 @@ Final result: exit `0`.
 - Integration suite: 18 passed, 0 failed.
 - Exact EmDash 0.40.1 storage proved Regular Money survives repository
   close/reopen and remains listable; missing Regular is not listable.
+- A pre-price catalog row survives reopen with zero `catalogPrices` rows and
+  resolves `listable: false`. The draft stays in the catalog. Operator
+  remediation is `catalog-items/set-regular-price`.
+
+The redacted upgrade transcript is retained at:
+
+```text
+proof/commerce-owned-product-price/live-runtime.txt
+```
 
 Manifest command:
 
@@ -71,6 +80,7 @@ excluded because they are workflow evidence rather than runtime source.
 | Catalog row isolation | High | price writes never `put` the catalog item |
 | Private admin actions | High | POST-only, `content:edit_any`, exact field allowlist |
 | Existing availability | Medium | additive `listable`; prior status/sellable matrix retained for priced products |
+| Pre-price catalog upgrade | High | live reopen: catalog row persists, zero price rows, not listable |
 
 ## Fidelity limits and deferrals
 
@@ -78,6 +88,9 @@ This slice does not add visual EmDash UI, sale schedules, checkout
 enforcement, payments, Inventory transport, coupons, a Manage Stock toggle,
 or a template-store dogfood hide. Commerce reports `listable: false` for
 unpriced products; the storefront home page catch-up is a later slice.
+
+Upgrade does not invent a Regular for existing drafts. Immediate de-listing of
+unpriced products is the locked shop-owner contract, not a compatibility bug.
 
 No push, pull request, merge, deployment, package publication, account change,
 or production mutation was performed by this implementation step.

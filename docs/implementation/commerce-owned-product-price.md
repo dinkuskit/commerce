@@ -50,3 +50,11 @@ Private POST routes require `content:edit_any`:
 `resolveStorefrontAvailability` and `resolveManagedStorefrontAvailability`
 read that contract first. Missing Regular returns `listable: false` and
 `sellable: false` without contacting Inventory or manual availability.
+
+## Upgrade
+
+Existing catalog drafts have no `catalogPrices` row. After this slice they
+remain in the catalog and stay off the storefront until a clerk sets Regular.
+That is the locked shop-owner contract, not a silent wipe. Operator
+remediation is `catalog-items/set-regular-price`. Callers must pass the
+`prices` collection; a missing collection fails closed as not listable.

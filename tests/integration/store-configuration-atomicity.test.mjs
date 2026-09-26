@@ -31,6 +31,7 @@ import {
   readCatalogBackorderPolicies,
   readCatalogManualAvailability,
   readCatalogItems,
+  readCatalogPrices,
   readClaimRecords,
   readStoreInventoryConfigurations,
   readStorefrontAvailabilitySettings,
@@ -515,6 +516,81 @@ test("manual unmanaged availability survives EmDash storage reopen without Inven
         resolvedStatus: result.status,
         sellable: result.sellable,
         inventoryContacted: providerResolved,
+        dataClassification: "synthetic",
+      }),
+  );
+});
+
+test("a pre-price catalog item stays persisted and is not listable after reopen", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "commerce-pre-price-upgrade-live-"));
+  t.after(() => rm(directory, { force: true, recursive: true }));
+  const databasePath = join(directory, "commerce.db");
+  initializeCatalogDatabase(databasePath);
+
+  const firstCatalog = openCatalogRepository(databasePath);
+  const created = await createCatalogItem(
+    firstCatalog.storage,
+    {
+      commandId: "cmd:pre-price-upgrade-live",
+      name: "Pre Price Grill",
+      sku: "PRE-PRICE-GRILL",
+    },
+    { createId: () => "catalog-pre-price-upgrade" },
+  );
+  await firstCatalog.db.destroy();
+
+  const catalog = openCatalogRepository(databasePath);
+  const prices = openCatalogPriceRepository(databasePath);
+  t.after(() => Promise.all([catalog.db.destroy(), prices.db.destroy()]));
+  let providerResolved = false;
+  const mustNotRead = {
+    async get() {
+      throw new Error("managed-only storage must not be read");
+    },
+  };
+  const result = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: mustNotRead,
+      catalog: catalog.storage,
+      configurations: mustNotRead,
+      manualAvailability: mustNotRead,
+      prices: prices.storage,
+      settings: mustNotRead,
+    },
+    { catalogItemId: created.item.itemId },
+    {
+      resolveProvider: async () => {
+        providerResolved = true;
+        throw new Error("Inventory must not be resolved");
+      },
+    },
+  );
+
+  const [persisted] = readCatalogItems(databasePath);
+  assert.equal(persisted.itemId, created.item.itemId);
+  assert.equal(readCatalogPrices(databasePath).length, 0);
+  assert.deepEqual(result, {
+    schema: "dinkuskit.commerce.storefront-availability-result/v1",
+    catalogItemId: created.item.itemId,
+    status: "availability-unavailable",
+    sellable: false,
+    listable: false,
+  });
+  assert.equal(providerResolved, false);
+
+  console.log(
+    "LIVE_PROOF " +
+      JSON.stringify({
+        case: "pre-price-catalog-upgrade-delisting",
+        emdash: emdashPackage.version,
+        storageReopened: true,
+        catalogRowPersisted: persisted.itemId === created.item.itemId,
+        priceRows: readCatalogPrices(databasePath).length,
+        listable: result.listable,
+        sellable: result.sellable,
+        resolvedStatus: result.status,
+        inventoryContacted: providerResolved,
+        operatorRemediation: "catalog-items/set-regular-price",
         dataClassification: "synthetic",
       }),
   );

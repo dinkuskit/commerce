@@ -17,4 +17,10 @@ additive. Unpriced products skip Inventory. `$0` remains listable. No
 admin UI, checkout, Inventory transport, coupons, or template-store catch-up
 landed.
 
-`bin/verify-commerce full` passed: 98 unit, 18 integration, audits clean.
+`bin/verify-commerce full` passed: 98 unit, 19 integration (pre-price upgrade
+case included), audits clean.
+
+ClawSweeper later asked to keep unpriced products listable during rollout.
+That contradicts locked `price-missing-002` / `price-clear-regular-007`.
+Immediate de-listing is the shop-owner contract. Live reopen proof shows the
+catalog row survives and `listable` is false until Regular is set.
