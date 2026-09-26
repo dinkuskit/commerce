@@ -81,11 +81,7 @@ async function hideOutOfStockEnabled(
   storage: StorefrontAvailabilityStorage,
 ): Promise<boolean> {
   if (!storage.listing) return false;
-  try {
-    return (await loadOutOfStockListing(storage.listing)).hideOutOfStock;
-  } catch {
-    return false;
-  }
+  return (await loadOutOfStockListing(storage.listing)).hideOutOfStock;
 }
 
 async function applyOutOfStockListing(
@@ -93,7 +89,13 @@ async function applyOutOfStockListing(
   result: StorefrontAvailabilityResult,
 ): Promise<StorefrontAvailabilityResult> {
   if (result.status !== "out-of-stock" || !result.listable) return result;
-  if (!(await hideOutOfStockEnabled(storage))) return result;
+  let hide: boolean;
+  try {
+    hide = await hideOutOfStockEnabled(storage);
+  } catch {
+    return { ...result, listable: false };
+  }
+  if (!hide) return result;
   return { ...result, listable: false };
 }
 

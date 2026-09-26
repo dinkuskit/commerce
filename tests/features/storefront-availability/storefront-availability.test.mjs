@@ -857,6 +857,53 @@ test("hide out-of-stock unlist clerk Out of stock and Inventory-at-zero, and lea
   assert.equal(hiddenZero.listable, false);
 });
 
+test("a listing lookup or malformed record does not re-list out-of-stock products", async () => {
+  const unmanaged = catalogItem({
+    creationIntent: { manageStock: false },
+    stockManagement: { mode: "unmanaged" },
+  });
+  const failing = new MemoryCollection([listingRecord(true)]);
+  failing.get = async () => {
+    throw new Error("disk full");
+  };
+  const lookupFailed = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing: failing,
+      manualAvailability: new MemoryCollection([manualAvailabilityRecord("out-of-stock")]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(lookupFailed.status, "out-of-stock");
+  assert.equal(lookupFailed.listable, false);
+
+  const malformed = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing: new MemoryCollection([
+        {
+          recordKind: "storefront-out-of-stock-listing",
+          recordId: "active",
+          hideOutOfStock: "yes",
+          updatedAt: "2026-09-26T00:00:00.000Z",
+        },
+      ]),
+      manualAvailability: new MemoryCollection([manualAvailabilityRecord("out-of-stock")]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(malformed.status, "out-of-stock");
+  assert.equal(malformed.listable, false);
+});
+
 test("a missing listing collection keeps out-of-stock products on the shop", async () => {
   const unmanaged = catalogItem({
     creationIntent: { manageStock: false },
