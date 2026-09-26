@@ -5,6 +5,14 @@ being built in public for stores whose humans want to orchestrate the business
 through EmDash while agents handle repeatable operations through the same
 explicit contracts.
 
+## Kit direction
+
+The canonical [vision](https://github.com/dinkuskit/.github/blob/main/VISION.md)
+and [roadmap](https://github.com/dinkuskit/.github/blob/main/ROADMAP.md) put a
+human-operable EmDash store first. Commerce and Inventory are crucial launch
+pieces and launch side by side. This repository's contracts and status below
+describe its own scope; the roadmap is not a claim of release readiness.
+
 ## Status
 
 Pilot stage. The package name is reserved in source as
