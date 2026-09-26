@@ -18,12 +18,34 @@ export {
 } from "./price.js";
 export { CatalogError } from "./errors.js";
 export type { CatalogErrorCode } from "./errors.js";
+export {
+  CLERK_DOLLAR_MESSAGE,
+  CLERK_END_SALE_MESSAGE,
+  CLERK_SALE_LOWER_MESSAGE,
+  CLERK_SALE_NEEDS_REGULAR_MESSAGE,
+  formatClerkDollar,
+  parseClerkDollar,
+} from "./clerk-price.js";
+export type { ParsedClerkDollar } from "./clerk-price.js";
 export { normalizeMoney, parseMinorUnits } from "./money.js";
+export {
+  catalogProductCreateInput,
+  listCatalogProducts,
+  saveCatalogProductPrices,
+} from "./product-admin.js";
+export type {
+  CatalogProductListItem,
+  CatalogProductListStorage,
+  CatalogProductPriceForm,
+  SaveCatalogProductPricesInput,
+} from "./product-admin.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "./normalize.js";
 export {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
   CREATE_CATALOG_ITEM_ROUTE,
+  LIST_CATALOG_PRODUCTS_ROUTE,
+  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -31,6 +53,8 @@ export {
   clearCatalogItemRegularPriceRoute,
   clearCatalogItemSalePriceRoute,
   createCatalogItemRoute,
+  listCatalogProductsRoute,
+  saveCatalogProductPricesRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,

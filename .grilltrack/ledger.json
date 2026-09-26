@@ -1,30 +1,30 @@
 {
   "closeout": null,
-  "created_at": "2026-09-25T21:21:17+00:00",
+  "created_at": "2026-09-26T12:35:39+00:00",
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-09-25T21:49:28+00:00",
-    "domain": "a product has a price Commerce owns",
-    "started_at": "2026-09-25T21:21:17+00:00",
-    "status": "inspected",
-    "summary": "Commerce stores isolated Regular and optional Sale Money on existing draft simple products. Money is { currency: USD, minor } with USD only. Missing Regular is not listable and is never $0. $0 Regular is a free listable product. Sale requires Regular and must be strictly lower; invalid or orphan Sale is refused. Clearing Sale keeps Regular. Clearing Regular while Sale exists is refused. No admin UI, checkout, Inventory, coupons, payments, sale schedule, Manage Stock toggle, or template-store catch-up. Verify with bin/verify-commerce full."
+    "confirmed_at": "2026-09-26T13:16:04+00:00",
+    "domain": "a clerk types Regular and Sale on a product",
+    "started_at": "2026-09-26T12:56:59+00:00",
+    "status": "confirmed",
+    "summary": "Commerce admin lists products by name and adds one with name and SKU. Manage Stock is not asked. Products stay Commerce records. Clicking a product shows Regular and Sale. The clerk presses Save. 12 or 12.00 shows 12.00. 12.5 and $12 save as 12.50 and 12.00. Blank Sale clears Sale. Blank Regular unprices the product. $0 shows 0.00. 12.999, a letter, or a minus is refused and stored prices stay unchanged. Sale must be lower than Regular. Clearing Regular while a Sale remains is refused. Duplicate SKU is refused. SKU is stored uppercase. No commit."
   },
   "decisions": [
     {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
+      "baseline_ref": "git:3f20fe96d5b3104c4b599e669d18f54fd8ab2587",
       "candidate_refs": [],
-      "choice": "Store Money as { currency: \"USD\", minor: \"1200\" }. Minor is a string of integer currency subunits. USD is the only allowed currency this slice. No floats, no implied-currency cents field.",
-      "context_ref": "charter:docs/CHARTER.md;payments:money-terminology;catalog:CatalogItemRecord",
-      "created_at": "2026-09-25T21:24:13+00:00",
+      "choice": "On an existing product, Regular and Sale only. Save and clear use the four price routes and the locked price guards. Not on this screen: Manage Stock, manual availability, backorders, storefront display policy, Configure Inventory, coupons, promotions, checkout, a sale schedule, or a currency picker.",
+      "context_ref": "predecessor:gt-20260925212117-b02bdf;file:docs/implementation/commerce-owned-product-price.md",
+      "created_at": "2026-09-26T12:35:39+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
-      "domain": "a product has a price Commerce owns",
+      "domain": "a clerk types Regular and Sale on a product",
       "history": [
         {
-          "at": "2026-09-25T21:24:13+00:00",
-          "choice": "Store Money as { currency: \"USD\", minor: \"1200\" }. Minor is a string of integer currency subunits. USD is the only allowed currency this slice. No floats, no implied-currency cents field.",
+          "at": "2026-09-26T12:35:40+00:00",
+          "choice": "On an existing product, Regular and Sale only. Save and clear use the four price routes and the locked price guards. Not on this screen: Manage Stock, manual availability, backorders, storefront display policy, Configure Inventory, coupons, promotions, checkout, a sale schedule, or a currency picker.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -37,73 +37,51 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "Store Money as { currency: \"USD\", minor: \"1200\" }. Minor is a string of integer currency subunits. USD is the only allowed currency this slice. No floats, no implied-currency cents field.",
+          "at": "2026-09-26T12:47:33+00:00",
+          "choice": "On an existing product, Regular and Sale only. Save and clear use the four price routes and the locked price guards. Not on this screen: Manage Stock, manual availability, backorders, storefront display policy, Configure Inventory, coupons, promotions, checkout, a sale schedule, or a currency picker.",
           "from": "locked",
           "implementation_ref": null,
-          "note": "bounded implementation recorded",
+          "note": "Bobby added a product list and name/SKU create. Products stay Commerce records, not a Content Types collection.",
           "repair_required": false,
           "review_classifications": [],
           "review_ref": null,
           "review_result": null,
           "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "Store Money as { currency: \"USD\", minor: \"1200\" }. Minor is a string of integer currency subunits. USD is the only allowed currency this slice. No floats, no implied-currency cents field.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
+          "to": "superseded",
           "verification_ref": null
         }
       ],
-      "id": "price-money-001",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "When the shop owner says this bag is $12, what does Commerce store?",
-      "rationale": "Matches the payments charter Money shape so catalog price and later Stripe totals share one exact amount language. An implied-USD cents field would rewrite when currency appears; a decimal would leak rounding into checkout.",
+      "id": "admin-screen-001",
+      "implementation_ref": null,
+      "question": "What does the first EmDash admin screen include?",
+      "rationale": "Bobby accepted the parked Regular/Sale screen as the start. Those routes already exist on main. The other backends stay later slices. Manage Stock toggle stays parked at commerce #17. Coupon admin stays out until a promotion can be saved.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:55+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:55+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "superseded",
+      "superseded_by": "admin-page-003",
+      "updated_at": "2026-09-26T12:47:33+00:00",
+      "verification_ref": null
     },
     {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
+      "baseline_ref": "git:3f20fe96d5b3104c4b599e669d18f54fd8ab2587",
       "candidate_refs": [],
-      "choice": "A product may exist without a price. Missing price is not sellable and is never treated as $0. Create keeps name/SKU only; a later set-price action writes Money. Existing drafts stay valid.",
-      "context_ref": "decision:price-money-001;catalog:CreateCatalogItemInput",
-      "created_at": "2026-09-25T21:24:56+00:00",
+      "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
+      "context_ref": "decision:admin-screen-001;file:src/features/catalog/money.ts;file:src/features/catalog/price.ts",
+      "created_at": "2026-09-26T12:38:13+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "price-money-001"
+        "admin-screen-001"
       ],
-      "domain": "a product has a price Commerce owns",
+      "domain": "a clerk types Regular and Sale on a product",
       "history": [
         {
-          "at": "2026-09-25T21:24:56+00:00",
-          "choice": "A product may exist without a price. Missing price is not sellable and is never treated as $0. Create keeps name/SKU only; a later set-price action writes Money. Existing drafts stay valid.",
+          "at": "2026-09-26T12:38:13+00:00",
+          "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -116,8 +94,77 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "A product may exist without a price. Missing price is not sellable and is never treated as $0. Create keeps name/SKU only; a later set-price action writes Money. Existing drafts stay valid.",
+          "at": "2026-09-26T12:47:33+00:00",
+          "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency admin-screen-001 changed: Bobby added a product list and name/SKU create. Products stay Commerce records, not a Content Types collection.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T12:47:33+00:00",
+          "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
+          "from": "needs_reverification",
+          "implementation_ref": null,
+          "note": "Same dollar and blank-field behavior, now tied to the product list and create page.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
+        }
+      ],
+      "id": "admin-entry-002",
+      "implementation_ref": null,
+      "question": "What does the clerk type, and what does a blank field do?",
+      "rationale": "Bobby confirmed the dollar-field behavior. Storage stays { currency: USD, minor }. The screen translates. Blank fields map to the existing clear routes and the locked price guards.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "superseded",
+      "superseded_by": "admin-entry-004",
+      "updated_at": "2026-09-26T12:47:33+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:3f20fe96d5b3104c4b599e669d18f54fd8ab2587",
+      "candidate_refs": [],
+      "choice": "The Commerce admin page lists Commerce products by name and lets the clerk add one with a name and SKU. Manage Stock is not asked. Clicking a product shows Regular and Sale for that product. Products stay catalog records. They are not an EmDash Content Types collection. Still not on this page: manual availability, backorders, storefront display policy, Configure Inventory, coupons, promotions, checkout, a sale schedule, or a currency picker.",
+      "context_ref": "decision:admin-screen-001;file:src/features/catalog/types.ts;emdash:docs/concepts/collections.mdx@0.40.1",
+      "created_at": "2026-09-26T12:47:33+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "a clerk types Regular and Sale on a product",
+      "history": [
+        {
+          "at": "2026-09-26T12:47:33+00:00",
+          "choice": "The Commerce admin page lists Commerce products by name and lets the clerk add one with a name and SKU. Manage Stock is not asked. Clicking a product shows Regular and Sale for that product. Products stay catalog records. They are not an EmDash Content Types collection. Still not on this page: manual availability, backorders, storefront display policy, Configure Inventory, coupons, promotions, checkout, a sale schedule, or a currency picker.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T13:21:37+00:00",
+          "choice": "The Commerce admin page lists Commerce products by name and lets the clerk add one with a name and SKU. Manage Stock is not asked. Clicking a product shows Regular and Sale for that product. Products stay catalog records. They are not an EmDash Content Types collection. Still not on this page: manual availability, backorders, storefront display policy, Configure Inventory, coupons, promotions, checkout, a sale schedule, or a currency picker.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -130,10 +177,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "A product may exist without a price. Missing price is not sellable and is never treated as $0. Create keeps name/SKU only; a later set-price action writes Money. Existing drafts stay valid.",
+          "at": "2026-09-26T13:21:37+00:00",
+          "choice": "The Commerce admin page lists Commerce products by name and lets the clerk add one with a name and SKU. Manage Stock is not asked. Clicking a product shows Regular and Sale for that product. Products stay catalog records. They are not an EmDash Content Types collection. Still not on this page: manual availability, backorders, storefront display policy, Configure Inventory, coupons, promotions, checkout, a sale schedule, or a currency picker.",
           "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -144,45 +191,37 @@
           "verification_ref": null
         }
       ],
-      "id": "price-missing-002",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "A product exists and nobody has set a price yet. What should that mean?",
-      "rationale": "Catalog drafts already exist without price. Inventing $0 would give the product away. Requiring price at create would make every current draft incomplete without a shop-owner benefit this slice.",
+      "id": "admin-page-003",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts",
+      "question": "How does the clerk find a product and add one?",
+      "rationale": "Bobby confirmed. WooCommerce ships the product type from the plugin. An EmDash content collection is site schema and would store price as a plain number, which skips the locked Money guards. Create already accepts name and SKU. Manage Stock stays off this page.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:55+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:55+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
+      "updated_at": "2026-09-26T13:21:37+00:00",
+      "verification_ref": "file:proof/commerce-admin-products/PROOF.md;test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
+      "baseline_ref": "git:3f20fe96d5b3104c4b599e669d18f54fd8ab2587",
       "candidate_refs": [],
-      "choice": "This slice persists Woo's two price fields: Regular (list) and optional Sale. Customer pays Sale when it is set and lower than Regular; otherwise Regular. No sale schedule. Stored as their own records keyed to the product, not mixed into name/SKU. Missing Regular remains not sellable.",
-      "context_ref": "decision:price-money-001;decision:price-missing-002;woo:html-product-data-general.php;woo:WC_Product_Data_Store_CPT.handle_updated_props",
-      "created_at": "2026-09-25T21:31:04+00:00",
+      "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
+      "context_ref": "decision:admin-entry-002;decision:admin-page-003;file:src/features/catalog/money.ts",
+      "created_at": "2026-09-26T12:47:33+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "price-missing-002"
+        "admin-page-003"
       ],
-      "domain": "a product has a price Commerce owns",
+      "domain": "a clerk types Regular and Sale on a product",
       "history": [
         {
-          "at": "2026-09-25T21:31:04+00:00",
-          "choice": "This slice persists Woo's two price fields: Regular (list) and optional Sale. Customer pays Sale when it is set and lower than Regular; otherwise Regular. No sale schedule. Stored as their own records keyed to the product, not mixed into name/SKU. Missing Regular remains not sellable.",
+          "at": "2026-09-26T12:47:33+00:00",
+          "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -195,8 +234,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "This slice persists Woo's two price fields: Regular (list) and optional Sale. Customer pays Sale when it is set and lower than Regular; otherwise Regular. No sale schedule. Stored as their own records keyed to the product, not mixed into name/SKU. Missing Regular remains not sellable.",
+          "at": "2026-09-26T13:21:37+00:00",
+          "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -209,10 +248,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "This slice persists Woo's two price fields: Regular (list) and optional Sale. Customer pays Sale when it is set and lower than Regular; otherwise Regular. No sale schedule. Stored as their own records keyed to the product, not mixed into name/SKU. Missing Regular remains not sellable.",
+          "at": "2026-09-26T13:21:37+00:00",
+          "choice": "The clerk types 12 or 12.00, never minor units. After a good save the field shows 12.00. A blank Sale clears Sale and keeps Regular. A blank Regular unprices the product. Clearing Regular while Sale exists is refused. Currency stays USD.",
           "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -223,45 +262,37 @@
           "verification_ref": null
         }
       ],
-      "id": "price-regular-sale-003",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "What should the clerk set on this bag this slice?",
-      "rationale": "Matches Woo General: Regular price and Sale price. Schedule, tax, and COGS stay later. Isolation follows Woo post-meta (price is not the product title) and Commerce's existing backorder/manual-availability pattern so a price write cannot smash the catalog row.",
+      "id": "admin-entry-004",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts",
+      "question": "What does the clerk type, and what does a blank field do?",
+      "rationale": "Dollar and blank-field behavior is unchanged by the product list. It now applies on the product the clerk opened or just added.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:56+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:56+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
+      "updated_at": "2026-09-26T13:21:37+00:00",
+      "verification_ref": "file:proof/commerce-admin-products/PROOF.md;test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     },
     {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
+      "baseline_ref": "git:3f20fe96d5b3104c4b599e669d18f54fd8ab2587",
       "candidate_refs": [],
-      "choice": "Refuse the save. Sale must be a Money amount strictly lower than Regular in the same currency. Regular is unchanged. Do not silently clear Sale the way Woo does.",
-      "context_ref": "decision:price-regular-sale-003;woo:handle_updated_props-sale-cleared-when-gte-regular",
-      "created_at": "2026-09-25T21:31:56+00:00",
+      "choice": "12.5 and $12 save as 12.50 and 12.00. 12.999, a letter, or a minus is refused: the field keeps what was typed and nothing is saved. A Sale that is not lower than Regular, or clearing Regular while a Sale is on, is refused the same way. The page says why. Stored prices do not change.",
+      "context_ref": "decision:admin-entry-004;file:src/features/catalog/money.ts;file:docs/implementation/commerce-owned-product-price.md",
+      "created_at": "2026-09-26T12:56:45+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "price-regular-sale-003"
+        "admin-entry-004"
       ],
-      "domain": "a product has a price Commerce owns",
+      "domain": "a clerk types Regular and Sale on a product",
       "history": [
         {
-          "at": "2026-09-25T21:31:56+00:00",
-          "choice": "Refuse the save. Sale must be a Money amount strictly lower than Regular in the same currency. Regular is unchanged. Do not silently clear Sale the way Woo does.",
+          "at": "2026-09-26T12:56:45+00:00",
+          "choice": "12.5 and  save as 12.50 and 12.00. 12.999, a letter, or a minus is refused: the field keeps what was typed and nothing is saved. A Sale that is not lower than Regular, or clearing Regular while a Sale is on, is refused the same way. The page says why. Stored prices do not change.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -274,74 +305,23 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "Refuse the save. Sale must be a Money amount strictly lower than Regular in the same currency. Regular is unchanged. Do not silently clear Sale the way Woo does.",
+          "at": "2026-09-26T12:56:59+00:00",
+          "choice": "12.5 and  save as 12.50 and 12.00. 12.999, a letter, or a minus is refused: the field keeps what was typed and nothing is saved. A Sale that is not lower than Regular, or clearing Regular while a Sale is on, is refused the same way. The page says why. Stored prices do not change.",
           "from": "locked",
           "implementation_ref": null,
-          "note": "bounded implementation recorded",
+          "note": "Stored choice dropped the dollar-sign example. Bobby accepted that $12 saves as 12.00.",
           "repair_required": false,
           "review_classifications": [],
           "review_ref": null,
           "review_result": null,
           "review_source_identity": null,
-          "to": "implemented",
+          "to": "reopened",
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:25+00:00",
-          "choice": "Refuse the save. Sale must be a Money amount strictly lower than Regular in the same currency. Regular is unchanged. Do not silently clear Sale the way Woo does.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "price-sale-guard-004",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "Regular is $12. Clerk types Sale $15 (or $12). What should happen?",
-      "rationale": "Silent Woo clear hides the clerk's typo. An equal or higher Sale is not a discount. Same-currency compare on integer minor units is exact.",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:56+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:56+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
-    },
-    {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
-      "candidate_refs": [],
-      "choice": "Refuse. Sale cannot be set until Regular exists. Product stays not sellable. No orphan Sale record.",
-      "context_ref": "decision:price-missing-002;decision:price-regular-sale-003;decision:price-sale-guard-004",
-      "created_at": "2026-09-25T21:41:09+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "price-sale-guard-004"
-      ],
-      "domain": "a product has a price Commerce owns",
-      "history": [
-        {
-          "at": "2026-09-25T21:41:09+00:00",
-          "choice": "Refuse. Sale cannot be set until Regular exists. Product stays not sellable. No orphan Sale record.",
-          "from": "proposed",
+          "at": "2026-09-26T12:56:59+00:00",
+          "choice": "12.5 and  save as 12.50 and 12.00. 12.999, a letter, or a minus is refused: the field keeps what was typed and nothing is saved. A Sale that is not lower than Regular, or clearing Regular while a Sale is on, is refused the same way. The page says why. Stored prices do not change.",
+          "from": "reopened",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
           "repair_required": false,
@@ -353,8 +333,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "Refuse. Sale cannot be set until Regular exists. Product stays not sellable. No orphan Sale record.",
+          "at": "2026-09-26T13:21:37+00:00",
+          "choice": "12.5 and $12 save as 12.50 and 12.00. 12.999, a letter, or a minus is refused: the field keeps what was typed and nothing is saved. A Sale that is not lower than Regular, or clearing Regular while a Sale is on, is refused the same way. The page says why. Stored prices do not change.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -367,10 +347,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-25T21:58:25+00:00",
-          "choice": "Refuse. Sale cannot be set until Regular exists. Product stays not sellable. No orphan Sale record.",
+          "at": "2026-09-26T13:21:37+00:00",
+          "choice": "12.5 and $12 save as 12.50 and 12.00. 12.999, a letter, or a minus is refused: the field keeps what was typed and nothing is saved. A Sale that is not lower than Regular, or clearing Regular while a Sale is on, is refused the same way. The page says why. Stored prices do not change.",
           "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -381,286 +361,33 @@
           "verification_ref": null
         }
       ],
-      "id": "price-sale-requires-regular-005",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "No Regular yet. Clerk types Sale $10. What happens?",
-      "rationale": "Sale is a discount against Regular. Missing Regular is already not sellable. An orphan Sale would invent a customer price with no list price.",
+      "id": "admin-reject-005",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts",
+      "question": "What does a bad price do?",
+      "rationale": "Bobby confirmed. One decimal place is exact cents, not rounding. More than two decimals, letters, and a minus are not silently fixed. Refusal matches the price guards: the stored Regular and Sale stay as they were.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:56+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:56+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
-    },
-    {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
-      "candidate_refs": [],
-      "choice": "Clear Sale only. Regular stays $12. Customer pays Regular. Product remains sellable.",
-      "context_ref": "decision:price-regular-sale-003;woo:empty-sale-price-keeps-regular",
-      "created_at": "2026-09-25T21:44:13+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "price-sale-requires-regular-005"
-      ],
-      "domain": "a product has a price Commerce owns",
-      "history": [
-        {
-          "at": "2026-09-25T21:44:13+00:00",
-          "choice": "Clear Sale only. Regular stays $12. Customer pays Regular. Product remains sellable.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "Clear Sale only. Regular stays $12. Customer pays Regular. Product remains sellable.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-25T21:58:25+00:00",
-          "choice": "Clear Sale only. Regular stays $12. Customer pays Regular. Product remains sellable.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "price-clear-sale-006",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "Regular $12, Sale $10. Clerk takes the sale off. What happens?",
-      "rationale": "Sale is optional. Woo empties the Sale field and keeps Regular. Ending a promotion must not unprice the bag.",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:56+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:56+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
-    },
-    {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
-      "candidate_refs": [],
-      "choice": "Refuse while Sale exists. Clerk must end the sale first, then may clear Regular. After Regular is gone, the product is not sellable and must not appear on the website. Missing Regular is never shown as price TBA.",
-      "context_ref": "decision:price-missing-002;decision:price-sale-requires-regular-005;decision:price-clear-sale-006",
-      "created_at": "2026-09-25T21:47:01+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "price-clear-sale-006"
-      ],
-      "domain": "a product has a price Commerce owns",
-      "history": [
-        {
-          "at": "2026-09-25T21:47:01+00:00",
-          "choice": "Refuse while Sale exists. Clerk must end the sale first, then may clear Regular. After Regular is gone, the product is not sellable and must not appear on the website. Missing Regular is never shown as price TBA.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "Refuse while Sale exists. Clerk must end the sale first, then may clear Regular. After Regular is gone, the product is not sellable and must not appear on the website. Missing Regular is never shown as price TBA.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-25T21:58:25+00:00",
-          "choice": "Refuse while Sale exists. Clerk must end the sale first, then may clear Regular. After Regular is gone, the product is not sellable and must not appear on the website. Missing Regular is never shown as price TBA.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "price-clear-regular-007",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "Regular $12, Sale $10. Clerk clears Regular. What happens?",
-      "rationale": "Clearing Regular while Sale remains would orphan a customer price. User-owned: unpriced products do not show on the website. That is stronger than not-sellable: no listing without Regular.",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:56+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:56+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
-    },
-    {
-      "baseline_ref": "git:b9e432b1869bae09e394f5d631aa97b6949bf2fd",
-      "candidate_refs": [],
-      "choice": "Regular minor \"0\" is a free product and may appear on the website. Missing Regular is not a price: the product must not appear on the frontend. Sale cannot exist on a $0 Regular because it cannot be strictly lower than zero.",
-      "context_ref": "decision:price-money-001;decision:price-missing-002;decision:price-clear-regular-007",
-      "created_at": "2026-09-25T21:48:12+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "price-clear-regular-007"
-      ],
-      "domain": "a product has a price Commerce owns",
-      "history": [
-        {
-          "at": "2026-09-25T21:48:12+00:00",
-          "choice": "Regular minor \"0\" is a free product and may appear on the website. Missing Regular is not a price: the product must not appear on the frontend. Sale cannot exist on a $0 Regular because it cannot be strictly lower than zero.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-25T21:58:24+00:00",
-          "choice": "Regular minor \"0\" is a free product and may appear on the website. Missing Regular is not a price: the product must not appear on the frontend. Sale cannot exist on a $0 Regular because it cannot be strictly lower than zero.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-25T21:58:25+00:00",
-          "choice": "Regular minor \"0\" is a free product and may appear on the website. Missing Regular is not a price: the product must not appear on the frontend. Sale cannot exist on a $0 Regular because it cannot be strictly lower than zero.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "price-zero-008",
-      "implementation_ref": "file:docs/implementation/commerce-owned-product-price.md",
-      "question": "Clerk sets Regular $0.00. What is that?",
-      "rationale": "User-owned: 0 is free; no price means hidden. Distinct from missing. Woo allows a 0 regular price. Integer minor \"0\" is exact, not a float.",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-09-25T21:58:56+00:00",
-          "source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6"
-        }
-      ],
-      "review_ref": "file:proof/commerce-owned-product-price/REVIEW.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:f19b8fc6bb26cf68bcd21797e2d5240ea52e87f32f1d612a34039aab994f6ef6",
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-09-25T21:58:56+00:00",
-      "verification_ref": "file:proof/commerce-owned-product-price/PROOF.md"
+      "updated_at": "2026-09-26T13:21:37+00:00",
+      "verification_ref": "file:proof/commerce-admin-products/PROOF.md;test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
     }
   ],
   "last_activation": {
-    "at": "2026-09-25T21:21:17+00:00",
+    "at": "2026-09-26T12:56:59+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
-  "predecessor_track_id": "gt-20260830205754-677931",
-  "recommendation": {
-    "alternatives": [
-      "A clerk can type Regular and Sale on the product in EmDash admin.",
-      "A clerk can turn Manage Stock on or off after the product exists without two clerks racing (parked commerce #17)."
-    ],
-    "reason": "Commerce now reports listable false without Regular. The locked website outcome still needs template-store to honor that contract. Admin UI and the parked Manage Stock toggle are real later slices, not this kernel.",
-    "recommended": "Dogfood home hides a product with no Regular so the shop owner does not see an unpriced bag on the website.",
-    "recorded_at": "2026-09-25T21:59:01+00:00"
-  },
+  "predecessor_track_id": "gt-20260925212117-b02bdf",
+  "recommendation": null,
   "schema_version": "grilltrack/v0.1",
   "status": "active",
-  "title": "Commerce-owned product price",
-  "track_id": "gt-20260925212117-b02bdf",
-  "updated_at": "2026-09-25T21:59:01+00:00"
+  "title": "Clerk types Regular and Sale in EmDash admin",
+  "track_id": "gt-20260926123539-d964d3",
+  "updated_at": "2026-09-26T13:21:37+00:00"
 }

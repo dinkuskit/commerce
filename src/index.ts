@@ -9,6 +9,8 @@ import {
   CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
   COMMERCE_PLUGIN_ID,
   CREATE_CATALOG_ITEM_ROUTE,
+  LIST_CATALOG_PRODUCTS_ROUTE,
+  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -16,6 +18,8 @@ import {
   clearCatalogItemRegularPriceRoute,
   clearCatalogItemSalePriceRoute,
   createCatalogItemRoute,
+  listCatalogProductsRoute,
+  saveCatalogProductPricesRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
@@ -48,11 +52,21 @@ export * from "./features/storefront-availability/index.js";
 
 const COMMERCE_PLUGIN_VERSION = "0.0.0";
 
+const COMMERCE_ADMIN_ENTRY = "@dinkuskit/commerce/admin";
+const COMMERCE_PRODUCTS_PAGE = {
+  path: "/products",
+  label: "Products",
+  icon: "storefront",
+} as const;
+
 export function dinkusCommerce(): PluginDescriptor {
   return {
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
+    format: "native",
     entrypoint: "@dinkuskit/commerce",
+    adminEntry: COMMERCE_ADMIN_ENTRY,
+    adminPages: [COMMERCE_PRODUCTS_PAGE],
   };
 }
 
@@ -94,6 +108,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         uniqueIndexes: [],
       },
     },
+    admin: {
+      entry: COMMERCE_ADMIN_ENTRY,
+      pages: [COMMERCE_PRODUCTS_PAGE],
+    },
     routes: {
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRoute,
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
@@ -104,6 +122,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE]: clearCatalogItemSalePriceRoute,
       [CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE]:
         clearCatalogItemRegularPriceRoute,
+      [LIST_CATALOG_PRODUCTS_ROUTE]: listCatalogProductsRoute,
+      [SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: saveCatalogProductPricesRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

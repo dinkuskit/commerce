@@ -71,6 +71,10 @@ storefront. Sale requires Regular and must be strictly lower; invalid Sale is
 refused rather than silently cleared. `resolveStorefrontAvailability` returns
 `listable: false` when Regular is missing.
 
+The EmDash admin Products page lists those catalog products by name and
+lets a clerk add one with a name and SKU. Opening a product shows Regular
+and Sale. The clerk types dollars. Commerce still stores Money.
+
 Mounted-site work is currently a private pilot backed by the public
 [`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
 a stock 0.40.1 compatibility claim. It requires exact commit
