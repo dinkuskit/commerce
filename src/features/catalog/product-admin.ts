@@ -295,21 +295,34 @@ export async function saveCatalogProductPrices(
     return displayForm(targetRegular, targetSale, managed, nextStockStatus);
   }
 
-  if (!priceUnchanged) {
-    await commitCatalogItemPrice(storage, {
-      catalogItemId,
-      regular: targetRegular,
-      sale: targetSale,
-    });
-  }
-  if (!managed && nextStockStatus !== null && !stockUnchanged) {
-    await setCatalogItemManualAvailability(
-      { catalog: storage.catalog, availability: storage.availability },
-      {
+  let priceCommitted = false;
+  try {
+    if (!priceUnchanged) {
+      await commitCatalogItemPrice(storage, {
         catalogItemId,
-        status: toStoredStockStatus(nextStockStatus),
-      },
-    );
+        regular: targetRegular,
+        sale: targetSale,
+      });
+      priceCommitted = true;
+    }
+    if (!managed && nextStockStatus !== null && !stockUnchanged) {
+      await setCatalogItemManualAvailability(
+        { catalog: storage.catalog, availability: storage.availability },
+        {
+          catalogItemId,
+          status: toStoredStockStatus(nextStockStatus),
+        },
+      );
+    }
+  } catch (error) {
+    if (priceCommitted) {
+      await commitCatalogItemPrice(storage, {
+        catalogItemId,
+        regular: currentRegular,
+        sale: currentSale,
+      });
+    }
+    throw error;
   }
   return displayForm(targetRegular, targetSale, managed, nextStockStatus);
 }

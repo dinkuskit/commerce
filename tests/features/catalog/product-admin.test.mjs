@@ -339,6 +339,36 @@ test("one Save writes Out of stock and a refused status leaves the stored status
   assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
 });
 
+test("a failed stock write after a price change restores the stored Regular and Sale", async () => {
+  const stores = storage();
+  await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag",
+    regular: "12",
+    sale: "10",
+    stockStatus: "in-stock",
+  });
+  stores.availability.put = async () => {
+    throw new Error("disk full");
+  };
+  await assert.rejects(
+    saveCatalogProductPrices(stores, {
+      catalogItemId: "item-bag",
+      regular: "20",
+      sale: "8",
+      stockStatus: "out-of-stock",
+    }),
+    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
+  );
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+    catalogItemId: "item-bag",
+    listable: true,
+    regular: { currency: "USD", minor: "1200" },
+    sale: { currency: "USD", minor: "1000" },
+    customerPays: { currency: "USD", minor: "1000" },
+  });
+  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "in-stock");
+});
+
 test("stock status is hidden and refused while Manage Stock is on", async () => {
   const stores = storage([
     item({

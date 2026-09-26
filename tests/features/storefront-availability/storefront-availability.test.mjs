@@ -857,6 +857,27 @@ test("hide out-of-stock unlist clerk Out of stock and Inventory-at-zero, and lea
   assert.equal(hiddenZero.listable, false);
 });
 
+test("a missing listing collection keeps out-of-stock products on the shop", async () => {
+  const unmanaged = catalogItem({
+    creationIntent: { manageStock: false },
+    stockManagement: { mode: "unmanaged" },
+  });
+  const shown = await resolveStorefrontAvailability(
+    {
+      backorderPolicies: new MemoryCollection(),
+      catalog: new MemoryCollection([unmanaged]),
+      configurations: new MemoryCollection(),
+      listing: new MemoryCollection(),
+      manualAvailability: new MemoryCollection([manualAvailabilityRecord("out-of-stock")]),
+      prices: new MemoryCollection([catalogPrice()]),
+      settings: new MemoryCollection(),
+    },
+    { catalogItemId: "item-grill" },
+  );
+  assert.equal(shown.status, "out-of-stock");
+  assert.equal(shown.listable, true);
+});
+
 test("the store listing defaults to show out-of-stock and persists hide", async () => {
   const listing = new MemoryCollection();
   const loaded = await setOutOfStockListing(listing, { hideOutOfStock: false });
