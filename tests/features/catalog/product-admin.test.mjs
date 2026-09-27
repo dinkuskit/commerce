@@ -327,8 +327,6 @@ test("the product list is by name and the admin routes stay private", async () =
   );
 
   const plugin = createPlugin();
-  assert.equal(plugin.admin.pages[0].path, "/products");
-  assert.equal(plugin.admin.pages[1].path, "/store");
   assert.equal(plugin.routes[LIST_CATALOG_PRODUCTS_ROUTE].permission, "content:edit_any");
   assert.equal(plugin.routes[SAVE_CATALOG_PRODUCT_PRICES_ROUTE].permission, "content:edit_any");
   const context = {

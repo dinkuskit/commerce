@@ -1,0 +1,76 @@
+{
+  "$schema": "./node_modules/@emdash-cms/plugin-cli/schemas/emdash-plugin.schema.json",
+  "slug": "dinkus-commerce",
+  "publisher": "did:plc:ekk4pjmkh3k3ql2kfoex3qt4",
+  "name": "Commerce",
+  "description": "Manage products, prices and catalog settings in EmDash.",
+  "license": "MIT",
+  "author": {
+    "name": "DinkusKit",
+    "url": "https://github.com/dinkuskit"
+  },
+  "security": {
+    "url": "https://github.com/dinkuskit/commerce/security"
+  },
+  "repo": "https://github.com/dinkuskit/commerce",
+  "capabilities": [],
+  "allowedHosts": [],
+  "storage": {
+    "catalog_items": {
+      "indexes": [],
+      "uniqueIndexes": [
+        "commandId",
+        "skuKey"
+      ]
+    },
+    "catalog_backorder_policies": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "catalog_manual_availability": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "catalog_prices": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "managed_sku_claims": {
+      "indexes": [
+        "catalogItemId"
+      ],
+      "uniqueIndexes": [
+        "claimKey",
+        "operationId"
+      ]
+    },
+    "store_inventory_configurations": {
+      "indexes": [],
+      "uniqueIndexes": [
+        "configurationKey"
+      ]
+    },
+    "storefront_availability_settings": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "storefront_out_of_stock_listing": {
+      "indexes": [],
+      "uniqueIndexes": []
+    }
+  },
+  "admin": {
+    "pages": [
+      {
+        "path": "/products",
+        "label": "Commerce Products",
+        "icon": "storefront"
+      },
+      {
+        "path": "/settings",
+        "label": "Commerce Settings",
+        "icon": "settings"
+      }
+    ]
+  }
+}

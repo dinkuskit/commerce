@@ -17,7 +17,9 @@ describe its own scope; the roadmap is not a claim of release readiness.
 
 Pilot stage. The package name is reserved in source as
 `@dinkuskit/commerce`, but the manifest remains private at `0.0.0`: there is
-no installable package, release, deployment, or compatibility promise yet.
+no published package, Registry listing, release, or deployment yet. A local
+Registry-format sandbox artifact is built from `emdash-plugin.jsonc` and
+`src/plugin.ts`; it is not a claim of public Registry installation.
 
 Development and the private package's runtime peer are pinned to exact
 `emdash@0.41.0`. The first feature is the `dinkus.catalog` draft-item creation
@@ -79,8 +81,10 @@ storefront. Sale requires Regular and must be strictly lower; invalid Sale is
 refused rather than silently cleared. `resolveStorefrontAvailability` returns
 `listable: false` when Regular is missing.
 
-The EmDash admin Products page lists those catalog products by name and
-lets a clerk add one with a name and SKU. Opening a product shows Regular,
+The sandboxed EmDash Block Kit Products page lists those catalog products by name and
+lets a clerk add one with a name and SKU. Name is the customer-facing title
+(the product page H1 contract); this plugin does not render a storefront page.
+Opening a product shows Regular,
 Sale, Manage stock, and In stock / Out of stock / On backorder when Manage
 stock is off. Those three stock statuses hide when Manage stock is on. New
 products still default Manage stock off. Checking it persists setup-required
@@ -89,7 +93,7 @@ the dormant stock status, drops the Commerce setup claim, and does not contact
 Inventory. Uncheck is refused while Inventory setup is still running; the clerk
 retries Save after it finishes. One Save writes prices, Manage stock, and stock status. A refused
 Manage stock write leaves stored prices unchanged. Commerce still stores Money.
-The Store admin page lets the shop owner show out-of-stock products on the
+Commerce → Settings → Catalog lets the shop owner show out-of-stock products on the
 live site or hide them. The default is to show them. Hide is opt-in and
 applies to clerk Out of stock and Inventory-at-zero. On backorder stays
 visible. Unpriced products stay hidden. Admin still lists every product.
@@ -105,6 +109,28 @@ the fix reaches a stable EmDash release, Commerce must repin and rerun the
 SmokyClub mounted-site proof before expanding its compatibility claim.
 
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
+
+## Sandbox distribution
+
+`npm run build` produces `dist/sandbox/{plugin.mjs,manifest.json,index.mjs}`
+with the released EmDash plugin CLI. The publisher is `@smokyco.bsky.social`;
+publication requires separate approval. No npm publication is needed for the
+Registry path. No plugin-supplied JavaScript runs in the browser: EmDash renders
+Block Kit JSON and sends authenticated private interactions to the sandbox.
+The only runtime access is declared plugin storage; no network hosts or
+Inventory service are required for unmanaged products.
+
+The released CLI requires lowercase storage collection names. Fresh sandbox
+installs use snake_case names, preserving the kernel record shapes and actual
+unique-index checks. The legacy native API entry keeps its camelCase storage
+and no longer registers React admin pages. **This is not a native-to-sandbox
+upgrade path:** do not replace a populated native installation with this
+artifact. Data migration and live Inventory service wiring are separate work.
+The Cloudflare development limitation above remains; proof uses a disposable
+SQLite site with a real workerd runner, not an in-process fallback.
+
+See [sandbox admin implementation](docs/implementation/sandbox-admin.md) for
+the build, local installation and proof steps.
 
 ## Direction
 
@@ -133,6 +159,8 @@ The quick verifier covers types, unit contracts, feature boundaries, public
 repository hygiene, the exact EmDash API peer, and the exact private-pilot fork
 contract. The full verifier additionally runs cross-process SQLite atomicity
 proof against EmDash's real 0.41.0 storage repository and a two-process local
-Wrangler/D1 expression-index proof.
+Wrangler/D1 expression-index proof, plus the real workerd + SQLite
+admin/browser flow (`npm run test:sandbox` to run that boundary alone). Install Chromium first with
+`npx playwright install chromium`. No live site or Registry publication is used.
 
 Under construction. MIT licensed.

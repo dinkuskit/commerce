@@ -1,0 +1,1010 @@
+
+> @dinkuskit/commerce@0.0.0 typecheck
+> tsc --noEmit
+
+
+> @dinkuskit/commerce@0.0.0 test:unit
+> npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs tests/features/storefront-availability/*.test.mjs
+
+
+> @dinkuskit/commerce@0.0.0 build
+> node scripts/build.mjs && npm run build:sandbox
+
+
+> @dinkuskit/commerce@0.0.0 build:sandbox
+> emdash-plugin validate && emdash-plugin build --out-dir dist/sandbox
+
+[success] Manifest is valid: [2m<repo>/emdash-plugin.jsonc[22m
+[info] Default release hosting: publisher PDS blobs
+[start] Building plugin...
+[info] Manifest: <repo>/emdash-plugin.jsonc
+[info] Plugin entry: <repo>/src/plugin.ts
+[info] npm package: @dinkuskit/commerce
+[start] Building runtime entry...
+[34mℹ[39m entry: [34msrc/plugin.ts[39m
+[34mℹ[39m tsconfig: [34mtsconfig.json[39m
+[34mℹ[39m Build start
+[34mℹ[39m [2m../../../tmp/emdash-build-UJmSdP/runtime/[22m[1mplugin.mjs[22m  [2m30.32 kB[22m [2m│ gzip: 8.69 kB[22m
+[34mℹ[39m 1 files, total: 30.32 kB
+[32m✔[39m Build complete in [32m26ms[39m
+[34mℹ[39m entry: [34msrc/plugin.ts[39m
+[34mℹ[39m tsconfig: [34mtsconfig.json[39m
+[34mℹ[39m Build start
+[34mℹ[39m [2m../../../tmp/emdash-build-UJmSdP/runtime/[22mplugin.d.mts.map  [2m0.17 kB[22m [2m│ gzip: 0.16 kB[22m
+[34mℹ[39m [2m../../../tmp/emdash-build-UJmSdP/runtime/[22m[32m[1mplugin.d.mts[22m[39m      [2m0.20 kB[22m [2m│ gzip: 0.15 kB[22m
+[34mℹ[39m 2 files, total: 0.37 kB
+[32m✔[39m Build complete in [32m1076ms[39m
+[success] Built plugin.mjs
+[start] Probing plugin surface...
+[34mℹ[39m entry: [34msrc/plugin.ts[39m
+[34mℹ[39m tsconfig: [34mtsconfig.json[39m
+[34mℹ[39m Build start
+[34mℹ[39m [2m../../../tmp/emdash-build-UJmSdP/plugin-probe/[22m[1mplugin.mjs[22m  [2m54.85 kB[22m [2m│ gzip: 12.06 kB[22m
+[34mℹ[39m 1 files, total: 54.85 kB
+[32m✔[39m Build complete in [32m12ms[39m
+[info]   Hooks: (none)
+[info]   Routes: admin
+[success] Wrote manifest.json
+[start] Generating descriptor module...
+[success] Wrote index.mjs
+[success] Plugin built: did:plc:ekk4pjmkh3k3ql2kfoex3qt4/dinkus-commerce@0.0.0
+
+[info] Output:
+  [36m<repo>/dist/sandbox/index.mjs[39m
+  [36m<repo>/dist/sandbox/plugin.mjs[39m
+  [36m<repo>/dist/sandbox/manifest.json[39m
+TAP version 13
+# Subtest: SKU canonicalization is site-wide, ASCII-only, and hyphen-segmented
+ok 1 - SKU canonicalization is site-wide, ASCII-only, and hyphen-segmented
+  ---
+  duration_ms: 1.4395
+  type: 'test'
+  ...
+# Subtest: one command writes one complete draft row and a retry returns the original
+ok 2 - one command writes one complete draft row and a retry returns the original
+  ---
+  duration_ms: 4.467292
+  type: 'test'
+  ...
+# Subtest: an existing pre-policy row replays as explicitly unmanaged
+ok 3 - an existing pre-policy row replays as explicitly unmanaged
+  ---
+  duration_ms: 0.427291
+  type: 'test'
+  ...
+# Subtest: managed catalog creation persists setup-required intent without a quantity
+ok 4 - managed catalog creation persists setup-required intent without a quantity
+  ---
+  duration_ms: 0.57775
+  type: 'test'
+  ...
+# Subtest: manageStock must be a boolean when supplied
+ok 5 - manageStock must be a boolean when supplied
+  ---
+  duration_ms: 0.584666
+  type: 'test'
+  ...
+# Subtest: a reused command with changed input is a command conflict
+ok 6 - a reused command with changed input is a command conflict
+  ---
+  duration_ms: 0.549375
+  type: 'test'
+  ...
+# Subtest: a reused command cannot change managed-stock intent
+ok 7 - a reused command cannot change managed-stock intent
+  ---
+  duration_ms: 0.398709
+  type: 'test'
+  ...
+# Subtest: a managed create retry remains idempotent after stock setup advances
+ok 8 - a managed create retry remains idempotent after stock setup advances
+  ---
+  duration_ms: 0.274459
+  type: 'test'
+  ...
+# Subtest: a legacy active managed record without Inventory identity downgrades to setup-required
+ok 9 - a legacy active managed record without Inventory identity downgrades to setup-required
+  ---
+  duration_ms: 0.526334
+  type: 'test'
+  ...
+# Subtest: distinct commands cannot claim the same canonical SKU
+ok 10 - distinct commands cannot claim the same canonical SKU
+  ---
+  duration_ms: 0.71075
+  type: 'test'
+  ...
+# Subtest: creation fails closed before a product write when either unique index is absent
+ok 11 - creation fails closed before a product write when either unique index is absent
+  ---
+  duration_ms: 0.413666
+  type: 'test'
+  ...
+# Subtest: creation fails closed when an integrity probe cannot be cleaned up
+ok 12 - creation fails closed when an integrity probe cannot be cleaned up
+  ---
+  duration_ms: 0.265417
+  type: 'test'
+  ...
+# Subtest: only an exact named unique violation is classified as atomic proof
+ok 13 - only an exact named unique violation is classified as atomic proof
+  ---
+  duration_ms: 0.178334
+  type: 'test'
+  ...
+# Subtest: the EmDash plugin exposes one private, permissioned create route and both unique declarations
+ok 14 - the EmDash plugin exposes one private, permissioned create route and both unique declarations
+  ---
+  duration_ms: 0.083917
+  type: 'test'
+  ...
+# Subtest: the route rejects alternate methods and delegates POST to the catalog application
+ok 15 - the route rejects alternate methods and delegates POST to the catalog application
+  ---
+  duration_ms: 89.438917
+  type: 'test'
+  ...
+# Subtest: new and legacy unmanaged products normalize to In stock without a write
+ok 16 - new and legacy unmanaged products normalize to In stock without a write
+  ---
+  duration_ms: 1.475292
+  type: 'test'
+  ...
+# Subtest: an unmanaged product persists one strict manual status idempotently
+ok 17 - an unmanaged product persists one strict manual status idempotently
+  ---
+  duration_ms: 0.4565
+  type: 'test'
+  ...
+# Subtest: manual availability cannot be changed while Manage Stock is enabled
+ok 18 - manual availability cannot be changed while Manage Stock is enabled
+  ---
+  duration_ms: 0.686417
+  type: 'test'
+  ...
+# Subtest: manual availability rejects malformed input and untrustworthy storage
+ok 19 - manual availability rejects malformed input and untrustworthy storage
+  ---
+  duration_ms: 0.619542
+  type: 'test'
+  ...
+# Subtest: the plugin exposes one private permissioned manual-availability action
+ok 20 - the plugin exposes one private permissioned manual-availability action
+  ---
+  duration_ms: 18.285417
+  type: 'test'
+  ...
+# Subtest: missing Regular is not listable and is never treated as zero
+ok 21 - missing Regular is not listable and is never treated as zero
+  ---
+  duration_ms: 1.13775
+  type: 'test'
+  ...
+# Subtest: Regular persists as Money and zero is a free listable product
+ok 22 - Regular persists as Money and zero is a free listable product
+  ---
+  duration_ms: 1.181458
+  type: 'test'
+  ...
+# Subtest: Sale requires Regular, must be strictly lower, and can be cleared alone
+ok 23 - Sale requires Regular, must be strictly lower, and can be cleared alone
+  ---
+  duration_ms: 1.063708
+  type: 'test'
+  ...
+# Subtest: Regular cannot be cleared while Sale exists, then unpricing hides the product
+ok 24 - Regular cannot be cleared while Sale exists, then unpricing hides the product
+  ---
+  duration_ms: 0.392125
+  type: 'test'
+  ...
+# Subtest: Sale cannot exist on a free Regular and lowering Regular below Sale is refused
+ok 25 - Sale cannot exist on a free Regular and lowering Regular below Sale is refused
+  ---
+  duration_ms: 0.368417
+  type: 'test'
+  ...
+# Subtest: price writes reject malformed Money and unknown catalog items
+ok 26 - price writes reject malformed Money and unknown catalog items
+  ---
+  duration_ms: 0.596125
+  type: 'test'
+  ...
+# Subtest: price routes are private POST actions that do not rewrite the catalog row
+ok 27 - price routes are private POST actions that do not rewrite the catalog row
+  ---
+  duration_ms: 27.697792
+  type: 'test'
+  ...
+# Subtest: adding a product asks only for name and SKU
+ok 28 - adding a product asks only for name and SKU
+  ---
+  duration_ms: 1.135375
+  type: 'test'
+  ...
+# Subtest: a clerk can save Regular and Sale and see a refusal leave the price unchanged
+ok 29 - a clerk can save Regular and Sale and see a refusal leave the price unchanged
+  ---
+  duration_ms: 1.910083
+  type: 'test'
+  ...
+# Subtest: one decimal and a dollar sign save as cents, and a bad sale does not change the stored price
+ok 30 - one decimal and a dollar sign save as cents, and a bad sale does not change the stored price
+  ---
+  duration_ms: 0.460625
+  type: 'test'
+  ...
+# Subtest: lowering Regular below the current Sale stores the new lower Sale in one write
+ok 31 - lowering Regular below the current Sale stores the new lower Sale in one write
+  ---
+  duration_ms: 2.607916
+  type: 'test'
+  ...
+# Subtest: a failed price write leaves the stored Regular and Sale unchanged
+ok 32 - a failed price write leaves the stored Regular and Sale unchanged
+  ---
+  duration_ms: 1.211167
+  type: 'test'
+  ...
+# Subtest: blanking both fields ends the sale and unprices the product
+ok 33 - blanking both fields ends the sale and unprices the product
+  ---
+  duration_ms: 0.658667
+  type: 'test'
+  ...
+# Subtest: the product list is by name and the admin routes stay private
+ok 34 - the product list is by name and the admin routes stay private
+  ---
+  duration_ms: 22.591792
+  type: 'test'
+  ...
+# Subtest: one Save writes Out of stock and a refused status leaves the stored status unchanged
+ok 35 - one Save writes Out of stock and a refused status leaves the stored status unchanged
+  ---
+  duration_ms: 0.769875
+  type: 'test'
+  ...
+# Subtest: a failed stock write after a price change restores the stored Regular and Sale
+ok 36 - a failed stock write after a price change restores the stored Regular and Sale
+  ---
+  duration_ms: 0.960166
+  type: 'test'
+  ...
+# Subtest: a failed stock write does not restore over a later clerk price save
+ok 37 - a failed stock write does not restore over a later clerk price save
+  ---
+  duration_ms: 0.948583
+  type: 'test'
+  ...
+# Subtest: a failed stock write does not restore after a later save between verify and restore
+ok 38 - a failed stock write does not restore after a later save between verify and restore
+  ---
+  duration_ms: 0.86575
+  type: 'test'
+  ...
+# Subtest: stock status is hidden and refused while Manage Stock is on
+ok 39 - stock status is hidden and refused while Manage Stock is on
+  ---
+  duration_ms: 0.168458
+  type: 'test'
+  ...
+# Subtest: the same Save can check Manage stock without rewriting price
+ok 40 - the same Save can check Manage stock without rewriting price
+  ---
+  duration_ms: 0.347083
+  type: 'test'
+  ...
+# Subtest: unchecking Manage stock restores dormant status and drops the setup claim
+ok 41 - unchecking Manage stock restores dormant status and drops the setup claim
+  ---
+  duration_ms: 0.562
+  type: 'test'
+  ...
+# Subtest: unchecking Manage stock is refused while Inventory setup is pending
+ok 42 - unchecking Manage stock is refused while Inventory setup is pending
+  ---
+  duration_ms: 0.198083
+  type: 'test'
+  ...
+# Subtest: a refused disable does not drop a claim that became pending after the save started
+ok 43 - a refused disable does not drop a claim that became pending after the save started
+  ---
+  duration_ms: 0.229291
+  type: 'test'
+  ...
+# Subtest: a failed claim release after disable is cleaned up on the next unmanaged save
+ok 44 - a failed claim release after disable is cleaned up on the next unmanaged save
+  ---
+  duration_ms: 0.8245
+  type: 'test'
+  ...
+# Subtest: a stale enable does not overwrite a concurrent pending registration
+ok 45 - a stale enable does not overwrite a concurrent pending registration
+  ---
+  duration_ms: 0.250916
+  type: 'test'
+  ...
+# Subtest: the package root and feature entry expose the same catalog contract
+ok 46 - the package root and feature entry expose the same catalog contract
+  ---
+  duration_ms: 0.547542
+  type: 'test'
+  ...
+# Subtest: the provider binding retains only opaque provider, pool, and default-location identities
+ok 47 - the provider binding retains only opaque provider, pool, and default-location identities
+  ---
+  duration_ms: 0.812375
+  type: 'test'
+  ...
+# Subtest: the provider binding rejects missing, blank, and non-string identities
+ok 48 - the provider binding rejects missing, blank, and non-string identities
+  ---
+  duration_ms: 0.275417
+  type: 'test'
+  ...
+# Subtest: managed intent starts fail-closed and contains no local quantity
+ok 49 - managed intent starts fail-closed and contains no local quantity
+  ---
+  duration_ms: 0.076166
+  type: 'test'
+  ...
+# Subtest: disabling management is Commerce-only and re-enabling requires fresh setup
+ok 50 - disabling management is Commerce-only and re-enabling requires fresh setup
+  ---
+  duration_ms: 0.102791
+  type: 'test'
+  ...
+# Subtest: registration request uses the Commerce title once and carries no stock or location
+ok 51 - registration request uses the Commerce title once and carries no stock or location
+  ---
+  duration_ms: 0.158583
+  type: 'test'
+  ...
+# Subtest: registration requests fail closed on malformed identities or titles
+ok 52 - registration requests fail closed on malformed identities or titles
+  ---
+  duration_ms: 0.185167
+  type: 'test'
+  ...
+# Subtest: registration results retain only the provider-neutral Inventory SKU identity
+ok 53 - registration results retain only the provider-neutral Inventory SKU identity
+  ---
+  duration_ms: 0.18425
+  type: 'test'
+  ...
+# Subtest: a newly registered SKU activates only its permanent Inventory identity
+ok 54 - a newly registered SKU activates only its permanent Inventory identity
+  ---
+  duration_ms: 0.081917
+  type: 'test'
+  ...
+# Subtest: an existing pooled SKU requires review before its permanent identity activates
+ok 55 - an existing pooled SKU requires review before its permanent identity activates
+  ---
+  duration_ms: 0.4095
+  type: 'test'
+  ...
+# Subtest: existing SKU confirmation rejects malformed persisted candidates
+ok 56 - existing SKU confirmation rejects malformed persisted candidates
+  ---
+  duration_ms: 0.4675
+  type: 'test'
+  ...
+# Subtest: registration rejects wrong-SKU and out-of-order state transitions
+ok 57 - registration rejects wrong-SKU and out-of-order state transitions
+  ---
+  duration_ms: 0.173958
+  type: 'test'
+  ...
+# Subtest: the package root and feature entry expose the same inventory-provider contract
+ok 58 - the package root and feature entry expose the same inventory-provider contract
+  ---
+  duration_ms: 0.605417
+  type: 'test'
+  ...
+# Subtest: the plugin declares isolated atomic claim storage
+ok 59 - the plugin declares isolated atomic claim storage
+  ---
+  duration_ms: 6.543917
+  type: 'test'
+  ...
+# Subtest: the claim adapter atomically returns one winner
+ok 60 - the claim adapter atomically returns one winner
+  ---
+  duration_ms: 5.692083
+  type: 'test'
+  ...
+# Subtest: missing claim uniqueness fails closed before a claim row
+ok 61 - missing claim uniqueness fails closed before a claim row
+  ---
+  duration_ms: 0.814
+  type: 'test'
+  ...
+# Subtest: one operation ID cannot silently move to another claim generation
+ok 62 - one operation ID cannot silently move to another claim generation
+  ---
+  duration_ms: 0.572417
+  type: 'test'
+  ...
+# Subtest: ambiguous winner recovery fails closed
+ok 63 - ambiguous winner recovery fails closed
+  ---
+  duration_ms: 0.455334
+  type: 'test'
+  ...
+# Subtest: only exact named claim constraints are accepted as atomic proof
+ok 64 - only exact named claim constraints are accepted as atomic proof
+  ---
+  duration_ms: 0.161833
+  type: 'test'
+  ...
+# Subtest: simultaneous first registrations converge on one operation and one provider call
+ok 65 - simultaneous first registrations converge on one operation and one provider call
+  ---
+  duration_ms: 1.125209
+  type: 'test'
+  ...
+# Subtest: a different-pool contender keeps the winning pool and makes no second provider call
+ok 66 - a different-pool contender keeps the winning pool and makes no second provider call
+  ---
+  duration_ms: 0.244792
+  type: 'test'
+  ...
+# Subtest: unavailable atomic authority leaves state untouched and never contacts Inventory
+ok 67 - unavailable atomic authority leaves state untouched and never contacts Inventory
+  ---
+  duration_ms: 0.263166
+  type: 'test'
+  ...
+# Subtest: a malformed claimed winner fails closed before Commerce persistence or Inventory contact
+ok 68 - a malformed claimed winner fails closed before Commerce persistence or Inventory contact
+  ---
+  duration_ms: 0.159875
+  type: 'test'
+  ...
+# Subtest: a corrected rejection receives a distinct append-only claim generation
+ok 69 - a corrected rejection receives a distinct append-only claim generation
+  ---
+  duration_ms: 0.070209
+  type: 'test'
+  ...
+# Subtest: concurrent registration feedback names the pool and exposes Refresh status
+ok 70 - concurrent registration feedback names the pool and exposes Refresh status
+  ---
+  duration_ms: 0.062833
+  type: 'test'
+  ...
+# Subtest: unavailable feedback preserves the locked copy and invalid feedback is not a storage outage
+ok 71 - unavailable feedback preserves the locked copy and invalid feedback is not a storage outage
+  ---
+  duration_ms: 0.128958
+  type: 'test'
+  ...
+# Subtest: an ambiguous first call persists one retryable operation before contacting Inventory
+ok 72 - an ambiguous first call persists one retryable operation before contacting Inventory
+  ---
+  duration_ms: 2.419667
+  type: 'test'
+  ...
+# Subtest: a pending operation survives reload and an explicit retry reuses its identity
+ok 73 - a pending operation survives reload and an explicit retry reuses its identity
+  ---
+  duration_ms: 0.315917
+  type: 'test'
+  ...
+# Subtest: a genuine existing SKU still waits for explicit confirmation
+ok 74 - a genuine existing SKU still waits for explicit confirmation
+  ---
+  duration_ms: 0.205291
+  type: 'test'
+  ...
+# Subtest: a definitive rejection needs attention and corrected resubmission uses a new operation
+ok 75 - a definitive rejection needs attention and corrected resubmission uses a new operation
+  ---
+  duration_ms: 0.255417
+  type: 'test'
+  ...
+# Subtest: malformed provider output leaves the persisted operation pending
+ok 76 - malformed provider output leaves the persisted operation pending
+  ---
+  duration_ms: 0.122042
+  type: 'test'
+  ...
+# Subtest: malformed persisted attempts fail safe to setup-required
+ok 77 - malformed persisted attempts fail safe to setup-required
+  ---
+  duration_ms: 0.115167
+  type: 'test'
+  ...
+# Subtest: one store configuration atomically mints and preserves one permanent site identity
+ok 78 - one store configuration atomically mints and preserves one permanent site identity
+  ---
+  duration_ms: 8.380208
+  type: 'test'
+  ...
+# Subtest: simultaneous first configuration converges on one site identity
+ok 79 - simultaneous first configuration converges on one site identity
+  ---
+  duration_ms: 0.647417
+  type: 'test'
+  ...
+# Subtest: location changes retain site identity while provider or pool changes require migration
+ok 80 - location changes retain site identity while provider or pool changes require migration
+  ---
+  duration_ms: 0.943417
+  type: 'test'
+  ...
+# Subtest: configuration rejects caller-supplied site identity and malformed binding data
+ok 81 - configuration rejects caller-supplied site identity and malformed binding data
+  ---
+  duration_ms: 0.438333
+  type: 'test'
+  ...
+# Subtest: missing store setup returns a structured setup action without claims or provider contact
+ok 82 - missing store setup returns a structured setup action without claims or provider contact
+  ---
+  duration_ms: 1.209916
+  type: 'test'
+  ...
+# Subtest: incomplete stored setup returns the same setup action without side effects
+ok 83 - incomplete stored setup returns the same setup action without side effects
+  ---
+  duration_ms: 0.3535
+  type: 'test'
+  ...
+# Subtest: the product action accepts only catalogItemId and rejects missing or unmanaged products
+ok 84 - the product action accepts only catalogItemId and rejects missing or unmanaged products
+  ---
+  duration_ms: 0.737958
+  type: 'test'
+  ...
+# Subtest: complete setup resolves the provider with the permanent site identity and activates the SKU
+ok 85 - complete setup resolves the provider with the permanent site identity and activates the SKU
+  ---
+  duration_ms: 2.263375
+  type: 'test'
+  ...
+# Subtest: existing, pending, and active states never start a second registration
+ok 86 - existing, pending, and active states never start a second registration
+  ---
+  duration_ms: 0.905041
+  type: 'test'
+  ...
+# Subtest: a configured product fails before a claim when no runtime provider is installed
+ok 87 - a configured product fails before a claim when no runtime provider is installed
+  ---
+  duration_ms: 0.809583
+  type: 'test'
+  ...
+# Subtest: the plugin declares the singleton configuration and one private update route
+ok 88 - the plugin declares the singleton configuration and one private update route
+  ---
+  duration_ms: 28.973958
+  type: 'test'
+  ...
+# Subtest: Configure Inventory does not overwrite a concurrent disable
+ok 89 - Configure Inventory does not overwrite a concurrent disable
+  ---
+  duration_ms: 0.840584
+  type: 'test'
+  ...
+# Subtest: disable after setup-pending is refused so registration can still contact Inventory
+ok 90 - disable after setup-pending is refused so registration can still contact Inventory
+  ---
+  duration_ms: 0.932083
+  type: 'test'
+  ...
+# Subtest: the package root and feature entry expose the same inventory-setup contract
+ok 91 - the package root and feature entry expose the same inventory-setup contract
+  ---
+  duration_ms: 0.507
+  type: 'test'
+  ...
+# Subtest: the package root and feature entry expose the same storefront availability contract
+ok 92 - the package root and feature entry expose the same storefront availability contract
+  ---
+  duration_ms: 0.588041
+  type: 'test'
+  ...
+# Subtest: status-only availability uses Inventory available at the default fulfillment location
+ok 93 - status-only availability uses Inventory available at the default fulfillment location
+  ---
+  duration_ms: 2.672667
+  type: 'test'
+  ...
+# Subtest: exact and threshold policies expose quantity only when the policy permits it
+ok 94 - exact and threshold policies expose quantity only when the policy permits it
+  ---
+  duration_ms: 0.994375
+  type: 'test'
+  ...
+# Subtest: zero stock is out of stock unless the product deliberately allows backorders
+ok 95 - zero stock is out of stock unless the product deliberately allows backorders
+  ---
+  duration_ms: 0.541125
+  type: 'test'
+  ...
+# Subtest: non-active managed setup fails closed without contacting Inventory
+ok 96 - non-active managed setup fails closed without contacting Inventory
+  ---
+  duration_ms: 0.249541
+  type: 'test'
+  ...
+# Subtest: provider failure, not-found, and malformed stock all fail closed even for backorders
+ok 97 - provider failure, not-found, and malformed stock all fail closed even for backorders
+  ---
+  duration_ms: 11.83575
+  type: 'test'
+  ...
+# Subtest: unmanaged products map all three manual states without contacting Inventory
+ok 98 - unmanaged products map all three manual states without contacting Inventory
+  ---
+  duration_ms: 2.051583
+  type: 'test'
+  ...
+# Subtest: missing unmanaged state defaults to In stock and ignores exact or threshold display policy
+ok 99 - missing unmanaged state defaults to In stock and ignores exact or threshold display policy
+  ---
+  duration_ms: 0.374459
+  type: 'test'
+  ...
+# Subtest: a dormant manual state returns after Manage Stock is disabled
+ok 100 - a dormant manual state returns after Manage Stock is disabled
+  ---
+  duration_ms: 0.405
+  type: 'test'
+  ...
+# Subtest: manual storage failure fails closed for unmanaged products but is never read for managed products
+ok 101 - manual storage failure fails closed for unmanaged products but is never read for managed products
+  ---
+  duration_ms: 0.688458
+  type: 'test'
+  ...
+# Subtest: non-active managed setup never falls back to dormant manual availability
+ok 102 - non-active managed setup never falls back to dormant manual availability
+  ---
+  duration_ms: 0.562375
+  type: 'test'
+  ...
+# Subtest: the managed-only compatibility resolver still rejects unmanaged products
+ok 103 - the managed-only compatibility resolver still rejects unmanaged products
+  ---
+  duration_ms: 0.884833
+  type: 'test'
+  ...
+# Subtest: admin actions persist strict store display and product backorder settings
+ok 104 - admin actions persist strict store display and product backorder settings
+  ---
+  duration_ms: 1.628916
+  type: 'test'
+  ...
+# Subtest: legacy persisted records normalize to safe status-only and no-backorder defaults
+ok 105 - legacy persisted records normalize to safe status-only and no-backorder defaults
+  ---
+  duration_ms: 0.341167
+  type: 'test'
+  ...
+# Subtest: admin settings reject malformed values and caller-controlled fields
+ok 106 - admin settings reject malformed values and caller-controlled fields
+  ---
+  duration_ms: 0.713916
+  type: 'test'
+  ...
+# Subtest: the existing authenticated display and managed-backorder actions remain bounded
+ok 107 - the existing authenticated display and managed-backorder actions remain bounded
+  ---
+  duration_ms: 14.275042
+  type: 'test'
+  ...
+# Subtest: unpriced products are not listable and never contact Inventory
+ok 108 - unpriced products are not listable and never contact Inventory
+  ---
+  duration_ms: 0.190292
+  type: 'test'
+  ...
+# Subtest: a free Regular remains listable
+ok 109 - a free Regular remains listable
+  ---
+  duration_ms: 0.311792
+  type: 'test'
+  ...
+# Subtest: hide out-of-stock unlist clerk Out of stock and Inventory-at-zero, and leaves On backorder visible
+ok 110 - hide out-of-stock unlist clerk Out of stock and Inventory-at-zero, and leaves On backorder visible
+  ---
+  duration_ms: 0.615667
+  type: 'test'
+  ...
+# Subtest: a listing lookup or malformed record does not re-list out-of-stock products
+ok 111 - a listing lookup or malformed record does not re-list out-of-stock products
+  ---
+  duration_ms: 0.265625
+  type: 'test'
+  ...
+# Subtest: a missing listing collection keeps out-of-stock products on the shop
+ok 112 - a missing listing collection keeps out-of-stock products on the shop
+  ---
+  duration_ms: 0.139291
+  type: 'test'
+  ...
+# Subtest: the store listing defaults to show out-of-stock and persists hide
+ok 113 - the store listing defaults to show out-of-stock and persists hide
+  ---
+  duration_ms: 0.501417
+  type: 'test'
+  ...
+# Subtest: the committed scaffold satisfies the public repository contract
+ok 114 - the committed scaffold satisfies the public repository contract
+  ---
+  duration_ms: 36.0195
+  type: 'test'
+  ...
+# Subtest: recognizes one exact command line inside a longer comment
+ok 115 - recognizes one exact command line inside a longer comment
+  ---
+  duration_ms: 0.594875
+  type: 'test'
+  ...
+# Subtest: binds the live default-branch SHA when the pull request base snapshot is stale
+ok 116 - binds the live default-branch SHA when the pull request base snapshot is stale
+  ---
+  duration_ms: 1.892417
+  type: 'test'
+  ...
+# Subtest: lets the exact PR author request a fresh read-only re-review
+ok 117 - lets the exact PR author request a fresh read-only re-review
+  ---
+  duration_ms: 0.127041
+  type: 'test'
+  ...
+# Subtest: does not let an untrusted contributor start review or rerun another PR
+ok 118 - does not let an untrusted contributor start review or rerun another PR
+  ---
+  duration_ms: 0.0855
+  type: 'test'
+  ...
+# Subtest: ignores bots, non-PR comments, wrong repository identity, and edited comments
+ok 119 - ignores bots, non-PR comments, wrong repository identity, and edited comments
+  ---
+  duration_ms: 0.150625
+  type: 'test'
+  ...
+# Subtest: fails closed when the live PR is closed, moved, or malformed
+ok 120 - fails closed when the live PR is closed, moved, or malformed
+  ---
+  duration_ms: 0.076875
+  type: 'test'
+  ...
+# Subtest: fails closed when the live default-branch ref is missing or malformed
+ok 121 - fails closed when the live default-branch ref is missing or malformed
+  ---
+  duration_ms: 0.172417
+  type: 'test'
+  ...
+# Subtest: pins the ClawSweeper caller and engine to one immutable commit
+ok 122 - pins the ClawSweeper caller and engine to one immutable commit
+  ---
+  duration_ms: 4.246209
+  type: 'test'
+  ...
+1..122
+# tests 122
+# suites 0
+# pass 122
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 994.869959
+
+> @dinkuskit/commerce@0.0.0 audit:repo
+> node scripts/repo-contract.mjs && npm run audit:features
+
+public_repository_contract=clean
+
+> @dinkuskit/commerce@0.0.0 audit:features
+> node scripts/check-features.mjs
+
+feature_contract=clean
+
+> @dinkuskit/commerce@0.0.0 test:integration
+> npm run build && node --test tests/integration/*.test.mjs
+
+
+> @dinkuskit/commerce@0.0.0 build
+> node scripts/build.mjs && npm run build:sandbox
+
+
+> @dinkuskit/commerce@0.0.0 build:sandbox
+> emdash-plugin validate && emdash-plugin build --out-dir dist/sandbox
+
+[success] Manifest is valid: [2m<repo>/emdash-plugin.jsonc[22m
+[info] Default release hosting: publisher PDS blobs
+[start] Building plugin...
+[info] Manifest: <repo>/emdash-plugin.jsonc
+[info] Plugin entry: <repo>/src/plugin.ts
+[info] npm package: @dinkuskit/commerce
+[start] Building runtime entry...
+[34mℹ[39m entry: [34msrc/plugin.ts[39m
+[34mℹ[39m tsconfig: [34mtsconfig.json[39m
+[34mℹ[39m Build start
+[34mℹ[39m [2m../../../tmp/emdash-build-MPD6cf/runtime/[22m[1mplugin.mjs[22m  [2m30.32 kB[22m [2m│ gzip: 8.69 kB[22m
+[34mℹ[39m 1 files, total: 30.32 kB
+[32m✔[39m Build complete in [32m25ms[39m
+[34mℹ[39m entry: [34msrc/plugin.ts[39m
+[34mℹ[39m tsconfig: [34mtsconfig.json[39m
+[34mℹ[39m Build start
+[34mℹ[39m [2m../../../tmp/emdash-build-MPD6cf/runtime/[22mplugin.d.mts.map  [2m0.17 kB[22m [2m│ gzip: 0.16 kB[22m
+[34mℹ[39m [2m../../../tmp/emdash-build-MPD6cf/runtime/[22m[32m[1mplugin.d.mts[22m[39m      [2m0.20 kB[22m [2m│ gzip: 0.15 kB[22m
+[34mℹ[39m 2 files, total: 0.37 kB
+[32m✔[39m Build complete in [32m959ms[39m
+[success] Built plugin.mjs
+[start] Probing plugin surface...
+[34mℹ[39m entry: [34msrc/plugin.ts[39m
+[34mℹ[39m tsconfig: [34mtsconfig.json[39m
+[34mℹ[39m Build start
+[34mℹ[39m [2m../../../tmp/emdash-build-MPD6cf/plugin-probe/[22m[1mplugin.mjs[22m  [2m54.85 kB[22m [2m│ gzip: 12.06 kB[22m
+[34mℹ[39m 1 files, total: 54.85 kB
+[32m✔[39m Build complete in [32m9ms[39m
+[info]   Hooks: (none)
+[info]   Routes: admin
+[success] Wrote manifest.json
+[start] Generating descriptor module...
+[success] Wrote index.mjs
+[success] Plugin built: did:plc:ekk4pjmkh3k3ql2kfoex3qt4/dinkus-commerce@0.0.0
+
+[info] Output:
+  [36m<repo>/dist/sandbox/index.mjs[39m
+  [36m<repo>/dist/sandbox/plugin.mjs[39m
+  [36m<repo>/dist/sandbox/manifest.json[39m
+TAP version 13
+# Subtest: two local Wrangler/D1 processes enforce the EmDash JSON-expression SKU index
+ok 1 - two local Wrangler/D1 processes enforce the EmDash JSON-expression SKU index
+  ---
+  duration_ms: 3804.073209
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"wrangler-d1-atomic-managed-sku-registration-claim","emdash":"0.41.0","processes":2,"writesSucceeded":1,"writesRejected":1,"persistedClaims":1,"rejectedConstraint":"uidx_plugin_dinkus-commerce_managedSkuClaims_claimKey","dataClassification":"synthetic-local"}
+# Subtest: two local Wrangler/D1 processes enforce one managed-SKU registration claim
+ok 2 - two local Wrangler/D1 processes enforce one managed-SKU registration claim
+  ---
+  duration_ms: 3640.699583
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"wrangler-d1-atomic-store-inventory-configuration","emdash":"0.41.0","processes":2,"writesSucceeded":1,"writesRejected":1,"persistedConfigurations":1,"rejectedConstraint":"uidx_plugin_dinkus-commerce_storeInventoryConfigurations_configurationKey","dataClassification":"synthetic-local"}
+# Subtest: two local Wrangler/D1 processes enforce one permanent store identity
+ok 3 - two local Wrangler/D1 processes enforce one permanent store identity
+  ---
+  duration_ms: 3548.411833
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"atomic-managed-sku-registration-claim","emdash":"0.41.0","processes":2,"claimed":1,"joined":1,"persistedClaims":1,"oneOperation":true,"onePool":true,"dataClassification":"synthetic"}
+# Subtest: two EmDash 0.35 repository processes converge on one registration operation
+ok 4 - two EmDash 0.35 repository processes converge on one registration operation
+  ---
+  duration_ms: 480.154375
+  type: 'test'
+  ...
+# Subtest: EmDash 0.35 claim storage fails closed when either unique index is absent
+    # Subtest: only claimKey is active
+    ok 1 - only claimKey is active
+      ---
+      duration_ms: 8.486917
+      type: 'test'
+      ...
+    # Subtest: only operationId is active
+    ok 2 - only operationId is active
+      ---
+      duration_ms: 4.385042
+      type: 'test'
+      ...
+    1..2
+ok 5 - EmDash 0.35 claim storage fails closed when either unique index is absent
+  ---
+  duration_ms: 13.339625
+  type: 'test'
+  ...
+# Subtest: exact EmDash 0.35 storage fails closed when either declared unique index is not live
+    # Subtest: only commandId is active
+    ok 1 - only commandId is active
+      ---
+      duration_ms: 13.769041
+      type: 'test'
+      ...
+    # Subtest: only skuKey is active
+    ok 2 - only skuKey is active
+      ---
+      duration_ms: 4.805333
+      type: 'test'
+      ...
+    1..2
+ok 6 - exact EmDash 0.35 storage fails closed when either declared unique index is not live
+  ---
+  duration_ms: 19.245542
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"managed-setup-persistence","emdash":"0.41.0","created":true,"persistedRecords":1,"creationIntent":{"manageStock":true},"stockManagement":{"mode":"managed","status":"setup-required"},"hasQuantity":false,"hasStockQuantity":false,"dataClassification":"synthetic"}
+# Subtest: exact EmDash 0.35 storage persists managed setup intent without local quantity
+ok 7 - exact EmDash 0.35 storage persists managed setup intent without local quantity
+  ---
+  duration_ms: 6.902833
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"competing-sku","emdash":"0.41.0","processes":2,"created":1,"rejected":1,"rejectionCode":"SKU_CONFLICT","persistedRecords":1,"persistedRows":1}
+# Subtest: two server processes claiming one SKU produce one row and one SKU_CONFLICT
+ok 8 - two server processes claiming one SKU produce one row and one SKU_CONFLICT
+  ---
+  duration_ms: 453.675333
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"idempotent-replay","emdash":"0.41.0","processes":2,"created":1,"replayed":1,"sameItem":true,"persistedRecords":1,"persistedRows":1}
+# Subtest: two server processes retrying one command converge on the original row
+ok 9 - two server processes retrying one command converge on the original row
+  ---
+  duration_ms: 341.349708
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"atomic-store-inventory-configuration","emdash":"0.41.0","processes":2,"created":1,"joined":1,"persistedConfigurations":1,"onePermanentSiteId":true,"dataClassification":"synthetic"}
+# Subtest: two EmDash 0.35 repository processes converge on one permanent site identity
+ok 10 - two EmDash 0.35 repository processes converge on one permanent site identity
+  ---
+  duration_ms: 475.647292
+  type: 'test'
+  ...
+# Subtest: EmDash 0.35 configuration storage fails closed without its unique index
+ok 11 - EmDash 0.35 configuration storage fails closed without its unique index
+  ---
+  duration_ms: 9.494833
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"configure-inventory-action-persistence","emdash":"0.41.0","outcome":"inventory-active","siteIdentityPersisted":true,"catalogState":"active","persistedConfigurations":1,"persistedClaims":1,"providerContract":"InventoryProviderPort","dataClassification":"synthetic"}
+# Subtest: Configure Inventory persists one active SKU through exact EmDash 0.35 storage
+ok 12 - Configure Inventory persists one active SKU through exact EmDash 0.35 storage
+  ---
+  duration_ms: 14.152667
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"storefront-availability-policy-persistence","emdash":"0.41.0","storageReopened":true,"displayMode":"threshold","threshold":5,"allowBackorders":true,"inventoryScope":"location","inventoryLocation":"murphy-nc","resolvedStatus":"low-stock","dataClassification":"synthetic"}
+# Subtest: storefront policy and backorders survive EmDash storage reopen
+ok 13 - storefront policy and backorders survive EmDash storage reopen
+  ---
+  duration_ms: 16.101959
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"manual-unmanaged-availability-persistence","emdash":"0.41.0","storageReopened":true,"persistedStatus":"out-of-stock","resolvedStatus":"out-of-stock","sellable":false,"inventoryContacted":false,"dataClassification":"synthetic"}
+# Subtest: manual unmanaged availability survives EmDash storage reopen without Inventory
+ok 14 - manual unmanaged availability survives EmDash storage reopen without Inventory
+  ---
+  duration_ms: 9.942542
+  type: 'test'
+  ...
+# LIVE_PROOF {"case":"pre-price-catalog-upgrade-delisting","emdash":"0.41.0","storageReopened":true,"catalogRowPersisted":true,"priceRows":0,"listable":false,"sellable":false,"resolvedStatus":"availability-unavailable","inventoryContacted":false,"operatorRemediation":"catalog-items/set-regular-price","dataClassification":"synthetic"}
+# Subtest: a pre-price catalog item stays persisted and is not listable after reopen
+ok 15 - a pre-price catalog item stays persisted and is not listable after reopen
+  ---
+  duration_ms: 5.202792
+  type: 'test'
+  ...
+1..15
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11330.411375
+
+> @dinkuskit/commerce@0.0.0 test:sandbox
+> playwright test
+
+[WebServer] (node:48582) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [datetime migration] 0 noncanonical values (0 naive) using UTC
+[WebServer] [emdash] No user seed found at .emdash/seed.json, package.json#emdash.seed, or seed/seed.json. Falling back to the built-in default seed; the setup wizard will not offer demo content for this site.
+
+Running 1 test using 1 worker
+
+sandbox_proof=pass create replay price-refusal stock-toggle settings anonymous-denial unmanaged-without-Inventory; DB=<repo>/.tmp/sandbox-proof/1790471641291/content.db
+  ✓  1 tests/sandbox/commerce.spec.mjs:10:1 › fresh sandbox installation preserves the clerk workflow and storefront policy (1.2m)
+
+  1 passed (1.3m)
