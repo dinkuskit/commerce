@@ -8,6 +8,7 @@ This map is the repository contract for bounded Commerce feature work. A feature
 | `dinkus.inventory-provider` | Opaque store-level provider binding, atomic managed-SKU registration claims, provider-neutral registration orchestration, and product stock-management transitions; never stock quantity or provider fallback | `src/features/inventory-provider/` | `src/features/inventory-provider/index.ts`; package root; `@dinkuskit/commerce/features/inventory-provider` | EmDash 0.41.0 plugin and storage types | `tests/features/inventory-provider/`; `tests/integration/`; `proof/managed-stock-foundation/PROOF.md`; `proof/managed-sku-registration/PROOF.md` | `bin/verify-commerce quick` | `bin/verify-commerce full` | `InventoryProviderBinding`; `InventoryProviderPort`; `ManagedSkuRegistrationClaimPort`; `ManagedSkuRegistrationRequest`; `StockManagement`; binding, atomic claim, registration, review, feedback, and enable/disable transitions | proven claim foundation |
 | `dinkus.inventory-setup` | One permanent Commerce site identity, one store-level Inventory binding, and the trusted Configure Inventory product action | `src/features/inventory-setup/` | `src/features/inventory-setup/index.ts`; package root; `@dinkuskit/commerce/features/inventory-setup` | EmDash 0.41.0 plugin and storage types; `dinkus.catalog` and `dinkus.inventory-provider` public entries | `tests/features/inventory-setup/`; `tests/integration/store-configuration-atomicity.test.mjs`; `proof/configure-inventory-action/PROOF.md` | `bin/verify-commerce quick` | `bin/verify-commerce full` | `StoreInventoryConfigurationRecord`; `createStoreInventoryConfiguration`; `configureCatalogItemInventory`; authenticated `catalog-items/configure-inventory` route | provider-neutral Commerce half |
 | `dinkus.storefront-availability` | Resolve managed Inventory truth or unmanaged Commerce policy into one structured storefront status, sellability, and listable contract after catalog Regular exists, exposing quantity only for managed products when policy permits, and the store-level show-or-hide out-of-stock listing | `src/features/storefront-availability/` | `src/features/storefront-availability/index.ts`; `src/features/storefront-availability/browser/index.ts`; package root; `@dinkuskit/commerce/features/storefront-availability`; `@dinkuskit/commerce/features/storefront-availability/browser` | `dinkus.catalog`, `dinkus.inventory-provider`, and `dinkus.inventory-setup` public entries; DinkusKit Inventory `sku-stock-read-result/v1` port shape | `tests/features/storefront-availability/`; `tests/integration/store-configuration-atomicity.test.mjs`; `proof/managed-storefront-availability/PROOF.md`; `proof/unmanaged-product-sellability/PROOF.md`; `proof/commerce-owned-product-price/PROOF.md` | `bin/verify-commerce quick` | `bin/verify-commerce full` | `setStorefrontAvailabilityPolicy`; `setOutOfStockListing`; additive `resolveStorefrontAvailability`; compatible `resolveManagedStorefrontAvailability`; `InventoryAvailabilityProviderPort`; `StorefrontAvailabilityResult`; authenticated `settings/storefront-availability` and `settings/out-of-stock-listing` routes; no transport or customer-facing wording | unified backend contract |
+| `dinkus.checkout` | Durable guest checkout attempts, frozen totals, orders and receipts behind explicit payment and Inventory ports | `src/features/checkout/` | `src/features/checkout/index.ts`; package root; `@dinkuskit/commerce/features/checkout` | EmDash storage types; `dinkus.catalog`, `dinkus.inventory-provider`, `dinkus.inventory-setup`, and `dinkus.storefront-availability` public entries | `tests/features/checkout/`; `tests/integration/checkout-storage.test.mjs`; `proof/checkout-experience/PROOF.md`; `proof/checkout-expired-recovery/PROOF.md`; `proof/checkout-session-equality/PROOF.md`; `proof/commerce-integration-qualified-20260930/PROOF.md` | `bin/verify-commerce quick` | `bin/verify-commerce full` | `startCheckout`; `reconcileCheckout`; `createCheckoutStore`; `CHECKOUT_COLLECTION`; public export `@dinkuskit/commerce/features/checkout`; `checkoutCarts` unmounted | exported/unmounted; composed verification recorded; Stripe, provider, and runtime-mount obligations deferred; independent review not claimed |
 
 ## Boundary rules
 
@@ -33,12 +34,14 @@ This map is the repository contract for bounded Commerce feature work. A feature
 - Fresh sandbox storage uses snake_case collection names. Populated native camelCase storage migration is not included; never substitute this artifact on an existing native store.
 - Public Registry listing/installation remains unproved until separately authorized publication. Local sandbox operation is not Registry discovery proof.
 
-## Pending checkout composition
+## Applied checkout composition limits
 
-PR #29 remains a separately owned checkout slice. Later composition must add its
-checkout feature ownership, `./features/checkout` export and checkout unit test
-glob while retaining the sandbox build and native `./admin` entry. Both branches
-change `package.json`, this map and GrillTrack lineage; resolve the product
-contracts through the GrillTrack CLI instead of hand-merging ledger/event files.
-This branch does not include or mount checkout. `package.json#dinkuskit.pendingComposition`
-records the same prerequisite for the eventual integration owner.
+Qualified composition is applied: checkout feature ownership, public
+`./features/checkout` export, and checkout unit/integration globs are present
+while native `./admin`, `./sandbox`, `./descriptor`, sandbox build, and native
+lock/dependencies remain. Checkout stays unmounted. Native `createPlugin` does
+not register `checkoutCarts`, checkout routes, payment adapters, or Stripe
+logic. Real Stripe traffic, Inventory provider quantity/whole-basket work, shopper
+H1 UI, and runtime checkout mount remain separate obligations.
+`package.json#dinkuskit.pendingComposition` now records the applied
+exported/unmounted limit rather than a separate-unmerged-slice prerequisite.

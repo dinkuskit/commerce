@@ -31,13 +31,26 @@ const forbiddenSegments = new Set([
   "runs",
 ]);
 
+const ignoredPublicWalkDirectories = new Set([
+  ".git",
+  ".tmp",
+  "coverage",
+  "dist",
+  "node_modules",
+]);
+
 async function walk(root, directory = root) {
   const paths = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
-    if (entry.name === ".git" || entry.name === "node_modules") continue;
+    if (ignoredPublicWalkDirectories.has(entry.name)) continue;
+    const relativePath = relative(root, join(directory, entry.name));
+    // Ignored local GrillTrack working artifacts are not a public path.
+    if (relativePath === ".grilltrack/work" || relativePath.startsWith(".grilltrack/work/")) {
+      continue;
+    }
     const absolute = join(directory, entry.name);
     if (entry.isDirectory()) paths.push(...(await walk(root, absolute)));
-    else paths.push(relative(root, absolute));
+    else paths.push(relativePath);
   }
   return paths;
 }

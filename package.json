@@ -44,7 +44,11 @@
       "default": "./dist/admin/native.js"
     },
     "./sandbox": "./dist/sandbox/plugin.mjs",
-    "./descriptor": "./dist/sandbox/index.mjs"
+    "./descriptor": "./dist/sandbox/index.mjs",
+    "./features/checkout": {
+      "types": "./dist/features/checkout/index.d.ts",
+      "default": "./dist/features/checkout/index.js"
+    }
   },
   "license": "MIT",
   "repository": {
@@ -65,7 +69,7 @@
     "pendingComposition": {
       "checkout": {
         "pullRequest": "https://github.com/dinkuskit/commerce/pull/29",
-        "status": "separate-unmerged-slice",
+        "status": "exported-unmounted",
         "preserveExports": [
           "./admin",
           "./descriptor",
@@ -76,7 +80,7 @@
           "build:sandbox",
           "tests/features/checkout/*.test.mjs"
         ],
-        "decisionLineage": "Reconcile GrillTrack histories through the CLI; do not hand-merge ledger or events."
+        "decisionLineage": "GrillTrack CLI applied plan edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438; checkout remains exported and unmounted. Real Stripe, provider, and runtime-mount obligations stay deferred."
       }
     }
   },
@@ -88,7 +92,7 @@
     "build": "node scripts/build.mjs && npm run build:sandbox",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs tests/features/storefront-availability/*.test.mjs",
+    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs tests/features/storefront-availability/*.test.mjs tests/features/checkout/*.test.mjs",
     "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
     "proof:registration-retry:real": "npm run build && node --no-warnings --experimental-sqlite --experimental-strip-types tools/prove-registration-retry-real.mjs",
     "audit:features": "node scripts/check-features.mjs",
