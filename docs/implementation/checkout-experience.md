@@ -80,13 +80,20 @@ or unavailable pending their own settlement policy. No shipping, tax, discount,
 subscription, live merchant connection or customer-account behavior is implied.
 An adapter must disable processor changes to frozen Commerce totals.
 
-Set a 30-minute window at first processor session creation and preserve that
-session's original deadline forever. Commerce requests `paymentWindowSeconds:
-1800`, validates normalized `createdAt`/`expiresAt` Unix seconds, and freezes
-the returned session. Time spent reserving does not reduce the shopper's
-processor payment window. A local deadline suppresses an old redirect but
-never releases stock. Session creation and expiration semantics are documented
-in [Stripe's creation API](https://docs.stripe.com/api/checkout/sessions/create)
+Set a provider-reported inclusive 1800..1860-second window at first processor
+session creation and preserve that session's original deadline forever. New
+Commerce requests use immutable `paymentWindow: { minSeconds: 1800, maxSeconds:
+1860 }`. Commerce validates real safe-integer provider `createdAt`/`expiresAt`
+and accepts `1800 <= expiresAt - createdAt <= 1860`. It never manufactures
+creation time or omits expiry. Frozen historical `paymentWindowSeconds: 1800`
+originals stay exact and keep exact-1800 validation; retries do not rewrite
+them. See [checkout-payment-window.md](checkout-payment-window.md) for the
+public types, Payments persist-before-contact obligation, 23-hour create retry
+bound, and `requestedExpiresAtSeconds=floor(original claimedAtMs/1000)+1860`.
+Time spent reserving does not reduce the shopper's processor payment window. A
+local deadline suppresses an old redirect but never releases stock. Session
+creation and expiration semantics are documented in
+[Stripe's creation API](https://docs.stripe.com/api/checkout/sessions/create)
 and [session API](https://docs.stripe.com/api/checkout/sessions/object).
 
 `paid` requires authoritative settlement, matching attempt, original session,

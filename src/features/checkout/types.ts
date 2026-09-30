@@ -1,6 +1,7 @@
-import type { Money } from "../catalog/index.js";
+import type { StorageCollection } from "emdash";
+import type { Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/index.js";
-import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/index.js";
+import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
 
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
 export interface CartLine { catalogItemId: string; quantity: number }
@@ -18,15 +19,61 @@ export interface CheckoutInventoryPort {
   /** Idempotent terminal fence, including an in-flight reserve. No subsequent reacquisition. */
   release(request: StockRequest): Promise<"released" | "unknown">;
 }
-export interface PaymentRequest {
+export const CURRENT_PAYMENT_WINDOW_MIN_SECONDS = 1800;
+export const CURRENT_PAYMENT_WINDOW_MAX_SECONDS = 1860;
+export const LEGACY_EXACT_PAYMENT_WINDOW_SECONDS = 1800;
+export const PAYMENTS_CREATE_RETRY_BOUND_HOURS = 23;
+export const PAYMENTS_SAFE_PROVIDER_DELAY_SECONDS = 60;
+
+export const CURRENT_PAYMENT_WINDOW = {
+  minSeconds: CURRENT_PAYMENT_WINDOW_MIN_SECONDS,
+  maxSeconds: CURRENT_PAYMENT_WINDOW_MAX_SECONDS,
+} as const;
+
+export type CurrentPaymentWindow = {
+  readonly minSeconds: typeof CURRENT_PAYMENT_WINDOW_MIN_SECONDS;
+  readonly maxSeconds: typeof CURRENT_PAYMENT_WINDOW_MAX_SECONDS;
+};
+
+export type PaymentWindowPolicyKind =
+  | "current-bounded-1800-1860"
+  | "legacy-exact-1800";
+
+export interface PaymentWindowBounds {
+  readonly kind: PaymentWindowPolicyKind;
+  readonly minSeconds: number;
+  readonly maxSeconds: number;
+}
+
+interface PaymentRequestBase {
   attemptId: string;
   /** Immutable server-side merchant/provider binding; never resolve to a replacement account. */
   bindingRef: string;
   lines: CheckoutLine[];
   total: Money;
-  paymentWindowSeconds: 1800;
   paymentMethods: readonly ["card"];
 }
+
+/** Current Commerce construction. New attempts use only this shape. */
+export interface CurrentPaymentRequest extends PaymentRequestBase {
+  paymentWindow: CurrentPaymentWindow;
+  paymentWindowSeconds?: never;
+}
+
+/**
+ * Frozen historical originals only. Replay exactly; never rewrite to
+ * `paymentWindow` on retry or restart.
+ */
+export interface LegacyExact1800PaymentRequest extends PaymentRequestBase {
+  paymentWindowSeconds: typeof LEGACY_EXACT_PAYMENT_WINDOW_SECONDS;
+  paymentWindow?: never;
+}
+
+export type PaymentRequest = CurrentPaymentRequest | LegacyExact1800PaymentRequest;
+
+export type PaymentRequestHandoff =
+  | { kind: "current-bounded-1800-1860"; request: CurrentPaymentRequest }
+  | { kind: "legacy-exact-1800"; request: LegacyExact1800PaymentRequest };
 export interface PaymentSession {
   sessionId: string;
   redirectUrl: string;
@@ -41,7 +88,11 @@ export type PaymentOutcome =
   | { outcome: "not-created"; attemptId: string };
 /** Payments owns transport/authenticity and durable processor idempotency, not orders. */
 export interface CheckoutPaymentPort {
-  /** Ensure one session, with deadline fixed at first creation; never reset on retry. */
+  /**
+   * Persist the original claim/request/deadline/idempotency key before provider
+   * contact. Replay that exact tuple; never reset deadline, alter parameters,
+   * send a new key, or lookup-create.
+   */
   ensureSession(request: PaymentRequest): Promise<PaymentOutcome>;
   /** Authoritative lookup. Events are hints only. not-created is a terminal creation fence. */
   lookup(request: PaymentRequest): Promise<PaymentOutcome>;
@@ -80,3 +131,126 @@ export interface CheckoutExecution {
   createAttemptId?: () => string;
   now?: () => number;
 }
+
+export const GUEST_CHECKOUT_PROJECTION_SCHEMA =
+  "dinkuskit.commerce.guest-checkout-projection/v1" as const;
+export const GUEST_CAPABILITY_HEADER = "x-commerce-guest-capability";
+export const GUEST_ORIGIN_HEADER = "origin";
+export const GUEST_SEC_FETCH_SITE_HEADER = "sec-fetch-site";
+export const GUEST_CHECKOUT_DECLARED_HEADERS = [
+  GUEST_CAPABILITY_HEADER,
+  GUEST_ORIGIN_HEADER,
+  GUEST_SEC_FETCH_SITE_HEADER,
+] as const;
+export const CHECKOUT_GUEST_CAPABILITY_COLLECTION = "checkoutGuestCapabilities";
+export const CHECKOUT_GUEST_CAPABILITY_SANDBOX_COLLECTION = "checkout_guest_capabilities";
+export const CHECKOUT_SANDBOX_COLLECTION = "checkout_carts";
+
+export type GuestCheckoutState =
+  | "pending"
+  | "paid"
+  | "recoverable-failure"
+  | "released-retry";
+
+export type GuestCheckoutErrorCode =
+  | "CAPABILITY_DENIED"
+  | "CHECKOUT_FROZEN"
+  | "CHECKOUT_NOT_FOUND"
+  | "CONTENTION"
+  | "INVALID_CART"
+  | "INVENTORY_UNAVAILABLE"
+  | "ORIGIN_DENIED"
+  | "PAYMENTS_UNAVAILABLE"
+  | "PRODUCT_UNAVAILABLE"
+  | "RETRY_REQUIRED"
+  | "UNAVAILABLE";
+
+export interface GuestCheckoutLine {
+  catalogItemId: string;
+  name: string;
+  quantity: number;
+  unitPrice: Money;
+}
+
+export interface GuestCheckoutOrderSummary {
+  orderId: string;
+  receiptId: string;
+  lines: GuestCheckoutLine[];
+  total: Money;
+}
+
+export interface GuestCheckoutProjection {
+  schema: typeof GUEST_CHECKOUT_PROJECTION_SCHEMA;
+  state: GuestCheckoutState;
+  attemptId: string | null;
+  lines: GuestCheckoutLine[];
+  total: Money | null;
+  redirectUrl: string | null;
+  order: GuestCheckoutOrderSummary | null;
+  retryAfter: string | null;
+  unavailable: { code: GuestCheckoutErrorCode; message: string } | null;
+}
+
+export interface GuestCapabilityPresentation {
+  capabilityId: string;
+  capability: string;
+  retention: "json-body";
+  header: typeof GUEST_CAPABILITY_HEADER;
+}
+
+export interface GuestCapabilityRecord {
+  recordKind: "guest-checkout-capability";
+  capabilityId: string;
+  cartId: string;
+  verifier: string;
+  siteBinding: string;
+  createdAt: string;
+}
+
+export interface GuestCheckoutHostOptions {
+  /**
+   * Host-owned trusted public site origin. Used when runtime `ctx.site.url`
+   * is empty. A present public, malformed, or conflicting runtime URL cannot
+   * be masked. Not read from Host, query, or body.
+   */
+  siteUrl?: string;
+  topLevelSiteUrl?: string;
+  checkoutSiteUrl?: string;
+  paymentBindingRef?: string;
+  resolvePayments?: CheckoutExecution["resolvePayments"];
+  resolveInventory?: CheckoutExecution["resolveInventory"];
+  resolveAvailabilityProvider?: ResolveStorefrontAvailabilityExecution["resolveProvider"];
+  createCapabilitySecret?: () => string;
+  createCartId?: () => string;
+  createCapabilityId?: () => string;
+  createAttemptId?: () => string;
+  now?: () => number;
+}
+
+export interface GuestCheckoutRuntime {
+  carts: Pick<StorageCollection<CheckoutRecord>, "getVersioned" | "compareAndSet">;
+  capabilities: Pick<
+    StorageCollection<GuestCapabilityRecord>,
+    "compareAndSet" | "get" | "getVersioned"
+  >;
+  catalog: StorefrontAvailabilityResolverStorage;
+  /** Canonical trusted site origin after host resolution, when available. */
+  siteUrl?: string;
+  constructorSiteUrl?: string;
+  runtimeSiteUrl?: string;
+  topLevelSiteUrl?: string;
+  checkoutSiteUrl?: string;
+  host: GuestCheckoutHostOptions;
+}
+
+export type GuestCheckoutResult =
+  | {
+      ok: true;
+      capabilityId: string;
+      capability?: GuestCapabilityPresentation;
+      checkout: GuestCheckoutProjection;
+    }
+  | {
+      ok: false;
+      error: { code: GuestCheckoutErrorCode; message: string };
+    };

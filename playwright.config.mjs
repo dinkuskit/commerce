@@ -23,7 +23,7 @@ export default defineConfig({
   projects: [
     {
       name: "sandbox",
-      testMatch: /commerce\.spec\.mjs/,
+      testMatch: /commerce\.spec\.mjs|guest-checkout\.spec\.mjs/,
       use: {
         baseURL: "http://127.0.0.1:" + port,
         viewport: { width: 1440, height: 1000 },
@@ -31,7 +31,7 @@ export default defineConfig({
     },
     {
       name: "native",
-      testMatch: /native-populated\.spec\.mjs/,
+      testMatch: /native-populated\.spec\.mjs|guest-checkout\.spec\.mjs/,
       use: {
         baseURL: "http://127.0.0.1:" + nativePort,
         viewport: { width: 1440, height: 1000 },
@@ -48,6 +48,8 @@ export default defineConfig({
       env: {
         ASTRO_DEV_BACKGROUND: "1",
         COMMERCE_PROOF_DB: process.env.COMMERCE_PROOF_DB,
+        EMDASH_SITE_URL: "http://127.0.0.1:" + port,
+        COMMERCE_SITE_URL: "http://127.0.0.1:" + port,
         NO_PROXY: "127.0.0.1,localhost,::1",
         no_proxy: "127.0.0.1,localhost,::1",
       },
@@ -61,6 +63,8 @@ export default defineConfig({
       env: {
         ASTRO_DEV_BACKGROUND: "1",
         COMMERCE_PROOF_DB: process.env.COMMERCE_NATIVE_DB,
+        EMDASH_SITE_URL: "http://127.0.0.1:" + nativePort,
+        COMMERCE_SITE_URL: "http://127.0.0.1:" + nativePort,
         NO_PROXY: "127.0.0.1,localhost,::1",
         no_proxy: "127.0.0.1,localhost,::1",
       },

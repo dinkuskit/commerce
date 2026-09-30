@@ -73,7 +73,7 @@
     "pendingComposition": {
       "checkout": {
         "pullRequest": "https://github.com/dinkuskit/commerce/pull/29",
-        "status": "exported-unmounted",
+        "status": "mounted-public-routes-synthetic-unverified-stripe",
         "preserveExports": [
           "./admin",
           "./descriptor",
@@ -84,7 +84,7 @@
           "build:sandbox",
           "tests/features/checkout/*.test.mjs"
         ],
-        "decisionLineage": "GrillTrack CLI applied plan edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438; checkout remains exported and unmounted. Real Stripe, provider, and runtime-mount obligations stay deferred."
+        "decisionLineage": "Issue32 mounts public guest prepare/start/status and checkoutCarts on native and Registry/sandbox. Prepare mints a server capability before any payment or hold. Default Payments adapter remains unavailable. Synthetic fixture injection proves transport. Actual Stripe is not run. Registry cannot invoke a Payments plugin."
       }
     }
   },

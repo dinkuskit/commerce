@@ -1,0 +1,103 @@
+import { guestCheckoutErrorMessage } from "./errors.js";
+import {
+  GUEST_CHECKOUT_PROJECTION_SCHEMA,
+  type CheckoutAttempt,
+  type GuestCheckoutErrorCode,
+  type GuestCheckoutLine,
+  type GuestCheckoutProjection,
+  type GuestCheckoutState,
+} from "./types.js";
+
+function linesOf(attempt: CheckoutAttempt | undefined): GuestCheckoutLine[] {
+  return (attempt?.payment.lines ?? []).map((line) => ({
+    catalogItemId: line.catalogItemId,
+    name: line.name,
+    quantity: line.quantity,
+    unitPrice: line.unitPrice,
+  }));
+}
+
+function stateOf(attempt: CheckoutAttempt): GuestCheckoutState {
+  if (attempt.phase === "paid" && attempt.order) return "paid";
+  if (attempt.phase === "released") return "released-retry";
+  if (attempt.phase === "releasing") return "recoverable-failure";
+  if (attempt.phase === "reserving") return "recoverable-failure";
+  if (attempt.phase === "paying" && !attempt.session) return "recoverable-failure";
+  return "pending";
+}
+
+function unavailableOf(
+  attempt: CheckoutAttempt,
+): { code: GuestCheckoutErrorCode; message: string } | null {
+  if (attempt.phase === "paid" && attempt.order) return null;
+  if (attempt.phase === "released") return null;
+  if (attempt.phase === "paying" && attempt.session) return null;
+  const code: GuestCheckoutErrorCode = attempt.phase === "reserving" && attempt.stock
+    ? "INVENTORY_UNAVAILABLE"
+    : attempt.phase === "paying"
+      ? "PAYMENTS_UNAVAILABLE"
+      : "UNAVAILABLE";
+  return { code, message: guestCheckoutErrorMessage(code) };
+}
+
+export function projectPreparedGuestCheckout(): GuestCheckoutProjection {
+  return {
+    schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
+    state: "pending",
+    attemptId: null,
+    lines: [],
+    total: null,
+    redirectUrl: null,
+    order: null,
+    retryAfter: null,
+    unavailable: null,
+  };
+}
+
+export function projectGuestCheckout(
+  attempt: CheckoutAttempt | undefined,
+  now?: number,
+): GuestCheckoutProjection {
+  if (!attempt) {
+    return {
+      schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
+      state: "recoverable-failure",
+      attemptId: null,
+      lines: [],
+      total: null,
+      redirectUrl: null,
+      order: null,
+      retryAfter: null,
+      unavailable: { code: "CHECKOUT_NOT_FOUND", message: "Checkout not found" },
+    };
+  }
+  const lines = linesOf(attempt);
+  const paid = attempt.phase === "paid" && attempt.order
+    ? {
+        orderId: attempt.order.orderId,
+        receiptId: attempt.order.receiptId,
+        lines,
+        total: attempt.order.total,
+      }
+    : null;
+  const isTerminalOrReleased = attempt.phase === "released" || attempt.phase === "releasing";
+  const isExpired =
+    typeof now === "number" &&
+    typeof attempt.session?.expiresAt === "number" &&
+    now >= attempt.session.expiresAt;
+  const redirectUrl =
+    paid !== null || isTerminalOrReleased || isExpired
+      ? null
+      : attempt.session?.redirectUrl ?? null;
+  return {
+    schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
+    state: stateOf(attempt),
+    attemptId: attempt.attemptId,
+    lines,
+    total: attempt.payment.total,
+    redirectUrl,
+    order: paid,
+    retryAfter: attempt.phase === "released" ? attempt.attemptId : null,
+    unavailable: unavailableOf(attempt),
+  };
+}

@@ -23,6 +23,8 @@ test('canonical sale price, duplicate lines, guest checkout and complete basket 
   const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',[...cart,{catalogItemId:'one',quantity:1}]);
   assert.equal(a.payment.total.minor,'325'); assert.equal(a.payment.total.currency,'USD');
   assert.equal(a.phase,'paying'); assert.equal(a.session.expiresAt-a.session.createdAt,1800);
+  assert.deepEqual(a.payment.paymentWindow,{minSeconds:1800,maxSeconds:1860});
+  assert.equal('paymentWindowSeconds' in a.payment,false);
   assert.deepEqual(a.stock.requirements,[{skuId:'sku-one',quantity:3,allowBackorders:false},{skuId:'sku-two',quantity:1,allowBackorders:false}]);
   assert.equal(f.holds.size,1); assert.deepEqual(a.payment.paymentMethods,['card']);
 });

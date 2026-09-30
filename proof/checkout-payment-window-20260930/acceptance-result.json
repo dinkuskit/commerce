@@ -1,0 +1,24 @@
+{
+  "decision": "checkout-payment-window-004",
+  "result": "synthetic-accepted",
+  "stripe": "NOT_RUN",
+  "window": {
+    "current": { "minSeconds": 1800, "maxSeconds": 1860, "inclusive": true },
+    "legacyFrozen": { "paymentWindowSeconds": 1800, "rewritten": false }
+  },
+  "checks": {
+    "node": "v22.23.1",
+    "build": "pass",
+    "typecheck": "pass",
+    "focusedCheckoutUnit": "30/30",
+    "guestUnitNoClaim": "9/9",
+    "auditRepo": "clean"
+  },
+  "omissions": [
+    "actual Stripe",
+    "guest-auth repair",
+    "commit",
+    "full browser",
+    "source-manifest parent-finalized"
+  ]
+}
