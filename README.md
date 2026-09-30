@@ -123,7 +123,8 @@ Inventory service are required for unmanaged products.
 The released CLI requires lowercase storage collection names. Fresh sandbox
 installs use snake_case names, preserving the kernel record shapes and actual
 unique-index checks. The legacy native API entry keeps its camelCase storage
-and no longer registers React admin pages. **This is not a native-to-sandbox
+and retains its React Products and Store pages through the separate `./admin`
+compatibility export. **This is not a native-to-sandbox
 upgrade path:** do not replace a populated native installation with this
 artifact. Data migration and live Inventory service wiring are separate work.
 The Cloudflare development limitation above remains; proof uses a disposable

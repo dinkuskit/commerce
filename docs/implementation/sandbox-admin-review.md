@@ -51,3 +51,15 @@ and sanitized receipts: ../../proof/sandbox-admin-20260926/.
 
 The initial broad review plus this focused repair review leave no required
 source fix. Deferred kernel behavior and human publication/merge gates remain.
+
+## Native admin continuity review
+
+Follow-up review against branch initial head 0d120659d39e859ed4d32224b5981a18029ccb01:
+
+- required_fix: existing native pilot data and admin access must remain usable.
+  PR27 removed native descriptor adminEntry/adminPages and the package ./admin export.
+  Approved direction is registry-distributed sandbox Block Kit for fresh installs, but
+  native compatibility entry point must be retained pending tested migration.
+  Restore native descriptor adminEntry/adminPages, package ./admin export via separate
+  native compatibility entry (src/admin/native.ts), and React peerDependency.
+  Preserve existing src/admin/index.ts Block Kit, sandbox plugin/manifest, and catalog kernels.

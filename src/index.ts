@@ -55,13 +55,26 @@ export * from "./features/storefront-availability/index.js";
 
 const COMMERCE_PLUGIN_VERSION = "0.0.0";
 
-/* Legacy native descriptor is API-only. Install the sandbox artifact for admin UI. */
+const COMMERCE_ADMIN_ENTRY = "@dinkuskit/commerce/admin";
+const COMMERCE_PRODUCTS_PAGE = {
+  path: "/products",
+  label: "Products",
+  icon: "storefront",
+} as const;
+const COMMERCE_STORE_PAGE = {
+  path: "/store",
+  label: "Store",
+  icon: "storefront",
+} as const;
+
 export function dinkusCommerce(): PluginDescriptor {
   return {
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
     format: "native",
     entrypoint: "@dinkuskit/commerce",
+    adminEntry: COMMERCE_ADMIN_ENTRY,
+    adminPages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
   };
 }
 
@@ -106,6 +119,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+    },
+    admin: {
+      entry: COMMERCE_ADMIN_ENTRY,
+      pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
     },
     routes: {
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRoute,

@@ -107,10 +107,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-29T22:52:27+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-29T22:55:30+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+          "review_result": "findings",
+          "review_source_identity": "git:0d120659d39e859ed4d32224b5981a18029ccb01",
+          "to": "implemented",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-30T01:02:16+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
         }
       ],
       "id": "block-admin-save-001",
-      "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+      "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
       "question": "Does the clerk open a product from Products and use one Save for Regular, Sale, Manage stock and unmanaged stock status?",
       "rationale": "",
       "repair_required": false,
@@ -131,15 +175,24 @@
           "result": "clean",
           "reviewed_at": "2026-09-27T01:18:31+00:00",
           "source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:docs/implementation/sandbox-admin-review.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-29T22:52:27+00:00",
+          "source_identity": "git:0d120659d39e859ed4d32224b5981a18029ccb01"
         }
       ],
-      "review_ref": "file:docs/implementation/sandbox-admin-review.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405",
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-27T01:18:31+00:00",
-      "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+      "updated_at": "2026-09-30T01:02:16+00:00",
+      "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
     },
     {
       "baseline_ref": null,
@@ -385,5 +438,5 @@
   "status": "active",
   "title": "Registry-safe Commerce Products and Store admin",
   "track_id": "gt-20260927003013-b02439",
-  "updated_at": "2026-09-27T01:18:31+00:00"
+  "updated_at": "2026-09-30T01:02:16+00:00"
 }
