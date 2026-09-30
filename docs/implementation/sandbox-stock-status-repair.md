@@ -24,5 +24,7 @@ introduced. Fresh runtime proof covers explicit choice, reload persistence,
 untouched restoration, omitted-field restoration, and the native regression.
 
 Formal exact-source review remains with its assigned owner. Checkout PR #29
-and main-branch integration are separate work. Same-repository sanitized proof
-is committed for public inspection; local raw logs and databases remain ignored.
+and main-branch integration are separate work. Sanitized textual proof and screenshot digests
+remain public. Selected screenshots use the configured restricted proof shelf;
+authorized reviewers need the operational receipt to resolve those references.
+Local raw originals, logs and databases remain ignored.

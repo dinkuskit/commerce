@@ -1,8 +1,9 @@
 # Sandbox selected-stock-status repair — 2026-09-30
 
 Before production source: `5cde2b574a06db40249a2e609673f6a3d92a09b8`.
-After production source and harness: [source-sha256.txt](source-sha256.txt), bound
-by the commit containing this packet. Historical native repair proof remains
+After production source and harness: [source-sha256.txt](source-sha256.txt),
+originally captured at `5f90a611b793cb8b5479ca55bcfd8df59458091d`.
+The later placement-only commit does not change production source or tests. Historical native repair proof remains
 unchanged. [Before source hashes](before-source-sha256.txt) bind the failure to
 the original handler and the same new sandbox regression harness used after.
 
@@ -27,9 +28,9 @@ Only the synthetic fixture label, transport, form values, toast and manual
 status are retained; generated product IDs and host paths are omitted.
 These are selected observations, not database exports.
 
-![Before: successful Save incorrectly restores Out of stock](sandbox-before.png)
+Before: successful Save incorrectly restores Out of stock: see `sandbox-before.png` in [selected media manifest](media-manifest.json).
 
-![After: the same Save retains explicit In stock](sandbox-after.png)
+After: the same Save retains explicit In stock: see `sandbox-after.png` in [selected media manifest](media-manifest.json).
 
 [Failing assertion](regression-before.txt) and
 [passing browser transcript](regression-after.txt) preserve the red/green result.
@@ -40,7 +41,7 @@ does not overwrite dormant availability. Prices and absence of managed claims
 remain asserted. The original storage-error, retry, settings and anonymous
 access controls also pass.
 
-![Sandbox: dormant status after reload](sandbox-dormant-restored.png)
+Sandbox: dormant status after reload: see `sandbox-dormant-restored.png` in [selected media manifest](media-manifest.json).
 
 ## Native compatibility regression
 
@@ -50,9 +51,9 @@ reload. Product switching cannot leak unsaved intent; a disable with no new
 choice restores dormant Out of stock; clicking an already-selected In stock
 default remains explicit. [Native captured receipt](native-after.json).
 
-![Native: explicit Out of stock saved](native-explicit-status.png)
+Native: explicit Out of stock saved: see `native-explicit-status.png` in [selected media manifest](media-manifest.json).
 
-![Native: dormant status restored](native-dormant-restored.png)
+Native: dormant status restored: see `native-dormant-restored.png` in [selected media manifest](media-manifest.json).
 
 These native controls are the retained compatibility renderer, including its
 existing unstyled appearance in this fixture; this packet does not claim a
@@ -66,9 +67,24 @@ sandbox workflow, populated native regression, and unauthenticated native denial
 The before browser case fails exactly at persisted status. All five screenshots
 were directly inspected: synthetic products only, visible selected controls,
 no secrets, customer data, private repository coordinates or authenticated URLs.
-[Evidence hashes](assets-sha256.txt) identify the exact unedited captures and
-selected transcripts. This packet is committed in the same public repository
-for inspection; ignored raw logs/screenshots alone are not the acceptance evidence.
+[Text evidence hashes](assets-sha256.txt) identify the retained receipts and
+transcripts; [selected media manifest](media-manifest.json) preserves every
+original screenshot name, before/after label, byte size, SHA-256 digest,
+source identity, capture date, provenance and redaction status. Screenshots
+are published separately on the configured restricted proof shelf. Their
+uploaded sizes and server SHA-256 digests match the original bytes. Current
+Commerce source retains text only; local raw originals remain available.
+
+Public readers can inspect the textual receipts, assertions and source hashes.
+The screenshot references are content digests, not public download links;
+authorized reviewers require the separately retained upload receipt to resolve
+them. The installed placement tool checks changed media paths, not private
+asset accessibility, and supplies no public digest resolver. Private shelf
+coordinates and endpoints are deliberately absent from this public packet.
+The release follows the no-replacement contract, but the backend reports
+immutable-release protection disabled; this packet does not claim enforcement.
+No repository visibility or permissions were changed. The prior published
+Commerce commit is preserved; this migration does not erase historical blobs.
 
 The host logs one uncontrolled FieldControl default-value warning in the
 passing sandbox fixture. It is retained in the public transcript; the stock

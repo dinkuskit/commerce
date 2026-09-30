@@ -1,7 +1,9 @@
 # Bounded author inspection
 
 Standards: only the assigned #27 branch/worktree changed. Public source and
-synthetic observations are retained in same-repository proof; product locks
+synthetic textual observations are retained in same-repository proof; selected
+screenshots now use the configured external proof shelf with public-safe digest
+references and separately retained restricted upload receipts; product locks
 remain unchanged and ledger transitions were generated only by GrillTrack CLI.
 Source and evidence hashes are recorded in this packet. This inspection is
 advisory; it is not a formal clean-review or merge qualification claim.
