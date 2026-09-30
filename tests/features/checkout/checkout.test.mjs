@@ -12,6 +12,12 @@ function setup(t,managed=true) {
   t.after(() => { opened.db.close(); rmSync(dir,{recursive:true,force:true}); });
   return {...fixture(opened.store,managed),path,opened};
 }
+function reversedSession(session) {
+  const reordered={expiresAt:session.expiresAt,createdAt:session.createdAt,redirectUrl:session.redirectUrl,sessionId:session.sessionId};
+  assert.deepEqual(session,reordered);
+  assert.notEqual(JSON.stringify(session),JSON.stringify(reordered));
+  return reordered;
+}
 
 test('canonical sale price, duplicate lines, guest checkout and complete basket before redirect',async t => {
   const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',[...cart,{catalogItemId:'one',quantity:1}]);
@@ -173,4 +179,71 @@ test('a recovered expired open session persists so restart cannot release on con
   const after=(await restarted.store.read('guest-cart')).record.attempts[0];
   assert.equal(after.phase,'paying');assert.deepEqual(after.session,original);
   assert.equal(f.holds.get(a.attemptId).state,'reserved');assert.equal(f.counts().releaseCalls,0);
+});
+
+test('paid lookup with reversed session keys retains the paid order',async t => {
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);
+  const original=f.sessions.get(a.attemptId).session;const reordered=reversedSession(original);
+  f.setPayment('paid');const lookup=f.execution.payments.lookup;
+  f.execution.payments.lookup=async req => ({...await lookup(req),session:reordered});
+  const paid=await reconcileCheckout(f.execution,'guest-cart',a.attemptId);
+  assert.equal(paid.phase,'paid');assert.deepEqual(paid.order.total,a.payment.total);
+  assert.deepEqual(paid.session,original);assert.equal(f.counts().releaseCalls,0);
+  assert.deepEqual((await f.execution.store.read('guest-cart')).record.attempts[0].order,paid.order);
+});
+
+test('paying retry ensure with reversed session keys preserves the same session and deadline',async t => {
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);
+  const original=a.session;const reordered=reversedSession(original);
+  const ensure=f.execution.payments.ensureSession;
+  f.execution.payments.ensureSession=async req => ({...await ensure(req),session:reordered});
+  const retry=await startCheckout(f.execution,'guest-cart',cart);
+  assert.equal(retry.attemptId,a.attemptId);assert.equal(retry.phase,'paying');
+  assert.deepEqual(retry.session,original);assert.equal(retry.session.createdAt,1000);assert.equal(retry.session.expiresAt,2800);
+  assert.equal(f.sessions.size,1);assert.equal(f.counts().releaseCalls,0);
+});
+
+test('late recovered open then reordered paid lookup retains one order',async t => {
+  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',cart);
+  assert.equal(a.phase,'paying');assert.equal(a.session,undefined);
+  const original=f.sessions.get(a.attemptId).session;const reordered=reversedSession(original);
+  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',cart);
+  assert.equal(recovered.phase,'paying');assert.equal(recovered.session,undefined);assert.equal(f.counts().releaseCalls,0);
+  const persisted=(await f.execution.store.read('guest-cart')).record.attempts[0].session;
+  assert.deepEqual(persisted,original);assert.equal(persisted.createdAt,1000);assert.equal(persisted.expiresAt,2800);
+  f.setPayment('paid');const lookup=f.execution.payments.lookup;
+  f.execution.payments.lookup=async req => ({...await lookup(req),session:reordered});
+  const paid=await reconcileCheckout(f.execution,'guest-cart',a.attemptId);
+  assert.equal(paid.phase,'paid');assert.deepEqual(paid.order.total,a.payment.total);assert.equal(f.counts().releaseCalls,0);
+});
+
+test('late recovered open then reordered expired-unpaid releases once',async t => {
+  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',cart);
+  assert.equal(a.phase,'paying');assert.equal(a.session,undefined);
+  const original=f.sessions.get(a.attemptId).session;const reordered=reversedSession(original);
+  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',cart);
+  assert.equal(recovered.phase,'paying');assert.equal(recovered.session,undefined);
+  const persisted=(await f.execution.store.read('guest-cart')).record.attempts[0].session;
+  assert.deepEqual(persisted,original);assert.equal(persisted.createdAt,1000);assert.equal(persisted.expiresAt,2800);
+  f.setPayment('expired-unpaid');const lookup=f.execution.payments.lookup;
+  f.execution.payments.lookup=async req => ({...await lookup(req),session:reordered});
+  const released=await reconcileCheckout(f.execution,'guest-cart',a.attemptId);
+  assert.equal(released.phase,'released');assert.equal(f.holds.get(a.attemptId).state,'released');assert.equal(f.counts().releaseCalls,1);
+});
+
+test('real session field changes remain rejected while paying holds stay',async t => {
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);const lookup=f.execution.payments.lookup;
+  for (const mutate of [
+    s => ({...s,sessionId:'other-session'}),
+    s => ({...s,redirectUrl:'https://checkout.stripe.com/other'}),
+    s => ({...s,createdAt:s.createdAt+60,expiresAt:s.expiresAt+60}),
+  ]) {
+    f.execution.payments.lookup=async req => {
+      const outcome=await lookup(req);
+      return {outcome:'paid',attemptId:req.attemptId,total:outcome.total,session:mutate(outcome.session),paymentId:'payment-'+req.attemptId};
+    };
+    await assert.rejects(reconcileCheckout(f.execution,'guest-cart',a.attemptId),/Payment session changed/);
+    assert.equal((await f.execution.store.read('guest-cart')).record.attempts[0].phase,'paying');
+    assert.equal(f.holds.get(a.attemptId).state,'reserved');assert.equal(f.counts().releaseCalls,0);
+  }
 });

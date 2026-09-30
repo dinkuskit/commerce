@@ -2,7 +2,7 @@ import { loadCatalogItemBackorderPolicy, normalizeMoney, parseMinorUnits, resolv
 import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
 import { loadStoreInventoryConfiguration } from "../inventory-setup/index.js";
 import { resolveStorefrontAvailability } from "../storefront-availability/index.js";
-import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, PaymentOutcome, StockRequest } from "./types.js";
+import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
 
 export class CheckoutError extends Error {}
 function fail(message: string): never { throw new CheckoutError(message); }
@@ -88,6 +88,10 @@ export async function reconcileCheckout(e: CheckoutExecution, cartId: string, at
   return drive(e, cartId, attemptId, false);
 }
 
+function samePaymentSession(left: PaymentSession, right: PaymentSession): boolean {
+  return left.sessionId === right.sessionId && left.redirectUrl === right.redirectUrl &&
+    left.createdAt === right.createdAt && left.expiresAt === right.expiresAt;
+}
 function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void {
   if (value.outcome === "unknown") return;
   if (value.attemptId !== attempt.attemptId) fail("Payment identity mismatch");
@@ -103,7 +107,7 @@ function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void 
   let url: URL;
   try { url = new URL(s.redirectUrl); } catch { return fail("Invalid payment redirect"); }
   if (url.protocol !== "https:" || url.username || url.password) fail("Invalid payment redirect");
-  if (attempt.session && JSON.stringify(attempt.session) !== JSON.stringify(s)) fail("Payment session changed");
+  if (attempt.session && !samePaymentSession(attempt.session, s)) fail("Payment session changed");
   if (value.outcome === "paid" && !value.paymentId) fail("Missing payment identity");
 }
 
