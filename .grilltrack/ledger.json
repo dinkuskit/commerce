@@ -799,10 +799,57 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T11:23:42+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "review_ref": "file:proof/checkout-experience/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82",
+          "to": "implemented",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
         }
       ],
       "id": "checkout-stock-hold-003",
-      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "implementation_ref": "file:src/features/checkout/orchestrate.ts",
       "question": "When should checkout reserve managed stock?",
       "rationale": "The user accepted reserving at checkout start to avoid tying up stock in abandoned carts while protecting shoppers actively paying. Exact hold duration and payment-method timing policy remain undecided.",
       "repair_required": false,
@@ -820,15 +867,34 @@
           "result": "findings",
           "reviewed_at": "2026-09-30T01:12:51+00:00",
           "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:23:42+00:00",
+          "source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82"
+        },
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:29:43+00:00",
+          "source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c"
         }
       ],
-      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
       "review_result": "findings",
-      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "review_source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T01:12:51+00:00",
-      "verification_ref": "file:proof/checkout-experience/PROOF.md"
+      "updated_at": "2026-09-30T11:29:43+00:00",
+      "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
@@ -884,10 +950,57 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T11:23:42+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "review_ref": "file:proof/checkout-experience/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82",
+          "to": "implemented",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
         }
       ],
       "id": "checkout-payment-window-004",
-      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "implementation_ref": "file:src/features/checkout/orchestrate.ts",
       "question": "Does a 30-minute Stripe payment window work for the first release?",
       "rationale": "The user accepted the recommended 30-minute window, avoiding the provider default of 24 hours while matching its shortest supported automatic Checkout expiry.",
       "repair_required": false,
@@ -905,40 +1018,57 @@
           "result": "findings",
           "reviewed_at": "2026-09-30T01:12:51+00:00",
           "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:23:42+00:00",
+          "source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82"
+        },
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:29:44+00:00",
+          "source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c"
         }
       ],
-      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
       "review_result": "findings",
-      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "review_source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T01:12:51+00:00",
-      "verification_ref": "file:proof/checkout-experience/PROOF.md"
+      "updated_at": "2026-09-30T11:29:44+00:00",
+      "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-09-30T01:20:39+00:00",
+    "at": "2026-09-30T11:23:42+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
-    "artifact_refs": [
-      "file:proof/checkout-experience/PROOF.md",
-      "file:proof/checkout-experience/REVIEW.md",
-      "file:docs/implementation/checkout-experience.md"
-    ],
-    "next_safe_action": "Owner inspect focused local patch and contract, route provider and registry integration, then authorize immutable delivery and official review.",
-    "paused_at": "2026-09-30T01:13:29+00:00",
-    "reason": "Local checkout orchestration proof preserved; real provider/registry integration and official review remain separate dependencies. No delivery authorization.",
-    "resumed_at": "2026-09-30T01:20:39+00:00"
-  },
-  "pause": {
     "artifact_refs": [
       "file:proof/checkout-experience/PROOF.md",
       "file:proof/checkout-experience/REVIEW.md"
     ],
     "next_safe_action": "Publish the verified checkout candidate as a draft PR, retain formal-review-pending status, and return its source identity for owner inspection.",
     "paused_at": "2026-09-30T01:20:39+00:00",
-    "reason": "Draft PR publication explicitly authorized. Formal review pending while review rails are repaired; real registry and provider integration remain deferred."
+    "reason": "Draft PR publication explicitly authorized. Formal review pending while review rails are repaired; real registry and provider integration remain deferred.",
+    "resumed_at": "2026-09-30T11:23:42+00:00"
+  },
+  "pause": {
+    "artifact_refs": [
+      "file:proof/checkout-expired-recovery/PROOF.md"
+    ],
+    "next_safe_action": "Publish bounded repair to PR 29, report fresh source tuple and proof, and leave integration/review ownership unchanged.",
+    "paused_at": "2026-09-30T11:29:44+00:00",
+    "reason": "Recovered expired-session P2 repaired and independently verified; publication to existing draft PR authorized. Formal review remains with its assigned owner."
   },
   "predecessor_track_id": "gt-20260926151731-84df4c",
   "recommendation": null,
@@ -946,5 +1076,5 @@
   "status": "paused",
   "title": "Clerk turns Manage stock on or off on a product",
   "track_id": "gt-20260926183503-6113fc",
-  "updated_at": "2026-09-30T01:20:39+00:00"
+  "updated_at": "2026-09-30T11:29:44+00:00"
 }

@@ -151,18 +151,16 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           next.phase = "paid";
           next.order = { orderId: `order:${attemptId}`, receiptId: `receipt:${attemptId}`, attemptId, paymentId: outcome.paymentId, lines: attempt.payment.lines, total: attempt.payment.total };
         } else if (outcome.outcome === "expired-unpaid") next.phase = "releasing";
-        else {
-          // A local clock can suppress an old redirect but never authorize release.
-          if ((e.now ?? (() => Date.now() / 1000))() >= outcome.session.expiresAt) {
-            return { ...attempt, session: undefined };
-          }
-        }
       }
     }
     const attempts = [...stored.record.attempts];
     attempts[index] = next;
     if (await e.store.compareAndSet(cartId, stored.version, { attempts })) {
-      if (next.phase === "paying" && next.session) return next;
+      if (next.phase === "paying" && next.session) {
+        // A local clock can suppress an old redirect but never authorize release.
+        if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
+        return next;
+      }
       if (next.phase === "paid" || next.phase === "released") return next;
     }
   }

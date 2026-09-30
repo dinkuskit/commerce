@@ -156,3 +156,21 @@ test('a known payment session cannot be released by a contradictory not-created 
   await assert.rejects(reconcileCheckout(f.execution,'guest-cart',a.attemptId),/Known payment session/);
   assert.equal(f.counts().releaseCalls,0);
 });
+
+test('a recovered expired open session persists so restart cannot release on contradictory not-created',async t => {
+  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',cart);
+  assert.equal(a.phase,'paying');assert.equal(a.session,undefined);
+  assert.equal((await f.execution.store.read('guest-cart')).record.attempts[0].session,undefined);
+  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',cart);
+  assert.equal(recovered.phase,'paying');assert.equal(recovered.session,undefined);assert.equal(f.counts().releaseCalls,0);
+  const original=f.sessions.get(a.attemptId).session;
+  const persisted=(await f.execution.store.read('guest-cart')).record.attempts[0].session;
+  assert.deepEqual(persisted,original);assert.equal(persisted.sessionId,original.sessionId);
+  assert.equal(persisted.createdAt,1000);assert.equal(persisted.expiresAt,2800);
+  const restarted=openStore(f.path);t.after(() => restarted.db.close());
+  f.setPayment('not-created');
+  await assert.rejects(reconcileCheckout({...f.execution,store:restarted.store},'guest-cart',a.attemptId),/Known payment session/);
+  const after=(await restarted.store.read('guest-cart')).record.attempts[0];
+  assert.equal(after.phase,'paying');assert.deepEqual(after.session,original);
+  assert.equal(f.holds.get(a.attemptId).state,'reserved');assert.equal(f.counts().releaseCalls,0);
+});
