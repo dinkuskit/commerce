@@ -16,6 +16,8 @@ import {
 } from "../inventory-provider/index.js";
 
 export interface CreateCatalogItemOptions {
+  /** Trusted host collection name, never taken from clerk input. */
+  collection?: string;
   createId?: () => string;
   now?: () => Date;
 }
@@ -86,7 +88,7 @@ export async function createCatalogItem(
   options: CreateCatalogItemOptions = {},
 ): Promise<CreateCatalogItemResult> {
   const input = normalizeCreateCatalogItemInput(rawInput);
-  await assertCatalogStorageConstraints(storage);
+  await assertCatalogStorageConstraints(storage, options.collection);
 
   const existing = await findCommand(storage, input.commandId);
   if (existing) return resolveExistingCommand(existing, input);
@@ -103,7 +105,7 @@ export async function createCatalogItem(
     await storage.put(item.itemId, item);
     return { created: true, item };
   } catch (error) {
-    const uniqueField = identifyConfirmedUniqueViolation(error);
+    const uniqueField = identifyConfirmedUniqueViolation(error, options.collection);
     if (!uniqueField) {
       throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item creation failed", {
         cause: error,

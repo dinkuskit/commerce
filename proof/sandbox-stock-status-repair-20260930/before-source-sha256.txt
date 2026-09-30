@@ -1,0 +1,2 @@
+a7a458e7fba2f630266f7c4461c9be1a3299c37b3f771f25fab64e46d43181ef  src/admin/index.ts (git:5cde2b574a06db40249a2e609673f6a3d92a09b8)
+0e4868b213fd27a778b97e011ea612c3949b3f3270c106e3ddddb6c75932c694  tests/sandbox/commerce.spec.mjs (regression harness added before repair)

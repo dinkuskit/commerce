@@ -4,9 +4,9 @@ import {
   resolveCatalogItemPrice,
   type CatalogItemRecord,
   type CatalogStorageRecord,
-} from "../catalog/index.js";
+} from "../catalog/kernel/index.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
-import { loadStoreInventoryConfiguration } from "../inventory-setup/index.js";
+import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import { StorefrontAvailabilityError } from "./errors.js";
 import {
   exactQuantitySign,

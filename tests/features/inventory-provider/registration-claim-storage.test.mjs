@@ -72,7 +72,7 @@ function claimRows(storage) {
 
 test("the plugin declares isolated atomic claim storage", () => {
   assert.deepEqual(createPlugin().storage.managedSkuClaims, {
-    indexes: [],
+    indexes: ["catalogItemId"],
     uniqueIndexes: ["claimKey", "operationId"],
   });
 });

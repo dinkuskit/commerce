@@ -1,0 +1,18 @@
+Baseline production source: 5cde2b574a06db40249a2e609673f6a3d92a09b8
+Command: COMMERCE_PROOF_RUN=sandbox-status-before-20260930 npm run test:sandbox -- --project=sandbox
+Exit: 1; 1 test failed
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "in-stock"
+    Received: "out-of-stock"
+
+      107 |     await capture("sandbox-explicit-status");
+      108 |     expect(lastSave.values).toMatchObject({ manageStock: false, stockStatus: "in-stock" });
+    > 109 |     expect(persistedStatus).toBe("in-stock");
+          |                             ^
+      110 |     await page.reload();
+      111 |     await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+      112 |     await expect(page.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
+        at ./tests/sandbox/commerce.spec.mjs:109:29
+

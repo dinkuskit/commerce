@@ -596,6 +596,24 @@ test("unchecking Manage stock restores dormant status and drops the setup claim"
   });
 });
 
+test("unchecking Manage stock honors an explicit status over dormant availability", async () => {
+  const stores = storage([
+    item({ stockManagement: { mode: "managed", status: "setup-required" }, creationIntent: { manageStock: true } }),
+  ]);
+  stores.availability = new MemoryCollection([
+    { recordKind: "catalog-manual-availability", recordId: "item-bag", catalogItemId: "item-bag", status: "in-stock" },
+  ]);
+  const saved = await saveCatalogProductPrices(stores, {
+    catalogItemId: "item-bag", regular: "20", sale: "15", manageStock: false, stockStatus: "out-of-stock",
+  });
+  assert.equal(saved.saved, true);
+  assert.equal(saved.stockStatus, "out-of-stock");
+  assert.equal(saved.manageStock, false);
+  assert.equal(stores.availability.records.get("item-bag").status, "out-of-stock");
+  assert.deepEqual(stores.catalog.records.get("item-bag").stockManagement, { mode: "unmanaged" });
+  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
+});
+
 test("unchecking Manage stock is refused while Inventory setup is pending", async () => {
   const stores = storage([
     item({

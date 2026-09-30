@@ -104,7 +104,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         uniqueIndexes: [],
       },
       [MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION]: {
-        indexes: [],
+        indexes: ["catalogItemId"],
         uniqueIndexes: [...MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES],
       },
       [STORE_INVENTORY_CONFIGURATIONS_COLLECTION]: {
@@ -147,3 +147,5 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
 }
 
 export default createPlugin;
+
+export * from "./features/checkout/index.js";

@@ -1,0 +1,86 @@
+TAP version 13
+# (node:80406) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: paid lookup with reversed session keys retains the paid order
+not ok 1 - paid lookup with reversed session keys retains the paid order
+  ---
+  duration_ms: 6.807375
+  type: 'test'
+  location: '<worktree>/tests/features/checkout/checkout.test.mjs:184:1'
+  failureType: 'testCodeFailure'
+  error: 'Payment session changed'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file://<worktree>/dist/features/checkout/orchestrate.js:7:32)
+    validateOutcome (file://<worktree>/dist/features/checkout/orchestrate.js:133:9)
+    drive (file://<worktree>/dist/features/checkout/orchestrate.js:198:13)
+    async TestContext.<anonymous> (file://<worktree>/tests/features/checkout/checkout.test.mjs:189:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: paying retry ensure with reversed session keys preserves the same session and deadline
+not ok 2 - paying retry ensure with reversed session keys preserves the same session and deadline
+  ---
+  duration_ms: 2.325708
+  type: 'test'
+  location: '<worktree>/tests/features/checkout/checkout.test.mjs:195:1'
+  failureType: 'testCodeFailure'
+  error: 'Payment session changed'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file://<worktree>/dist/features/checkout/orchestrate.js:7:32)
+    validateOutcome (file://<worktree>/dist/features/checkout/orchestrate.js:133:9)
+    drive (file://<worktree>/dist/features/checkout/orchestrate.js:198:13)
+    async TestContext.<anonymous> (file://<worktree>/tests/features/checkout/checkout.test.mjs:200:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: late recovered open then reordered paid lookup retains one order
+not ok 3 - late recovered open then reordered paid lookup retains one order
+  ---
+  duration_ms: 2.927
+  type: 'test'
+  location: '<worktree>/tests/features/checkout/checkout.test.mjs:206:1'
+  failureType: 'testCodeFailure'
+  error: 'Payment session changed'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file://<worktree>/dist/features/checkout/orchestrate.js:7:32)
+    validateOutcome (file://<worktree>/dist/features/checkout/orchestrate.js:133:9)
+    drive (file://<worktree>/dist/features/checkout/orchestrate.js:198:13)
+    async TestContext.<anonymous> (file://<worktree>/tests/features/checkout/checkout.test.mjs:216:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: late recovered open then reordered expired-unpaid releases once
+not ok 4 - late recovered open then reordered expired-unpaid releases once
+  ---
+  duration_ms: 2.699667
+  type: 'test'
+  location: '<worktree>/tests/features/checkout/checkout.test.mjs:220:1'
+  failureType: 'testCodeFailure'
+  error: 'Payment session changed'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    fail (file://<worktree>/dist/features/checkout/orchestrate.js:7:32)
+    validateOutcome (file://<worktree>/dist/features/checkout/orchestrate.js:133:9)
+    drive (file://<worktree>/dist/features/checkout/orchestrate.js:198:13)
+    async TestContext.<anonymous> (file://<worktree>/tests/features/checkout/checkout.test.mjs:230:18)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: real session field changes remain rejected while paying holds stay
+ok 5 - real session field changes remain rejected while paying holds stay
+  ---
+  duration_ms: 3.45525
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 1
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 507.161667

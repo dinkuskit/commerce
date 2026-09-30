@@ -1,7 +1,7 @@
 import type {
   CatalogItemRecord,
   CatalogStorageRecord,
-} from "../catalog/index.js";
+} from "../catalog/kernel/index.js";
 import {
   createManagedSkuRegistrationClaimKey,
   createManagedSkuRegistrationClaimPort,

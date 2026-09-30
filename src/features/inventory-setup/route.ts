@@ -4,7 +4,7 @@ import {
   type StorageCollection,
 } from "emdash";
 
-import type { CatalogStorageRecord } from "../catalog/index.js";
+import type { CatalogStorageRecord } from "../catalog/kernel/index.js";
 import {
   ManagedSkuRegistrationError,
   type ManagedSkuRegistrationClaimRecord,

@@ -1,0 +1,24 @@
+(node:47128) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> @dinkuskit/commerce@0.0.0 test:sandbox
+> playwright test
+
+(node:47149) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:47150) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:47150) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[WebServer] [datetime migration] 0 noncanonical values (0 naive) using UTC
+[WebServer] [emdash] No user seed found at .emdash/seed.json, package.json#emdash.seed, or seed/seed.json. Falling back to the built-in default seed; the setup wizard will not offer demo content for this site.
+
+Running 1 test using 1 worker
+
+(node:47168) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:47150) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+sandbox_proof=pass create replay price-refusal stock-toggle settings anonymous-denial unmanaged-without-Inventory; DB=<repo>/.tmp/sandbox-proof/1790471519644/content.db
+  ✓  1 tests/sandbox/commerce.spec.mjs:10:1 › fresh sandbox installation preserves the clerk workflow and storefront policy (1.2m)
+
+  1 passed (1.3m)
