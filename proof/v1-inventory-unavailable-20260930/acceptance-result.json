@@ -33,5 +33,12 @@
     "no physical Inventory quantity proof",
     "checkout unmounted",
     "no merge/release/deploy/live payment"
-  ]
+  ],
+  "media_delivery": {
+    "result": "published-and-verified",
+    "tested_source_commit": "0446520747df0d4e11977f07a8fa0b2d896a727a",
+    "selected_original_pngs": 4,
+    "verification": "GitHub API byte counts and SHA-256 match original files; append-only policy, no replacement",
+    "locator_policy": "restricted receipt resolver; no private coordinates in public proof"
+  }
 }

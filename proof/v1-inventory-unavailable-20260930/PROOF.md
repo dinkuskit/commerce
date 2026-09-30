@@ -154,3 +154,7 @@ host Block Kit support.
 ## Parent verification
 
 Parent checked the built public entry: all three existing route-object exports keep `handler`. Independent locality probes pass for conflicting public runtime/constructor URLs, explicit trusted local opt-in, and default refusal. The full source inventory contains 333 files, including current GrillTrack lineage and all new implementation/config/fixture files; all hashes match. PR31 merged at `91560488c5728c0571fab2423f1ece9f08ffcd8d`; this follow-up targets `main` with reviewed `791882e5c44069810de9017fca48383886e5a606` preserved in ancestry. No review result or Registry acceptance is asserted.
+
+## Media delivery
+
+Four visually inspected original synthetic PNGs and the media manifest were uploaded once to the designated restricted evidence shelf. GitHub API byte counts and SHA-256 match all originals. The append-only policy prohibits replacements; no platform-lock claim is made. Tested source commit: `0446520747df0d4e11977f07a8fa0b2d896a727a`. Public evidence uses opaque digest references; authorized reviewers resolve them through the ignored delivery receipt. This does not satisfy the outstanding Registry host gate.
