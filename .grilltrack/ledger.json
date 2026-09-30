@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-09-30T18:35:58+00:00",
-    "domain": "First-release shopper checkout experience",
-    "started_at": "2026-09-30T18:35:51+00:00",
-    "status": "inspected",
-    "summary": "Repair commerce-guest-runtime-mount-001 only: trusted canonical HTTP(S) site origin for mint/authorize (constructor siteUrl may fill empty runtime; present public/malformed/conflicting runtime cannot be masked; default Registry missing site is explicit host unavailable); public checkout/guest/prepare mints a server capability under CAS with no attempt/reservation/provider call; start/status are capability-required; lost first start with a pre-retained capability retries the same frozen attempt; portable same-origin write admission on native and Registry from request.url plus declared Origin/Sec-Fetch-Site, fail-closed otherwise; unexpected failures are guest-safe UNAVAILABLE without raw provider/storage strings. Frozen checkout-payment-window-004 1800..1860 and old exact-1800 originals stay unchanged. No shipping/contact/coupon/bundle, no fake Payments adapter, no commit/push/review/closeout/v1-ready. Verify with Node 22.23.2 via mise, one canonical full after source fixes, host/provider/Stripe gates explicit."
+    "confirmed_at": "2026-09-30T20:59:46+00:00",
+    "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+    "started_at": "2026-09-30T20:59:46+00:00",
+    "status": "confirmed",
+    "summary": "Keep the Manage stock slider in place with adjacent Coming soon, truly disabled and gray by default. Only an explicit local-development setting may enable the real slider and its server admission for synthetic tests. Preserve default unmanaged creation, legacy state, and future kernels. Actual Registry disabled-control support is required; report the concrete host dependency rather than claiming unsupported behavior."
   },
   "decisions": [
     {
@@ -119,7 +119,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts. For Commerce v1, Manage stock is disabled and marked Coming soon; the shared Save edits prices and unmanaged manual availability without changing tracking state. Missing disabled fields must preserve an existing managed product, its claims and binding, and its fail-closed behavior. No implicit false default. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+      "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
       "context_ref": null,
       "created_at": "2026-09-27T00:33:51+00:00",
       "deferred_reason": null,
@@ -365,110 +365,12 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
-          "from": "verified",
-          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
-          "note": "Apply the approved v1 unavailable-Inventory boundary to the shared Save while preserving prices/manual availability and existing managed data.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
-          "from": "reopened",
-          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:33+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts. For Commerce v1, Manage stock is disabled and marked Coming soon; the shared Save edits prices and unmanaged manual availability without changing tracking state. Missing disabled fields must preserve an existing managed product, its claims and binding, and its fail-closed behavior. No implicit false default.",
-          "from": "locked",
-          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts. For Commerce v1, Manage stock is disabled and marked Coming soon; the shared Save edits prices and unmanaged manual availability without changing tracking state. Missing disabled fields must preserve an existing managed product, its claims and binding, and its fail-closed behavior. No implicit false default.",
-          "from": "implemented",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:07+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts. For Commerce v1, Manage stock is disabled and marked Coming soon; the shared Save edits prices and unmanaged manual availability without changing tracking state. Missing disabled fields must preserve an existing managed product, its claims and binding, and its fail-closed behavior. No implicit false default.",
-          "from": "verified",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
-        },
-        {
-          "at": "2026-09-30T16:59:07+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts. For Commerce v1, Manage stock is disabled and marked Coming soon; the shared Save edits prices and unmanaged manual availability without changing tracking state. Missing disabled fields must preserve an existing managed product, its claims and binding, and its fail-closed behavior. No implicit false default.",
-          "from": "reopened",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
-        },
-        {
-          "at": "2026-09-30T17:09:59+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts. For Commerce v1, Manage stock is disabled and marked Coming soon; the shared Save edits prices and unmanaged manual availability without changing tracking state. Missing disabled fields must preserve an existing managed product, its claims and binding, and its fail-closed behavior. No implicit false default. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
-          "from": "locked",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "block-admin-save-001",
-      "implementation_ref": "file:src/features/catalog/local-stock-development.ts file:src/features/catalog/v1-stock-admission.ts file:src/index.ts file:src/admin/products-page.ts file:src/admin/index.ts file:src/features/catalog/route.ts file:docs/implementation/v1-inventory-unavailable.md file:proof/v1-inventory-unavailable-20260930/PROOF.md",
+      "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
       "question": "Does the clerk open a product from Products and use one Save for Regular, Sale, Manage stock and unmanaged stock status?",
-      "rationale": "A disabled presentation must have real server/action admission and preserve legacy managed state.",
+      "rationale": "",
       "reconciliation_sources": [
         {
           "role": "current",
@@ -526,10 +428,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T17:09:59+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": null,
@@ -814,34 +716,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
-          "from": "verified",
-          "implementation_ref": "file:docs/implementation/checkout-experience.md",
-          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
-          "from": "reopened",
-          "implementation_ref": "file:docs/implementation/checkout-experience.md",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-guest-001",
@@ -872,9 +746,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T17:48:19+00:00",
+      "updated_at": "2026-09-30T14:43:01+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -952,48 +826,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
-          "from": "verified",
-          "implementation_ref": "file:docs/implementation/checkout-experience.md",
-          "note": "dependency checkout-guest-001 changed: Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/checkout-experience.md",
-          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
-          "from": "reopened",
-          "implementation_ref": "file:docs/implementation/checkout-experience.md",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-hosted-first-002",
@@ -1024,15 +856,15 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T17:48:19+00:00",
+      "updated_at": "2026-09-30T14:43:01+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
       "candidate_refs": [],
-      "choice": "Provider-reported inclusive 1800..1860-second hosted card session window; one original durable claim/request/deadline/idempotency key, pin floor(original claimedAtMs/1000)+1860; preserve real safe-integer timestamps and later field-by-value session equality; no altered retries, replacement session, timer-authorized stock release or inferred non-creation.",
+      "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
       "context_ref": "https://docs.stripe.com/payments/checkout/managing-limited-inventory.md?payment-ui=stripe-hosted",
       "created_at": "2026-09-30T01:05:09+00:00",
       "deferred_reason": null,
@@ -1198,110 +1030,12 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
-          "from": "verified",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "dependency checkout-guest-001 changed: Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
-          "from": "reopened",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T18:15:37+00:00",
-          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
-          "from": "locked",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "Human approved provider-reported 1800..1860 seconds with immutable original claim, request, deadline and key; preserve conservative unknown and terminal stock authority. Replaces exact 1800 duration without changing hosted-first or stock-hold ownership.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T18:15:37+00:00",
-          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
-          "from": "reopened",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T18:22:57+00:00",
-          "choice": "Provider-reported inclusive 1800..1860-second hosted card session window; one original durable claim/request/deadline/idempotency key, pin floor(original claimedAtMs/1000)+1860; preserve real safe-integer timestamps and later field-by-value session equality; no altered retries, replacement session, timer-authorized stock release or inferred non-creation.",
-          "from": "locked",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T18:23:41+00:00",
-          "choice": "Provider-reported inclusive 1800..1860-second hosted card session window; one original durable claim/request/deadline/idempotency key, pin floor(original claimedAtMs/1000)+1860; preserve real safe-integer timestamps and later field-by-value session equality; no altered retries, replacement session, timer-authorized stock release or inferred non-creation.",
-          "from": "implemented",
-          "implementation_ref": "file:src/features/checkout/payment-window.ts,src/features/checkout/types.ts,src/features/checkout/orchestrate.ts,docs/implementation/checkout-payment-window.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-payment-window-004",
-      "implementation_ref": "file:src/features/checkout/payment-window.ts,src/features/checkout/types.ts,src/features/checkout/orchestrate.ts,docs/implementation/checkout-payment-window.md",
+      "implementation_ref": "file:src/features/checkout/orchestrate.ts",
       "question": "Does a 30-minute Stripe payment window work for the first release?",
-      "rationale": "Explicit human timing choice permits 30\u201331 minutes with these safeguards. More than 60 seconds of delay may still fail safely. Unknown or elapsed time cannot release managed holds; terminal authority and frozen price/provider binding remain unchanged. Synthetic tests do not establish actual Stripe acceptance.",
+      "rationale": "The user accepted the recommended 30-minute window, avoiding the provider default of 24 hours while matching its shortest supported automatic Checkout expiry.",
       "reconciliation_sources": [
         {
           "role": "incoming",
@@ -1366,8 +1100,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T18:23:41+00:00",
-      "verification_ref": "file:proof/checkout-payment-window-20260930/PROOF.md"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
@@ -1538,48 +1272,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
-          "from": "verified",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "dependency checkout-guest-001 changed: Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
-          "from": "reopened",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-stock-hold-003",
@@ -1648,15 +1340,15 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T17:48:19+00:00",
+      "updated_at": "2026-09-30T14:43:01+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
       "candidate_refs": [],
-      "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule. Commerce v1 availability boundary: Manage stock is displayed as Coming soon and disabled/unavailable until Inventory is shippable. v1 admin server/actions refuse enabling tracking; new products stay unmanaged. Existing managed product state is preserved, never silently converted or allowed a provider fallback. The original toggle behavior remains the future-compatible kernel contract. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+      "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
       "context_ref": "woo:product-inventory-manage-stock;file:src/features/inventory-provider/stock-management.ts;predecessor:gt-20260926123539-d964d3",
       "created_at": "2026-09-26T18:35:59+00:00",
       "deferred_reason": null,
@@ -1726,110 +1418,12 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
-          "from": "reopened",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:33+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule. Commerce v1 availability boundary: Manage stock is displayed as Coming soon and disabled/unavailable until Inventory is shippable. v1 admin server/actions refuse enabling tracking; new products stay unmanaged. Existing managed product state is preserved, never silently converted or allowed a provider fallback. The original toggle behavior remains the future-compatible kernel contract.",
-          "from": "locked",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:33+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule. Commerce v1 availability boundary: Manage stock is displayed as Coming soon and disabled/unavailable until Inventory is shippable. v1 admin server/actions refuse enabling tracking; new products stay unmanaged. Existing managed product state is preserved, never silently converted or allowed a provider fallback. The original toggle behavior remains the future-compatible kernel contract.",
-          "from": "implemented",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule. Commerce v1 availability boundary: Manage stock is displayed as Coming soon and disabled/unavailable until Inventory is shippable. v1 admin server/actions refuse enabling tracking; new products stay unmanaged. Existing managed product state is preserved, never silently converted or allowed a provider fallback. The original toggle behavior remains the future-compatible kernel contract.",
-          "from": "verified",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
-        },
-        {
-          "at": "2026-09-30T16:59:07+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule. Commerce v1 availability boundary: Manage stock is displayed as Coming soon and disabled/unavailable until Inventory is shippable. v1 admin server/actions refuse enabling tracking; new products stay unmanaged. Existing managed product state is preserved, never silently converted or allowed a provider fallback. The original toggle behavior remains the future-compatible kernel contract.",
-          "from": "reopened",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
-        },
-        {
-          "at": "2026-09-30T17:09:59+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule. Commerce v1 availability boundary: Manage stock is displayed as Coming soon and disabled/unavailable until Inventory is shippable. v1 admin server/actions refuse enabling tracking; new products stay unmanaged. Existing managed product state is preserved, never silently converted or allowed a provider fallback. The original toggle behavior remains the future-compatible kernel contract. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
-          "from": "locked",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-checkbox-001",
-      "implementation_ref": "file:src/features/catalog/local-stock-development.ts file:src/features/catalog/v1-stock-admission.ts file:src/index.ts file:src/admin/products-page.ts file:src/admin/index.ts file:src/features/catalog/route.ts file:docs/implementation/v1-inventory-unavailable.md file:proof/v1-inventory-unavailable-20260930/PROOF.md",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
       "question": "After the product exists, can the clerk check or uncheck Manage stock on that product?",
-      "rationale": "Inventory develops concurrently without becoming a Commerce v1 launch dependency.",
+      "rationale": "Bobby confirmed Q1. Woo Inventory is a per-product checkbox after create. Create on main already defaults unmanaged. This slice is flipping it later, not a second create form.",
       "reconciliation_sources": [
         {
           "role": "base",
@@ -1853,10 +1447,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T17:09:59+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -1933,48 +1527,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-existing-sku-confirm-006",
@@ -2004,10 +1556,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T16:59:06+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -2084,48 +1636,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-hide-status-002",
@@ -2155,10 +1665,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T16:59:06+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -2235,48 +1745,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-no-price-rewrite-007",
@@ -2306,10 +1774,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T16:59:06+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -2386,48 +1854,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-reenable-fresh-005",
@@ -2457,10 +1883,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T16:59:06+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -2537,48 +1963,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-same-save-008",
@@ -2608,10 +1992,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T16:59:06+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -2688,48 +2072,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-setup-required-003",
@@ -2759,10 +2101,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T16:59:06+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -2839,48 +2181,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified that Inventory must not block Commerce v1; its stock control is Coming soon and unavailable at launch. Preserve the original future stock-management contract.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:55:34+00:00",
-          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
-        },
-        {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
-          "from": "verified",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
         }
       ],
       "id": "manage-stock-uncheck-restores-004",
@@ -2910,28 +2210,25 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T16:59:06+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+      "updated_at": "2026-09-30T14:43:01+00:00",
+      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
-      "baseline_ref": "git:791882e5c44069810de9017fca48383886e5a606",
+      "baseline_ref": "git:8a04c0b16b381b89531c88d1a655aad6c0c461c3",
       "candidate_refs": [],
-      "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
-      "context_ref": null,
-      "created_at": "2026-09-30T16:40:43+00:00",
-      "deferred_reason": null,
+      "choice": "A predefined set of existing catalog products sold together at a Commerce-owned set price. Component identities and quantities are retained for fulfillment. Mix-and-match and shopper-configurable membership are excluded.",
+      "context_ref": "file:FEATURE_MAP.md",
+      "created_at": "2026-09-30T18:31:43+00:00",
+      "deferred_reason": "Authoritative bundle catalog, set price, and order+provider adoption are still missing; the component projection is verified separately.",
       "delivery_ref": null,
-      "dependencies": [
-        "manage-stock-checkbox-001",
-        "block-admin-save-001"
-      ],
-      "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+      "dependencies": [],
+      "domain": "Fixed bundle component snapshot",
       "history": [
         {
-          "at": "2026-09-30T16:40:43+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products.",
+          "at": "2026-09-30T18:31:43+00:00",
+          "choice": "A predefined set of existing catalog products sold together at a Commerce-owned set price. Component identities and quantities are retained for fulfillment. Mix-and-match and shopper-configurable membership are excluded.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -2944,8 +2241,8 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-30T16:55:33+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products.",
+          "at": "2026-09-30T18:35:20+00:00",
+          "choice": "A predefined set of existing catalog products sold together at a Commerce-owned set price. Component identities and quantities are retained for fulfillment. Mix-and-match and shopper-configurable membership are excluded.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -2958,10 +2255,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-30T16:55:33+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products.",
+          "at": "2026-09-30T18:35:21+00:00",
+          "choice": "A predefined set of existing catalog products sold together at a Commerce-owned set price. Component identities and quantities are retained for fulfillment. Mix-and-match and shopper-configurable membership are excluded.",
           "from": "implemented",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
+          "implementation_ref": "file:docs/implementation/fixed-bundle-components.md; file:src/features/fixed-bundles/types.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -2972,38 +2269,94 @@
           "verification_ref": null
         },
         {
-          "at": "2026-09-30T16:59:06+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products.",
+          "at": "2026-09-30T18:39:52+00:00",
+          "choice": "A predefined set of existing catalog products sold together at a Commerce-owned set price. Component identities and quantities are retained for fulfillment. Mix-and-match and shopper-configurable membership are excluded.",
           "from": "verified",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "dependency manage-stock-checkbox-001 changed: Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
+          "implementation_ref": "file:docs/implementation/fixed-bundle-components.md; file:src/features/fixed-bundles/types.ts",
+          "note": "adjudicated review requires a fix",
           "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
+          "review_classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "review_ref": "file:proof/fixed-bundle-components/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79",
           "to": "needs_reverification",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+          "verification_ref": "file:proof/fixed-bundle-components/PROOF.md"
         },
         {
-          "at": "2026-09-30T16:59:07+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products.",
+          "at": "2026-09-30T18:40:18+00:00",
+          "choice": "A predefined set of existing catalog products sold together at a Commerce-owned set price. Component identities and quantities are retained for fulfillment. Mix-and-match and shopper-configurable membership are excluded.",
           "from": "needs_reverification",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
-          "note": "Owner clarified: retain the slider, gray it out with adjacent Coming soon, and allow explicitly enabled local development testing.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+          "implementation_ref": "file:docs/implementation/fixed-bundle-components.md; file:src/features/fixed-bundles/types.ts",
+          "note": "Authoritative bundle catalog, set price, and order+provider adoption are still missing; the component projection is verified separately.",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/fixed-bundle-components/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79",
+          "to": "deferred",
+          "verification_ref": "file:proof/fixed-bundle-components/PROOF.md"
+        }
+      ],
+      "id": "fixed-bundle-shape-001",
+      "implementation_ref": "file:docs/implementation/fixed-bundle-components.md; file:src/features/fixed-bundles/types.ts",
+      "question": "What product shape is a fixed bundle in this Commerce slice?",
+      "rationale": "Human-authorized fixed-bundle handoff. Catalog on this base currently has only simple-product; this choice does not invent a bundle catalog kind.",
+      "repair_required": true,
+      "review_classifications": [
+        "required_fix"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/fixed-bundle-components/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T18:35:21+00:00",
+          "source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79"
         },
         {
-          "at": "2026-09-30T16:59:07+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products.",
-          "from": "reopened",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/fixed-bundle-components/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T18:39:52+00:00",
+          "source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79"
+        }
+      ],
+      "review_ref": "file:proof/fixed-bundle-components/PROOF.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79",
+      "status": "deferred",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T18:40:18+00:00",
+      "verification_ref": "file:proof/fixed-bundle-components/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:8a04c0b16b381b89531c88d1a655aad6c0c461c3",
+      "candidate_refs": [],
+      "choice": "No. Fixed-bundle work is a nonblocking Commerce v1 lane. Catalog currently has only simple-product, and checkout and order currently lack a component snapshot. This slice must not invent a bundle catalog kind or order or price policy to pretend a simple-product can already be sold as a bundle.",
+      "context_ref": "file:FEATURE_MAP.md",
+      "created_at": "2026-09-30T18:31:43+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "fixed-bundle-shape-001"
+      ],
+      "domain": "Fixed bundle component snapshot",
+      "history": [
+        {
+          "at": "2026-09-30T18:31:44+00:00",
+          "choice": "No. Fixed-bundle work is a nonblocking Commerce v1 lane. Catalog currently has only simple-product, and checkout and order currently lack a component snapshot. This slice must not invent a bundle catalog kind or order or price policy to pretend a simple-product can already be sold as a bundle.",
+          "from": "proposed",
+          "implementation_ref": null,
           "note": "user accepted the scoped decision",
           "repair_required": false,
           "review_classifications": [],
@@ -3011,13 +2364,13 @@
           "review_result": null,
           "review_source_identity": null,
           "to": "locked",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+          "verification_ref": null
         },
         {
-          "at": "2026-09-30T17:09:59+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "at": "2026-09-30T18:35:21+00:00",
+          "choice": "No. Fixed-bundle work is a nonblocking Commerce v1 lane. Catalog currently has only simple-product, and checkout and order currently lack a component snapshot. This slice must not invent a bundle catalog kind or order or price policy to pretend a simple-product can already be sold as a bundle.",
           "from": "locked",
-          "implementation_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md file:src/features/catalog/v1-stock-admission.ts file:src/admin/index.ts file:src/admin/products-page.ts file:src/features/catalog/route.ts",
+          "implementation_ref": null,
           "note": "bounded implementation recorded",
           "repair_required": false,
           "review_classifications": [],
@@ -3025,7 +2378,190 @@
           "review_result": null,
           "review_source_identity": null,
           "to": "implemented",
-          "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:35:21+00:00",
+          "choice": "No. Fixed-bundle work is a nonblocking Commerce v1 lane. Catalog currently has only simple-product, and checkout and order currently lack a component snapshot. This slice must not invent a bundle catalog kind or order or price policy to pretend a simple-product can already be sold as a bundle.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/fixed-bundle-components.md; file:FEATURE_MAP.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "fixed-bundle-nonblocking-002",
+      "implementation_ref": "file:docs/implementation/fixed-bundle-components.md; file:FEATURE_MAP.md",
+      "question": "Does fixed-bundle work gate Commerce v1?",
+      "rationale": "Human-authorized nonblocking v1 limit. Core component projection may stand alone.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/fixed-bundle-components/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T18:35:21+00:00",
+          "source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79"
+        }
+      ],
+      "review_ref": "file:proof/fixed-bundle-components/PROOF.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T18:35:21+00:00",
+      "verification_ref": "file:proof/fixed-bundle-components/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:8a04c0b16b381b89531c88d1a655aad6c0c461c3",
+      "candidate_refs": [],
+      "choice": "A trusted server-owned fixed definition identity plus fixed components {catalogItemId, quantityPerBundle}. Resolve display SKU and name from the catalog public read type. Produce a detached fulfillment projection for a positive safe-integer purchased bundle quantity, preserving membership and per-bundle quantities. Real authoritative set-price, order adoption, runtime mount, and managed-provider reservation are deferred. Core projection is verified separately. The module does not price, declare sellability, contact Inventory, reserve or release, own stock, or create orders.",
+      "context_ref": "file:FEATURE_MAP.md",
+      "created_at": "2026-09-30T18:31:43+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "fixed-bundle-shape-001",
+        "fixed-bundle-nonblocking-002"
+      ],
+      "domain": "Fixed bundle component snapshot",
+      "history": [
+        {
+          "at": "2026-09-30T18:31:44+00:00",
+          "choice": "A trusted server-owned fixed definition identity plus fixed components {catalogItemId, quantityPerBundle}. Resolve display SKU and name from the catalog public read type. Produce a detached fulfillment projection for a positive safe-integer purchased bundle quantity, preserving membership and per-bundle quantities. Real authoritative set-price, order adoption, runtime mount, and managed-provider reservation are deferred. Core projection is verified separately. The module does not price, declare sellability, contact Inventory, reserve or release, own stock, or create orders.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:35:21+00:00",
+          "choice": "A trusted server-owned fixed definition identity plus fixed components {catalogItemId, quantityPerBundle}. Resolve display SKU and name from the catalog public read type. Produce a detached fulfillment projection for a positive safe-integer purchased bundle quantity, preserving membership and per-bundle quantities. Real authoritative set-price, order adoption, runtime mount, and managed-provider reservation are deferred. Core projection is verified separately. The module does not price, declare sellability, contact Inventory, reserve or release, own stock, or create orders.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:35:21+00:00",
+          "choice": "A trusted server-owned fixed definition identity plus fixed components {catalogItemId, quantityPerBundle}. Resolve display SKU and name from the catalog public read type. Produce a detached fulfillment projection for a positive safe-integer purchased bundle quantity, preserving membership and per-bundle quantities. Real authoritative set-price, order adoption, runtime mount, and managed-provider reservation are deferred. Core projection is verified separately. The module does not price, declare sellability, contact Inventory, reserve or release, own stock, or create orders.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/fixed-bundles/index.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "fixed-bundle-component-snapshot-003",
+      "implementation_ref": "file:src/features/fixed-bundles/index.ts",
+      "question": "What independent capability is approved now?",
+      "rationale": "Human-authorized independent projection. Caller owns the definition server-side; shopper-chosen membership and browser money are excluded.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/fixed-bundle-components/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T18:35:21+00:00",
+          "source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79"
+        }
+      ],
+      "review_ref": "file:proof/fixed-bundle-components/PROOF.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:160c8c513770cc2e04054ce14ed6c95e20304c3e9e2a67bae480ed46d25c1e79",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T18:35:21+00:00",
+      "verification_ref": "file:proof/fixed-bundle-components/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+      "context_ref": null,
+      "created_at": "2026-09-30T20:59:46+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+      "history": [
+        {
+          "at": "2026-09-30T20:59:46+00:00",
+          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T20:59:47+00:00",
+          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T20:59:47+00:00",
+          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/catalog/local-stock-development.ts file:src/features/catalog/v1-stock-admission.ts file:src/index.ts file:src/admin/products-page.ts file:src/admin/index.ts file:src/features/catalog/route.ts file:docs/implementation/v1-inventory-unavailable.md file:proof/v1-inventory-unavailable-20260930/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "commerce-v1-inventory-unavailable-001",
@@ -3038,161 +2574,39 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
-      "superseded_by": null,
-      "updated_at": "2026-09-30T17:09:59+00:00",
-      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
-    },
-    {
-      "baseline_ref": "git:e3d398bde103d23417c7c1a954834dadf419ec4b",
-      "candidate_refs": [],
-      "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
-      "context_ref": "https://github.com/dinkuskit/commerce/issues/32",
-      "created_at": "2026-09-30T17:48:19+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "checkout-guest-001",
-        "checkout-hosted-first-002",
-        "checkout-stock-hold-003",
-        "checkout-payment-window-004"
-      ],
-      "domain": "First-release shopper checkout experience",
-      "history": [
-        {
-          "at": "2026-09-30T17:48:19+00:00",
-          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T18:15:37+00:00",
-          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "dependency checkout-payment-window-004 changed: Human approved provider-reported 1800..1860 seconds with immutable original claim, request, deadline and key; preserve conservative unknown and terminal stock authority. Replaces exact 1800 duration without changing hosted-first or stock-hold ownership.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T18:35:51+00:00",
-          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
-          "from": "needs_reverification",
-          "implementation_ref": null,
-          "note": "Required guest-auth repairs: fail-closed trusted site scope, capability prepare before any payment/hold, portable same-origin write admission, guest-safe UNAVAILABLE. Replace stale exact-30-minute clause with accepted checkout-payment-window-004 1800..1860 window; keep prior choice history.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T18:35:54+00:00",
-          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
-          "from": "reopened",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T18:50:41+00:00",
-          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-09-30T18:50:48+00:00",
-          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
-          "from": "implemented",
-          "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "commerce-guest-runtime-mount-001",
-      "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
-      "question": "Does Commerce own and mount the trusted guest checkout/status contract consumed by Template Store?",
-      "rationale": "",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T18:50:48+00:00",
-      "verification_ref": "file:proof/guest-checkout-mount-20260930/PROOF.md Node22.23.2 unit:202 integration:22(d1-sku-index-flaked-then-3/3-retry) sandbox:5 native-local-stock:1 Stripe:NOT_RUN"
+      "updated_at": "2026-09-30T20:59:47+00:00",
+      "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
     }
   ],
   "last_activation": {
-    "at": "2026-09-30T18:35:51+00:00",
+    "at": "2026-09-30T20:59:16+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
     "artifact_refs": [
-      "file:proof/checkout-payment-window-20260930/PROOF.md",
-      "file:docs/implementation/checkout-payment-window.md",
-      "file:.grilltrack/work/guest-checkout-mount-20260930/STATE.md"
+      "file:proof/fixed-bundle-components/PROOF.md",
+      "file:proof/fixed-bundle-components/source-manifest.sha256",
+      "file:.grilltrack/work/fixed-bundles-20260930/worker/HANDOFF.md",
+      "file:.grilltrack/work/fixed-bundles-20260930/worker/lifecycle-correction/",
+      "file:src/features/fixed-bundles/index.ts",
+      "file:docs/implementation/fixed-bundle-components.md"
     ],
-    "next_safe_action": "Parent inspects checkout-payment-window-004 source, tests, public contract doc, and proof/checkout-payment-window-20260930; do not treat this as guest verification or an actual Stripe run.",
-    "paused_at": "2026-09-30T18:23:41+00:00",
-    "reason": "Timing candidate is synthetically verified and ready for parent inspection before rebind. No commit, review identity, or Stripe run.",
-    "resumed_at": "2026-09-30T18:35:48+00:00"
+    "next_safe_action": "Parent independently accepts the scoped states, then a later checkout-owned grill can adopt fixed-bundle SKU representation, authoritative set price, and the order/provider seam.",
+    "paused_at": "2026-09-30T18:40:55+00:00",
+    "reason": "Lifecycle/proof correction recorded. fixed-bundle-shape-001 is deferred because authoritative bundle catalog, set price, and order+provider adoption are still missing; the component projection is verified separately. Track remains paused, not closed. Parent owns independent acceptance and publication.",
+    "resumed_at": "2026-09-30T20:59:16+00:00"
   },
-  "pause": {
-    "artifact_refs": [
-      "file:proof/guest-checkout-mount-20260930/PROOF.md",
-      "file:docs/implementation/guest-checkout-public.md",
-      "file:.grilltrack/work/guest-checkout-mount-20260930/STATE.md"
-    ],
-    "next_safe_action": "Parent inspects commerce-guest-runtime-mount-001 source, tests, public contract, and proof/guest-checkout-mount-20260930 against frozen timing snapshot d2960fa; do not treat this as an actual Stripe run or v1-ready claim.",
-    "paused_at": "2026-09-30T18:51:35+00:00",
-    "reason": "Guest-auth repair candidate is synthetically verified and ready for parent independent review. No commit, review identity, or Stripe run."
-  },
+  "pause": null,
   "recommendation": {
     "alternatives": [
-      "After inspection, Payments implements persist-before-contact against the frozen 1800..1860 window without rewriting old1800 originals.",
-      "Defer actual Stripe qualification until a separately authorized provider run."
+      "Catalog representation for a bundle parent and its authoritative set-price record",
+      "Managed combined-basket reservation of projected component quantities through the existing Inventory port"
     ],
-    "reason": "Guest mount required repairs are synthetically verified. Timing remains frozen. Payments still owns transport. No commit, review identity, or Stripe run was authorized.",
-    "recommended": "Parent independently reviews the guest-auth repair candidate and public prepare/start/status contract against frozen timing snapshot d2960fa plus this working tree.",
-    "recorded_at": "2026-09-30T18:51:31+00:00"
+    "reason": "The independent projection is locally verified. Selling still needs the sole checkout owner to read set price once, freeze this snapshot with the commercial order line, and later reserve managed components. Catalog bundle kind and provider reservation remain separate dependencies.",
+    "recommended": "Checkout/order adoption of the frozen component snapshot beside one Commerce-owned bundle set price",
+    "recorded_at": "2026-09-30T18:35:21+00:00"
   },
   "reconciliation": {
     "plan_id": "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",
@@ -3204,8 +2618,8 @@
     "snapshot_ref": ".grilltrack/lineage/edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "paused",
+  "status": "active",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-09-30T18:51:35+00:00"
+  "updated_at": "2026-09-30T20:59:47+00:00"
 }
