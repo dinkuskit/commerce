@@ -32,6 +32,29 @@ export { catalogProductCreateInput } from "../product-create-input.js";
 export { CLERK_STOCK_STATUSES } from "../clerk-stock.js";
 export type { ClerkStockStatus } from "../clerk-stock.js";
 export { listCatalogProducts, saveCatalogProductPrices } from "../product-admin.js";
+export {
+  LOCAL_STOCK_MANAGEMENT_OPTION,
+  isLocalLoopbackContext,
+  isLocalStockManagementEnabled,
+  isLoopbackUrl,
+  manageStockControlFromAdmission,
+  normalizeHostLocalStockOption,
+  readLocalStockAdmission,
+  trustedSiteUrlSources,
+} from "../local-stock-development.js";
+export type {
+  LocalStockAdmissionContext,
+  LocalStockHostOptions,
+  ManageStockControl,
+} from "../local-stock-development.js";
+export {
+  admitV1CatalogCreateInput,
+  admitV1CatalogPriceSaveInput,
+  isManagedCatalogRecord,
+  manageStockMutationsAllowed,
+  MANAGE_STOCK_LOCKED_MESSAGE,
+  MANAGE_STOCK_UNAVAILABLE_MESSAGE,
+} from "../v1-stock-admission.js";
 export type {
   CatalogProductListItem,
   CatalogProductListStorage,

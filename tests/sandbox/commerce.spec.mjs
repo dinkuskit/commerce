@@ -63,12 +63,24 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect((await replay.json()).data.toast.type).toBe("success");
     expect(raw("catalog_items").filter(row => row.recordKind === "catalog-item")).toHaveLength(1);
 
+    await expect(page.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
+    await expect(page.getByRole("switch", { name: /Manage stock/ })).toHaveCount(0);
+    await expect(page.locator('input[type="checkbox"][id="manage-stock"]')).toHaveCount(0);
+    await expect(page.locator('[data-action-id="manageStock"], [name="manageStock"]')).toHaveCount(0);
+    await page.getByText("Manage stock — Coming soon", { exact: true }).click();
+    await page.keyboard.press("Space");
+    await page.keyboard.press("Enter");
+    expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
+    await capture("manage-stock-coming-soon");
+
     await page.getByRole("textbox", { name: "Regular", exact: true }).fill("12");
     await page.getByRole("textbox", { name: "Sale", exact: true }).fill("10");
     await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
     await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
+    expect(lastSave.values).not.toHaveProperty("manageStock");
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
+    expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     expect(await availability()).toMatchObject({ status: "out-of-stock", sellable: false, listable: true });
     await capture("price-stock-saved");
 
@@ -83,61 +95,35 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await capture("price-refused");
     await page.getByRole("textbox", { name: "Regular", exact: true }).fill("12.00");
     await page.getByRole("textbox", { name: "Sale", exact: true }).fill("10.00");
-    await page.getByRole("switch", { name: "Manage stock", exact: true }).check();
-    await expect(page.getByRole("radio")).toHaveCount(0);
-    expect((await save()).toast.type).toBe("success");
-    expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "managed", status: "setup-required" });
-    expect((await availability()).status).toBe("availability-unavailable");
-    await capture("manage-stock-on");
-    await page.reload();
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
-    await expect(page.getByRole("switch", { name: "Manage stock", exact: true })).toBeChecked();
-    await page.getByRole("switch", { name: "Manage stock", exact: true }).uncheck();
-    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
-    // A new manual choice must survive the same Save that disables management.
     await page.getByRole("radio", { name: "In stock", exact: true }).check();
-    const explicit = await save();
-    expect(explicit.toast.type).toBe("success");
-    const persistedStatus = raw("catalog_manual_availability")[0].status;
-    writeFileSync(process.env.COMMERCE_PROOF_ARTIFACTS + "/sandbox-explicit-status.json", JSON.stringify({
-      fixture: "synthetic Red hat", transport: "EmDash 0.41.0 / workerd / SQLite",
-      dormantBefore: "out-of-stock", response: explicit.toast,
-      submittedValues: lastSave.values, persistedStatus,
-    }, null, 2) + "\n");
-    await capture("sandbox-explicit-status");
-    expect(lastSave.values).toMatchObject({ manageStock: false, stockStatus: "in-stock" });
-    expect(persistedStatus).toBe("in-stock");
+    expect((await save()).toast.type).toBe("success");
+    expect(raw("catalog_manual_availability")[0].status).toBe("in-stock");
+    expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
+    const catalogBeforeEnable = JSON.stringify(raw("catalog_items"));
+    const pricesBeforeEnable = JSON.stringify(raw("catalog_prices"));
+    const claimsBeforeEnable = JSON.stringify(raw("managed_sku_claims"));
+    const maliciousEnable = await page.request.post(endpoint, {
+      data: { ...lastSave, values: { ...lastSave.values, manageStock: true } },
+      headers: { "X-EmDash-Request": "1" },
+    });
+    const enableBody = await maliciousEnable.json();
+    expect(enableBody.data.toast.type).toBe("error");
+    expect(enableBody.data.toast.message).toContain("coming soon");
+    expect(JSON.stringify(raw("catalog_items"))).toBe(catalogBeforeEnable);
+    expect(JSON.stringify(raw("catalog_prices"))).toBe(pricesBeforeEnable);
+    expect(JSON.stringify(raw("managed_sku_claims"))).toBe(claimsBeforeEnable);
+    expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
+    await capture("manage-stock-enable-refused");
     await page.reload();
     await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    await expect(page.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
     await expect(page.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
-
-    // An untouched dormant choice still restores when management is disabled.
-    await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
-    expect((await save()).toast.type).toBe("success");
-    await page.getByRole("switch", { name: "Manage stock", exact: true }).check();
-    expect((await save()).toast.type).toBe("success");
-    await page.reload();
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
-    await page.getByRole("switch", { name: "Manage stock", exact: true }).uncheck();
-    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
-    expect((await save()).toast.type).toBe("success");
-    expect(raw("catalog_manual_availability")[0].status).toBe("out-of-stock");
-
-    // Clients that omit manual status must also preserve dormant restoration.
-    await page.getByRole("switch", { name: "Manage stock", exact: true }).check();
-    expect((await save()).toast.type).toBe("success");
-    const omittedValues = { ...lastSave.values, manageStock: false };
-    delete omittedValues.stockStatus;
-    const omitted = await page.request.post(endpoint, { data: { ...lastSave, values: omittedValues }, headers: { "X-EmDash-Request": "1" } });
-    expect((await omitted.json()).data.toast.type).toBe("success");
-    expect(raw("catalog_manual_availability")[0].status).toBe("out-of-stock");
-    await page.reload();
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
-    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
     expect(raw("managed_sku_claims")).toHaveLength(0);
-    await capture("manage-stock-off");
+    await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
+    expect((await save()).toast.type).toBe("success");
+    expect(raw("catalog_manual_availability")[0].status).toBe("out-of-stock");
 
     await page.goto(adminPath + "settings");
     await expect(page.getByRole("heading", { name: "Catalog", exact: true })).toBeVisible();
@@ -197,6 +183,6 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.25");
     await capture("product-mobile");
-    console.log("sandbox_proof=pass create replay price-refusal stock-toggle settings anonymous-denial unmanaged-without-Inventory; DB=" + filename);
+    console.log("sandbox_proof=pass create replay price-refusal coming-soon-disabled malicious-enable-refused settings anonymous-denial unmanaged-without-Inventory; DB=" + filename);
   } finally { await db.destroy(); }
 });

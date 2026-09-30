@@ -100,7 +100,8 @@
     "verify:quick": "bin/verify-commerce quick",
     "verify:full": "bin/verify-commerce full",
     "build:sandbox": "emdash-plugin validate && emdash-plugin build --out-dir dist/sandbox",
-    "test:sandbox": "playwright test"
+    "test:sandbox": "playwright test",
+    "test:sandbox:native-local-stock": "playwright test --config=playwright.native-local-stock.config.mjs"
   },
   "devDependencies": {
     "@astrojs/node": "11.0.2",

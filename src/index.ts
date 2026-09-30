@@ -17,9 +17,9 @@ import {
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
   clearCatalogItemRegularPriceRoute,
   clearCatalogItemSalePriceRoute,
-  createCatalogItemRoute,
-  listCatalogProductsRoute,
-  saveCatalogProductPricesRoute,
+  createCatalogItemRouteWithLocalStock,
+  createListCatalogProductsRouteWithLocalStock,
+  createSaveCatalogProductPricesRouteWithLocalStock,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
@@ -67,22 +67,56 @@ const COMMERCE_STORE_PAGE = {
   icon: "storefront",
 } as const;
 
-export function dinkusCommerce(): PluginDescriptor {
+export interface CommerceLocalDevelopmentOptions {
+  /**
+   * Host-owned local-development opt-in for synthetic Manage stock testing.
+   * Default false. Not a merchant setting, URL query, or browser override.
+   * Admission also requires a trusted loopback request URL and every present
+   * trusted site URL to be loopback. A local constructor URL cannot mask a
+   * known public or malformed runtime site URL. Missing, blank, or malformed
+   * site URL fails closed.
+   */
+  enableLocalStockManagement?: boolean;
+  /**
+   * Host-owned configured public site origin. Pass the same loopback URL the
+   * host set as EmDash `siteUrl` / `EMDASH_SITE_URL`. Plugin `ctx.site.url` may
+   * be empty until the host runtime supplies it; a blank runtime may use this
+   * constructor URL. When runtime site URL is present, both sources must be
+   * loopback. Do not read this from the browser or request body.
+   */
+  siteUrl?: string;
+}
+
+export function dinkusCommerce(
+  options: CommerceLocalDevelopmentOptions = {},
+): PluginDescriptor<CommerceLocalDevelopmentOptions> {
   return {
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
     format: "native",
     entrypoint: "@dinkuskit/commerce",
+    options: {
+      enableLocalStockManagement: options.enableLocalStockManagement === true,
+      ...(typeof options.siteUrl === "string" && options.siteUrl.trim() !== ""
+        ? { siteUrl: options.siteUrl.trim() }
+        : {}),
+    },
     adminEntry: COMMERCE_ADMIN_ENTRY,
     adminPages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
   };
 }
 
-export interface CommercePluginOptions {
+export interface CommercePluginOptions extends CommerceLocalDevelopmentOptions {
   inventorySetup?: ConfigureInventoryExecution;
 }
 
 export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugin {
+  const localStock = {
+    enableLocalStockManagement: options.enableLocalStockManagement === true,
+    ...(typeof options.siteUrl === "string" && options.siteUrl.trim() !== ""
+      ? { siteUrl: options.siteUrl.trim() }
+      : {}),
+  };
   return definePlugin({
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
@@ -125,7 +159,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
     },
     routes: {
-      [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRoute,
+      [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
       [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:
         setCatalogItemManualAvailabilityRoute,
@@ -134,8 +168,9 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE]: clearCatalogItemSalePriceRoute,
       [CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE]:
         clearCatalogItemRegularPriceRoute,
-      [LIST_CATALOG_PRODUCTS_ROUTE]: listCatalogProductsRoute,
-      [SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: saveCatalogProductPricesRoute,
+      [LIST_CATALOG_PRODUCTS_ROUTE]: createListCatalogProductsRouteWithLocalStock(localStock),
+      [SAVE_CATALOG_PRODUCT_PRICES_ROUTE]:
+        createSaveCatalogProductPricesRouteWithLocalStock(localStock),
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

@@ -10,6 +10,16 @@ import {
   setCatalogItemSalePrice,
 } from "./price.js";
 import { listCatalogProducts, saveCatalogProductPrices } from "./product-admin.js";
+import {
+  manageStockControlFromAdmission,
+  readLocalStockAdmission,
+  type LocalStockHostOptions,
+} from "./local-stock-development.js";
+import {
+  admitV1CatalogCreateInput,
+  admitV1CatalogPriceSaveInput,
+  isManagedCatalogRecord,
+} from "./v1-stock-admission.js";
 import { setCatalogItemBackorders } from "./set-backorders.js";
 import {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -42,30 +52,36 @@ export {
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
 };
 
-export const createCatalogItemRoute: PluginRoute = {
-  permission: "content:create",
-  handler: async (ctx) => {
-    if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "catalog item creation requires POST",
-        405,
-      );
-    }
-
-    try {
-      return await createCatalogItem(
-        ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
-        ctx.input,
-      );
-    } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
+export function createCatalogItemRouteWithLocalStock(
+  options: LocalStockHostOptions = {},
+): PluginRoute {
+  return {
+    permission: "content:create",
+    handler: async (ctx) => {
+      if (ctx.request.method.toUpperCase() !== "POST") {
+        throw new PluginRouteError(
+          "METHOD_NOT_ALLOWED",
+          "catalog item creation requires POST",
+          405,
+        );
       }
-      throw error;
-    }
-  },
-};
+
+      try {
+        return await createCatalogItem(
+          ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
+          admitV1CatalogCreateInput(ctx.input, readLocalStockAdmission(options, ctx)),
+        );
+      } catch (error) {
+        if (error instanceof CatalogError) {
+          throw new PluginRouteError(error.code, error.message, error.status);
+        }
+        throw error;
+      }
+    },
+  };
+}
+
+export const createCatalogItemRoute: PluginRoute = createCatalogItemRouteWithLocalStock();
 
 export const setCatalogItemBackordersRoute: PluginRoute = {
   permission: "content:edit_any",
@@ -178,45 +194,83 @@ export const clearCatalogItemRegularPriceRoute = catalogPriceRoute(
   "regular price clear requires POST",
 );
 
-export const listCatalogProductsRoute: PluginRoute = {
-  permission: "content:edit_any",
-  handler: async (ctx) => {
-    const method = ctx.request.method.toUpperCase();
-    if (method !== "GET" && method !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "product list requires GET or POST",
-        405,
-      );
-    }
-    try {
-      return await listCatalogProducts(productSaveStorage(ctx));
-    } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
+export function createListCatalogProductsRouteWithLocalStock(
+  options: LocalStockHostOptions = {},
+): PluginRoute {
+  return {
+    permission: "content:edit_any",
+    handler: async (ctx) => {
+      const method = ctx.request.method.toUpperCase();
+      if (method !== "GET" && method !== "POST") {
+        throw new PluginRouteError(
+          "METHOD_NOT_ALLOWED",
+          "product list requires GET or POST",
+          405,
+        );
       }
-      throw error;
-    }
-  },
-};
+      try {
+        const listed = await listCatalogProducts(productSaveStorage(ctx));
+        return {
+          ...listed,
+          manageStockControl: manageStockControlFromAdmission(
+            readLocalStockAdmission(options, ctx),
+          ),
+        };
+      } catch (error) {
+        if (error instanceof CatalogError) {
+          throw new PluginRouteError(error.code, error.message, error.status);
+        }
+        throw error;
+      }
+    },
+  };
+}
 
-export const saveCatalogProductPricesRoute: PluginRoute = {
-  permission: "content:edit_any",
-  handler: async (ctx) => {
-    if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "price save requires POST",
-        405,
-      );
-    }
-    try {
-      return await saveCatalogProductPrices(productSaveStorage(ctx), ctx.input);
-    } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
+export const listCatalogProductsRoute: PluginRoute =
+  createListCatalogProductsRouteWithLocalStock();
+
+export function createSaveCatalogProductPricesRouteWithLocalStock(
+  options: LocalStockHostOptions = {},
+): PluginRoute {
+  return {
+    permission: "content:edit_any",
+    handler: async (ctx) => {
+      if (ctx.request.method.toUpperCase() !== "POST") {
+        throw new PluginRouteError(
+          "METHOD_NOT_ALLOWED",
+          "price save requires POST",
+          405,
+        );
       }
-      throw error;
-    }
-  },
-};
+      try {
+        const input =
+          typeof ctx.input === "object" && ctx.input !== null && !Array.isArray(ctx.input)
+            ? (ctx.input as Record<string, unknown>)
+            : null;
+        const catalogItemId =
+          typeof input?.catalogItemId === "string" ? input.catalogItemId.trim() : "";
+        const current = catalogItemId
+          ? await (
+              ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>
+            ).get(catalogItemId)
+          : null;
+        return await saveCatalogProductPrices(
+          productSaveStorage(ctx),
+          admitV1CatalogPriceSaveInput(
+            ctx.input,
+            isManagedCatalogRecord(current),
+            readLocalStockAdmission(options, ctx),
+          ),
+        );
+      } catch (error) {
+        if (error instanceof CatalogError) {
+          throw new PluginRouteError(error.code, error.message, error.status);
+        }
+        throw error;
+      }
+    },
+  };
+}
+
+export const saveCatalogProductPricesRoute: PluginRoute =
+  createSaveCatalogProductPricesRouteWithLocalStock();

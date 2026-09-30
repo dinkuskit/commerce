@@ -5,8 +5,12 @@ import emdash, { local } from "emdash/astro";
 import { sqlite } from "emdash/db";
 import { dinkusCommerce } from "../../dist/index.js";
 
-const enableLocalStockManagement = process.env.COMMERCE_ENABLE_LOCAL_STOCK === "true";
 const siteUrl = process.env.EMDASH_SITE_URL || process.env.COMMERCE_SITE_URL;
+if (!siteUrl) {
+  throw new Error(
+    "native-local-site requires EMDASH_SITE_URL or COMMERCE_SITE_URL from the test host",
+  );
+}
 
 export default defineConfig({
   output: "server",
@@ -16,8 +20,8 @@ export default defineConfig({
     emdash({
       database: sqlite({ url: process.env.COMMERCE_PROOF_DB ?? "file:./.artifacts/content.db" }),
       storage: local({ directory: ".artifacts/uploads", baseUrl: "/_emdash/api/media/file" }),
-      ...(siteUrl ? { siteUrl } : {}),
-      plugins: [dinkusCommerce({ enableLocalStockManagement })],
+      siteUrl,
+      plugins: [dinkusCommerce({ enableLocalStockManagement: true, siteUrl })],
     }),
   ],
   devToolbar: { enabled: false },

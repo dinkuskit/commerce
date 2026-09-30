@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { PluginRouteError } from "emdash";
 
 import * as catalog from "../../../dist/features/catalog/index.js";
 import * as commerce from "../../../dist/index.js";
@@ -34,4 +35,127 @@ test("the package root and feature entry expose the same catalog contract", () =
   assert.equal(catalog.DEFAULT_CATALOG_MANUAL_AVAILABILITY, "in-stock");
   assert.equal(typeof commerce.dinkusCommerce, "function");
   assert.equal(typeof commerce.createPlugin, "function");
+});
+
+test("built public catalog entry keeps default-disabled route objects with handlers", async () => {
+  const named = [
+    ["createCatalogItemRoute", catalog.createCatalogItemRoute, commerce.createCatalogItemRoute],
+    ["listCatalogProductsRoute", catalog.listCatalogProductsRoute, commerce.listCatalogProductsRoute],
+    [
+      "saveCatalogProductPricesRoute",
+      catalog.saveCatalogProductPricesRoute,
+      commerce.saveCatalogProductPricesRoute,
+    ],
+  ];
+  for (const [name, featureRoute, rootRoute] of named) {
+    assert.equal(typeof featureRoute, "object", `${name} feature export must be a route object`);
+    assert.equal(typeof rootRoute, "object", `${name} root export must be a route object`);
+    assert.equal(typeof featureRoute.handler, "function", `${name}.handler must be defined`);
+    assert.equal(typeof rootRoute.handler, "function", `${name}.handler must be defined`);
+    assert.equal(featureRoute.permission, rootRoute.permission);
+  }
+  assert.equal(typeof catalog.createCatalogItemRouteWithLocalStock, "function");
+  assert.equal(typeof catalog.createListCatalogProductsRouteWithLocalStock, "function");
+  assert.equal(typeof catalog.createSaveCatalogProductPricesRouteWithLocalStock, "function");
+
+  const records = new Map([
+    [
+      "item-public",
+      {
+        recordKind: "catalog-item",
+        itemId: "item-public",
+        commandId: "catalog:create:public",
+        creationIntent: { manageStock: false },
+        kind: "simple-product",
+        name: "Public Safe",
+        sku: "PUBLIC-SAFE",
+        skuKey: "PUBLIC-SAFE",
+        stockManagement: { mode: "unmanaged" },
+        state: "draft",
+        createdAt: "2026-09-26T00:00:00.000Z",
+      },
+    ],
+  ]);
+  const catalogItems = {
+    async get(id) {
+      return records.has(id) ? structuredClone(records.get(id)) : null;
+    },
+    async put(id, data) {
+      records.set(id, structuredClone(data));
+    },
+    async query() {
+      return {
+        items: [...records.entries()].map(([id, data]) => ({ id, data: structuredClone(data) })),
+        hasMore: false,
+      };
+    },
+  };
+  const empty = {
+    async get() {
+      return null;
+    },
+    async put() {},
+    async query() {
+      return { items: [], hasMore: false };
+    },
+  };
+  const before = structuredClone(records.get("item-public"));
+
+  await assert.rejects(
+    catalog.createCatalogItemRoute.handler({
+      storage: { catalogItems },
+      input: {
+        commandId: "cmd:public-enable",
+        name: "Public Enable",
+        sku: "PUBLIC-ENABLE",
+        manageStock: true,
+      },
+      request: new Request(
+        "http://127.0.0.1/catalog-items/create?enableLocalStockManagement=true",
+        { method: "POST" },
+      ),
+      site: { url: "http://127.0.0.1" },
+    }),
+    (error) =>
+      error instanceof PluginRouteError &&
+      error.code === "MANAGE_STOCK_UNAVAILABLE" &&
+      error.message === catalog.MANAGE_STOCK_UNAVAILABLE_MESSAGE,
+  );
+  assert.equal(records.size, 1);
+  assert.deepEqual(records.get("item-public"), before);
+
+  const listed = await catalog.listCatalogProductsRoute.handler({
+    storage: {
+      catalogItems,
+      catalogPrices: empty,
+      catalogManualAvailability: empty,
+      managedSkuClaims: empty,
+    },
+    input: {},
+    request: new Request("http://127.0.0.1/catalog-items/list", { method: "POST" }),
+    site: { url: "http://127.0.0.1" },
+  });
+  assert.deepEqual(listed.manageStockControl, { enabled: false });
+  await assert.rejects(
+    catalog.saveCatalogProductPricesRoute.handler({
+      storage: {
+        catalogItems,
+        catalogPrices: empty,
+        catalogManualAvailability: empty,
+        managedSkuClaims: empty,
+      },
+      input: {
+        catalogItemId: "item-public",
+        regular: "12",
+        sale: "",
+        manageStock: true,
+      },
+      request: new Request("http://127.0.0.1/catalog-items/save-prices", { method: "POST" }),
+      site: { url: "http://127.0.0.1" },
+    }),
+    (error) =>
+      error instanceof PluginRouteError &&
+      error.message === catalog.MANAGE_STOCK_UNAVAILABLE_MESSAGE,
+  );
+  assert.deepEqual(records.get("item-public"), before);
 });
