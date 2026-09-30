@@ -41,6 +41,10 @@
     "./admin": {
       "types": "./dist/admin/index.d.ts",
       "default": "./dist/admin/index.js"
+    },
+    "./features/checkout": {
+      "types": "./dist/features/checkout/index.d.ts",
+      "default": "./dist/features/checkout/index.js"
     }
   },
   "license": "MIT",
@@ -68,7 +72,7 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs tests/features/storefront-availability/*.test.mjs",
+    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs tests/features/storefront-availability/*.test.mjs tests/features/checkout/*.test.mjs",
     "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
     "proof:registration-retry:real": "npm run build && node --no-warnings --experimental-sqlite --experimental-strip-types tools/prove-registration-retry-real.mjs",
     "audit:features": "node scripts/check-features.mjs",

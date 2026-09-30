@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-09-26T18:36:00+00:00",
-    "domain": "a clerk turns Manage stock on or off on a product",
-    "started_at": "2026-09-26T18:35:59+00:00",
+    "confirmed_at": "2026-09-30T01:06:07+00:00",
+    "domain": "First-release shopper checkout experience",
+    "started_at": "2026-09-30T01:02:24+00:00",
     "status": "confirmed",
-    "summary": "Products page same Save as Regular and Sale: clerk checks or unchecks Manage stock. New products default off. On hides In stock/Out of stock/On backorder and persists setup-required with no auto Configure Inventory, no quantity, no install popup. Off restores dormant stock status, drops the Commerce setup claim, does not contact Inventory, and leaves pool quantity (the 6 red hats) in place. Later enable is not already-claimed; existing SKU is needs-review confirm; title does not remap. Toggle does not rewrite Regular or Sale. A refused Manage stock write leaves prices unchanged. Out: Allow backorders admin, Configure Inventory walk, marketplace install, auto-link, title remap, live quantity on this page. Proof: bin/verify-commerce full plus Products admin check/uncheck/recheck with prices unchanged."
+    "summary": "Bobby approved guest checkout, Stripe hosted redirect first, authoritative price validation and managed stock reservation on Checkout, paid holds through fulfillment, confirmed expired unpaid release only, and a fixed 30-minute payment window. Implement and prove bounded local checkout orchestration with fake providers, persisted retries and concurrency; Stripe connection, shipping, taxes and real-store acceptance remain separate."
   },
   "decisions": [
     {
@@ -576,19 +576,375 @@
       "superseded_by": null,
       "updated_at": "2026-09-26T19:11:36+00:00",
       "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+      "context_ref": "file:docs/CHARTER.md",
+      "created_at": "2026-09-30T01:02:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:02:24+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-guest-001",
+      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "question": "Should the first store support guest checkout without mandatory customer accounts?",
+      "rationale": "The user explicitly accepted guest checkout as the intended first-store experience. Optional customer accounts and saved shopper profiles remain undecided.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:50+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        }
+      ],
+      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T01:12:50+00:00",
+      "verification_ref": "file:proof/checkout-experience/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+      "context_ref": "file:docs/CHARTER.md",
+      "created_at": "2026-09-30T01:03:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-guest-001"
+      ],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:03:44+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-hosted-first-002",
+      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "question": "Must payment stay inside the storefront in the first release?",
+      "rationale": "The user prefers the cleaner in-storefront experience but explicitly accepted redirect checkout as a sensible first goal toward it. This choice does not schedule or authorize the later embedded implementation.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:51+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        }
+      ],
+      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T01:12:51+00:00",
+      "verification_ref": "file:proof/checkout-experience/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+      "context_ref": "file:docs/CHARTER.md",
+      "created_at": "2026-09-30T01:04:27+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-hosted-first-002"
+      ],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:04:27+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-stock-hold-003",
+      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "question": "When should checkout reserve managed stock?",
+      "rationale": "The user accepted reserving at checkout start to avoid tying up stock in abandoned carts while protecting shoppers actively paying. Exact hold duration and payment-method timing policy remain undecided.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:51+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        }
+      ],
+      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T01:12:51+00:00",
+      "verification_ref": "file:proof/checkout-experience/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+      "context_ref": "https://docs.stripe.com/payments/checkout/managing-limited-inventory.md?payment-ui=stripe-hosted",
+      "created_at": "2026-09-30T01:05:09+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-stock-hold-003"
+      ],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:05:09+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-payment-window-004",
+      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "question": "Does a 30-minute Stripe payment window work for the first release?",
+      "rationale": "The user accepted the recommended 30-minute window, avoiding the provider default of 24 hours while matching its shortest supported automatic Checkout expiry.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:51+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        }
+      ],
+      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T01:12:51+00:00",
+      "verification_ref": "file:proof/checkout-experience/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-09-26T18:35:03+00:00",
+    "at": "2026-09-30T01:20:39+00:00",
     "mechanism": "implicit"
   },
-  "last_pause": null,
-  "pause": null,
+  "last_pause": {
+    "artifact_refs": [
+      "file:proof/checkout-experience/PROOF.md",
+      "file:proof/checkout-experience/REVIEW.md",
+      "file:docs/implementation/checkout-experience.md"
+    ],
+    "next_safe_action": "Owner inspect focused local patch and contract, route provider and registry integration, then authorize immutable delivery and official review.",
+    "paused_at": "2026-09-30T01:13:29+00:00",
+    "reason": "Local checkout orchestration proof preserved; real provider/registry integration and official review remain separate dependencies. No delivery authorization.",
+    "resumed_at": "2026-09-30T01:20:39+00:00"
+  },
+  "pause": {
+    "artifact_refs": [
+      "file:proof/checkout-experience/PROOF.md",
+      "file:proof/checkout-experience/REVIEW.md"
+    ],
+    "next_safe_action": "Publish the verified checkout candidate as a draft PR, retain formal-review-pending status, and return its source identity for owner inspection.",
+    "paused_at": "2026-09-30T01:20:39+00:00",
+    "reason": "Draft PR publication explicitly authorized. Formal review pending while review rails are repaired; real registry and provider integration remain deferred."
+  },
   "predecessor_track_id": "gt-20260926151731-84df4c",
   "recommendation": null,
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
+  "status": "paused",
   "title": "Clerk turns Manage stock on or off on a product",
   "track_id": "gt-20260926183503-6113fc",
-  "updated_at": "2026-09-26T19:11:36+00:00"
+  "updated_at": "2026-09-30T01:20:39+00:00"
 }
