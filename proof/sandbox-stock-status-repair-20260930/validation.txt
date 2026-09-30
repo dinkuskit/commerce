@@ -1,0 +1,42 @@
+Node 22.23.1; EmDash 0.41.0; synthetic SQLite fixtures.
+
+npm run test:unit (includes production and sandbox builds)
+Exit: 0
+  ...
+1..125
+# tests 125
+# suites 0
+# pass 125
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 816.771917
+
+node --test tests/integration/*.test.mjs
+Exit: 0
+  ...
+1..16
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 12793.313542
+
+npm run typecheck
+Exit: 0
+
+> @dinkuskit/commerce@0.0.0 typecheck
+> tsc --noEmit
+
+
+npm run audit:repo
+Exit: 0
+public_repository_contract=clean
+feature_contract=clean
+
+GrillTrack CLI validate: exit 0
+git diff --check: exit 0

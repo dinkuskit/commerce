@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const grilltrackScreenshotsDir = resolve(".grilltrack/work/native-continuity/screenshots");
@@ -153,7 +153,13 @@ test.describe("Native populated-browser continuity fixture", () => {
     await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
     await page.locator("#regular-price").fill("42.00");
     await page.locator("#sale-price").fill("35.00");
-    expect(await saveNativeProduct()).toMatchObject({ manageStock: false, stockStatus: "out-of-stock", regular: "42.00", sale: "35.00" });
+    const explicitValues = await saveNativeProduct();
+    expect(explicitValues).toMatchObject({ manageStock: false, stockStatus: "out-of-stock", regular: "42.00", sale: "35.00" });
+    const { catalogItemId: _fixtureId, ...publicValues } = explicitValues;
+    writeFileSync(resolve(artifactsDir, "native-explicit-status.json"), JSON.stringify({
+      fixture: "synthetic managed blanket", transport: "EmDash 0.41.0 / native React / SQLite",
+      submittedValues: publicValues, persistedStatus: managedStockStatus(),
+    }, null, 2) + "\n");
     await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
     expect(managedStockStatus()).toBe("out-of-stock");
     await saveScreenshot(page, "native-managed-off-explicit-status.png", artifactsDir);

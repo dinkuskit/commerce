@@ -151,11 +151,13 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const store = storage(ctx);
         const item = await store.catalog.get(id);
         const manageStock = bool(values.manageStock);
-        // On disable, restore the persisted dormant choice. Never invent In stock.
+        // The form starts at the persisted dormant status, even while hidden.
+        // Honor a submitted choice on disable; omission restores the dormant value.
         const wasManaged = item?.recordKind === "catalog-item" && item.stockManagement?.mode === "managed";
         const saved = await saveCatalogProductPrices(store, { catalogItemId: id,
           regular: text(values.regular), sale: text(values.sale), manageStock,
-          ...(!manageStock && !wasManaged ? { stockStatus: text(values.stockStatus) } : {}),
+          ...(!manageStock && (!wasManaged || values.stockStatus !== undefined)
+            ? { stockStatus: text(values.stockStatus) } : {}),
         });
         return { ...await product(ctx, id, saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }

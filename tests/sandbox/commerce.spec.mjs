@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import Database from "better-sqlite3";
+import { writeFileSync } from "node:fs";
 import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 import { resolveStorefrontAvailability } from "../../dist/features/storefront-availability/index.js";
@@ -21,11 +22,13 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
   const capture = async (name) => page.screenshot({ path: process.env.COMMERCE_PROOF_ARTIFACTS + "/" + name + ".png", animations: "disabled", fullPage: true });
   const adminPath = "/_emdash/admin/plugins/dinkus-commerce/";
   const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
+  let lastSave;
   const save = async () => {
     const response = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
     await page.getByRole("button", { name: "Save", exact: true }).click();
     const received = await response;
     expect(received.status()).toBe(200);
+    lastSave = received.request().postDataJSON();
     const body = await received.json();
     expect(body.success).toBe(true);
     return body.data;
@@ -91,7 +94,46 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await expect(page.getByRole("switch", { name: "Manage stock", exact: true })).toBeChecked();
     await page.getByRole("switch", { name: "Manage stock", exact: true }).uncheck();
     await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
+    // A new manual choice must survive the same Save that disables management.
+    await page.getByRole("radio", { name: "In stock", exact: true }).check();
+    const explicit = await save();
+    expect(explicit.toast.type).toBe("success");
+    const persistedStatus = raw("catalog_manual_availability")[0].status;
+    writeFileSync(process.env.COMMERCE_PROOF_ARTIFACTS + "/sandbox-explicit-status.json", JSON.stringify({
+      fixture: "synthetic Red hat", transport: "EmDash 0.41.0 / workerd / SQLite",
+      dormantBefore: "out-of-stock", response: explicit.toast,
+      submittedValues: lastSave.values, persistedStatus,
+    }, null, 2) + "\n");
+    await capture("sandbox-explicit-status");
+    expect(lastSave.values).toMatchObject({ manageStock: false, stockStatus: "in-stock" });
+    expect(persistedStatus).toBe("in-stock");
+    await page.reload();
+    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    await expect(page.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
+
+    // An untouched dormant choice still restores when management is disabled.
+    await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
+    await page.getByRole("switch", { name: "Manage stock", exact: true }).check();
+    expect((await save()).toast.type).toBe("success");
+    await page.reload();
+    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    await page.getByRole("switch", { name: "Manage stock", exact: true }).uncheck();
+    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
+    expect((await save()).toast.type).toBe("success");
+    expect(raw("catalog_manual_availability")[0].status).toBe("out-of-stock");
+
+    // Clients that omit manual status must also preserve dormant restoration.
+    await page.getByRole("switch", { name: "Manage stock", exact: true }).check();
+    expect((await save()).toast.type).toBe("success");
+    const omittedValues = { ...lastSave.values, manageStock: false };
+    delete omittedValues.stockStatus;
+    const omitted = await page.request.post(endpoint, { data: { ...lastSave, values: omittedValues }, headers: { "X-EmDash-Request": "1" } });
+    expect((await omitted.json()).data.toast.type).toBe("success");
+    expect(raw("catalog_manual_availability")[0].status).toBe("out-of-stock");
+    await page.reload();
+    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
     expect(raw("managed_sku_claims")).toHaveLength(0);

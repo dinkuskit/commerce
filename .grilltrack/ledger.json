@@ -195,10 +195,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
+        },
+        {
+          "at": "2026-09-30T13:09:14+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:11:40+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "review_result": "findings",
+          "review_source_identity": "git:5cde2b574a06db40249a2e609673f6a3d92a09b8",
+          "to": "implemented",
+          "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:16:27+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
         }
       ],
       "id": "block-admin-save-001",
-      "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
+      "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
       "question": "Does the clerk open a product from Products and use one Save for Regular, Sale, Manage stock and unmanaged stock status?",
       "rationale": "",
       "repair_required": false,
@@ -237,6 +281,15 @@
           "result": "findings",
           "reviewed_at": "2026-09-30T11:31:11+00:00",
           "source_identity": "git:6f511ac1243801d44f177ade1a83383086b594ae"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T13:09:14+00:00",
+          "source_identity": "git:5cde2b574a06db40249a2e609673f6a3d92a09b8"
         }
       ],
       "review_ref": null,
@@ -244,8 +297,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T11:41:39+00:00",
-      "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
+      "updated_at": "2026-09-30T13:16:27+00:00",
+      "verification_ref": "file:proof/sandbox-stock-status-repair-20260930/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -496,5 +549,5 @@
   "status": "active",
   "title": "Registry-safe Commerce Products and Store admin",
   "track_id": "gt-20260927003013-b02439",
-  "updated_at": "2026-09-30T11:41:39+00:00"
+  "updated_at": "2026-09-30T13:16:27+00:00"
 }
