@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-09-30T16:59:07+00:00",
-    "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
-    "started_at": "2026-09-30T16:59:07+00:00",
-    "status": "confirmed",
-    "summary": "Keep the Manage stock slider in place with adjacent Coming soon, truly disabled and gray by default. Only an explicit local-development setting may enable the real slider and its server admission for synthetic tests. Preserve default unmanaged creation, legacy state, and future kernels. Actual Registry disabled-control support is required; report the concrete host dependency rather than claiming unsupported behavior."
+    "confirmed_at": "2026-09-30T18:20:48+00:00",
+    "domain": "First-release shopper checkout experience",
+    "started_at": "2026-09-30T18:15:37+00:00",
+    "status": "inspected",
+    "summary": "Human-approved checkout-payment-window-004: replace exact paymentWindowSeconds:1800 with immutable paymentWindow:{minSeconds:1800,maxSeconds:1860} on new Commerce PaymentRequest construction. Validate real safe-integer provider createdAt/expiresAt with inclusive 1800<=expiresAt-createdAt<=1860; never manufacture createdAt or omit expiresAt; compare sessionId/redirectUrl/both timestamps by value. Payments obligation: persist one original claim/request/deadline/idempotency key before provider contact; requestedExpiresAtSeconds=floor(original claimedAtMs/1000)+1860; validate exact requested expiry plus actual bounds; never reset deadline/parameters, send altered retries/new keys, or lookup-create. Preserve 23h create retry bound. Delay>60s or clock skew can fail safely. Unknown or local-timer expiry never establishes not-created/unpaid or releases a managed hold. Frozen old paymentWindowSeconds:1800 originals stay exact and are validated under the old exact-1800 policy; do not rewrite to the new shape. New attempts use only the bounded shape. Implement only this timing contract plus focused tests/docs/proof. Do not repair guest checkout, shipping/contact/coupons, commit, push, merge, deploy, or call providers."
   },
   "decisions": [
     {
@@ -814,6 +814,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "reopened",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-guest-001",
@@ -844,9 +872,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-09-30T17:48:19+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -924,6 +952,48 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "dependency checkout-guest-001 changed: Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "reopened",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-hosted-first-002",
@@ -954,15 +1024,15 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-09-30T17:48:19+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
       "candidate_refs": [],
-      "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+      "choice": "Provider-reported inclusive 1800..1860-second hosted card session window; one original durable claim/request/deadline/idempotency key, pin floor(original claimedAtMs/1000)+1860; preserve real safe-integer timestamps and later field-by-value session equality; no altered retries, replacement session, timer-authorized stock release or inferred non-creation.",
       "context_ref": "https://docs.stripe.com/payments/checkout/managing-limited-inventory.md?payment-ui=stripe-hosted",
       "created_at": "2026-09-30T01:05:09+00:00",
       "deferred_reason": null,
@@ -1128,12 +1198,110 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "dependency checkout-guest-001 changed: Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "reopened",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T18:15:37+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "locked",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "Human approved provider-reported 1800..1860 seconds with immutable original claim, request, deadline and key; preserve conservative unknown and terminal stock authority. Replaces exact 1800 duration without changing hosted-first or stock-hold ownership.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T18:15:37+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "reopened",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T18:22:57+00:00",
+          "choice": "Provider-reported inclusive 1800..1860-second hosted card session window; one original durable claim/request/deadline/idempotency key, pin floor(original claimedAtMs/1000)+1860; preserve real safe-integer timestamps and later field-by-value session equality; no altered retries, replacement session, timer-authorized stock release or inferred non-creation.",
+          "from": "locked",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T18:23:41+00:00",
+          "choice": "Provider-reported inclusive 1800..1860-second hosted card session window; one original durable claim/request/deadline/idempotency key, pin floor(original claimedAtMs/1000)+1860; preserve real safe-integer timestamps and later field-by-value session equality; no altered retries, replacement session, timer-authorized stock release or inferred non-creation.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/payment-window.ts,src/features/checkout/types.ts,src/features/checkout/orchestrate.ts,docs/implementation/checkout-payment-window.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-payment-window-004",
-      "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+      "implementation_ref": "file:src/features/checkout/payment-window.ts,src/features/checkout/types.ts,src/features/checkout/orchestrate.ts,docs/implementation/checkout-payment-window.md",
       "question": "Does a 30-minute Stripe payment window work for the first release?",
-      "rationale": "The user accepted the recommended 30-minute window, avoiding the provider default of 24 hours while matching its shortest supported automatic Checkout expiry.",
+      "rationale": "Explicit human timing choice permits 30\u201331 minutes with these safeguards. More than 60 seconds of delay may still fail safely. Unknown or elapsed time cannot release managed holds; terminal authority and frozen price/provider binding remain unchanged. Synthetic tests do not establish actual Stripe acceptance.",
       "reconciliation_sources": [
         {
           "role": "incoming",
@@ -1198,8 +1366,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
-      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+      "updated_at": "2026-09-30T18:23:41+00:00",
+      "verification_ref": "file:proof/checkout-payment-window-20260930/PROOF.md"
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
@@ -1370,6 +1538,48 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "dependency checkout-guest-001 changed: Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "Approved Commerce issue32 admits the runtime mount; reverify against actual mounted guest authority while retaining the accepted choice.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "reopened",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "checkout-stock-hold-003",
@@ -1438,9 +1648,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-09-30T17:48:19+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -2832,15 +3042,92 @@
       "superseded_by": null,
       "updated_at": "2026-09-30T17:09:59+00:00",
       "verification_ref": "file:proof/v1-inventory-unavailable-20260930/PROOF.md unit:157 browser:3 integration:20/21 native-sqlite-kernel-toggle:pass"
+    },
+    {
+      "baseline_ref": "git:e3d398bde103d23417c7c1a954834dadf419ec4b",
+      "candidate_refs": [],
+      "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/32",
+      "created_at": "2026-09-30T17:48:19+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-guest-001",
+        "checkout-hosted-first-002",
+        "checkout-stock-hold-003",
+        "checkout-payment-window-004"
+      ],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T17:48:19+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:15:37+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency checkout-payment-window-004 changed: Human approved provider-reported 1800..1860 seconds with immutable original claim, request, deadline and key; preserve conservative unknown and terminal stock authority. Replaces exact 1800 duration without changing hosted-first or stock-hold ownership.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-guest-runtime-mount-001",
+      "implementation_ref": null,
+      "question": "Does Commerce own and mount the trusted guest checkout/status contract consumed by Template Store?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "needs_reverification",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T18:15:37+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
-    "at": "2026-09-30T16:59:07+00:00",
+    "at": "2026-09-30T18:15:37+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
-  "pause": null,
-  "recommendation": null,
+  "pause": {
+    "artifact_refs": [
+      "file:proof/checkout-payment-window-20260930/PROOF.md",
+      "file:docs/implementation/checkout-payment-window.md",
+      "file:.grilltrack/work/guest-checkout-mount-20260930/STATE.md"
+    ],
+    "next_safe_action": "Parent inspects checkout-payment-window-004 source, tests, public contract doc, and proof/checkout-payment-window-20260930; do not treat this as guest verification or an actual Stripe run.",
+    "paused_at": "2026-09-30T18:23:41+00:00",
+    "reason": "Timing candidate is synthetically verified and ready for parent inspection before rebind. No commit, review identity, or Stripe run."
+  },
+  "recommendation": {
+    "alternatives": [
+      "After inspection, resume guest-auth repair against the frozen 1800..1860 window without rewriting old1800 originals.",
+      "Defer actual Stripe qualification until a separately authorized provider run."
+    ],
+    "reason": "Timing contract is synthetically verified. Guest mount remains dirty and unrepaired. Payments still owns transport. No commit or provider run was authorized.",
+    "recommended": "Parent inspects the timing candidate and public PaymentRequest handoff, then Payments implements persist-before-contact against that exact identity.",
+    "recorded_at": "2026-09-30T18:23:41+00:00"
+  },
   "reconciliation": {
     "plan_id": "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",
     "refs": {
@@ -2851,8 +3138,8 @@
     "snapshot_ref": ".grilltrack/lineage/edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
+  "status": "paused",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-09-30T17:09:59+00:00"
+  "updated_at": "2026-09-30T18:23:41+00:00"
 }

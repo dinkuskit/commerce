@@ -44,6 +44,15 @@ import {
   outOfStockListingRoute,
   setStorefrontAvailabilityPolicyRoute,
 } from "./features/storefront-availability/index.js";
+import {
+  CHECKOUT_COLLECTION,
+  CHECKOUT_GUEST_CAPABILITY_COLLECTION,
+  GUEST_CHECKOUT_START_ROUTE,
+  GUEST_CHECKOUT_STATUS_ROUTE,
+  createGuestCheckoutStartRoute,
+  createGuestCheckoutStatusRoute,
+  type GuestCheckoutHostOptions,
+} from "./features/checkout/index.js";
 
 export * from "./features/inventory-provider/index.js";
 
@@ -108,6 +117,7 @@ export function dinkusCommerce(
 
 export interface CommercePluginOptions extends CommerceLocalDevelopmentOptions {
   inventorySetup?: ConfigureInventoryExecution;
+  checkout?: GuestCheckoutHostOptions;
 }
 
 export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugin {
@@ -153,6 +163,14 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [CHECKOUT_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
+      [CHECKOUT_GUEST_CAPABILITY_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
     },
     admin: {
       entry: COMMERCE_ADMIN_ENTRY,
@@ -177,6 +195,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE]:
         setStorefrontAvailabilityPolicyRoute,
       [OUT_OF_STOCK_LISTING_ROUTE]: outOfStockListingRoute,
+      [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(options.checkout),
+      [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(options.checkout),
     },
   });
 }

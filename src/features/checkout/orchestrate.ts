@@ -1,7 +1,8 @@
-import { loadCatalogItemBackorderPolicy, normalizeMoney, parseMinorUnits, resolveCatalogItemPrice } from "../catalog/index.js";
+import { loadCatalogItemBackorderPolicy, normalizeMoney, parseMinorUnits, resolveCatalogItemPrice } from "../catalog/kernel/index.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
-import { loadStoreInventoryConfiguration } from "../inventory-setup/index.js";
-import { resolveStorefrontAvailability } from "../storefront-availability/index.js";
+import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
+import { resolveStorefrontAvailability } from "../storefront-availability/kernel/index.js";
+import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
 
 export class CheckoutError extends Error {}
@@ -58,7 +59,7 @@ async function freeze(cart: CartLine[], e: CheckoutExecution): Promise<CheckoutA
   const total = normalizeMoney({ currency: "USD", minor });
   // This slice has no free-order or delayed-payment settlement policy.
   if (minor === "0") fail("Zero-total checkout is outside this payment slice");
-  return { attemptId, cart, payment: { attemptId, bindingRef: e.paymentBindingRef, lines, total, paymentWindowSeconds: 1800, paymentMethods: ["card"] }, ...(stock ? { stock } : {}), phase: "reserving" };
+  return { attemptId, cart, payment: createCurrentPaymentRequest({ attemptId, bindingRef: e.paymentBindingRef, lines, total }), ...(stock ? { stock } : {}), phase: "reserving" };
 }
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
@@ -102,8 +103,7 @@ function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void 
   const total = normalizeMoney(value.total);
   if (total.currency !== attempt.payment.total.currency || total.minor !== attempt.payment.total.minor) fail("Payment total mismatch");
   const s = value.session;
-  if (!s.sessionId || !Number.isSafeInteger(s.createdAt) || s.expiresAt !== s.createdAt + 1800 ||
-    !Number.isSafeInteger(s.expiresAt)) fail("Invalid payment window");
+  if (!providerSessionWindowIsValid(s, attempt.payment)) fail("Invalid payment window");
   let url: URL;
   try { url = new URL(s.redirectUrl); } catch { return fail("Invalid payment redirect"); }
   if (url.protocol !== "https:" || url.username || url.password) fail("Invalid payment redirect");

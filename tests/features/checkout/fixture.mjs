@@ -32,7 +32,7 @@ export function fixture(store, managed = true) {
     configurations:collection([{recordKind:'store-inventory-configuration',recordId:'config',configurationKey:'active',siteId:'site-test',binding:{providerRef:'inventory-test',poolId:'pool-test',defaultFulfillmentLocationId:'location-test'},configuredAt:'2026-01-01',updatedAt:'2026-01-01'}]),
   };
   const holds = new Map(), sessions = new Map();
-  let now = 1000, stockResult = 'reserved', paymentResult = 'open', reserveCalls = 0, releaseCalls = 0;
+  let now = 1000, sessionDuration = 1800, stockResult = 'reserved', paymentResult = 'open', reserveCalls = 0, releaseCalls = 0;
   const inventory = {
     async reserve(request) {
       reserveCalls++;
@@ -48,7 +48,7 @@ export function fixture(store, managed = true) {
   async function lookup(request, create) {
     let entry = sessions.get(request.attemptId);
     if (!entry && create && paymentResult !== 'unknown' && paymentResult !== 'not-created') {
-      entry = {request:structuredClone(request),session:{sessionId:'session-'+request.attemptId,redirectUrl:'https://checkout.stripe.com/test',createdAt:now,expiresAt:now+1800}};
+      entry = {request:structuredClone(request),session:{sessionId:'session-'+request.attemptId,redirectUrl:'https://checkout.stripe.com/test',createdAt:now,expiresAt:now+sessionDuration}};
       sessions.set(request.attemptId,entry);
       if (paymentResult === 'ambiguous') throw Error('connection lost after session creation');
     }
@@ -61,7 +61,7 @@ export function fixture(store, managed = true) {
     return {schema:'dinkuskit.inventory.sku-stock-read-result/v1',outcome:'found',...input,stock,locations:[{locationId:input.scope.locationId,name:'Test location',stock}]};
   }})},resolveInventory:async () => inventory,payments:{ensureSession:r => lookup(r,true),lookup:r => lookup(r,false)},paymentBindingRef: 'stripe-test-binding',now:() => now };
   execution.resolvePayments=async ref => ref === 'stripe-test-binding' ? execution.payments : null;
-  return {execution,holds,sessions,inventory,setNow:v => now=v,setStock:v => stockResult=v,setPayment:v => paymentResult=v,counts:() => ({reserveCalls,releaseCalls})};
+  return {execution,holds,sessions,inventory,setNow:v => now=v,setSessionDuration:v => sessionDuration=v,setStock:v => stockResult=v,setPayment:v => paymentResult=v,counts:() => ({reserveCalls,releaseCalls})};
 }
 
 /** Persisted fake external operations shared by independent worker processes. */

@@ -23,7 +23,7 @@ export default defineConfig({
   projects: [
     {
       name: "sandbox",
-      testMatch: /commerce\.spec\.mjs/,
+      testMatch: /commerce\.spec\.mjs|guest-checkout\.spec\.mjs/,
       use: {
         baseURL: "http://127.0.0.1:" + port,
         viewport: { width: 1440, height: 1000 },
@@ -31,7 +31,7 @@ export default defineConfig({
     },
     {
       name: "native",
-      testMatch: /native-populated\.spec\.mjs/,
+      testMatch: /native-populated\.spec\.mjs|guest-checkout\.spec\.mjs/,
       use: {
         baseURL: "http://127.0.0.1:" + nativePort,
         viewport: { width: 1440, height: 1000 },

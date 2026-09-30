@@ -1,0 +1,23 @@
+{
+  "issue": 32,
+  "decision": "commerce-guest-runtime-mount-001",
+  "result": "partial-required-repairs",
+  "stripe": "NOT_RUN",
+  "registryPaymentsInvocation": "unsupported-host-gate",
+  "capabilityRetention": "json-body-plus-declared-header",
+  "checks": {
+    "typecheck": "pass",
+    "unit": "182/182",
+    "audit": "clean",
+    "integration": "22/22",
+    "browserFirstFull": "4/5 fail native-populated seed leak",
+    "browserRetry": "5/5",
+    "nativeLocalStock": "1/1 after first full aborted"
+  },
+  "requiredRepairs": [
+    "trusted-tenant-scope-missing-fail-closed",
+    "capability-retention-before-any-attempt-or-provider-contact",
+    "explicit-same-origin-policy",
+    "guest-safe-unexpected-errors"
+  ]
+}

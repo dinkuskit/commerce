@@ -123,6 +123,15 @@ Cloudflare development runtime, so Commerce fails writes closed there. After
 the fix reaches a stable EmDash release, Commerce must repin and rerun the
 SmokyClub mounted-site proof before expanding its compatibility claim.
 
+Public guest checkout start/status routes are now mounted on both the native
+plugin and the Registry/sandbox descriptor. Commerce mints a server-owned
+capability, returns it in JSON, and checks it on later requests through the
+declared `x-commerce-guest-capability` header. Template Store retains that
+capability; EmDash public responses cannot set cookies. Default production
+Payments adapters stay unavailable. Synthetic fixture injection proves
+transport. Actual Stripe is not run. See
+[docs/implementation/guest-checkout-public.md](docs/implementation/guest-checkout-public.md).
+
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
 ## Sandbox distribution

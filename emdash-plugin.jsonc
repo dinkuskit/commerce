@@ -57,6 +57,14 @@
     "storefront_out_of_stock_listing": {
       "indexes": [],
       "uniqueIndexes": []
+    },
+    "checkout_carts": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "checkout_guest_capabilities": {
+      "indexes": [],
+      "uniqueIndexes": []
     }
   },
   "admin": {
