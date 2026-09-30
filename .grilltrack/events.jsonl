@@ -1,35 +1,17 @@
-{"action": "track_initialized", "at": "2026-09-26T18:35:03+00:00", "data": {"archive_ref": ".grilltrack/archive/gt-20260926151731-84df4c", "predecessor_track_id": "gt-20260926151731-84df4c", "track_id": "gt-20260926183503-6113fc"}, "event_id": "0be29ce5-aa8f-415f-b5df-9315614c785c"}
-{"action": "focus_started", "at": "2026-09-26T18:35:59+00:00", "data": {"cadence": "sequential", "domain": "a clerk turns Manage stock on or off on a product"}, "event_id": "d5dcea60-1179-4289-b0d1-6da6aed454f8"}
-{"action": "decision_proposed", "at": "2026-09-26T18:35:59+00:00", "data": {"decision_id": "manage-stock-checkbox-001"}, "event_id": "ec17636c-ed1b-4d73-9c00-a591fde2229b"}
-{"action": "decision_locked", "at": "2026-09-26T18:35:59+00:00", "data": {"decision_id": "manage-stock-checkbox-001"}, "event_id": "d644ea40-539d-4f7a-a948-f72724406c80"}
-{"action": "decision_proposed", "at": "2026-09-26T18:35:59+00:00", "data": {"decision_id": "manage-stock-hide-status-002"}, "event_id": "689b6b03-e58a-4408-b219-0da9aa764506"}
-{"action": "decision_locked", "at": "2026-09-26T18:35:59+00:00", "data": {"decision_id": "manage-stock-hide-status-002"}, "event_id": "a8801a96-f0d1-4769-b5d1-74455a406d91"}
-{"action": "decision_proposed", "at": "2026-09-26T18:35:59+00:00", "data": {"decision_id": "manage-stock-setup-required-003"}, "event_id": "3a815d36-b1e1-4aa4-ae47-471f03932997"}
-{"action": "decision_locked", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-setup-required-003"}, "event_id": "f8d4bbbe-3edc-4833-8b86-5e425b845a82"}
-{"action": "decision_proposed", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-uncheck-restores-004"}, "event_id": "dccada7d-e08f-4d55-a9ce-1bd396552ddc"}
-{"action": "decision_locked", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-uncheck-restores-004"}, "event_id": "b20822ff-5a01-4a21-8af2-cb989817ce9c"}
-{"action": "decision_proposed", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-reenable-fresh-005"}, "event_id": "3af6f6a8-1f3a-4dbe-9cf3-2a31f544bde3"}
-{"action": "decision_locked", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-reenable-fresh-005"}, "event_id": "4922f0bf-46ec-40b6-a76f-9245b12a2a4f"}
-{"action": "decision_proposed", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-existing-sku-confirm-006"}, "event_id": "31e7f88a-52ef-4dfa-a6fa-f5ad9e561e5b"}
-{"action": "decision_locked", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-existing-sku-confirm-006"}, "event_id": "94a62c66-bad2-4074-beaf-dd005a46cf95"}
-{"action": "decision_proposed", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-no-price-rewrite-007"}, "event_id": "badd43c3-3482-40d7-a008-43bfbc5bc5d6"}
-{"action": "decision_locked", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-no-price-rewrite-007"}, "event_id": "f597e014-e285-4c29-a220-5e25072bd666"}
-{"action": "decision_proposed", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-same-save-008"}, "event_id": "511fa3b7-ac30-4cb8-ac29-33d4c5cf8c49"}
-{"action": "decision_locked", "at": "2026-09-26T18:36:00+00:00", "data": {"decision_id": "manage-stock-same-save-008"}, "event_id": "5b643a44-141c-4f79-9d2f-131dca828709"}
-{"action": "shared_understanding_confirmed", "at": "2026-09-26T18:36:00+00:00", "data": {"summary": "Products page same Save as Regular and Sale: clerk checks or unchecks Manage stock. New products default off. On hides In stock/Out of stock/On backorder and persists setup-required with no auto Configure Inventory, no quantity, no install popup. Off restores dormant stock status, drops the Commerce setup claim, does not contact Inventory, and leaves pool quantity (the 6 red hats) in place. Later enable is not already-claimed; existing SKU is needs-review confirm; title does not remap. Toggle does not rewrite Regular or Sale. A refused Manage stock write leaves prices unchanged. Out: Allow backorders admin, Configure Inventory walk, marketplace install, auto-link, title remap, live quantity on this page. Proof: bin/verify-commerce full plus Products admin check/uncheck/recheck with prices unchanged."}, "event_id": "700f7494-b6b6-4603-9562-577e139995c4"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-checkbox-001"}, "event_id": "61389934-b541-46be-953e-f52b74d8bbad"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-checkbox-001"}, "event_id": "f2b5fb9d-f7d9-44af-b306-b6b8d60f5c0e"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-hide-status-002"}, "event_id": "0ce4cd38-5c7e-413d-a4b6-ec2d68b62b3a"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-hide-status-002"}, "event_id": "5a4d869d-ecc7-4ffd-8094-1a582aa57b8e"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-setup-required-003"}, "event_id": "cc895e68-0682-4326-99d2-2f5852338722"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-setup-required-003"}, "event_id": "1fc8c4d8-8014-41af-86df-92117442cf2f"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-uncheck-restores-004"}, "event_id": "bc3af53d-b70c-4bc5-89f9-a353766e4d79"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-uncheck-restores-004"}, "event_id": "5d2d43e9-ff2f-481c-8a49-1fc3e5910ce3"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:35+00:00", "data": {"decision_id": "manage-stock-reenable-fresh-005"}, "event_id": "d898f745-f8e7-4135-9ede-09e0b8be0496"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:36+00:00", "data": {"decision_id": "manage-stock-reenable-fresh-005"}, "event_id": "1ec20fe4-2c93-4a32-88a1-e7972092a9f7"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:36+00:00", "data": {"decision_id": "manage-stock-existing-sku-confirm-006"}, "event_id": "97c7f16d-3317-49af-9ec8-4248fc7e4167"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:36+00:00", "data": {"decision_id": "manage-stock-existing-sku-confirm-006"}, "event_id": "8aba68df-33b7-4ec9-82cb-1843eaea98cc"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:36+00:00", "data": {"decision_id": "manage-stock-no-price-rewrite-007"}, "event_id": "9735d96a-b055-4233-bb20-2cd62b40295c"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:36+00:00", "data": {"decision_id": "manage-stock-no-price-rewrite-007"}, "event_id": "ce4796b1-1a6c-4a23-af61-0f9152f11603"}
-{"action": "decision_implemented", "at": "2026-09-26T19:11:36+00:00", "data": {"decision_id": "manage-stock-same-save-008"}, "event_id": "d7adf8b7-4352-45bf-bc8f-adddf524cbcf"}
-{"action": "decision_verified", "at": "2026-09-26T19:11:36+00:00", "data": {"decision_id": "manage-stock-same-save-008"}, "event_id": "05b9aae1-c3fb-499a-893b-32ea5d2d554f"}
+{   "action": "track_reconciled",   "at": "2026-09-30T13:16:27+00:00",   "data": {     "plan_id": "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",     "snapshot_ref": ".grilltrack/lineage/edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",     "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"   },   "event_id": "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438" }
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "block-admin-create-002"}, "event_id": "ef6bb84b-2411-461d-81c5-4ea0d826c830"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "block-admin-save-001"}, "event_id": "b1111c76-58ef-442b-865f-0f3f816d7247"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "block-admin-settings-003"}, "event_id": "510ac31f-b2be-4818-8082-f09b29c9ed41"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "block-admin-settings-label-004"}, "event_id": "d72e83b5-9e3e-4ab8-aa59-f9d5a55d4a9e"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "checkout-guest-001"}, "event_id": "dadff9a5-84d6-45f0-a6e9-8043638f095f"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "checkout-hosted-first-002"}, "event_id": "256ec8ac-f733-4411-9ef0-18f2159c425f"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "checkout-payment-window-004"}, "event_id": "f3a5126e-2149-4745-8762-f53c55844b14"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "checkout-stock-hold-003"}, "event_id": "e96d98ce-21d1-4951-b5ca-34ce9cde6a35"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-checkbox-001"}, "event_id": "0881f417-2052-4adf-a34d-51f0d66d9b00"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-existing-sku-confirm-006"}, "event_id": "10f2a204-dfab-4637-9a63-ec5aed3560fc"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-hide-status-002"}, "event_id": "e3b8b852-f7bd-4f39-9073-f20db1c5c1b5"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-no-price-rewrite-007"}, "event_id": "4df8a8d3-8c20-4d2e-bd9e-4dd25c490e6f"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-reenable-fresh-005"}, "event_id": "6c7c3695-5263-4a82-a49d-72142c68188d"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-same-save-008"}, "event_id": "52c48af1-779d-40ae-b34d-d225c70938a3"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-setup-required-003"}, "event_id": "4a89545d-ca1c-4239-8de1-781edc8b859f"}
+{"action": "decision_verified", "at": "2026-09-30T14:43:01+00:00", "data": {"decision_id": "manage-stock-uncheck-restores-004"}, "event_id": "4f03b79e-5fb8-46f7-affe-d2f43ccfd9be"}

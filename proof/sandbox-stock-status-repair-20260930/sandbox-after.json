@@ -1,0 +1,16 @@
+{
+  "fixture": "synthetic Red hat",
+  "transport": "EmDash 0.41.0 / workerd / SQLite",
+  "dormantBefore": "out-of-stock",
+  "response": {
+    "type": "success",
+    "message": "Product saved"
+  },
+  "submittedValues": {
+    "regular": "12.00",
+    "sale": "10.00",
+    "manageStock": false,
+    "stockStatus": "in-stock"
+  },
+  "persistedStatus": "in-stock"
+}

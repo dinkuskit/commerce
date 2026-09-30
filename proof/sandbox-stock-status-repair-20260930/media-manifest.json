@@ -1,0 +1,82 @@
+{
+  "schema": "commerce.proof-media.v1",
+  "sourceRepository": "dinkuskit/commerce",
+  "pullRequest": "https://github.com/dinkuskit/commerce/pull/27",
+  "sourceHead": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+  "captureDate": "2026-09-30",
+  "access": "restricted external proof shelf; authorized reviewer requires operational receipt to resolve digest references",
+  "assets": [
+    {
+      "name": "sandbox-before.png",
+      "label": "Before: successful Save incorrectly restores Out of stock",
+      "bytes": 72109,
+      "sha256": "ac46e54ff20dfcb4a1f5e81631170dc4c18ffa81a81d1d40e1223cdd8b585be6",
+      "mediaType": "image/png",
+      "capturedDate": "2026-09-30",
+      "sourceHead": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "productionSourceBefore": "5cde2b574a06db40249a2e609673f6a3d92a09b8",
+      "provenance": "Selected original Playwright runtime screenshot; synthetic EmDash fixture; copied without modification",
+      "redactionStatus": "Inspected public-safe synthetic data; no redaction or image edits performed",
+      "reference": "sha256:ac46e54ff20dfcb4a1f5e81631170dc4c18ffa81a81d1d40e1223cdd8b585be6"
+    },
+    {
+      "name": "sandbox-after.png",
+      "label": "After: the same Save retains explicit In stock",
+      "bytes": 72115,
+      "sha256": "dd6514bc9e0bce043900302fe6e16a9c90044015b72121a726d71254a756318a",
+      "mediaType": "image/png",
+      "capturedDate": "2026-09-30",
+      "sourceHead": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "productionSourceBefore": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "provenance": "Selected original Playwright runtime screenshot; synthetic EmDash fixture; copied without modification",
+      "redactionStatus": "Inspected public-safe synthetic data; no redaction or image edits performed",
+      "reference": "sha256:dd6514bc9e0bce043900302fe6e16a9c90044015b72121a726d71254a756318a"
+    },
+    {
+      "name": "sandbox-dormant-restored.png",
+      "label": "Sandbox: dormant status after reload",
+      "bytes": 70653,
+      "sha256": "122933f3fc10fae36fc74c1554f1bf2707ecd21c092b3d1f5587cde2abf50e0f",
+      "mediaType": "image/png",
+      "capturedDate": "2026-09-30",
+      "sourceHead": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "productionSourceBefore": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "provenance": "Selected original Playwright runtime screenshot; synthetic EmDash fixture; copied without modification",
+      "redactionStatus": "Inspected public-safe synthetic data; no redaction or image edits performed",
+      "reference": "sha256:122933f3fc10fae36fc74c1554f1bf2707ecd21c092b3d1f5587cde2abf50e0f"
+    },
+    {
+      "name": "native-explicit-status.png",
+      "label": "Native: explicit Out of stock saved",
+      "bytes": 73984,
+      "sha256": "5273c9071e93dc8282aa4251f008c736ed321c0b415c54531432904ccfc70b7f",
+      "mediaType": "image/png",
+      "capturedDate": "2026-09-30",
+      "sourceHead": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "productionSourceBefore": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "provenance": "Selected original Playwright runtime screenshot; synthetic EmDash fixture; copied without modification",
+      "redactionStatus": "Inspected public-safe synthetic data; no redaction or image edits performed",
+      "reference": "sha256:5273c9071e93dc8282aa4251f008c736ed321c0b415c54531432904ccfc70b7f"
+    },
+    {
+      "name": "native-dormant-restored.png",
+      "label": "Native: dormant status restored",
+      "bytes": 73984,
+      "sha256": "5273c9071e93dc8282aa4251f008c736ed321c0b415c54531432904ccfc70b7f",
+      "mediaType": "image/png",
+      "capturedDate": "2026-09-30",
+      "sourceHead": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "productionSourceBefore": "5f90a611b793cb8b5479ca55bcfd8df59458091d",
+      "provenance": "Selected original Playwright runtime screenshot; synthetic EmDash fixture; copied without modification",
+      "redactionStatus": "Inspected public-safe synthetic data; no redaction or image edits performed",
+      "reference": "sha256:5273c9071e93dc8282aa4251f008c736ed321c0b415c54531432904ccfc70b7f"
+    }
+  ],
+  "publication": {
+    "status": "published",
+    "serverSizesAndSha256DigestsVerified": true,
+    "replacementPolicy": "Do not replace; use a new exact-source release for changed evidence",
+    "backendImmutableReleaseProtection": false,
+    "resolverAvailability": "No public digest-to-private-asset resolver is provided by the installed placement tool. Authorized reviewers need the separately retained operational upload receipt."
+  }
+}

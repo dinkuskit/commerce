@@ -1,0 +1,8 @@
+Command: COMMERCE_PROOF_RUN=sandbox-status-after-20260930 npm run test:sandbox
+Exit: 0
+
+[WebServer] 09:12:55 [ERROR] [vite] [console.error] Base UI: A component is changing the default value state of an uncontrolled FieldControl after being initialized. To suppress this warning opt to use a controlled FieldControl.
+  ✓  1 [sandbox] › tests/sandbox/commerce.spec.mjs:11:1 › fresh sandbox installation preserves the clerk workflow and storefront policy (1.2m)
+  ✓  2 [native] › tests/sandbox/native-populated.spec.mjs:23:3 › Native populated-browser continuity fixture › seeds old data, verifies rendering, edits via restored UI, and asserts storage retention (11.5s)
+  ✓  3 [native] › tests/sandbox/native-populated.spec.mjs:275:3 › Native populated-browser continuity fixture › unauthenticated access to native admin routes and APIs fails closed (254ms)
+  3 passed (1.5m)

@@ -1,0 +1,253 @@
+{
+  "schema": "commerce-integration-qualified/acceptance-result/v1",
+  "kind": "composed_acceptance_result",
+  "plan_id": "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",
+  "joined_track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
+  "composed_verification_run": true,
+  "composed_review_run": false,
+  "product_proof_claimed": false,
+  "track_status": "active",
+  "scope": {
+    "checkout": "exported-unmounted",
+    "native_admin_sandbox_descriptor": "preserved",
+    "deferred": [
+      "real-stripe",
+      "real-inventory-quantity-whole-basket",
+      "shopper-h1-ui",
+      "runtime-checkout-mount"
+    ]
+  },
+  "verifier": {
+    "command": "bin/verify-commerce full",
+    "node": "22.23.2",
+    "first_full": {
+      "typecheck": "pass",
+      "unit": { "total": 144, "pass": 143, "fail": 1 },
+      "audit_repo": "not_reached",
+      "integration": "not_reached",
+      "sandbox": "not_reached"
+    },
+    "failures_and_retests": [
+      {
+        "stage": "unit",
+        "case": "the committed scaffold satisfies the public repository contract",
+        "first": "fail",
+        "cause": "audit walked ignored .grilltrack/work plans/runs segments",
+        "repair": "scripts/repo-contract.mjs skips gitignored work/tmp/dist/coverage",
+        "retest": "pass"
+      },
+      {
+        "stage": "integration",
+        "case": "two local Wrangler/D1 processes enforce one permanent store identity",
+        "first": "fail",
+        "cause": "Wrangler D1 internal error, not composed-source constraint mismatch",
+        "repair": "none",
+        "retest": "pass"
+      }
+    ],
+    "after_retests": {
+      "unit_repo_contract": "pass",
+      "audit_repo": "pass",
+      "audit_features": "pass",
+      "integration": { "total": 21, "first_pass": 20, "retested_pass": 1 },
+      "sandbox": { "total": 3, "pass": 3 },
+      "audit_regressions": {
+        "file": "tests/repo-contract.test.mjs",
+        "total": 3,
+        "pass": 3,
+        "focused": 2,
+        "node": "22.23.2"
+      }
+    }
+  },
+  "decisions": [
+    {
+      "id": "manage-stock-checkbox-001",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "one command writes one complete draft row and a retry returns the original",
+        "the same Save can check Manage stock without rewriting price",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "manage-stock-hide-status-002",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "stock status is hidden and refused while Manage Stock is on",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy",
+        "seeds old data, verifies rendering, edits via restored UI, and asserts storage retention"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "manage-stock-setup-required-003",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "the same Save can check Manage stock without rewriting price",
+        "managed catalog creation persists setup-required intent without a quantity",
+        "missing store setup returns a structured setup action without claims or provider contact",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "manage-stock-uncheck-restores-004",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "unchecking Manage stock restores dormant status and drops the setup claim",
+        "unchecking Manage stock honors an explicit status over dormant availability",
+        "native SQLite saves an explicit stock status and restores it when the next toggle omits status",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy",
+        "seeds old data, verifies rendering, edits via restored UI, and asserts storage retention"
+      ],
+      "omissions": ["real Inventory quantity unchanged"],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "manage-stock-reenable-fresh-005",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "unchecking Manage stock restores dormant status and drops the setup claim",
+        "a failed claim release after disable is cleaned up on the next unmanaged save"
+      ],
+      "omissions": ["real Inventory pool quantity retention"],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "manage-stock-existing-sku-confirm-006",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "an existing pooled SKU requires review before its permanent identity activates",
+        "a genuine existing SKU still waits for explicit confirmation"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "manage-stock-no-price-rewrite-007",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "the same Save can check Manage stock without rewriting price",
+        "a failed stock write after a price change restores the stored Regular and Sale",
+        "native SQLite saves an explicit stock status and restores it when the next toggle omits status",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "manage-stock-same-save-008",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "the same Save can check Manage stock without rewriting price",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy",
+        "seeds old data, verifies rendering, edits via restored UI, and asserts storage retention"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "block-admin-create-002",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "adding a product asks only for name and SKU",
+        "one command writes one complete draft row and a retry returns the original",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy"
+      ],
+      "omissions": ["storefront product-page H1"],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "block-admin-save-001",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "one Save writes Out of stock and a refused status leaves the stored status unchanged",
+        "fresh sandbox installation preserves the clerk workflow and storefront policy",
+        "seeds old data, verifies rendering, edits via restored UI, and asserts storage retention",
+        "unauthenticated access to native admin routes and APIs fails closed"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "block-admin-settings-003",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "fresh sandbox installation preserves the clerk workflow and storefront policy"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "block-admin-settings-label-004",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "fresh sandbox installation preserves the clerk workflow and storefront policy"
+      ],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "checkout-guest-001",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "canonical sale price, duplicate lines, guest checkout and complete basket before redirect"
+      ],
+      "omissions": ["mounted shopper guest UI", "live Stripe"],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "checkout-hosted-first-002",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["source_contract_guard", "named_executable_case"],
+      "source_contract_guard": "src/features/checkout/orchestrate.ts https redirect without credentials",
+      "passed_cases": [
+        "real session field changes remain rejected while paying holds stay",
+        "canonical sale price, duplicate lines, guest checkout and complete basket before redirect"
+      ],
+      "omissions": ["live Stripe hosted Checkout", "shopper-browser redirect"],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "checkout-stock-hold-003",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "canonical sale price, duplicate lines, guest checkout and complete basket before redirect",
+        "local deadline and unknown payment never release; confirmed expiry releases then retry reprices",
+        "release failure/restart remains retryable and blocks new checkout",
+        "a known payment session cannot be released by a contradictory not-created response",
+        "shortage and provider outage fail closed; unmanaged checkout invokes no Inventory operations"
+      ],
+      "omissions": ["real Inventory whole-basket adapter"],
+      "product_proof_claimed": false
+    },
+    {
+      "id": "checkout-payment-window-004",
+      "composed_status": "verified_exported_unmounted",
+      "evidence_kinds": ["named_executable_case"],
+      "passed_cases": [
+        "canonical sale price, duplicate lines, guest checkout and complete basket before redirect",
+        "concurrent start and durable restart reuse one reservation and one fixed session",
+        "a recovered expired open session persists so restart cannot release on contradictory not-created",
+        "paid lookup with reversed session keys retains the paid order",
+        "paying retry ensure with reversed session keys preserves the same session and deadline",
+        "real session field changes remain rejected while paying holds stay",
+        "payment binding is frozen across configuration changes and missing old adapter preserves uncertainty",
+        "checkout CAS and order receipt survive exact EmDash repository connection reopen",
+        "independent processes converge on persisted providers, then a fresh process reconciles one durable order"
+      ],
+      "omissions": ["live Stripe 1800 window"],
+      "product_proof_claimed": false
+    }
+  ]
+}

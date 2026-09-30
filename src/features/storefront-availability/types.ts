@@ -5,11 +5,11 @@ import type {
   CatalogBackorderPolicyStorage,
   CatalogPriceStorage,
   CatalogStorageRecord,
-} from "../catalog/index.js";
+} from "../catalog/kernel/index.js";
 import type {
   StoreInventoryConfigurationRecord,
   StoreInventoryConfigurationStorage,
-} from "../inventory-setup/index.js";
+} from "../inventory-setup/kernel/index.js";
 
 export const STOREFRONT_AVAILABILITY_FEATURE_ID =
   "dinkus.storefront-availability";

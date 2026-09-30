@@ -1,0 +1,50 @@
+(node:45730) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> @dinkuskit/commerce@0.0.0 test:sandbox
+> playwright test
+
+(node:45751) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:45752) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:45752) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[WebServer] [datetime migration] 0 noncanonical values (0 naive) using UTC
+[WebServer] [emdash] No user seed found at .emdash/seed.json, package.json#emdash.seed, or seed/seed.json. Falling back to the built-in default seed; the setup wizard will not offer demo content for this site.
+
+Running 1 test using 1 worker
+
+(node:45832) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:45752) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 tests/sandbox/commerce.spec.mjs:10:1 › fresh sandbox installation preserves the clerk workflow and storefront policy (1.2m)
+
+
+  1) tests/sandbox/commerce.spec.mjs:10:1 › fresh sandbox installation preserves the clerk workflow and storefront policy 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator: getByRole('textbox', { name: 'Regular', exact: true })
+    Expected: "13.25"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveValue" with timeout 5000ms
+      - waiting for getByRole('textbox', { name: 'Regular', exact: true })
+
+
+      134 |     try {
+      135 |       expect((await save()).toast.message).toContain("catalog price update failed");
+    > 136 |       await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.25");
+          |                                                                                 ^
+      137 |       await expect(page.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("8.50");
+      138 |       await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+      139 |       expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
+        at <repo>/tests/sandbox/commerce.spec.mjs:136:81
+
+    Error Context: .tmp/sandbox-proof/1790471376956/test-results/commerce-fresh-sandbox-ins-15e32-kflow-and-storefront-policy/error-context.md
+
+  1 failed
+    tests/sandbox/commerce.spec.mjs:10:1 › fresh sandbox installation preserves the clerk workflow and storefront policy 

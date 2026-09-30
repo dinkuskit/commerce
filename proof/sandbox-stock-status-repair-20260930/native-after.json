@@ -1,0 +1,11 @@
+{
+  "fixture": "synthetic managed blanket",
+  "transport": "EmDash 0.41.0 / native React / SQLite",
+  "submittedValues": {
+    "regular": "42.00",
+    "sale": "35.00",
+    "manageStock": false,
+    "stockStatus": "out-of-stock"
+  },
+  "persistedStatus": "out-of-stock"
+}

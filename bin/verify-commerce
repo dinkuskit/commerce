@@ -12,6 +12,7 @@ case "$mode" in
   full)
     "$0" quick
     npm run test:integration
+    npm run test:sandbox
     ;;
   *)
     echo "Usage: bin/verify-commerce [quick|full]" >&2
