@@ -44,8 +44,14 @@ the next toggle omits status` passed on the first integration run.
 
 Playwright sandbox/native: 3 passed (fresh sandbox clerk workflow; native
 populated continuity; native anonymous denial). Screenshots used synthetic
-fixtures only and remain in ignored `.tmp/sandbox-proof/` for parent
-placement in a separate proof repository. Media are not tracked here.
+fixtures only. Four selected captures were visually inspected and published
+to the designated restricted proof shelf; server byte sizes and SHA-256
+digests match. [media-manifest.json](media-manifest.json) records capture
+source `2c9725f09bb555fbae3d8f49417a111418f6f10e`, provenance, redaction
+status, and digest references. Authorized reviewers need the separately
+retained operational receipt to resolve the restricted assets. The evidence
+follow-up changes text proof only; capture source code is unchanged. Media
+are not tracked here.
 
 Follow-up public-audit regressions under the same Node 22.23.2, without
 re-running accepted full/integration/browser suites: `tests/repo-contract.test.mjs`
@@ -89,4 +95,10 @@ Detailed mapping: [acceptance-result.json](acceptance-result.json).
 - Independent exact-source review (separate owner).
 - Track closeout or clean review identity.
 - Live Stripe, live Inventory, runtime checkout mount, or shopper H1.
-- Commit, push, pull request, merge, or deploy.
+- Merge, deployment, release, or live payment/provider mutation.
+
+## Delivery
+
+[Draft integration PR #31](https://github.com/dinkuskit/commerce/pull/31)
+contains the reviewed source union and composed proof. Independent review
+remains pending. The active track is not closed.

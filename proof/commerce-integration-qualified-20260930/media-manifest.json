@@ -1,0 +1,65 @@
+{
+  "schema": "commerce.proof-media.v1",
+  "sourceRepository": "dinkuskit/commerce",
+  "pullRequest": "https://github.com/dinkuskit/commerce/pull/31",
+  "sourceHead": "2c9725f09bb555fbae3d8f49417a111418f6f10e",
+  "captureDate": "2026-09-30",
+  "access": "Restricted external proof shelf; authorized reviewer needs separately retained operational receipt to resolve digests",
+  "assets": [
+    {
+      "name": "sandbox-explicit-status.png",
+      "label": "Sandbox explicit In stock saved",
+      "bytes": 72115,
+      "sha256": "dd6514bc9e0bce043900302fe6e16a9c90044015b72121a726d71254a756318a",
+      "mediaType": "image/png",
+      "captureDate": "2026-09-30",
+      "sourceHead": "2c9725f09bb555fbae3d8f49417a111418f6f10e",
+      "provenance": "Original Playwright screenshot of synthetic EmDash 0.41.0 local fixture; parent visually inspected selected capture",
+      "redactionStatus": "Public-safe synthetic data; no redaction or edits performed",
+      "reference": "sha256:dd6514bc9e0bce043900302fe6e16a9c90044015b72121a726d71254a756318a"
+    },
+    {
+      "name": "manage-stock-off.png",
+      "label": "Sandbox dormant Out of stock restored",
+      "bytes": 70653,
+      "sha256": "122933f3fc10fae36fc74c1554f1bf2707ecd21c092b3d1f5587cde2abf50e0f",
+      "mediaType": "image/png",
+      "captureDate": "2026-09-30",
+      "sourceHead": "2c9725f09bb555fbae3d8f49417a111418f6f10e",
+      "provenance": "Original Playwright screenshot of synthetic EmDash 0.41.0 local fixture; parent visually inspected selected capture",
+      "redactionStatus": "Public-safe synthetic data; no redaction or edits performed",
+      "reference": "sha256:122933f3fc10fae36fc74c1554f1bf2707ecd21c092b3d1f5587cde2abf50e0f"
+    },
+    {
+      "name": "native-managed-off-dormant-restored.png",
+      "label": "Native dormant Out of stock restored",
+      "bytes": 73984,
+      "sha256": "5273c9071e93dc8282aa4251f008c736ed321c0b415c54531432904ccfc70b7f",
+      "mediaType": "image/png",
+      "captureDate": "2026-09-30",
+      "sourceHead": "2c9725f09bb555fbae3d8f49417a111418f6f10e",
+      "provenance": "Original Playwright screenshot of synthetic EmDash 0.41.0 local fixture; parent visually inspected selected capture",
+      "redactionStatus": "Public-safe synthetic data; no redaction or edits performed",
+      "reference": "sha256:5273c9071e93dc8282aa4251f008c736ed321c0b415c54531432904ccfc70b7f"
+    },
+    {
+      "name": "settings-catalog.png",
+      "label": "Catalog setting retained after reload",
+      "bytes": 61291,
+      "sha256": "55750e0224abf6584a0068dc219c80d103929fff7377612f849a4f4796651883",
+      "mediaType": "image/png",
+      "captureDate": "2026-09-30",
+      "sourceHead": "2c9725f09bb555fbae3d8f49417a111418f6f10e",
+      "provenance": "Original Playwright screenshot of synthetic EmDash 0.41.0 local fixture; parent visually inspected selected capture",
+      "redactionStatus": "Public-safe synthetic data; no redaction or edits performed",
+      "reference": "sha256:55750e0224abf6584a0068dc219c80d103929fff7377612f849a4f4796651883"
+    }
+  ],
+  "publication": {
+    "status": "published",
+    "serverSizesAndSha256DigestsVerified": true,
+    "replacementPolicy": "Never replace; publish a new exact-source evidence bundle when captures change",
+    "backendImmutableReleaseProtection": false,
+    "resolverAvailability": "No public digest resolver. Authorized reviewers require the separately retained operational upload receipt."
+  }
+}
