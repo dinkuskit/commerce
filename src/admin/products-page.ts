@@ -34,6 +34,7 @@ export function ProductsPage() {
   const [regular, setRegular] = useState("");
   const [sale, setSale] = useState("");
   const [stockStatus, setStockStatus] = useState<ClerkStockStatus>("in-stock");
+  const [stockStatusChanged, setStockStatusChanged] = useState(false);
   const [manageStock, setManageStock] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -45,6 +46,7 @@ export function ProductsPage() {
       "Could not load products",
     );
     setProducts(listed.products);
+    setStockStatusChanged(false);
     const nextId = selectId ?? selectedId;
     const selected = listed.products.find((product) => product.catalogItemId === nextId) ?? null;
     if (selected === null) {
@@ -59,7 +61,7 @@ export function ProductsPage() {
     setRegular(selected.regular ?? "");
     setSale(selected.sale ?? "");
     setManageStock(selected.manageStock);
-    if (selected.stockStatus !== null) setStockStatus(selected.stockStatus);
+    setStockStatus(selected.stockStatus ?? "in-stock");
   }
 
   useEffect(() => {
@@ -73,7 +75,8 @@ export function ProductsPage() {
     setRegular(product.regular ?? "");
     setSale(product.sale ?? "");
     setManageStock(product.manageStock);
-    if (product.stockStatus !== null) setStockStatus(product.stockStatus);
+    setStockStatus(product.stockStatus ?? "in-stock");
+    setStockStatusChanged(false);
     setMessage(null);
   }
 
@@ -110,7 +113,7 @@ export function ProductsPage() {
         SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
         manageStock
           ? { catalogItemId: selectedId, regular, sale, manageStock: true }
-          : listedManaged
+          : listedManaged && !stockStatusChanged
             ? { catalogItemId: selectedId, regular, sale, manageStock: false }
             : {
                 catalogItemId: selectedId,
@@ -186,7 +189,10 @@ export function ProductsPage() {
           labeledField("Regular", "regular-price", regular, setRegular),
           labeledField("Sale", "sale-price", sale, setSale),
           manageStockCheckbox(manageStock, setManageStock),
-          manageStock ? null : stockStatusFields(stockStatus, setStockStatus),
+          manageStock ? null : stockStatusFields(stockStatus, (status) => {
+            setStockStatus(status);
+            setStockStatusChanged(true);
+          }),
           createElement("button", { type: "submit", disabled: pending }, "Save"),
         ),
   );
@@ -233,6 +239,7 @@ function stockStatusFields(
           type: "radio",
           name: "stock-status",
           checked: value === status,
+          onClick: () => setValue(status),
           onChange: () => {
             setValue(status);
           },

@@ -7,7 +7,7 @@
     "confirmed_at": "2026-09-27T00:45:14+00:00",
     "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
     "started_at": "2026-09-27T00:30:13+00:00",
-    "status": "confirmed",
+    "status": "inspected",
     "summary": "Build Registry-safe sandboxed Commerce with emdash-plugin.jsonc and Block Kit JSON, no browser-side plugin React. Products: add Name and SKU; Name is customer-facing title/H1 contract, no new storefront page. One Save for Regular, Sale, Manage stock and manual stock status. Preserve kernel validation and setup-required, hidden manual statuses when managed, dormant restoration when off, no install popup. Commerce Settings page, Catalog section: Hide out-of-stock products with separate Save. Prove sandbox installation and admin behavior on fresh EmDash 0.41.0 SQLite throwaway. No publishing or live-site changes; Inventory service hosting excluded; unmanaged availability works independently."
   },
   "decisions": [
@@ -151,10 +151,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-30T11:31:11+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
+        },
+        {
+          "at": "2026-09-30T11:37:21+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "review_result": "findings",
+          "review_source_identity": "git:6f511ac1243801d44f177ade1a83383086b594ae",
+          "to": "implemented",
+          "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
+        },
+        {
+          "at": "2026-09-30T11:41:39+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
         }
       ],
       "id": "block-admin-save-001",
-      "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
+      "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
       "question": "Does the clerk open a product from Products and use one Save for Regular, Sale, Manage stock and unmanaged stock status?",
       "rationale": "",
       "repair_required": false,
@@ -184,6 +228,15 @@
           "result": "findings",
           "reviewed_at": "2026-09-29T22:52:27+00:00",
           "source_identity": "git:0d120659d39e859ed4d32224b5981a18029ccb01"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:31:11+00:00",
+          "source_identity": "git:6f511ac1243801d44f177ade1a83383086b594ae"
         }
       ],
       "review_ref": null,
@@ -191,8 +244,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T01:02:16+00:00",
-      "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
+      "updated_at": "2026-09-30T11:41:39+00:00",
+      "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -433,10 +486,15 @@
   "last_pause": null,
   "pause": null,
   "predecessor_track_id": "gt-20260926183503-6113fc",
-  "recommendation": null,
+  "recommendation": {
+    "alternatives": [],
+    "reason": "The parent must contain native compatibility and explicit selected-status repair before independent merge qualification. Checkout composition conflicts touch FEATURE_MAP.md, package.json, ledger and events. Preserve sandbox/native exports and checkout tests; reconcile decision lineage only through GrillTrack CLI.",
+    "recommended": "Requalify repaired parent PR 27; report child PR 28 as redundant if fully included. Compose separately owned PR 29 only after its repair.",
+    "recorded_at": "2026-09-30T11:37:21+00:00"
+  },
   "schema_version": "grilltrack/v0.1",
   "status": "active",
   "title": "Registry-safe Commerce Products and Store admin",
   "track_id": "gt-20260927003013-b02439",
-  "updated_at": "2026-09-30T01:02:16+00:00"
+  "updated_at": "2026-09-30T11:41:39+00:00"
 }

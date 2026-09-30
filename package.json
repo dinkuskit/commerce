@@ -61,6 +61,23 @@
       "upstreamPullRequest": "https://github.com/emdash-cms/emdash/pull/2768",
       "stockReleaseBehavior": "fail-closed",
       "stableReleaseExit": "repin-and-rerun-smokyclub-proof"
+    },
+    "pendingComposition": {
+      "checkout": {
+        "pullRequest": "https://github.com/dinkuskit/commerce/pull/29",
+        "status": "separate-unmerged-slice",
+        "preserveExports": [
+          "./admin",
+          "./descriptor",
+          "./sandbox",
+          "./features/checkout"
+        ],
+        "preserveChecks": [
+          "build:sandbox",
+          "tests/features/checkout/*.test.mjs"
+        ],
+        "decisionLineage": "Reconcile GrillTrack histories through the CLI; do not hand-merge ledger or events."
+      }
     }
   },
   "peerDependencies": {
