@@ -1,0 +1,79 @@
+{
+  "schema": "commerce.media-proof.v1",
+  "source_manifest_sha256": "eec7b502ec531a7eb7c97b764234983e6ebfdbdfb9429713aeecdaf1c0eca69e",
+  "publication": "selected originals on designated restricted immutable-by-policy evidence shelf; no tracked media",
+  "assets": [
+    {
+      "name": "native-products-populated.png",
+      "bytes": 75269,
+      "sha256": "ab1c37545edc6d3ac66ba4c80352187f7b0721443a487bc390669daed39a4228",
+      "scenario": "unmanaged product: gray disabled slider with adjacent Coming soon",
+      "provenance": {
+        "fixture": "neutral synthetic SQLite store",
+        "runtime": "EmDash 0.41.0 native admin",
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "capture": "original Playwright PNG"
+      },
+      "redaction": "none required; synthetic data only",
+      "visible_inspection": "passed",
+      "evidence_ref": "sha256:ab1c37545edc6d3ac66ba4c80352187f7b0721443a487bc390669daed39a4228"
+    },
+    {
+      "name": "native-managed-price-preserved.png",
+      "bytes": 67673,
+      "sha256": "ffa7c3d6e63fc48c04d8971865918eb368495158b486e2c6682e76f10dda3850",
+      "scenario": "legacy managed product: gray checked slider; price edit preserves stock mode",
+      "provenance": {
+        "fixture": "neutral synthetic SQLite store",
+        "runtime": "EmDash 0.41.0 native admin",
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "capture": "original Playwright PNG"
+      },
+      "redaction": "none required; synthetic data only",
+      "visible_inspection": "passed",
+      "evidence_ref": "sha256:ffa7c3d6e63fc48c04d8971865918eb368495158b486e2c6682e76f10dda3850"
+    },
+    {
+      "name": "native-local-stock-setup-required.png",
+      "bytes": 63871,
+      "sha256": "e11ca24a43a6df1353ff66d07eb32805281cc1803d28130e10e400d85bf46695",
+      "scenario": "explicit local development: enabled slider saved managed setup-required",
+      "provenance": {
+        "fixture": "neutral synthetic SQLite store",
+        "runtime": "EmDash 0.41.0 native admin",
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "capture": "original Playwright PNG"
+      },
+      "redaction": "none required; synthetic data only",
+      "visible_inspection": "passed",
+      "evidence_ref": "sha256:e11ca24a43a6df1353ff66d07eb32805281cc1803d28130e10e400d85bf46695"
+    },
+    {
+      "name": "native-local-stock-reloaded.png",
+      "bytes": 71700,
+      "sha256": "868b1a751d72f6c2dbbeb453495659e2489f081909c535656b09f8494d9830ee",
+      "scenario": "explicit local development: keyboard disable restores dormant Out of stock and reloads edited prices",
+      "provenance": {
+        "fixture": "neutral synthetic SQLite store",
+        "runtime": "EmDash 0.41.0 native admin",
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "capture": "original Playwright PNG"
+      },
+      "redaction": "none required; synthetic data only",
+      "visible_inspection": "passed",
+      "evidence_ref": "sha256:868b1a751d72f6c2dbbeb453495659e2489f081909c535656b09f8494d9830ee"
+    }
+  ]
+}

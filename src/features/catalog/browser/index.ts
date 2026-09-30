@@ -11,3 +11,4 @@ export type {
   CatalogProductListItem,
   CatalogProductPriceForm,
 } from "../product-admin.js";
+export type { ManageStockControl } from "../local-stock-development.js";

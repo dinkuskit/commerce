@@ -4,6 +4,7 @@ import type { StorageCollection } from "emdash";
 import {
   CatalogError, createCatalogItem, catalogProductCreateInput, listCatalogProducts,
   saveCatalogProductPrices, loadCatalogItemManualAvailability,
+  admitV1CatalogCreateInput, admitV1CatalogPriceSaveInput, isManagedCatalogRecord,
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm,
 } from "../features/catalog/kernel/index.js";
@@ -55,7 +56,7 @@ function navigation(): Block {
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
     { type: "header", text: "Add product" },
-    { type: "context", text: "Name is the customer-facing product title (the product page heading). New products start with Manage stock off." },
+    { type: "context", text: "Name is the customer-facing product title (the product page heading). New products stay unmanaged. Manage stock is coming soon." },
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
@@ -78,15 +79,31 @@ async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> 
   if (paging.elements.length) blocks.push(paging);
   return { blocks };
 }
-type ProductFields = Pick<CatalogProductPriceForm, "regular" | "sale" | "manageStock" | "stockStatus">;
+type ProductFields = {
+  regular: CatalogProductPriceForm["regular"];
+  sale: CatalogProductPriceForm["sale"];
+  manageStock: boolean | null;
+  stockStatus: CatalogProductPriceForm["stockStatus"];
+};
+// Registry/sandbox Block Kit 0.41.0 ToggleElement has no disabled field and never
+// forwards disabled to Kumo Switch. Emitting a live toggle would not fulfill the
+// requested disabled slider. This notice is an honest temporary fallback.
+function manageStockNotice(managed: boolean | null): Block {
+  return {
+    type: "context",
+    text: managed === true
+      ? "Manage stock — Coming soon. This product stays managed; tracking cannot be changed."
+      : managed === false
+        ? "Manage stock — Coming soon"
+        : "Manage stock — Coming soon. Manual status is hidden until stored tracking can be proven.",
+  };
+}
 function productForm(id: string, values: ProductFields): Block {
   return { type: "form", block_id: "product-" + id + "-" + crypto.randomUUID(), fields: [
       { type: "text_input", action_id: "regular", label: "Regular", initial_value: values.regular },
       { type: "text_input", action_id: "sale", label: "Sale", initial_value: values.sale },
-      { type: "toggle", action_id: "manageStock", label: "Manage stock", initial_value: values.manageStock,
-        description: "Turning this on requires Inventory setup. It does not connect Inventory or change a quantity." },
-      { type: "radio", action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS,
-        initial_value: values.stockStatus ?? undefined, condition: { field: "manageStock", eq: false } },
+      ...(values.manageStock === false ? [{ type: "radio" as const, action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS,
+        initial_value: values.stockStatus ?? undefined }] : []),
     ], submit: { label: "Save", action_id: "save:" + id } };
 }
 async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm): Promise<BlockResponse> {
@@ -101,6 +118,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     { type: "header", text: selected.name }, { type: "context", text: "Commerce / Products" }, navigation(),
     { type: "context", text: "SKU: " + selected.sku },
     ...(form?.message ? [alert(form.message)] : []),
+    manageStockNotice(values.manageStock),
     productForm(id, { ...values, stockStatus: values.stockStatus ?? status }),
   ] };
 }
@@ -142,6 +160,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
       values = object(input.values);
       if (action.startsWith("create:")) {
         const commandId = action.slice(7);
+        admitV1CatalogCreateInput(values);
         const created = await createCatalogItem(storage(ctx).catalog,
           catalogProductCreateInput(text(values.name), text(values.sku), commandId), { collection: "catalog_items" });
         return { ...await product(ctx, created.item.itemId), toast: { type: "success", message: "Product added" } };
@@ -150,15 +169,16 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const id = action.slice(5);
         const store = storage(ctx);
         const item = await store.catalog.get(id);
-        const manageStock = bool(values.manageStock);
-        // The form starts at the persisted dormant status, even while hidden.
-        // Honor a submitted choice on disable; omission restores the dormant value.
-        const wasManaged = item?.recordKind === "catalog-item" && item.stockManagement?.mode === "managed";
-        const saved = await saveCatalogProductPrices(store, { catalogItemId: id,
-          regular: text(values.regular), sale: text(values.sale), manageStock,
-          ...(!manageStock && (!wasManaged || values.stockStatus !== undefined)
-            ? { stockStatus: text(values.stockStatus) } : {}),
-        });
+        const wasManaged = isManagedCatalogRecord(item);
+        const payload: Record<string, unknown> = {
+          catalogItemId: id,
+          regular: text(values.regular),
+          sale: text(values.sale),
+        };
+        if (Object.hasOwn(values, "manageStock")) payload.manageStock = values.manageStock;
+        if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus);
+        const saved = await saveCatalogProductPrices(store,
+          admitV1CatalogPriceSaveInput(payload, wasManaged));
         return { ...await product(ctx, id, saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }
       if (action === "settings.save") {
@@ -179,13 +199,20 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     // Recovery is render-only: even a storage outage must not erase clerk input.
     if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.length <= 1024) {
       if (input.action_id.startsWith("save:") && typeof values.regular === "string" && values.regular.length <= 1024 &&
-          typeof values.sale === "string" && values.sale.length <= 1024 && typeof values.manageStock === "boolean") {
+          typeof values.sale === "string" && values.sale.length <= 1024) {
         const status = STOCK_OPTIONS.some(option => option.value === values.stockStatus)
           ? values.stockStatus as ProductFields["stockStatus"] : null;
+        const managed = typeof values.manageStock === "boolean" ? values.manageStock : null;
         return { blocks: [
           { type: "header", text: "Product changes" }, { type: "context", text: "Commerce / Products" }, navigation(),
           alert(failure), { type: "context", text: "Save was not confirmed. Your entries are retained; review or retry." },
-          productForm(input.action_id.slice(5), { regular: values.regular, sale: values.sale, manageStock: values.manageStock, stockStatus: status }),
+          manageStockNotice(managed),
+          productForm(input.action_id.slice(5), {
+            regular: values.regular,
+            sale: values.sale,
+            manageStock: managed,
+            stockStatus: managed === false ? status : null,
+          }),
         ], toast: { type: "error", message: failure } };
       }
       if (input.action_id === "settings.save" && typeof values.hideOutOfStock === "boolean") {

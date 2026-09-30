@@ -84,15 +84,30 @@ refused rather than silently cleared. `resolveStorefrontAvailability` returns
 The sandboxed EmDash Block Kit Products page lists those catalog products by name and
 lets a clerk add one with a name and SKU. Name is the customer-facing title
 (the product page H1 contract); this plugin does not render a storefront page.
-Opening a product shows Regular,
-Sale, Manage stock, and In stock / Out of stock / On backorder when Manage
-stock is off. Those three stock statuses hide when Manage stock is on. New
-products still default Manage stock off. Checking it persists setup-required
-and does not run Configure Inventory or invent a quantity. Unchecking restores
-the dormant stock status, drops the Commerce setup claim, and does not contact
-Inventory. Uncheck is refused while Inventory setup is still running; the clerk
-retries Save after it finishes. One Save writes prices, Manage stock, and stock status. A refused
-Manage stock write leaves stored prices unchanged. Commerce still stores Money.
+Opening a product shows Regular, Sale, the Manage stock slider, and In stock /
+Out of stock / On backorder when the product is unmanaged. Native admin keeps
+that slider in place after Regular/Sale. By default it is gray, disabled, and
+labeled Coming soon on the same row; keyboard and pointer cannot change it.
+Those three stock statuses stay hidden on managed products. New products stay
+unmanaged and do not need Inventory. Existing managed products stay managed:
+clerks can edit prices, but omitted tracking fields preserve claims, bindings,
+and fail-closed sellability. A host enables synthetic local testing only with
+`dinkusCommerce({ enableLocalStockManagement: true, siteUrl })` or
+`createPlugin({ enableLocalStockManagement: true, siteUrl })` together with an
+actual loopback site URL (`emdash({ siteUrl })`, `EMDASH_SITE_URL`, or
+`SITE_URL`) and a loopback request. Pass that same configured origin into
+Commerce. When runtime `ctx.site.url` is also present, both trusted site URLs
+must be loopback; a local constructor cannot mask a public runtime site.
+Missing or blank runtime may use the constructor URL. Missing, blank, or
+malformed present site URL fails closed.
+That is not a merchant setting, URL query, or browser override. The
+kernel still accepts future Manage stock transitions. Mounted create/save
+refuse tracking changes unless that local-dev triple is true; creation still
+defaults off. The public `createCatalogItemRoute`, `listCatalogProductsRoute`,
+and `saveCatalogProductPricesRoute` exports stay default-disabled route
+objects. Additive `*WithLocalStock` factories configure a trusted host. Registry/sandbox Block Kit 0.41.0 cannot render a true disabled
+slider, so the Coming-soon notice there is a temporary fallback pending host
+support. Commerce still stores Money.
 Commerce → Settings → Catalog lets the shop owner show out-of-stock products on the
 live site or hide them. The default is to show them. Hide is opt-in and
 applies to clerk Out of stock and Inventory-at-zero. On backorder stays
@@ -161,7 +176,9 @@ repository hygiene, the exact EmDash API peer, and the exact private-pilot fork
 contract. The full verifier additionally runs cross-process SQLite atomicity
 proof against EmDash's real 0.41.0 storage repository and a two-process local
 Wrangler/D1 expression-index proof, plus the real workerd + SQLite
-admin/browser flow (`npm run test:sandbox` to run that boundary alone). Install Chromium first with
+admin/browser flow (`npm run test:sandbox` to run that boundary alone) and the
+opted-in native local-stock browser (`npm run test:sandbox:native-local-stock`)
+after the standard sandbox suite. Install Chromium first with
 `npx playwright install chromium`. No live site or Registry publication is used.
 
 Under construction. MIT licensed.

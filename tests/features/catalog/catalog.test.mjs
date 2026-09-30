@@ -5,11 +5,17 @@ import { PluginRouteError } from "emdash";
 import {
   CatalogError,
   catalogUniqueIndexName,
+  createCatalogItemRoute,
+  createCatalogItemRouteWithLocalStock,
+  createListCatalogProductsRouteWithLocalStock,
   createPlugin,
   createCatalogItem,
+  createSaveCatalogProductPricesRouteWithLocalStock,
   dinkusCommerce,
   identifyConfirmedUniqueViolation,
+  listCatalogProductsRoute,
   normalizeSku,
+  saveCatalogProductPricesRoute,
 } from "../../../dist/index.js";
 
 const commercePlugin = createPlugin();
@@ -27,6 +33,11 @@ class MemoryCatalogStorage {
     this.activeUniqueFields = new Set(activeUniqueFields);
     this.records = new Map();
     this.puts = [];
+  }
+
+  async get(id) {
+    const record = this.records.get(id);
+    return record === undefined ? null : structuredClone(record);
   }
 
   async put(id, data) {
@@ -336,7 +347,21 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
       { path: "/products", label: "Products", icon: "storefront" },
       { path: "/store", label: "Store", icon: "storefront" },
     ],
+    options: { enableLocalStockManagement: false },
   });
+  assert.deepEqual(dinkusCommerce({ enableLocalStockManagement: true }).options, {
+    enableLocalStockManagement: true,
+  });
+  assert.deepEqual(
+    dinkusCommerce({
+      enableLocalStockManagement: true,
+      siteUrl: "http://127.0.0.1:4321",
+    }).options,
+    {
+      enableLocalStockManagement: true,
+      siteUrl: "http://127.0.0.1:4321",
+    },
+  );
   assert.equal(commercePlugin.id, "dinkus-commerce");
   assert.deepEqual(commercePlugin.storage.catalogItems, {
     indexes: [],
@@ -372,4 +397,47 @@ test("the route rejects alternate methods and delegates POST to the catalog appl
   });
   assert.equal(result.created, true);
   assert.equal(result.item.sku, "ROUTE-GRILL");
+});
+
+test("named catalog route exports stay default-disabled PluginRoute objects", async () => {
+  for (const route of [createCatalogItemRoute, listCatalogProductsRoute, saveCatalogProductPricesRoute]) {
+    assert.equal(typeof route, "object");
+    assert.equal(typeof route.handler, "function");
+    assert.equal(typeof route.permission, "string");
+  }
+  assert.equal(typeof createCatalogItemRouteWithLocalStock, "function");
+  assert.equal(typeof createListCatalogProductsRouteWithLocalStock, "function");
+  assert.equal(typeof createSaveCatalogProductPricesRouteWithLocalStock, "function");
+
+  const storage = new MemoryCatalogStorage();
+  await storage.put("item-bag", {
+    recordKind: "catalog-item",
+    itemId: "item-bag",
+    commandId: "catalog:create:bag",
+    creationIntent: { manageStock: false },
+    kind: "simple-product",
+    name: "Bag",
+    sku: "BAG-1",
+    skuKey: "BAG-1",
+    stockManagement: { mode: "unmanaged" },
+    state: "draft",
+    createdAt: "2026-09-26T00:00:00.000Z",
+  });
+  await assert.rejects(
+    saveCatalogProductPricesRoute.handler({
+      input: { catalogItemId: "item-bag", regular: "12", sale: "", manageStock: true },
+      storage: {
+        catalogItems: storage,
+        catalogPrices: { async get() { return null; }, async put() {} },
+        catalogManualAvailability: { async get() { return null; }, async put() {} },
+        managedSkuClaims: { async get() { return null; }, async query() { return { items: [] }; } },
+      },
+      request: new Request("http://127.0.0.1/catalog-items/save-prices", { method: "POST" }),
+      site: { url: "http://127.0.0.1" },
+    }),
+    (error) =>
+      error instanceof PluginRouteError &&
+      error.code === "MANAGE_STOCK_UNAVAILABLE",
+  );
+  assert.deepEqual(storage.records.get("item-bag").stockManagement, { mode: "unmanaged" });
 });

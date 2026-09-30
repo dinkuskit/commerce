@@ -11,6 +11,7 @@ import {
   type CatalogProductListItem,
   type CatalogProductPriceForm,
   type ClerkStockStatus,
+  type ManageStockControl,
 } from "../features/catalog/browser/index.js";
 
 function pluginRoute(route: string): string {
@@ -26,6 +27,12 @@ async function postPlugin<T>(route: string, body: unknown, fallback: string): Pr
   return parseApiResponse<T>(response, fallback);
 }
 
+function readManageStockEnabled(value: unknown): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const control = (value as { manageStockControl?: ManageStockControl }).manageStockControl;
+  return control?.enabled === true;
+}
+
 export function ProductsPage() {
   const [products, setProducts] = useState<CatalogProductListItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -36,16 +43,17 @@ export function ProductsPage() {
   const [stockStatus, setStockStatus] = useState<ClerkStockStatus>("in-stock");
   const [stockStatusChanged, setStockStatusChanged] = useState(false);
   const [manageStock, setManageStock] = useState(false);
+  const [manageStockEnabled, setManageStockEnabled] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function loadProducts(selectId?: string): Promise<void> {
-    const listed = await postPlugin<{ products: CatalogProductListItem[] }>(
-      LIST_CATALOG_PRODUCTS_ROUTE,
-      {},
-      "Could not load products",
-    );
+    const listed = await postPlugin<{
+      products: CatalogProductListItem[];
+      manageStockControl?: ManageStockControl;
+    }>(LIST_CATALOG_PRODUCTS_ROUTE, {}, "Could not load products");
     setProducts(listed.products);
+    setManageStockEnabled(readManageStockEnabled(listed));
     setStockStatusChanged(false);
     const nextId = selectId ?? selectedId;
     const selected = listed.products.find((product) => product.catalogItemId === nextId) ?? null;
@@ -54,7 +62,6 @@ export function ProductsPage() {
       setRegular("");
       setSale("");
       setStockStatus("in-stock");
-      setManageStock(false);
       return;
     }
     setSelectedId(selected.catalogItemId);
@@ -66,6 +73,7 @@ export function ProductsPage() {
 
   useEffect(() => {
     void loadProducts().catch((error: unknown) => {
+      setManageStockEnabled(false);
       setMessage(error instanceof Error ? error.message : "Could not load products");
     });
   }, []);
@@ -111,16 +119,25 @@ export function ProductsPage() {
         true;
       const saved = await postPlugin<CatalogProductPriceForm>(
         SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
-        manageStock
-          ? { catalogItemId: selectedId, regular, sale, manageStock: true }
-          : listedManaged && !stockStatusChanged
-            ? { catalogItemId: selectedId, regular, sale, manageStock: false }
+        manageStockEnabled
+          ? manageStock
+            ? { catalogItemId: selectedId, regular, sale, manageStock: true }
+            : listedManaged && !stockStatusChanged
+              ? { catalogItemId: selectedId, regular, sale, manageStock: false }
+              : {
+                  catalogItemId: selectedId,
+                  regular,
+                  sale,
+                  manageStock: false,
+                  stockStatus,
+                }
+          : listedManaged
+            ? { catalogItemId: selectedId, regular, sale }
             : {
                 catalogItemId: selectedId,
                 regular,
                 sale,
-                manageStock: false,
-                stockStatus,
+                ...(stockStatusChanged ? { stockStatus } : {}),
               },
         "Could not save the product",
       );
@@ -188,32 +205,55 @@ export function ProductsPage() {
           createElement("h2", { className: "text-lg font-semibold" }, "Price"),
           labeledField("Regular", "regular-price", regular, setRegular),
           labeledField("Sale", "sale-price", sale, setSale),
-          manageStockCheckbox(manageStock, setManageStock),
-          manageStock ? null : stockStatusFields(stockStatus, (status) => {
-            setStockStatus(status);
-            setStockStatusChanged(true);
-          }),
+          manageStockSwitch(manageStock, manageStockEnabled, setManageStock),
+          manageStock
+            ? null
+            : stockStatusFields(stockStatus, (status) => {
+                setStockStatus(status);
+                setStockStatusChanged(true);
+              }),
           createElement("button", { type: "submit", disabled: pending }, "Save"),
         ),
   );
 }
 
-function manageStockCheckbox(
+const SWITCH_STYLE = `
+.dk-manage-stock-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.dk-manage-stock-row input[role=switch]{appearance:none;-webkit-appearance:none;width:2.5rem;height:1.4rem;margin:0;border:0;border-radius:999px;background:#6b7280;position:relative;flex:0 0 auto}
+.dk-manage-stock-row input[role=switch]::after{content:"";position:absolute;top:.15rem;left:.15rem;width:1.1rem;height:1.1rem;border-radius:999px;background:#fff}
+.dk-manage-stock-row input[role=switch]:checked{background:#2563eb}
+.dk-manage-stock-row input[role=switch]:checked::after{left:1.25rem}
+.dk-manage-stock-row input[role=switch]:disabled{filter:grayscale(1);opacity:.55;cursor:not-allowed}
+`;
+
+function manageStockSwitch(
   value: boolean,
+  enabled: boolean,
   setValue: (value: boolean) => void,
 ) {
   return createElement(
-    "label",
-    { htmlFor: "manage-stock", className: "block" },
+    "div",
+    { className: "dk-manage-stock-row" },
+    createElement("style", null, SWITCH_STYLE),
+    createElement("label", { htmlFor: "manage-stock" }, "Manage stock"),
     createElement("input", {
       id: "manage-stock",
       type: "checkbox",
+      role: "switch",
       checked: value,
-      onChange: (event: ChangeEvent<HTMLInputElement>) => {
-        setValue(event.currentTarget.checked);
-      },
+      disabled: !enabled,
+      "aria-checked": value,
+      "aria-disabled": enabled ? undefined : "true",
+      "aria-describedby": enabled ? undefined : "manage-stock-coming-soon",
+      onChange: enabled
+        ? (event: ChangeEvent<HTMLInputElement>) => {
+            setValue(event.currentTarget.checked);
+          }
+        : undefined,
     }),
-    " Manage stock",
+    enabled
+      ? null
+      : createElement("span", { id: "manage-stock-coming-soon" }, "Coming soon"),
   );
 }
 

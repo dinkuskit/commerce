@@ -94,6 +94,32 @@ test.describe("Native populated-browser continuity fixture", () => {
     };
     insertStorage.run("dinkus-commerce", "catalogItems", managedProduct.itemId, JSON.stringify(managedProduct), now, now);
 
+    const managedClaim = {
+      recordKind: "managed-sku-registration-claim",
+      recordId: "claim-wool-blanket",
+      claimKey: JSON.stringify(["managed-sku-registration", managedProduct.itemId, "initial"]),
+      catalogItemId: managedProduct.itemId,
+      operationId: "op-wool-blanket",
+      request: { poolId: "pool-legacy", sku: "BLANKET-01", displayNameIfNew: "Wool Blanket" },
+      createdAt: now,
+    };
+    insertStorage.run("dinkus-commerce", "managedSkuClaims", managedClaim.recordId, JSON.stringify(managedClaim), now, now);
+
+    const managedBinding = {
+      recordKind: "store-inventory-configuration",
+      recordId: "active",
+      configurationKey: "active",
+      siteId: "site-legacy",
+      binding: {
+        providerRef: "inventory:legacy",
+        poolId: "pool-legacy",
+        defaultFulfillmentLocationId: "loc-legacy",
+      },
+      configuredAt: now,
+      updatedAt: now,
+    };
+    insertStorage.run("dinkus-commerce", "storeInventoryConfigurations", managedBinding.recordId, JSON.stringify(managedBinding), now, now);
+
     // (e) Seed Store settings (hide out-of-stock)
     const storeSettings = {
       recordKind: "storefront-out-of-stock-listing",
@@ -122,75 +148,78 @@ test.describe("Native populated-browser continuity fixture", () => {
     await bootButton.click();
     await expect(page.locator("#regular-price")).toHaveValue("180.00");
     await expect(page.locator("#sale-price")).toHaveValue("150.00");
-    await expect(page.locator("#manage-stock")).not.toBeChecked();
-    // Verify Out of stock radio is checked
+    const manageStock = page.locator("#manage-stock");
+    const manageStockRow = page.locator(".dk-manage-stock-row");
+    await expect(manageStock).toHaveAttribute("role", "switch");
+    await expect(manageStock).not.toBeChecked();
+    await expect(manageStock).toBeDisabled();
+    await expect(manageStockRow.getByText("Coming soon", { exact: true })).toBeVisible();
+    await expect(manageStockRow).toHaveCSS("display", "flex");
+    const filter = await manageStock.evaluate((element) => getComputedStyle(element).filter);
+    expect(filter).toMatch(/grayscale/);
+    await manageStock.click({ force: true });
+    await expect(manageStock).not.toBeChecked();
+    await manageStock.focus();
+    await page.keyboard.press("Space");
+    await expect(manageStock).not.toBeChecked();
     const outOfStockRadio = page.locator("label:has-text('Out of stock') input");
     await expect(outOfStockRadio).toBeChecked();
 
     await saveScreenshot(page, "native-products-populated.png", artifactsDir);
 
-    // 5. Verify managed setup product renders with Manage stock checked and status radios hidden
-    await blanketButton.click();
-    await expect(page.locator("#manage-stock")).toBeChecked();
-    await expect(page.locator("fieldset:has-text('Stock status')")).not.toBeVisible();
-
-    await saveScreenshot(page, "native-managed-setup.png", artifactsDir);
-
-    const saveNativeProduct = async () => {
+    const storageRow = (collection, id) => JSON.parse(db.prepare(
+      "SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?",
+    ).get("dinkus-commerce", collection, id).data);
+    const saveNativeProduct = async (expectedSaved = true) => {
       const response = page.waitForResponse(r => r.url().endsWith("/catalog-items/save-prices") && r.request().method() === "POST");
       await page.locator("form:has(#regular-price) button:has-text('Save')").click();
       const received = await response;
-      expect(received.status()).toBe(200);
-      expect((await received.json()).data.saved).toBe(true);
-      await expect(page.getByRole("button", { name: "Save", exact: true })).toBeEnabled();
-      return received.request().postDataJSON();
+      const body = await received.json();
+      if (expectedSaved) {
+        expect(received.status()).toBe(200);
+        expect(body.data.saved).toBe(true);
+        await expect(page.getByRole("button", { name: "Save", exact: true })).toBeEnabled();
+      }
+      return { received, body, values: received.request().postDataJSON() };
     };
-    const managedStockStatus = () => JSON.parse(db.prepare("SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?")
-      .get("dinkus-commerce", "catalogManualAvailability", managedProduct.itemId).data).status;
 
-    // P2 regression: an explicit choice belongs to the same Save as prices and Manage stock.
-    await page.locator("#manage-stock").uncheck();
-    await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
+    await blanketButton.click();
+    await expect(manageStock).toBeChecked();
+    await expect(manageStock).toBeDisabled();
+    await expect(page.getByText("Coming soon", { exact: true })).toBeVisible();
+    await expect(page.locator("fieldset:has-text('Stock status')")).not.toBeVisible();
+    await saveScreenshot(page, "native-managed-setup.png", artifactsDir);
+
+    const claimBefore = storageRow("managedSkuClaims", managedClaim.recordId);
+    const bindingBefore = storageRow("storeInventoryConfigurations", managedBinding.recordId);
+    const managedBefore = storageRow("catalogItems", managedProduct.itemId);
     await page.locator("#regular-price").fill("42.00");
     await page.locator("#sale-price").fill("35.00");
-    const explicitValues = await saveNativeProduct();
-    expect(explicitValues).toMatchObject({ manageStock: false, stockStatus: "out-of-stock", regular: "42.00", sale: "35.00" });
-    const { catalogItemId: _fixtureId, ...publicValues } = explicitValues;
-    writeFileSync(resolve(artifactsDir, "native-explicit-status.json"), JSON.stringify({
+    const managedSave = await saveNativeProduct();
+    expect(managedSave.values).toMatchObject({ regular: "42.00", sale: "35.00" });
+    expect(managedSave.values).not.toHaveProperty("manageStock");
+    writeFileSync(resolve(artifactsDir, "native-managed-price-omit.json"), JSON.stringify({
       fixture: "synthetic managed blanket", transport: "EmDash 0.41.0 / native React / SQLite",
-      submittedValues: publicValues, persistedStatus: managedStockStatus(),
+      submittedValues: (({ catalogItemId, ...rest }) => rest)(managedSave.values),
+      persistedStock: storageRow("catalogItems", managedProduct.itemId).stockManagement,
     }, null, 2) + "\n");
-    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
-    expect(managedStockStatus()).toBe("out-of-stock");
-    await saveScreenshot(page, "native-managed-off-explicit-status.png", artifactsDir);
-    await page.reload();
-    await blanketButton.click();
-    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
-    await expect(page.locator("#regular-price")).toHaveValue("42.00");
+    expect(storageRow("catalogItems", managedProduct.itemId)).toEqual(managedBefore);
+    expect(storageRow("managedSkuClaims", managedClaim.recordId)).toEqual(claimBefore);
+    expect(storageRow("storeInventoryConfigurations", managedBinding.recordId)).toEqual(bindingBefore);
+    expect(storageRow("catalogPrices", managedProduct.itemId)).toMatchObject({
+      regular: { currency: "USD", minor: "4200" },
+      sale: { currency: "USD", minor: "3500" },
+    });
+    await saveScreenshot(page, "native-managed-price-preserved.png", artifactsDir);
 
-    // Re-enable stock management; dormant manual status must not be overwritten.
-    await page.locator("#manage-stock").check();
-    expect(await saveNativeProduct()).not.toHaveProperty("stockStatus");
-    expect(managedStockStatus()).toBe("out-of-stock");
-    // A different product's unsaved choice must not leak into the managed product.
-    await bootButton.click();
-    await page.getByRole("radio", { name: "In stock", exact: true }).check();
-    await blanketButton.click();
-    await page.locator("#manage-stock").uncheck();
-    await expect(page.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
-    expect(await saveNativeProduct()).not.toHaveProperty("stockStatus");
-    await expect(page.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
-    expect(managedStockStatus()).toBe("out-of-stock");
-    await saveScreenshot(page, "native-managed-off-dormant-restored.png", artifactsDir);
-
-    // Clicking the already-selected default is also an explicit choice.
-    await page.locator("#manage-stock").check();
-    await saveNativeProduct();
-    await page.locator("#manage-stock").uncheck();
-    await page.getByRole("radio", { name: "In stock", exact: true }).click();
-    expect(await saveNativeProduct()).toMatchObject({ stockStatus: "in-stock" });
-    await expect(page.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
-    expect(managedStockStatus()).toBe("in-stock");
+    const disableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
+      data: { catalogItemId: managedProduct.itemId, regular: "42.00", sale: "35.00", manageStock: false },
+      headers: { "X-EmDash-Request": "1" },
+    });
+    expect([400, 409]).toContain(disableAttempt.status());
+    expect(await disableAttempt.text()).toMatch(/cannot be changed|coming soon|MANAGE_STOCK_UNAVAILABLE/i);
+    expect(storageRow("catalogItems", managedProduct.itemId)).toEqual(managedBefore);
+    expect(storageRow("managedSkuClaims", managedClaim.recordId)).toEqual(claimBefore);
 
     // 6. Edit Heritage Boot via restored UI: change price and set In stock
     await bootButton.click();
@@ -226,6 +255,18 @@ test.describe("Native populated-browser continuity fixture", () => {
     const updatedAvailabilityData = JSON.parse(updatedAvailabilityRow.data);
     expect(updatedAvailabilityData.status).toBe("in-stock");
 
+    const bootBeforeEnable = storageRow("catalogItems", unmanagedProduct.itemId);
+    const bootPriceBeforeEnable = storageRow("catalogPrices", unmanagedProduct.itemId);
+    const enableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
+      data: { catalogItemId: unmanagedProduct.itemId, regular: "195.00", sale: "160.00", manageStock: true },
+      headers: { "X-EmDash-Request": "1" },
+    });
+    expect([400, 409]).toContain(enableAttempt.status());
+    expect(await enableAttempt.text()).toMatch(/coming soon|MANAGE_STOCK_UNAVAILABLE/i);
+    expect(storageRow("catalogItems", unmanagedProduct.itemId)).toEqual(bootBeforeEnable);
+    expect(storageRow("catalogPrices", unmanagedProduct.itemId)).toEqual(bootPriceBeforeEnable);
+    expect(storageRow("catalogItems", unmanagedProduct.itemId).stockManagement).toEqual({ mode: "unmanaged" });
+
     // 8. Navigate to Store settings admin and verify seeded setting
     await page.goto("/_emdash/admin/plugins/dinkus-commerce/store");
     await page.waitForLoadState("networkidle");
@@ -257,7 +298,9 @@ test.describe("Native populated-browser continuity fixture", () => {
     const storedItems = db.prepare("SELECT id, data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? ORDER BY id")
       .all("dinkus-commerce", "catalogItems");
     expect(storedItems.map(row => row.id)).toEqual(["item-heritage-boot", "item-wool-blanket"]);
-    expect(JSON.parse(storedItems[1].data)).toEqual({ ...managedProduct, stockManagement: { mode: "unmanaged" } });
+    expect(JSON.parse(storedItems[1].data)).toEqual(managedProduct);
+    expect(storageRow("managedSkuClaims", managedClaim.recordId)).toEqual(managedClaim);
+    expect(storageRow("storeInventoryConfigurations", managedBinding.recordId)).toEqual(managedBinding);
     expect(JSON.parse(storedItems[0].data)).toMatchObject({ itemId: unmanagedProduct.itemId, sku: "BOOT-01", stockManagement: { mode: "unmanaged" } });
     expect(db.prepare("SELECT COUNT(*) AS count FROM _plugin_storage WHERE plugin_id = ? AND collection = ?")
       .get("dinkus-commerce", "catalog_items").count).toBe(0);

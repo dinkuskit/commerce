@@ -1,0 +1,44 @@
+{
+  "schema": "commerce.acceptance.v1",
+  "source_manifest_sha256": "eec7b502ec531a7eb7c97b764234983e6ebfdbdfb9429713aeecdaf1c0eca69e",
+  "result": "partial",
+  "native_slider": "passed: retained in place, gray disabled, adjacent Coming soon",
+  "local_development": "passed: explicit host opt-in, loopback request and trusted site sources, conflict refusal",
+  "registry_slider": "NEEDS_HOST_SUPPORT",
+  "checks": {
+    "typecheck": "passed",
+    "unit": {
+      "passed": 172,
+      "failed": 0
+    },
+    "audit_repo": "passed",
+    "audit_features": "passed",
+    "native_default_browser": {
+      "passed": 2
+    },
+    "native_local_development_browser": {
+      "passed": 1
+    },
+    "prior_sandbox_browser": {
+      "passed": 1,
+      "scope": "default sandbox source unchanged by final native gate repairs"
+    },
+    "integration": "prior full run had one Wrangler internal error; focused D1 retry3/3 and native kernel proof passed; no new full-suite success claimed",
+    "parent_contract_probes": "passed: route objects, conflicting public URLs, local opt-in, default refusal"
+  },
+  "decision_status": "lead decisions implemented/unverified; Registry host gate outstanding",
+  "review": "not adjudicated; no clean review asserted",
+  "bounds": [
+    "synthetic fixtures only",
+    "no physical Inventory quantity proof",
+    "checkout unmounted",
+    "no merge/release/deploy/live payment"
+  ],
+  "media_delivery": {
+    "result": "published-and-verified",
+    "tested_source_commit": "0446520747df0d4e11977f07a8fa0b2d896a727a",
+    "selected_original_pngs": 4,
+    "verification": "GitHub API byte counts and SHA-256 match original files; append-only policy, no replacement",
+    "locator_policy": "restricted receipt resolver; no private coordinates in public proof"
+  }
+}

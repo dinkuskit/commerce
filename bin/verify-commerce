@@ -13,6 +13,7 @@ case "$mode" in
     "$0" quick
     npm run test:integration
     npm run test:sandbox
+    npm run test:sandbox:native-local-stock
     ;;
   *)
     echo "Usage: bin/verify-commerce [quick|full]" >&2
