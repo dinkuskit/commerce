@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-09-30T18:20:48+00:00",
+    "confirmed_at": "2026-09-30T18:35:58+00:00",
     "domain": "First-release shopper checkout experience",
-    "started_at": "2026-09-30T18:15:37+00:00",
+    "started_at": "2026-09-30T18:35:51+00:00",
     "status": "inspected",
-    "summary": "Human-approved checkout-payment-window-004: replace exact paymentWindowSeconds:1800 with immutable paymentWindow:{minSeconds:1800,maxSeconds:1860} on new Commerce PaymentRequest construction. Validate real safe-integer provider createdAt/expiresAt with inclusive 1800<=expiresAt-createdAt<=1860; never manufacture createdAt or omit expiresAt; compare sessionId/redirectUrl/both timestamps by value. Payments obligation: persist one original claim/request/deadline/idempotency key before provider contact; requestedExpiresAtSeconds=floor(original claimedAtMs/1000)+1860; validate exact requested expiry plus actual bounds; never reset deadline/parameters, send altered retries/new keys, or lookup-create. Preserve 23h create retry bound. Delay>60s or clock skew can fail safely. Unknown or local-timer expiry never establishes not-created/unpaid or releases a managed hold. Frozen old paymentWindowSeconds:1800 originals stay exact and are validated under the old exact-1800 policy; do not rewrite to the new shape. New attempts use only the bounded shape. Implement only this timing contract plus focused tests/docs/proof. Do not repair guest checkout, shipping/contact/coupons, commit, push, merge, deploy, or call providers."
+    "summary": "Repair commerce-guest-runtime-mount-001 only: trusted canonical HTTP(S) site origin for mint/authorize (constructor siteUrl may fill empty runtime; present public/malformed/conflicting runtime cannot be masked; default Registry missing site is explicit host unavailable); public checkout/guest/prepare mints a server capability under CAS with no attempt/reservation/provider call; start/status are capability-required; lost first start with a pre-retained capability retries the same frozen attempt; portable same-origin write admission on native and Registry from request.url plus declared Origin/Sec-Fetch-Site, fail-closed otherwise; unexpected failures are guest-safe UNAVAILABLE without raw provider/storage strings. Frozen checkout-payment-window-004 1800..1860 and old exact-1800 originals stay unchanged. No shipping/contact/coupon/bundle, no fake Payments adapter, no commit/push/review/closeout/v1-ready. Verify with Node 22.23.2 via mise, one canonical full after source fixes, host/provider/Stripe gates explicit."
   },
   "decisions": [
     {
@@ -3046,7 +3046,7 @@
     {
       "baseline_ref": "git:e3d398bde103d23417c7c1a954834dadf419ec4b",
       "candidate_refs": [],
-      "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+      "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/32",
       "created_at": "2026-09-30T17:48:19+00:00",
       "deferred_reason": null,
@@ -3086,10 +3086,66 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:35:51+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "needs_reverification",
+          "implementation_ref": null,
+          "note": "Required guest-auth repairs: fail-closed trusted site scope, capability prepare before any payment/hold, portable same-origin write admission, guest-safe UNAVAILABLE. Replace stale exact-30-minute clause with accepted checkout-payment-window-004 1800..1860 window; keep prior choice history.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:35:54+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability authorizes a durable cart across retries; guessed browser IDs do not. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted30minute payment window. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:50:41+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T18:50:48+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "commerce-guest-runtime-mount-001",
-      "implementation_ref": null,
+      "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
       "question": "Does Commerce own and mount the trusted guest checkout/status contract consumed by Template Store?",
       "rationale": "",
       "repair_required": false,
@@ -3098,18 +3154,17 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T18:15:37+00:00",
-      "verification_ref": null
+      "updated_at": "2026-09-30T18:50:48+00:00",
+      "verification_ref": "file:proof/guest-checkout-mount-20260930/PROOF.md Node22.23.2 unit:202 integration:22(d1-sku-index-flaked-then-3/3-retry) sandbox:5 native-local-stock:1 Stripe:NOT_RUN"
     }
   ],
   "last_activation": {
-    "at": "2026-09-30T18:15:37+00:00",
+    "at": "2026-09-30T18:35:51+00:00",
     "mechanism": "implicit"
   },
-  "last_pause": null,
-  "pause": {
+  "last_pause": {
     "artifact_refs": [
       "file:proof/checkout-payment-window-20260930/PROOF.md",
       "file:docs/implementation/checkout-payment-window.md",
@@ -3117,16 +3172,27 @@
     ],
     "next_safe_action": "Parent inspects checkout-payment-window-004 source, tests, public contract doc, and proof/checkout-payment-window-20260930; do not treat this as guest verification or an actual Stripe run.",
     "paused_at": "2026-09-30T18:23:41+00:00",
-    "reason": "Timing candidate is synthetically verified and ready for parent inspection before rebind. No commit, review identity, or Stripe run."
+    "reason": "Timing candidate is synthetically verified and ready for parent inspection before rebind. No commit, review identity, or Stripe run.",
+    "resumed_at": "2026-09-30T18:35:48+00:00"
+  },
+  "pause": {
+    "artifact_refs": [
+      "file:proof/guest-checkout-mount-20260930/PROOF.md",
+      "file:docs/implementation/guest-checkout-public.md",
+      "file:.grilltrack/work/guest-checkout-mount-20260930/STATE.md"
+    ],
+    "next_safe_action": "Parent inspects commerce-guest-runtime-mount-001 source, tests, public contract, and proof/guest-checkout-mount-20260930 against frozen timing snapshot d2960fa; do not treat this as an actual Stripe run or v1-ready claim.",
+    "paused_at": "2026-09-30T18:51:35+00:00",
+    "reason": "Guest-auth repair candidate is synthetically verified and ready for parent independent review. No commit, review identity, or Stripe run."
   },
   "recommendation": {
     "alternatives": [
-      "After inspection, resume guest-auth repair against the frozen 1800..1860 window without rewriting old1800 originals.",
+      "After inspection, Payments implements persist-before-contact against the frozen 1800..1860 window without rewriting old1800 originals.",
       "Defer actual Stripe qualification until a separately authorized provider run."
     ],
-    "reason": "Timing contract is synthetically verified. Guest mount remains dirty and unrepaired. Payments still owns transport. No commit or provider run was authorized.",
-    "recommended": "Parent inspects the timing candidate and public PaymentRequest handoff, then Payments implements persist-before-contact against that exact identity.",
-    "recorded_at": "2026-09-30T18:23:41+00:00"
+    "reason": "Guest mount required repairs are synthetically verified. Timing remains frozen. Payments still owns transport. No commit, review identity, or Stripe run was authorized.",
+    "recommended": "Parent independently reviews the guest-auth repair candidate and public prepare/start/status contract against frozen timing snapshot d2960fa plus this working tree.",
+    "recorded_at": "2026-09-30T18:51:31+00:00"
   },
   "reconciliation": {
     "plan_id": "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",
@@ -3141,5 +3207,5 @@
   "status": "paused",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-09-30T18:23:41+00:00"
+  "updated_at": "2026-09-30T18:51:35+00:00"
 }

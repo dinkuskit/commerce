@@ -1,7 +1,7 @@
 import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
-import { startCheckout, reconcileCheckout, CheckoutError } from "./orchestrate.js";
+import { startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { authorizeGuestCapability, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
-import { projectGuestCheckout } from "./project.js";
+import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
 import type {
   CartLine,
@@ -49,8 +49,7 @@ function mapCheckoutError(error: unknown): never {
   if (/Inventory/i.test(message)) fail("INVENTORY_UNAVAILABLE");
   if (/Payment binding/i.test(message)) fail("PAYMENTS_UNAVAILABLE");
   if (/contention/i.test(message)) fail("CONTENTION");
-  if (error instanceof CheckoutError) fail("UNAVAILABLE");
-  throw error;
+  fail("UNAVAILABLE");
 }
 
 function paymentsReady(host: GuestCheckoutHostOptions): boolean {
@@ -75,6 +74,36 @@ function currentAttempt(attempts: CheckoutAttempt[]): CheckoutAttempt | undefine
   return attempts[attempts.length - 1];
 }
 
+function guestSafeResult(error: unknown): GuestCheckoutResult {
+  if (error instanceof GuestCheckoutError) {
+    return { ok: false, error: { code: error.code, message: error.message } };
+  }
+  try {
+    mapCheckoutError(error);
+  } catch (mapped) {
+    if (mapped instanceof GuestCheckoutError) {
+      return { ok: false, error: { code: mapped.code, message: mapped.message } };
+    }
+  }
+  return { ok: false, error: { code: "UNAVAILABLE", message: guestCheckoutErrorMessage("UNAVAILABLE") } };
+}
+
+export async function prepareGuestCheckout(
+  runtime: GuestCheckoutRuntime,
+): Promise<GuestCheckoutResult> {
+  try {
+    const minted = await mintGuestCapability(runtime);
+    return {
+      ok: true,
+      capabilityId: minted.record.capabilityId,
+      capability: minted.presentation,
+      checkout: projectPreparedGuestCheckout(),
+    };
+  } catch (error) {
+    return guestSafeResult(error);
+  }
+}
+
 export async function startGuestCheckout(
   runtime: GuestCheckoutRuntime,
   input: unknown,
@@ -82,39 +111,25 @@ export async function startGuestCheckout(
 ): Promise<GuestCheckoutResult> {
   try {
     const lines = admitGuestCheckoutStartInput(input);
+    const authorized = await authorizeGuestCapability(
+      runtime,
+      readGuestCapabilityHeader(headers),
+    );
     if (!paymentsReady(runtime.host)) fail("PAYMENTS_UNAVAILABLE");
-    const presented = readGuestCapabilityHeader(headers);
-    const minted = presented
-      ? undefined
-      : await mintGuestCapability(runtime);
-    const authorized = presented
-      ? await authorizeGuestCapability(runtime, presented)
-      : minted!.record;
     const store = createCheckoutStore(runtime.carts);
     const existing = await store.read(authorized.cartId);
     const previous = existing ? currentAttempt(existing.record.attempts) : undefined;
     const retryAfter =
       previous?.phase === "released" ? previous.attemptId : undefined;
     const attempt = await startCheckout(executionOf(runtime), authorized.cartId, lines, retryAfter);
+    const currentNow = runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
     return {
       ok: true,
       capabilityId: authorized.capabilityId,
-      ...(minted ? { capability: minted.presentation } : {}),
-      checkout: projectGuestCheckout(attempt),
+      checkout: projectGuestCheckout(attempt, currentNow),
     };
   } catch (error) {
-    if (error instanceof GuestCheckoutError) {
-      return { ok: false, error: { code: error.code, message: error.message } };
-    }
-    try {
-      mapCheckoutError(error);
-    } catch (mapped) {
-      if (mapped instanceof GuestCheckoutError) {
-        return { ok: false, error: { code: mapped.code, message: mapped.message } };
-      }
-      throw mapped;
-    }
-    throw error;
+    return guestSafeResult(error);
   }
 }
 
@@ -128,12 +143,13 @@ export async function statusGuestCheckout(
       runtime,
       readGuestCapabilityHeader(headers),
     );
+    const currentNow = runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
     if (!paymentsReady(runtime.host)) {
       const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
       return {
         ok: true,
         capabilityId: authorized.capabilityId,
-        checkout: projectGuestCheckout(currentAttempt(stored?.record.attempts ?? [])),
+        checkout: projectGuestCheckout(currentAttempt(stored?.record.attempts ?? []), currentNow),
       };
     }
     const body = input && typeof input === "object" && !Array.isArray(input)
@@ -154,21 +170,10 @@ export async function statusGuestCheckout(
     return {
       ok: true,
       capabilityId: authorized.capabilityId,
-      checkout: projectGuestCheckout(attempt),
+      checkout: projectGuestCheckout(attempt, currentNow),
     };
   } catch (error) {
-    if (error instanceof GuestCheckoutError) {
-      return { ok: false, error: { code: error.code, message: error.message } };
-    }
-    try {
-      mapCheckoutError(error);
-    } catch (mapped) {
-      if (mapped instanceof GuestCheckoutError) {
-        return { ok: false, error: { code: mapped.code, message: mapped.message } };
-      }
-      throw mapped;
-    }
-    throw error;
+    return guestSafeResult(error);
   }
 }
 

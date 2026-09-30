@@ -66,54 +66,110 @@ function seedProduct(filename, native) {
   return { database, catalog, prices, availability };
 }
 
+function capabilityCount(database, native) {
+  const collection = native ? "checkoutGuestCapabilities" : "checkout_guest_capabilities";
+  return database
+    .prepare("SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id = ? AND collection = ?")
+    .get("dinkus-commerce", collection).n;
+}
+
+function cartCount(database, native) {
+  const collection = native ? "checkoutCarts" : "checkout_carts";
+  return database
+    .prepare("SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id = ? AND collection = ?")
+    .get("dinkus-commerce", collection).n;
+}
+
+function writeHeaders(origin) {
+  return {
+    origin,
+    "sec-fetch-site": "same-origin",
+  };
+}
+
 test("public guest checkout routes admit same-origin JSON and fail closed without a Payments adapter", async ({
   request,
   page,
+  baseURL,
 }) => {
   const setup = await request.get("/_emdash/api/setup/dev-bypass");
   expect(setup.status()).toBe(200);
   const { native, filename } = dbPath();
   const { database, catalog, prices, availability } = seedProduct(filename, native);
+  const origin = new URL(baseURL).origin;
+  const prepare = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/prepare";
   const start = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/start";
   const status = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/status";
   const capture = process.env.COMMERCE_PROOF_ARTIFACTS
     ? `${process.env.COMMERCE_PROOF_ARTIFACTS}/guest-checkout-${native ? "native" : "sandbox"}-unavailability.png`
     : undefined;
   try {
-    const missing = await request.post(start, {
-      data: { lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
+    const cross = await request.post(prepare, {
+      data: {},
+      headers: { origin: "https://evil.example", "sec-fetch-site": "cross-site" },
     });
-    const missingBody = await missing.json();
+    const crossText = await cross.text();
+    expect(cross.ok()).toBeFalsy();
+    if (/json/i.test(cross.headers()["content-type"] ?? "")) {
+      const body = JSON.parse(crossText);
+      expect(body.error?.code || body.data?.error?.code).toBe("ORIGIN_DENIED");
+    } else {
+      expect(crossText).toMatch(/cross-orig/i);
+    }
+    expect(capabilityCount(database, native)).toBe(0);
+    expect(cartCount(database, native)).toBe(0);
+
+    const prepared = await request.post(prepare, {
+      data: {},
+      headers: writeHeaders(origin),
+    });
+    const preparedBody = await prepared.json();
+    const payload = preparedBody.data ?? preparedBody;
     if (native) {
+      expect(payload.ok, JSON.stringify(preparedBody)).toBeTruthy();
+      expect(payload.capability?.capability, JSON.stringify(preparedBody)).toMatch(
+        /^[0-9a-f-]+\.[0-9a-f]+$/i,
+      );
+      const missing = await request.post(start, {
+        data: { lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
+        headers: {
+          ...writeHeaders(origin),
+          "x-commerce-guest-capability": payload.capability.capability,
+        },
+      });
+      const missingBody = await missing.json();
       expect(missing.status()).toBe(503);
       expect(missingBody.error?.code).toBe("PAYMENTS_UNAVAILABLE");
+      expect(missing.headers()["set-cookie"]).toBeUndefined();
+      expect(missing.headers()["cache-control"]).toMatch(/no-store/);
+      expect(cartCount(database, native)).toBe(0);
     } else {
-      expect(missing.ok()).toBeTruthy();
-      expect(missingBody.data?.ok).toBe(false);
-      expect(missingBody.data?.error?.code).toBe("PAYMENTS_UNAVAILABLE");
+      expect(payload.ok).toBe(false);
+      expect(payload.error?.code, JSON.stringify(preparedBody)).toBe("UNAVAILABLE");
+      expect(capabilityCount(database, native)).toBe(0);
+      expect(cartCount(database, native)).toBe(0);
     }
-    expect(missing.headers()["set-cookie"]).toBeUndefined();
-    expect(missing.headers()["cache-control"]).toMatch(/no-store/);
 
     const tampered = await request.post(start, {
       data: { lines: [{ catalogItemId: "guest-hat", quantity: 1, price: "1" }], total: "1", paid: true },
+      headers: writeHeaders(origin),
     });
     if (native) {
       expect(tampered.status()).toBe(400);
     } else {
       const body = await tampered.json();
-      expect(body.data?.error?.code || body.error?.code).toBe("INVALID_CART");
+      expect(body.data?.error?.code || body.error?.code).toBe("UNAVAILABLE");
     }
 
     const guessed = await request.post(status, {
       data: { cartId: "guessed", attemptId: "guessed", paid: true },
-      headers: { "x-commerce-guest-capability": "guessed.token" },
+      headers: { ...writeHeaders(origin), "x-commerce-guest-capability": "guessed.token" },
     });
     if (native) {
       expect(guessed.status()).toBe(403);
     } else {
       const body = await guessed.json();
-      expect(body.data?.error?.code || body.error?.code).toBe("CAPABILITY_DENIED");
+      expect(body.data?.error?.code || body.error?.code).toBe("UNAVAILABLE");
     }
 
     const configurations = native ? "storeInventoryConfigurations" : "store_inventory_configurations";

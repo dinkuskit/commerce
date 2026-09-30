@@ -80,7 +80,7 @@
           "build:sandbox",
           "tests/features/checkout/*.test.mjs"
         ],
-        "decisionLineage": "Issue32 mounts public guest start/status and checkoutCarts on native and Registry/sandbox. Default Payments adapter remains unavailable. Synthetic fixture injection proves transport. Actual Stripe is not run. Registry cannot invoke a Payments plugin."
+        "decisionLineage": "Issue32 mounts public guest prepare/start/status and checkoutCarts on native and Registry/sandbox. Prepare mints a server capability before any payment or hold. Default Payments adapter remains unavailable. Synthetic fixture injection proves transport. Actual Stripe is not run. Registry cannot invoke a Payments plugin."
       }
     }
   },

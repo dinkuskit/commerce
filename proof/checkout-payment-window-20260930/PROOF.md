@@ -63,16 +63,20 @@ replace; new request shape is cloned.
 Earlier exact-1800 proof remains history:
 `proof/checkout-experience/`, `proof/checkout-expired-recovery/`,
 `proof/checkout-session-equality/`. Those committed artifacts were not rewritten.
-The current guest-mount candidate has separate required authorization/retention
-repairs; passing timing checks do not qualify that candidate.
+The initial guest-mount candidate required separate authorization/retention
+repairs. Their later proof is recorded in the guest-mount artifact; passing
+timing checks alone never qualified that candidate.
 
 ## Scope and review
 
-Author verification only. No commit, push, merge, deploy, or provider call.
+Author and parent verification only. Source is submitted for review; no merge,
+deploy, or live provider call is authorized.
 Parent independently passed 29 timing/kernel checks plus one public-contract
 check, typecheck, and public repository/feature audits. Full source inventory
-contains 354 files, including current CLI ledger/events and prior public proof;
+contains 357 files, including current CLI ledger/events and prior public proof;
 both current proof metadata directories are excluded to prevent circular hashes.
-Manifest SHA-256: `909d768b38d20bca679d78e751afd2398491886b57dc33406419d678abb82f88`.
-Existing UI host/support gaps remain. Guest authorization/retention repairs are
-required before guest mount admission; actual Stripe is not run.
+Manifest SHA-256: `93cb0774c20c11ad58c23d2592a12933a527a394a8cda93dc9282183d2c12ac4`.
+Existing UI host/support gaps remain. The guest-mount proof records repaired
+authorization, retention, same-origin, and configured Registry scope checks.
+Formal review, full current browser/integration qualification, and actual Stripe
+remain separate gates; actual Stripe is not run.

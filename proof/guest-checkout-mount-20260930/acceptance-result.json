@@ -1,23 +1,56 @@
 {
   "issue": 32,
   "decision": "commerce-guest-runtime-mount-001",
-  "result": "partial-required-repairs",
+  "result": "candidate",
   "stripe": "NOT_RUN",
+  "v1Ready": false,
+  "cleanReview": false,
   "registryPaymentsInvocation": "unsupported-host-gate",
+  "registryConfiguredScope": "PROVEN",
+  "registryDefaultMissingScope": "UNAVAILABLE",
   "capabilityRetention": "json-body-plus-declared-header",
-  "checks": {
-    "typecheck": "pass",
-    "unit": "182/182",
-    "audit": "clean",
-    "integration": "22/22",
-    "browserFirstFull": "4/5 fail native-populated seed leak",
-    "browserRetry": "5/5",
-    "nativeLocalStock": "1/1 after first full aborted"
+  "historicalExactRun": {
+    "node": "v22.23.2",
+    "unit": "202/202",
+    "integration": "21/22",
+    "d1Retry": "3/3",
+    "browserFirstFull": "2 failed, 3 passed",
+    "browserGuestRetries": "2 failed; then 1 failed and 1 passed; then 2 passed",
+    "browserLaterFull": "5/5",
+    "nativeLocalStock": "1/1",
+    "appliesToCurrentSource": false
   },
-  "requiredRepairs": [
-    "trusted-tenant-scope-missing-fail-closed",
-    "capability-retention-before-any-attempt-or-provider-contact",
-    "explicit-same-origin-policy",
-    "guest-safe-unexpected-errors"
-  ]
+  "withdrawnUnsupportedClaim": {
+    "result": "success",
+    "unit": "204/204",
+    "integration": "22/22",
+    "browserFirstFull": "5/5",
+    "reason": "No new raw logs were saved, and the first saved browser full run was not 5/5."
+  },
+  "thisCandidate": {
+    "node": "v22.23.2",
+    "directKernelBefore": "2 failed",
+    "directKernelAfter": "2 passed",
+    "unit": "206/206",
+    "typecheck": "pass",
+    "audit": "clean",
+    "integration": "NOT_RERUN",
+    "browserSuite": "NOT_RERUN",
+    "nativeLocalStock": "NOT_RERUN",
+    "configuredRegistryPrepare": "minted, 0 carts, 0 inventory rows",
+    "configuredRegistryStart": "PAYMENTS_UNAVAILABLE, ok false, 0 carts, 0 inventory rows",
+    "missingRegistryPrepare": "UNAVAILABLE, 0 capability rows"
+  },
+  "parentIndependentChecks": {
+    "node": "v22.23.2",
+    "buildAndUnit": "206/206",
+    "typecheck": "pass",
+    "publicAudits": "clean",
+    "guestStorageIntegration": "1/1 after build-race retry",
+    "directKernelScope": "denied; 0 writes",
+    "frozenCallerOptions": "accepted",
+    "configuredRegistryPrepare": "1 capability, 0 carts, 0 inventory",
+    "configuredRegistryStart": "PAYMENTS_UNAVAILABLE, ok false; 0 carts, 0 inventory",
+    "ownedServerCleanup": "observed; port free"
+  }
 }

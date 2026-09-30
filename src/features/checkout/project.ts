@@ -1,6 +1,8 @@
+import { guestCheckoutErrorMessage } from "./errors.js";
 import {
   GUEST_CHECKOUT_PROJECTION_SCHEMA,
   type CheckoutAttempt,
+  type GuestCheckoutErrorCode,
   type GuestCheckoutLine,
   type GuestCheckoutProjection,
   type GuestCheckoutState,
@@ -24,7 +26,38 @@ function stateOf(attempt: CheckoutAttempt): GuestCheckoutState {
   return "pending";
 }
 
-export function projectGuestCheckout(attempt: CheckoutAttempt | undefined): GuestCheckoutProjection {
+function unavailableOf(
+  attempt: CheckoutAttempt,
+): { code: GuestCheckoutErrorCode; message: string } | null {
+  if (attempt.phase === "paid" && attempt.order) return null;
+  if (attempt.phase === "released") return null;
+  if (attempt.phase === "paying" && attempt.session) return null;
+  const code: GuestCheckoutErrorCode = attempt.phase === "reserving" && attempt.stock
+    ? "INVENTORY_UNAVAILABLE"
+    : attempt.phase === "paying"
+      ? "PAYMENTS_UNAVAILABLE"
+      : "UNAVAILABLE";
+  return { code, message: guestCheckoutErrorMessage(code) };
+}
+
+export function projectPreparedGuestCheckout(): GuestCheckoutProjection {
+  return {
+    schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
+    state: "pending",
+    attemptId: null,
+    lines: [],
+    total: null,
+    redirectUrl: null,
+    order: null,
+    retryAfter: null,
+    unavailable: null,
+  };
+}
+
+export function projectGuestCheckout(
+  attempt: CheckoutAttempt | undefined,
+  now?: number,
+): GuestCheckoutProjection {
   if (!attempt) {
     return {
       schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
@@ -47,15 +80,24 @@ export function projectGuestCheckout(attempt: CheckoutAttempt | undefined): Gues
         total: attempt.order.total,
       }
     : null;
+  const isTerminalOrReleased = attempt.phase === "released" || attempt.phase === "releasing";
+  const isExpired =
+    typeof now === "number" &&
+    typeof attempt.session?.expiresAt === "number" &&
+    now >= attempt.session.expiresAt;
+  const redirectUrl =
+    paid !== null || isTerminalOrReleased || isExpired
+      ? null
+      : attempt.session?.redirectUrl ?? null;
   return {
     schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
     state: stateOf(attempt),
     attemptId: attempt.attemptId,
     lines,
     total: attempt.payment.total,
-    redirectUrl: paid ? null : attempt.session?.redirectUrl ?? null,
+    redirectUrl,
     order: paid,
     retryAfter: attempt.phase === "released" ? attempt.attemptId : null,
-    unavailable: null,
+    unavailable: unavailableOf(attempt),
   };
 }

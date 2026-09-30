@@ -12,6 +12,7 @@ export { GuestCheckoutError, guestCheckoutErrorMessage } from "../errors.js";
 export {
   admitGuestCheckoutStartInput,
   guestCheckoutFailure,
+  prepareGuestCheckout,
   startGuestCheckout,
   statusGuestCheckout,
 } from "../guest.js";
@@ -21,15 +22,20 @@ export {
   hostSiteBinding,
   mintGuestCapability,
   readGuestCapabilityHeader,
+  requireTrustedSiteOrigin,
 } from "../capability.js";
-export { projectGuestCheckout } from "../project.js";
+export { projectGuestCheckout, projectPreparedGuestCheckout } from "../project.js";
 export {
+  admitBoundGuestCheckoutRuntime,
   bindGuestCheckoutRuntime,
   NATIVE_GUEST_CHECKOUT_STORAGE,
   SANDBOX_GUEST_CHECKOUT_STORAGE,
 } from "../runtime.js";
 export type { GuestCheckoutStorageNames } from "../runtime.js";
+export { admitGuestCheckoutWrite } from "../origin-admission.js";
+export { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "../site-scope.js";
 export {
+  GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
 } from "../route-ids.js";
@@ -42,7 +48,10 @@ export {
   CURRENT_PAYMENT_WINDOW_MAX_SECONDS,
   CURRENT_PAYMENT_WINDOW_MIN_SECONDS,
   GUEST_CAPABILITY_HEADER,
+  GUEST_CHECKOUT_DECLARED_HEADERS,
   GUEST_CHECKOUT_PROJECTION_SCHEMA,
+  GUEST_ORIGIN_HEADER,
+  GUEST_SEC_FETCH_SITE_HEADER,
   LEGACY_EXACT_PAYMENT_WINDOW_SECONDS,
   PAYMENTS_CREATE_RETRY_BOUND_HOURS,
   PAYMENTS_SAFE_PROVIDER_DELAY_SECONDS,

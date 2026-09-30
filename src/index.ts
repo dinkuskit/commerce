@@ -47,8 +47,10 @@ import {
 import {
   CHECKOUT_COLLECTION,
   CHECKOUT_GUEST_CAPABILITY_COLLECTION,
+  GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
+  createGuestCheckoutPrepareRoute,
   createGuestCheckoutStartRoute,
   createGuestCheckoutStatusRoute,
   type GuestCheckoutHostOptions,
@@ -127,6 +129,14 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       ? { siteUrl: options.siteUrl.trim() }
       : {}),
   };
+  const topLevelSiteUrl = options.siteUrl;
+  const checkoutSiteUrl = options.checkout?.siteUrl;
+  const checkoutHost: GuestCheckoutHostOptions = Object.freeze({
+    ...options.checkout,
+    topLevelSiteUrl,
+    checkoutSiteUrl,
+    siteUrl: checkoutSiteUrl ?? topLevelSiteUrl,
+  });
   return definePlugin({
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
@@ -195,8 +205,9 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE]:
         setStorefrontAvailabilityPolicyRoute,
       [OUT_OF_STOCK_LISTING_ROUTE]: outOfStockListingRoute,
-      [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(options.checkout),
-      [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(options.checkout),
+      [GUEST_CHECKOUT_PREPARE_ROUTE]: createGuestCheckoutPrepareRoute(checkoutHost),
+      [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(checkoutHost),
+      [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(checkoutHost),
     },
   });
 }

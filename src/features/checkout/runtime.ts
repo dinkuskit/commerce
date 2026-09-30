@@ -11,6 +11,9 @@ import type {
   StorefrontAvailabilitySettingsStorage,
   StorefrontOutOfStockListingStorage,
 } from "../storefront-availability/kernel/index.js";
+import { GuestCheckoutError } from "./errors.js";
+import { admitGuestCheckoutWrite } from "./origin-admission.js";
+import { resolveTrustedSiteOrigin } from "./site-scope.js";
 import type {
   CheckoutRecord,
   GuestCapabilityRecord,
@@ -57,8 +60,25 @@ export const SANDBOX_GUEST_CHECKOUT_STORAGE = {
 export function bindGuestCheckoutRuntime(
   storage: Record<string, unknown>,
   names: GuestCheckoutStorageNames,
-  options: { siteUrl?: string; host?: GuestCheckoutHostOptions } = {},
+  options: {
+    siteUrl?: string;
+    constructorSiteUrl?: string;
+    runtimeSiteUrl?: string;
+    topLevelSiteUrl?: string;
+    checkoutSiteUrl?: string;
+    host?: GuestCheckoutHostOptions;
+  } = {},
 ): GuestCheckoutRuntime {
+  const constructorSiteUrl = options.constructorSiteUrl ?? options.host?.siteUrl;
+  const runtimeSiteUrl = options.runtimeSiteUrl ?? options.siteUrl;
+  const topLevelSiteUrl = options.topLevelSiteUrl ?? options.host?.topLevelSiteUrl;
+  const checkoutSiteUrl = options.checkoutSiteUrl ?? options.host?.checkoutSiteUrl;
+  const resolved = resolveTrustedSiteOrigin({
+    constructorSiteUrl,
+    topLevelSiteUrl,
+    checkoutSiteUrl,
+    runtimeSiteUrl,
+  });
   return {
     carts: storage[names.carts] as Pick<StorageCollection<CheckoutRecord>, "compareAndSet" | "getVersioned">,
     capabilities: storage[names.capabilities] as Pick<
@@ -76,7 +96,46 @@ export function bindGuestCheckoutRuntime(
         : undefined,
       manualAvailability: storage[names.manualAvailability] as CatalogManualAvailabilityStorage,
     },
-    siteUrl: options.siteUrl,
+    siteUrl: resolved.ok ? resolved.origin : undefined,
+    constructorSiteUrl,
+    runtimeSiteUrl,
+    topLevelSiteUrl,
+    checkoutSiteUrl,
     host: options.host ?? {},
   };
+}
+
+export function admitBoundGuestCheckoutRuntime(
+  ctx: {
+    storage: Record<string, unknown>;
+    request: { url: string; headers?: Headers | Record<string, string> };
+    site?: { url?: string };
+  },
+  names: GuestCheckoutStorageNames,
+  host: GuestCheckoutHostOptions = {},
+): GuestCheckoutRuntime {
+  const constructorSiteUrl = host.siteUrl;
+  const runtimeSiteUrl = ctx.site?.url;
+  const topLevelSiteUrl = host.topLevelSiteUrl;
+  const checkoutSiteUrl = host.checkoutSiteUrl;
+  const resolved = resolveTrustedSiteOrigin({
+    constructorSiteUrl,
+    topLevelSiteUrl,
+    checkoutSiteUrl,
+    runtimeSiteUrl,
+  });
+  if (!resolved.ok) throw new GuestCheckoutError("UNAVAILABLE");
+  admitGuestCheckoutWrite({
+    requestUrl: ctx.request.url,
+    headers: ctx.request.headers,
+    siteOrigin: resolved.origin,
+  });
+  return bindGuestCheckoutRuntime(ctx.storage, names, {
+    siteUrl: resolved.origin,
+    constructorSiteUrl,
+    runtimeSiteUrl,
+    topLevelSiteUrl,
+    checkoutSiteUrl,
+    host,
+  });
 }

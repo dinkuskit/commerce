@@ -17,7 +17,10 @@ export default defineConfig({
       database: sqlite({ url: process.env.COMMERCE_PROOF_DB ?? "file:./.artifacts/content.db" }),
       storage: local({ directory: ".artifacts/uploads", baseUrl: "/_emdash/api/media/file" }),
       ...(siteUrl ? { siteUrl } : {}),
-      plugins: [dinkusCommerce({ enableLocalStockManagement })],
+      plugins: [dinkusCommerce({
+        enableLocalStockManagement,
+        ...(siteUrl ? { siteUrl } : {}),
+      })],
     }),
   ],
   devToolbar: { enabled: false },

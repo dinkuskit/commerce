@@ -1,4 +1,5 @@
 import { GuestCheckoutError } from "./errors.js";
+import { canonicalizeHttpOrigin, presentSiteUrl, resolveTrustedSiteOrigin } from "./site-scope.js";
 import {
   GUEST_CAPABILITY_HEADER,
   type GuestCapabilityPresentation,
@@ -30,8 +31,32 @@ function randomSecret(): string {
   return bytesToHex(bytes);
 }
 
+function knownOriginsAgree(left: string, right: string): boolean {
+  const leftOrigin = canonicalizeHttpOrigin(presentSiteUrl(left));
+  const rightOrigin = canonicalizeHttpOrigin(presentSiteUrl(right));
+  return leftOrigin !== null && leftOrigin === rightOrigin;
+}
+
+function knownSiteSource(retained: string | undefined, hosted: string | undefined): string | undefined {
+  if (retained !== undefined && hosted !== undefined && !knownOriginsAgree(retained, hosted)) {
+    throw new GuestCheckoutError("UNAVAILABLE");
+  }
+  return retained !== undefined ? retained : hosted;
+}
+
+export function requireTrustedSiteOrigin(runtime: GuestCheckoutRuntime): string {
+  const resolved = resolveTrustedSiteOrigin({
+    constructorSiteUrl: knownSiteSource(runtime.constructorSiteUrl, runtime.host.siteUrl),
+    runtimeSiteUrl: runtime.runtimeSiteUrl,
+    topLevelSiteUrl: knownSiteSource(runtime.topLevelSiteUrl, runtime.host.topLevelSiteUrl),
+    checkoutSiteUrl: knownSiteSource(runtime.checkoutSiteUrl, runtime.host.checkoutSiteUrl),
+  });
+  if (!resolved.ok) throw new GuestCheckoutError("UNAVAILABLE");
+  return resolved.origin;
+}
+
 export function hostSiteBinding(siteUrl: string | undefined): string {
-  return typeof siteUrl === "string" ? siteUrl.trim() : "";
+  return canonicalizeHttpOrigin(siteUrl) ?? "";
 }
 
 export function readGuestCapabilityHeader(
@@ -60,6 +85,7 @@ function parsePresentedCapability(token: string): { capabilityId: string; secret
 export async function mintGuestCapability(
   runtime: GuestCheckoutRuntime,
 ): Promise<{ record: GuestCapabilityRecord; presentation: GuestCapabilityPresentation }> {
+  const siteBinding = requireTrustedSiteOrigin(runtime);
   const capabilityId = (runtime.host.createCapabilityId ?? (() => crypto.randomUUID()))();
   const cartId = (runtime.host.createCartId ?? (() => crypto.randomUUID()))();
   const secret = (runtime.host.createCapabilitySecret ?? randomSecret)();
@@ -71,7 +97,7 @@ export async function mintGuestCapability(
     capabilityId,
     cartId,
     verifier: await hashGuestCapabilitySecret(secret),
-    siteBinding: hostSiteBinding(runtime.siteUrl),
+    siteBinding,
     createdAt: new Date((runtime.host.now ?? (() => Date.now() / 1000))() * 1000).toISOString(),
   };
   if (!(await runtime.capabilities.compareAndSet(capabilityId, null, record)).applied) {
@@ -92,6 +118,7 @@ export async function authorizeGuestCapability(
   runtime: GuestCheckoutRuntime,
   presented: string | undefined,
 ): Promise<GuestCapabilityRecord> {
+  const requestSite = requireTrustedSiteOrigin(runtime);
   if (!presented) throw new GuestCheckoutError("CAPABILITY_DENIED");
   const { capabilityId, secret } = parsePresentedCapability(presented);
   const stored = await runtime.capabilities.get(capabilityId);
@@ -100,12 +127,12 @@ export async function authorizeGuestCapability(
     stored.recordKind !== "guest-checkout-capability" ||
     stored.capabilityId !== capabilityId ||
     !stored.cartId ||
-    !stored.verifier
+    !stored.verifier ||
+    !stored.siteBinding
   ) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
-  const requestSite = hostSiteBinding(runtime.siteUrl);
-  if (stored.siteBinding && requestSite && stored.siteBinding !== requestSite) {
+  if (stored.siteBinding !== requestSite) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
   if (!timingSafeEqual(stored.verifier, await hashGuestCapabilitySecret(secret))) {

@@ -7,12 +7,17 @@ import {
   CHECKOUT_COLLECTION,
   CHECKOUT_GUEST_CAPABILITY_COLLECTION,
   COMMERCE_PLUGIN_ID,
+  GUEST_CHECKOUT_PREPARE_ROUTE,
+  GUEST_CHECKOUT_START_ROUTE,
   createPlugin,
+  guestCheckoutPrepareRoute,
   guestCheckoutStartRoute,
   guestCheckoutStatusRoute,
 } from "../../../dist/index.js";
 import { initializeCatalogDatabase } from "../../integration/sqlite-fixture.mjs";
 import { fixture } from "./fixture.mjs";
+
+export const TRUSTED_SITE = "http://store-a.test";
 
 const PLUGIN_STORAGE_TABLE = `
   CREATE TABLE IF NOT EXISTS _plugin_storage (
@@ -108,38 +113,89 @@ export async function seedGuestCatalog(storage, { managed = false, itemId = "hat
 export function syntheticCheckoutHost(overrides = {}) {
   const opened = { store: { async read() { return null; }, async compareAndSet() { return false; } } };
   const f = fixture(opened.store, overrides.managed !== false);
+  let paymentCreates = 0;
+  let paymentLookups = 0;
+  let customResolveInventory = overrides.host?.resolveInventory;
+  let customResolveAvailabilityProvider = overrides.host?.resolveAvailabilityProvider;
+  const resolvePayments = async (ref) => {
+    const port = await f.execution.resolvePayments(ref);
+    if (!port) return null;
+    return {
+      ensureSession: async (request) => {
+        paymentCreates += 1;
+        return port.ensureSession(request);
+      },
+      lookup: async (request) => {
+        paymentLookups += 1;
+        return port.lookup(request);
+      },
+    };
+  };
+  const resolveInventory = async (...args) => {
+    if (customResolveInventory !== undefined) {
+      return typeof customResolveInventory === "function"
+        ? customResolveInventory(...args)
+        : customResolveInventory;
+    }
+    return f.execution.resolveInventory(...args);
+  };
+  const resolveAvailabilityProvider = async (...args) => {
+    if (customResolveAvailabilityProvider !== undefined) {
+      return typeof customResolveAvailabilityProvider === "function"
+        ? customResolveAvailabilityProvider(...args)
+        : customResolveAvailabilityProvider;
+    }
+    return f.execution.availability.resolveProvider(...args);
+  };
+  const host = {
+    siteUrl: TRUSTED_SITE,
+    paymentBindingRef: "stripe-test-binding",
+    now: f.execution.now,
+    createAttemptId: () => randomUUID(),
+    ...overrides.host,
+    resolvePayments,
+    resolveInventory,
+    resolveAvailabilityProvider,
+  };
   return {
     fixture: f,
-    host: {
-      paymentBindingRef: "stripe-test-binding",
-      resolvePayments: f.execution.resolvePayments,
-      resolveInventory: f.execution.resolveInventory,
-      resolveAvailabilityProvider: f.execution.availability.resolveProvider,
-      now: f.execution.now,
-      createAttemptId: () => randomUUID(),
-      ...overrides.host,
-    },
+    host,
     setPayment: f.setPayment,
     setStock: f.setStock,
     setNow: f.setNow,
-    counts: f.counts,
+    setResolveInventory(fn) { customResolveInventory = fn; },
+    setResolveAvailabilityProvider(fn) { customResolveAvailabilityProvider = fn; },
+    counts: () => ({ ...f.counts(), paymentCreates, paymentLookups }),
     holds: f.holds,
     sessions: f.sessions,
   };
 }
 
-export function guestContext(storage, input, { siteUrl = "http://store-a.test", capability, method = "POST" } = {}) {
+export function guestContext(storage, input, {
+  siteUrl = TRUSTED_SITE,
+  runtimeSiteUrl = siteUrl,
+  capability,
+  method = "POST",
+  route = GUEST_CHECKOUT_START_ROUTE,
+  origin,
+  fetchSite = "same-origin",
+} = {}) {
   const headers = { "content-type": "application/json" };
+  if (origin !== null) headers.origin = origin === undefined ? siteUrl : origin;
+  if (fetchSite) headers["sec-fetch-site"] = fetchSite;
   if (capability) headers["x-commerce-guest-capability"] = capability;
+  const requestInit = {
+    method,
+    headers,
+  };
+  if (method !== "GET" && method !== "HEAD") {
+    requestInit.body = JSON.stringify(input ?? {});
+  }
   return {
     storage,
     input,
-    request: new Request(`http://127.0.0.1/_emdash/api/plugins/dinkus-commerce/checkout/guest/start`, {
-      method,
-      headers,
-      body: JSON.stringify(input ?? {}),
-    }),
-    site: { url: siteUrl, name: "Test", locale: "en" },
+    request: new Request(`${siteUrl}/_emdash/api/plugins/dinkus-commerce/${route}`, requestInit),
+    site: { url: runtimeSiteUrl, name: "Test", locale: "en" },
   };
 }
 
@@ -147,13 +203,18 @@ export async function invokeGuest(route, storage, input, options = {}) {
   return route.handler(guestContext(storage, input, options));
 }
 
-export function defaultPluginRoutes() {
-  const plugin = createPlugin();
-  return plugin;
+export async function prepareGuest(route, storage, options = {}) {
+  return invokeGuest(route, storage, {}, { ...options, route: GUEST_CHECKOUT_PREPARE_ROUTE });
 }
 
 export function injectedPluginRoutes(host) {
   return createPlugin({ checkout: host });
 }
 
-export { guestCheckoutStartRoute, guestCheckoutStatusRoute };
+export {
+  GUEST_CHECKOUT_PREPARE_ROUTE,
+  GUEST_CHECKOUT_START_ROUTE,
+  guestCheckoutPrepareRoute,
+  guestCheckoutStartRoute,
+  guestCheckoutStatusRoute,
+};

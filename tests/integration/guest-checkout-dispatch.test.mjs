@@ -4,12 +4,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { GUEST_CHECKOUT_START_ROUTE } from "../../dist/index.js";
+import { GUEST_CHECKOUT_PREPARE_ROUTE, GUEST_CHECKOUT_START_ROUTE } from "../../dist/index.js";
 import {
   initializeGuestCheckoutDatabase,
   injectedPluginRoutes,
   invokeGuest,
   openGuestCollections,
+  prepareGuest,
   seedGuestCatalog,
   syntheticCheckoutHost,
 } from "../features/checkout/guest-dispatch.mjs";
@@ -25,10 +26,15 @@ test("native PluginStorageRepository dispatch retains one paid order across conn
     await seedGuestCatalog(left.storage);
     const synth = syntheticCheckoutHost();
     const plugin = injectedPluginRoutes(synth.host);
-    const started = await invokeGuest(plugin.routes[GUEST_CHECKOUT_START_ROUTE], left.storage, {
-      lines: [{ catalogItemId: "hat", quantity: 1 }],
-    });
-    const token = started.capability.capability;
+    const prepared = await prepareGuest(plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], left.storage);
+    const token = prepared.capability.capability;
+    const started = await invokeGuest(
+      plugin.routes[GUEST_CHECKOUT_START_ROUTE],
+      left.storage,
+      { lines: [{ catalogItemId: "hat", quantity: 1 }] },
+      { capability: token },
+    );
+    assert.equal(typeof started.checkout.attemptId, "string");
     synth.setPayment("paid");
     const paid = await invokeGuest(
       plugin.routes["checkout/guest/status"],

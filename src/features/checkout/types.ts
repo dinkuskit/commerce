@@ -135,6 +135,13 @@ export interface CheckoutExecution {
 export const GUEST_CHECKOUT_PROJECTION_SCHEMA =
   "dinkuskit.commerce.guest-checkout-projection/v1" as const;
 export const GUEST_CAPABILITY_HEADER = "x-commerce-guest-capability";
+export const GUEST_ORIGIN_HEADER = "origin";
+export const GUEST_SEC_FETCH_SITE_HEADER = "sec-fetch-site";
+export const GUEST_CHECKOUT_DECLARED_HEADERS = [
+  GUEST_CAPABILITY_HEADER,
+  GUEST_ORIGIN_HEADER,
+  GUEST_SEC_FETCH_SITE_HEADER,
+] as const;
 export const CHECKOUT_GUEST_CAPABILITY_COLLECTION = "checkoutGuestCapabilities";
 export const CHECKOUT_GUEST_CAPABILITY_SANDBOX_COLLECTION = "checkout_guest_capabilities";
 export const CHECKOUT_SANDBOX_COLLECTION = "checkout_carts";
@@ -152,6 +159,7 @@ export type GuestCheckoutErrorCode =
   | "CONTENTION"
   | "INVALID_CART"
   | "INVENTORY_UNAVAILABLE"
+  | "ORIGIN_DENIED"
   | "PAYMENTS_UNAVAILABLE"
   | "PRODUCT_UNAVAILABLE"
   | "RETRY_REQUIRED"
@@ -200,6 +208,14 @@ export interface GuestCapabilityRecord {
 }
 
 export interface GuestCheckoutHostOptions {
+  /**
+   * Host-owned trusted public site origin. Used when runtime `ctx.site.url`
+   * is empty. A present public, malformed, or conflicting runtime URL cannot
+   * be masked. Not read from Host, query, or body.
+   */
+  siteUrl?: string;
+  topLevelSiteUrl?: string;
+  checkoutSiteUrl?: string;
   paymentBindingRef?: string;
   resolvePayments?: CheckoutExecution["resolvePayments"];
   resolveInventory?: CheckoutExecution["resolveInventory"];
@@ -218,7 +234,12 @@ export interface GuestCheckoutRuntime {
     "compareAndSet" | "get" | "getVersioned"
   >;
   catalog: StorefrontAvailabilityResolverStorage;
+  /** Canonical trusted site origin after host resolution, when available. */
   siteUrl?: string;
+  constructorSiteUrl?: string;
+  runtimeSiteUrl?: string;
+  topLevelSiteUrl?: string;
+  checkoutSiteUrl?: string;
   host: GuestCheckoutHostOptions;
 }
 
