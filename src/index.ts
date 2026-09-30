@@ -149,3 +149,5 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
 export default createPlugin;
 
 export * from "./features/checkout/index.js";
+
+export * from "./features/fixed-bundles/index.js";
