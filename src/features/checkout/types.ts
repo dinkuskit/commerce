@@ -116,6 +116,16 @@ export interface CheckoutAttempt {
 }
 /** One durable aggregate per trusted cart. Preserve past attempts and paid receipts. */
 export interface CheckoutRecord { attempts: CheckoutAttempt[] }
+export interface CheckoutPaymentAssociation {
+  recordKind: "checkout-payment-association";
+  attemptId: string;
+  cartId: string;
+  bindingRef: string;
+}
+export interface CheckoutPaymentAssociationPort {
+  claim(record: CheckoutPaymentAssociation): Promise<boolean>;
+  get(attemptId: string): Promise<CheckoutPaymentAssociation | null>;
+}
 export interface CheckoutStore {
   read(cartId: string): Promise<{ version: string; record: CheckoutRecord } | null>;
   /** Atomic insert (null version) or compare-and-set across processes. */
@@ -128,6 +138,8 @@ export interface CheckoutExecution {
   resolveInventory(binding: InventoryProviderBinding): Promise<CheckoutInventoryPort | null>;
   paymentBindingRef: string;
   resolvePayments(bindingRef: string): Promise<CheckoutPaymentPort | null>;
+  /** Optional durable index, claimed before any external payment call. */
+  paymentAssociations?: CheckoutPaymentAssociationPort;
   createAttemptId?: () => string;
   now?: () => number;
 }
@@ -218,6 +230,7 @@ export interface GuestCheckoutHostOptions {
   checkoutSiteUrl?: string;
   paymentBindingRef?: string;
   resolvePayments?: CheckoutExecution["resolvePayments"];
+  paymentAssociations?: CheckoutPaymentAssociationPort;
   resolveInventory?: CheckoutExecution["resolveInventory"];
   resolveAvailabilityProvider?: ResolveStorefrontAvailabilityExecution["resolveProvider"];
   createCapabilitySecret?: () => string;
@@ -240,6 +253,7 @@ export interface GuestCheckoutRuntime {
   runtimeSiteUrl?: string;
   topLevelSiteUrl?: string;
   checkoutSiteUrl?: string;
+  paymentAssociations?: CheckoutPaymentAssociationPort;
   host: GuestCheckoutHostOptions;
 }
 

@@ -3,6 +3,8 @@ import { startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { authorizeGuestCapability, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
+import { reconcilePaymentWakes } from "./wake.js";
+import { resolveTrustedSiteOrigin } from "./site-scope.js";
 import type {
   CartLine,
   CheckoutAttempt,
@@ -10,6 +12,7 @@ import type {
   GuestCheckoutResult,
   GuestCheckoutRuntime,
 } from "./types.js";
+import type { CommercePaymentWakePort } from "./wake.js";
 
 function fail(code: GuestCheckoutError["code"]): never {
   throw new GuestCheckoutError(code);
@@ -56,18 +59,40 @@ function paymentsReady(host: GuestCheckoutHostOptions): boolean {
   return Boolean(host.paymentBindingRef?.trim() && host.resolvePayments);
 }
 
-function executionOf(runtime: GuestCheckoutRuntime) {
+export function executionOf(runtime: GuestCheckoutRuntime) {
   if (!paymentsReady(runtime.host)) fail("PAYMENTS_UNAVAILABLE");
   return {
     store: createCheckoutStore(runtime.carts),
     catalog: runtime.catalog,
     availability: { resolveProvider: runtime.host.resolveAvailabilityProvider },
     resolveInventory: runtime.host.resolveInventory ?? (async () => null),
+    paymentAssociations: runtime.paymentAssociations,
     paymentBindingRef: runtime.host.paymentBindingRef!.trim(),
     resolvePayments: runtime.host.resolvePayments!,
     createAttemptId: runtime.host.createAttemptId,
     now: runtime.host.now,
   };
+}
+
+/**
+ * Trusted host-only wake seam. The caller supplies a Payments-owned list/ack
+ * port; Commerce supplies its bound storage and canonical order writer.
+ */
+export async function reconcileGuestPaymentWakes(
+  runtime: GuestCheckoutRuntime,
+  wakes: CommercePaymentWakePort,
+) {
+  const resolved = resolveTrustedSiteOrigin({
+    constructorSiteUrl: runtime.constructorSiteUrl ?? runtime.host.siteUrl,
+    runtimeSiteUrl: runtime.runtimeSiteUrl ?? runtime.siteUrl,
+    topLevelSiteUrl: runtime.topLevelSiteUrl ?? runtime.host.topLevelSiteUrl,
+    checkoutSiteUrl: runtime.checkoutSiteUrl ?? runtime.host.checkoutSiteUrl,
+  });
+  if (!resolved.ok || runtime.siteUrl !== resolved.origin ||
+      !runtime.paymentAssociations || !paymentsReady(runtime.host)) {
+    fail("UNAVAILABLE");
+  }
+  return reconcilePaymentWakes(executionOf(runtime), runtime.paymentAssociations, wakes);
 }
 
 function currentAttempt(attempts: CheckoutAttempt[]): CheckoutAttempt | undefined {
