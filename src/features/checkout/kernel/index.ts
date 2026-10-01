@@ -1,4 +1,21 @@
-export { CHECKOUT_COLLECTION, createCheckoutStore } from "../storage.js";
+export {
+  CHECKOUT_COLLECTION,
+  CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION,
+  CHECKOUT_PAYMENT_ASSOCIATIONS_SANDBOX_COLLECTION,
+  createCheckoutPaymentAssociationPort,
+  createCheckoutStore,
+} from "../storage.js";
+export {
+  createTrustedTestPaymentPort,
+  createTrustedTestPaymentsCheckoutHost,
+} from "../test-payments.js";
+export { reconcileGuestPaymentWakes } from "../guest.js";
+export { reconcilePaymentWakes } from "../wake.js";
+export type {
+  CommercePaymentWake,
+  CommercePaymentWakePort,
+  WakeReconciliationResult,
+} from "../wake.js";
 export { startCheckout, reconcileCheckout, CheckoutError } from "../orchestrate.js";
 export {
   createCurrentPaymentRequest,
@@ -59,6 +76,8 @@ export {
 export type {
   CartLine,
   CheckoutAttempt,
+  CheckoutPaymentAssociation,
+  CheckoutPaymentAssociationPort,
   CheckoutExecution,
   CheckoutInventoryPort,
   CheckoutLine,
@@ -88,3 +107,8 @@ export type {
   StockRequest,
   StockRequirement,
 } from "../types.js";
+export type {
+  ScopedPaymentFetch,
+  TrustedTestPaymentsCheckoutHost,
+  TrustedTestPaymentsConfig,
+} from "../test-payments.js";

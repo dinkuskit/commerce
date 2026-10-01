@@ -76,6 +76,14 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
     if (previous && retryAfter !== previous.attemptId) fail("Retry requires the released attempt identity");
     if (!previous && retryAfter !== undefined) fail("Retry checkout not found");
     const attempt = await freeze(cart, e);
+    if (e.paymentAssociations && !await e.paymentAssociations.claim({
+      recordKind: "checkout-payment-association",
+      attemptId: attempt.attemptId,
+      cartId,
+      bindingRef: attempt.payment.bindingRef,
+    })) {
+      continue;
+    }
     if (stored?.record.attempts.some(a => a.attemptId === attempt.attemptId)) fail("Attempt identity reused");
     if (await e.store.compareAndSet(cartId, stored?.version ?? null, { attempts: [...(stored?.record.attempts ?? []), attempt] })) {
       return drive(e, cartId, attempt.attemptId, true);
