@@ -27,6 +27,7 @@ const requiredFiles = [
   "src/features/storefront-availability/index.ts",
   "src/features/checkout/index.ts",
   "src/features/checkout/kernel/index.ts",
+  "src/features/coupons/index.ts",
   "docs/implementation/guest-checkout-public.md",
   "docs/implementation/checkout-payment-window.md",
   "src/features/storefront-availability/policy.ts",
@@ -79,6 +80,7 @@ export async function auditFeatures(repositoryRoot = root) {
     "`src/features/inventory-setup/`",
     "`src/features/storefront-availability/`",
     "`src/features/checkout/`",
+    "`src/features/coupons/`",
     "`bin/verify-commerce quick`",
     "`bin/verify-commerce full`",
     "`proof/catalog-first-managed-sku/PROOF.md`",
@@ -118,6 +120,14 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/inventory-setup must resolve to the inventory-setup public entry",
     );
   }
+  if (
+    manifest.exports?.["./features/coupons"]?.default !==
+    "./dist/features/coupons/index.js"
+  ) {
+    findings.push(
+      "package export ./features/coupons must resolve to the coupons public entry",
+    );
+  }
   if (manifest.devDependencies?.emdash !== "0.41.0") {
     findings.push("catalog pilot must remain pinned to exact emdash 0.41.0");
   }
@@ -135,6 +145,7 @@ export async function auditFeatures(repositoryRoot = root) {
         "inventory-setup",
         "storefront-availability",
         "checkout",
+        "coupons",
       ].find(
         (feature) =>
           importPath.includes(`/features/${feature}/`) || importPath.includes(`/${feature}/`),
