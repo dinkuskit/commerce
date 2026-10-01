@@ -86,7 +86,7 @@ proof. Public proof retains only this document, `media-manifest.json`, and
 
 The consumer used separate normal Astro dev hosts and SQLite databases:
 `consumer-astro.native.mjs` registered the installed native
-`dinkusCommerce` descriptor in `plugins`, on port 20142; 
+`dinkusCommerce` descriptor in `plugins`, on port 20142;
 `consumer-astro.sandbox.mjs` registered the installed descriptor and resolved
 the installed sandbox entrypoint under `sandboxed`, on port 20143. Production
 auth was not bypassed or weakened; the existing local setup/dev-auth fixture
