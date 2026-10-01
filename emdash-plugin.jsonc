@@ -65,6 +65,10 @@
     "checkout_guest_capabilities": {
       "indexes": [],
       "uniqueIndexes": []
+    },
+    "checkout_payment_associations": {
+      "indexes": [],
+      "uniqueIndexes": []
     }
   },
   "admin": {

@@ -47,6 +47,7 @@ import {
 import {
   CHECKOUT_COLLECTION,
   CHECKOUT_GUEST_CAPABILITY_COLLECTION,
+  CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION,
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
@@ -178,6 +179,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         uniqueIndexes: [],
       },
       [CHECKOUT_GUEST_CAPABILITY_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
+      [CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION]: {
         indexes: [],
         uniqueIndexes: [],
       },

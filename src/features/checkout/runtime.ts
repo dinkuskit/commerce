@@ -14,8 +14,10 @@ import type {
 import { GuestCheckoutError } from "./errors.js";
 import { admitGuestCheckoutWrite } from "./origin-admission.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
+import { createCheckoutPaymentAssociationPort } from "./storage.js";
 import type {
   CheckoutRecord,
+  CheckoutPaymentAssociation,
   GuestCapabilityRecord,
   GuestCheckoutHostOptions,
   GuestCheckoutRuntime,
@@ -31,6 +33,7 @@ export interface GuestCheckoutStorageNames {
   configurations: string;
   settings: string;
   listing?: string;
+  paymentAssociations?: string;
 }
 
 export const NATIVE_GUEST_CHECKOUT_STORAGE = {
@@ -43,6 +46,7 @@ export const NATIVE_GUEST_CHECKOUT_STORAGE = {
   configurations: "storeInventoryConfigurations",
   settings: "storefrontAvailabilitySettings",
   listing: "storefrontOutOfStockListing",
+  paymentAssociations: "checkoutPaymentAssociations",
 } as const satisfies GuestCheckoutStorageNames;
 
 export const SANDBOX_GUEST_CHECKOUT_STORAGE = {
@@ -55,6 +59,7 @@ export const SANDBOX_GUEST_CHECKOUT_STORAGE = {
   configurations: "store_inventory_configurations",
   settings: "storefront_availability_settings",
   listing: "storefront_out_of_stock_listing",
+  paymentAssociations: "checkout_payment_associations",
 } as const satisfies GuestCheckoutStorageNames;
 
 export function bindGuestCheckoutRuntime(
@@ -102,6 +107,11 @@ export function bindGuestCheckoutRuntime(
     topLevelSiteUrl,
     checkoutSiteUrl,
     host: options.host ?? {},
+    ...(names.paymentAssociations && storage[names.paymentAssociations]
+      ? { paymentAssociations: createCheckoutPaymentAssociationPort(
+        storage[names.paymentAssociations] as StorageCollection<CheckoutPaymentAssociation>,
+      ) }
+      : {}),
   };
 }
 
