@@ -10,7 +10,7 @@ Native plugin: `createPlugin()` / `dinkusCommerce()`.
 Registry/sandbox entry: `@dinkuskit/commerce/sandbox` built from
 `emdash-plugin.jsonc` + `src/plugin.ts`.
 Runtime slug: `dinkus-commerce`.
-EmDash API peer: `0.41.0`.
+EmDash API peer: `1.0.1`.
 
 ## Routes
 
@@ -23,9 +23,10 @@ Both the native plugin and the Registry/sandbox descriptor mount:
 | `checkout/guest/status` | `POST` | yes | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/status` |
 
 Public routes skip host session auth and CSRF. They declare incoming headers
-`origin`, `sec-fetch-site`, and `x-commerce-guest-capability`. EmDash 0.41
-sandbox serialization exposes only those declared headers (max 32, no
-`cookie`/`authorization`/`x-emdash-request`). Successful and error responses
+`origin`, `sec-fetch-site`, and `x-commerce-guest-capability`. EmDash 1.0.1
+sandbox route adaptation exposes only those declared headers and strips
+`cookie`, `set-cookie`, `authorization`, `proxy-authorization`, Cloudflare
+Access credentials, and `x-emdash-request`. Successful and error responses
 use `Cache-Control: private, no-store` unless the host later adds a public GET
 cache policy, which these POST routes do not.
 
@@ -67,13 +68,13 @@ capability writes or provider calls.
 
 Default Registry/sandbox invocation has no constructor `siteUrl`. Missing
 runtime `ctx.site.url` is explicit host `UNAVAILABLE`, not a fake fallback.
-EmDash 0.41 reads an existing `emdash:site_url` option before it loads the
-sandbox worker. A trusted site URL stored there before that cold start is a
-normal runtime site source. Writing the option after the worker has already
-snapshotted site info does not refresh `ctx.site.url`. The default browser
-server starts before its tests, so that sandbox guest check still sees the
-missing snapshot and stays fail-closed. It does not prove a configured shop.
-Native `createPlugin({ siteUrl })` / `dinkusCommerce({ siteUrl })` /
+EmDash 1.0.1 reads an existing `emdash:site_url` option during runtime cold
+start before loading sandboxed plugins, so a trusted site URL stored before
+that load populates `ctx.site.url`. Writing the option after the runtime has
+loaded the sandbox plugin does not refresh that injected site context. The
+default browser server starts before its tests, so that sandbox guest check
+still sees the missing context and stays fail-closed. It does not prove a
+configured shop. Native `createPlugin({ siteUrl })` / `dinkusCommerce({ siteUrl })` /
 `createPlugin({ checkout: { siteUrl } })` may fill an empty runtime URL.
 A present public, malformed, or conflicting runtime URL cannot be masked.
 
@@ -117,12 +118,12 @@ fresh `prepare` capability; keep the prior capability separately if the UI
 continues to show that purchase's receipt. Never replace the capability to
 retry an unresolved attempt.
 
-EmDash 0.41 public raw responses strip `Set-Cookie` and reject external
-`Location`. Commerce therefore does not set cookies or redirect through the
-plugin response. If Template Store wants HTTP-only cookie retention, its own
-same-origin server wrapper stores the Commerce-issued capability and replays
-the header. Commerce still mints and checks the verifier. Do not put the
-capability in querystrings.
+EmDash 1.0.1 public raw responses exclude `Set-Cookie` and reject external
+`Location` values. Commerce therefore does not set cookies or redirect
+through the plugin response. If Template Store wants HTTP-only cookie
+retention, its own same-origin server wrapper stores the Commerce-issued
+capability and replays the header. Commerce still mints and checks the
+verifier. Do not put the capability in querystrings.
 
 Host `ctx.site` has `url` and no `tenantId`. Plugin storage is already
 site-scoped. Commerce binds a minted capability to the canonical site

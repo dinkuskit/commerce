@@ -199,7 +199,7 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(managedSave.values).toMatchObject({ regular: "42.00", sale: "35.00" });
     expect(managedSave.values).not.toHaveProperty("manageStock");
     writeFileSync(resolve(artifactsDir, "native-managed-price-omit.json"), JSON.stringify({
-      fixture: "synthetic managed blanket", transport: "EmDash 0.41.0 / native React / SQLite",
+      fixture: "synthetic managed blanket", transport: "EmDash 1.0.1 / native React / SQLite",
       submittedValues: (({ catalogItemId, ...rest }) => rest)(managedSave.values),
       persistedStock: storageRow("catalogItems", managedProduct.itemId).stockManagement,
     }, null, 2) + "\n");

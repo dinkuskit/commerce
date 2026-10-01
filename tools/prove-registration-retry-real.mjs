@@ -139,7 +139,7 @@ const { createRegisterManagedSku, createLocalSqliteTestStore } =
 const emdashPackage = JSON.parse(
   readFileSync(new URL("../node_modules/emdash/package.json", import.meta.url), "utf8"),
 );
-assert.equal(emdashPackage.version, "0.41.0");
+assert.equal(emdashPackage.version, "1.0.1");
 
 const directory = await mkdtemp(join(tmpdir(), "commerce-registration-retry-real-"));
 const commerceDatabasePath = join(directory, "commerce.db");
