@@ -1,15 +1,7 @@
 {
   "closeout": null,
   "created_at": "2026-10-01T11:49:53+00:00",
-  "current_focus": {
-    "cadence": "sequential",
-    "confirmed": true,
-    "confirmed_at": "2026-10-01T16:37:21+00:00",
-    "domain": "Coupon native admin bounded review repair",
-    "started_at": "2026-10-01T16:37:21+00:00",
-    "status": "confirmed",
-    "summary": "Existing direct human proceed authorizes completing the accepted coupon admin slice and required review repairs. Preserve named page and routes for later atomic core composition; no new product policy or feature merge authorization."
-  },
+  "current_focus": null,
   "decisions": [
     {
       "baseline_ref": null,
@@ -2224,69 +2216,10 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-01T15:29:17+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-01T16:37:20+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "verified",
-          "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
-          "note": "adjudicated review requires a fix",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": "file:proof/coupon-admin-native-v1/REVIEW.md",
-          "review_result": "clean",
-          "review_source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692",
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
-        },
-        {
-          "at": "2026-10-01T16:37:21+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
-          "note": "bounded implementation recorded",
-          "repair_required": true,
-          "review_classifications": [
-            "required_fix",
-            "human_gate"
-          ],
-          "review_ref": "file:proof/coupon-admin-native-v1/REVIEW.md prior source OpenClaw request req-20261001T154138Z-188998311548 P2 accepted premature default coupon-page exposure; native review needs human",
-          "review_result": "findings",
-          "review_source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692",
-          "to": "implemented",
-          "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
-        },
-        {
-          "at": "2026-10-01T16:37:21+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "implemented",
-          "implementation_ref": "file:src/admin/native.ts;file:tests/native-coupon-site/coupon-admin.mjs;file:proof/coupon-admin-native-v1/REVIEW.md accepted P2 repair native Cursor Luna Medium job4571d749-d285-430b-bf89-cd208f68a1ff",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
         }
       ],
       "id": "coupons-admin-native-v1-001",
-      "implementation_ref": "file:src/admin/native.ts;file:tests/native-coupon-site/coupon-admin.mjs;file:proof/coupon-admin-native-v1/REVIEW.md accepted P2 repair native Cursor Luna Medium job4571d749-d285-430b-bf89-cd208f68a1ff",
+      "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
       "question": "What bounded native admin surface should expose Coupons-v1?",
       "rationale": "Explicit coordinator assignment in .grilltrack/work/coupon-admin-run/PROOF.md; preserves the verified coupon kernel and the repository source partition.",
       "reconciliation_sources": [
@@ -2330,39 +2263,15 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T11:49:53+00:00",
           "source_identity": "sha256:1c026ebbb5b65d46b2b898d992b3d1af47c698430f9c4860d4098a0769c52445"
-        },
-        {
-          "classifications": [],
-          "ref": "file:proof/coupon-admin-native-v1/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-10-01T15:37:02+00:00",
-          "source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692"
-        },
-        {
-          "classifications": [
-            "required_fix",
-            "human_gate"
-          ],
-          "ref": "file:proof/coupon-admin-native-v1/REVIEW.md prior source OpenClaw request req-20261001T154138Z-188998311548 P2 accepted premature default coupon-page exposure; native review needs human",
-          "result": "findings",
-          "reviewed_at": "2026-10-01T16:37:20+00:00",
-          "source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692"
-        },
-        {
-          "classifications": [],
-          "ref": "file:proof/coupon-admin-native-v1/REVIEW.md parent reviewed accepted P2 fix; default pages omit coupons, named page preserved, fixture composes pages+routes+storage; parent4focused tests pass; fresh official reviews pending",
-          "result": "clean",
-          "reviewed_at": "2026-10-01T16:39:23+00:00",
-          "source_identity": "sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b"
         }
       ],
-      "review_ref": "file:proof/coupon-admin-native-v1/REVIEW.md parent reviewed accepted P2 fix; default pages omit coupons, named page preserved, fixture composes pages+routes+storage; parent4focused tests pass; fresh official reviews pending",
-      "review_result": "clean",
-      "review_source_identity": "sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b",
-      "status": "verified",
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-01T16:39:23+00:00",
-      "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md source sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b build/typecheck/4focused regression/native browser1passed; fresh fullCI and official reviews pending"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": null,
@@ -5383,5 +5292,5 @@
   "status": "active",
   "title": "Coupon admin and accepted TEST checkout integration",
   "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d",
-  "updated_at": "2026-10-01T16:39:23+00:00"
+  "updated_at": "2026-10-01T11:49:53+00:00"
 }
