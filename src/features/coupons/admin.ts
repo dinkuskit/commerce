@@ -209,16 +209,17 @@ export function createCouponAdmin(collection: CouponCollection): CouponAdminPort
     async list() {
       const rows: CouponRecord[] = [];
       let cursor: string | undefined;
-      for (let page = 0; page < 100; page += 1) {
+      const seenCursors = new Set<string>();
+      while (true) {
         const result = await collection.query({ limit: 100, cursor });
         rows.push(...result.items.map((item) => assertCoupon(item.data, item.id)));
         if (!result.hasMore) return deepFreeze(rows);
-        if (!result.cursor || result.cursor === cursor) {
+        if (!result.cursor || result.cursor === cursor || seenCursors.has(result.cursor)) {
           throw new CouponAdminError("STORAGE_UNAVAILABLE", "coupon pagination cursor did not advance");
         }
+        seenCursors.add(result.cursor);
         cursor = result.cursor;
       }
-      throw new CouponAdminError("STORAGE_UNAVAILABLE", "coupon list exceeded pagination safety limit");
     },
     async get(couponId) {
       const id = nonEmpty(couponId, "couponId");

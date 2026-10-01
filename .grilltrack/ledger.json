@@ -2842,14 +2842,21 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:49:55+00:00",
           "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T04:02:47+00:00",
+          "source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
+      "review_source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:49:55+00:00",
+      "updated_at": "2026-10-01T04:02:47+00:00",
       "verification_ref": "file:proof/coupon-redemption-v1/PROOF.md"
     },
     {
@@ -3136,10 +3143,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:59:43+00:00",
+          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T04:00:48+00:00",
+          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "git:7e3739458ad0713c8914b6eb128e11f38efc9e18",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T04:01:48+00:00",
+          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/coupons/admin.ts; file:tests/features/coupons/coupons-v1.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
         }
       ],
       "id": "coupons-v1-independent-001",
-      "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+      "implementation_ref": "file:src/features/coupons/admin.ts; file:tests/features/coupons/coupons-v1.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
       "question": "What authoritative coupon evaluator/admin boundary is confirmed for this slice?",
       "rationale": "The checkout owner retains runtime and mounts; source authority must remain server-side and adoption-ready.",
       "repair_required": false,
@@ -3208,15 +3259,31 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:49:55+00:00",
           "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "proof/coupon-redemption-v1/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-01T03:59:43+00:00",
+          "source_identity": "git:7e3739458ad0713c8914b6eb128e11f38efc9e18"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T04:02:47+00:00",
+          "source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
+      "review_source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:49:55+00:00",
-      "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
+      "updated_at": "2026-10-01T04:02:47+00:00",
+      "verification_ref": ".grilltrack/work/coupon-redemption-run/p3-prefixed-focused.log;.grilltrack/work/coupon-redemption-run/p3-final-focused.log;.grilltrack/work/coupon-redemption-run/p3-final-unit.log;.grilltrack/work/coupon-redemption-run/p3-final-build.log;.grilltrack/work/coupon-redemption-run/p3-final-typecheck.log;.grilltrack/work/coupon-redemption-run/p3-final-audit.log;.grilltrack/work/coupon-redemption-run/p3-manifest.log;proof/coupon-redemption-v1/PROOF.md"
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -3643,14 +3710,21 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:49:55+00:00",
           "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T04:02:47+00:00",
+          "source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
+      "review_source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:49:55+00:00",
+      "updated_at": "2026-10-01T04:02:47+00:00",
       "verification_ref": "file:.grilltrack/work/coupon-redemption-run/focused-free-reconcile.log"
     },
     {
@@ -4025,14 +4099,21 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:49:55+00:00",
           "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T04:02:47+00:00",
+          "source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
+      "review_source_identity": "sha256:7f6c7b7552b1188533f58a95551d2710b70ac995301d684fae5ddc4316769e29",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:49:55+00:00",
+      "updated_at": "2026-10-01T04:02:47+00:00",
       "verification_ref": "file:.grilltrack/work/coupon-redemption-run/focused-free-reconcile.log"
     }
   ],
@@ -4077,5 +4158,5 @@
   "status": "active",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-10-01T03:49:55+00:00"
+  "updated_at": "2026-10-01T04:02:47+00:00"
 }

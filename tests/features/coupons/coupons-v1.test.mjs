@@ -28,7 +28,7 @@ async function fixture() {
   const coupons = new PluginStorageRepository(db, COMMERCE_PLUGIN_ID, "coupons", ["normalizedCode"]);
   const catalog = new PluginStorageRepository(db, COMMERCE_PLUGIN_ID, "catalogItems", []);
   const prices = new PluginStorageRepository(db, COMMERCE_PLUGIN_ID, "catalogPrices", []);
-  return { db, coupons, catalog, prices, close: async () => { await db.destroy(); await rm(dir, { recursive: true, force: true }); } };
+  return { path, db, coupons, catalog, prices, close: async () => { await db.destroy(); await rm(dir, { recursive: true, force: true }); } };
 }
 async function product(fix, id, regular, sale) {
   await fix.catalog.put(id, { recordKind: "catalog-item", itemId: id });
@@ -44,6 +44,61 @@ test("admin uses actual indexed lookup, unique writes, CAS edits, and paginated 
   await assert.rejects(() => admin.edit(created.couponId, 1, { globalCap: 4 }), /revision/);
   for (let i = 0; i < 105; i++) await admin.create({ code: `code-${i}`, globalCap: 1, rule: rule({ ruleId: `r-${i}` }) });
   assert.equal((await admin.list()).length, 106);
+});
+
+test("admin lists more than 10000 real SQLite coupons completely", async (t) => {
+  const fix = await fixture(); t.after(fix.close);
+  const admin = createCouponAdmin(fix.coupons);
+  const seed = await admin.create({ code: "bulk-seed", globalCap: 1, rule: rule() });
+  const raw = new BetterSqlite3(fix.path);
+  t.after(() => raw.close());
+  const insert = raw.prepare(
+    "INSERT INTO _plugin_storage (plugin_id, collection, id, data, revision, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  );
+  const insertMany = raw.transaction((count) => {
+    for (let i = 0; i < count; i += 1) {
+      const couponId = `bulk-${String(i).padStart(5, "0")}`;
+      const record = {
+        ...seed,
+        couponId,
+        code: couponId,
+        normalizedCode: couponId.toUpperCase(),
+        rule: { ...seed.rule, ruleId: `rule-${couponId}` },
+      };
+      insert.run(
+        COMMERCE_PLUGIN_ID,
+        "coupons",
+        couponId,
+        JSON.stringify(record),
+        "1",
+        seed.createdAt,
+        seed.updatedAt,
+      );
+    }
+  });
+  insertMany(10_000);
+  assert.equal((await admin.list()).length, 10_001);
+});
+
+test("admin fails closed when the storage cursor does not advance", async (t) => {
+  const fix = await fixture(); t.after(fix.close);
+  const admin = createCouponAdmin(fix.coupons);
+  for (let i = 0; i < 101; i += 1) {
+    await admin.create({ code: `stuck-${i}`, globalCap: 1, rule: rule({ ruleId: `stuck-rule-${i}` }) });
+  }
+  let firstCursor;
+  const stuckCollection = {
+    ...fix.coupons,
+    query: async (options) => {
+      const result = await fix.coupons.query(options);
+      firstCursor ??= result.cursor;
+      return { ...result, cursor: firstCursor, hasMore: true };
+    },
+  };
+  await assert.rejects(
+    () => createCouponAdmin(stuckCollection).list(),
+    /coupon pagination cursor did not advance/,
+  );
 });
 
 test("evaluator applies merchandise-only eligibility, caps, fixed discounts, clamps, and boundaries", async (t) => {

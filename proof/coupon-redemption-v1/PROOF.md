@@ -1,8 +1,8 @@
 # Coupons v1 current verification
 
-This proof covers the source repaired after the first two review rounds of Commerce
-PR #40. Parent adjudication accepted the P1 and P2 fixes; fresh exact-commit
-official review remains pending. Checkout/runtime mounts, payment integration,
+This proof covers the source repaired after the first three review rounds of
+Commerce PR #40. Parent adjudication accepted the P1, P2, and P3 fixes; fresh
+exact-commit official review remains pending. Checkout/runtime mounts, payment integration,
 order creation, and merchant/shopper UI adoption remain pending.
 
 ## Lineage and parent finding adjudication
@@ -47,7 +47,9 @@ order creation, and merchant/shopper UI adoption remain pending.
   returned attempts are deep-frozen clones.
 - Comprehensive acceptance tests covering independent connections,
   concurrent free proof race, retry snapshot preservation, cap CAS, unique index
-  collision, corruption fail-closed, and evaluator rounding/largest remainder.
+  collision, corruption fail-closed, evaluator rounding/largest remainder, a
+  real SQLite 10,001-coupon complete-list regression, and a repeated-cursor
+  fail-closed regression.
 - Browser/admin, checkout, payment, order, and shopper host seams remain
   unmounted/pending.
 
@@ -57,9 +59,9 @@ Using Node 22.23.2 through `mise exec`, the current working tree passed:
 
 - `npm run build`
 - `npm run typecheck`
-- `node --test tests/features/coupons/*.test.mjs`: 18 passed / 0 failed
+- `node --test tests/features/coupons/coupons-v1.test.mjs`: 5 passed / 0 failed
 - `npm run audit:repo`
-- `npm run test:unit`: 233 passed / 0 failed
+- `npm run test:unit`: 235 passed / 0 failed
 
 Raw outputs are retained under
 `.grilltrack/work/coupon-redemption-run/*-free-reconcile.log`. This verification
@@ -68,4 +70,22 @@ mutation, deployment, or merge approval.
 
 ## Second Spark review finding
 
-The comprehensive P3 review of `git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a` found a P2: free failed/cancelled reconciliation could persist a provider session and violate the durable record validator. Accepted and repaired through Cursor Luna Medium ACP. The real SQLite regression failed before the fix; rejection now runs before unknown/terminal replay checks and preserves pending, consumed and released records, counts and revisions. A fresh connection can read and edit the coupon afterward. Sessionless release and durable free consumption remain valid. Fresh exact-commit reviews and CI remain pending.
+The comprehensive P3 review of `git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a`
+found a P2: free failed/cancelled reconciliation could persist a provider
+session and violate the durable record validator. Accepted and repaired through
+the bounded P2 cycle. The real SQLite regression failed before the fix; rejection
+now runs before unknown/terminal replay checks and preserves pending, consumed
+and released records, counts and revisions. A fresh connection can read and
+edit the coupon afterward. Sessionless release and durable free consumption
+remain valid.
+
+The fresh P3 Spark review of `git:7e3739458ad0713c8914b6eb128e11f38efc9e18`
+found a `required_fix`: admin listing stopped after 100 pages despite the
+complete-list contract. Parent accepted that finding. The repaired list
+traverses until `hasMore` is false, retains the nonadvancing-cursor guard, and
+rejects repeated cursor cycles. The real SQLite regression failed before the
+fix at 10,000 records and now returns all 10,001. Fresh exact-commit reviews,
+CI, and merge approval remain pending; this proof makes no independent clean
+review claim.
+
+Parent final coupon verification: `node --test tests/features/coupons/*.test.mjs` passed 20/20 on Node 22.23.2. Raw `parent-listing-focused.log` is preserved.
