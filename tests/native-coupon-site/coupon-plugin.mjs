@@ -25,5 +25,6 @@ const descriptor = dinkusCommerce();
 export default {
   ...descriptor,
   entrypoint: fileURLToPath(import.meta.url),
+  adminEntry: fileURLToPath(new URL("./coupon-admin.mjs", import.meta.url)),
   adminPages: [...descriptor.adminPages, { path: "/coupons", label: "Coupons", icon: "tag" }],
 };

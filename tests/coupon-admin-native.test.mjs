@@ -7,6 +7,9 @@ import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 import { COMMERCE_PLUGIN_ID } from "../dist/index.js";
+import * as nativeAdmin from "../dist/admin/native.js";
+import couponFixture from "./native-coupon-site/coupon-plugin.mjs";
+import * as couponFixtureAdmin from "./native-coupon-site/coupon-admin.mjs";
 import {
   createCoupon,
   createCouponAdminPorts,
@@ -47,6 +50,18 @@ const form = (overrides = {}) => ({
 function routeContext(coupons, input) {
   return { request: { method: "POST" }, input, storage: { coupons } };
 }
+
+test("default native pages omit unmounted coupons while the test fixture composes the named page", () => {
+  assert.equal(nativeAdmin.pages["/coupons"], undefined);
+  assert.equal(typeof nativeAdmin.CouponsPage, "function");
+  assert.equal(couponFixtureAdmin.pages["/coupons"], nativeAdmin.CouponsPage);
+  assert.match(couponFixture.adminEntry, /tests\/native-coupon-site\/coupon-admin\.mjs$/);
+  assert.deepEqual(couponFixture.adminPages.at(-1), {
+    path: "/coupons",
+    label: "Coupons",
+    icon: "tag",
+  });
+});
 
 test("real SQLite controller uses merchant units and preserves rule eligibility and percentage maximum", async (t) => {
   const f = await fixture();

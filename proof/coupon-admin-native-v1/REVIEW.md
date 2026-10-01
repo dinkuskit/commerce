@@ -1,22 +1,22 @@
 # Coupon admin native v1 — current review handoff
 
-The current pinned native browser run passed 1/1 with exit 0, the parent
-independent real-SQLite checks passed 3/3, and the visible usage counts were
-1 consumed, 1 pending, 1 released, and 1 remaining. The owned bounded
-composition proof is verified. The full pinned rail produced 248/248 unit and
-22/22 integration passes but exited 1 at shared sandbox startup because
-Google font metadata/files were unavailable.
+The accepted OpenClaw P2 on prior head `2a9` identified premature default
+`/coupons` exposure in source `sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692`.
+The repaired native browser run `browser-20261001T163500Z` passed 1/1 with
+exit 0, and the repair passed four focused tests, build, and typecheck. The
+prior full CI passed 248 unit tests, 22 integration tests, five standard browser
+checks, and one native local-stock browser check; typecheck, build, and audit
+passed.
 
 This is not a self-independent clean-review claim. Official CI and independent
 review remain pending, and no final merge or production-mount clearance is
-claimed. The current published media and its provenance are in
+claimed. Fresh media and its provenance are in
 [`media-manifest.json`](./media-manifest.json); the prior release is preserved
-in [`media-manifest-historical.json`](./media-manifest-historical.json).
+in [`media-manifest-before-exposure-fix.json`](./media-manifest-before-exposure-fix.json).
 
-The review scope is the exact source set listed in
+The accepted P2 finding was premature default `/coupons` exposure: `src/admin/native.ts` now keeps the page named-only while the fixture-local admin entry explicitly composes it with test-only routes/storage. The review scope is the exact source set listed in
 `source-manifest.sha256`, covering the native mapping, browser-safe contract,
 client page, controller, server routes, focused unit test, browser
 configuration, supported fixture, browser spec, and fixture `.gitignore`.
-Historical `.grilltrack/proof` references and the original immutable media
-release remain unchanged. The full-rail font failure is an environment limit,
-not an owned source or test change.
+Fresh CI and both independent reviews remain pending. No final merge or
+production-mount clearance is claimed.

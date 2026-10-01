@@ -23,9 +23,14 @@ registered `coupons` collection. The production core mount remains pending;
 the fixture proof does not claim that the central descriptor or manifest is
 mounted.
 
+The core-owned native entry intentionally exposes only the already mounted
+`/products` and `/store` pages. `CouponsPage` remains a named export for a
+host that composes the coupon routes and storage in the same fixture or
+production mount.
+
 The composed surface is:
 
-- `pages["/coupons"]` (`CouponsPage`);
+- named `CouponsPage` (`/coupons` when explicitly composed);
 - `menu` `{ path: "/coupons", label: "Coupons", icon: "tag" }`;
 - `createCouponAdminRoutes(resolve)`, where `resolve(ctx)` returns the
   authoritative `coupons` `CouponCollection`;
@@ -75,8 +80,9 @@ and remaining capacity from `createCouponAttemptOwner.getCounts`.
 
 Focused controller/route tests use a neutral real EmDash SQLite storage fixture
 in `tests/coupon-admin-native.test.mjs`. The supported fixture in
-`tests/native-coupon-site/coupon-plugin.mjs` composes the public SDK, page,
-server adapter, and SQLite storage; it does not alter core registration,
+`tests/native-coupon-site/coupon-admin.mjs` explicitly composes the named
+`CouponsPage`; `coupon-plugin.mjs` supplies the test-only route/storage fixture
+and descriptor. The fixture does not alter core registration,
 descriptors, manifests, or package exports. It is a synthetic supported-host
 fixture, not a Registry-installed production mount.
 
@@ -87,21 +93,21 @@ Browser proof command:
 The repair spec requests ignored artifacts under
 `.grilltrack/work/coupon-admin-browser-proof/<run>/`, including empty-before,
 percentage and fixed create, usage, disabled-persisted, final-after, and
-storage-evidence outputs. The current pinned native run passed 1/1; the
-artifact run is `browser-20261001T152159Z`. The current six screenshots and
-synthetic storage evidence are published in the immutable release linked from
-`proof/coupon-admin-native-v1/PROOF.md`; the current root
-`media-manifest.json` records their provenance, redaction review, sizes,
-hashes, and URLs. The prior release remains explicitly preserved in
-`media-manifest-historical.json`. The exact source/test manifest beside the
-proof has identity
-`sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692`,
-includes the fixture hygiene file, and excludes docs, ledgers, and proof
-recursively. The bounded current composition passed acceptance with 248/248
-unit, 22/22 integration, 1/1 native browser, and 3/3 parent real-SQLite
-checks. The full pinned composition rail still exited 1 at shared sandbox
-startup because Google font metadata/files were unavailable; official CI and
-independent review remain pending. The approved composition baseline is
+storage-evidence outputs. The repair browser run is recorded under
+`.grilltrack/work/coupon-admin-browser-proof/browser-20261001T163500Z/` and
+passed 1/1. Its screenshots and SQLite storage evidence are published in the
+fresh immutable
+[commerce-coupon-admin-c5207970164e release](https://github.com/dinkuskit/dinkus-pr-assets/releases/tag/commerce-coupon-admin-c5207970164e).
+The existing immutable media release linked
+from `proof/coupon-admin-native-v1/PROOF.md` remains prior-source proof. The
+exact repaired source/test manifest beside the proof records the new source
+identity `sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b`,
+includes the fixture and focused regression, and excludes docs, ledgers, and
+proof recursively. The repair passed four focused tests, one native browser
+run, build, and typecheck. The prior full CI passed 248 unit tests, 22
+integration tests, five standard browser checks, and one native local-stock
+browser check; typecheck, build, and audit passed. Fresh CI and both independent
+reviews remain pending. The approved composition baseline is
 `5710fc185645ed56098aff5727da03483be067ea`, with plan
 `15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5`.
 This is a supported fixture definition, not Registry publication, hosted
