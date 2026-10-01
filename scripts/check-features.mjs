@@ -128,8 +128,8 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/coupons must resolve to the coupons public entry",
     );
   }
-  if (manifest.devDependencies?.emdash !== "0.41.0") {
-    findings.push("catalog pilot must remain pinned to exact emdash 0.41.0");
+  if (manifest.devDependencies?.emdash !== "1.0.1") {
+    findings.push("catalog pilot must remain pinned to exact emdash 1.0.1");
   }
 
   const sourceFiles = allFiles.filter((path) => path.startsWith("src/") && path.endsWith(".ts"));

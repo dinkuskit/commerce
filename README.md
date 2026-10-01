@@ -22,7 +22,7 @@ Registry-format sandbox artifact is built from `emdash-plugin.jsonc` and
 `src/plugin.ts`; it is not a claim of public Registry installation.
 
 Development and the private package's runtime peer are pinned to exact
-`emdash@0.41.0`. The first feature is the `dinkus.catalog` draft-item creation
+`emdash@1.0.1`. The first feature is the `dinkus.catalog` draft-item creation
 pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
 writes unless the live EmDash storage collection proves unique `commandId`
 and site-wide canonical `skuKey` constraints.
@@ -105,7 +105,7 @@ kernel still accepts future Manage stock transitions. Mounted create/save
 refuse tracking changes unless that local-dev triple is true; creation still
 defaults off. The public `createCatalogItemRoute`, `listCatalogProductsRoute`,
 and `saveCatalogProductPricesRoute` exports stay default-disabled route
-objects. Additive `*WithLocalStock` factories configure a trusted host. Registry/sandbox Block Kit 0.41.0 cannot render a true disabled
+objects. Additive `*WithLocalStock` factories configure a trusted host. Registry/sandbox Block Kit 1.0.1 cannot render a true disabled
 slider, so the Coming-soon notice there is a temporary fallback pending host
 support. Commerce still stores Money.
 Commerce → Settings → Catalog lets the shop owner show out-of-stock products on the
@@ -113,15 +113,12 @@ live site or hide them. The default is to show them. Hide is opt-in and
 applies to clerk Out of stock and Inventory-at-zero. On backorder stays
 visible. Unpriced products stay hidden. Admin still lists every product.
 
-Mounted-site work is currently a private pilot backed by the public
-[`saariuslystoned/emdash`](https://github.com/saariuslystoned/emdash) fork, not
-a stock 0.41.0 compatibility claim. It requires exact commit
-`4c1f21900f3a28e9a270e64111f4979bce74926e`, the public head of
-[EmDash PR #2768](https://github.com/emdash-cms/emdash/pull/2768). Stock
-`emdash@0.41.0` cannot materialize the required indexes through the mounted
-Cloudflare development runtime, so Commerce fails writes closed there. After
-the fix reaches a stable EmDash release, Commerce must repin and rerun the
-SmokyClub mounted-site proof before expanding its compatibility claim.
+Mounted-site work remains a private pilot; this package does not publish
+Commerce or claim a trusted Registry installation. This migration targets the
+official public `emdash@1.0.1` package and verifies native and local
+workerd/sandbox hosts with synthetic SQLite fixtures. A real Registry
+publication/install remains separately authorized. Commerce still fails
+managed-stock writes closed when its configured provider is unavailable.
 
 Public guest checkout prepare/start/status routes are now mounted on both the
 native plugin and the Registry/sandbox descriptor. Commerce mints a
@@ -184,9 +181,9 @@ bin/verify-commerce full
 ```
 
 The quick verifier covers types, unit contracts, feature boundaries, public
-repository hygiene, the exact EmDash API peer, and the exact private-pilot fork
-contract. The full verifier additionally runs cross-process SQLite atomicity
-proof against EmDash's real 0.41.0 storage repository and a two-process local
+repository hygiene, and the official published EmDash 1.0.1 package with its
+recorded npm integrity. The full verifier additionally runs cross-process SQLite atomicity
+proof against EmDash's real 1.0.1 storage repository and a two-process local
 Wrangler/D1 expression-index proof, plus the real workerd + SQLite
 admin/browser flow (`npm run test:sandbox` to run that boundary alone) and the
 opted-in native local-stock browser (`npm run test:sandbox:native-local-stock`)

@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-01T02:51:42+00:00",
-    "domain": "Coupons-v1 independent evaluator/admin and free-order reconciliation",
-    "started_at": "2026-10-01T02:43:56+00:00",
+    "confirmed_at": "2026-10-01T04:33:02+00:00",
+    "domain": "First-release shopper checkout experience",
+    "started_at": "2026-10-01T04:32:57+00:00",
     "status": "confirmed",
-    "summary": "Final bounded repair: one admin-created coupons owner, shared fail-closed record validation, frozen trusted host final totals, strict payment/free reconciliation, evaluator and indexed admin tests; no checkout/runtime/root source or delivery changes."
+    "summary": "Implement only the exact EmDash 1.0.1 compatibility migration: update supported package/tooling pins and host API usage, preserve all existing Commerce contracts and unmounted coupon/fixed-bundle boundaries, retain native and local-stock safety gates, and verify with unit/integration plus native and sandbox renderer evidence. Trusted Registry publication is excluded and will be reported NOT_RUN."
   },
   "decisions": [
     {
@@ -365,10 +365,66 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "note": "EmDash 1.0.1 host renderer and Block Kit compatibility must be reverified without changing the accepted one-Save Commerce contract.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "reopened",
+          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "locked",
+          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json file:src/admin/index.ts file:docs/implementation/emdash-1-0-1-compatibility.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "block-admin-save-001",
-      "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+      "implementation_ref": "file:package.json file:src/admin/index.ts file:docs/implementation/emdash-1-0-1-compatibility.md",
       "question": "Does the clerk open a product from Products and use one Save for Regular, Sale, Manage stock and unmanaged stock status?",
       "rationale": "",
       "reconciliation_sources": [
@@ -430,8 +486,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
-      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+      "updated_at": "2026-10-01T04:43:06+00:00",
+      "verification_ref": "file:proof/emdash-1-0-1-20261001/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -1418,10 +1474,66 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+          "from": "reopened",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+          "from": "locked",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json file:src/admin/index.ts file:proof/emdash-1-0-1-20261001/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-checkbox-001",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "implementation_ref": "file:package.json file:src/admin/index.ts file:proof/emdash-1-0-1-20261001/PROOF.md",
       "question": "After the product exists, can the clerk check or uncheck Manage stock on that product?",
       "rationale": "Bobby confirmed Q1. Woo Inventory is a per-product checkbox after create. Create on main already defaults unmanaged. This slice is flipping it later, not a second create form.",
       "reconciliation_sources": [
@@ -1449,8 +1561,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
-      "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
+      "updated_at": "2026-10-01T04:43:06+00:00",
+      "verification_ref": "file:proof/emdash-1-0-1-20261001/PROOF.md"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -1527,6 +1639,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "dependency manage-stock-checkbox-001 changed: EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-existing-sku-confirm-006",
@@ -1556,9 +1682,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-10-01T04:32:57+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -1636,6 +1762,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "dependency manage-stock-checkbox-001 changed: EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-hide-status-002",
@@ -1665,9 +1805,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-10-01T04:32:57+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -1745,6 +1885,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "dependency manage-stock-checkbox-001 changed: EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-no-price-rewrite-007",
@@ -1774,9 +1928,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-10-01T04:32:57+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -1854,6 +2008,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "dependency manage-stock-checkbox-001 changed: EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-reenable-fresh-005",
@@ -1883,9 +2051,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-10-01T04:32:57+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -1963,6 +2131,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "dependency manage-stock-checkbox-001 changed: EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-same-save-008",
@@ -1992,9 +2174,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-10-01T04:32:57+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -2072,6 +2254,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "dependency manage-stock-checkbox-001 changed: EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-setup-required-003",
@@ -2101,9 +2297,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-10-01T04:32:57+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -2181,6 +2377,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
+          "from": "verified",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "dependency manage-stock-checkbox-001 changed: EmDash 1.0.1 host renderer capability must reverify the accepted disabled/default Manage stock behavior without changing product policy.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
         }
       ],
       "id": "manage-stock-uncheck-restores-004",
@@ -2210,9 +2420,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-09-30T14:43:01+00:00",
+      "updated_at": "2026-10-01T04:32:57+00:00",
       "verification_ref": "file:proof/commerce-integration-qualified-20260930/PROOF.md bounded exported/unmounted composition; Stripe/provider/runtime-mount deferred"
     },
     {
@@ -2631,10 +2841,66 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-01T04:32:57+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
+          "note": "EmDash 1.0.1 route/plugin host compatibility must reverify the accepted guest checkout contract without changing its public mount or capability semantics.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": "file:proof/guest-checkout-mount-20260930/PROOF.md Node22.23.2 unit:202 integration:22(d1-sku-index-flaked-then-3/3-retry) sandbox:5 native-local-stock:1 Stripe:NOT_RUN"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "reopened",
+          "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": "file:proof/guest-checkout-mount-20260930/PROOF.md Node22.23.2 unit:202 integration:22(d1-sku-index-flaked-then-3/3-retry) sandbox:5 native-local-stock:1 Stripe:NOT_RUN"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "locked",
+          "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": "file:proof/guest-checkout-mount-20260930/PROOF.md Node22.23.2 unit:202 integration:22(d1-sku-index-flaked-then-3/3-retry) sandbox:5 native-local-stock:1 Stripe:NOT_RUN"
+        },
+        {
+          "at": "2026-10-01T04:43:06+00:00",
+          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json file:src/plugin.ts file:docs/implementation/emdash-1-0-1-compatibility.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/guest-checkout-mount-20260930/PROOF.md Node22.23.2 unit:202 integration:22(d1-sku-index-flaked-then-3/3-retry) sandbox:5 native-local-stock:1 Stripe:NOT_RUN"
         }
       ],
       "id": "commerce-guest-runtime-mount-001",
-      "implementation_ref": "file:src/features/checkout/;file:src/plugin.ts;file:src/index.ts;file:docs/implementation/guest-checkout-public.md;file:FEATURE_MAP.md",
+      "implementation_ref": "file:package.json file:src/plugin.ts file:docs/implementation/emdash-1-0-1-compatibility.md",
       "question": "Does Commerce own and mount the trusted guest checkout/status contract consumed by Template Store?",
       "rationale": "",
       "repair_required": false,
@@ -2645,8 +2911,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-09-30T21:18:03+00:00",
-      "verification_ref": "file:proof/guest-checkout-mount-20260930/PROOF.md Node22.23.2 unit:202 integration:22(d1-sku-index-flaked-then-3/3-retry) sandbox:5 native-local-stock:1 Stripe:NOT_RUN"
+      "updated_at": "2026-10-01T04:43:06+00:00",
+      "verification_ref": "file:proof/emdash-1-0-1-20261001/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -4118,7 +4384,7 @@
     }
   ],
   "last_activation": {
-    "at": "2026-10-01T02:43:56+00:00",
+    "at": "2026-10-01T04:32:57+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -4158,5 +4424,5 @@
   "status": "active",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-10-01T04:02:47+00:00"
+  "updated_at": "2026-10-01T04:43:06+00:00"
 }

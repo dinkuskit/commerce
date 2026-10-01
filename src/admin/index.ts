@@ -85,7 +85,7 @@ type ProductFields = {
   manageStock: boolean | null;
   stockStatus: CatalogProductPriceForm["stockStatus"];
 };
-// Registry/sandbox Block Kit 0.41.0 ToggleElement has no disabled field and never
+// Registry/sandbox Block Kit 1.0.1 ToggleElement has no disabled field and never
 // forwards disabled to Kumo Switch. Emitting a live toggle would not fulfill the
 // requested disabled slider. This notice is an honest temporary fallback.
 function manageStockNotice(managed: boolean | null): Block {

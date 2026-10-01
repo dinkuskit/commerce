@@ -19,7 +19,7 @@ const emdashPackage = JSON.parse(
 );
 const emdashVersion = emdashPackage.version;
 
-assert.equal(emdashVersion, "0.41.0");
+assert.equal(emdashVersion, "1.0.1");
 
 async function runContenders(databasePath, contenders) {
   const children = contenders.map((input) =>
@@ -62,7 +62,7 @@ async function runContenders(databasePath, contenders) {
   );
 }
 
-test("exact EmDash 0.35 storage fails closed when either declared unique index is not live", async (t) => {
+test("exact EmDash 1.0.1 storage fails closed when either declared unique index is not live", async (t) => {
   for (const activeUniqueField of ["commandId", "skuKey"]) {
     await t.test(`only ${activeUniqueField} is active`, async (t) => {
       const directory = await mkdtemp(join(tmpdir(), "commerce-sqlite-missing-"));
@@ -86,7 +86,7 @@ test("exact EmDash 0.35 storage fails closed when either declared unique index i
   }
 });
 
-test("exact EmDash 0.35 storage persists managed setup intent without local quantity", async (t) => {
+test("exact EmDash 1.0.1 storage persists managed setup intent without local quantity", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "commerce-sqlite-managed-"));
   t.after(() => rm(directory, { force: true, recursive: true }));
   const databasePath = join(directory, "catalog.db");

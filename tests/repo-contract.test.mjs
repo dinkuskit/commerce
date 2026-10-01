@@ -32,18 +32,18 @@ const requiredPublicManifest = {
   },
   files: ["dist", "emdash-plugin.jsonc"],
   peerDependencies: {
-    emdash: "0.41.0",
+    emdash: "1.0.1",
   },
   dinkuskit: {
     emdashCompatibility: {
-      apiPeer: "0.41.0",
+      apiPeer: "1.0.1",
+      nodeEngine: ">=22.16",
+      packageIntegrity: "sha512-tD2JluGSDfRS/NhTG4M+KEcQsTOFvEMbQlIaRpePk9bLizOES1QUKx20LAEAv0Mpfhz6knii87TDrJwNr+NvAA==",
       mountedSitePilot: "private",
       requiredSourceVisibility: "public",
-      requiredSourceRepository: "https://github.com/saariuslystoned/emdash",
-      requiredCommit: "4c1f21900f3a28e9a270e64111f4979bce74926e",
-      upstreamPullRequest: "https://github.com/emdash-cms/emdash/pull/2768",
+      requiredSourceRepository: "https://github.com/emdash-cms/emdash",
       stockReleaseBehavior: "fail-closed",
-      stableReleaseExit: "repin-and-rerun-smokyclub-proof",
+      stableReleaseExit: "repin-and-rerun-compatibility-proof",
     },
   },
 };

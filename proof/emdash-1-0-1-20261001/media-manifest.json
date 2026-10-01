@@ -1,0 +1,32 @@
+{
+  "runtime": "EmDash 1.0.1",
+  "provenance": "Original Playwright captures from synthetic local SQLite native and sandbox fixtures; consumer captures remain at their ignored original paths",
+  "registryPublication": "NOT_RUN",
+  "captures": [
+    {
+      "path": ".tmp/commerce-migration-20261001/consumer/.artifacts/native-products-1.0.1.png",
+      "sha256": "b910c51a2027f9f2e41c58ccc3f896a63f863afb77857583a72f17f9f3bd6b3b",
+      "purpose": "Installed packed-consumer native Products admin: disabled gray Manage stock and Coming soon after pointer/keyboard attempts"
+    },
+    {
+      "path": ".tmp/commerce-migration-20261001/consumer/.artifacts/sandbox-products-blockkit-1.0.1.png",
+      "sha256": "dd748cdb1ee2e46394f608a032bf18044a0d70a6dabcdc07889a6e5e403e81b3",
+      "purpose": "Installed packed-consumer sandbox BlockKit Products admin: Coming-soon notice with no live toggle"
+    },
+    {
+      "path": ".tmp/sandbox-proof/emdash-1-0-1-20261001-default/manage-stock-coming-soon.png",
+      "sha256": "f9205133a5dacf39450dc309dc800dc4e8726aaf375463bb141db862e891be36",
+      "purpose": "Initial/default native and sandbox admin state"
+    },
+    {
+      "path": ".tmp/sandbox-proof/emdash-1-0-1-local-stock/native-local-stock-enabled.png",
+      "sha256": "50d6a03c156f02d04186f7d92c452a95f3414a34814dcd0ca74ebffda2ca08f2",
+      "purpose": "Trusted native local-stock opt-in"
+    },
+    {
+      "path": ".tmp/sandbox-proof/emdash-1-0-1-local-stock/native-local-stock-setup-required.png",
+      "sha256": "cfbf1371170b327527d2814faf85ad55a5911564be805d5fee27441be51a42e1",
+      "purpose": "Trusted opt-in preserves managed setup-required semantics"
+    }
+  ]
+}
