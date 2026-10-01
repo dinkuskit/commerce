@@ -20,6 +20,12 @@ const TABLE = `CREATE TABLE _plugin_storage (
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
   PRIMARY KEY (plugin_id, collection, id)
 )`;
+const createDb = (path) => {
+  const database = new BetterSqlite3(path);
+  database.pragma("journal_mode = WAL");
+  database.pragma("busy_timeout = 5000");
+  return new Kysely({ dialect: new SqliteDialect({ database }) });
+};
 const baseRule = (overrides = {}) => ({
   ruleId: "rule-core-v1", discount: { kind: "fixed", amount: { currency: "USD", minor: "100" } },
   appliesTo: "all-merchandise", selectedProductIds: [], includeSaleItems: true,
@@ -36,7 +42,7 @@ async function fixture({ cap = 2, amount = "100" } = {}) {
   database.exec(TABLE);
   database.exec(`CREATE UNIQUE INDEX coupon_code_uq ON _plugin_storage(plugin_id, collection, json_extract(data, '$.normalizedCode')) WHERE collection = 'coupons'`);
   database.close();
-  const db = new Kysely({ dialect: new SqliteDialect({ database: new BetterSqlite3(path) }) });
+  const db = createDb(path);
   const coupons = new PluginStorageRepository(db, COMMERCE_PLUGIN_ID, "coupons", ["normalizedCode"]);
   const catalog = new PluginStorageRepository(db, COMMERCE_PLUGIN_ID, "catalogItems", []);
   const prices = new PluginStorageRepository(db, COMMERCE_PLUGIN_ID, "catalogPrices", []);
@@ -45,7 +51,7 @@ async function fixture({ cap = 2, amount = "100" } = {}) {
   const admin = createCouponAdmin(coupons);
   const coupon = await admin.create({ code: `CODE-${crypto.randomUUID()}`, globalCap: cap, rule: baseRule({ discount: { kind: "fixed", amount: { currency: "USD", minor: amount } } }) });
   const quote = await evaluateCoupon(coupon, { catalog, prices }, { quoteId: `quote-${crypto.randomUUID()}`, now: "2026-10-01T12:00:00Z", lines: [{ productId: "item", quantity: 1 }] });
-  return { path, db, coupons, coupon, quote, owner: createCouponAttemptOwner(coupons), close: async () => { await db.destroy(); await rm(dir, { recursive: true, force: true }); } };
+  return { path, db, coupons, coupon, quote, admin: createCouponAdmin(coupons), owner: createCouponAttemptOwner(coupons), close: async () => { await db.destroy(); await rm(dir, { recursive: true, force: true }); } };
 }
 const total = (minor) => ({ currency: "USD", minor });
 const reserve = (fix, id, overall = "0") => fix.owner.reserve({
@@ -72,6 +78,84 @@ test("payable attempts require payment proof; free attempts use only strict free
   const proof = { kind: "verified-free-order", attemptId: "free", couponId: fix.coupon.couponId, ruleId: fix.quote.ruleId, ruleVersion: fix.quote.ruleVersion, quoteId: fix.quote.quoteId, orderId: "order-1", receiptId: "receipt-1", overallPayableTotal: total("0") };
   assert.equal((await fix.owner.reconcileFreeOrder({ couponId: fix.coupon.couponId, attemptId: "free", proof })).state, "consumed");
   await assert.rejects(() => fix.owner.reconcileFreeOrder({ couponId: fix.coupon.couponId, attemptId: "free", proof: { ...proof, attemptId: "other" } }), expectCode("TERMINAL_CONFLICT"));
+});
+
+test("free provider sessions are rejected before unknown or terminal replay checks without mutating durable SQLite state", async (t) => {
+  const fix = await fixture({ cap: 10 }); t.after(fix.close);
+  const couponId = fix.coupon.couponId;
+  const freeProof = (attemptId, orderId = `order-${attemptId}`, receiptId = `receipt-${attemptId}`) => ({
+    kind: "verified-free-order",
+    attemptId,
+    couponId,
+    ruleId: fix.quote.ruleId,
+    ruleVersion: fix.quote.ruleVersion,
+    quoteId: fix.quote.quoteId,
+    orderId,
+    receiptId,
+    overallPayableTotal: total("0"),
+  });
+
+  await reserve(fix, "pending-failure", "0");
+  await reserve(fix, "pending-cancel", "0");
+  await reserve(fix, "pending-unknown", "0");
+  const beforePendingCounts = await fix.owner.getCounts(couponId);
+  const beforePendingRevision = (await fix.admin.get(couponId)).revision;
+
+  for (const [attemptId, kind] of [
+    ["pending-failure", "confirmed-failure"],
+    ["pending-cancel", "confirmed-cancel"],
+    ["pending-unknown", "unknown"],
+  ]) {
+    await assert.rejects(
+      () => fix.owner.reconcile(couponId, attemptId, { kind, providerSessionId: `session-${attemptId}` }),
+      expectCode("TERMINAL_CONFLICT"),
+    );
+    assert.equal((await fix.owner.get(couponId, attemptId)).state, "pending");
+  }
+  assert.deepEqual(await fix.owner.getCounts(couponId), beforePendingCounts);
+  assert.equal((await fix.admin.get(couponId)).revision, beforePendingRevision);
+
+  await reserve(fix, "sessionless-failure", "0");
+  await reserve(fix, "sessionless-cancel", "0");
+  await reserve(fix, "sessionless-not-created", "0");
+  assert.equal((await fix.owner.reconcile(couponId, "sessionless-failure", { kind: "confirmed-failure" })).state, "released");
+  assert.equal((await fix.owner.reconcile(couponId, "sessionless-cancel", { kind: "confirmed-cancel" })).state, "released");
+  assert.equal((await fix.owner.reconcile(couponId, "sessionless-not-created", { kind: "verified-not-created" })).state, "released");
+
+  await assert.rejects(
+    () => fix.owner.reconcile(couponId, "sessionless-failure", { kind: "confirmed-failure", providerSessionId: "late-failure" }),
+    expectCode("TERMINAL_CONFLICT"),
+  );
+  await assert.rejects(
+    () => fix.owner.reconcile(couponId, "sessionless-cancel", { kind: "confirmed-cancel", providerSessionId: "late-cancel" }),
+    expectCode("TERMINAL_CONFLICT"),
+  );
+  await assert.rejects(
+    () => fix.owner.reconcile(couponId, "sessionless-not-created", { kind: "verified-not-created", providerSessionId: "late-not-created" }),
+    expectCode("INVALID_INPUT"),
+  );
+
+  await reserve(fix, "consumed", "0");
+  await fix.owner.reconcileFreeOrder({ couponId, attemptId: "consumed", proof: freeProof("consumed") });
+  await assert.rejects(
+    () => fix.owner.reconcile(couponId, "consumed", { kind: "confirmed-cancel", providerSessionId: "late-consumed" }),
+    expectCode("TERMINAL_CONFLICT"),
+  );
+
+  const freshDb = createDb(fix.path);
+  t.after(() => freshDb.destroy());
+  const freshCoupons = new PluginStorageRepository(freshDb, COMMERCE_PLUGIN_ID, "coupons", ["normalizedCode"]);
+  const freshOwner = createCouponAttemptOwner(freshCoupons);
+  const freshPending = await freshOwner.get(couponId, "pending-failure");
+  assert.equal(freshPending.state, "pending");
+  assert.deepEqual(await freshOwner.getCounts(couponId), await fix.owner.getCounts(couponId));
+
+  const freshAdmin = createCouponAdmin(freshCoupons);
+  const durableRevision = (await freshAdmin.get(couponId)).revision;
+  const edited = await freshAdmin.edit(couponId, durableRevision, { globalCap: 11 });
+  assert.equal(edited.revision, durableRevision + 1);
+  assert.equal((await freshOwner.get(couponId, "pending-cancel")).state, "pending");
+  assert.equal((await freshOwner.get(couponId, "consumed")).freeOrder.orderId, "order-consumed");
 });
 
 test("unknown is sticky for pending, released, and consumed; no resurrection", async (t) => {

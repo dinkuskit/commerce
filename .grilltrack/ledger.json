@@ -2835,14 +2835,21 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:35:33+00:00",
           "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:49:55+00:00",
+          "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
+      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:35:33+00:00",
+      "updated_at": "2026-10-01T03:49:55+00:00",
       "verification_ref": "file:proof/coupon-redemption-v1/PROOF.md"
     },
     {
@@ -3194,14 +3201,21 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:35:33+00:00",
           "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:49:55+00:00",
+          "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
+      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:35:33+00:00",
+      "updated_at": "2026-10-01T03:49:55+00:00",
       "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
     },
     {
@@ -3504,10 +3518,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:46:41+00:00",
+          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:48:28+00:00",
+          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:.grilltrack/work/coupon-redemption-run/openclaw-epoch2.txt",
+          "review_result": "findings",
+          "review_source_identity": "git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:48:28+00:00",
+          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
+          "from": "implemented",
+          "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
         }
       ],
       "id": "coupons-v1-cap-fence-001",
-      "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+      "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
       "question": "How do current coupon rules compose with frozen redemption attempts?",
       "rationale": "A new rule version must not reset global capacity or invalidate a still-valid frozen session.",
       "repair_required": false,
@@ -3569,15 +3627,31 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:35:33+00:00",
           "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:.grilltrack/work/coupon-redemption-run/openclaw-epoch2.txt",
+          "result": "findings",
+          "reviewed_at": "2026-10-01T03:46:41+00:00",
+          "source_identity": "git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:49:55+00:00",
+          "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
+      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:35:33+00:00",
-      "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
+      "updated_at": "2026-10-01T03:49:55+00:00",
+      "verification_ref": "file:.grilltrack/work/coupon-redemption-run/focused-free-reconcile.log"
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -3835,10 +3909,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:tests/features/coupons/acceptance.test.mjs"
+        },
+        {
+          "at": "2026-10-01T03:46:41+00:00",
+          "choice": "Add a durable trusted verified-free-order reconciliation requiring Commerce order, receipt, attempt, coupon, rule, and quote identities; consume exactly once without provider session/payment ID, hold unknown completion, reject nonzero or payment-bound free proofs, and never restore after refund.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
+          "to": "needs_reverification",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:48:28+00:00",
+          "choice": "Add a durable trusted verified-free-order reconciliation requiring Commerce order, receipt, attempt, coupon, rule, and quote identities; consume exactly once without provider session/payment ID, hold unknown completion, reject nonzero or payment-bound free proofs, and never restore after refund.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:.grilltrack/work/coupon-redemption-run/openclaw-epoch2.txt",
+          "review_result": "findings",
+          "review_source_identity": "git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a",
+          "to": "implemented",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:48:28+00:00",
+          "choice": "Add a durable trusted verified-free-order reconciliation requiring Commerce order, receipt, attempt, coupon, rule, and quote identities; consume exactly once without provider session/payment ID, hold unknown completion, reject nonzero or payment-bound free proofs, and never restore after refund.",
+          "from": "implemented",
+          "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
         }
       ],
       "id": "coupons-v1-free-reconcile-001",
-      "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+      "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
       "question": "What trusted completion proof may consume a zero-total coupon attempt?",
       "rationale": "Zero payable totals are completed orders, not fake payment sessions; only the checkout/order owner can supply authoritative completion proof.",
       "repair_required": false,
@@ -3891,15 +4009,31 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:35:34+00:00",
           "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:.grilltrack/work/coupon-redemption-run/openclaw-epoch2.txt",
+          "result": "findings",
+          "reviewed_at": "2026-10-01T03:46:41+00:00",
+          "source_identity": "git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:49:55+00:00",
+          "source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
+      "review_source_identity": "sha256:a910f01b5cecfbfe36ab57fa8bb8ef431da17097ccbe7d30406a565788e46d28",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:35:34+00:00",
-      "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+      "updated_at": "2026-10-01T03:49:55+00:00",
+      "verification_ref": "file:.grilltrack/work/coupon-redemption-run/focused-free-reconcile.log"
     }
   ],
   "last_activation": {
@@ -3943,5 +4077,5 @@
   "status": "active",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-10-01T03:35:34+00:00"
+  "updated_at": "2026-10-01T03:49:55+00:00"
 }

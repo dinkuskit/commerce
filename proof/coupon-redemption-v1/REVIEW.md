@@ -11,8 +11,8 @@ Parent accepted both findings, inspected the narrow source repairs and real
 SQLite regressions, and accepted the repaired source for fresh official review.
 Its source identity is the SHA-256 of `source-manifest.sha256`; that manifest
 covers source, tests, exports, feature audit, map, and the adoption contract.
-Using Node 22.23.2 through `mise exec`, current verification passed: 17 focused
-coupon tests, 232 full unit tests, build, typecheck, and repository audit.
+Using Node 22.23.2 through `mise exec`, current verification passed: 18 focused
+coupon tests, 233 full unit tests, build, typecheck, and repository audit.
 Real EmDash SQLite tests cover missing-coupon lookup, missing-attempt lookup,
 present-attempt cloning, corrupt-record fail-closed lookup, independent
 connections, a child-process final-slot race, restart replay, cap edits, code
@@ -27,3 +27,5 @@ module is a trusted unmounted API and does not prove a complete purchase flow.
 Shipping and tax remain outside coupon evaluation. The host supplies the
 final overall total; a qualifying zero-total order consumes through durable
 Commerce order/receipt proof with no fabricated payment identity.
+
+Parent also accepted the second Spark review P2 on `git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a`. The three-line free-session guard precedes unknown and terminal replay. Parent inspected the real SQLite pre-fix failure and 18/233 passing logs; it prevents malformed durable writes while preserving sessionless release and verified free completion. This source is accepted for fresh exact-commit review, without merge authority.

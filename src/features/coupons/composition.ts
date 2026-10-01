@@ -207,6 +207,9 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
       validateReconciliation(reconciliation);
       const record = await update(id, (current) => {
         const item = find(current, aid);
+        if (item.quote.overallPayableTotal.minor === "0" && reconciliation.providerSessionId !== undefined) {
+          throw new CouponRedemptionError("TERMINAL_CONFLICT", "free attempts cannot have a provider session");
+        }
         const mapped = item.providerSessionId;
         if (reconciliation.providerSessionId !== undefined && mapped !== undefined && reconciliation.providerSessionId !== mapped) {
           throw new CouponRedemptionError("TERMINAL_CONFLICT", "provider session identity mismatch");

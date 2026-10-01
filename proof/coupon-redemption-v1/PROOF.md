@@ -1,6 +1,6 @@
 # Coupons v1 current verification
 
-This proof covers the source repaired after the first review of Commerce
+This proof covers the source repaired after the first two review rounds of Commerce
 PR #40. Parent adjudication accepted the P1 and P2 fixes; fresh exact-commit
 official review remains pending. Checkout/runtime mounts, payment integration,
 order creation, and merchant/shopper UI adoption remain pending.
@@ -57,11 +57,15 @@ Using Node 22.23.2 through `mise exec`, the current working tree passed:
 
 - `npm run build`
 - `npm run typecheck`
-- `node --test tests/features/coupons/*.test.mjs`: 17 passed / 0 failed
+- `node --test tests/features/coupons/*.test.mjs`: 18 passed / 0 failed
 - `npm run audit:repo`
-- `npm run test:unit`: 232 passed / 0 failed
+- `npm run test:unit`: 233 passed / 0 failed
 
 Raw outputs are retained under
-`.grilltrack/work/coupon-redemption-run/*-final-p2.log`. This verification
+`.grilltrack/work/coupon-redemption-run/*-free-reconcile.log`. This verification
 does not claim checkout/runtime mounting, a complete purchase flow, provider
 mutation, deployment, or merge approval.
+
+## Second Spark review finding
+
+The comprehensive P3 review of `git:54eb36d9824842aec6a7f80c4cb38ecabf80a84a` found a P2: free failed/cancelled reconciliation could persist a provider session and violate the durable record validator. Accepted and repaired through Cursor Luna Medium ACP. The real SQLite regression failed before the fix; rejection now runs before unknown/terminal replay checks and preserves pending, consumed and released records, counts and revisions. A fresh connection can read and edit the coupon afterward. Sessionless release and durable free consumption remain valid. Fresh exact-commit reviews and CI remain pending.
