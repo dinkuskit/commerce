@@ -1,17 +1,22 @@
 # Coupons v1 current verification
 
-This proof is for the current repaired working tree. It does not claim an
-independent clean review; parent/official review remains pending. No commit,
-push, PR, checkout/runtime mount, payment integration, order writer, or UI
-adoption is included.
+This proof covers the source repaired after the first review of Commerce
+PR #40. Parent adjudication accepted the P1 and P2 fixes; fresh exact-commit
+official review remains pending. Checkout/runtime mounts, payment integration,
+order creation, and merchant/shopper UI adoption remain pending.
 
 ## Lineage and parent finding adjudication
 
-- Following parent review findings on minimum spend policy, the required fix
-  was implemented and verified through the GrillTrack ledger CLI.
+- The historical parent/native review of `git:b4dbe7adb2e7f29edcfd6c50b460c38b1a0cf835`
+  accepted one P1 monotonic-rule finding and one P2 nullable-attempt-get finding.
+- The existing P1 fix remains present and is covered by the monotonic-version
+  regression. The P2 fix makes `get` nullable for absent coupons and attempts,
+  while preserving validation, corruption fail-closed behavior, and frozen
+  returned attempts.
 - Adjudication records `findings` / `required_fix` followed by bounded
-  `implement` and `verify`. No independent clean claim is made; parent/official
-  review remains pending.
+  `implement` and `verify` for the affected redemption decisions. No
+  worker independent clean claim is made; parent accepted the repaired source
+  for fresh official review.
 
 ## Current implementation
 
@@ -37,6 +42,9 @@ adoption is included.
 - Offset-only, calendar-valid dates use epoch comparison; code lookup is
   normalized and paginated.
 - Complete internal arithmetic validation on quotes and stored attempt records.
+- Attempt lookup returns `null` for a missing coupon or valid coupon with no
+  matching attempt; stored corruption still returns `CORRUPTED_RECORD`, and
+  returned attempts are deep-frozen clones.
 - Comprehensive acceptance tests covering independent connections,
   concurrent free proof race, retry snapshot preservation, cap CAS, unique index
   collision, corruption fail-closed, and evaluator rounding/largest remainder.
@@ -45,23 +53,15 @@ adoption is included.
 
 ## Verification commands
 
-The former AGY7cfcdce3 job used Node 22.23.2 through `mise exec`; its raw logs
-may not be present in the current checkout. Local state records the
-minimum-spend findings from that partial handoff, but does not guarantee that
-the supporting logs remain available.
+Using Node 22.23.2 through `mise exec`, the current working tree passed:
 
 - `npm run build`
 - `npm run typecheck`
-- `node --test tests/features/coupons/*.test.mjs`
+- `node --test tests/features/coupons/*.test.mjs`: 17 passed / 0 failed
 - `npm run audit:repo`
-- `npm run test:unit`
+- `npm run test:unit`: 232 passed / 0 failed
 
-This proof is not a claim of a completed AGY7cfcdce3 run: that job timed out
-after a partial handoff. It does not claim checkout/runtime mounting, payment
-integration, order writing, or UI adoption.
-
-Former-job results retained for context: focused coupon tests 15 passed / 0
-failed; full unit suite 230 passed / 0 failed; `npm run build`, `npm run
-typecheck`, and `npm run audit:repo` passed. These figures are not newly
-verified here. No commit, push, PR, dependency, configuration, checkout,
-runtime, or package-root source change was made for this handoff.
+Raw outputs are retained under
+`.grilltrack/work/coupon-redemption-run/*-final-p2.log`. This verification
+does not claim checkout/runtime mounting, a complete purchase flow, provider
+mutation, deployment, or merge approval.

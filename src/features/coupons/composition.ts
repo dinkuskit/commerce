@@ -299,8 +299,12 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
 
     async get(couponId, attemptId) {
       const id = required(couponId, "couponId");
+      const aid = required(attemptId, "attemptId");
       const stored = await collection.get(id);
-      return stored ? deepFreeze(structuredClone(find(storedRecord(stored, id), required(attemptId, "attemptId")))) : null;
+      if (!stored) return null;
+      const record = storedRecord(stored, id);
+      const item = record.attempts.find((candidate) => candidate.attemptId === aid);
+      return item ? deepFreeze(structuredClone(item)) : null;
     },
 
     async getCounts(couponId) {

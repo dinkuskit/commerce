@@ -512,6 +512,107 @@ test("2 Existing attempt identical retry after admin edit/disable/expiry retains
 });
 
 // ---------------------------------------------------------------------------
+// TEST 3: Full returned rule edits force trusted monotonic versions; stale
+//         new attempts reject while original retries retain their quote
+// ---------------------------------------------------------------------------
+test("3 Full returned rule edits force trusted monotonic versions and preserve frozen attempts", async (t) => {
+  const fix = await acceptanceFixture();
+  t.after(fix.close);
+
+  await addProduct(fix, "version-item", "1000");
+  const createdWithFutureVersion = await fix.admin1.create({
+    code: "VERSION-CREATE",
+    globalCap: 5,
+    rule: ruleFixture({ version: 99 }),
+  });
+  assert.equal(createdWithFutureVersion.rule.version, 1);
+
+  const coupon = await fix.admin1.create({
+    code: "VERSION-EDIT",
+    globalCap: 5,
+    rule: ruleFixture({
+      ruleId: "rule-versioned",
+      discount: { kind: "percentage", basisPoints: 2000 },
+      minimumEligibleMerchandise: { currency: "USD", minor: "1000" },
+    }),
+  });
+  const oldQuote = await evaluateCoupon(
+    coupon,
+    { catalog: fix.catalog, prices: fix.prices },
+    {
+      quoteId: "quote-version-old",
+      now: "2026-10-01T12:00:00Z",
+      lines: [{ productId: "version-item", quantity: 1 }],
+    },
+  );
+  assert.equal(oldQuote.ruleVersion, 1);
+  assert.equal(oldQuote.discount.minor, "200");
+
+  const originalAttempt = await fix.owner1.reserve({
+    couponId: coupon.couponId,
+    attemptId: "att-version-original",
+    quote: oldQuote,
+    overallPayableTotal: { currency: "USD", minor: "800" },
+    now: "2026-10-01T12:00:00Z",
+  });
+  assert.equal(originalAttempt.ruleVersion, 1);
+
+  const editedWithOldReturnedRule = await fix.admin1.edit(coupon.couponId, 1, {
+    rule: {
+      ...coupon.rule,
+      version: 1,
+      discount: { kind: "percentage", basisPoints: 5000 },
+      minimumEligibleMerchandise: { currency: "USD", minor: "500" },
+    },
+  });
+  assert.equal(editedWithOldReturnedRule.rule.version, 2);
+  assert.equal(editedWithOldReturnedRule.rule.discount.basisPoints, 5000);
+
+  await assert.rejects(
+    () =>
+      fix.owner1.reserve({
+        couponId: coupon.couponId,
+        attemptId: "att-version-stale-new",
+        quote: oldQuote,
+        overallPayableTotal: { currency: "USD", minor: "800" },
+        now: "2026-10-01T12:00:00Z",
+      }),
+    expectCode("CONFLICTING_ATTEMPT"),
+  );
+
+  const originalRetry = await fix.owner1.reserve({
+    couponId: coupon.couponId,
+    attemptId: "att-version-original",
+    quote: oldQuote,
+    overallPayableTotal: { currency: "USD", minor: "800" },
+    now: "2026-10-01T12:00:00Z",
+  });
+  assert.equal(originalRetry.ruleVersion, 1);
+  assert.equal(originalRetry.quote.discount.minor, "200");
+
+  const freshQuote = await evaluateCoupon(
+    editedWithOldReturnedRule,
+    { catalog: fix.catalog, prices: fix.prices },
+    {
+      quoteId: "quote-version-fresh",
+      now: "2026-10-01T12:00:00Z",
+      lines: [{ productId: "version-item", quantity: 1 }],
+    },
+  );
+  assert.equal(freshQuote.ruleVersion, 2);
+  assert.equal(freshQuote.discount.minor, "500");
+
+  const editedWithFutureReturnedRule = await fix.admin1.edit(coupon.couponId, 2, {
+    rule: {
+      ...editedWithOldReturnedRule.rule,
+      version: 999,
+      discount: { kind: "percentage", basisPoints: 1000 },
+    },
+  });
+  assert.equal(editedWithFutureReturnedRule.rule.version, 3);
+});
+
+// ---------------------------------------------------------------------------
 // TEST 3: Cap edit vs reserve concurrent independent connections actual CAS;
 //         cap shrink below pending+consumed preserves counts remaining 0;
 //         cap increase allows new reserve; fresh connection restart same counts
@@ -840,7 +941,65 @@ test("5 Stored record corruption: missing attempts, invalid state, consumed no p
 });
 
 // ---------------------------------------------------------------------------
-// TEST 6: Evaluator HALFUP total two 1-cent at 25% = 1 cent; deterministic
+// TEST 6: Attempt lookup is nullable for missing coupons/attempts, while
+//         stored attempts remain frozen clones and corruption fails closed
+// ---------------------------------------------------------------------------
+test("6 Attempt get returns null for absent coupon or attempt, clones present attempts, and fails closed on corrupt records", async (t) => {
+  const fix = await acceptanceFixture();
+  t.after(fix.close);
+
+  assert.equal(await fix.owner1.get("missing-coupon", "missing-attempt"), null);
+
+  await addProduct(fix, "get-item", "1000");
+  const coupon = await fix.admin1.create({
+    code: "GET-NULLABLE",
+    globalCap: 5,
+    rule: ruleFixture(),
+  });
+  assert.equal(await fix.owner1.get(coupon.couponId, "missing-attempt"), null);
+
+  const quote = await evaluateCoupon(
+    coupon,
+    { catalog: fix.catalog, prices: fix.prices },
+    {
+      quoteId: "quote-get",
+      now: "2026-10-01T12:00:00Z",
+      lines: [{ productId: "get-item", quantity: 1 }],
+    },
+  );
+  await fix.owner1.reserve({
+    couponId: coupon.couponId,
+    attemptId: "att-get",
+    quote,
+    overallPayableTotal: { currency: "USD", minor: "750" },
+    now: "2026-10-01T12:00:00Z",
+  });
+
+  const present = await fix.owner1.get(coupon.couponId, "att-get");
+  assert.equal(present.attemptId, "att-get");
+  assert.ok(Object.isFrozen(present));
+  assert.equal((await fix.owner1.get(coupon.couponId, "att-get")).quoteId, "quote-get");
+
+  const rawDb = new BetterSqlite3(fix.path);
+  t.after(() => rawDb.close());
+  rawDb
+    .prepare(
+      "UPDATE _plugin_storage SET data = ?, revision = CAST((CAST(revision AS INTEGER) + 1) AS TEXT) WHERE plugin_id = ? AND collection = 'coupons' AND id = ?",
+    )
+    .run(
+      JSON.stringify({ ...coupon, attempts: undefined }),
+      COMMERCE_PLUGIN_ID,
+      coupon.couponId,
+    );
+
+  await assert.rejects(
+    () => fix.owner1.get(coupon.couponId, "absent-after-corruption"),
+    expectCode("CORRUPTED_RECORD"),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// TEST 7: Evaluator HALFUP total two 1-cent at 25% = 1 cent; deterministic
 //         largest remainder allocations sum; sale inclusion true + default false;
 //         minimum fails despite unrelated lines; percent max / fixed clamp;
 //         inclusive start and exclusive end equal instant offset;
@@ -1050,7 +1209,7 @@ test("6 Evaluator half-up total two 1-cent at 25% = 1 cent; deterministic larges
   );
   // Atomic guard check: getCounts remains unchanged, no attempt created
   assert.deepEqual(await fix.owner1.getCounts(couponMin.couponId), minCountsInitial);
-  await assert.rejects(() => fix.owner1.get(couponMin.couponId, "att-stale-below-min"), expectCode("UNKNOWN_ATTEMPT"));
+  assert.equal(await fix.owner1.get(couponMin.couponId, "att-stale-below-min"), null);
 
   // Existing valid retry after changed minimum is still accepted:
   const couponDynamic = await fix.admin1.create({

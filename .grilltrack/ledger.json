@@ -2744,10 +2744,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:35:33+00:00",
+          "choice": "Implement only a reusable trusted-owner reservation core under src/features/coupons. Coupon stable identity owns a global cap across immutable rule versions. Reservations persist before any payable session, keyed by immutable original checkout attempt identity and carrying coupon/rule/quote identity; duplicate reserve is idempotent, conflicting reuse fails closed. CAS coordinates concurrent processes and prevents last-slot oversubscription; pending and consumed count toward capacity. Verified success consumes once; confirmed failure/cancel/not-created releases only after authoritative provider reconciliation; unknown outcome never releases based on elapsed time. Terminal attempts stay fenced; release cannot re-reserve a frozen attempt; duplicate/stale/contradictory events cannot double transition; provider session id may attach once immutably. Refund never restores consumed capacity. Expose only trusted-owner ports, with no browser route accepting cap/outcome/amount. Cap is an internal trusted rule/owner snapshot; no production host mount claim. Public handoff context: https://github.com/dinkuskit/coupons/blob/3b6e3fc20ee6d8af61df50f662058e6dfcd0bbda/docs/basic-v1-handoff.md",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/index.ts; file:tests/features/coupons/redemption-core.test.mjs; file:tests/features/coupons/redemption-process-race.test.mjs",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:35:33+00:00",
+          "choice": "Implement only a reusable trusted-owner reservation core under src/features/coupons. Coupon stable identity owns a global cap across immutable rule versions. Reservations persist before any payable session, keyed by immutable original checkout attempt identity and carrying coupon/rule/quote identity; duplicate reserve is idempotent, conflicting reuse fails closed. CAS coordinates concurrent processes and prevents last-slot oversubscription; pending and consumed count toward capacity. Verified success consumes once; confirmed failure/cancel/not-created releases only after authoritative provider reconciliation; unknown outcome never releases based on elapsed time. Terminal attempts stay fenced; release cannot re-reserve a frozen attempt; duplicate/stale/contradictory events cannot double transition; provider session id may attach once immutably. Refund never restores consumed capacity. Expose only trusted-owner ports, with no browser route accepting cap/outcome/amount. Cap is an internal trusted rule/owner snapshot; no production host mount claim. Public handoff context: https://github.com/dinkuskit/coupons/blob/3b6e3fc20ee6d8af61df50f662058e6dfcd0bbda/docs/basic-v1-handoff.md",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/coupons/index.ts; file:tests/features/coupons/redemption-core.test.mjs; file:tests/features/coupons/redemption-process-race.test.mjs",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "git:b4dbe7adb2e7f29edcfd6c50b460c38b1a0cf835",
+          "to": "implemented",
+          "verification_ref": "file:proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:35:33+00:00",
+          "choice": "Implement only a reusable trusted-owner reservation core under src/features/coupons. Coupon stable identity owns a global cap across immutable rule versions. Reservations persist before any payable session, keyed by immutable original checkout attempt identity and carrying coupon/rule/quote identity; duplicate reserve is idempotent, conflicting reuse fails closed. CAS coordinates concurrent processes and prevents last-slot oversubscription; pending and consumed count toward capacity. Verified success consumes once; confirmed failure/cancel/not-created releases only after authoritative provider reconciliation; unknown outcome never releases based on elapsed time. Terminal attempts stay fenced; release cannot re-reserve a frozen attempt; duplicate/stale/contradictory events cannot double transition; provider session id may attach once immutably. Refund never restores consumed capacity. Expose only trusted-owner ports, with no browser route accepting cap/outcome/amount. Cap is an internal trusted rule/owner snapshot; no production host mount claim. Public handoff context: https://github.com/dinkuskit/coupons/blob/3b6e3fc20ee6d8af61df50f662058e6dfcd0bbda/docs/basic-v1-handoff.md",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/coupon-redemption-v1/PROOF.md"
         }
       ],
       "id": "coupons-redemption-core-001",
-      "implementation_ref": "file:src/features/coupons/index.ts; file:tests/features/coupons/redemption-core.test.mjs; file:tests/features/coupons/redemption-process-race.test.mjs",
+      "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs",
       "question": "What durable redemption lifecycle is authorized for the independent Commerce Coupons-v1 core?",
       "rationale": "Human explicitly authorized the independent engine slice while checkout coordination proceeds; lifecycle invariants are settled for this bounded build, while money/code/date choices remain pending.",
       "repair_required": false,
@@ -2775,14 +2819,30 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:19:28+00:00",
           "source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-01T03:35:33+00:00",
+          "source_identity": "git:b4dbe7adb2e7f29edcfd6c50b460c38b1a0cf835"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:35:33+00:00",
+          "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a",
+      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:19:28+00:00",
+      "updated_at": "2026-10-01T03:35:33+00:00",
       "verification_ref": "file:proof/coupon-redemption-v1/PROOF.md"
     },
     {
@@ -3025,10 +3085,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:tests/features/coupons/acceptance.test.mjs"
+        },
+        {
+          "at": "2026-10-01T03:27:50+00:00",
+          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a",
+          "to": "needs_reverification",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:33:08+00:00",
+          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "git:b4dbe7adb2e7f29edcfd6c50b460c38b1a0cf835",
+          "to": "implemented",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:33:13+00:00",
+          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
         }
       ],
       "id": "coupons-v1-independent-001",
-      "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+      "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
       "question": "What authoritative coupon evaluator/admin boundary is confirmed for this slice?",
       "rationale": "The checkout owner retains runtime and mounts; source authority must remain server-side and adoption-ready.",
       "repair_required": false,
@@ -3074,15 +3178,31 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:19:28+00:00",
           "source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-01T03:27:50+00:00",
+          "source_identity": "git:b4dbe7adb2e7f29edcfd6c50b460c38b1a0cf835"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:35:33+00:00",
+          "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a",
+      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:19:28+00:00",
-      "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+      "updated_at": "2026-10-01T03:35:33+00:00",
+      "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -3340,10 +3460,54 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:tests/features/coupons/acceptance.test.mjs"
+        },
+        {
+          "at": "2026-10-01T03:27:50+00:00",
+          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a",
+          "to": "needs_reverification",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:33:08+00:00",
+          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "git:b4dbe7adb2e7f29edcfd6c50b460c38b1a0cf835",
+          "to": "implemented",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+        },
+        {
+          "at": "2026-10-01T03:33:13+00:00",
+          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
         }
       ],
       "id": "coupons-v1-cap-fence-001",
-      "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/coupons/composition.ts file:tests/features/coupons/acceptance.test.mjs",
+      "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
       "question": "How do current coupon rules compose with frozen redemption attempts?",
       "rationale": "A new rule version must not reset global capacity or invalidate a still-valid frozen session.",
       "repair_required": false,
@@ -3389,15 +3553,31 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:19:28+00:00",
           "source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-01T03:27:50+00:00",
+          "source_identity": "git:b4dbe7adb2e7f29edcfd6c50b460c38b1a0cf835"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:35:33+00:00",
+          "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a",
+      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:19:28+00:00",
-      "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
+      "updated_at": "2026-10-01T03:35:33+00:00",
+      "verification_ref": ".grilltrack/work/coupon-redemption-run/build-final-p2.log,.grilltrack/work/coupon-redemption-run/typecheck-final-p2.log,.grilltrack/work/coupon-redemption-run/audit-final-p2.log,.grilltrack/work/coupon-redemption-run/focused-final-p2.log,.grilltrack/work/coupon-redemption-run/unit-final-p2.log,proof/coupon-redemption-v1/PROOF.md"
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -3704,14 +3884,21 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T03:19:28+00:00",
           "source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-redemption-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T03:35:34+00:00",
+          "source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f"
         }
       ],
       "review_ref": "file:proof/coupon-redemption-v1/REVIEW.md",
       "review_result": "clean",
-      "review_source_identity": "sha256:29727ff392dd524bf2142998e139723d1d4182ea29ce96417344cdd9de4c720a",
+      "review_source_identity": "sha256:3c132fb54115c551c5ce74631bf37f6f63f79bcc0ee8e3c1d71235516ed6ad5f",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T03:19:28+00:00",
+      "updated_at": "2026-10-01T03:35:34+00:00",
       "verification_ref": "proof/coupon-redemption-v1/PROOF.md"
     }
   ],
@@ -3756,5 +3943,5 @@
   "status": "active",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-10-01T03:19:28+00:00"
+  "updated_at": "2026-10-01T03:35:34+00:00"
 }

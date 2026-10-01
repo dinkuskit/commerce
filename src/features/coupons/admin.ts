@@ -125,7 +125,6 @@ export function normalizeCouponRule(value: unknown, version: number = 1): Coupon
   }
   const input = value as Record<string, unknown>;
   safeInteger(version, "version", 1);
-  const targetVersion = input.version !== undefined ? safeInteger(input.version, "rule.version", 1) : version;
 
   const appliesTo = input.appliesTo;
   if (appliesTo !== "all-merchandise" && appliesTo !== "selected-products") {
@@ -149,7 +148,7 @@ export function normalizeCouponRule(value: unknown, version: number = 1): Coupon
   const minimumEligibleMerchandise = money(input.minimumEligibleMerchandise, "minimumEligibleMerchandise");
   return deepFreeze({
     ruleId: nonEmpty(input.ruleId ?? crypto.randomUUID(), "ruleId"),
-    version: targetVersion,
+    version,
     discount: discount(input.discount),
     appliesTo,
     selectedProductIds: Object.freeze([...new Set(selected.map((id) => id.trim()))]),
