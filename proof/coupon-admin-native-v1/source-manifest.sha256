@@ -7,5 +7,6 @@ c2119d2298e2f14b77525229cb442264785674f010f3a6ac79baafa992a775c9  src/admin/coup
 3fb5617139ea6f84d277eb816ee14a2cc427183c71d590aaa1df67f0193a3cf2  tests/coupon-native.playwright.config.mjs
 4967b7bc09868653c316b595d7611ea8c4ecd81ad73918dc882d692a17d61880  tests/native-coupon-site/astro.config.mjs
 740e9d741919bb036c2b8e79564d2245eeb22e6e8172d44dbb5d178a90b18e90  tests/native-coupon-site/coupon-plugin.mjs
+717b9229bcc7d159b3adda994d5ef79b14f033fa615772ce2f31e93ffa1d3d85  tests/native-coupon-site/.gitignore
 2f8d080c8b9cb815b1368ad03d52e9f7e735b8d46427e8faa6f403427e002abd  tests/native-coupon-site/src/pages/index.astro
 0205f9e5684e33c5e3325c6c8cabea3f7466e9eb1cfb9cb4fa9626b3b3ca6fae  tests/sandbox/coupon-native.spec.mjs

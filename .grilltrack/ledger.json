@@ -2216,6 +2216,20 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
+        },
+        {
+          "at": "2026-10-01T15:29:17+00:00",
+          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "coupons-admin-native-v1-001",
@@ -2263,15 +2277,22 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T11:49:53+00:00",
           "source_identity": "sha256:1c026ebbb5b65d46b2b898d992b3d1af47c698430f9c4860d4098a0769c52445"
+        },
+        {
+          "classifications": [],
+          "ref": "file:proof/coupon-admin-native-v1/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-01T15:37:02+00:00",
+          "source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692"
         }
       ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "needs_reverification",
+      "review_ref": "file:proof/coupon-admin-native-v1/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-01T11:49:53+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-01T15:37:02+00:00",
+      "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
     },
     {
       "baseline_ref": null,
@@ -5292,5 +5313,5 @@
   "status": "active",
   "title": "Coupon admin and accepted TEST checkout integration",
   "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d",
-  "updated_at": "2026-10-01T11:49:53+00:00"
+  "updated_at": "2026-10-01T15:37:02+00:00"
 }

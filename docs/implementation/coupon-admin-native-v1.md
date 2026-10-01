@@ -87,15 +87,22 @@ Browser proof command:
 The repair spec requests ignored artifacts under
 `.grilltrack/work/coupon-admin-browser-proof/<run>/`, including empty-before,
 percentage and fixed create, usage, disabled-persisted, final-after, and
-storage-evidence outputs. The final pinned run passed 1/1 using the supported
-503 parser fallback (`Could not load coupons: Service Unavailable`); the
-artifact run is `1790855042182`. The six screenshots and synthetic storage
-evidence are published in the immutable media release linked from
-`proof/coupon-admin-native-v1/PROOF.md`; its root `media-manifest.json`
-records provenance, redaction review, sizes, hashes, and URLs. The exact
-source/test manifest beside the proof has identity
-`sha256:1c026ebbb5b65d46b2b898d992b3d1af47c698430f9c4860d4098a0769c52445`.
-The original base `d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca` and fetched
-`main` `5710fc185645ed56098aff5727da03483be067ea` have drift requiring
-same-repository canonical lineage integration. This is a supported fixture
-definition, not Registry publication or the pending serial production mount.
+storage-evidence outputs. The current pinned native run passed 1/1; the
+artifact run is `browser-20261001T152159Z`. The current six screenshots and
+synthetic storage evidence are published in the immutable release linked from
+`proof/coupon-admin-native-v1/PROOF.md`; the current root
+`media-manifest.json` records their provenance, redaction review, sizes,
+hashes, and URLs. The prior release remains explicitly preserved in
+`media-manifest-historical.json`. The exact source/test manifest beside the
+proof has identity
+`sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692`,
+includes the fixture hygiene file, and excludes docs, ledgers, and proof
+recursively. The bounded current composition passed acceptance with 248/248
+unit, 22/22 integration, 1/1 native browser, and 3/3 parent real-SQLite
+checks. The full pinned composition rail still exited 1 at shared sandbox
+startup because Google font metadata/files were unavailable; official CI and
+independent review remain pending. The approved composition baseline is
+`5710fc185645ed56098aff5727da03483be067ea`, with plan
+`15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5`.
+This is a supported fixture definition, not Registry publication, hosted
+feature merge, deployment, or the pending serial production mount.

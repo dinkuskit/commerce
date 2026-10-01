@@ -1,53 +1,55 @@
 {
   "schema": "dinkuskit-proof-media-v1",
   "source_repository": "dinkuskit/commerce",
-  "source_identity": "sha256:1c026ebbb5b65d46b2b898d992b3d1af47c698430f9c4860d4098a0769c52445",
+  "source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692",
   "source_manifest": "proof/coupon-admin-native-v1/source-manifest.sha256",
-  "fixture": "official EmDash 1.0.1 native host with neutral synthetic SQLite state; not Registry installation",
+  "composition_base": "5710fc185645ed56098aff5727da03483be067ea",
+  "approved_lineage_plan": "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
+  "fixture": "official EmDash1.0.1 native host with neutral synthetic SQLite; not Registry installation",
   "redaction": "reviewed; no sensitive data present",
-  "run": "1790855042182",
+  "run": "browser-20261001T152159Z",
   "assets": [
     {
       "name": "coupon-empty-before.png",
       "bytes": 91732,
       "sha256": "8d9816b683bd5314919c55fa1602f07767f233ff069dbc35d4946469c19c7dbd",
-      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-1c026ebbb5b6/coupon-empty-before.png"
+      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-16b1e96d31fa/coupon-empty-before.png"
     },
     {
       "name": "coupon-created-percent.png",
       "bytes": 109473,
       "sha256": "dcaf3c0449ffff4f20e7f35bd24a99fc1bd99e39f04881786b03f7a812fbb28b",
-      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-1c026ebbb5b6/coupon-created-percent.png"
+      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-16b1e96d31fa/coupon-created-percent.png"
     },
     {
       "name": "coupon-created-fixed.png",
       "bytes": 111162,
       "sha256": "e07cffb30db22560118c5e9709c68169ea82c5d9442e43020be52ad81d81d179",
-      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-1c026ebbb5b6/coupon-created-fixed.png"
+      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-16b1e96d31fa/coupon-created-fixed.png"
     },
     {
       "name": "coupon-usage-real-attempts.png",
       "bytes": 116037,
       "sha256": "5ad5b75f03fe3fffc77a1206a22d82b4077fc61609f82f1fcaaf5a39b76bb924",
-      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-1c026ebbb5b6/coupon-usage-real-attempts.png"
+      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-16b1e96d31fa/coupon-usage-real-attempts.png"
     },
     {
       "name": "coupon-disabled-persisted.png",
       "bytes": 114419,
       "sha256": "8f5b2d629e5b86d5f0f0392ac7bc3e76d53d916d52df47f2847ac92e36dab4f7",
-      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-1c026ebbb5b6/coupon-disabled-persisted.png"
+      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-16b1e96d31fa/coupon-disabled-persisted.png"
     },
     {
       "name": "coupon-final-after.png",
       "bytes": 117916,
       "sha256": "0f807dbdadc8119127eaaba221f133e84f3a9c0a2af1f96218e15e30f54bc858",
-      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-1c026ebbb5b6/coupon-final-after.png"
+      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-16b1e96d31fa/coupon-final-after.png"
     },
     {
       "name": "coupon-storage-evidence.json",
       "bytes": 515,
-      "sha256": "88a3c9ad411332c5ffc73151021d8312fa34c8ddf74da47d1e8ad5e11b81c7a1",
-      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-1c026ebbb5b6/coupon-storage-evidence.json"
+      "sha256": "a950eee22b32d1e472d88b21eac1abaca1a2aec2d9b0cfa24061dd5267e6f336",
+      "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-coupon-admin-16b1e96d31fa/coupon-storage-evidence.json"
     }
   ]
 }
