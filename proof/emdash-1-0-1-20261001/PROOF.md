@@ -122,10 +122,10 @@ and 20123. It proved one minted capability, `PAYMENTS_UNAVAILABLE` on start,
 zero cart/inventory writes, and `UNAVAILABLE` with no mint when trusted site
 configuration was missing.
 
-`source-manifest.sha256` contains 387 SHA-256 entries covering all tracked
-files and nonignored new files, excluding only this proof directory's metadata
-and consumer evidence, its media manifest, and the manifest itself to avoid
-circular hashes. The original 25 history prefixes remain preserved.
+`source-manifest.sha256` contains 387 SHA-256 entries covering the existing
+tracked and nonignored source inventory, excluding only this proof directory
+to avoid circular metadata/evidence coverage. The original 25 history
+prefixes remain preserved.
 
 ## Parent checkout results
 
@@ -134,9 +134,21 @@ guest-storage audit, all 25 history-prefix checks, and selected visible
 inspection. The parent also verified that all 243 package files in the packed
 tarball match the current root and recorded tarball SHA-256
 `f5f7ef5d4f963565dec377c8cf61bf91d22bfba6441999e91bda4f842a8d7164`.
-The 387-entry source inventory is `d4952c58bcc0c7c52344199b629a982e4f2af3fbea13acf5aa7c81e857a943d7`
-and covers all source, including new docs, excluding only proof metadata.
+The 387-entry source inventory is
+`f7e0bdb8786e495ced325665b14c1a3debe6901d8577ea40ef8853c68eaa1fc7` and
+covers all source, including the repaired docs, ledger, and event log, while
+excluding only this proof directory.
 No functional code or test changed after those parent checks.
+
+## Native review repair
+
+The two confirmed Commerce PR41 native ClawSweeper findings were repaired
+without runtime or API changes. GrillTrack focus was restored through the
+installed CLI using the exact existing EmDash 1.0.1 migration summary, and
+the guest-checkout handoff now describes the verified EmDash 1.0.1 host
+behavior for declared request headers, cold-start site context, and public
+raw responses. This is documentation and lineage repair only; no browser
+rerun was performed.
 
 Orders → Make remains the next-slice queue item only. No Commerce or shipping
 implementation was added. Trusted Registry installation/publication and the

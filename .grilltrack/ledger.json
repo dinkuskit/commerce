@@ -4,9 +4,9 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-01T04:33:02+00:00",
-    "domain": "First-release shopper checkout experience",
-    "started_at": "2026-10-01T04:32:57+00:00",
+    "confirmed_at": "2026-10-01T05:45:52+00:00",
+    "domain": "EmDash 1.0.1 compatibility migration and existing Commerce contract reverification",
+    "started_at": "2026-10-01T05:45:52+00:00",
     "status": "confirmed",
     "summary": "Implement only the exact EmDash 1.0.1 compatibility migration: update supported package/tooling pins and host API usage, preserve all existing Commerce contracts and unmounted coupon/fixed-bundle boundaries, retain native and local-stock safety gates, and verify with unit/integration plus native and sandbox renderer evidence. Trusted Registry publication is excluded and will be reported NOT_RUN."
   },
@@ -4424,5 +4424,5 @@
   "status": "active",
   "title": "Qualified native, sandbox and checkout integration",
   "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
-  "updated_at": "2026-10-01T04:43:06+00:00"
+  "updated_at": "2026-10-01T05:45:52+00:00"
 }
