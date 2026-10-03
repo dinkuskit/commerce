@@ -1,0 +1,5 @@
+Command: node --test --test-name-pattern='trusted|wake reconciliation|paid wake|failed association|association storage|bounded overflow' tests/features/checkout/test-payments-reconciliation.test.mjs
+Result: exit 0
+
+5 cap/reconciliation tests selected by the pattern passed, including the
+four-endpoint overflow matrix and canonical retained-wake safety assertions.
