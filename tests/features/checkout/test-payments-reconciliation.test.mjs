@@ -38,12 +38,10 @@ const CONFIG = {
 };
 
 function response(value, ok = true) {
-  return {
-    ok,
-    async json() {
-      return value;
-    },
-  };
+  return new Response(JSON.stringify(value), {
+    status: ok ? 200 : 500,
+    headers: { "content-type": "application/json" },
+  });
 }
 
 test("trusted TEST adapter pins identity, auth, endpoints, and frozen request body", async () => {
@@ -83,6 +81,192 @@ test("trusted TEST adapter pins identity, auth, endpoints, and frozen request bo
   assert.deepEqual(JSON.parse(calls[1].init.body), original);
   assert.equal(calls[1].init.headers.authorization, "Bearer credential-is-resolved-lazily");
   assert.equal(calls[1].init.headers["x-dinkus-site"], CONFIG.siteId);
+});
+
+function streamedResponse(chunks, headers = {}, hooks = {}) {
+  let index = 0;
+  return new Response(new ReadableStream({
+    pull(controller) {
+      if (index < chunks.length) controller.enqueue(chunks[index++]);
+      else controller.close();
+    },
+    cancel(reason) {
+      hooks.cancel?.(reason);
+    },
+  }), { headers });
+}
+
+function bindingJson(binding = CONFIG.bindingRef) {
+  return JSON.stringify({
+    bindingRef: binding,
+    providerId: "stripe",
+    stripeAccountId: CONFIG.stripeAccountId,
+    mode: "test",
+    ready: true,
+  });
+}
+
+function requestForCapTests() {
+  return {
+    attemptId: "attempt-cap",
+    bindingRef: CONFIG.bindingRef,
+    lines: [],
+    total: { currency: "USD", minor: "1" },
+    paymentWindowSeconds: 1800,
+    paymentMethods: ["card"],
+  };
+}
+
+test("finite oversized binding rejects before reaching session transport", async () => {
+  const calls = [];
+  const payload = JSON.stringify({ ...JSON.parse(bindingJson()), padding: "x".repeat(1024 * 1024) });
+  assert.ok(new TextEncoder().encode(payload).byteLength > 1024 * 1024);
+  const port = createTrustedTestPaymentPort({
+    ...CONFIG,
+    credentialResolver: async () => "synthetic-test-credential",
+    fetch: async (url) => {
+      calls.push(new URL(url).pathname);
+      return calls.length === 1
+        ? new Response(payload, { headers: { "content-length": "12" } })
+        : response({ outcome: "unknown" });
+    },
+  });
+  await assert.rejects(() => port.ensureSession(requestForCapTests()), /Malformed Payments response/);
+  assert.deepEqual(calls, ["/v1/checkout-binding"]);
+});
+
+test("trusted TEST adapter bounds every binding and checkout response by actual bytes", async () => {
+  const calls = [];
+  const port = createTrustedTestPaymentPort({
+    ...CONFIG,
+    credentialResolver: async () => "credential",
+    fetch: async (url) => {
+      calls.push(url);
+      return streamedResponse([
+        new TextEncoder().encode('{"bindingRef":"binding-test","providerId":"stripe","stripeAccountId":"acct_test","mode":"test","ready":true}'),
+      ]);
+    },
+  });
+  const request = requestForCapTests();
+  await assert.rejects(() => port.ensureSession(request), /Malformed Payments outcome/);
+  assert.deepEqual(calls, [
+    "https://payments.example.test/v1/checkout-binding?bindingRef=binding-test",
+    "https://payments.example.test/v1/checkout/session",
+  ]);
+});
+
+test("trusted TEST adapter accepts the exact finite byte bound and handles UTF-8 split across chunks", async () => {
+  const fixed = {
+    bindingRef: CONFIG.bindingRef,
+    providerId: "stripe",
+    stripeAccountId: CONFIG.stripeAccountId,
+    mode: "test",
+    ready: true,
+    note: "",
+  };
+  const fixedBytes = new TextEncoder().encode(JSON.stringify(fixed)).byteLength;
+  const payload = JSON.stringify({ ...fixed, note: `é${"x".repeat(131072 - fixedBytes - 2)}` });
+  const encoded = new TextEncoder().encode(payload);
+  assert.equal(encoded.byteLength, 131072);
+  const split = encoded.indexOf(0xc3) + 1;
+  const calls = [];
+  const port = createTrustedTestPaymentPort({
+    ...CONFIG,
+    credentialResolver: async () => "credential",
+    fetch: async (url) => {
+      calls.push(url);
+      return url.endsWith("/checkout-binding?bindingRef=binding-test")
+        ? streamedResponse([encoded.slice(0, split), encoded.slice(split)])
+        : response({ outcome: "open", attemptId: "attempt-cap", total: { currency: "USD", minor: "1" } });
+    },
+  });
+  const result = await port.ensureSession(requestForCapTests());
+  assert.equal(result.outcome, "open");
+  assert.deepEqual(calls, [
+    "https://payments.example.test/v1/checkout-binding?bindingRef=binding-test",
+    "https://payments.example.test/v1/checkout/session",
+  ]);
+});
+
+test("trusted TEST adapter rejects missing, malformed, unreadable, and non-byte response bodies", async () => {
+  const bodies = [
+    () => new Response(null),
+    () => streamedResponse([new Uint8Array([0xc3, 0x28])]),
+    () => new Response(new ReadableStream({
+      start(controller) { controller.error(new Error("unreadable")); },
+    })),
+    () => ({
+      ok: true,
+      body: { getReader() { throw new Error("unsupported"); } },
+    }),
+  ];
+  for (const makeResponse of bodies) {
+    const port = createTrustedTestPaymentPort({
+      ...CONFIG,
+      credentialResolver: async () => "credential",
+      fetch: async () => makeResponse(),
+    });
+    await assert.rejects(() => port.ensureSession(requestForCapTests()), /Malformed Payments response/);
+  }
+});
+
+test("oversized responses are rejected before session or lookup and ignore misleading Content-Length", async () => {
+  const oversized = (value, cancel) => {
+    const bytes = new TextEncoder().encode(`${" ".repeat(131073)}${JSON.stringify(value)}`);
+    let index = 0;
+    return new Response(new ReadableStream({
+      pull(controller) {
+        if (index < 2) controller.enqueue(index++ === 0 ? bytes.slice(0, 17) : bytes.slice(17));
+      },
+      cancel,
+    }), { headers: { "content-length": "1" } });
+  };
+  const binding = () => response({
+    bindingRef: CONFIG.bindingRef,
+    providerId: "stripe",
+    stripeAccountId: CONFIG.stripeAccountId,
+    mode: "test",
+    ready: true,
+  });
+  for (const target of [
+    "/v1/checkout-binding",
+    "/v1/existing-binding",
+    "/v1/checkout/session",
+    "/v1/checkout/lookup",
+  ]) {
+    const calls = [];
+    let delivered;
+    let canceled = false;
+    const port = createTrustedTestPaymentPort({
+      ...CONFIG,
+      credentialResolver: async () => "credential",
+      fetch: async (url) => {
+        calls.push(url);
+        const endpoint = new URL(url).pathname;
+        if (endpoint === target) {
+          delivered = oversized(endpoint.includes("binding")
+            ? JSON.parse(bindingJson())
+            : { outcome: "open" }, () => { canceled = true; });
+          return delivered;
+        }
+        if (endpoint === "/v1/checkout-binding" || endpoint === "/v1/existing-binding") return binding();
+        return response({ outcome: "open", attemptId: "attempt-cap", total: { currency: "USD", minor: "1" } });
+      },
+    });
+    const operation = target === "/v1/existing-binding" || target === "/v1/checkout/lookup"
+      ? () => port.lookup(requestForCapTests())
+      : () => port.ensureSession(requestForCapTests());
+    await assert.rejects(operation, /Malformed Payments response/);
+    assert.equal(canceled, true);
+    assert.equal(delivered.body.locked, false);
+    assert.equal(calls.some((url) => new URL(url).pathname === target), true);
+    if (target === "/v1/checkout-binding") {
+      assert.equal(calls.includes("https://payments.example.test/v1/checkout/session"), false);
+    }
+    if (target === "/v1/existing-binding") {
+      assert.equal(calls.includes("https://payments.example.test/v1/checkout/lookup"), false);
+    }
+  }
 });
 
 test("trusted TEST adapter denies wrong mode/account and preserves lookup create separation", async () => {
@@ -344,6 +528,59 @@ test("association storage rejects malformed and stored-key-mismatched records", 
   assert.equal(await port.get("attempt-1"), null);
   assert.equal(await port.claim({ recordKind: "checkout-payment-association", attemptId: "attempt-1", cartId: "cart-1", bindingRef: "binding-1" }), false);
   assert.equal(await port.claim({ recordKind: "checkout-payment-association", attemptId: "attempt-2", cartId: "", bindingRef: "binding-1" }), false);
+});
+
+test("bounded overflow stays unknown in canonical reconciliation without order, release, or acknowledgement", async () => {
+  let record = null;
+  let version = 0;
+  const store = {
+    async read() {
+      return record ? { version: String(version), record: structuredClone(record) } : null;
+    },
+    async compareAndSet(_cartId, expected, value) {
+      if ((record ? String(version) : null) !== expected) return false;
+      record = structuredClone(value);
+      version++;
+      return true;
+    },
+  };
+  const f = fixture(store, true);
+  const bindingRef = "stripe-test-binding";
+  const overflow = () => new Response(`${" ".repeat(131073)}{}`);
+  f.execution.payments = createTrustedTestPaymentPort({
+    ...CONFIG,
+    bindingRef,
+    credentialResolver: async () => "credential",
+    fetch: async (url) => {
+      const endpoint = new URL(url).pathname;
+      if (endpoint === "/v1/checkout-binding") {
+        return response({ bindingRef, providerId: "stripe", stripeAccountId: CONFIG.stripeAccountId, mode: "test", ready: true });
+      }
+      return overflow();
+    },
+  });
+  const attempt = await startCheckout(f.execution, "cart-cap", cart);
+  assert.equal(attempt.phase, "paying");
+  const associations = {
+    async get(attemptId) {
+      return { recordKind: "checkout-payment-association", attemptId, cartId: "cart-cap", bindingRef };
+    },
+  };
+  let acknowledged = 0;
+  const results = await reconcilePaymentWakes(f.execution, associations, {
+    async list() {
+      return [{ eventId: "evt-cap", attemptId: attempt.attemptId, bindingRef, deliveryGeneration: 1, wokeAt: 2000 }];
+    },
+    async acknowledge() {
+      acknowledged++;
+      return true;
+    },
+  });
+  assert.deepEqual(results.map((result) => result.status), ["retained"]);
+  assert.equal(results[0].reason, "unknown");
+  assert.equal(record.attempts[0].order, undefined);
+  assert.equal(f.counts().releaseCalls, 0);
+  assert.equal(acknowledged, 0);
 });
 
 test("native public handlers reopen durable storage and reconcile one order per event-safe wake", async (t) => {

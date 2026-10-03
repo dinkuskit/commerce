@@ -1,0 +1,34 @@
+{
+  "sourceIdentity": "sha256:0e2d07f30b8245fdb9d93214a2054bc6fcdac27e00b29dccda970303fc785893",
+  "base": "7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
+  "node": "24.21.0;CI pinned Node22 not yet run",
+  "rawLogs": "Retained in ignored task parent proof directory",
+  "records": [
+    {
+      "file": "baseline-finite-red.log",
+      "sha256": "11f5fd789b71ef538d46cfd51abb17349135063ed23ca44b978087c3ccc09788",
+      "result": "exit1; exact baseline module compiled from Git; Missing expected rejection"
+    },
+    {
+      "file": "unit-final.log",
+      "sha256": "66fbc46291109365fcf4406b01413993576cc1d98bd462589b886a4453987656",
+      "result": "exit0;255passed"
+    },
+    {
+      "file": "verify-full.log",
+      "sha256": "f8c3864d7b7f7b8ddd0b61aeb5fc18222d758e59bbd2fb61cd59c5eef1dc4512",
+      "result": "typecheck/build/audits/unit/integration passed; browser step blocked by existing default port"
+    },
+    {
+      "file": "browser-final.log",
+      "sha256": "ea12447156247120fbbfd4529e2b087ee9aec5c2cd59e3ee60d8c2e23833ee46",
+      "result": "exit0;5passed on separate task ports"
+    },
+    {
+      "file": "local-stock-final.log",
+      "sha256": "31a3d503330f1880dbb9371f1ca79d1ef20fe557cfd59674a7d382904672bfc4",
+      "result": "exit0;1passed on separate task port"
+    }
+  ],
+  "acceptance": "All required checks passed after browser port isolation; no installed TEST Payments or realStripe proof"
+}

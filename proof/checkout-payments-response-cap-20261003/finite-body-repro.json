@@ -1,0 +1,24 @@
+{
+  "bodyBytes": 1048697,
+  "results": [
+    {
+      "name": "baseline",
+      "calls": [
+        "/v1/checkout-binding",
+        "/v1/checkout/session"
+      ],
+      "parsedViaResponseJsonBytes": 1048697,
+      "outcome": {
+        "outcome": "unknown"
+      }
+    },
+    {
+      "name": "repaired",
+      "calls": [
+        "/v1/checkout-binding"
+      ],
+      "parsedViaResponseJsonBytes": 0,
+      "error": "Malformed Payments response"
+    }
+  ]
+}
