@@ -56,6 +56,7 @@ import {
   createGuestCheckoutStatusRoute,
   type GuestCheckoutHostOptions,
 } from "./features/checkout/index.js";
+import { COUPONS_COLLECTION } from "./features/coupons/index.js";
 
 export * from "./features/inventory-provider/index.js";
 
@@ -185,6 +186,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION]: {
         indexes: [],
         uniqueIndexes: [],
+      },
+      [COUPONS_COLLECTION]: {
+        indexes: ["normalizedCode"],
+        uniqueIndexes: ["normalizedCode"],
       },
     },
     admin: {

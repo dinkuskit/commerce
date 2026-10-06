@@ -28,6 +28,7 @@ export {
 export { GuestCheckoutError, guestCheckoutErrorMessage } from "../errors.js";
 export {
   admitGuestCheckoutStartInput,
+  admitGuestCheckoutPricingStartInput,
   guestCheckoutFailure,
   prepareGuestCheckout,
   startGuestCheckout,
@@ -72,6 +73,7 @@ export {
 } from "../route-ids.js";
 export {
   CHECKOUT_FEATURE_ID,
+  CHECKOUT_PRICING_SCHEMA,
   CHECKOUT_GUEST_CAPABILITY_COLLECTION,
   CHECKOUT_GUEST_CAPABILITY_SANDBOX_COLLECTION,
   CHECKOUT_SANDBOX_COLLECTION,
@@ -90,6 +92,8 @@ export {
 export type {
   CartLine,
   CheckoutAttempt,
+  CheckoutPricingLine,
+  CheckoutPricingSnapshot,
   CheckoutPaymentAssociation,
   CheckoutPaymentAssociationPort,
   CheckoutExecution,
@@ -108,6 +112,7 @@ export type {
   GuestCheckoutLine,
   GuestCheckoutOrderSummary,
   GuestCheckoutProjection,
+  GuestCheckoutPricingSummary,
   GuestCheckoutResult,
   GuestCheckoutRuntime,
   GuestCheckoutState,
@@ -120,6 +125,8 @@ export type {
   PaymentWindowPolicyKind,
   StockRequest,
   StockRequirement,
+  TrustedCheckoutPricing,
+  TrustedShippingConfiguration,
 } from "../types.js";
 export type {
   ScopedPaymentFetch,

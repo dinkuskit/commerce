@@ -2,11 +2,22 @@ import { guestCheckoutErrorMessage } from "./errors.js";
 import {
   GUEST_CHECKOUT_PROJECTION_SCHEMA,
   type CheckoutAttempt,
+  type CheckoutPricingSnapshot,
   type GuestCheckoutErrorCode,
   type GuestCheckoutLine,
   type GuestCheckoutProjection,
   type GuestCheckoutState,
 } from "./types.js";
+
+function publicPricing(pricing: CheckoutPricingSnapshot) {
+  return structuredClone({
+    merchandiseSubtotal: pricing.merchandiseSubtotal,
+    couponDiscount: pricing.couponDiscount,
+    netMerchandise: pricing.netMerchandise,
+    shipping: { mode: pricing.shipping.mode, charge: pricing.shipping.charge },
+    finalTotal: pricing.finalTotal,
+  });
+}
 
 function linesOf(attempt: CheckoutAttempt | undefined): GuestCheckoutLine[] {
   return (attempt?.payment.lines ?? []).map((line) => ({
@@ -78,6 +89,7 @@ export function projectGuestCheckout(
         receiptId: attempt.order.receiptId,
         lines,
         total: attempt.order.total,
+        ...(attempt.order.pricing ? { pricing: publicPricing(attempt.order.pricing) } : {}),
       }
     : null;
   const isTerminalOrReleased = attempt.phase === "released" || attempt.phase === "releasing";
@@ -95,6 +107,7 @@ export function projectGuestCheckout(
     attemptId: attempt.attemptId,
     lines,
     total: attempt.payment.total,
+    ...(attempt.payment.pricing ? { pricing: publicPricing(attempt.payment.pricing) } : {}),
     redirectUrl,
     order: paid,
     retryAfter: attempt.phase === "released" ? attempt.attemptId : null,

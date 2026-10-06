@@ -78,6 +78,11 @@ export async function reconcilePaymentWakes(
         results.push({ wake, status: "retained", reason: "unknown" });
         continue;
       }
+      if (attempt.coupon && attempt.coupon.status !==
+          (attempt.phase === "paid" ? "consumed" : "released")) {
+        results.push({ wake, status: "retained", reason: "unknown" });
+        continue;
+      }
       if (attempt.phase === "paid" &&
           (!attempt.order || attempt.order.attemptId !== wake.attemptId)) {
         results.push({ wake, status: "retained", reason: "mismatch" });

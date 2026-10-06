@@ -41,6 +41,16 @@ export function admitGuestCheckoutStartInput(raw: unknown): CartLine[] {
   });
 }
 
+export function admitGuestCheckoutPricingStartInput(raw: unknown): CartLine[] | { lines: CartLine[]; couponCode?: string } {
+  const input = asObject(raw);
+  const keys = Object.keys(input).sort();
+  if (keys.join() !== "lines" && keys.join() !== "couponCode,lines") fail("INVALID_CART");
+  const lines = admitGuestCheckoutStartInput({ lines: input.lines });
+  if (keys.join() === "lines") return lines;
+  if (typeof input.couponCode !== "string" || !input.couponCode.trim()) fail("INVALID_CART");
+  return { lines, couponCode: input.couponCode.trim() };
+}
+
 function mapCheckoutError(error: unknown): never {
   if (error instanceof GuestCheckoutError) throw error;
   const message = error instanceof Error ? error.message : "";
@@ -71,6 +81,7 @@ export function executionOf(runtime: GuestCheckoutRuntime) {
     resolvePayments: runtime.host.resolvePayments!,
     createAttemptId: runtime.host.createAttemptId,
     now: runtime.host.now,
+    pricing: runtime.pricing,
   };
 }
 
@@ -135,7 +146,9 @@ export async function startGuestCheckout(
   headers?: Headers | Record<string, string>,
 ): Promise<GuestCheckoutResult> {
   try {
-    const lines = admitGuestCheckoutStartInput(input);
+    const admitted = runtime.host.pricing
+      ? admitGuestCheckoutPricingStartInput(input)
+      : admitGuestCheckoutStartInput(input);
     const authorized = await authorizeGuestCapability(
       runtime,
       readGuestCapabilityHeader(headers),
@@ -146,7 +159,7 @@ export async function startGuestCheckout(
     const previous = existing ? currentAttempt(existing.record.attempts) : undefined;
     const retryAfter =
       previous?.phase === "released" ? previous.attemptId : undefined;
-    const attempt = await startCheckout(executionOf(runtime), authorized.cartId, lines, retryAfter);
+    const attempt = await startCheckout(executionOf(runtime), authorized.cartId, admitted, retryAfter);
     const currentNow = runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
     return {
       ok: true,

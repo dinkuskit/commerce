@@ -1,3 +1,5 @@
+import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
+import { isCurrentPaymentRequest } from "./payment-window.js";
 import type {
   CheckoutPaymentPort,
   CurrentPaymentRequest,
@@ -22,6 +24,7 @@ export interface TrustedTestPaymentsConfig {
   stripeAccountId: string;
   credentialResolver: () => Promise<string>;
   fetch: ScopedPaymentFetch;
+  pricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
 }
 
 interface PaymentBinding {
@@ -109,6 +112,9 @@ function exactRequest(request: PaymentRequest, bindingRef: string): PaymentReque
       copy.paymentMethods[0] !== "card") {
     throw new Error("Malformed payment request");
   }
+  if (copy.pricing && (copy.pricing.schema !== CHECKOUT_PRICING_SCHEMA || !isCurrentPaymentRequest(copy))) {
+    throw new Error("Unsupported payment pricing request");
+  }
   return copy;
 }
 
@@ -116,6 +122,7 @@ function normalizedConfig(
   input: TrustedTestPaymentsConfig,
 ): Readonly<TrustedTestPaymentsConfig> {
   if (input.providerId !== "stripe") invalid("providerId must be stripe");
+  if (input.pricingSchema !== undefined && input.pricingSchema !== CHECKOUT_PRICING_SCHEMA) invalid("unsupported pricing schema");
   return Object.freeze({
     paymentsOrigin: origin(input.paymentsOrigin, "paymentsOrigin"),
     commerceOrigin: commerceOrigin(input.commerceOrigin),
@@ -125,6 +132,7 @@ function normalizedConfig(
     stripeAccountId: nonEmpty(input.stripeAccountId, "stripeAccountId"),
     credentialResolver: input.credentialResolver,
     fetch: input.fetch,
+    pricingSchema: input.pricingSchema,
   });
 }
 
@@ -216,6 +224,9 @@ function createPaymentPort(
 
   async function ensureSession(request: PaymentRequest): Promise<PaymentOutcome> {
     const exact = exactRequest(request, config.bindingRef);
+    if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
+      throw new Error("Payments pricing schema unsupported");
+    }
     const ready = await binding("/v1/checkout-binding");
     if (ready.ready === false) throw new Error("Payments binding unavailable");
     return outcome(await call("POST", "/v1/checkout/session", exact));
@@ -223,6 +234,9 @@ function createPaymentPort(
 
   async function lookup(request: PaymentRequest): Promise<PaymentOutcome> {
     const exact = exactRequest(request, config.bindingRef);
+    if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
+      throw new Error("Payments pricing schema unsupported");
+    }
     await binding("/v1/existing-binding");
     return outcome(await call(
       "POST",
@@ -231,7 +245,7 @@ function createPaymentPort(
     ));
   }
 
-  return Object.freeze({ ensureSession, lookup });
+  return Object.freeze({ ensureSession, lookup, ...(config.pricingSchema ? { pricingSchema: config.pricingSchema } : {}) });
 }
 
 export function createTrustedTestPaymentPort(

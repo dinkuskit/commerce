@@ -1,7 +1,15 @@
 {
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
-  "current_focus": null,
+  "current_focus": {
+    "cadence": "sequential",
+    "confirmed": true,
+    "confirmed_at": "2026-10-06T21:59:55+00:00",
+    "domain": "Accepted checkout coupon and free/flat shipping totals composition",
+    "started_at": "2026-10-06T21:59:54+00:00",
+    "status": "confirmed",
+    "summary": "Build and verify the accepted positive-payable basic coupon plus merchant-configured free/flat shipping totals integration, with immutable versioned Payments handoff, recovery-safe coupon redemption and one canonical order. Preserve fail-closed host/provider and Inventory contracts. Zero-total orchestration is not newly selected by this bounded confirmation."
+  },
   "decisions": [
     {
       "baseline_ref": null,
@@ -6342,6 +6350,80 @@
       "superseded_by": null,
       "updated_at": "2026-10-06T20:35:45+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+    },
+    {
+      "baseline_ref": "git:896a8ce1e652d1c0c9378dc3d0b4fefb31a043dc",
+      "candidate_refs": [],
+      "choice": "Integrate the existing coupon evaluator and durable attempt owner with trusted merchant-configured free or flat USD shipping. Freeze subtotal, existing per-line discount allocations, net merchandise, shipping configuration identity and revision, and final total in a versioned checkout/payment/order snapshot. Preserve originals across retries, recovery and provider reconciliation; one order and applicable redemption. Reserve coupon capacity before any payable provider session, consume only after canonical paid order, and release only when the canonical owner has a terminal failure or not-created fence. No browser amounts, new tax policy, stacking, advanced promotions, second money writer, silent Inventory fallback or implicit provider activation. Publish a versioned handoff for the existing Payments owner and fail closed when a payment port does not explicitly support the new pricing schema. Existing merchandise requests and payment windows retain their original shapes. Zero-total order orchestration remains separately scoped pending existing authority clarification.",
+      "context_ref": null,
+      "created_at": "2026-10-06T21:59:54+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "coupons-v1-independent-001",
+        "coupons-redemption-core-001",
+        "coupons-v1-cap-fence-001",
+        "commerce-guest-runtime-mount-001"
+      ],
+      "domain": "Accepted checkout coupon and free/flat shipping totals composition",
+      "history": [
+        {
+          "at": "2026-10-06T21:59:55+00:00",
+          "choice": "Integrate the existing coupon evaluator and durable attempt owner with trusted merchant-configured free or flat USD shipping. Freeze subtotal, existing per-line discount allocations, net merchandise, shipping configuration identity and revision, and final total in a versioned checkout/payment/order snapshot. Preserve originals across retries, recovery and provider reconciliation; one order and applicable redemption. Reserve coupon capacity before any payable provider session, consume only after canonical paid order, and release only when the canonical owner has a terminal failure or not-created fence. No browser amounts, new tax policy, stacking, advanced promotions, second money writer, silent Inventory fallback or implicit provider activation. Publish a versioned handoff for the existing Payments owner and fail closed when a payment port does not explicitly support the new pricing schema. Existing merchandise requests and payment windows retain their original shapes. Zero-total order orchestration remains separately scoped pending existing authority clarification.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-06T22:25:24+00:00",
+          "choice": "Integrate the existing coupon evaluator and durable attempt owner with trusted merchant-configured free or flat USD shipping. Freeze subtotal, existing per-line discount allocations, net merchandise, shipping configuration identity and revision, and final total in a versioned checkout/payment/order snapshot. Preserve originals across retries, recovery and provider reconciliation; one order and applicable redemption. Reserve coupon capacity before any payable provider session, consume only after canonical paid order, and release only when the canonical owner has a terminal failure or not-created fence. No browser amounts, new tax policy, stacking, advanced promotions, second money writer, silent Inventory fallback or implicit provider activation. Publish a versioned handoff for the existing Payments owner and fail closed when a payment port does not explicitly support the new pricing schema. Existing merchandise requests and payment windows retain their original shapes. Zero-total order orchestration remains separately scoped pending existing authority clarification.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-06T22:35:35+00:00",
+          "choice": "Integrate the existing coupon evaluator and durable attempt owner with trusted merchant-configured free or flat USD shipping. Freeze subtotal, existing per-line discount allocations, net merchandise, shipping configuration identity and revision, and final total in a versioned checkout/payment/order snapshot. Preserve originals across retries, recovery and provider reconciliation; one order and applicable redemption. Reserve coupon capacity before any payable provider session, consume only after canonical paid order, and release only when the canonical owner has a terminal failure or not-created fence. No browser amounts, new tax policy, stacking, advanced promotions, second money writer, silent Inventory fallback or implicit provider activation. Publish a versioned handoff for the existing Payments owner and fail closed when a payment port does not explicitly support the new pricing schema. Existing merchandise requests and payment windows retain their original shapes. Zero-total order orchestration remains separately scoped pending existing authority clarification.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-pricing-payments-handoff.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-totals-composition-001",
+      "implementation_ref": "file:docs/implementation/checkout-pricing-payments-handoff.md",
+      "question": "How do accepted basic coupons and Commerce shopper shipping charges compose with canonical checkout money?",
+      "rationale": "Implementation composition of existing accepted v1 decisions under the coordinated TEST purchase outcome; not a new promotion or shipping product policy.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-06T22:35:35+00:00",
+      "verification_ref": ".grilltrack/proof/checkout-totals-20261006-PROOF.md"
     }
   ],
   "last_activation": {
@@ -6364,5 +6446,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-06T20:35:45+00:00"
+  "updated_at": "2026-10-06T22:35:35+00:00"
 }
