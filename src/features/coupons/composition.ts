@@ -10,7 +10,7 @@ import {
   type CouponRecord,
 } from "./types.js";
 import { CouponRecordValidationError, validateCouponRecord, validateCouponQuoteSnapshot } from "./validation.js";
-import { normalizeMoney, parseMinorUnits } from "../catalog/index.js";
+import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 
 const MAX_RETRIES = 32;
 const fail = (message: string): never => { throw new CouponRedemptionError("INVALID_INPUT", message); };

@@ -15,7 +15,7 @@ export default defineConfig({
     storage: local({ directory: ".artifacts/uploads", baseUrl: "/_emdash/api/media/file" }),
     sandboxRunner: "@emdash-cms/sandbox-workerd/sandbox",
     ...(siteUrl ? { siteUrl } : {}),
-    sandboxed: [{ ...descriptor, entrypoint: fileURLToPath(new URL("../../dist/sandbox/plugin.mjs", import.meta.url)) }],
+    sandboxed: [{ ...descriptor, entrypoint: process.env.COMMERCE_SANDBOX_ARTIFACT ?? fileURLToPath(new URL("../../dist/sandbox/plugin.mjs", import.meta.url)) }],
   })],
   devToolbar: { enabled: false },
 });

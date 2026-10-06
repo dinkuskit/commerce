@@ -1,4 +1,4 @@
-import { normalizeMoney, parseMinorUnits, type Money } from "../catalog/index.js";
+import { normalizeMoney, parseMinorUnits, type Money } from "../catalog/kernel/index.js";
 import type { PluginRoute } from "emdash";
 import {
   COUPONS_COLLECTION,

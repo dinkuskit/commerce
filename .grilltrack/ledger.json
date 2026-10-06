@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-01T16:37:21+00:00",
+    "confirmed_at": "2026-10-06T13:29:02+00:00",
     "domain": "Coupon native admin bounded review repair",
     "started_at": "2026-10-01T16:37:21+00:00",
     "status": "confirmed",
-    "summary": "Existing direct human proceed authorizes completing the accepted coupon admin slice and required review repairs. Preserve named page and routes for later atomic core composition; no new product policy or feature merge authorization."
+    "summary": "Resume the approved coupon Registry patch with audited pinned auth optimization and complete precompiled Lingui fallback. Preserve all coupon/Products/Settings authority and canonical storage contracts; verify helper equivalence, locale isolation, decompressed official package size, then exact-artifact installed HTTP/Block Kit behavior. Publishing/grants remain separately gated."
   },
   "decisions": [
     {
@@ -5361,13 +5361,108 @@
       "superseded_by": null,
       "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
+      "candidate_refs": [],
+      "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
+      "context_ref": null,
+      "created_at": "2026-10-03T19:49:04+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "coupons-admin-native-v1-001"
+      ],
+      "domain": "Coupon native admin bounded review repair",
+      "history": [
+        {
+          "at": "2026-10-03T19:49:04+00:00",
+          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "coupons-registry-block-kit-001",
+      "implementation_ref": null,
+      "question": "Can installed Commerce expose coupon administration as a host-rendered Registry Block Kit page without granting coupons to content editors?",
+      "rationale": "User-confirmed correction to the prior native-only decision; exact pinned 1.0.1 host APIs were inspected and expose both host-attested caller identity and the upstream permission helper.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-03T19:49:04+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
+      "context_ref": null,
+      "created_at": "2026-10-06T13:29:01+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "coupons-registry-block-kit-001"
+      ],
+      "domain": "Coupon native admin bounded review repair",
+      "history": [
+        {
+          "at": "2026-10-06T13:29:01+00:00",
+          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "coupons-registry-packaging-001",
+      "implementation_ref": null,
+      "question": "Can the confirmed coupon sandbox surface fit the official decompressed backend cap while retaining pinned public RBAC and request-local locale behavior?",
+      "rationale": "Bobby approved proceeding with the coupons patch; completed read-only packaging research establishes this bounded technical implementation.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-06T13:29:01+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
-    "at": "2026-10-01T11:49:53+00:00",
+    "at": "2026-10-06T13:28:25+00:00",
     "mechanism": "implicit"
   },
-  "last_pause": null,
+  "last_pause": {
+    "artifact_refs": [
+      "proof/coupon-block-kit-20261003/PROOF.md",
+      "proof/coupon-block-kit-20261003/package-boundary.json"
+    ],
+    "next_safe_action": "Provide a supported small public RBAC export or host-attested coupon page permission seam, then rerun official package validation and installed browser proof.",
+    "paused_at": "2026-10-03T20:27:35+00:00",
+    "reason": "Official Registry backend.js exceeds the pinned 128 KiB file limit after public auth dependency prebundling; installed browser acceptance is unavailable.",
+    "resumed_at": "2026-10-06T13:28:25+00:00"
+  },
   "pause": null,
   "recommendation": null,
   "reconciliation": {
@@ -5383,5 +5478,5 @@
   "status": "active",
   "title": "Coupon admin and accepted TEST checkout integration",
   "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d",
-  "updated_at": "2026-10-01T16:39:23+00:00"
+  "updated_at": "2026-10-06T13:29:02+00:00"
 }
