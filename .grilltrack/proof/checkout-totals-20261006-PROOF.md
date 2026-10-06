@@ -11,13 +11,13 @@ A synthetic 250-cent merchandise basket, 100-cent fixed discount and 50-cent shi
 Pinned Node 22.23.1 and unchanged package lock:
 
 - `npm run typecheck`, build and repository/feature audits: pass.
-- Full unit suite: 294 pass; integration suite: 22 pass.
+- Full unit suite: 295 pass. Integration suite: 22 passed on the preceding repaired candidate; current Mac limitation is recorded below.
 - `npm run test:sandbox`: 5 pass.
 - `npm run test:sandbox:native-local-stock`: 1 pass.
 - `npm run test:sandbox:coupons`: 1 pass, including official Registry packaging and existing role/forbidden-action checks.
-- Focused pricing suite: 19 pass, included in the unit total.
+- Focused pricing suite: 20 pass, included in the unit total.
 
-The initial complete-command attempt used a borrowed dependency symlink. Unit/integration checks passed, but Vite rejected the external dependency paths. That task-owned browser run was interrupted; a local locked install fixed the fixture boundary. Rebuilding with local dependencies restored the existing audited auth purity transform. The final Registry backend is 119,954 bytes, below the official 128 KiB limit. No validation limit or auth policy was relaxed.
+The initial complete-command attempt used a borrowed dependency symlink. Unit/integration checks passed, but Vite rejected the external dependency paths. That task-owned browser run was interrupted; a local locked install fixed the fixture boundary. Rebuilding with local dependencies restored the existing audited auth purity transform. The preceding repaired Registry backend was 119,954 bytes, below the official 128 KiB limit. No validation limit or auth policy was relaxed.
 
 ## Recovery and source review
 
@@ -38,3 +38,11 @@ The accepted canonical zero-payable order writer and trusted free-order coupon r
 Comprehensive OpenClaw/P3 review of `6e6a4bc43cca8dd56af0c52556bf6d4a48a457a5` found one P2: the TEST payment adapter could forward valid-schema pricing with divergent total/snapshot arithmetic. Classified `required_fix`. A regression first reproduced the missing validation. Both create and lookup now reject 19 divergent total, shipping, line, coupon quote and canonical-money cases before any credential or transport operation. The adapter reuses the Coupons public quote-snapshot validator and checks its equality to the frozen payment snapshot; historical requests remain unchanged.
 
 Parent source-intent and standards review accepts this repair: frozen originals are validated without reevaluating prices/rules, no provider or second order writer was introduced, and all 323 required checks (294 unit, 22 integration, seven installed browser tests) pass. This parent acceptance does not substitute for fresh exact-head CI, comprehensive OpenClaw/P3 and native ClawSweeper review of the pushed candidate. Prior external reviews remain evidence only for their original commit.
+
+## Core malformed-input repair and local limitation
+
+Comprehensive OpenClaw/P3 review of `d1313b09983f96b16b4bb49bed5492a82a253e04` found one P3: nullish direct core cart payloads dereferenced `lines` before validation. Classified `required_fix`. A regression reproduced the TypeError instead of the expected Invalid cart rejection; an object/array guard now rejects nullish and primitive inputs before storage reads, coupon reservation or payment resolution. The 20 focused pricing tests and 295 unit tests pass; repository/feature audits pass.
+
+The current local full-check attempt and two bounded integration diagnostics preserve a Wrangler/D1 limitation: the unchanged concurrent uniqueness test intermittently returns a generic internal-error reference rather than its expected constraint identity. One attempt passed 21/22 integration cases, another 20/22; serialized test files passed 21/22. The test's concurrent two-process contention remains unchanged; its source, D1 fixture and package lock are unchanged from the base. This is an unresolved local verification limitation, not a passing integration claim. Fresh exact-head CI must supply its own full result; previous CI/native reviews are not reused. No broad dependency, test-policy or D1 repair is included in the checkout slice.
+
+The final guard repair also passes all seven installed browser tests. Its freshly built Registry backend is 120,017 bytes, below 128 KiB. Parent source-intent review accepts the guard with no new payment/order behavior; exact-head CI and both external reviews remain required.

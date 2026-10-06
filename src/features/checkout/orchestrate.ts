@@ -79,6 +79,7 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
+  if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
   const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
     ? (Object.keys(rawCart).sort().join() === "couponCode,lines" || Object.keys(rawCart).sort().join() === "lines")
       ? (Object.prototype.hasOwnProperty.call(rawCart, "couponCode")

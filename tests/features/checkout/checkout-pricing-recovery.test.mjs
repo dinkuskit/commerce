@@ -3,6 +3,19 @@ import test from 'node:test';
 import { startCheckout, reconcileCheckout, reconcilePaymentWakes, projectGuestCheckout, createTrustedTestPaymentPort, bindGuestCheckoutRuntime, NATIVE_GUEST_CHECKOUT_STORAGE } from '../../../dist/features/checkout/index.js';
 import { pricingFixture } from './pricing-fixture.mjs';
 
+test('nullish and primitive core cart inputs reject before storage or payment effects', async t => {
+  const f = await pricingFixture(t);
+  let reads = 0, paymentResolution = 0;
+  f.execution.store.read = async () => { reads++; throw new Error('must not read'); };
+  f.execution.resolvePayments = async () => { paymentResolution++; throw new Error('must not resolve'); };
+  for (const input of [null, undefined, 42, '', true]) {
+    await assert.rejects(startCheckout(f.execution, 'cart', input), { message: 'Invalid cart' });
+  }
+  assert.equal(reads, 0);
+  assert.equal(paymentResolution, 0);
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 0);
+});
+
 test('final zero is rejected before attempt, coupon or provider creation in positive-only slice', async t => {
   const f = await pricingFixture(t, { discount: { kind: 'percentage', basisPoints: 10000 }, shipping: '0' });
   await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Zero-total/);
