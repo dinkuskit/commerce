@@ -1,0 +1,43 @@
+{
+  "sourceIdentity": "sha256:c9fcb9b0b52532e796b21b0b575df9f4c7593df4faa459e22a90c1dd2d951e80",
+  "base": "444b0505ae061c58e2f738e9f39fb0b366d50e8c",
+  "scope": "Parent source/intent review after completed native worker and cleanup; not formal OpenClaw/ClawSweeper clearance",
+  "files": {
+    "src/features/checkout/installed.ts": "1304fe377236d36e7c680bc3adc2846015983838b42fe4171dfe7ccad3a63a41",
+    "src/features/checkout/kernel/index.ts": "a98032cd93a4c6f1a67733f76bdea08bbd432c0e25fc67bacda32395bc9b98a4",
+    "src/plugin.ts": "2968019cc6ffcca4fd5737ef685cf5232d518021175fed2b24dfe18bf737f1d0",
+    "tests/features/checkout/installed-context.test.mjs": "5a7897a1c6d47870b1cfc2263679adb928f88bff7ff5c38f1759201ae6055f17",
+    "docs/implementation/installed-checkout-context.md": "4a968ed8b581de6d2fcf7dcf7d157342a4a3d133681c8e6bf581846145e070a6"
+  },
+  "result": "clean",
+  "adjudications": [
+    {
+      "classification": "required_fix",
+      "finding": "Initial adapter accepted only config slug and missed actual Registry normalized identity",
+      "disposition": "Resolved: admit only exact manifest-derived r_gshdrqaldna3r7sn plus existing config descriptor slug, with derivation and different-owner regression."
+    },
+    {
+      "classification": "required_fix",
+      "finding": "Initial route merged unknown request/context and cron synthesized a guest request",
+      "disposition": "Resolved: supported two-argument handler contract preserves original ctx for resolver; cron binds trusted site/storage directly."
+    },
+    {
+      "classification": "required_fix",
+      "finding": "Initial storage admission missed configuration.query",
+      "disposition": "Resolved: require exact methods consumed by canonical fixed Registry collections."
+    },
+    {
+      "classification": "human_gate",
+      "finding": "Approved TEST bridge/credential consumer and network consent are not supplied or attested",
+      "disposition": "Keep installed checkout unavailable. Conditional network:request + one exact approved broker hostname proposal only; no grant/credential changes or provider calls. Resolver must be bundled in Registry artifact using supported context."
+    }
+  ],
+  "checks": [
+    "Production uses only supported public EmDash type exports; no DB/private context APIs.",
+    "Same ctx owner collections feed canonical guest and wake execution, associations and order CAS.",
+    "Invalid owner/storage/site/origin deny before resolver where discoverable.",
+    "Unknown/overflow lookup retains original payment request/session; no ACK/order/release.",
+    "No Template/coupon/Inventory/Ship edits; manifest grants unchanged."
+  ],
+  "formalReviewPending": true
+}
