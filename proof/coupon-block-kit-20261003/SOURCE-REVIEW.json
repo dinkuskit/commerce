@@ -1,0 +1,43 @@
+{
+  "sourceIdentity": "git:83a24cdd3dff0eefa57c4c5bea08180e64b2276b",
+  "reviewer": "owning parent Codex after canonical ACP cleanup",
+  "standards": "public-safe focused source/owned worktree; exact pinned dependency and initializer guards; official package cap respected; ledger CLI composition",
+  "sourceIntent": "host permission separation; canonical coupon owner; input retention/CAS/collision/usage; host locale/direction and English fallback; native Products/Settings/Coming Soon retained",
+  "resolvedFindings": [
+    {
+      "classification": "required_fix",
+      "finding": "nonreproducible regex catalog extraction and incomplete helper proof",
+      "resolution": "AST compiler/checker, every public permission valid/invalid-role helper equivalence, request-local mixed-locale tests"
+    },
+    {
+      "classification": "required_fix",
+      "finding": "form_submit accepted disable identity as edit",
+      "resolution": "operation-specific action parser and regression"
+    },
+    {
+      "classification": "required_fix",
+      "finding": "catalog unique constraint classifier assumed config namespace",
+      "resolution": "trusted host pluginId flows into unchanged exact-index proof; installed Editor create/save passes; wrong namespace remains unconfirmed"
+    }
+  ],
+  "rejectedFindings": [
+    {
+      "classification": "reject_false_positive",
+      "finding": "Remove plugin guard in favor of page route declaration",
+      "reason": "Pinned ordinary Block Kit pages share content:edit_any admin route; removing the helper grants Editors coupon authority."
+    },
+    {
+      "classification": "reject_false_positive",
+      "finding": "Arabic host direction establishes Arabic coupon translation",
+      "reason": "Visible coupon messages are documented English fallback only."
+    }
+  ],
+  "remaining": [
+    {
+      "classification": "human_gate",
+      "finding": "Authoritative Registry release/install and consent",
+      "reason": "Local profile deliberately supplies unsigned state; no publisher/account/grant or deploy authority was exercised."
+    }
+  ],
+  "formalReview": "OpenClaw and native exact-head review pending"
+}

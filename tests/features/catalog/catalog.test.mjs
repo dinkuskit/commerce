@@ -334,6 +334,10 @@ test("only an exact named unique violation is classified as atomic proof", () =>
   assert.equal(identifyConfirmedUniqueViolation(postgres), "commandId");
   assert.equal(identifyConfirmedUniqueViolation(new Error("SQLITE_BUSY")), null);
   assert.equal(identifyConfirmedUniqueViolation(new Error("UNIQUE constraint failed")), null);
+  const installed = new Error("UNIQUE constraint failed: index 'uidx_plugin_r_gshdrqaldna3r7sn_catalog_items_skuKey'");
+  assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items'), null);
+  assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_gshdrqaldna3r7sn'), 'skuKey');
+  assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_othernamespace'), null);
 });
 
 test("the EmDash plugin exposes one private, permissioned create route and both unique declarations", () => {

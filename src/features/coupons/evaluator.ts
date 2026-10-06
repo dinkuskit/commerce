@@ -1,4 +1,4 @@
-import { resolveCatalogItemPrice, parseMinorUnits, type Money } from "../catalog/index.js";
+import { resolveCatalogItemPrice, parseMinorUnits, type Money } from "../catalog/kernel/index.js";
 import { CouponAdminError, deepFreeze, normalizeCouponInstant } from "./admin.js";
 import { CouponRecordValidationError, validateCouponRecord } from "./validation.js";
 import type {

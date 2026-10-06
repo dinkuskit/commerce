@@ -13,6 +13,7 @@ import {
   loadOutOfStockListing, setOutOfStockListing, StorefrontAvailabilityError,
   type StorefrontOutOfStockListingRecord,
 } from "../features/storefront-availability/kernel/index.js";
+import { couponInteraction, couponBlocks } from "./coupons-blocks.js";
 
 const PAGE_SIZE = 25;
 const STOCK_OPTIONS = [
@@ -51,8 +52,10 @@ function navigation(): Block {
   return { type: "actions", elements: [
     { type: "link", label: "Products", target: { kind: "plugin-page", path: "/products" } },
     { type: "link", label: "Settings", target: { kind: "plugin-page", path: "/settings" } },
+    { type: "link", label: "Coupons", target: { kind: "plugin-page", path: "/coupons" } },
   ] };
 }
+
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
     { type: "header", text: "Add product" },
@@ -138,6 +141,7 @@ async function settings(ctx: PluginContext): Promise<BlockResponse> {
 
 /** Private Block Kit transport. The host authenticates and authorizes this route. */
 export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
+  if (couponInteraction(route.input)) return couponBlocks(route, ctx);
   let input: Record<string, unknown> = {};
   let values: Record<string, unknown> = {};
   try {
@@ -162,7 +166,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const commandId = action.slice(7);
         admitV1CatalogCreateInput(values);
         const created = await createCatalogItem(storage(ctx).catalog,
-          catalogProductCreateInput(text(values.name), text(values.sku), commandId), { collection: "catalog_items" });
+          catalogProductCreateInput(text(values.name), text(values.sku), commandId), { collection: "catalog_items", pluginId: ctx.plugin?.id });
         return { ...await product(ctx, created.item.itemId), toast: { type: "success", message: "Product added" } };
       }
       if (action.startsWith("save:")) {
