@@ -128,6 +128,49 @@ function normalizedConfig(
   });
 }
 
+const MAX_PAYMENT_RESPONSE_BYTES = 131072;
+
+async function boundedJson(response: Response): Promise<unknown> {
+  const body = response.body;
+  if (!body || typeof body.getReader !== "function") {
+    throw new Error("Malformed Payments response");
+  }
+
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+  try {
+    while (true) {
+      const result = await reader.read();
+      if (result.done) break;
+      if (!(result.value instanceof Uint8Array)) {
+        try { await reader.cancel(); } catch { /* fail closed */ }
+        throw new Error("Malformed Payments response");
+      }
+      byteLength += result.value.byteLength;
+      if (byteLength > MAX_PAYMENT_RESPONSE_BYTES) {
+        try { await reader.cancel(); } catch { /* fail closed */ }
+        throw new Error("Malformed Payments response");
+      }
+      chunks.push(result.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    throw new Error("Malformed Payments response");
+  }
+}
+
 function createPaymentPort(
   config: Readonly<TrustedTestPaymentsConfig>,
 ): CheckoutPaymentPort {
@@ -158,7 +201,7 @@ function createPaymentPort(
     });
     if (!response.ok) throw new Error("Payments transport unavailable");
     try {
-      return await response.json();
+      return await boundedJson(response);
     } catch {
       throw new Error("Malformed Payments response");
     }

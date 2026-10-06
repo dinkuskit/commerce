@@ -1,0 +1,10 @@
+Command: node --test tests/features/checkout/test-payments-reconciliation.test.mjs
+Baseline source: 7a8d262441d14ea4ec5e824a1baa76b5a6f0049c
+Result: exit 1
+
+The newly added streamed-body assertions failed because the unchanged
+adapter called response.json() without a byte bound. Oversized binding data
+was parsed and reached binding validation/session paths instead of failing
+closed. The unrelated native SQLite reconciliation case also reported
+ERR_DLOPEN_FAILED because the local better-sqlite3 binary had a macOS
+code-signature/team-ID mismatch.
