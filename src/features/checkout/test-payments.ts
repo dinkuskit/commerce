@@ -1,5 +1,7 @@
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import { isCurrentPaymentRequest } from "./payment-window.js";
+import { normalizeMoney } from "../catalog/kernel/index.js";
+import { normalizeCouponCode, validateCouponQuoteSnapshot } from "../coupons/index.js";
 import type {
   CheckoutPaymentPort,
   CurrentPaymentRequest,
@@ -103,6 +105,54 @@ function outcome(value: unknown): PaymentOutcome {
   return result;
 }
 
+function assertPricing(request: PaymentRequest): void {
+  const pricing = request.pricing;
+  if (!pricing) return;
+  const minor = (value: unknown) => BigInt(normalizeMoney(value).minor);
+  const check = (valid: boolean) => { if (!valid) throw new Error("Malformed payment pricing"); };
+  try {
+    const subtotal = minor(pricing.merchandiseSubtotal);
+    const discount = minor(pricing.couponDiscount);
+    const net = minor(pricing.netMerchandise);
+    const shipping = minor(pricing.shipping.charge);
+    const final = minor(pricing.finalTotal);
+    check(subtotal - discount === net && net + shipping === final && final > 0n && minor(request.total) === final);
+    check(typeof pricing.shipping.configurationId === "string" && !!pricing.shipping.configurationId.trim() &&
+      Number.isSafeInteger(pricing.shipping.revision) && pricing.shipping.revision >= 1 &&
+      (pricing.shipping.mode === "flat" || pricing.shipping.mode === "free" && shipping === 0n));
+    check(Array.isArray(pricing.lines) && pricing.lines.length === request.lines.length && pricing.lines.length > 0);
+    let sumSubtotal = 0n, sumDiscount = 0n, sumNet = 0n;
+    for (const [index, line] of pricing.lines.entries()) {
+      const original = request.lines[index];
+      check(typeof original.catalogItemId === "string" && !!original.catalogItemId.trim() &&
+        Number.isSafeInteger(original.quantity) && original.quantity > 0 &&
+        line.catalogItemId === original.catalogItemId && line.quantity === original.quantity &&
+        minor(line.unitPrice) === minor(original.unitPrice));
+      const lineSubtotal = minor(line.lineSubtotal), lineDiscount = minor(line.discount), lineNet = minor(line.netAmount);
+      check(lineSubtotal === minor(original.unitPrice) * BigInt(original.quantity) &&
+        lineSubtotal - lineDiscount === lineNet);
+      sumSubtotal += lineSubtotal; sumDiscount += lineDiscount; sumNet += lineNet;
+    }
+    check(sumSubtotal === subtotal && sumDiscount === discount && sumNet === net);
+    if (pricing.coupon) {
+      check(normalizeCouponCode(pricing.coupon.code) === pricing.coupon.code);
+      const quote = pricing.coupon.quote;
+      validateCouponQuoteSnapshot(quote, "payment pricing coupon");
+      check(minor(quote.merchandiseTotal) === subtotal && minor(quote.discount) === discount &&
+        minor(quote.payableMerchandiseTotal) === net && minor(quote.overallPayableTotal) === final &&
+        quote.lines.length === pricing.lines.length);
+      for (const [index, line] of quote.lines.entries()) {
+        const priced = pricing.lines[index];
+        check(line.productId === priced.catalogItemId && line.quantity === priced.quantity &&
+          minor(line.unitPrice) === minor(priced.unitPrice) && minor(line.lineSubtotal) === minor(priced.lineSubtotal) &&
+          minor(line.discount) === minor(priced.discount));
+      }
+    } else check(discount === 0n);
+  } catch {
+    throw new Error("Malformed payment pricing");
+  }
+}
+
 function exactRequest(request: PaymentRequest, bindingRef: string): PaymentRequest {
   const copy = structuredClone(request);
   if (copy.bindingRef !== request.bindingRef ||
@@ -115,6 +165,7 @@ function exactRequest(request: PaymentRequest, bindingRef: string): PaymentReque
   if (copy.pricing && (copy.pricing.schema !== CHECKOUT_PRICING_SCHEMA || !isCurrentPaymentRequest(copy))) {
     throw new Error("Unsupported payment pricing request");
   }
+  assertPricing(copy);
   return copy;
 }
 

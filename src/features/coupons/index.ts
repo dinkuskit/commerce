@@ -36,3 +36,4 @@ export {
   type CouponRecord,
   type CouponRule,
 } from "./types.js";
+export { validateCouponQuoteSnapshot } from "./validation.js";

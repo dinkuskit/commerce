@@ -39,6 +39,10 @@ parameters whose total equals the canonical amount. It must not reevaluate a
 coupon, resolve new prices/shipping, create a second money writer, omit the
 snapshot when shipping offsets the discount, or reset idempotency/deadlines.
 Processor adoption and real Stripe acceptance remain separate proof gates.
+Commerce's trusted TEST adapter rejects inconsistent snapshot, line, coupon,
+shipping or request-total arithmetic before credential resolution or transport
+on both creation and lookup. It validates the frozen original without resolving
+new merchant rules or prices.
 
 ## Explicit support and historical requests
 

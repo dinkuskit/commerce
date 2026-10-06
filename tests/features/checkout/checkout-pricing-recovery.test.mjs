@@ -229,6 +229,48 @@ test('adapter requires exact schema support before credentials and sends the can
   assert.equal(credentials, 2);
 });
 
+test('adapter rejects divergent pricing arithmetic before credentials or transport on create and lookup', async t => {
+  const f = await pricingFixture(t);
+  const a = await startCheckout(f.execution, 'cart', f.input);
+  let credentials = 0, calls = 0;
+  const port = createTrustedTestPaymentPort({
+    paymentsOrigin: 'https://payments.example', commerceOrigin: 'https://store.example', siteId: 'synthetic-site',
+    bindingRef: a.payment.bindingRef, providerId: 'stripe', stripeAccountId: 'synthetic-account',
+    pricingSchema: a.payment.pricing.schema,
+    credentialResolver: async () => { credentials++; return 'synthetic-test-token'; },
+    fetch: async () => { calls++; return new Response(JSON.stringify({ outcome: 'unknown' })); },
+  });
+  const mutations = [
+    r => { r.total.minor = '201'; },
+    r => { r.pricing.finalTotal.minor = '201'; },
+    r => { r.pricing.merchandiseSubtotal.minor = '251'; },
+    r => { r.pricing.couponDiscount.minor = '99'; },
+    r => { r.pricing.netMerchandise.minor = '151'; },
+    r => { r.pricing.shipping.charge.minor = '51'; },
+    r => { r.pricing.shipping.mode = 'free'; },
+    r => { r.pricing.shipping.revision = 0; },
+    r => { r.pricing.lines[0].lineSubtotal.minor = '151'; },
+    r => { r.pricing.lines[0].discount.minor = '59'; },
+    r => { r.pricing.lines[0].netAmount.minor = '91'; },
+    r => { r.pricing.lines[0].quantity = 3; },
+    r => { r.pricing.lines[0].catalogItemId = 'substituted'; },
+    r => { r.pricing.lines.pop(); },
+    r => { r.pricing.coupon.quote.discount.minor = '99'; },
+    r => { r.pricing.coupon.quote.overallPayableTotal.minor = '201'; },
+    r => { r.pricing.coupon.quote.lines[0].discount.minor = '59'; },
+    r => { r.pricing.coupon.quote.eligibleSubtotal.minor = '1'; },
+    r => { r.pricing.couponDiscount.minor = '0100'; },
+  ];
+  for (const mutate of mutations) {
+    const request = structuredClone(a.payment);
+    mutate(request);
+    await assert.rejects(port.ensureSession(request), /Malformed payment pricing/);
+    await assert.rejects(port.lookup(request), /Malformed payment pricing/);
+  }
+  assert.equal(credentials, 0);
+  assert.equal(calls, 0);
+});
+
 test('frozen coupon/canonical catalog and shipping survive merchant edits and replay', async t => {
   const f = await pricingFixture(t);
   const a = await startCheckout(f.execution, 'cart', f.input);
