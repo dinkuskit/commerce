@@ -1,0 +1,1 @@
+{"entries":{"archive":{"kind":"tree","sha256":"8a2972d4b48c702e00c09d98560088d77a80056765718048e37db6949f0c2f1f"},"events.jsonl":{"kind":"file","sha256":"16f8e90c814e050cb558e6f773f3317d736ac1cda1520af7b3e43c14ec2247f2"},"ledger.json":{"kind":"file","sha256":"fdf445e93cc170acb98aed8fb42cda19b49aa5fddd00ea0117fee66b2f0906f7"}},"schema":"grilltrack/retention-tree/v1"}

@@ -1,6 +1,6 @@
 {
   "closeout": null,
-  "created_at": "2026-10-06T13:54:15+00:00",
+  "created_at": "2026-10-01T11:49:53+00:00",
   "current_focus": null,
   "decisions": [
     {
@@ -83,13 +83,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "block-admin-create-002",
@@ -99,18 +92,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -129,7 +122,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -444,13 +437,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "block-admin-save-001",
@@ -460,18 +446,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -526,7 +512,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -609,13 +595,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "block-admin-settings-003",
@@ -625,18 +604,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -655,7 +634,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -738,13 +717,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "block-admin-settings-label-004",
@@ -754,18 +726,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -784,7 +756,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -867,13 +839,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "checkout-guest-001",
@@ -883,18 +848,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -916,7 +881,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -1001,13 +966,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "checkout-hosted-first-002",
@@ -1017,18 +975,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -1050,7 +1008,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -1229,13 +1187,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "checkout-payment-window-004",
@@ -1245,18 +1196,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -1316,108 +1267,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
-      "verification_ref": null
-    },
-    {
-      "baseline_ref": "git:7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
-      "candidate_refs": [],
-      "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-      "context_ref": null,
-      "created_at": "2026-10-03T20:44:58+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [],
-      "domain": "Canonical TEST Payments transport response bound repair",
-      "history": [
-        {
-          "at": "2026-10-03T20:44:58+00:00",
-          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-03T20:56:45+00:00",
-          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-03T20:56:45+00:00",
-          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-          "from": "implemented",
-          "implementation_ref": "file:src/features/checkout/test-payments.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        }
-      ],
-      "id": "checkout-payments-response-bound-001",
-      "implementation_ref": "file:src/features/checkout/test-payments.ts",
-      "question": "How does the canonical TEST Payments binding/session/lookup transport reject oversized successful response bodies before parsing?",
-      "rationale": "Independent Template27 review accepted P2 required_fix on its exact Commerce42 dependency: a 1048706-byte binding response reached subsequent session transport. Parent authorized this bounded canonical owner repair; no product re-grill.",
-      "reconciliation_sources": [
-        {
-          "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "proof/checkout-payments-response-cap-20261003/SOURCE-REVIEW.json",
-          "result": "clean",
-          "reviewed_at": "2026-10-03T20:56:45+00:00",
-          "source_identity": "sha256:0e2d07f30b8245fdb9d93214a2054bc6fcdac27e00b29dccda970303fc785893"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -1596,13 +1446,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "checkout-stock-hold-003",
@@ -1612,18 +1455,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -1683,7 +1526,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -2081,13 +1924,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "commerce-guest-runtime-mount-001",
@@ -2097,18 +1933,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2134,7 +1970,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -2196,13 +2032,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "commerce-v1-inventory-unavailable-001",
@@ -2212,18 +2041,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2234,7 +2063,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -2387,93 +2216,17 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-01T15:29:17+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-01T16:37:20+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "verified",
-          "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
-          "note": "adjudicated review requires a fix",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": "file:proof/coupon-admin-native-v1/REVIEW.md",
-          "review_result": "clean",
-          "review_source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692",
-          "to": "needs_reverification",
-          "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
-        },
-        {
-          "at": "2026-10-01T16:37:21+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
-          "note": "bounded implementation recorded",
-          "repair_required": true,
-          "review_classifications": [
-            "required_fix",
-            "human_gate"
-          ],
-          "review_ref": "file:proof/coupon-admin-native-v1/REVIEW.md prior source OpenClaw request req-20261001T154138Z-188998311548 P2 accepted premature default coupon-page exposure; native review needs human",
-          "review_result": "findings",
-          "review_source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692",
-          "to": "implemented",
-          "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
-        },
-        {
-          "at": "2026-10-01T16:37:21+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "implemented",
-          "implementation_ref": "file:src/admin/native.ts;file:tests/native-coupon-site/coupon-admin.mjs;file:proof/coupon-admin-native-v1/REVIEW.md accepted P2 repair native Cursor Luna Medium job4571d749-d285-430b-bf89-cd208f68a1ff",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "coupons-admin-native-v1-001",
-      "implementation_ref": "file:src/admin/native.ts;file:tests/native-coupon-site/coupon-admin.mjs;file:proof/coupon-admin-native-v1/REVIEW.md accepted P2 repair native Cursor Luna Medium job4571d749-d285-430b-bf89-cd208f68a1ff",
+      "implementation_ref": "file:.grilltrack/proof/coupon-admin-native-v1/PROOF.md",
       "question": "What bounded native admin surface should expose Coupons-v1?",
       "rationale": "Explicit coordinator assignment in .grilltrack/work/coupon-admin-run/PROOF.md; preserves the verified coupon kernel and the repository source partition.",
       "reconciliation_sources": [
         {
-          "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2510,30 +2263,6 @@
           "result": "clean",
           "reviewed_at": "2026-10-01T11:49:53+00:00",
           "source_identity": "sha256:1c026ebbb5b65d46b2b898d992b3d1af47c698430f9c4860d4098a0769c52445"
-        },
-        {
-          "classifications": [],
-          "ref": "file:proof/coupon-admin-native-v1/REVIEW.md",
-          "result": "clean",
-          "reviewed_at": "2026-10-01T15:37:02+00:00",
-          "source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692"
-        },
-        {
-          "classifications": [
-            "required_fix",
-            "human_gate"
-          ],
-          "ref": "file:proof/coupon-admin-native-v1/REVIEW.md prior source OpenClaw request req-20261001T154138Z-188998311548 P2 accepted premature default coupon-page exposure; native review needs human",
-          "result": "findings",
-          "reviewed_at": "2026-10-01T16:37:20+00:00",
-          "source_identity": "sha256:16b1e96d31fa4cd1abed3851ebea58e1e7657cf9fb249762d49433c650cbb692"
-        },
-        {
-          "classifications": [],
-          "ref": "file:proof/coupon-admin-native-v1/REVIEW.md parent reviewed accepted P2 fix; default pages omit coupons, named page preserved, fixture composes pages+routes+storage; parent4focused tests pass; fresh official reviews pending",
-          "result": "clean",
-          "reviewed_at": "2026-10-01T16:39:23+00:00",
-          "source_identity": "sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b"
         }
       ],
       "review_ref": null,
@@ -2541,7 +2270,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -2691,13 +2420,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "coupons-redemption-core-001",
@@ -2707,18 +2429,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2783,211 +2505,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
-      "verification_ref": null
-    },
-    {
-      "baseline_ref": "git:7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
-      "candidate_refs": [],
-      "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-      "context_ref": null,
-      "created_at": "2026-10-03T19:49:04+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "coupons-admin-native-v1-001"
-      ],
-      "domain": "Coupon native admin bounded review repair",
-      "history": [
-        {
-          "at": "2026-10-03T19:49:04+00:00",
-          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:29:02+00:00",
-          "from": "locked",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-          "from": "needs_reverification",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        }
-      ],
-      "id": "coupons-registry-block-kit-001",
-      "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-      "question": "Can installed Commerce expose coupon administration as a host-rendered Registry Block Kit page without granting coupons to content editors?",
-      "rationale": "User-confirmed correction to the prior native-only decision; exact pinned 1.0.1 host APIs were inspected and expose both host-attested caller identity and the upstream permission helper.",
-      "reconciliation_sources": [
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [
-            "human_gate"
-          ],
-          "ref": "file:proof/coupon-block-kit-20261003/SOURCE-REVIEW.json",
-          "result": "findings",
-          "reviewed_at": "2026-10-06T13:54:15+00:00",
-          "source_identity": "git:83a24cdd3dff0eefa57c4c5bea08180e64b2276b"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
-      "verification_ref": null
-    },
-    {
-      "baseline_ref": null,
-      "candidate_refs": [],
-      "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-      "context_ref": null,
-      "created_at": "2026-10-06T13:29:01+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "coupons-registry-block-kit-001"
-      ],
-      "domain": "Coupon native admin bounded review repair",
-      "history": [
-        {
-          "at": "2026-10-06T13:29:01+00:00",
-          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:29:02+00:00",
-          "from": "locked",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-          "from": "needs_reverification",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        }
-      ],
-      "id": "coupons-registry-packaging-001",
-      "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-      "question": "Can the confirmed coupon sandbox surface fit the official decompressed backend cap while retaining pinned public RBAC and request-local locale behavior?",
-      "rationale": "Bobby approved proceeding with the coupons patch; completed read-only packaging research establishes this bounded technical implementation.",
-      "reconciliation_sources": [
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [
-            "human_gate"
-          ],
-          "ref": "file:proof/coupon-block-kit-20261003/SOURCE-REVIEW.json",
-          "result": "findings",
-          "reviewed_at": "2026-10-06T13:54:15+00:00",
-          "source_identity": "git:83a24cdd3dff0eefa57c4c5bea08180e64b2276b"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -3341,13 +2859,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "coupons-v1-cap-fence-001",
@@ -3357,18 +2868,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -3460,7 +2971,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -3770,13 +3281,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "coupons-v1-free-reconcile-001",
@@ -3786,18 +3290,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -3880,7 +3384,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -4218,13 +3722,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "coupons-v1-independent-001",
@@ -4234,18 +3731,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4337,7 +3834,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -4402,13 +3899,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "fixed-bundle-component-snapshot-003",
@@ -4418,18 +3908,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4451,7 +3941,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -4515,13 +4005,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "fixed-bundle-nonblocking-002",
@@ -4531,18 +4014,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4564,7 +4047,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -4661,18 +4144,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": true,
@@ -4707,99 +4190,6 @@
       "superseded_by": null,
       "updated_at": "2026-09-30T18:40:18+00:00",
       "verification_ref": "file:proof/fixed-bundle-components/PROOF.md"
-    },
-    {
-      "baseline_ref": "git:444b0505ae061c58e2f738e9f39fb0b366d50e8c",
-      "candidate_refs": [],
-      "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-      "context_ref": null,
-      "created_at": "2026-10-05T16:12:43+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [],
-      "domain": "Installed owner-scoped checkout guest and wake context",
-      "history": [
-        {
-          "at": "2026-10-05T16:12:43+00:00",
-          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:16:14+00:00",
-          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:16:14+00:00",
-          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-          "from": "implemented",
-          "implementation_ref": "file:src/features/checkout/installed.ts;file:src/plugin.ts;file:docs/implementation/installed-checkout-context.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        }
-      ],
-      "id": "installed-checkout-context-001",
-      "implementation_ref": "file:src/features/checkout/installed.ts;file:src/plugin.ts;file:docs/implementation/installed-checkout-context.md",
-      "question": "How do guest checkout and payment wakes consume the same installed Commerce owner storage and trusted TEST host?",
-      "rationale": "Bobby approved usable shopper TEST demo; coordinator assigned this bounded canonical source seam. Scope is implementation of settled ownership and fail-closed rules, not a new product preference.",
-      "reconciliation_sources": [
-        {
-          "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [
-            "human_gate"
-          ],
-          "ref": "proof/installed-checkout-context-20261005/SOURCE-REVIEW.json",
-          "result": "findings",
-          "reviewed_at": "2026-10-06T13:16:14+00:00",
-          "source_identity": "sha256:c9fcb9b0b52532e796b21b0b575df9f4c7593df4faa459e22a90c1dd2d951e80"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
-      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -4937,13 +4327,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-checkbox-001",
@@ -4953,18 +4336,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4975,7 +4358,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -5074,13 +4457,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-existing-sku-confirm-006",
@@ -5090,18 +4466,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5112,7 +4488,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -5211,13 +4587,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-hide-status-002",
@@ -5227,18 +4596,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5249,7 +4618,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -5348,13 +4717,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-no-price-rewrite-007",
@@ -5364,18 +4726,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5386,7 +4748,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -5485,13 +4847,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-reenable-fresh-005",
@@ -5501,18 +4856,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5523,7 +4878,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -5622,13 +4977,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-same-save-008",
@@ -5638,18 +4986,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5660,7 +5008,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -5759,13 +5107,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-setup-required-003",
@@ -5775,18 +5116,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5797,7 +5138,7 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     },
     {
@@ -5896,13 +5237,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
         }
       ],
       "id": "manage-stock-uncheck-restores-004",
@@ -5912,18 +5246,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5934,29 +5268,29 @@
       "review_source_identity": null,
       "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T13:54:15+00:00",
+      "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
     }
   ],
   "last_activation": {
-    "at": "2026-10-06T13:54:15+00:00",
+    "at": "2026-10-01T11:49:53+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
   "recommendation": null,
   "reconciliation": {
-    "plan_id": "1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
+    "plan_id": "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
     "refs": {
-      "base": "2db2ac9e87119abb9bddb94bde6207e44d81a070",
-      "current": "6bd9247ad2926fa719453ad63849191eed9f81d5",
-      "incoming": "2320a51c837841ecab277a9cd519b189a7879c08"
+      "base": "d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+      "current": "fc97ead4d5c1d5a28567f467085e041f88223daa",
+      "incoming": "5710fc185645ed56098aff5727da03483be067ea"
     },
-    "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
+    "snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5"
   },
   "schema_version": "grilltrack/v0.1",
   "status": "active",
-  "title": "Installed checkout and guarded coupon composition",
-  "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-06T13:54:15+00:00"
+  "title": "Coupon admin and accepted TEST checkout integration",
+  "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d",
+  "updated_at": "2026-10-01T11:49:53+00:00"
 }
