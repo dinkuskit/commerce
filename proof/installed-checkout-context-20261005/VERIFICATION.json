@@ -1,0 +1,25 @@
+{
+  "sourceIdentity": "sha256:c9fcb9b0b52532e796b21b0b575df9f4c7593df4faa459e22a90c1dd2d951e80",
+  "runtime": "Node22.23.1; pinned EmDash1.0.1",
+  "fullVerifier": {
+    "command": "COMMERCE_PROOF_PORT=64601 COMMERCE_LOCAL_STOCK_PORT=19811 bin/verify-commerce full",
+    "exitCode": 0,
+    "unit": 266,
+    "integration": 22,
+    "browser": 5,
+    "nativeLocalStock": 1,
+    "rawLogSha256": "3973b55d7d2bc66b8b08897a1f12903439e84a9cab6ff0c02914f34429b48a62"
+  },
+  "focused": {
+    "tests": 11,
+    "exitCode": 0,
+    "rawLogSha256": "6a3a4948dba204e7c6e57f765a5677227336ecc0d072595981c50443c783efda"
+  },
+  "limits": [
+    "New adapter/transport tests use synthetic plugin contexts and HTTP outcomes.",
+    "Browser proof uses actual config-loaded EmDash/workerd handler contexts, not Registry installation.",
+    "No installed approved TEST resolver, real Stripe TEST payment or live order proof.",
+    "No network grants, credential changes, Registry release, deployment or merge."
+  ],
+  "priorTestCorrection": "A parent test initially expected phase open and nested payment.request/session; corrected to actual canonical paying, payment and session shape before final full verifier."
+}

@@ -52,6 +52,20 @@ export type { GuestCheckoutStorageNames } from "../runtime.js";
 export { admitGuestCheckoutWrite } from "../origin-admission.js";
 export { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "../site-scope.js";
 export {
+  COMMERCE_CHECKOUT_WAKES_TASK,
+  COMMERCE_REGISTRY_RUNTIME_ID,
+  INSTALLED_COMMERCE_PLUGIN_ID,
+  createInstalledCheckoutHandlers,
+  createInstalledCheckoutWakeHook,
+} from "../installed.js";
+export type {
+  InstalledCheckoutHandlers,
+  InstalledCheckoutServices,
+  InstalledCheckoutServiceResolver,
+  InstalledGuestCheckoutRequest,
+  InstalledWakeResult,
+} from "../installed.js";
+export {
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,

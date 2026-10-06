@@ -1,0 +1,1211 @@
+{
+  "closeout": null,
+  "created_at": "2026-09-26T18:35:03+00:00",
+  "current_focus": {
+    "cadence": "sequential",
+    "confirmed": true,
+    "confirmed_at": "2026-09-30T01:06:07+00:00",
+    "domain": "First-release shopper checkout experience",
+    "started_at": "2026-09-30T01:02:24+00:00",
+    "status": "confirmed",
+    "summary": "Bobby approved guest checkout, Stripe hosted redirect first, authoritative price validation and managed stock reservation on Checkout, paid holds through fulfillment, confirmed expired unpaid release only, and a fixed 30-minute payment window. Implement and prove bounded local checkout orchestration with fake providers, persisted retries and concurrency; Stripe connection, shipping, taxes and real-store acceptance remain separate."
+  },
+  "decisions": [
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+      "context_ref": "woo:product-inventory-manage-stock;file:src/features/inventory-provider/stock-management.ts;predecessor:gt-20260926123539-d964d3",
+      "created_at": "2026-09-26T18:35:59+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:35:59+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-checkbox-001",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "After the product exists, can the clerk check or uncheck Manage stock on that product?",
+      "rationale": "Bobby confirmed Q1. Woo Inventory is a per-product checkbox after create. Create on main already defaults unmanaged. This slice is flipping it later, not a second create form.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
+      "context_ref": "decision:manage-stock-checkbox-001;file:README.md;file:docs/implementation/managed-storefront-availability.md;predecessor:product-backorder-policy-038",
+      "created_at": "2026-09-26T18:35:59+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-checkbox-001"
+      ],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:35:59+00:00",
+          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-hide-status-002",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When Manage stock is on, do In stock / Out of stock / On backorder hide?",
+      "rationale": "Bobby confirmed Q2. Woo hides stock status when Track stock quantity is on. On backorder is unmanaged stock status. Allow backorders is the settled managed-zero policy (product-backorder-policy-038), Commerce not Inventory.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
+      "context_ref": "decision:manage-stock-hide-status-002;file:docs/implementation/configure-inventory-action.md;file:src/features/inventory-provider/stock-management.ts",
+      "created_at": "2026-09-26T18:35:59+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-hide-status-002"
+      ],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-setup-required-003",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When the clerk checks Manage stock, does Configure Inventory run immediately?",
+      "rationale": "Bobby confirmed. Marketplace browse/install exists on emdash 0.41.0, but @dinkuskit/inventory is private 0.0.0 and cannot be one-click installed. This slice is the persist toggle, not the install wizard.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
+      "context_ref": "decision:manage-stock-setup-required-003;file:README.md;file:src/features/catalog/manual-availability.ts;file:src/features/inventory-provider/stock-management.ts",
+      "created_at": "2026-09-26T18:36:00+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-setup-required-003"
+      ],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-uncheck-restores-004",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When the clerk unchecks Manage stock, do In stock / Out of stock / On backorder come back as they were?",
+      "rationale": "Bobby confirmed Q4. Matches Woo: turning off Track stock quantity returns stock status. Commerce already keeps that manual value dormant while managed.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:35+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
+      "context_ref": "decision:manage-stock-uncheck-restores-004;file:docs/implementation/managed-sku-registration-contract.md;inventory:docs/CHARTER.md#managed-sku-registration-036",
+      "created_at": "2026-09-26T18:36:00+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-uncheck-restores-004"
+      ],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:35+00:00",
+          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-reenable-fresh-005",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "After uncheck, can the clerk check Manage stock again without getting stuck already-claimed?",
+      "rationale": "Needed for reconnect. Bobby's red-hat-6 stays in Inventory. Shared-pool SKU is not marked disconnected from all stores. Commerce claim leftover is what caused already-claimed on parked #17.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
+      "context_ref": "decision:manage-stock-reenable-fresh-005;file:docs/implementation/managed-sku-registration-contract.md;inventory:docs/CHARTER.md#managed-sku-registration-036",
+      "created_at": "2026-09-26T18:36:00+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-reenable-fresh-005"
+      ],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-existing-sku-confirm-006",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When Inventory already has that SKU, does Configure Inventory auto-link it or wait for the clerk to confirm?",
+      "rationale": "Bobby: keep confirm for now. Matches main: existing -> needs-review; confirmExistingManagedSku is the only promotion to active. Title remap later.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
+      "context_ref": "decision:manage-stock-existing-sku-confirm-006;file:docs/implementation/commerce-owned-product-price.md;predecessor:admin-entry-004",
+      "created_at": "2026-09-26T18:36:00+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-existing-sku-confirm-006"
+      ],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-no-price-rewrite-007",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "Does checking or unchecking Manage stock change Regular or Sale?",
+      "rationale": "Bobby confirmed Q7. Woo Inventory is not General. Matches locked price isolation and the concurrent-save lesson from commerce #23.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
+      "candidate_refs": [],
+      "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
+      "context_ref": "decision:manage-stock-no-price-rewrite-007;file:src/admin/products-page.ts;predecessor:admin-entry-004",
+      "created_at": "2026-09-26T18:36:00+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "manage-stock-no-price-rewrite-007"
+      ],
+      "domain": "a clerk turns Manage stock on or off on a product",
+      "history": [
+        {
+          "at": "2026-09-26T18:36:00+00:00",
+          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-26T19:11:36+00:00",
+          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
+          "from": "implemented",
+          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "manage-stock-same-save-008",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "Is Manage stock part of the same Save as Regular and Sale?",
+      "rationale": "Bobby confirmed same Save. Matches Woo one Update and commerce #23 one Save for prices and stock status.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-26T19:11:36+00:00",
+      "verification_ref": "test:tests/features/catalog/product-admin.test.mjs;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+      "context_ref": "file:docs/CHARTER.md",
+      "created_at": "2026-09-30T01:02:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:02:24+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-guest-001",
+      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "question": "Should the first store support guest checkout without mandatory customer accounts?",
+      "rationale": "The user explicitly accepted guest checkout as the intended first-store experience. Optional customer accounts and saved shopper profiles remain undecided.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:50+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        }
+      ],
+      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T01:12:50+00:00",
+      "verification_ref": "file:proof/checkout-experience/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+      "context_ref": "file:docs/CHARTER.md",
+      "created_at": "2026-09-30T01:03:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-guest-001"
+      ],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:03:44+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:50+00:00",
+          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-hosted-first-002",
+      "implementation_ref": "file:docs/implementation/checkout-experience.md",
+      "question": "Must payment stay inside the storefront in the first release?",
+      "rationale": "The user prefers the cleaner in-storefront experience but explicitly accepted redirect checkout as a sensible first goal toward it. This choice does not schedule or authorize the later embedded implementation.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:51+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        }
+      ],
+      "review_ref": "file:proof/checkout-experience/REVIEW.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T01:12:51+00:00",
+      "verification_ref": "file:proof/checkout-experience/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+      "context_ref": "file:docs/CHARTER.md",
+      "created_at": "2026-09-30T01:04:27+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-hosted-first-002"
+      ],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:04:27+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T11:23:42+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "review_ref": "file:proof/checkout-experience/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82",
+          "to": "implemented",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:02:33+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:11:04+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/checkout-session-equality/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:7a054ea6e7a148dd0e1039ec138d967f02431ceb",
+          "to": "implemented",
+          "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:11:04+00:00",
+          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
+        }
+      ],
+      "id": "checkout-stock-hold-003",
+      "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+      "question": "When should checkout reserve managed stock?",
+      "rationale": "The user accepted reserving at checkout start to avoid tying up stock in abandoned carts while protecting shoppers actively paying. Exact hold duration and payment-method timing policy remain undecided.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:51+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:23:42+00:00",
+          "source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82"
+        },
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:29:43+00:00",
+          "source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/checkout-session-equality/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T13:02:33+00:00",
+          "source_identity": "git:7a054ea6e7a148dd0e1039ec138d967f02431ceb"
+        },
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-session-equality/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T13:11:04+00:00",
+          "source_identity": "sha256:16f541d6a9c8fa0d0add228fad53e492d9fbb5880cc26b753c67478f89c2b7d8"
+        }
+      ],
+      "review_ref": "file:proof/checkout-session-equality/PROOF.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:16f541d6a9c8fa0d0add228fad53e492d9fbb5880cc26b753c67478f89c2b7d8",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T13:11:04+00:00",
+      "verification_ref": "file:proof/checkout-session-equality/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+      "candidate_refs": [],
+      "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+      "context_ref": "https://docs.stripe.com/payments/checkout/managing-limited-inventory.md?payment-ui=stripe-hosted",
+      "created_at": "2026-09-30T01:05:09+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-stock-hold-003"
+      ],
+      "domain": "First-release shopper checkout experience",
+      "history": [
+        {
+          "at": "2026-09-30T01:05:09+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T01:12:51+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-30T11:23:42+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "review_ref": "file:proof/checkout-experience/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/checkout-experience.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82",
+          "to": "implemented",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T11:29:43+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/checkout-experience/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:02:33+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "review_ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:11:04+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:proof/checkout-session-equality/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:7a054ea6e7a148dd0e1039ec138d967f02431ceb",
+          "to": "implemented",
+          "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:11:04+00:00",
+          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/checkout-expired-recovery/PROOF.md"
+        }
+      ],
+      "id": "checkout-payment-window-004",
+      "implementation_ref": "file:src/features/checkout/orchestrate.ts",
+      "question": "Does a 30-minute Stripe payment window work for the first release?",
+      "rationale": "The user accepted the recommended 30-minute window, avoiding the provider default of 24 hours while matching its shortest supported automatic Checkout expiry.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer",
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-experience/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T01:12:51+00:00",
+          "source_identity": "sha256:44948ab7d57614e6f6c11d9987250b80952b774eadf8b764aa36eca84cccb578"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:23:42+00:00",
+          "source_identity": "git:e60674e02fd8eab4112f51162624ad7e34254c82"
+        },
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-expired-recovery/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:29:44+00:00",
+          "source_identity": "sha256:b671164c5804c65e9dab2690953a8f9909b6367a429385145e81eef9e870151c"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:proof/checkout-session-equality/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T13:02:33+00:00",
+          "source_identity": "git:7a054ea6e7a148dd0e1039ec138d967f02431ceb"
+        },
+        {
+          "classifications": [
+            "defer",
+            "human_gate"
+          ],
+          "ref": "file:proof/checkout-session-equality/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T13:11:04+00:00",
+          "source_identity": "sha256:16f541d6a9c8fa0d0add228fad53e492d9fbb5880cc26b753c67478f89c2b7d8"
+        }
+      ],
+      "review_ref": "file:proof/checkout-session-equality/PROOF.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:16f541d6a9c8fa0d0add228fad53e492d9fbb5880cc26b753c67478f89c2b7d8",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T13:11:04+00:00",
+      "verification_ref": "file:proof/checkout-session-equality/PROOF.md"
+    }
+  ],
+  "last_activation": {
+    "at": "2026-09-30T13:02:33+00:00",
+    "mechanism": "implicit"
+  },
+  "last_pause": {
+    "artifact_refs": [
+      "file:proof/checkout-expired-recovery/PROOF.md"
+    ],
+    "next_safe_action": "Publish bounded repair to PR 29, report fresh source tuple and proof, and leave integration/review ownership unchanged.",
+    "paused_at": "2026-09-30T11:29:44+00:00",
+    "reason": "Recovered expired-session P2 repaired and independently verified; publication to existing draft PR authorized. Formal review remains with its assigned owner.",
+    "resumed_at": "2026-09-30T13:02:33+00:00"
+  },
+  "pause": {
+    "artifact_refs": [
+      "file:proof/checkout-session-equality/PROOF.md"
+    ],
+    "next_safe_action": "Publish bounded repair to PR 29; report new integration input head and unchanged Payments interface; await assigned formal review.",
+    "paused_at": "2026-09-30T13:11:04+00:00",
+    "reason": "Session key-order P2 repaired and independently verified; authorized draft PR publication pending. Formal review remains with its assigned owner."
+  },
+  "predecessor_track_id": "gt-20260926151731-84df4c",
+  "recommendation": null,
+  "schema_version": "grilltrack/v0.1",
+  "status": "paused",
+  "title": "Clerk turns Manage stock on or off on a product",
+  "track_id": "gt-20260926183503-6113fc",
+  "updated_at": "2026-09-30T13:11:04+00:00"
+}

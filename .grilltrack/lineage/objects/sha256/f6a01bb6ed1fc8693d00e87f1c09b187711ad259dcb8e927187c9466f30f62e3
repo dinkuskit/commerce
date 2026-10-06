@@ -1,7 +1,15 @@
 {
   "closeout": null,
-  "created_at": "2026-10-06T13:54:15+00:00",
-  "current_focus": null,
+  "created_at": "2026-10-01T11:49:53+00:00",
+  "current_focus": {
+    "cadence": "sequential",
+    "confirmed": true,
+    "confirmed_at": "2026-10-05T16:12:43+00:00",
+    "domain": "Installed owner-scoped checkout guest and wake context",
+    "started_at": "2026-10-05T16:12:43+00:00",
+    "status": "confirmed",
+    "summary": "Implement the already-authorized installed owner-context seam shared by guest and wake. Verify through actual compiled package and runtime handler paths using synthetic dependencies with honest installed identity limits. Do not activate network grants or credentials; produce focused draft PR and immutable callable/package contract with any exact approval blocker."
+  },
   "decisions": [
     {
       "baseline_ref": null,
@@ -83,27 +91,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:43+00:00",
-          "choice": "Yes. Products includes Add product with Name and SKU. After creation open the product for pricing. Manage stock defaults off; creation needs neither developer work nor Inventory setup. Name is the customer-facing product title and supplies the H1 on its customer-facing product page, not a separate internal label. This title contract does not by itself authorize building a new storefront product page in this admin slice.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "block-admin-create-002",
@@ -113,18 +100,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -141,10 +128,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": null,
@@ -458,27 +445,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:43+00:00",
-          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:package.json file:src/admin/index.ts file:docs/implementation/emdash-1-0-1-compatibility.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "block-admin-save-001",
@@ -488,18 +454,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -552,10 +518,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": null,
@@ -637,27 +603,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:43+00:00",
-          "choice": "Keep the store-wide Hide out-of-stock products checkbox with its own Save, in Commerce settings rather than a separate top-level Store area. User described Commerce > Settings or Advanced settings; exact label remains to be confirmed. Preserve existing setting behavior.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "block-admin-settings-003",
@@ -667,18 +612,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -695,10 +640,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": null,
@@ -780,27 +725,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:43+00:00",
-          "choice": "Yes, for this slice. Label the Commerce page Settings and its catalog settings section Catalog. Put Hide out-of-stock products there with its own Save. This is the current accepted placement, not a permanent navigation rule.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "block-admin-settings-label-004",
@@ -810,18 +734,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -838,10 +762,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
@@ -923,27 +847,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:43+00:00",
-          "choice": "Yes. Shoppers can complete a purchase as guests without creating a store account or DinkusKit account. The DinkusKit account connection is for the shop owner, not a purchase prerequisite for shoppers.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/checkout-experience.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "checkout-guest-001",
@@ -953,18 +856,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -984,10 +887,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
@@ -1071,27 +974,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:43+00:00",
-          "choice": "Stripe-hosted redirect Checkout is the first-release delivery goal. Payment inside the storefront is the preferred later experience. Keep Commerce checkout/order ownership and the Payments provider boundary so the presentation can evolve without a competing order model.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/checkout-experience.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "checkout-hosted-first-002",
@@ -1101,18 +983,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -1132,10 +1014,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
@@ -1313,27 +1195,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Yes. Configure a 30-minute payment window for Stripe-hosted Checkout. After expiry the shopper can retry from the cart with authoritative prices and availability checked again. Release managed-stock reservations only after confirming the checkout expired unpaid, not solely because a local timer elapsed.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "checkout-payment-window-004",
@@ -1343,18 +1204,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -1412,125 +1273,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
-    },
-    {
-      "baseline_ref": "git:7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
-      "candidate_refs": [],
-      "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-      "context_ref": null,
-      "created_at": "2026-10-03T20:44:58+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [],
-      "domain": "Canonical TEST Payments transport response bound repair",
-      "history": [
-        {
-          "at": "2026-10-03T20:44:58+00:00",
-          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-03T20:56:45+00:00",
-          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-03T20:56:45+00:00",
-          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-          "from": "implemented",
-          "implementation_ref": "file:src/features/checkout/test-payments.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/checkout/test-payments.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "checkout-payments-response-bound-001",
-      "implementation_ref": "file:src/features/checkout/test-payments.ts",
-      "question": "How does the canonical TEST Payments binding/session/lookup transport reject oversized successful response bodies before parsing?",
-      "rationale": "Independent Template27 review accepted P2 required_fix on its exact Commerce42 dependency: a 1048706-byte binding response reached subsequent session transport. Parent authorized this bounded canonical owner repair; no product re-grill.",
-      "reconciliation_sources": [
-        {
-          "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [],
-          "ref": "proof/checkout-payments-response-cap-20261003/SOURCE-REVIEW.json",
-          "result": "clean",
-          "reviewed_at": "2026-10-03T20:56:45+00:00",
-          "source_identity": "sha256:0e2d07f30b8245fdb9d93214a2054bc6fcdac27e00b29dccda970303fc785893"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:51ab023b14490e3bff821e5310dd1c323092df30",
@@ -1708,27 +1454,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Adding a product to cart does not reserve stock. When the shopper clicks Checkout, Commerce validates authoritative prices and reserves managed stock before redirecting to Stripe. Successful payment keeps stock reserved for the order until fulfillment. An expired unpaid checkout releases its reservation only after the payment outcome is confirmed; an unknown outcome is not treated as unpaid.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/checkout/orchestrate.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "checkout-stock-hold-003",
@@ -1738,18 +1463,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -1807,10 +1532,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": null,
@@ -2207,27 +1932,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Commerce mounts trusted tenant-scoped guest checkout and guest-safe status for Template Store. Server-issued capability is minted by a prepare/bootstrap handshake under durable CAS with no attempt, reservation, or provider call; start is capability-required. Guessed browser IDs, query tokens, and header flags are not authority. Re-read Commerce price/sellability, retain one checkout/order writer and immutable Payments binding, reconcile only against authoritative provider lookup. Browser price, provider, redirect, paid state, success URL or webhook body is not authority. Unmanaged baskets require no Inventory; managed baskets remain fail-closed. Keep USD/card and the accepted checkout-payment-window-004 hosted-card window (paymentWindow:{minSeconds:1800,maxSeconds:1860}); frozen paymentWindowSeconds:1800 originals stay exact. Trusted canonical HTTP(S) site origin must be present and valid for mint and authorize; constructor siteUrl may fill empty runtime ctx.site.url and cannot mask a present public, malformed, or conflicting runtime URL. Public native and Registry write routes admit same-origin requests from request.url plus declared Origin/Sec-Fetch-Site headers and fail closed otherwise. Unexpected failures are guest-safe UNAVAILABLE. Missing runtime/provider support is explicit unavailability, no fake success. Contact/delivery/shipping/tax/promotion semantics are separate unresolved follow-ups. Additionally, Commerce owns the bounded trusted TEST Payments adapter, durable attempt-to-cart association, and generation-aware event-safe wake reconciliation around the canonical guest checkout/order writer; external Payments drain/ack, host scheduler, provider grant, merchant readiness, and real TEST purchase remain explicit gates.",
-          "from": "needs_reverification",
-          "implementation_ref": "src/features/checkout/test-payments.ts;src/features/checkout/wake.ts;src/features/checkout/storage.ts;src/features/checkout/guest.ts;src/features/checkout/types.ts;src/index.ts;emdash-plugin.jsonc;tests/features/checkout/test-payments-reconciliation.test.mjs;docs/implementation/test-payments-reconciliation.md;proof/test-payments-reconciliation-20261001/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "commerce-guest-runtime-mount-001",
@@ -2237,18 +1941,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2272,10 +1976,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": null,
@@ -2336,27 +2040,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/catalog/local-stock-development.ts file:src/features/catalog/v1-stock-admission.ts file:src/index.ts file:src/admin/products-page.ts file:src/admin/index.ts file:src/features/catalog/route.ts file:docs/implementation/v1-inventory-unavailable.md file:proof/v1-inventory-unavailable-20260930/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "commerce-v1-inventory-unavailable-001",
@@ -2366,18 +2049,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2386,10 +2069,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": null,
@@ -2600,27 +2283,6 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md;unit248/248;integration22/22;nativeCouponBrowser1/1;parentRealSQLite3/3;fullRailBlockedExternalFontFetch"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Export a native React /coupons page, menu declaration, route/action/storage permission adapter contract, and controller using authenticated apiFetch/parseApiResponse. Create/edit current basic fields through createCouponAdmin with expected-revision CAS, preserve existing rule eligibility fields, disable only blocks new acceptance, and show getCounts pending/consumed/released/remaining. Keep central descriptor, mounted routes, storage registration, and final native fixture integration with core.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/native.ts;file:tests/native-coupon-site/coupon-admin.mjs;file:proof/coupon-admin-native-v1/REVIEW.md accepted P2 repair native Cursor Luna Medium job4571d749-d285-430b-bf89-cd208f68a1ff",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "coupons-admin-native-v1-001",
@@ -2629,19 +2291,9 @@
       "rationale": "Explicit coordinator assignment in .grilltrack/work/coupon-admin-run/PROOF.md; preserves the verified coupon kernel and the repository source partition.",
       "reconciliation_sources": [
         {
-          "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2704,13 +2356,13 @@
           "source_identity": "sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b"
         }
       ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
+      "review_ref": "file:proof/coupon-admin-native-v1/REVIEW.md parent reviewed accepted P2 fix; default pages omit coupons, named page preserved, fixture composes pages+routes+storage; parent4focused tests pass; fresh official reviews pending",
+      "review_result": "clean",
+      "review_source_identity": "sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T16:39:23+00:00",
+      "verification_ref": "file:proof/coupon-admin-native-v1/PROOF.md source sha256:c5207970164ed4d15aac454617a1cca7a97551e2392f37c23ea39b3a01f4e68b build/typecheck/4focused regression/native browser1passed; fresh fullCI and official reviews pending"
     },
     {
       "baseline_ref": null,
@@ -2859,27 +2511,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Implement only a reusable trusted-owner reservation core under src/features/coupons. Coupon stable identity owns a global cap across immutable rule versions. Reservations persist before any payable session, keyed by immutable original checkout attempt identity and carrying coupon/rule/quote identity; duplicate reserve is idempotent, conflicting reuse fails closed. CAS coordinates concurrent processes and prevents last-slot oversubscription; pending and consumed count toward capacity. Verified success consumes once; confirmed failure/cancel/not-created releases only after authoritative provider reconciliation; unknown outcome never releases based on elapsed time. Terminal attempts stay fenced; release cannot re-reserve a frozen attempt; duplicate/stale/contradictory events cannot double transition; provider session id may attach once immutably. Refund never restores consumed capacity. Expose only trusted-owner ports, with no browser route accepting cap/outcome/amount. Cap is an internal trusted rule/owner snapshot; no production host mount claim. Public handoff context: https://github.com/dinkuskit/coupons/blob/3b6e3fc20ee6d8af61df50f662058e6dfcd0bbda/docs/basic-v1-handoff.md",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "coupons-redemption-core-001",
@@ -2889,18 +2520,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -2963,242 +2594,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
-    },
-    {
-      "baseline_ref": "git:7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
-      "candidate_refs": [],
-      "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-      "context_ref": null,
-      "created_at": "2026-10-03T19:49:04+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "coupons-admin-native-v1-001"
-      ],
-      "domain": "Coupon native admin bounded review repair",
-      "history": [
-        {
-          "at": "2026-10-03T19:49:04+00:00",
-          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:29:02+00:00",
-          "from": "locked",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-          "from": "needs_reverification",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "coupons-registry-block-kit-001",
-      "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-      "question": "Can installed Commerce expose coupon administration as a host-rendered Registry Block Kit page without granting coupons to content editors?",
-      "rationale": "User-confirmed correction to the prior native-only decision; exact pinned 1.0.1 host APIs were inspected and expose both host-attested caller identity and the upstream permission helper.",
-      "reconciliation_sources": [
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [
-            "human_gate"
-          ],
-          "ref": "file:proof/coupon-block-kit-20261003/SOURCE-REVIEW.json",
-          "result": "findings",
-          "reviewed_at": "2026-10-06T13:54:15+00:00",
-          "source_identity": "git:83a24cdd3dff0eefa57c4c5bea08180e64b2276b"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
-    },
-    {
-      "baseline_ref": null,
-      "candidate_refs": [],
-      "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-      "context_ref": null,
-      "created_at": "2026-10-06T13:29:01+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [
-        "coupons-registry-block-kit-001"
-      ],
-      "domain": "Coupon native admin bounded review repair",
-      "history": [
-        {
-          "at": "2026-10-06T13:29:01+00:00",
-          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:29:02+00:00",
-          "from": "locked",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-          "from": "needs_reverification",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-          "from": "implemented",
-          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "coupons-registry-packaging-001",
-      "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
-      "question": "Can the confirmed coupon sandbox surface fit the official decompressed backend cap while retaining pinned public RBAC and request-local locale behavior?",
-      "rationale": "Bobby approved proceeding with the coupons patch; completed read-only packaging research establishes this bounded technical implementation.",
-      "reconciliation_sources": [
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [
-            "human_gate"
-          ],
-          "ref": "file:proof/coupon-block-kit-20261003/SOURCE-REVIEW.json",
-          "result": "findings",
-          "reviewed_at": "2026-10-06T13:54:15+00:00",
-          "source_identity": "git:83a24cdd3dff0eefa57c4c5bea08180e64b2276b"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -3551,27 +2950,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "coupons-v1-cap-fence-001",
@@ -3581,18 +2959,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -3682,10 +3060,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -3994,27 +3372,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Add a durable trusted verified-free-order reconciliation requiring Commerce order, receipt, attempt, coupon, rule, and quote identities; consume exactly once without provider session/payment ID, hold unknown completion, reject nonzero or payment-bound free proofs, and never restore after refund.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "coupons-v1-free-reconcile-001",
@@ -4024,18 +3381,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4116,10 +3473,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -4456,27 +3813,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/coupons/admin.ts; file:tests/features/coupons/coupons-v1.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "coupons-v1-independent-001",
@@ -4486,18 +3822,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4587,10 +3923,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:8a04c0b16b381b89531c88d1a655aad6c0c461c3",
@@ -4654,27 +3990,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "A trusted server-owned fixed definition identity plus fixed components {catalogItemId, quantityPerBundle}. Resolve display SKU and name from the catalog public read type. Produce a detached fulfillment projection for a positive safe-integer purchased bundle quantity, preserving membership and per-bundle quantities. Real authoritative set-price, order adoption, runtime mount, and managed-provider reservation are deferred. Core projection is verified separately. The module does not price, declare sellability, contact Inventory, reserve or release, own stock, or create orders.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/fixed-bundles/index.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "fixed-bundle-component-snapshot-003",
@@ -4684,18 +3999,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4715,10 +4030,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:8a04c0b16b381b89531c88d1a655aad6c0c461c3",
@@ -4781,27 +4096,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "No. Fixed-bundle work is a nonblocking Commerce v1 lane. Catalog currently has only simple-product, and checkout and order currently lack a component snapshot. This slice must not invent a bundle catalog kind or order or price policy to pretend a simple-product can already be sold as a bundle.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:docs/implementation/fixed-bundle-components.md; file:FEATURE_MAP.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "fixed-bundle-nonblocking-002",
@@ -4811,18 +4105,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -4842,10 +4136,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:8a04c0b16b381b89531c88d1a655aad6c0c461c3",
@@ -4941,18 +4235,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": true,
@@ -4987,113 +4281,6 @@
       "superseded_by": null,
       "updated_at": "2026-09-30T18:40:18+00:00",
       "verification_ref": "file:proof/fixed-bundle-components/PROOF.md"
-    },
-    {
-      "baseline_ref": "git:444b0505ae061c58e2f738e9f39fb0b366d50e8c",
-      "candidate_refs": [],
-      "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-      "context_ref": null,
-      "created_at": "2026-10-05T16:12:43+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [],
-      "domain": "Installed owner-scoped checkout guest and wake context",
-      "history": [
-        {
-          "at": "2026-10-05T16:12:43+00:00",
-          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:16:14+00:00",
-          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "bounded implementation recorded",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "implemented",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:16:14+00:00",
-          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-          "from": "implemented",
-          "implementation_ref": "file:src/features/checkout/installed.ts;file:src/plugin.ts;file:docs/implementation/installed-checkout-context.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "verified",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/features/checkout/installed.ts;file:src/plugin.ts;file:docs/implementation/installed-checkout-context.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
-        }
-      ],
-      "id": "installed-checkout-context-001",
-      "implementation_ref": "file:src/features/checkout/installed.ts;file:src/plugin.ts;file:docs/implementation/installed-checkout-context.md",
-      "question": "How do guest checkout and payment wakes consume the same installed Commerce owner storage and trusted TEST host?",
-      "rationale": "Bobby approved usable shopper TEST demo; coordinator assigned this bounded canonical source seam. Scope is implementation of settled ownership and fail-closed rules, not a new product preference.",
-      "reconciliation_sources": [
-        {
-          "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        }
-      ],
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [
-        {
-          "classifications": [
-            "human_gate"
-          ],
-          "ref": "proof/installed-checkout-context-20261005/SOURCE-REVIEW.json",
-          "result": "findings",
-          "reviewed_at": "2026-10-06T13:16:14+00:00",
-          "source_identity": "sha256:c9fcb9b0b52532e796b21b0b575df9f4c7593df4faa459e22a90c1dd2d951e80"
-        }
-      ],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -5231,27 +4418,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:44+00:00",
-          "choice": "Yes. On the same Products page as Regular and Sale, the clerk can check or uncheck Woo Manage stock (Track stock quantity for this product). It persists. New products still default off. Not in this lock: quantity, Allow backorders, Configure Inventory, claim release, or a sale schedule.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:package.json file:src/admin/index.ts file:proof/emdash-1-0-1-20261001/PROOF.md",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "manage-stock-checkbox-001",
@@ -5261,18 +4427,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5281,10 +4447,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -5382,27 +4548,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:45+00:00",
-          "choice": "Keep confirm. Inventory returning an existing pooled SKU stays needs-review. The clerk confirms it is the same item. No auto-link this slice. Commerce title does not remap Inventory display name this slice.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "manage-stock-existing-sku-confirm-006",
@@ -5412,18 +4557,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5432,10 +4577,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:45+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -5533,27 +4678,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:45+00:00",
-          "choice": "Yes. Those three Woo stock-status choices hide while Inventory is counting the product. Allow backorders is a different field; it is not this lock and is not an Inventory toggle. Commerce already owns per-product Allow backorders (catalogBackorderPolicies, defaults off).",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "manage-stock-hide-status-002",
@@ -5563,18 +4687,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5583,10 +4707,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:45+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -5684,27 +4808,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:45+00:00",
-          "choice": "No. The Manage stock toggle does not rewrite Regular or Sale. Isolated records stay isolated. A refused Manage stock write must leave stored prices unchanged.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "manage-stock-no-price-rewrite-007",
@@ -5714,18 +4817,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5734,10 +4837,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:45+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -5835,27 +4938,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:45+00:00",
-          "choice": "Yes. Unchecking drops the Commerce setup claim so a later enable can start registration again. Inventory keeps the SKU and its quantity (the 6 red hats stay in the pool). Uncheck does not zero or delete the Inventory SKU. It unhooks this catalog product, not every store on the pool.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "manage-stock-reenable-fresh-005",
@@ -5865,18 +4947,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -5885,10 +4967,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:45+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -5986,27 +5068,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:45+00:00",
-          "choice": "Yes. On the Products page, Manage stock is on the same Save as Regular and Sale. A refused Manage stock write still leaves stored prices unchanged.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "manage-stock-same-save-008",
@@ -6016,18 +5077,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -6036,10 +5097,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:45+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -6137,27 +5198,6 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
-        },
-        {
-          "at": "2026-10-06T20:35:45+00:00",
-          "choice": "No. Checking Manage stock persists setup-required. It does not auto-run Configure Inventory, does not invent a Commerce quantity, and does not ship an install popup or marketplace walk. Configure Inventory stays the later explicit action. A walk-through to install Inventory is a later visual grill after Inventory is actually installable from EmDash Marketplace.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-          "note": "verification recorded in cumulative context",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "verified",
-          "verification_ref": null
         }
       ],
       "id": "manage-stock-setup-required-003",
@@ -6167,18 +5207,18 @@
       "reconciliation_sources": [
         {
           "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
           "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         }
       ],
       "repair_required": false,
@@ -6187,10 +5227,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:45+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
     },
     {
       "baseline_ref": "git:32a0ee8ce518d628fffba188a261ae4e4a356649",
@@ -6288,19 +5328,84 @@
           "note": "fork composition invalidates prior current proof",
           "source_snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
           "to": "needs_reverification"
+        }
+      ],
+      "id": "manage-stock-uncheck-restores-004",
+      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+      "question": "When the clerk unchecks Manage stock, do In stock / Out of stock / On backorder come back as they were?",
+      "rationale": "Bobby confirmed Q4. Matches Woo: turning off Track stock quantity returns stock status. Commerce already keeps that manual value dormant while managed.",
+      "reconciliation_sources": [
+        {
+          "role": "base",
+          "source_identity": "git:d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
-          "at": "2026-10-06T13:54:15+00:00",
-          "from": "needs_reverification",
-          "note": "fork composition invalidates prior current proof",
-          "source_snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
-          "to": "needs_reverification"
+          "role": "current",
+          "source_identity": "git:fc97ead4d5c1d5a28567f467085e041f88223daa",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
         },
         {
-          "at": "2026-10-06T20:35:45+00:00",
-          "choice": "Yes. Unchecking restores the dormant manual stock status (In stock / Out of stock / On backorder) with no Inventory quantity change and no Inventory contact. Unchecking does not talk to Inventory.",
-          "from": "needs_reverification",
-          "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
+          "role": "incoming",
+          "source_identity": "git:5710fc185645ed56098aff5727da03483be067ea",
+          "track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8"
+        }
+      ],
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "needs_reverification",
+      "superseded_by": null,
+      "updated_at": "2026-10-01T11:49:53+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
+      "candidate_refs": [],
+      "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+      "context_ref": null,
+      "created_at": "2026-10-03T20:44:58+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Canonical TEST Payments transport response bound repair",
+      "history": [
+        {
+          "at": "2026-10-03T20:44:58+00:00",
+          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-03T20:56:45+00:00",
+          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-03T20:56:45+00:00",
+          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/test-payments.ts",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -6311,58 +5416,130 @@
           "verification_ref": null
         }
       ],
-      "id": "manage-stock-uncheck-restores-004",
-      "implementation_ref": "file:src/admin/products-page.ts;file:src/features/catalog/product-admin.ts;file:src/features/inventory-provider/claim-storage.ts;file:src/features/catalog/route.ts",
-      "question": "When the clerk unchecks Manage stock, do In stock / Out of stock / On backorder come back as they were?",
-      "rationale": "Bobby confirmed Q4. Matches Woo: turning off Track stock quantity returns stock status. Commerce already keeps that manual value dormant while managed.",
-      "reconciliation_sources": [
-        {
-          "role": "base",
-          "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "current",
-          "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
-          "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
-        },
-        {
-          "role": "incoming",
-          "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
-          "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
-        }
-      ],
+      "id": "checkout-payments-response-bound-001",
+      "implementation_ref": "file:src/features/checkout/test-payments.ts",
+      "question": "How does the canonical TEST Payments binding/session/lookup transport reject oversized successful response bodies before parsing?",
+      "rationale": "Independent Template27 review accepted P2 required_fix on its exact Commerce42 dependency: a 1048706-byte binding response reached subsequent session transport. Parent authorized this bounded canonical owner repair; no product re-grill.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/checkout-payments-response-cap-20261003/SOURCE-REVIEW.json",
+          "result": "clean",
+          "reviewed_at": "2026-10-03T20:56:45+00:00",
+          "source_identity": "sha256:0e2d07f30b8245fdb9d93214a2054bc6fcdac27e00b29dccda970303fc785893"
+        }
+      ],
+      "review_ref": "proof/checkout-payments-response-cap-20261003/SOURCE-REVIEW.json",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0e2d07f30b8245fdb9d93214a2054bc6fcdac27e00b29dccda970303fc785893",
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:45+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-03T20:56:45+00:00",
+      "verification_ref": "proof/checkout-payments-response-cap-20261003/PARENT-VERIFICATION.json"
+    },
+    {
+      "baseline_ref": "git:444b0505ae061c58e2f738e9f39fb0b366d50e8c",
+      "candidate_refs": [],
+      "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
+      "context_ref": null,
+      "created_at": "2026-10-05T16:12:43+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Installed owner-scoped checkout guest and wake context",
+      "history": [
+        {
+          "at": "2026-10-05T16:12:43+00:00",
+          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-06T13:16:14+00:00",
+          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-06T13:16:14+00:00",
+          "choice": "Add a typed installed PluginContext adapter using fixed Registry collections and genuine runtime handler contexts, validating plugin/site and storage APIs and sharing canonical guest/wake execution. Preserve unavailable default when approved host callbacks/transport are absent. Expose concrete callable contract and exact missing bridge/network capability/allowed-host approval boundary; no activation, credential/account grant, new ledger or private/raw storage access.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/installed.ts;file:src/plugin.ts;file:docs/implementation/installed-checkout-context.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "installed-checkout-context-001",
+      "implementation_ref": "file:src/features/checkout/installed.ts;file:src/plugin.ts;file:docs/implementation/installed-checkout-context.md",
+      "question": "How do guest checkout and payment wakes consume the same installed Commerce owner storage and trusted TEST host?",
+      "rationale": "Bobby approved usable shopper TEST demo; coordinator assigned this bounded canonical source seam. Scope is implementation of settled ownership and fail-closed rules, not a new product preference.",
+      "repair_required": false,
+      "review_classifications": [
+        "human_gate"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "human_gate"
+          ],
+          "ref": "proof/installed-checkout-context-20261005/SOURCE-REVIEW.json",
+          "result": "findings",
+          "reviewed_at": "2026-10-06T13:16:14+00:00",
+          "source_identity": "sha256:c9fcb9b0b52532e796b21b0b575df9f4c7593df4faa459e22a90c1dd2d951e80"
+        }
+      ],
+      "review_ref": "proof/installed-checkout-context-20261005/SOURCE-REVIEW.json",
+      "review_result": "findings",
+      "review_source_identity": "sha256:c9fcb9b0b52532e796b21b0b575df9f4c7593df4faa459e22a90c1dd2d951e80",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-06T13:16:14+00:00",
+      "verification_ref": "proof/installed-checkout-context-20261005/VERIFICATION.json"
     }
   ],
   "last_activation": {
-    "at": "2026-10-06T13:54:15+00:00",
+    "at": "2026-10-01T11:49:53+00:00",
     "mechanism": "implicit"
   },
   "last_pause": null,
   "pause": null,
   "recommendation": null,
   "reconciliation": {
-    "plan_id": "1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
+    "plan_id": "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5",
     "refs": {
-      "base": "2db2ac9e87119abb9bddb94bde6207e44d81a070",
-      "current": "6bd9247ad2926fa719453ad63849191eed9f81d5",
-      "incoming": "2320a51c837841ecab277a9cd519b189a7879c08"
+      "base": "d3f7e591ef64c63d7748fe75e746dcfe39bbb4ca",
+      "current": "fc97ead4d5c1d5a28567f467085e041f88223daa",
+      "incoming": "5710fc185645ed56098aff5727da03483be067ea"
     },
-    "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
+    "snapshot_ref": ".grilltrack/lineage/15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5"
   },
   "schema_version": "grilltrack/v0.1",
   "status": "active",
-  "title": "Installed checkout and guarded coupon composition",
-  "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-06T20:35:45+00:00"
+  "title": "Coupon admin and accepted TEST checkout integration",
+  "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d",
+  "updated_at": "2026-10-06T13:16:14+00:00"
 }
