@@ -1,0 +1,1395 @@
+{
+  "adjudicated_decisions": {
+    "block-admin-create-002": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "block-admin-save-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "block-admin-settings-003": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "block-admin-settings-label-004": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "checkout-guest-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "checkout-hosted-first-002": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "checkout-payment-window-004": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "checkout-payments-response-bound-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "checkout-stock-hold-003": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "commerce-guest-runtime-mount-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "commerce-v1-inventory-unavailable-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "coupons-admin-native-v1-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "coupons-redemption-core-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "coupons-v1-cap-fence-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "coupons-v1-free-reconcile-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "coupons-v1-independent-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "fixed-bundle-component-snapshot-003": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "fixed-bundle-nonblocking-002": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "fixed-bundle-shape-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-checkbox-001": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-existing-sku-confirm-006": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-hide-status-002": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-no-price-rewrite-007": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-reenable-fresh-005": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-same-save-008": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-setup-required-003": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    },
+    "manage-stock-uncheck-restores-004": {
+      "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+      "role": "current"
+    }
+  },
+  "adjudication": {
+    "decisions": {
+      "block-admin-create-002": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "block-admin-save-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "block-admin-settings-003": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "block-admin-settings-label-004": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "checkout-guest-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "checkout-hosted-first-002": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "checkout-payment-window-004": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "checkout-payments-response-bound-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "checkout-stock-hold-003": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "commerce-guest-runtime-mount-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "commerce-v1-inventory-unavailable-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "coupons-admin-native-v1-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "coupons-redemption-core-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "coupons-v1-cap-fence-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "coupons-v1-free-reconcile-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "coupons-v1-independent-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "fixed-bundle-component-snapshot-003": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "fixed-bundle-nonblocking-002": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "fixed-bundle-shape-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-checkbox-001": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-existing-sku-confirm-006": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-hide-status-002": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-no-price-rewrite-007": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-reenable-fresh-005": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-same-save-008": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-setup-required-003": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      },
+      "manage-stock-uncheck-restores-004": {
+        "reason": "Preserve the established current answer and history; retain the competing nested composition as immutable lineage.",
+        "role": "current"
+      }
+    },
+    "refs": {
+      "base": "2db2ac9e87119abb9bddb94bde6207e44d81a070",
+      "current": "6bd9247ad2926fa719453ad63849191eed9f81d5",
+      "incoming": "2320a51c837841ecab277a9cd519b189a7879c08"
+    },
+    "schema": "grilltrack/adjudication/v1"
+  },
+  "composed_review": false,
+  "composed_verification": false,
+  "decision_ids": [
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-payments-response-bound-001",
+    "checkout-stock-hold-003",
+    "commerce-guest-runtime-mount-001",
+    "commerce-v1-inventory-unavailable-001",
+    "coupons-admin-native-v1-001",
+    "coupons-redemption-core-001",
+    "coupons-registry-block-kit-001",
+    "coupons-registry-packaging-001",
+    "coupons-v1-cap-fence-001",
+    "coupons-v1-free-reconcile-001",
+    "coupons-v1-independent-001",
+    "fixed-bundle-component-snapshot-003",
+    "fixed-bundle-nonblocking-002",
+    "fixed-bundle-shape-001",
+    "installed-checkout-context-001",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004"
+  ],
+  "decision_provenance": {
+    "block-admin-create-002": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "block-admin-save-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "block-admin-settings-003": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "block-admin-settings-label-004": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "checkout-guest-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "checkout-hosted-first-002": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "checkout-payment-window-004": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "checkout-payments-response-bound-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "checkout-stock-hold-003": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "commerce-guest-runtime-mount-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "commerce-v1-inventory-unavailable-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "coupons-admin-native-v1-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "coupons-redemption-core-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "coupons-registry-block-kit-001": [
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "coupons-registry-packaging-001": [
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "coupons-v1-cap-fence-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "coupons-v1-free-reconcile-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "coupons-v1-independent-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "fixed-bundle-component-snapshot-003": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "fixed-bundle-nonblocking-002": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "fixed-bundle-shape-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "installed-checkout-context-001": [
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      }
+    ],
+    "manage-stock-checkbox-001": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "manage-stock-existing-sku-confirm-006": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "manage-stock-hide-status-002": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "manage-stock-no-price-rewrite-007": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "manage-stock-reenable-fresh-005": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "manage-stock-same-save-008": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "manage-stock-setup-required-003": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ],
+    "manage-stock-uncheck-restores-004": [
+      {
+        "role": "base",
+        "source_identity": "git:2db2ac9e87119abb9bddb94bde6207e44d81a070",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:6bd9247ad2926fa719453ad63849191eed9f81d5",
+        "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:2320a51c837841ecab277a9cd519b189a7879c08",
+        "track_id": "gt-join-1c88607dd47ff27b8d4b8a1f89a0c2fd"
+      }
+    ]
+  },
+  "joined_track_id": "gt-join-925b214068976194be8bccd15206e3cb",
+  "lineage": {
+    "base": {
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/applied.json": "2762eed8d6fe4a3ec163bfa0088f0b51cc7b6b3892a49da399ca3203a0cedb53",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/plan.json": "debb6c2e627252cab221bb8bf480777ef5dfe1510ace23a7e0e1039a983c5e4c",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/projection/events.jsonl": "1f9780527eeee839aedcbbd63f14670a2f1931c000069666340cc6bad5490b07",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/projection/ledger.json": "3ce5fd31b763ec223b90ddff90de3f341673dab8a3d3337ff52eb76d144bac11",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/events.jsonl": "bbea1b345518ae375a1e6977ff8897e9e397a5404fb4723d2a687b79b369cba8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/ledger.json": "7c0d426c101a27b609d00fcd2c717315618f5538ea2f25222b7f34158211433b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/events.jsonl": "01cc3da4ab716f53e15ee81c46e332119fcbf2fdfcee20ce43a809cf86aba18f",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/ledger.json": "924413dbf75508401a4ef807995d2cf1dcf09bf96566c37d53632a82a04efff5",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/events.jsonl": "a68047618e3339410331ad48b72c1478d4a55104a1f0dda9f7296481e16c5880",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/ledger.json": "aae2e337432843161d64a7241796ea659fd269ad3778a2144549ac91d34f4bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/applied.json": "7ddb563063c61925f60ac09839749b517b660b69a69a1789bf9759e88e9a0c98",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/plan.json": "a03f6190e3c7f0be3ff5b484ab194b0bfdc6b78db6a897f48519a59d8fdb9165",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/projection/events.jsonl": "5cf99dbe00c3dca44ca742a51a06d968aa6a8bbc2e4730ab655175fd59d7b176",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/projection/ledger.json": "d02e931ead8d99925c9cc41df3a8e8110e84c25390d8443815fbdb0685f5966b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/events.jsonl": "13acaeceefc26edab50c1c66097f559284b9e109968a15393a62b81c4fca2fdf",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/ledger.json": "be3444ebcb171459f1446d3c6536708b7790f71303f4b31868cbe6c7f3e1ea3e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/events.jsonl": "16f8e90c814e050cb558e6f773f3317d736ac1cda1520af7b3e43c14ec2247f2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/ledger.json": "fdf445e93cc170acb98aed8fb42cda19b49aa5fddd00ea0117fee66b2f0906f7",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/events.jsonl": "abcf44010602fe80ac96fd30c1c32b429933b3786906c160cce0d5524883783a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/ledger.json": "a6e39f46b992a10d8041f0e0c5fdfc430fe3603b52bbf4717beb49fe5ec5be2d"
+    },
+    "current": {
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/applied.json": "2762eed8d6fe4a3ec163bfa0088f0b51cc7b6b3892a49da399ca3203a0cedb53",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/plan.json": "debb6c2e627252cab221bb8bf480777ef5dfe1510ace23a7e0e1039a983c5e4c",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/projection/events.jsonl": "1f9780527eeee839aedcbbd63f14670a2f1931c000069666340cc6bad5490b07",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/projection/ledger.json": "3ce5fd31b763ec223b90ddff90de3f341673dab8a3d3337ff52eb76d144bac11",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/events.jsonl": "bbea1b345518ae375a1e6977ff8897e9e397a5404fb4723d2a687b79b369cba8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/ledger.json": "7c0d426c101a27b609d00fcd2c717315618f5538ea2f25222b7f34158211433b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/events.jsonl": "01cc3da4ab716f53e15ee81c46e332119fcbf2fdfcee20ce43a809cf86aba18f",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/ledger.json": "924413dbf75508401a4ef807995d2cf1dcf09bf96566c37d53632a82a04efff5",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/events.jsonl": "a68047618e3339410331ad48b72c1478d4a55104a1f0dda9f7296481e16c5880",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/ledger.json": "aae2e337432843161d64a7241796ea659fd269ad3778a2144549ac91d34f4bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/applied.json": "7ddb563063c61925f60ac09839749b517b660b69a69a1789bf9759e88e9a0c98",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/plan.json": "a03f6190e3c7f0be3ff5b484ab194b0bfdc6b78db6a897f48519a59d8fdb9165",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/projection/events.jsonl": "5cf99dbe00c3dca44ca742a51a06d968aa6a8bbc2e4730ab655175fd59d7b176",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/projection/ledger.json": "d02e931ead8d99925c9cc41df3a8e8110e84c25390d8443815fbdb0685f5966b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/events.jsonl": "13acaeceefc26edab50c1c66097f559284b9e109968a15393a62b81c4fca2fdf",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/ledger.json": "be3444ebcb171459f1446d3c6536708b7790f71303f4b31868cbe6c7f3e1ea3e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/events.jsonl": "16f8e90c814e050cb558e6f773f3317d736ac1cda1520af7b3e43c14ec2247f2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/ledger.json": "fdf445e93cc170acb98aed8fb42cda19b49aa5fddd00ea0117fee66b2f0906f7",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/events.jsonl": "abcf44010602fe80ac96fd30c1c32b429933b3786906c160cce0d5524883783a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/ledger.json": "a6e39f46b992a10d8041f0e0c5fdfc430fe3603b52bbf4717beb49fe5ec5be2d"
+    },
+    "incoming": {
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/applied.json": "2762eed8d6fe4a3ec163bfa0088f0b51cc7b6b3892a49da399ca3203a0cedb53",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/plan.json": "debb6c2e627252cab221bb8bf480777ef5dfe1510ace23a7e0e1039a983c5e4c",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/projection/events.jsonl": "1f9780527eeee839aedcbbd63f14670a2f1931c000069666340cc6bad5490b07",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/projection/ledger.json": "3ce5fd31b763ec223b90ddff90de3f341673dab8a3d3337ff52eb76d144bac11",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/events.jsonl": "bbea1b345518ae375a1e6977ff8897e9e397a5404fb4723d2a687b79b369cba8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/base/ledger.json": "7c0d426c101a27b609d00fcd2c717315618f5538ea2f25222b7f34158211433b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/events.jsonl": "01cc3da4ab716f53e15ee81c46e332119fcbf2fdfcee20ce43a809cf86aba18f",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/current/ledger.json": "924413dbf75508401a4ef807995d2cf1dcf09bf96566c37d53632a82a04efff5",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/events.jsonl": "a68047618e3339410331ad48b72c1478d4a55104a1f0dda9f7296481e16c5880",
+      "15aa3e6cee8cffda9b9fa353a4f0175dd6f79aad82222a6e8190320530ba1ab5/snapshots/incoming/ledger.json": "aae2e337432843161d64a7241796ea659fd269ad3778a2144549ac91d34f4bab",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/applied.json": "fcffd6a4dcccd4b16d25300c6811bff5a82b87da14c1ad1c27033504b0d51377",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/plan.json": "fbb262a57772daff596a481b907e6b126549fcafc823038035f5b037029d0a0b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/projection/events.jsonl": "03511a2c49edd007d5f7524dea0d37dfe9501709261fc5df6b02227a1b07e626",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/projection/ledger.json": "5c6fe50b4746af568a2942469dcc935a0aa362b147f0e5135b81d5d1f2076acc",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/events.jsonl": "997c282d9af5d7b67e110bafb0442c30fe4599135e3977f6d32a19f43ee70cf7",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/base/ledger.json": "32b975cb89e0046c562620a4805f57891c27255fc6702dccf6131f650a957a51",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/events.jsonl": "ff35774fa038dd88dc218a8cd8e8a7095675dd333ef8026dc541477eaea5eca5",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/current/ledger.json": "2c11a39c210dad2110d6e9d196c68604a65f1713744da01ca16a5bbc658a9e14",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/events.jsonl": "db166a65a3a96d00bbafad5cec0c8b51bc3f8ab3221d10b2383bfe563c7df69b",
+      "1c88607dd47ff27b8d4b8a1f89a0c2fdd9d958b407051a8cb207c154a295c112/snapshots/incoming/ledger.json": "ff0052747fb3d86c58fc643245ec1d94c475c113aef0e5d2a0ef1b279a7ea1c0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/applied.json": "7ddb563063c61925f60ac09839749b517b660b69a69a1789bf9759e88e9a0c98",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/plan.json": "a03f6190e3c7f0be3ff5b484ab194b0bfdc6b78db6a897f48519a59d8fdb9165",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/projection/events.jsonl": "5cf99dbe00c3dca44ca742a51a06d968aa6a8bbc2e4730ab655175fd59d7b176",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/projection/ledger.json": "d02e931ead8d99925c9cc41df3a8e8110e84c25390d8443815fbdb0685f5966b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/events.jsonl": "13acaeceefc26edab50c1c66097f559284b9e109968a15393a62b81c4fca2fdf",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/base/ledger.json": "be3444ebcb171459f1446d3c6536708b7790f71303f4b31868cbe6c7f3e1ea3e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/events.jsonl": "16f8e90c814e050cb558e6f773f3317d736ac1cda1520af7b3e43c14ec2247f2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/current/ledger.json": "fdf445e93cc170acb98aed8fb42cda19b49aa5fddd00ea0117fee66b2f0906f7",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/events.jsonl": "abcf44010602fe80ac96fd30c1c32b429933b3786906c160cce0d5524883783a",
+      "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438/snapshots/incoming/ledger.json": "a6e39f46b992a10d8041f0e0c5fdfc430fe3603b52bbf4717beb49fe5ec5be2d"
+    }
+  },
+  "needs_reverification": [
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-payments-response-bound-001",
+    "checkout-stock-hold-003",
+    "commerce-guest-runtime-mount-001",
+    "commerce-v1-inventory-unavailable-001",
+    "coupons-admin-native-v1-001",
+    "coupons-redemption-core-001",
+    "coupons-registry-block-kit-001",
+    "coupons-registry-packaging-001",
+    "coupons-v1-cap-fence-001",
+    "coupons-v1-free-reconcile-001",
+    "coupons-v1-independent-001",
+    "fixed-bundle-component-snapshot-003",
+    "fixed-bundle-nonblocking-002",
+    "installed-checkout-context-001",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004"
+  ],
+  "plan_id": "925b214068976194be8bccd15206e3cbfcaf143f42ed1e66fb88dc41d2d3731c",
+  "refs": {
+    "base": "2db2ac9e87119abb9bddb94bde6207e44d81a070",
+    "current": "6bd9247ad2926fa719453ad63849191eed9f81d5",
+    "incoming": "2320a51c837841ecab277a9cd519b189a7879c08"
+  },
+  "schema": "grilltrack/reconcile/v1",
+  "snapshot_ref": ".grilltrack/lineage/925b214068976194be8bccd15206e3cbfcaf143f42ed1e66fb88dc41d2d3731c",
+  "snapshots": {
+    "base": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "db166a65a3a96d00bbafad5cec0c8b51bc3f8ab3221d10b2383bfe563c7df69b",
+      "ledger.json": "ff0052747fb3d86c58fc643245ec1d94c475c113aef0e5d2a0ef1b279a7ea1c0"
+    },
+    "current": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "88a3801cf1deea8009051533078982a33d38295a75764512123b917eb92a71e1",
+      "ledger.json": "f6a01bb6ed1fc8693d00e87f1c09b187711ad259dcb8e927187c9466f30f62e3"
+    },
+    "incoming": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "9a63988903d6708caf43ea8fc4595b6163d98169d07dd9edba9edb4e3a77fc4e",
+      "ledger.json": "03e30add3930149d1612dd82f3c97ccbffab8ce208da945a5d26d7c5ef23836f"
+    }
+  },
+  "title": "Installed checkout and guarded coupon composition"
+}

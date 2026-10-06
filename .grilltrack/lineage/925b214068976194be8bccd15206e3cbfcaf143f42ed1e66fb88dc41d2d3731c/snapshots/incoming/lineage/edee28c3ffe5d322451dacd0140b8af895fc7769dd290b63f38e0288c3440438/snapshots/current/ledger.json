@@ -1,0 +1,553 @@
+{
+  "closeout": null,
+  "created_at": "2026-09-27T00:30:13+00:00",
+  "current_focus": {
+    "cadence": "sequential",
+    "confirmed": true,
+    "confirmed_at": "2026-09-27T00:45:14+00:00",
+    "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+    "started_at": "2026-09-27T00:30:13+00:00",
+    "status": "inspected",
+    "summary": "Build Registry-safe sandboxed Commerce with emdash-plugin.jsonc and Block Kit JSON, no browser-side plugin React. Products: add Name and SKU; Name is customer-facing title/H1 contract, no new storefront page. One Save for Regular, Sale, Manage stock and manual stock status. Preserve kernel validation and setup-required, hidden manual statuses when managed, dormant restoration when off, no install popup. Commerce Settings page, Catalog section: Hide out-of-stock products with separate Save. Prove sandbox installation and admin behavior on fresh EmDash 0.41.0 SQLite throwaway. No publishing or live-site changes; Inventory service hosting excluded; unmanaged availability works independently."
+  },
+  "decisions": [
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+      "context_ref": null,
+      "created_at": "2026-09-27T00:33:51+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+      "history": [
+        {
+          "at": "2026-09-27T00:33:51+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:05:31+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:16:22+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:16:22+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-27T01:16:40+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:563bbe73a33f00c6df4eedf595cee6c515ff72b2b17ca10eed6dfeace508ece6",
+          "to": "implemented",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-27T01:16:40+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-29T22:52:27+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405",
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-29T22:55:30+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+          "review_result": "findings",
+          "review_source_identity": "git:0d120659d39e859ed4d32224b5981a18029ccb01",
+          "to": "implemented",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-30T01:02:16+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+        },
+        {
+          "at": "2026-09-30T11:31:11+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
+        },
+        {
+          "at": "2026-09-30T11:37:21+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/native-admin-continuity.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "review_result": "findings",
+          "review_source_identity": "git:6f511ac1243801d44f177ade1a83383086b594ae",
+          "to": "implemented",
+          "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
+        },
+        {
+          "at": "2026-09-30T11:41:39+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/native-admin-continuity-20260929/README.md"
+        },
+        {
+          "at": "2026-09-30T13:09:14+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:11:40+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "review_result": "findings",
+          "review_source_identity": "git:5cde2b574a06db40249a2e609673f6a3d92a09b8",
+          "to": "implemented",
+          "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
+        },
+        {
+          "at": "2026-09-30T13:16:27+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": "file:proof/native-admin-gate-repair-20260930/PROOF.md"
+        }
+      ],
+      "id": "block-admin-save-001",
+      "implementation_ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+      "question": "Does the clerk open a product from Products and use one Save for Regular, Sale, Manage stock and unmanaged stock status?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:docs/implementation/sandbox-admin-review.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-27T01:16:22+00:00",
+          "source_identity": "sha256:563bbe73a33f00c6df4eedf595cee6c515ff72b2b17ca10eed6dfeace508ece6"
+        },
+        {
+          "classifications": [],
+          "ref": "file:docs/implementation/sandbox-admin-review.md",
+          "result": "clean",
+          "reviewed_at": "2026-09-27T01:18:31+00:00",
+          "source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:docs/implementation/sandbox-admin-review.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-29T22:52:27+00:00",
+          "source_identity": "git:0d120659d39e859ed4d32224b5981a18029ccb01"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:docs/implementation/native-admin-gate-repair.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T11:31:11+00:00",
+          "source_identity": "git:6f511ac1243801d44f177ade1a83383086b594ae"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "file:docs/implementation/sandbox-stock-status-repair.md",
+          "result": "findings",
+          "reviewed_at": "2026-09-30T13:09:14+00:00",
+          "source_identity": "git:5cde2b574a06db40249a2e609673f6a3d92a09b8"
+        }
+      ],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-30T13:16:27+00:00",
+      "verification_ref": "file:proof/sandbox-stock-status-repair-20260930/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Yes. Products includes Add product with Name and SKU. After creation open the product for pricing. Manage stock defaults off; creation needs neither developer work nor Inventory setup. Name is the customer-facing product title and supplies the H1 on its customer-facing product page, not a separate internal label. This title contract does not by itself authorize building a new storefront product page in this admin slice.",
+      "context_ref": null,
+      "created_at": "2026-09-27T00:38:14+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+      "history": [
+        {
+          "at": "2026-09-27T00:38:14+00:00",
+          "choice": "Yes. Products includes Add product with Name and SKU. After creation open the product for pricing. Manage stock defaults off; creation needs neither developer work nor Inventory setup. Name is the customer-facing product title and supplies the H1 on its customer-facing product page, not a separate internal label. This title contract does not by itself authorize building a new storefront product page in this admin slice.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:05:31+00:00",
+          "choice": "Yes. Products includes Add product with Name and SKU. After creation open the product for pricing. Manage stock defaults off; creation needs neither developer work nor Inventory setup. Name is the customer-facing product title and supplies the H1 on its customer-facing product page, not a separate internal label. This title contract does not by itself authorize building a new storefront product page in this admin slice.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:16:22+00:00",
+          "choice": "Yes. Products includes Add product with Name and SKU. After creation open the product for pricing. Manage stock defaults off; creation needs neither developer work nor Inventory setup. Name is the customer-facing product title and supplies the H1 on its customer-facing product page, not a separate internal label. This title contract does not by itself authorize building a new storefront product page in this admin slice.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "block-admin-create-002",
+      "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+      "question": "Can a clerk add a product using Name and SKU, then open it for pricing with Manage stock off by default?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:docs/implementation/sandbox-admin-review.md",
+          "result": "clean",
+          "reviewed_at": "2026-09-27T01:18:31+00:00",
+          "source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405"
+        }
+      ],
+      "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-27T01:18:31+00:00",
+      "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Keep the store-wide Hide out-of-stock products checkbox with its own Save, in Commerce settings rather than a separate top-level Store area. User described Commerce > Settings or Advanced settings; exact label remains to be confirmed. Preserve existing setting behavior.",
+      "context_ref": null,
+      "created_at": "2026-09-27T00:41:33+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+      "history": [
+        {
+          "at": "2026-09-27T00:41:33+00:00",
+          "choice": "Keep the store-wide Hide out-of-stock products checkbox with its own Save, in Commerce settings rather than a separate top-level Store area. User described Commerce > Settings or Advanced settings; exact label remains to be confirmed. Preserve existing setting behavior.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:05:31+00:00",
+          "choice": "Keep the store-wide Hide out-of-stock products checkbox with its own Save, in Commerce settings rather than a separate top-level Store area. User described Commerce > Settings or Advanced settings; exact label remains to be confirmed. Preserve existing setting behavior.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:16:22+00:00",
+          "choice": "Keep the store-wide Hide out-of-stock products checkbox with its own Save, in Commerce settings rather than a separate top-level Store area. User described Commerce > Settings or Advanced settings; exact label remains to be confirmed. Preserve existing setting behavior.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "block-admin-settings-003",
+      "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+      "question": "Where does the store-wide Hide out-of-stock products checkbox belong?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:docs/implementation/sandbox-admin-review.md",
+          "result": "clean",
+          "reviewed_at": "2026-09-27T01:18:31+00:00",
+          "source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405"
+        }
+      ],
+      "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-27T01:18:31+00:00",
+      "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Yes, for this slice. Label the Commerce page Settings and its catalog settings section Catalog. Put Hide out-of-stock products there with its own Save. This is the current accepted placement, not a permanent navigation rule.",
+      "context_ref": null,
+      "created_at": "2026-09-27T00:42:35+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "A clerk manages products and store settings after installing sandboxed Commerce",
+      "history": [
+        {
+          "at": "2026-09-27T00:42:35+00:00",
+          "choice": "Yes, for this slice. Label the Commerce page Settings and its catalog settings section Catalog. Put Hide out-of-stock products there with its own Save. This is the current accepted placement, not a permanent navigation rule.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:05:31+00:00",
+          "choice": "Yes, for this slice. Label the Commerce page Settings and its catalog settings section Catalog. Put Hide out-of-stock products there with its own Save. This is the current accepted placement, not a permanent navigation rule.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-09-27T01:16:22+00:00",
+          "choice": "Yes, for this slice. Label the Commerce page Settings and its catalog settings section Catalog. Put Hide out-of-stock products there with its own Save. This is the current accepted placement, not a permanent navigation rule.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "block-admin-settings-label-004",
+      "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+      "question": "Use Commerce > Settings > Catalog for Hide out-of-stock products?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "file:docs/implementation/sandbox-admin-review.md",
+          "result": "clean",
+          "reviewed_at": "2026-09-27T01:18:31+00:00",
+          "source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405"
+        }
+      ],
+      "review_ref": "file:docs/implementation/sandbox-admin-review.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:4e72b33f1276713b19a5b44c83c9782fd802515abb21088af38cc92b0e50b405",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-09-27T01:18:31+00:00",
+      "verification_ref": "file:proof/sandbox-admin-20260926/README.md"
+    }
+  ],
+  "last_activation": {
+    "at": "2026-09-27T00:30:13+00:00",
+    "mechanism": "implicit"
+  },
+  "last_pause": null,
+  "pause": null,
+  "predecessor_track_id": "gt-20260926183503-6113fc",
+  "recommendation": {
+    "alternatives": [],
+    "reason": "The parent must contain native compatibility and explicit selected-status repair before independent merge qualification. Checkout composition conflicts touch FEATURE_MAP.md, package.json, ledger and events. Preserve sandbox/native exports and checkout tests; reconcile decision lineage only through GrillTrack CLI.",
+    "recommended": "Requalify repaired parent PR 27; report child PR 28 as redundant if fully included. Compose separately owned PR 29 only after its repair.",
+    "recorded_at": "2026-09-30T11:37:21+00:00"
+  },
+  "schema_version": "grilltrack/v0.1",
+  "status": "active",
+  "title": "Registry-safe Commerce Products and Store admin",
+  "track_id": "gt-20260927003013-b02439",
+  "updated_at": "2026-09-30T13:16:27+00:00"
+}

@@ -1,0 +1,320 @@
+{
+  "composed_review": false,
+  "composed_verification": false,
+  "decision_ids": [
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-stock-hold-003",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004"
+  ],
+  "decision_provenance": {
+    "block-admin-create-002": [
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260927003013-b02439"
+      }
+    ],
+    "block-admin-save-001": [
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260927003013-b02439"
+      }
+    ],
+    "block-admin-settings-003": [
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260927003013-b02439"
+      }
+    ],
+    "block-admin-settings-label-004": [
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260927003013-b02439"
+      }
+    ],
+    "checkout-guest-001": [
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "checkout-hosted-first-002": [
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "checkout-payment-window-004": [
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "checkout-stock-hold-003": [
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-checkbox-001": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-existing-sku-confirm-006": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-hide-status-002": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-no-price-rewrite-007": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-reenable-fresh-005": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-same-save-008": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-setup-required-003": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ],
+    "manage-stock-uncheck-restores-004": [
+      {
+        "role": "base",
+        "source_identity": "git:51ab023b14490e3bff821e5310dd1c323092df30",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+        "track_id": "gt-20260926183503-6113fc"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:1cb55c756ef746bcb042b9679dc43b57e67bcb0d",
+        "track_id": "gt-20260926183503-6113fc"
+      }
+    ]
+  },
+  "joined_track_id": "gt-join-edee28c3ffe5d322451dacd0140b8af8",
+  "needs_reverification": [
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-stock-hold-003",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004"
+  ],
+  "plan_id": "edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",
+  "refs": {
+    "base": "51ab023b14490e3bff821e5310dd1c323092df30",
+    "current": "1aaa98c52c55f78308d285d620c3e71ff16e0b2a",
+    "incoming": "1cb55c756ef746bcb042b9679dc43b57e67bcb0d"
+  },
+  "schema": "grilltrack/reconcile/v1",
+  "snapshot_ref": ".grilltrack/lineage/edee28c3ffe5d322451dacd0140b8af895fc7769dd290b63f38e0288c3440438",
+  "snapshots": {
+    "base": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "13acaeceefc26edab50c1c66097f559284b9e109968a15393a62b81c4fca2fdf",
+      "ledger.json": "be3444ebcb171459f1446d3c6536708b7790f71303f4b31868cbe6c7f3e1ea3e"
+    },
+    "current": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "16f8e90c814e050cb558e6f773f3317d736ac1cda1520af7b3e43c14ec2247f2",
+      "ledger.json": "fdf445e93cc170acb98aed8fb42cda19b49aa5fddd00ea0117fee66b2f0906f7"
+    },
+    "incoming": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "abcf44010602fe80ac96fd30c1c32b429933b3786906c160cce0d5524883783a",
+      "ledger.json": "a6e39f46b992a10d8041f0e0c5fdfc430fe3603b52bbf4717beb49fe5ec5be2d"
+    }
+  },
+  "title": "Qualified native, sandbox and checkout integration"
+}

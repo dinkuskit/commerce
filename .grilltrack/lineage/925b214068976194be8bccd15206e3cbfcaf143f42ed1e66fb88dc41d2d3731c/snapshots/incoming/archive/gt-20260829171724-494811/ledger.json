@@ -1,0 +1,614 @@
+{
+  "closeout": {
+    "closed_at": "2026-08-30T19:41:31+00:00",
+    "confirmed_by": "user",
+    "deferred_decisions": [],
+    "proof_refs": [
+      "proof/configure-inventory-action/PROOF.md",
+      "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+      "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470568849",
+      "https://github.com/dinkuskit/commerce/pull/14"
+    ],
+    "reason": "PR #14 merged and the user explicitly confirmed closure before beginning the successor availability-policy track.",
+    "reviews": [
+      {
+        "classifications": [],
+        "decision_id": "configure-inventory-entry-030",
+        "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+        "result": "clean",
+        "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+      },
+      {
+        "classifications": [],
+        "decision_id": "store-inventory-binding-storage-031",
+        "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+        "result": "clean",
+        "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+      },
+      {
+        "classifications": [],
+        "decision_id": "store-inventory-pool-change-032",
+        "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+        "result": "clean",
+        "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+      },
+      {
+        "classifications": [],
+        "decision_id": "configure-inventory-runtime-boundary-033",
+        "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+        "result": "clean",
+        "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+      },
+      {
+        "classifications": [],
+        "decision_id": "stable-commerce-site-identity-035",
+        "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+        "result": "clean",
+        "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+      },
+      {
+        "classifications": [],
+        "decision_id": "configure-inventory-command-input-036",
+        "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+        "result": "clean",
+        "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+      }
+    ],
+    "summary": "Closed the Configure Inventory action track after its provider-neutral setup action, singleton store binding, deferred pool migration, replaceable provider boundary, permanent Commerce site identity, and server-owned command input were implemented and verified. Decision 034 remains preserved as superseded by decision 035. OpenClaw reviewed exact source a4ac5b0207b9a6261b040e71766a9de620b67408 clean; ClawSweeper found proof sufficient and requested the human contract approval supplied by the authorized merge of PR #14 at merge commit 530348c07769a010b0fa4ef24604292a4254eda0. Live cross-plugin transport, OAuth, visual UI, stock mutation, and the dedicated pool-migration workflow remain deferred.",
+    "superseded_decisions": [
+      "trusted-inventory-site-context-034"
+    ],
+    "verified_decisions": [
+      "configure-inventory-entry-030",
+      "store-inventory-binding-storage-031",
+      "store-inventory-pool-change-032",
+      "configure-inventory-runtime-boundary-033",
+      "stable-commerce-site-identity-035",
+      "configure-inventory-command-input-036"
+    ]
+  },
+  "created_at": "2026-08-29T17:17:25+00:00",
+  "current_focus": {
+    "cadence": "sequential",
+    "confirmed": true,
+    "confirmed_at": "2026-08-30T18:17:06+00:00",
+    "domain": "authenticated managed-stock setup action",
+    "started_at": "2026-08-29T17:17:25+00:00",
+    "status": "closed",
+    "summary": "Implement the Commerce half of Configure Inventory: persist one store-level Inventory configuration containing a permanent server-generated Commerce site ID plus provider, pool, and default location; keep EmDash site name and URL as human-facing metadata only; expose one authenticated product action accepting only catalogItemId; load all canonical product and binding data server-side; return inventory-setup-required without claim/provider contact when setup is incomplete; otherwise execute the existing atomic managed-SKU registration flow through the provider-neutral port. Remain compatible with Inventory main d31fbfda982ad669f638a222f0cb1caa7592c095. Exclude live cross-plugin transport, OAuth, visual UI, stock mutation, and pool migration."
+  },
+  "decisions": [
+    {
+      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "candidate_refs": [],
+      "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
+      "context_ref": "predecessor:atomic-managed-sku-registration-claim-20260829;recommendation:authenticated setup action",
+      "created_at": "2026-08-29T17:17:56+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "authenticated managed-stock setup action",
+      "history": [
+        {
+          "at": "2026-08-29T17:18:41+00:00",
+          "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:45+00:00",
+          "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:47+00:00",
+          "choice": "Configure Inventory is one explicit product action. When the store already has a complete Inventory provider binding, the click immediately begins the product's atomic SKU connection using that store's active pool, with no second confirmation. When the binding is missing or incomplete, Commerce creates no claim and contacts no provider; it returns a structured inventory-setup-required result so the future UI can lead the owner through store setup. The product action never accepts a one-off pool that bypasses the store binding.",
+          "from": "implemented",
+          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "configure-inventory-entry-030",
+      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+      "question": "What should Configure Inventory do when the store-level Inventory pool setup is complete or missing?",
+      "rationale": "This keeps the product action simple, preserves one active pool per store, and prevents a product-level request from silently changing store-wide Inventory configuration.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T19:41:30+00:00",
+          "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+        }
+      ],
+      "review_ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+      "review_result": "clean",
+      "review_source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T19:41:30+00:00",
+      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+    },
+    {
+      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "candidate_refs": [],
+      "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
+      "context_ref": "predecessor-lock:one-active-pool-per-store",
+      "created_at": "2026-08-29T17:18:41+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "configure-inventory-entry-030"
+      ],
+      "domain": "authenticated managed-stock setup action",
+      "history": [
+        {
+          "at": "2026-08-29T17:23:49+00:00",
+          "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:46+00:00",
+          "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:47+00:00",
+          "choice": "Persist one Commerce-owned store-level Inventory configuration record containing providerRef, poolId, and defaultFulfillmentLocationId. Every Configure Inventory product action reads that same record. Do not duplicate pool and location configuration onto every product; products retain only their own managed-stock state and permanent Inventory SKU identity.",
+          "from": "implemented",
+          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "store-inventory-binding-storage-031",
+      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+      "question": "Where should Commerce remember the store's selected Inventory pool and default fulfillment location?",
+      "rationale": "The store has one active pool configuration, while many products consume it. One durable record prevents products from drifting onto inconsistent pool or location settings.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T19:41:31+00:00",
+          "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+        }
+      ],
+      "review_ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+      "review_result": "clean",
+      "review_source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T19:41:31+00:00",
+      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+    },
+    {
+      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "candidate_refs": [],
+      "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. Defer the dedicated pool-migration workflow until after the Commerce, Inventory, and Blocks stack is proven on a real website; that later workflow must reconcile SKU links and stock before the store binding can change.",
+      "context_ref": null,
+      "created_at": "2026-08-29T17:23:49+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "store-inventory-binding-storage-031"
+      ],
+      "domain": "authenticated managed-stock setup action",
+      "history": [
+        {
+          "at": "2026-08-29T17:26:42+00:00",
+          "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. A future explicit pool-migration workflow must reconcile SKU links and stock before the store binding can change; this slice does not build that migration workflow.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:46+00:00",
+          "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. Defer the dedicated pool-migration workflow until after the Commerce, Inventory, and Blocks stack is proven on a real website; that later workflow must reconcile SKU links and stock before the store binding can change.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:47+00:00",
+          "choice": "Do not silently move or repoint existing products. Block changing the active store pool while any product is pending, needs attention, or active under the current pool, and return a structured migration-required result. Defer the dedicated pool-migration workflow until after the Commerce, Inventory, and Blocks stack is proven on a real website; that later workflow must reconcile SKU links and stock before the store binding can change.",
+          "from": "implemented",
+          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "store-inventory-pool-change-032",
+      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+      "question": "What should happen if an owner tries to change the store's active Inventory pool after managed products are already connected?",
+      "rationale": "Automatically switching the store binding would make existing Inventory SKU identities appear to belong to a different pool, risking incorrect stock truth or duplicate SKU links. Deferring migration keeps the proof slice focused without weakening the safety boundary.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T19:41:31+00:00",
+          "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+        }
+      ],
+      "review_ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+      "review_result": "clean",
+      "review_source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T19:41:31+00:00",
+      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+    },
+    {
+      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "candidate_refs": [],
+      "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
+      "context_ref": null,
+      "created_at": "2026-08-29T17:27:04+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "configure-inventory-entry-030",
+        "store-inventory-binding-storage-031"
+      ],
+      "domain": "authenticated managed-stock setup action",
+      "history": [
+        {
+          "at": "2026-08-29T17:28:48+00:00",
+          "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:46+00:00",
+          "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:47+00:00",
+          "choice": "No. Implement the real authenticated Commerce action and its durable store-binding and product-state persistence, while keeping Inventory behind the existing provider-neutral InventoryProviderPort. The runtime connector remains replaceable; this slice adds no hard-coded HTTP endpoint, Cloudflare OAuth, service binding, or EmDash-internal plugin lookup. Prove the action through deterministic and real Commerce-storage adapters, then add the DinkusKit Inventory runtime connector as the next cross-stack slice.",
+          "from": "implemented",
+          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "configure-inventory-runtime-boundary-033",
+      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+      "question": "Should this Commerce slice hard-wire Configure Inventory to one live cross-plugin transport?",
+      "rationale": "The Commerce behavior and safety rules can become durable now while EmDash 1.0 plugin connection and authorization surfaces are still moving. A narrow provider port lets the later live connector change without rewriting product state or atomic registration rules.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T19:41:31+00:00",
+          "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+        }
+      ],
+      "review_ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+      "review_result": "clean",
+      "review_source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T19:41:31+00:00",
+      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+    },
+    {
+      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "candidate_refs": [],
+      "choice": "The authenticated server runtime supplies the canonical EmDash site ID to the Commerce action. Never accept siteId from the browser request or let a product override it. The later Inventory connector maps Commerce's hidden registration operationId to Inventory commandId, the trusted runtime site ID to context.siteId, the saved store pool to context.poolId, the catalog SKU and one-time title fallback to the Inventory payload, and the catalog item identity to an external reference.",
+      "context_ref": "inventory:git:d31fbfda982ad669f638a222f0cb1caa7592c095",
+      "created_at": "2026-08-29T17:28:49+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "configure-inventory-runtime-boundary-033"
+      ],
+      "domain": "authenticated managed-stock setup action",
+      "history": [
+        {
+          "at": "2026-08-29T17:31:18+00:00",
+          "choice": "The authenticated server runtime supplies the canonical EmDash site ID to the Commerce action. Never accept siteId from the browser request or let a product override it. The later Inventory connector maps Commerce's hidden registration operationId to Inventory commandId, the trusted runtime site ID to context.siteId, the saved store pool to context.poolId, the catalog SKU and one-time title fallback to the Inventory payload, and the catalog item identity to an external reference.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "Exact EmDash 0.35 and current-main inspection found no canonical opaque siteId in PluginContext; only mutable site metadata is exposed.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
+        }
+      ],
+      "id": "trusted-inventory-site-context-034",
+      "implementation_ref": null,
+      "question": "Where should Configure Inventory obtain Inventory's required siteId?",
+      "rationale": "Inventory's merged command contract requires siteId, and trusting a browser-supplied value could attribute a registration to the wrong site. Server-owned context aligns Commerce to Inventory PR #12 without expanding the saved provider binding or coupling Commerce to Inventory's storage.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "superseded",
+      "superseded_by": "stable-commerce-site-identity-035",
+      "updated_at": "2026-08-29T17:31:18+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "candidate_refs": [],
+      "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
+      "context_ref": "emdash:0.35:PluginContext.site",
+      "created_at": "2026-08-29T17:31:18+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "store-inventory-binding-storage-031",
+        "configure-inventory-runtime-boundary-033"
+      ],
+      "domain": "authenticated managed-stock setup action",
+      "history": [
+        {
+          "at": "2026-08-29T17:36:02+00:00",
+          "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:46+00:00",
+          "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:47+00:00",
+          "choice": "Generate one opaque Commerce site ID during the store's first Inventory configuration, persist it server-side in the singleton store-level Inventory configuration, and reuse it for every Inventory command. The browser cannot supply or change it. EmDash's canonical ctx.site.url may identify the site to humans, but it is not the permanent key because domains can change. If EmDash 1.0 later exposes a native stable site identity, adopting it requires an explicit compatibility migration rather than silently replacing the existing ID.",
+          "from": "implemented",
+          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "stable-commerce-site-identity-035",
+      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+      "question": "What stable website identity should Commerce send when EmDash does not expose an opaque site ID?",
+      "rationale": "EmDash 0.35 and current upstream main expose ctx.site name, URL, locale, and trailing-slash policy but no opaque site ID. A durable Commerce-generated ID is concrete, domain-independent, and keeps today's contract adaptable to a future upstream identity surface.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T19:41:31+00:00",
+          "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+        }
+      ],
+      "review_ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+      "review_result": "clean",
+      "review_source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T19:41:31+00:00",
+      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+    },
+    {
+      "baseline_ref": "git:9fd24c6a13a4a4d332109e2d4541b05ec5f83786",
+      "candidate_refs": [],
+      "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
+      "context_ref": null,
+      "created_at": "2026-08-29T17:36:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "configure-inventory-entry-030",
+        "store-inventory-binding-storage-031",
+        "stable-commerce-site-identity-035"
+      ],
+      "domain": "authenticated managed-stock setup action",
+      "history": [
+        {
+          "at": "2026-08-29T17:36:39+00:00",
+          "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:46+00:00",
+          "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-08-30T18:30:47+00:00",
+          "choice": "The browser sends only the Commerce catalog item ID. The authenticated Commerce route loads the canonical product SKU, product title, Manage Stock state, permanent Commerce site ID, and active store-level Inventory binding from server-owned storage. It rejects missing or unmanaged products and never accepts browser-supplied site, pool, location, provider, SKU, title, operation, or Inventory SKU identities.",
+          "from": "implemented",
+          "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "configure-inventory-command-input-036",
+      "implementation_ref": "proof/configure-inventory-action/source-manifest.sha256@sha256:9298a6b375d5b9fa42d72f790d9d8bd0757cd1ade32bf1f72034d7214b523073",
+      "question": "What data may the browser send when an owner clicks Configure Inventory?",
+      "rationale": "A narrow command prevents stale forms or tampered requests from registering the wrong SKU in the wrong pool, while ensuring the atomic claim is built from the same canonical state Commerce will persist.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+          "result": "clean",
+          "reviewed_at": "2026-08-30T19:41:31+00:00",
+          "source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408"
+        }
+      ],
+      "review_ref": "https://github.com/dinkuskit/commerce/pull/14#issuecomment-5470550200",
+      "review_result": "clean",
+      "review_source_identity": "git:a4ac5b0207b9a6261b040e71766a9de620b67408",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-08-30T19:41:31+00:00",
+      "verification_ref": "proof/configure-inventory-action/PROOF.md#node-22.23.2-full-68-unit-16-integration"
+    }
+  ],
+  "last_activation": {
+    "at": "2026-08-29T17:17:25+00:00",
+    "mechanism": "implicit"
+  },
+  "last_pause": null,
+  "pause": null,
+  "predecessor_track_id": "atomic-managed-sku-registration-claim-20260829",
+  "recommendation": null,
+  "schema_version": "grilltrack/v0.1",
+  "status": "closed",
+  "title": "Configure Inventory action",
+  "track_id": "gt-20260829171724-494811",
+  "updated_at": "2026-08-30T19:41:31+00:00"
+}
