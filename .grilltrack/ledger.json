@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-01T16:37:21+00:00",
-    "domain": "Coupon native admin bounded review repair",
-    "started_at": "2026-10-01T16:37:21+00:00",
+    "confirmed_at": "2026-10-03T20:44:58+00:00",
+    "domain": "Canonical TEST Payments transport response bound repair",
+    "started_at": "2026-10-03T20:44:58+00:00",
     "status": "confirmed",
-    "summary": "Existing direct human proceed authorizes completing the accepted coupon admin slice and required review repairs. Preserve named page and routes for later atomic core composition; no new product policy or feature merge authorization."
+    "summary": "Apply the already-authorized canonical TEST transport 128 KiB streamed response bound repair and verify fail-before/green-after across binding/session/lookup without changing settled payment, checkout, authority or stock rules. Draft PR/package handoff is separately authorized; no merge, deployment, Registry publication or provider calls."
   },
   "decisions": [
     {
@@ -5361,6 +5361,83 @@
       "superseded_by": null,
       "updated_at": "2026-10-01T11:49:53+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:7a8d262441d14ea4ec5e824a1baa76b5a6f0049c",
+      "candidate_refs": [],
+      "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+      "context_ref": null,
+      "created_at": "2026-10-03T20:44:58+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Canonical TEST Payments transport response bound repair",
+      "history": [
+        {
+          "at": "2026-10-03T20:44:58+00:00",
+          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-03T20:56:45+00:00",
+          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-03T20:56:45+00:00",
+          "choice": "Repair the confirmed shared transport defect with a finite 128 KiB actual streamed byte bound before JSON parsing for both binding endpoints, session and lookup. Content-Length may reject early but cannot replace streamed accounting. Reject unsupported or malformed bodies and cancel overflow. Preserve the original request, identity, payment session/window, unknown-outcome, CAS and stock-release behavior; no new provider, host admission or order writer.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/test-payments.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-payments-response-bound-001",
+      "implementation_ref": "file:src/features/checkout/test-payments.ts",
+      "question": "How does the canonical TEST Payments binding/session/lookup transport reject oversized successful response bodies before parsing?",
+      "rationale": "Independent Template27 review accepted P2 required_fix on its exact Commerce42 dependency: a 1048706-byte binding response reached subsequent session transport. Parent authorized this bounded canonical owner repair; no product re-grill.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": "proof/checkout-payments-response-cap-20261003/SOURCE-REVIEW.json",
+          "result": "clean",
+          "reviewed_at": "2026-10-03T20:56:45+00:00",
+          "source_identity": "sha256:0e2d07f30b8245fdb9d93214a2054bc6fcdac27e00b29dccda970303fc785893"
+        }
+      ],
+      "review_ref": "proof/checkout-payments-response-cap-20261003/SOURCE-REVIEW.json",
+      "review_result": "clean",
+      "review_source_identity": "sha256:0e2d07f30b8245fdb9d93214a2054bc6fcdac27e00b29dccda970303fc785893",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-03T20:56:45+00:00",
+      "verification_ref": "proof/checkout-payments-response-cap-20261003/PARENT-VERIFICATION.json"
     }
   ],
   "last_activation": {
@@ -5383,5 +5460,5 @@
   "status": "active",
   "title": "Coupon admin and accepted TEST checkout integration",
   "track_id": "gt-join-15aa3e6cee8cffda9b9fa353a4f0175d",
-  "updated_at": "2026-10-01T16:39:23+00:00"
+  "updated_at": "2026-10-03T20:56:45+00:00"
 }
