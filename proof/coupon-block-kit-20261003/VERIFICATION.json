@@ -1,0 +1,24 @@
+{
+  "sourceCommit": "83a24cdd3dff0eefa57c4c5bea08180e64b2276b",
+  "command": "COMMERCE_PROOF_RUN=coupon-composed-20261006 bin/verify-commerce full",
+  "exitCode": 0,
+  "unit": 264,
+  "integration": 22,
+  "browser": 5,
+  "nativeLocalStock": 1,
+  "installedCouponBrowser": 1,
+  "httpMatrixRows": 51,
+  "deniedCouponStorageAccess": 0,
+  "visualInspection": [
+    "English large fixed money form",
+    "English authoritative usage and disabled state",
+    "Editor denial",
+    "host Arabic RTL with visible English fallback coupon form"
+  ],
+  "fidelity": {
+    "host": "actual EmDash1.0.1 Astro + workerd sandbox; installed Registry state/storage namespace; no config Commerce descriptor",
+    "install": "unsigned local profile, no authoritative publisher record / aggregator / consent verification",
+    "scopePolicy": "real dispatcher with explicit test scopes and host session caller; bearer authentication not tested"
+  },
+  "historicalAttempts": "Fixture setup, index materialization and observer failures retained as failures; initial oversized package is historical."
+}

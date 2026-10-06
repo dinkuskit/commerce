@@ -1,0 +1,7 @@
+{
+  "pluginId": "r_gshdrqaldna3r7sn",
+  "source": "registry",
+  "configuredCommerce": false,
+  "backendSha256": "0c74ecba65bbce2af32bd575462930e8e80b5816d082d66ecb7de60a354f3ac4",
+  "publisherVerification": "NOT_RUN: unsigned local installed profile, not Registry release acceptance"
+}
