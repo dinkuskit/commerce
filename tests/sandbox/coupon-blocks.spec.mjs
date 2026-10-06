@@ -203,5 +203,5 @@ test('packaged coupon Block Kit survives validation, conflicts, reload and forbi
     await capture('coupons-arabic-direction');
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'http-matrix.json'), JSON.stringify(matrix, null, 2));
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS,'storage.json'),JSON.stringify(rows(),null,2));
-  } finally { database.prepare('UPDATE users SET role=50').run(); await db.destroy(); }
+  } finally { await db.destroy(); }
 });

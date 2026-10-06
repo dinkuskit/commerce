@@ -20,5 +20,14 @@
     "install": "unsigned local profile, no authoritative publisher record / aggregator / consent verification",
     "scopePolicy": "real dispatcher with explicit test scopes and host session caller; bearer authentication not tested"
   },
-  "historicalAttempts": "Fixture setup, index materialization and observer failures retained as failures; initial oversized package is historical."
+  "historicalAttempts": "Fixture setup, index materialization and observer failures retained as failures; initial oversized package is historical.",
+  "ciRegression": {
+    "failedRun": 37474654247,
+    "cause": "Generated run directory differed between server and worker config evaluations when COMMERCE_PROOF_RUN was absent",
+    "fix": "Persist generated COMMERCE_PROOF_RUN in inherited environment; destroy disposable DB without masking failed assertions",
+    "verification": "npm run test:sandbox:coupons with COMMERCE_PROOF_RUN unset",
+    "exitCode": 0,
+    "installedCouponBrowser": 1,
+    "productionPackageSourceUnchanged": true
+  }
 }

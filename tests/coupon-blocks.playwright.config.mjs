@@ -5,7 +5,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-const directory = resolve('.tmp/coupon-blocks-proof', process.env.COMMERCE_PROOF_RUN ?? String(Date.now()));
+// Playwright reloads this config in workers. Persist the generated identity so
+// the worker and web server use the same artifact and database directory.
+process.env.COMMERCE_PROOF_RUN ??= String(Date.now());
+const directory = resolve('.tmp/coupon-blocks-proof', process.env.COMMERCE_PROOF_RUN);
 mkdirSync(directory, { recursive: true });
 const extracted = resolve(directory, 'extracted');
 const receipt = resolve(directory, 'artifact.json');

@@ -37,5 +37,23 @@ failures and the first RTL loading capture remain in ignored working proof;
 only the final visible captures are selected for the designated asset shelf.
 Formal exact-head reviews and owner merge/Registry release remain pending.
 
-Selected sanitized media will be linked from an immutable exact-source release
-in `dinkuskit/dinkus-pr-assets`; no binary proof enters this repository.
+CI run 37474654247 exposed a default run-directory mismatch between the
+Playwright config's server and worker evaluations. The generated run identity
+is now inherited by the worker. The installed browser profile passes with
+`COMMERCE_PROOF_RUN` unset; cleanup no longer masks an earlier failure by
+updating a disposable database. Production/package sources and the frozen
+archive remain unchanged from the composed source above.
+
+Selected sanitized media and their hash/provenance manifest are preserved in
+the immutable [83a24cdd3dff evidence release](https://github.com/dinkuskit/dinkus-pr-assets/releases/tag/commerce-pr-46-83a24cdd3dff).
+The release belongs to the actual capture/build source, independently of
+subsequent proof and fixture-only commits. No binary proof enters this repo.
+
+| Claim | Selected evidence |
+| --- | --- |
+| Empty state and successful creation | `coupons-empty.png`, `coupon-created.png` |
+| Stale revision retains draft and requires reopen | `coupon-stale.png` |
+| Maximum fixed-money value survives reload | `coupon-fixed.png` |
+| Usage and disable state persist | `coupon-usage.png`, `coupon-disabled.png` |
+| Editor receives guarded denial | `coupon-editor-denied.png` |
+| Arabic host layout renders English fallback | `coupons-arabic-direction.png` |
