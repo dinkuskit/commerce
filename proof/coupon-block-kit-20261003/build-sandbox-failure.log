@@ -1,0 +1,13 @@
+Command: PATH=/tmp:$PATH npm run build:sandbox
+Result: exit 1
+
+Manifest validation passed. Runtime compilation passed. The temporary
+emdash-plugin probe failed after the sandbox entry imported the pinned
+@emdash-cms/auth RBAC helper:
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@oslojs/binary' imported
+from .../emdash-build-*/plugin-probe/plugin.mjs
+
+The probe is outside the project dependency tree and the sandbox builder
+externalized the auth package. This log is retained as failed build evidence;
+no Registry artifact was accepted or installed.

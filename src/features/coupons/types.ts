@@ -1,5 +1,5 @@
 import type { StorageCollection } from "emdash";
-import type { Money, CatalogItemReadStorage, CatalogPriceStorage } from "../catalog/index.js";
+import type { Money, CatalogItemReadStorage, CatalogPriceStorage } from "../catalog/kernel/index.js";
 
 export const COUPONS_FEATURE_ID = "dinkus.coupons";
 export const COUPONS_COLLECTION = "coupons";

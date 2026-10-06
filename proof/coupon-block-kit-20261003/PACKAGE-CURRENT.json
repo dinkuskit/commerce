@@ -1,0 +1,34 @@
+{
+  "sourceCommit": "83a24cdd3dff0eefa57c4c5bea08180e64b2276b",
+  "baseCommit": "2db2ac9e87119abb9bddb94bde6207e44d81a070",
+  "archive": {
+    "file": "dinkus-commerce-0.0.0.tar.gz",
+    "bytes": 30271,
+    "sha256": "1b9cf04879704a6131a616b3fb76f1ee28d72a6075ca998aae4ae51a3f91b8d6"
+  },
+  "backend": {
+    "bytes": 106143,
+    "sha256": "0c74ecba65bbce2af32bd575462930e8e80b5816d082d66ecb7de60a354f3ac4",
+    "perFileLimit": 131072,
+    "selfContained": true,
+    "officialValidation": "PASS"
+  },
+  "emdash": "1.0.1",
+  "auth": "1.0.1",
+  "lingui": "5.9.5",
+  "rolldown": "1.2.6",
+  "sourceFiles": {
+    "emdash-plugin.jsonc": "c1ec1116d53eba1681f9f6b9d5d5582bc00a8ccdb70c40940ce136faaa31f002",
+    "package.json": "da1e6457c116c085086fbd33156797766c7af4e47bc48a2827e8f72a2148a1a2",
+    "package-lock.json": "c0bc42f0ce31fb1884965eaffbb74a7164b2da568bef1cb2952d0f0b07d2b687",
+    "scripts/build-sandbox.mjs": "ccf41ff2ee91562e69532883b71dc57634ccc6cd8a2c3cc6b78562f8f54dc347",
+    "scripts/coupon-build-transform.mjs": "a5d531289084487828c9de3627c28421a47e02cca033ee3b569d3cb8c4e048d1",
+    "scripts/coupon-catalog.mjs": "4b81c7845403b13128fd9e58d5c732cace2510228392f02be54f7a28fc66dbc1",
+    "src/admin/index.ts": "6e90142cb7a99fb6e2fcd2059f5d9a5817aacf26ef4c32836571fb33ea48048f",
+    "src/admin/coupons-blocks.ts": "0a31b576448413996c4777a3844930c37a9c81b6d0e4426bfe7419d8c3b64d72",
+    "src/admin/coupon-i18n.ts": "7d59771df28ee1a83ca34a117caee9be7c96683fc52c98126cc7eb4e197f51a7",
+    "src/admin/coupon-catalog.ts": "925fc9eb39a4ed3051974125f76f6df03fb312bb7729f7c08b49f1241c52197f",
+    "src/features/catalog/storage-constraints.ts": "d1a26472311513092fde3578f0f6bdbbaebc4001699bb897479af2a0f92b943b",
+    "src/features/catalog/create-catalog-item.ts": "60b7cbeefda03367bdb7c98b3936af12f9daf325582fe132c413006de06c8ed5"
+  }
+}

@@ -88,8 +88,9 @@ export function isConfirmedUniqueViolation(
   error: unknown,
   field: CatalogUniqueField,
   collection: string = CATALOG_COLLECTION,
+  pluginId: string = COMMERCE_PLUGIN_ID,
 ): boolean {
-  const expectedIndex = collection === CATALOG_COLLECTION ? INDEX_NAMES[field] : `uidx_plugin_${COMMERCE_PLUGIN_ID}_${collection}_${field}`;
+  const expectedIndex = `uidx_plugin_${pluginId}_${collection}_${field}`;
   const text = errorText(error);
   const properties = errorProperties(error);
   const namesExpectedIndex =
@@ -109,13 +110,13 @@ export function isConfirmedUniqueViolation(
   return hasPostgresCode || hasSqliteCode || namesUniqueFailure;
 }
 
-export function identifyConfirmedUniqueViolation(error: unknown, collection: string = CATALOG_COLLECTION): CatalogUniqueField | null {
-  if (isConfirmedUniqueViolation(error, "commandId", collection)) return "commandId";
-  if (isConfirmedUniqueViolation(error, "skuKey", collection)) return "skuKey";
+export function identifyConfirmedUniqueViolation(error: unknown, collection: string = CATALOG_COLLECTION, pluginId: string = COMMERCE_PLUGIN_ID): CatalogUniqueField | null {
+  if (isConfirmedUniqueViolation(error, "commandId", collection, pluginId)) return "commandId";
+  if (isConfirmedUniqueViolation(error, "skuKey", collection, pluginId)) return "skuKey";
   return null;
 }
 
-async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueField, collection: string): Promise<void> {
+async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueField, collection: string, pluginId: string): Promise<void> {
   const [left, right] = makeProbes(field);
   const attempted: CatalogIntegrityProbeRecord[] = [];
 
@@ -124,7 +125,7 @@ async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueFie
     try {
       await storage.put(left.itemId, left);
     } catch (error) {
-      if (isConfirmedUniqueViolation(error, field, collection)) return;
+      if (isConfirmedUniqueViolation(error, field, collection, pluginId)) return;
       throw new CatalogError(
         "STORAGE_CONSTRAINTS_UNAVAILABLE",
         `catalog ${field} uniqueness could not be proven`,
@@ -136,7 +137,7 @@ async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueFie
     try {
       await storage.put(right.itemId, right);
     } catch (error) {
-      if (isConfirmedUniqueViolation(error, field, collection)) return;
+      if (isConfirmedUniqueViolation(error, field, collection, pluginId)) return;
       throw new CatalogError(
         "STORAGE_CONSTRAINTS_UNAVAILABLE",
         `catalog ${field} uniqueness could not be proven`,
@@ -169,9 +170,9 @@ async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueFie
   }
 }
 
-export async function assertCatalogStorageConstraints(storage: CatalogStorage, collection: string = CATALOG_COLLECTION): Promise<void> {
-  await proveUniqueIndex(storage, "commandId", collection);
-  await proveUniqueIndex(storage, "skuKey", collection);
+export async function assertCatalogStorageConstraints(storage: CatalogStorage, collection: string = CATALOG_COLLECTION, pluginId: string = COMMERCE_PLUGIN_ID): Promise<void> {
+  await proveUniqueIndex(storage, "commandId", collection, pluginId);
+  await proveUniqueIndex(storage, "skuKey", collection, pluginId);
 }
 
 export function catalogUniqueIndexName(field: CatalogUniqueField): string {
