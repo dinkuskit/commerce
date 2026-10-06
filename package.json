@@ -107,13 +107,15 @@
     "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features",
     "verify:quick": "bin/verify-commerce quick",
     "verify:full": "bin/verify-commerce full",
-    "build:sandbox": "emdash-plugin validate && emdash-plugin build --out-dir dist/sandbox",
+    "build:sandbox": "emdash-plugin validate && node scripts/build-sandbox.mjs",
     "test:sandbox": "playwright test",
-    "test:sandbox:native-local-stock": "playwright test --config=playwright.native-local-stock.config.mjs"
+    "test:sandbox:native-local-stock": "playwright test --config=playwright.native-local-stock.config.mjs",
+    "test:sandbox:coupons": "COMMERCE_COUPON_INSTALLED_PROFILE=1 playwright test --config=tests/coupon-blocks.playwright.config.mjs"
   },
   "devDependencies": {
     "@astrojs/node": "11.0.2",
     "@astrojs/react": "6.0.1",
+    "@emdash-cms/auth": "1.0.1",
     "@emdash-cms/blocks": "1.0.1",
     "@emdash-cms/plugin-cli": "0.13.1",
     "@emdash-cms/plugin-types": "0.5.0",
@@ -127,6 +129,9 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "typescript": "6.0.3",
-    "wrangler": "4.127.0"
+    "wrangler": "4.127.0",
+    "@lingui/core": "5.9.5",
+    "@lingui/message-utils": "5.9.5",
+    "rolldown": "1.2.6"
   }
 }

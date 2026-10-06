@@ -1,4 +1,4 @@
-import { normalizeMoney } from "../catalog/index.js";
+import { normalizeMoney } from "../catalog/kernel/index.js";
 import type { CouponAttempt, CouponRecord, CouponRule, CouponQuoteSnapshot } from "./types.js";
 
 export class CouponRecordValidationError extends Error {

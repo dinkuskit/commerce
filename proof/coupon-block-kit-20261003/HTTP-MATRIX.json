@@ -1,0 +1,404 @@
+[
+  {
+    "actor": "Admin missing CSRF",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Admin wrong method",
+    "method": "DELETE",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 405,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Admin missing page",
+    "method": "POST",
+    "page": null,
+    "action": "coupon.create:new",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Admin undeclared page",
+    "method": "POST",
+    "page": "/forged",
+    "action": "coupon.create:new",
+    "status": 400,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Admin",
+    "scopePolicy": "content:read denied / admin admitted",
+    "fidelity": "genuine production dispatcher with test scopes; bearer authentication not exercised"
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.new",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.list",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.open",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.disable:354a1795-835b-4c34-a5fa-1b559fd04a06:3",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.create:new",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.save:354a1795-835b-4c34-a5fa-1b559fd04a06:3",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.new",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.list",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.open",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.disable:354a1795-835b-4c34-a5fa-1b559fd04a06:3",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.create:new",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.save:354a1795-835b-4c34-a5fa-1b559fd04a06:3",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.new",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.list",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.open",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.disable:354a1795-835b-4c34-a5fa-1b559fd04a06:3",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.create:new",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Editor forged body privileges",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.save:354a1795-835b-4c34-a5fa-1b559fd04a06:3",
+    "status": 200,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 10",
+    "method": "POST",
+    "page": "/products",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 10 forged coupon action",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 10",
+    "method": "POST",
+    "page": "/settings",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 10 forged coupon action",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 10",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 10 forged coupon action",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 20",
+    "method": "POST",
+    "page": "/products",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 20 forged coupon action",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 20",
+    "method": "POST",
+    "page": "/settings",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 20 forged coupon action",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 20",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 20 forged coupon action",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 30",
+    "method": "POST",
+    "page": "/products",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 30 forged coupon action",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 30",
+    "method": "POST",
+    "page": "/settings",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 30 forged coupon action",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 30",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 30 forged coupon action",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.create:new",
+    "status": 403,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 999",
+    "method": "POST",
+    "page": "/products",
+    "action": "page_load",
+    "status": 401,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 999 forged coupon action",
+    "method": "POST",
+    "page": "/products",
+    "action": "coupon.create:new",
+    "status": 401,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 999",
+    "method": "POST",
+    "page": "/settings",
+    "action": "page_load",
+    "status": 401,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 999 forged coupon action",
+    "method": "POST",
+    "page": "/settings",
+    "action": "coupon.create:new",
+    "status": 401,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 999",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "page_load",
+    "status": 401,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Role 999 forged coupon action",
+    "method": "POST",
+    "page": "/coupons",
+    "action": "coupon.create:new",
+    "status": 401,
+    "couponStorageAccess": 0
+  },
+  {
+    "actor": "Anonymous",
+    "couponStorageAccess": 0,
+    "result": "host denied"
+  }
+]

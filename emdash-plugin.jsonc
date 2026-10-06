@@ -69,6 +69,14 @@
     "checkout_payment_associations": {
       "indexes": [],
       "uniqueIndexes": []
+    },
+    "coupons": {
+      "indexes": [
+        "normalizedCode"
+      ],
+      "uniqueIndexes": [
+        "normalizedCode"
+      ]
     }
   },
   "admin": {
@@ -82,6 +90,11 @@
         "path": "/settings",
         "label": "Commerce Settings",
         "icon": "settings"
+      },
+      {
+        "path": "/coupons",
+        "label": "Coupons",
+        "icon": "tag"
       }
     ]
   }

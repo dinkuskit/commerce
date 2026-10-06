@@ -1,0 +1,70 @@
+{
+  "scope": "Local package validation; no Registry publication or installed browser acceptance",
+  "runtime": {
+    "bytes": 216639,
+    "sha256": "ddb048d2a5aae1a00ac092ee94d02472e5dc0f05df8f549dcbaa674489cb0060"
+  },
+  "publicAuthHelper": {
+    "bytes": 100962,
+    "sha256": "436f9e108c65ac173fb511412454d7475e61a03bfc0acc9389b719e7948cb17a",
+    "permissions": [
+      {
+        "role": 10,
+        "catalog": false,
+        "coupons": false
+      },
+      {
+        "role": 20,
+        "catalog": false,
+        "coupons": false
+      },
+      {
+        "role": 30,
+        "catalog": false,
+        "coupons": false
+      },
+      {
+        "role": 40,
+        "catalog": true,
+        "coupons": false
+      },
+      {
+        "role": 50,
+        "catalog": true,
+        "coupons": true
+      }
+    ]
+  },
+  "plugin": {
+    "id": "dinkus-commerce",
+    "couponsRegistered": true
+  },
+  "packaged": {
+    "status": "BLOCKED",
+    "code": "VALIDATION_FAILED",
+    "error": "Bundle validation failed:\n  - File backend.js is 211.6 KB, exceeds per-file maximum of 128.0 KB."
+  },
+  "installedBrowserAcceptance": "NOT_RUN",
+  "dependencies": {
+    "emdash": {
+      "version": "1.0.1",
+      "packageJsonSha256": "a7d54ea2d7bef9ae8cb7e1423c3870c7fb618acbc717e227c362806958f0e666"
+    },
+    "@emdash-cms/auth": {
+      "version": "1.0.1",
+      "packageJsonSha256": "f319c769869de46b669cb3b732cc177a522d16d0c0b512dd992b4ebe75c8131c"
+    },
+    "@emdash-cms/plugin-cli": {
+      "version": "0.13.1",
+      "packageJsonSha256": "b380d04d13989659123cc08c2dfb220daa98e8dc3d641ef856b08e56678bcfbb"
+    },
+    "@lingui/core": {
+      "version": "5.9.5",
+      "packageJsonSha256": "7b1d7c973d46fddd8ddf45e5e6f9e7cfc8d0022b03c4d1e9f023a2487ba626a8"
+    },
+    "rolldown": {
+      "version": "1.2.6",
+      "packageJsonSha256": "7bc88ad0b975edec6c28c4cbe124c407829d262ec9c5b59efb930646cbc9ba1d"
+    }
+  }
+}
