@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
 import test from 'node:test';
+import { resolveCatalogItemPrice } from '../../dist/features/catalog/index.js';
+import { resolveStorefrontAvailability } from '../../dist/features/storefront-availability/index.js';
 import { configuration, credential, runtimeFixture, SITE } from '../features/checkout/registry-runtime.mjs';
-import { COMMERCE_CHECKOUT_WAKES_TASK } from '../../dist/features/checkout/index.js';
+import {
+  COMMERCE_CHECKOUT_WAKES_TASK,
+  COMMERCE_REGISTRY_RUNTIME_ID,
+} from '../../dist/features/checkout/index.js';
 
 const PREPARE = 'checkout/guest/prepare', START = 'checkout/guest/start', STATUS = 'checkout/guest/status';
 const basket = { lines: [{ catalogItemId: 'hat', quantity: 1 }] };
@@ -16,6 +23,7 @@ async function start(state, input = basket) {
 test('actual compiled default workerd profile preserves empty-grants/unconfigured admission', async t => {
   const state = await runtimeFixture({ grants: false, config: null, token: null });
   t.after(() => state.close());
+  assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, []);
   assert.deepEqual(state.artifact.allowedHosts, []);
   const { result } = await start(state);
@@ -25,6 +33,43 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   assert.equal(state.counts.transport, 0);
   assert.equal(state.counts.scheduler, 0);
   assert.deepEqual(await state.cartRecords(), []);
+});
+
+test('EmDash 1.2 SDK storage preserves checkout records across runtime restart without reseed', async t => {
+  const directory = await mkdtemp('/tmp/commerce-emdash-1-2-restart-');
+  const databasePath = join(directory, 'runtime.db');
+  t.after(() => rm(directory, { recursive: true, force: true }));
+
+  const first = await runtimeFixture({ grants: false, databasePath });
+  await first.coupon('250');
+  const { token, result } = await start(first, { ...basket, couponCode: 'SAVE10' }).catch(async error => {
+    await first.close();
+    throw error;
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.checkout.state, 'paid');
+  await first.close();
+
+  const restarted = await runtimeFixture({
+    grants: false,
+    config: null,
+    token: null,
+    databasePath,
+    seed: false,
+  });
+  t.after(() => restarted.close());
+  const replay = await restarted.invoke(STATUS, {}, token);
+  assert.equal(replay.ok, true);
+  assert.equal(replay.checkout.state, 'paid');
+  assert.equal(replay.checkout.order.total.minor, '0');
+  assert.equal((await restarted.collections.catalog_items.get('hat')).sku, 'HAT');
+  const coupons = await restarted.collections.coupons.query({ where: { normalizedCode: 'SAVE10' } });
+  assert.equal(coupons.items.length, 1);
+  assert.equal(coupons.items[0].data.normalizedCode, 'SAVE10');
+  const persistedAttempt = (await restarted.cartRecords())[0].attempts[0];
+  assert.equal(persistedAttempt.coupon.status, 'consumed');
+  assert.equal(persistedAttempt.order.orderId, replay.checkout.order.orderId);
+  assert.equal(persistedAttempt.order.total.minor, replay.checkout.order.total.minor);
 });
 
 test('actual compiled default workerd zero-payable coupon writes one payment-free order', async t => {
@@ -44,6 +89,41 @@ test('actual compiled default workerd zero-payable coupon writes one payment-fre
   assert.equal((await state.cartRecords())[0].attempts[0].coupon.status, 'consumed');
   assert.equal(state.counts.transport, 0);
   assert.equal(state.counts.scheduler, 0);
+});
+
+test('EmDash 1.2 original storage shares admin prices, storefront helpers and canonical checkout', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const prepared = await state.invoke(PREPARE);
+  assert.equal(prepared.ok, true);
+  // Invoke the compiled admin handler on its original owner storage. Actual
+  // HTTP admin authorization is separately exercised by the browser suite.
+  const saved = await state.plugin.invokeRoute('admin', {
+    type: 'form_submit', action_id: 'save:hat',
+    values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' },
+  }, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/admin`, method: 'POST' });
+  assert.equal(saved.toast.type, 'success');
+  const c = state.collections;
+  const price = await resolveCatalogItemPrice(c.catalog_prices, 'hat');
+  assert.deepEqual(price.customerPays, { currency: 'USD', minor: '300' });
+  const availability = await resolveStorefrontAvailability({
+    catalog: c.catalog_items, prices: c.catalog_prices,
+    manualAvailability: c.catalog_manual_availability,
+    backorderPolicies: c.catalog_backorder_policies,
+    configurations: c.store_inventory_configurations,
+    settings: c.storefront_availability_settings,
+    listing: c.storefront_out_of_stock_listing,
+  }, { catalogItemId: 'hat' });
+  assert.equal(availability.sellable, true);
+  const token = prepared.capability.capability;
+  const started = await state.invoke(START, basket, token);
+  assert.equal(started.ok, true);
+  assert.deepEqual(started.checkout.total, price.customerPays);
+  assert.deepEqual(state.requests[0].total, price.customerPays);
+  state.setPaid();
+  const paid = await state.invoke(STATUS, {}, token);
+  assert.equal(paid.checkout.state, 'paid');
+  assert.deepEqual(paid.checkout.order.total, price.customerPays);
 });
 
 test('zero-payable compiled route rejects missing/foreign capability and browser totals before order creation', async t => {

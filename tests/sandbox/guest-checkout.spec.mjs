@@ -125,30 +125,28 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
     });
     const preparedBody = await prepared.json();
     const payload = preparedBody.data ?? preparedBody;
-    if (native) {
-      expect(payload.ok, JSON.stringify(preparedBody)).toBeTruthy();
-      expect(payload.capability?.capability, JSON.stringify(preparedBody)).toMatch(
-        /^[0-9a-f-]+\.[0-9a-f]+$/i,
-      );
-      const missing = await request.post(start, {
-        data: { lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
-        headers: {
-          ...writeHeaders(origin),
-          "x-commerce-guest-capability": payload.capability.capability,
-        },
-      });
-      const missingBody = await missing.json();
-      expect(missing.status()).toBe(503);
-      expect(missingBody.error?.code).toBe("PAYMENTS_UNAVAILABLE");
-      expect(missing.headers()["set-cookie"]).toBeUndefined();
-      expect(missing.headers()["cache-control"]).toMatch(/no-store/);
-      expect(cartCount(database, native)).toBe(0);
-    } else {
-      expect(payload.ok).toBe(false);
-      expect(payload.error?.code, JSON.stringify(preparedBody)).toBe("UNAVAILABLE");
-      expect(capabilityCount(database, native)).toBe(0);
-      expect(cartCount(database, native)).toBe(0);
-    }
+    // EmDash 1.2 supplies the configured site URL to both host formats.
+    // Prepare only mints a capability; no configured Payments means start fails.
+    expect(payload.ok, JSON.stringify(preparedBody)).toBeTruthy();
+    expect(payload.capability?.capability, JSON.stringify(preparedBody)).toMatch(
+      /^[0-9a-f-]+\.[0-9a-f]+$/i,
+    );
+    expect(capabilityCount(database, native)).toBe(1);
+    expect(cartCount(database, native)).toBe(0);
+    const missing = await request.post(start, {
+      data: { lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
+      headers: {
+        ...writeHeaders(origin),
+        "x-commerce-guest-capability": payload.capability.capability,
+      },
+    });
+    const missingBody = await missing.json();
+    const missingPayload = missingBody.data ?? missingBody;
+    if (native) expect(missing.status()).toBe(503);
+    expect(missingPayload.error?.code, JSON.stringify(missingBody)).toBe("PAYMENTS_UNAVAILABLE");
+    expect(missing.headers()["set-cookie"]).toBeUndefined();
+    expect(missing.headers()["cache-control"]).toMatch(/no-store/);
+    expect(cartCount(database, native)).toBe(0);
 
     const tampered = await request.post(start, {
       data: { lines: [{ catalogItemId: "guest-hat", quantity: 1, price: "1" }], total: "1", paid: true },
@@ -158,7 +156,7 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
       expect(tampered.status()).toBe(400);
     } else {
       const body = await tampered.json();
-      expect(body.data?.error?.code || body.error?.code).toBe("UNAVAILABLE");
+      expect(body.data?.error?.code || body.error?.code).toBe("INVALID_CART");
     }
 
     const guessed = await request.post(status, {
@@ -169,7 +167,7 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
       expect(guessed.status()).toBe(403);
     } else {
       const body = await guessed.json();
-      expect(body.data?.error?.code || body.error?.code).toBe("UNAVAILABLE");
+      expect(body.data?.error?.code || body.error?.code).toBe("CAPABILITY_DENIED");
     }
 
     const configurations = native ? "storeInventoryConfigurations" : "store_inventory_configurations";

@@ -1,5 +1,10 @@
 # Installed Commerce checkout context
 
+This adapter contract is retained alongside the subsequently bundled default
+[Registry service resolver](./installed-checkout-services.md). That resolver is
+implemented; the installation, host consent, and real-provider boundaries below
+remain prerequisites for actual activation.
+
 The compiled `@dinkuskit/commerce/features/checkout` subpath exposes
 `createInstalledCheckoutHandlers(resolveServices?)`,
 `createInstalledCheckoutWakeHook(resolveServices?)`, and
@@ -19,7 +24,7 @@ The adapter requires the fixed declared sandbox collection names from
 `SANDBOX_GUEST_CHECKOUT_STORAGE`; it accepts no storage-name argument or
 native collection aliases. Config-loaded sandbox descriptors use
 `dinkus-commerce`. Actual Registry installs use `r_gshdrqaldna3r7sn`, the
-EmDash 1.0.1 normalized ID derived from this manifest's publisher DID and slug.
+EmDash 1.2.0 normalized ID derived from this manifest's publisher DID and slug.
 Only those exact IDs are admitted; an arbitrary Registry-shaped ID is denied.
 The storage objects are used as supplied by EmDash, with no namespace rewrite,
 raw SQL, private context getter, or second order writer. These structural
@@ -64,7 +69,7 @@ neither copies that client into Commerce nor creates a new credential store.
 
 ## Exact remaining installation and approval boundary
 
-EmDash 1.0.1 exposes owner storage, site, settings, and optional cron/HTTP in
+EmDash 1.2.0 exposes owner storage, site, settings, and optional cron/HTTP in
 registered handler and hook contexts. It provides no public cross-plugin
 Payments invocation. The current approved broker URL and server credential
 consumer are not specified by this repository. A callback closure in a native
@@ -105,7 +110,7 @@ purchase. Public checkout remains unavailable until that real bridge is admitted
 
 ## Public API evidence
 
-- Pinned `emdash@1.0.1` public types: `PluginContext`, `SandboxedRouteContext`,
+- Pinned `emdash@1.2.0` public types: `PluginContext`, `SandboxedRouteContext`,
   `CronEvent`, and `CronHandler`. Production imports only supported exports.
 - [EmDash plugin context and cron hooks](https://docs.emdashcms.com/reference/hooks/)
 - [Owner-scoped storage](https://docs.emdashcms.com/plugins/creating-plugins/storage/)

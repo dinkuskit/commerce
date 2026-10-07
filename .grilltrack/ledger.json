@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-07T12:00:23+00:00",
-    "domain": "Canonical zero-payable order completion",
-    "started_at": "2026-10-07T12:00:23+00:00",
+    "confirmed_at": "2026-10-07T13:00:16+00:00",
+    "domain": "EmDash 1.2 compatibility migration",
+    "started_at": "2026-10-07T13:00:16+00:00",
     "status": "confirmed",
-    "summary": "Implement the approved required zero-payable canonical order slice before publication/slugs, preserve accepted coupon free-order identities and current authorization/stock failure, prove replay and recovery without Payments contact, and deliver focused implementation PR with exact-source review at human merge gate."
+    "summary": "The approved upgrade repins the applicable published stack, adapts necessary API/type contracts and proves real package/storage/sandbox compatibility without reseeding, changing checkout policy, adding unrelated dependencies, deploying or granting provider access."
   },
   "decisions": [
     {
@@ -6710,6 +6710,85 @@
       "superseded_by": null,
       "updated_at": "2026-10-07T12:09:54+00:00",
       "verification_ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md"
+    },
+    {
+      "baseline_ref": "git:76c440c2f4fb7bc1d443b1ad7808a87e67ade52a",
+      "candidate_refs": [],
+      "choice": "Upgrade applicable existing dependencies to EmDash/auth/blocks 1.2.0, plugin-types 0.6.0, CLI 0.13.3, sandbox 0.9.3 and compatible transitive loader/verifier; preserve checkout semantics, storage and 128KiB backend cap.",
+      "context_ref": null,
+      "created_at": "2026-10-07T13:00:16+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-zero-payable-order-composition-001"
+      ],
+      "domain": "EmDash 1.2 compatibility migration",
+      "history": [
+        {
+          "at": "2026-10-07T13:00:16+00:00",
+          "choice": "Upgrade applicable existing dependencies to EmDash/auth/blocks 1.2.0, plugin-types 0.6.0, CLI 0.13.3, sandbox 0.9.3 and compatible transitive loader/verifier; preserve checkout semantics, storage and 128KiB backend cap.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T13:30:27+00:00",
+          "choice": "Upgrade applicable existing dependencies to EmDash/auth/blocks 1.2.0, plugin-types 0.6.0, CLI 0.13.3, sandbox 0.9.3 and compatible transitive loader/verifier; preserve checkout semantics, storage and 128KiB backend cap.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T13:30:27+00:00",
+          "choice": "Upgrade applicable existing dependencies to EmDash/auth/blocks 1.2.0, plugin-types 0.6.0, CLI 0.13.3, sandbox 0.9.3 and compatible transitive loader/verifier; preserve checkout semantics, storage and 128KiB backend cap.",
+          "from": "implemented",
+          "implementation_ref": "docs/implementation/emdash-1-2-compatibility.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-1-2-compatibility-composition-001",
+      "implementation_ref": "docs/implementation/emdash-1-2-compatibility.md",
+      "question": "Which published EmDash stack should the existing Commerce contracts target?",
+      "rationale": "Explicitly approved focused core migration following official published-version research.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": ".grilltrack/proof/emdash-1-2-20261007-PROOF.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-07T13:30:27+00:00",
+          "source_identity": "sha256:88d93dcb56d6fb03f410541cbdc7e21adde973d106840b409d081937dca6b9b3"
+        }
+      ],
+      "review_ref": ".grilltrack/proof/emdash-1-2-20261007-PROOF.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:88d93dcb56d6fb03f410541cbdc7e21adde973d106840b409d081937dca6b9b3",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-07T13:30:27+00:00",
+      "verification_ref": ".grilltrack/proof/emdash-1-2-20261007-PROOF.md"
     }
   ],
   "last_activation": {
@@ -6732,5 +6811,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-07T12:09:54+00:00"
+  "updated_at": "2026-10-07T13:30:27+00:00"
 }

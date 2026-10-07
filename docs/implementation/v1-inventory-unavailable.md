@@ -83,7 +83,7 @@ proven. Refusing a save does not change stock data.
 
 ## Registry host gate
 
-Installed `@emdash-cms/blocks` 1.0.1 `ToggleElement` has no `disabled` field.
+Installed `@emdash-cms/blocks` 1.2.0 `ToggleElement` has no `disabled` field.
 `ToggleElementComponent` never forwards `disabled` to Kumo Switch. Adding
 unsupported `disabled: true`, rendering a clickable toggle labeled Coming soon,
 or injecting CSS/JS outside the plugin contract would not fulfill the requested

@@ -22,7 +22,7 @@ Registry-format sandbox artifact is built from `emdash-plugin.jsonc` and
 `src/plugin.ts`; it is not a claim of public Registry installation.
 
 Development and the private package's runtime peer are pinned to exact
-`emdash@1.0.1`. The first feature is the `dinkus.catalog` draft-item creation
+`emdash@1.2.0`. The first feature is the `dinkus.catalog` draft-item creation
 pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
 writes unless the live EmDash storage collection proves unique `commandId`
 and site-wide canonical `skuKey` constraints.
@@ -105,7 +105,7 @@ kernel still accepts future Manage stock transitions. Mounted create/save
 refuse tracking changes unless that local-dev triple is true; creation still
 defaults off. The public `createCatalogItemRoute`, `listCatalogProductsRoute`,
 and `saveCatalogProductPricesRoute` exports stay default-disabled route
-objects. Additive `*WithLocalStock` factories configure a trusted host. Registry/sandbox Block Kit 1.0.1 cannot render a true disabled
+objects. Additive `*WithLocalStock` factories configure a trusted host. Registry/sandbox Block Kit 1.2.0 cannot render a true disabled
 slider, so the Coming-soon notice there is a temporary fallback pending host
 support. Commerce still stores Money.
 Commerce → Settings → Catalog lets the shop owner show out-of-stock products on the
@@ -115,7 +115,7 @@ visible. Unpriced products stay hidden. Admin still lists every product.
 
 Mounted-site work remains a private pilot; this package does not publish
 Commerce or claim a trusted Registry installation. This migration targets the
-official public `emdash@1.0.1` package and verifies native and local
+official public `emdash@1.2.0` package and verifies native and local
 workerd/sandbox hosts with synthetic SQLite fixtures. A real Registry
 publication/install remains separately authorized. Commerce still fails
 managed-stock writes closed when its configured provider is unavailable.
@@ -181,9 +181,9 @@ bin/verify-commerce full
 ```
 
 The quick verifier covers types, unit contracts, feature boundaries, public
-repository hygiene, and the official published EmDash 1.0.1 package with its
+repository hygiene, and the official published EmDash 1.2.0 package with its
 recorded npm integrity. The full verifier additionally runs cross-process SQLite atomicity
-proof against EmDash's real 1.0.1 storage repository and a two-process local
+proof against EmDash's real 1.2.0 storage repository and a two-process local
 Wrangler/D1 expression-index proof, plus the real workerd + SQLite
 admin/browser flow (`npm run test:sandbox` to run that boundary alone) and the
 opted-in native local-stock browser (`npm run test:sandbox:native-local-stock`)
