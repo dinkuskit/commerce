@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-07T13:00:16+00:00",
-    "domain": "EmDash 1.2 compatibility migration",
-    "started_at": "2026-10-07T13:00:16+00:00",
+    "confirmed_at": "2026-10-07T15:35:02+00:00",
+    "domain": "Installed public catalog and canonical checkout seam",
+    "started_at": "2026-10-07T15:35:02+00:00",
     "status": "confirmed",
-    "summary": "The approved upgrade repins the applicable published stack, adapts necessary API/type contracts and proves real package/storage/sandbox compatibility without reseeding, changing checkout policy, adding unrelated dependencies, deploying or granting provider access."
+    "summary": "Bobby approved the installed catalog seam and canonical unmanaged coupon checkout fixture; implementation, focused commits, draft PR and required review authorized, merge and activation excluded."
   },
   "decisions": [
     {
@@ -6789,6 +6789,129 @@
       "superseded_by": null,
       "updated_at": "2026-10-07T13:30:27+00:00",
       "verification_ref": ".grilltrack/proof/emdash-1-2-20261007-PROOF.md"
+    },
+    {
+      "baseline_ref": "git:f170e201ad4ccb96a7f8b2b20859b4e75a239d56",
+      "candidate_refs": [],
+      "choice": "Commerce-owned bounded shopper-safe catalog projection in the original admin and guest checkout namespace; existing authoritative prices and availability, fail-closed configuration and managed stock; fixture consumer with canonical checkout intent and coupon totals; no Template production adoption or shipping activation.",
+      "context_ref": ".grilltrack/work/installed-public-catalog-20261007/PREPARATION.md",
+      "created_at": "2026-10-07T15:35:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Installed public catalog and canonical checkout seam",
+      "history": [
+        {
+          "at": "2026-10-07T15:35:02+00:00",
+          "choice": "Commerce-owned bounded shopper-safe catalog projection in the original admin and guest checkout namespace; existing authoritative prices and availability, fail-closed configuration and managed stock; fixture consumer with canonical checkout intent and coupon totals; no Template production adoption or shipping activation.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T19:22:30+00:00",
+          "choice": "Commerce-owned bounded shopper-safe catalog projection in the original admin and guest checkout namespace; existing authoritative prices and availability, fail-closed configuration and managed stock; fixture consumer with canonical checkout intent and coupon totals; no Template production adoption or shipping activation.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T19:22:30+00:00",
+          "choice": "Commerce-owned bounded shopper-safe catalog projection in the original admin and guest checkout namespace; existing authoritative prices and availability, fail-closed configuration and managed stock; fixture consumer with canonical checkout intent and coupon totals; no Template production adoption or shipping activation.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/installed-public-catalog.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T20:12:25+00:00",
+          "choice": "Commerce-owned bounded shopper-safe catalog projection in the original admin and guest checkout namespace; existing authoritative prices and availability, fail-closed configuration and managed stock; fixture consumer with canonical checkout intent and coupon totals; no Template production adoption or shipping activation.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/installed-public-catalog.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-public-catalog-20261007/PROOF.md"
+        },
+        {
+          "at": "2026-10-07T20:12:26+00:00",
+          "choice": "Commerce-owned bounded shopper-safe catalog projection in the original admin and guest checkout namespace; existing authoritative prices and availability, fail-closed configuration and managed stock; fixture consumer with canonical checkout intent and coupon totals; no Template production adoption or shipping activation.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/installed-public-catalog.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/installed-public-catalog-20261007/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "git:36135c7292759b2ac28540c506ee8443a9d29895",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/installed-public-catalog-20261007/PROOF.md"
+        },
+        {
+          "at": "2026-10-07T20:15:30+00:00",
+          "choice": "Commerce-owned bounded shopper-safe catalog projection in the original admin and guest checkout namespace; existing authoritative prices and availability, fail-closed configuration and managed stock; fixture consumer with canonical checkout intent and coupon totals; no Template production adoption or shipping activation.",
+          "from": "implemented",
+          "implementation_ref": "file:tests/installed-coupon-site/src/pages/index.astro",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/installed-public-catalog-20261007/PROOF.md"
+        }
+      ],
+      "id": "installed-public-catalog-20261007",
+      "implementation_ref": "file:tests/installed-coupon-site/src/pages/index.astro",
+      "question": "What installed storefront seam is approved for this slice?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/installed-public-catalog-20261007/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-07T20:12:25+00:00",
+          "source_identity": "git:36135c7292759b2ac28540c506ee8443a9d29895"
+        }
+      ],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-07T20:15:30+00:00",
+      "verification_ref": ".grilltrack/proof/installed-public-catalog-20261007/REVIEW.md"
     }
   ],
   "last_activation": {
@@ -6811,5 +6934,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-07T13:30:27+00:00"
+  "updated_at": "2026-10-07T20:15:30+00:00"
 }

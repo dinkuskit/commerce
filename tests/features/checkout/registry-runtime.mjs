@@ -46,6 +46,7 @@ export async function runtimeFixture({
   managed = false,
   databasePath = ':memory:',
   seed = true,
+  transportFetch,
 } = {}) {
   const sqlite = new BetterSqlite3(databasePath);
   // Minimal tables match the pinned SDK's options and plugin-storage schemas.
@@ -76,7 +77,7 @@ export async function runtimeFixture({
       const fieldList = Array.isArray(fields) ? fields : [fields];
       assert.ok(fieldList.every(field => /^[A-Za-z_][A-Za-z0-9_]*$/.test(field)));
       const expressions = fieldList.map(field => `json_extract(data, '$.${field}')`).join(',');
-      sqlite.exec(`CREATE UNIQUE INDEX IF NOT EXISTS "fixture_${name}_${index}" ON _plugin_storage(plugin_id,collection,${expressions})`);
+      sqlite.exec(`CREATE UNIQUE INDEX IF NOT EXISTS "uidx_plugin_${owner}_${name}_${fieldList.join('_')}" ON _plugin_storage(plugin_id,collection,${expressions})`);
     }
   }
   const settings = createSettingsAccess(new OptionsRepository(db), owner, manifest.admin.settingsSchema);
@@ -142,7 +143,7 @@ export async function runtimeFixture({
       total: request.total, session, ...(paid ? { paymentId: 'pi_synthetic' } : {}) });
   }
   const runner = new WorkerdSandboxRunner({ db, siteInfo: { name: 'Synthetic fixture', url: SITE, locale: 'en' },
-    httpFetch: transport, limits: { wallTimeMs: 15000 } });
+    httpFetch: transportFetch ? (...args) => { counts.transport++; return transportFetch(...args); } : transport, limits: { wallTimeMs: 15000 } });
   assert.equal(runner.isAvailable(), true, 'actual pinned workerd binary must be available');
   const plugin = await runner.load(manifest, backend);
   const invoke = (route, input = {}, capability, origin = SITE) => plugin.invokeRoute(route, input, {

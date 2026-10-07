@@ -121,3 +121,6 @@ export type {
   SetCatalogItemPriceResult,
   SetCatalogItemPriceStorage,
 } from "../types.js";
+
+export { PUBLIC_CATALOG_ROUTE, readPublicCatalog } from "../public.js";
+export type { PublicCatalogProduct, PublicCatalogResponse } from "../public.js";

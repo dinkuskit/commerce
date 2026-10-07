@@ -5,6 +5,7 @@ import { createCouponBuildTransform } from '../scripts/coupon-build-transform.mj
 import { englishCouponCatalog } from '../dist/admin/coupon-catalog.js';
 import { couponText } from '../dist/admin/coupon-i18n.js';
 import { extractCouponDescriptors, checkCouponCatalog } from '../scripts/coupon-catalog.mjs';
+import { compileMessage } from '@lingui/message-utils/compileMessage';
 import { rolldown } from 'rolldown';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -31,6 +32,11 @@ test('English catalog covers every literal coupon descriptor and interpolates', 
   assert.equal(t('{code} — {state} — {consumed} consumed / {remaining} remaining', {
     code: 'SALE', state: 'Active', consumed: 1, remaining: 9,
   }), 'SALE — Active — 1 consumed / 9 remaining');
+});
+
+test('compact emitted catalog preserves every pinned compiler message', () => {
+  const expected = Object.fromEntries(extractCouponDescriptors(source).map(message => [message, compileMessage(message)]));
+  assert.deepEqual(englishCouponCatalog, expected);
 });
 
 test('catalog compiler and extraction fail closed and support escaped literal descriptors', async () => {
