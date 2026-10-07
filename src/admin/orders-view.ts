@@ -1,7 +1,7 @@
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
-import type { CommerceOrder } from '../features/checkout/types.js';
-import type { Money } from '../features/catalog/types.js';
-import { normalizeMoney } from '../features/catalog/money.js';
+import type { CommerceOrder } from '../features/checkout/kernel/index.js';
+import type { Money } from '../features/catalog/kernel/index.js';
+import { normalizeMoney } from '../features/catalog/kernel/index.js';
 
 /** Read-only projection. The eventual authenticated controller owns loading and authorization. */
 export type OrdersInspection = { status: 'available'; orders: readonly CommerceOrder[] } | { status: 'unavailable' };
