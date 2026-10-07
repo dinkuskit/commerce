@@ -2,10 +2,35 @@ import type { StorageCollection } from "emdash";
 import type { Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
+import type { CouponCollection, CouponQuoteSnapshot } from "../coupons/index.js";
 
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
 export interface CartLine { catalogItemId: string; quantity: number }
 export interface CheckoutLine extends CartLine { name: string; unitPrice: Money }
+export const CHECKOUT_PRICING_SCHEMA = "dinkuskit.commerce.checkout-pricing/v1" as const;
+export interface CheckoutPricingLine {
+  catalogItemId: string;
+  quantity: number;
+  unitPrice: Money;
+  lineSubtotal: Money;
+  discount: Money;
+  netAmount: Money;
+}
+export interface CheckoutPricingSnapshot {
+  schema: typeof CHECKOUT_PRICING_SCHEMA;
+  merchandiseSubtotal: Money;
+  couponDiscount: Money;
+  netMerchandise: Money;
+  shipping: {
+    configurationId: string;
+    revision: number;
+    mode: "free" | "flat";
+    charge: Money;
+  };
+  finalTotal: Money;
+  lines: readonly CheckoutPricingLine[];
+  coupon?: { code: string; quote: CouponQuoteSnapshot };
+}
 export interface StockRequirement { skuId: string; quantity: number; allowBackorders: boolean }
 export interface StockRequest {
   operationId: string;
@@ -52,6 +77,7 @@ interface PaymentRequestBase {
   lines: CheckoutLine[];
   total: Money;
   paymentMethods: readonly ["card"];
+  pricing?: CheckoutPricingSnapshot;
 }
 
 /** Current Commerce construction. New attempts use only this shape. */
@@ -67,6 +93,7 @@ export interface CurrentPaymentRequest extends PaymentRequestBase {
 export interface LegacyExact1800PaymentRequest extends PaymentRequestBase {
   paymentWindowSeconds: typeof LEGACY_EXACT_PAYMENT_WINDOW_SECONDS;
   paymentWindow?: never;
+  pricing?: never;
 }
 
 export type PaymentRequest = CurrentPaymentRequest | LegacyExact1800PaymentRequest;
@@ -88,6 +115,8 @@ export type PaymentOutcome =
   | { outcome: "not-created"; attemptId: string };
 /** Payments owns transport/authenticity and durable processor idempotency, not orders. */
 export interface CheckoutPaymentPort {
+  /** Explicit version support; absent ports accept only frozen merchandise-only requests. */
+  readonly pricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
   /**
    * Persist the original claim/request/deadline/idempotency key before provider
    * contact. Replay that exact tuple; never reset deadline, alter parameters,
@@ -104,6 +133,7 @@ export interface CommerceOrder {
   paymentId: string;
   lines: CheckoutLine[];
   total: Money;
+  pricing?: CheckoutPricingSnapshot;
 }
 export interface CheckoutAttempt {
   attemptId: string;
@@ -113,6 +143,13 @@ export interface CheckoutAttempt {
   phase: "reserving" | "paying" | "releasing" | "released" | "paid";
   session?: PaymentSession;
   order?: CommerceOrder;
+  /** Durable canonical reason for releasing; host support or elapsed time is never a reason. */
+  paymentReleaseReason?: "never-started" | "not-created" | "expired-unpaid";
+  coupon?: {
+    couponId: string;
+    code: string;
+    status: "unreserved" | "pending" | "released" | "consumed";
+  };
 }
 /** One durable aggregate per trusted cart. Preserve past attempts and paid receipts. */
 export interface CheckoutRecord { attempts: CheckoutAttempt[] }
@@ -142,6 +179,20 @@ export interface CheckoutExecution {
   paymentAssociations?: CheckoutPaymentAssociationPort;
   createAttemptId?: () => string;
   now?: () => number;
+  pricing?: TrustedCheckoutPricing;
+}
+
+export interface TrustedShippingConfiguration {
+  configurationId: string;
+  revision: number;
+  mode: "free" | "flat";
+  amount?: Money;
+}
+
+export interface TrustedCheckoutPricing {
+  coupons: CouponCollection;
+  resolveShippingConfiguration: () => Promise<TrustedShippingConfiguration | null>;
+  paymentPricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
 }
 
 export const GUEST_CHECKOUT_PROJECTION_SCHEMA =
@@ -184,11 +235,21 @@ export interface GuestCheckoutLine {
   unitPrice: Money;
 }
 
+/** Shopper amounts only; owner configuration and redemption identities stay server-side. */
+export interface GuestCheckoutPricingSummary {
+  merchandiseSubtotal: Money;
+  couponDiscount: Money;
+  netMerchandise: Money;
+  shipping: { mode: "free" | "flat"; charge: Money };
+  finalTotal: Money;
+}
+
 export interface GuestCheckoutOrderSummary {
   orderId: string;
   receiptId: string;
   lines: GuestCheckoutLine[];
   total: Money;
+  pricing?: GuestCheckoutPricingSummary;
 }
 
 export interface GuestCheckoutProjection {
@@ -197,6 +258,7 @@ export interface GuestCheckoutProjection {
   attemptId: string | null;
   lines: GuestCheckoutLine[];
   total: Money | null;
+  pricing?: GuestCheckoutPricingSummary;
   redirectUrl: string | null;
   order: GuestCheckoutOrderSummary | null;
   retryAfter: string | null;
@@ -238,6 +300,8 @@ export interface GuestCheckoutHostOptions {
   createCapabilityId?: () => string;
   createAttemptId?: () => string;
   now?: () => number;
+  /** Coupon storage is bound from this installation, never supplied by the host. */
+  pricing?: Omit<TrustedCheckoutPricing, "coupons">;
 }
 
 export interface GuestCheckoutRuntime {
@@ -254,6 +318,7 @@ export interface GuestCheckoutRuntime {
   topLevelSiteUrl?: string;
   checkoutSiteUrl?: string;
   paymentAssociations?: CheckoutPaymentAssociationPort;
+  pricing?: TrustedCheckoutPricing;
   host: GuestCheckoutHostOptions;
 }
 

@@ -32,6 +32,8 @@ export {
   type CouponDiscount,
   type CouponQuote,
   type CouponQuoteLine,
+  type CouponQuoteSnapshot,
   type CouponRecord,
   type CouponRule,
 } from "./types.js";
+export { validateCouponQuoteSnapshot } from "./validation.js";

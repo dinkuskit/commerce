@@ -11,6 +11,7 @@ import type {
   StorefrontAvailabilitySettingsStorage,
   StorefrontOutOfStockListingStorage,
 } from "../storefront-availability/kernel/index.js";
+import type { CouponCollection } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
 import { admitGuestCheckoutWrite } from "./origin-admission.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
@@ -34,6 +35,7 @@ export interface GuestCheckoutStorageNames {
   settings: string;
   listing?: string;
   paymentAssociations?: string;
+  coupons?: string;
 }
 
 export const NATIVE_GUEST_CHECKOUT_STORAGE = {
@@ -47,6 +49,7 @@ export const NATIVE_GUEST_CHECKOUT_STORAGE = {
   settings: "storefrontAvailabilitySettings",
   listing: "storefrontOutOfStockListing",
   paymentAssociations: "checkoutPaymentAssociations",
+  coupons: "coupons",
 } as const satisfies GuestCheckoutStorageNames;
 
 export const SANDBOX_GUEST_CHECKOUT_STORAGE = {
@@ -60,6 +63,7 @@ export const SANDBOX_GUEST_CHECKOUT_STORAGE = {
   settings: "storefront_availability_settings",
   listing: "storefront_out_of_stock_listing",
   paymentAssociations: "checkout_payment_associations",
+  coupons: "coupons",
 } as const satisfies GuestCheckoutStorageNames;
 
 export function bindGuestCheckoutRuntime(
@@ -107,6 +111,10 @@ export function bindGuestCheckoutRuntime(
     topLevelSiteUrl,
     checkoutSiteUrl,
     host: options.host ?? {},
+    ...(options.host?.pricing ? { pricing: {
+      ...options.host.pricing,
+      coupons: (names.coupons ? storage[names.coupons] : undefined) as CouponCollection,
+    } } : {}),
     ...(names.paymentAssociations && storage[names.paymentAssociations]
       ? { paymentAssociations: createCheckoutPaymentAssociationPort(
         storage[names.paymentAssociations] as StorageCollection<CheckoutPaymentAssociation>,

@@ -3,6 +3,9 @@ import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
 import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import { resolveStorefrontAvailability } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
+import { composeCheckoutPricing } from "./pricing.js";
+import { createCouponAttemptOwner, CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
+import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
 
 export class CheckoutError extends Error {}
@@ -24,12 +27,15 @@ function cartInput(raw: unknown): CartLine[] {
 function current(attempts: CheckoutAttempt[]): CheckoutAttempt {
   return attempts[attempts.length - 1] ?? fail("Checkout not found");
 }
-async function freeze(cart: CartLine[], e: CheckoutExecution): Promise<CheckoutAttempt> {
+async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: string): Promise<CheckoutAttempt> {
   const lines: CheckoutLine[] = [];
   let stock: StockRequest | undefined;
   const attemptId = (e.createAttemptId ?? (() => globalThis.crypto.randomUUID()))();
   if (!attemptId) fail("Invalid attempt identity");
   if (!e.paymentBindingRef.trim()) fail("Payment binding required");
+  if (e.pricing && e.pricing.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) {
+    fail("Payments pricing schema unsupported");
+  }
   for (const line of cart) {
     const item = await e.catalog.catalog.get(line.catalogItemId);
     if (!item || item.recordKind !== "catalog-item" || item.itemId !== line.catalogItemId) fail("Product unavailable");
@@ -55,27 +61,46 @@ async function freeze(cart: CartLine[], e: CheckoutExecution): Promise<CheckoutA
       } else stock.requirements.push({ skuId: management.inventorySkuId, quantity: line.quantity, allowBackorders: policy.allowBackorders });
     }
   }
+  let pricing;
+  if (e.pricing) pricing = await composeCheckoutPricing(lines, cart, attemptId, couponCode, e);
+  else if (couponCode !== undefined) fail("Pricing composition is unavailable");
   const minor = lines.reduce((sum, line) => sum + parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity), 0n).toString();
-  const total = normalizeMoney({ currency: "USD", minor });
+  const total = pricing?.snapshot.finalTotal ?? normalizeMoney({ currency: "USD", minor });
   // This slice has no free-order or delayed-payment settlement policy.
-  if (minor === "0") fail("Zero-total checkout is outside this payment slice");
-  return { attemptId, cart, payment: createCurrentPaymentRequest({ attemptId, bindingRef: e.paymentBindingRef, lines, total }), ...(stock ? { stock } : {}), phase: "reserving" };
+  if (total.minor === "0") fail("Zero-total checkout is outside this payment slice");
+  return { attemptId, cart, payment: createCurrentPaymentRequest({
+    attemptId, bindingRef: e.paymentBindingRef, lines, total,
+    ...(pricing ? { pricing: pricing.snapshot } : {}),
+  }), ...(stock ? { stock } : {}),
+    ...(pricing?.couponId ? { coupon: { couponId: pricing.couponId, code: pricing.couponCode!, status: "unreserved" as const } } : {}),
+    phase: "reserving" };
 }
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
-  const cart = cartInput(rawCart);
+  if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
+  const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
+    ? (Object.keys(rawCart).sort().join() === "couponCode,lines" || Object.keys(rawCart).sort().join() === "lines")
+      ? (Object.prototype.hasOwnProperty.call(rawCart, "couponCode")
+        ? typeof (rawCart as { couponCode?: unknown }).couponCode === "string"
+          ? normalizeCouponCode((rawCart as { couponCode: string }).couponCode) : fail("Invalid cart coupon")
+        : undefined)
+      : fail("Invalid cart")
+    : undefined;
+  const cart = cartInput(Array.isArray(rawCart) ? rawCart : (rawCart as { lines: unknown }).lines);
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
     const previous = stored ? current(stored.record.attempts) : undefined;
     if (previous && previous.phase !== "released") {
       if (JSON.stringify(previous.cart) !== JSON.stringify(cart)) fail("Active checkout cart is frozen");
+      const requested = requestedCouponCode === undefined ? undefined : normalizeCouponCode(requestedCouponCode);
+      if ((previous.coupon?.code ?? undefined) !== requested) fail("Active checkout coupon selection is frozen");
       return drive(e, cartId, previous.attemptId, true);
     }
     if (previous && retryAfter !== previous.attemptId) fail("Retry requires the released attempt identity");
     if (!previous && retryAfter !== undefined) fail("Retry checkout not found");
-    const attempt = await freeze(cart, e);
+    const attempt = await freeze(cart, e, requestedCouponCode);
     if (e.paymentAssociations && !await e.paymentAssociations.claim({
       recordKind: "checkout-payment-association",
       attemptId: attempt.attemptId,
@@ -119,6 +144,55 @@ function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void 
   if (value.outcome === "paid" && !value.paymentId) fail("Missing payment identity");
 }
 
+async function reconcileCoupon(
+  e: CheckoutExecution,
+  attempt: CheckoutAttempt,
+  result: "paid" | "released",
+): Promise<void> {
+  if (!attempt.coupon) return;
+  if (!e.pricing) throw new Error("Coupon owner unavailable");
+  const owner = createCouponAttemptOwner(e.pricing.coupons);
+  if (result === "paid") {
+    if (!attempt.session) throw new Error("Paid checkout has no payment session");
+    await owner.reconcile(attempt.coupon.couponId, attempt.attemptId, {
+      kind: "verified-success",
+      providerSessionId: attempt.session.sessionId,
+    });
+    return;
+  }
+  if (attempt.paymentReleaseReason === "never-started") {
+    await owner.releaseUnstarted({ couponId: attempt.coupon.couponId, attemptId: attempt.attemptId,
+      quote: attempt.payment.pricing!.coupon!.quote, overallPayableTotal: attempt.payment.total });
+    return;
+  }
+  await owner.reconcile(attempt.coupon.couponId, attempt.attemptId,
+    attempt.session
+      ? { kind: "confirmed-cancel", providerSessionId: attempt.session.sessionId }
+      : { kind: "verified-not-created" });
+}
+
+async function persistCouponStatus(
+  e: CheckoutExecution,
+  cartId: string,
+  attemptId: string,
+  status: "released" | "consumed",
+): Promise<CheckoutAttempt | null> {
+  for (let retry = 0; retry < 20; retry += 1) {
+    const stored = await e.store.read(cartId);
+    if (!stored) return null;
+    const index = stored.record.attempts.findIndex((candidate) => candidate.attemptId === attemptId);
+    if (index < 0) return null;
+    const current = stored.record.attempts[index];
+    if (!current.coupon || current.coupon.status !== "pending") return current;
+    const next = structuredClone(current);
+    next.coupon!.status = status;
+    const attempts = [...stored.record.attempts];
+    attempts[index] = next;
+    if (await e.store.compareAndSet(cartId, stored.version, { attempts })) return next;
+  }
+  return null;
+}
+
 async function drive(e: CheckoutExecution, cartId: string, attemptId: string, create: boolean): Promise<CheckoutAttempt> {
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
@@ -126,7 +200,16 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
     const index = stored.record.attempts.findIndex(a => a.attemptId === attemptId);
     const attempt = stored.record.attempts[index];
     if (!attempt) fail("Checkout not found");
-    if (attempt.phase === "paid" || attempt.phase === "released") return attempt;
+    if (attempt.phase === "paid") {
+      if (attempt.coupon?.status === "pending") {
+        try {
+          await reconcileCoupon(e, attempt, "paid");
+          return await persistCouponStatus(e, cartId, attemptId, "consumed") ?? attempt;
+        } catch { return attempt; }
+      }
+      return attempt;
+    }
+    if (attempt.phase === "released") return attempt;
     const next = structuredClone(attempt);
     if (attempt.phase === "reserving") {
       if (attempt.stock) {
@@ -136,9 +219,42 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         try { result = await provider.reserve(structuredClone(attempt.stock)); } catch { return attempt; }
         if (result === "unknown") return attempt;
         if (result !== "reserved" && result !== "rejected") fail("Invalid reservation outcome");
-        next.phase = result === "reserved" ? "paying" : "released";
+        next.phase = result === "reserved" ? "paying" : next.coupon ? "releasing" : "released";
+        if (result === "rejected") next.paymentReleaseReason = "never-started";
       } else next.phase = "paying";
+      if (next.phase === "paying" && next.coupon?.status === "unreserved") {
+        try {
+          const owner = createCouponAttemptOwner(e.pricing!.coupons);
+          const reservation = await owner.reserve({
+            couponId: next.coupon.couponId,
+            attemptId: next.attemptId,
+            quote: next.payment.pricing!.coupon!.quote as CouponQuote,
+            overallPayableTotal: next.payment.total as { currency: "USD"; minor: string },
+            now: new Date((e.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
+          });
+          if (reservation.state !== "pending") {
+            next.phase = "releasing";
+            next.paymentReleaseReason = "never-started";
+          } else next.coupon.status = "pending";
+        } catch (error) {
+          if (error instanceof CouponRedemptionError &&
+              ["CAPACITY_EXHAUSTED", "INVALID_INPUT", "CONFLICTING_ATTEMPT", "TERMINAL_CONFLICT"].includes(error.code)) {
+            next.phase = "releasing";
+            next.paymentReleaseReason = "never-started";
+          } else {
+            return attempt;
+          }
+        }
+      }
     } else if (attempt.phase === "releasing") {
+      if (next.coupon && next.coupon.status !== "released") {
+        try {
+          await reconcileCoupon(e, next, "released");
+          next.coupon.status = "released";
+        } catch {
+          return attempt;
+        }
+      }
       if (attempt.stock) {
         const provider = await e.resolveInventory(attempt.stock.binding);
         if (!provider) return attempt;
@@ -148,21 +264,38 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       }
       next.phase = "released";
     } else {
+      // Current host support is not an authoritative provider creation fence.
+      if (attempt.payment.pricing && e.pricing?.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
       let outcome: PaymentOutcome;
       try {
         const payments = await e.resolvePayments(attempt.payment.bindingRef);
-        if (!payments) return attempt;
+        if (!payments || attempt.payment.pricing && payments.pricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
         outcome = await (create ? payments.ensureSession(structuredClone(attempt.payment)) : payments.lookup(structuredClone(attempt.payment)));
       } catch { return attempt; }
       validateOutcome(outcome, attempt);
       if (outcome.outcome === "unknown") return attempt;
-      if (outcome.outcome === "not-created") next.phase = "releasing";
+      if (outcome.outcome === "not-created") {
+        next.phase = "releasing";
+        next.paymentReleaseReason = "not-created";
+      }
       else {
+        if (attempt.coupon) {
+          try {
+            const owner = createCouponAttemptOwner(e.pricing!.coupons);
+            await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);
+          } catch {
+            return attempt;
+          }
+        }
         next.session = outcome.session;
         if (outcome.outcome === "paid") {
           next.phase = "paid";
-          next.order = { orderId: `order:${attemptId}`, receiptId: `receipt:${attemptId}`, attemptId, paymentId: outcome.paymentId, lines: attempt.payment.lines, total: attempt.payment.total };
-        } else if (outcome.outcome === "expired-unpaid") next.phase = "releasing";
+          next.order = { orderId: `order:${attemptId}`, receiptId: `receipt:${attemptId}`, attemptId, paymentId: outcome.paymentId, lines: attempt.payment.lines, total: attempt.payment.total,
+            ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}) };
+        } else if (outcome.outcome === "expired-unpaid") {
+          next.phase = "releasing";
+          next.paymentReleaseReason = "expired-unpaid";
+        }
       }
     }
     const attempts = [...stored.record.attempts];
@@ -173,7 +306,16 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
         return next;
       }
-      if (next.phase === "paid" || next.phase === "released") return next;
+      if (next.phase === "paid") {
+        if (next.coupon?.status === "pending") {
+          try {
+            await reconcileCoupon(e, next, "paid");
+            return await persistCouponStatus(e, cartId, attemptId, "consumed") ?? next;
+          } catch { return next; }
+        }
+        return next;
+      }
+      if (next.phase === "released") return next;
     }
   }
   return fail("Checkout contention; retry");

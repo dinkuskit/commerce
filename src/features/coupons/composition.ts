@@ -95,6 +95,13 @@ function storedRecord(value: unknown, id: string): CouponRecord {
 }
 
 export interface CouponAttemptPort {
+  /** Trusted Commerce durable pre-payment phase fence; prevents a late reserve from acquiring a slot. */
+  releaseUnstarted(input: {
+    couponId: string;
+    attemptId: string;
+    quote: CouponQuote;
+    overallPayableTotal: { currency: "USD"; minor: string };
+  }): Promise<CouponAttempt>;
   reserve(input: {
     couponId: string;
     attemptId: string;
@@ -137,6 +144,30 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
   };
 
   return {
+    async releaseUnstarted({ couponId, attemptId, quote, overallPayableTotal }) {
+      const id = required(couponId, "couponId");
+      const aid = required(attemptId, "attemptId");
+      const frozen = snapshot(quote, overallPayableTotal);
+      if (frozen.couponId !== id) fail("coupon identity mismatch");
+      const record = await update(id, (current) => {
+        const existing = current.attempts.find(item => item.attemptId === aid);
+        if (existing && !sameQuote(existing.quote, frozen)) {
+          throw new CouponRedemptionError("CONFLICTING_ATTEMPT", "checkout attempt identity is frozen");
+        }
+        if (existing?.providerSessionId || existing?.freeOrder || existing?.state === "consumed") {
+          throw new CouponRedemptionError("TERMINAL_CONFLICT", "payment-bound attempt is not unstarted");
+        }
+        if (existing?.state === "released") return current;
+        const released: CouponAttempt = existing ? { ...existing, state: "released" } : {
+          attemptId: aid, couponId: id, ruleId: frozen.ruleId, ruleVersion: frozen.ruleVersion,
+          quoteId: frozen.quoteId, quote: frozen, state: "released",
+        };
+        return { ...current, attempts: existing
+          ? current.attempts.map(item => item.attemptId === aid ? released : item)
+          : [...current.attempts, released] };
+      });
+      return deepFreeze(structuredClone(find(record, aid)));
+    },
     async reserve({ couponId, attemptId, quote, overallPayableTotal, now }) {
       const id = required(couponId, "couponId");
       const aid = required(attemptId, "attemptId");

@@ -1,3 +1,7 @@
+import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
+import { isCurrentPaymentRequest } from "./payment-window.js";
+import { normalizeMoney } from "../catalog/kernel/index.js";
+import { normalizeCouponCode, validateCouponQuoteSnapshot } from "../coupons/index.js";
 import type {
   CheckoutPaymentPort,
   CurrentPaymentRequest,
@@ -22,6 +26,7 @@ export interface TrustedTestPaymentsConfig {
   stripeAccountId: string;
   credentialResolver: () => Promise<string>;
   fetch: ScopedPaymentFetch;
+  pricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
 }
 
 interface PaymentBinding {
@@ -100,6 +105,54 @@ function outcome(value: unknown): PaymentOutcome {
   return result;
 }
 
+function assertPricing(request: PaymentRequest): void {
+  const pricing = request.pricing;
+  if (!pricing) return;
+  const minor = (value: unknown) => BigInt(normalizeMoney(value).minor);
+  const check = (valid: boolean) => { if (!valid) throw new Error("Malformed payment pricing"); };
+  try {
+    const subtotal = minor(pricing.merchandiseSubtotal);
+    const discount = minor(pricing.couponDiscount);
+    const net = minor(pricing.netMerchandise);
+    const shipping = minor(pricing.shipping.charge);
+    const final = minor(pricing.finalTotal);
+    check(subtotal - discount === net && net + shipping === final && final > 0n && minor(request.total) === final);
+    check(typeof pricing.shipping.configurationId === "string" && !!pricing.shipping.configurationId.trim() &&
+      Number.isSafeInteger(pricing.shipping.revision) && pricing.shipping.revision >= 1 &&
+      (pricing.shipping.mode === "flat" || pricing.shipping.mode === "free" && shipping === 0n));
+    check(Array.isArray(pricing.lines) && pricing.lines.length === request.lines.length && pricing.lines.length > 0);
+    let sumSubtotal = 0n, sumDiscount = 0n, sumNet = 0n;
+    for (const [index, line] of pricing.lines.entries()) {
+      const original = request.lines[index];
+      check(typeof original.catalogItemId === "string" && !!original.catalogItemId.trim() &&
+        Number.isSafeInteger(original.quantity) && original.quantity > 0 &&
+        line.catalogItemId === original.catalogItemId && line.quantity === original.quantity &&
+        minor(line.unitPrice) === minor(original.unitPrice));
+      const lineSubtotal = minor(line.lineSubtotal), lineDiscount = minor(line.discount), lineNet = minor(line.netAmount);
+      check(lineSubtotal === minor(original.unitPrice) * BigInt(original.quantity) &&
+        lineSubtotal - lineDiscount === lineNet);
+      sumSubtotal += lineSubtotal; sumDiscount += lineDiscount; sumNet += lineNet;
+    }
+    check(sumSubtotal === subtotal && sumDiscount === discount && sumNet === net);
+    if (pricing.coupon) {
+      check(normalizeCouponCode(pricing.coupon.code) === pricing.coupon.code);
+      const quote = pricing.coupon.quote;
+      validateCouponQuoteSnapshot(quote, "payment pricing coupon");
+      check(minor(quote.merchandiseTotal) === subtotal && minor(quote.discount) === discount &&
+        minor(quote.payableMerchandiseTotal) === net && minor(quote.overallPayableTotal) === final &&
+        quote.lines.length === pricing.lines.length);
+      for (const [index, line] of quote.lines.entries()) {
+        const priced = pricing.lines[index];
+        check(line.productId === priced.catalogItemId && line.quantity === priced.quantity &&
+          minor(line.unitPrice) === minor(priced.unitPrice) && minor(line.lineSubtotal) === minor(priced.lineSubtotal) &&
+          minor(line.discount) === minor(priced.discount));
+      }
+    } else check(discount === 0n);
+  } catch {
+    throw new Error("Malformed payment pricing");
+  }
+}
+
 function exactRequest(request: PaymentRequest, bindingRef: string): PaymentRequest {
   const copy = structuredClone(request);
   if (copy.bindingRef !== request.bindingRef ||
@@ -109,6 +162,10 @@ function exactRequest(request: PaymentRequest, bindingRef: string): PaymentReque
       copy.paymentMethods[0] !== "card") {
     throw new Error("Malformed payment request");
   }
+  if (copy.pricing && (copy.pricing.schema !== CHECKOUT_PRICING_SCHEMA || !isCurrentPaymentRequest(copy))) {
+    throw new Error("Unsupported payment pricing request");
+  }
+  assertPricing(copy);
   return copy;
 }
 
@@ -116,6 +173,7 @@ function normalizedConfig(
   input: TrustedTestPaymentsConfig,
 ): Readonly<TrustedTestPaymentsConfig> {
   if (input.providerId !== "stripe") invalid("providerId must be stripe");
+  if (input.pricingSchema !== undefined && input.pricingSchema !== CHECKOUT_PRICING_SCHEMA) invalid("unsupported pricing schema");
   return Object.freeze({
     paymentsOrigin: origin(input.paymentsOrigin, "paymentsOrigin"),
     commerceOrigin: commerceOrigin(input.commerceOrigin),
@@ -125,6 +183,7 @@ function normalizedConfig(
     stripeAccountId: nonEmpty(input.stripeAccountId, "stripeAccountId"),
     credentialResolver: input.credentialResolver,
     fetch: input.fetch,
+    pricingSchema: input.pricingSchema,
   });
 }
 
@@ -216,6 +275,9 @@ function createPaymentPort(
 
   async function ensureSession(request: PaymentRequest): Promise<PaymentOutcome> {
     const exact = exactRequest(request, config.bindingRef);
+    if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
+      throw new Error("Payments pricing schema unsupported");
+    }
     const ready = await binding("/v1/checkout-binding");
     if (ready.ready === false) throw new Error("Payments binding unavailable");
     return outcome(await call("POST", "/v1/checkout/session", exact));
@@ -223,6 +285,9 @@ function createPaymentPort(
 
   async function lookup(request: PaymentRequest): Promise<PaymentOutcome> {
     const exact = exactRequest(request, config.bindingRef);
+    if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
+      throw new Error("Payments pricing schema unsupported");
+    }
     await binding("/v1/existing-binding");
     return outcome(await call(
       "POST",
@@ -231,7 +296,7 @@ function createPaymentPort(
     ));
   }
 
-  return Object.freeze({ ensureSession, lookup });
+  return Object.freeze({ ensureSession, lookup, ...(config.pricingSchema ? { pricingSchema: config.pricingSchema } : {}) });
 }
 
 export function createTrustedTestPaymentPort(
