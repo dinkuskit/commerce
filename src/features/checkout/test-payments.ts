@@ -189,7 +189,8 @@ function normalizedConfig(
 
 const MAX_PAYMENT_RESPONSE_BYTES = 131072;
 
-async function boundedJson(response: Response): Promise<unknown> {
+/** Shared finite-body reader for authenticated Payments responses. */
+export async function readBoundedPaymentsJson(response: Response): Promise<unknown> {
   const body = response.body;
   if (!body || typeof body.getReader !== "function") {
     throw new Error("Malformed Payments response");
@@ -260,7 +261,7 @@ function createPaymentPort(
     });
     if (!response.ok) throw new Error("Payments transport unavailable");
     try {
-      return await boundedJson(response);
+      return await readBoundedPaymentsJson(response);
     } catch {
       throw new Error("Malformed Payments response");
     }

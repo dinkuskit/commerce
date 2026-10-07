@@ -80,6 +80,18 @@
     }
   },
   "admin": {
+    "settingsSchema": {
+      "installedCheckout": {
+        "type": "string",
+        "label": "Installed checkout configuration",
+        "description": "Versioned owner configuration; absent or disabled keeps checkout unavailable."
+      },
+      "installedCheckoutCredential": {
+        "type": "secret",
+        "label": "Installed checkout credential",
+        "description": "Separately provisioned issuer credential snapshot."
+      }
+    },
     "pages": [
       {
         "path": "/products",

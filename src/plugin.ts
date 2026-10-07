@@ -6,13 +6,14 @@ import {
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
+  resolveRegistryCheckoutServices,
 } from "./features/checkout/kernel/index.js";
 
 const guestRequest = {
   body: "json" as const,
   headers: [...GUEST_CHECKOUT_DECLARED_HEADERS],
 };
-const installedCheckout = createInstalledCheckoutHandlers();
+const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckoutServices);
 const plugin: SandboxedPlugin = {
   hooks: { cron: installedCheckout.cron },
   routes: {
