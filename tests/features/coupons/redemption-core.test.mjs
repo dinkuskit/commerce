@@ -74,10 +74,10 @@ test("payable attempts require payment proof; free attempts use only strict free
   const consumed = await fix.owner.reconcile(fix.coupon.couponId, payable.attemptId, { kind: "verified-success", providerSessionId: "s1" });
   assert.equal(consumed.state, "consumed");
   const free = await reserve(fix, "free", "0");
-  await assert.rejects(() => fix.owner.attachProviderSession(fix.coupon.couponId, free.attemptId, "s-free"), expectCode("TERMINAL_CONFLICT"));
+  await assert.rejects(() => fix.owner.attachProviderSession(fix.coupon.couponId, free.attemptId, "s-free"), (error) => { expectCode("TERMINAL_CONFLICT")(error); assert.equal(error.message, "provider session cannot attach to this attempt"); return true; });
   const proof = { kind: "verified-free-order", attemptId: "free", couponId: fix.coupon.couponId, ruleId: fix.quote.ruleId, ruleVersion: fix.quote.ruleVersion, quoteId: fix.quote.quoteId, orderId: "order-1", receiptId: "receipt-1", overallPayableTotal: total("0") };
   assert.equal((await fix.owner.reconcileFreeOrder({ couponId: fix.coupon.couponId, attemptId: "free", proof })).state, "consumed");
-  await assert.rejects(() => fix.owner.reconcileFreeOrder({ couponId: fix.coupon.couponId, attemptId: "free", proof: { ...proof, attemptId: "other" } }), expectCode("TERMINAL_CONFLICT"));
+  await assert.rejects(() => fix.owner.reconcileFreeOrder({ couponId: fix.coupon.couponId, attemptId: "free", proof: { ...proof, attemptId: "other" } }), (error) => { expectCode("TERMINAL_CONFLICT")(error); assert.equal(error.message, "free-order proof attemptId mismatch"); return true; });
 });
 
 test("free provider sessions are rejected before unknown or terminal replay checks without mutating durable SQLite state", async (t) => {

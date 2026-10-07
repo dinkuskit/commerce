@@ -14,6 +14,10 @@ import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 
 const MAX_RETRIES = 32;
 const fail = (message: string): never => { throw new CouponRedemptionError("INVALID_INPUT", message); };
+function terminalConflict(message: string): never {
+  throw new CouponRedemptionError("TERMINAL_CONFLICT", message);
+}
+
 const required = (value: unknown, name: string): string => {
   if (typeof value !== "string" || value.trim() === "") fail(`${name} must be non-empty`);
   return (value as string).trim();
@@ -155,7 +159,7 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
           throw new CouponRedemptionError("CONFLICTING_ATTEMPT", "checkout attempt identity is frozen");
         }
         if (existing?.providerSessionId || existing?.freeOrder || existing?.state === "consumed") {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "payment-bound attempt is not unstarted");
+          terminalConflict("payment-bound attempt is not unstarted");
         }
         if (existing?.state === "released") return current;
         const released: CouponAttempt = existing ? { ...existing, state: "released" } : {
@@ -218,11 +222,11 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
       const record = await update(id, (current) => {
         const item = find(current, aid);
         if (item.providerSessionId) {
-          if (item.providerSessionId !== session) throw new CouponRedemptionError("TERMINAL_CONFLICT", "provider session identity is immutable");
+          if (item.providerSessionId !== session) terminalConflict("provider session identity is immutable");
           return current;
         }
         if (item.state !== "pending" || item.freeOrder || item.quote.overallPayableTotal.minor === "0") {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "provider session cannot attach to this attempt");
+          terminalConflict("provider session cannot attach to this attempt");
         }
         return {
           ...current,
@@ -239,31 +243,31 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
       const record = await update(id, (current) => {
         const item = find(current, aid);
         if (item.quote.overallPayableTotal.minor === "0" && reconciliation.providerSessionId !== undefined) {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "free attempts cannot have a provider session");
+          terminalConflict("free attempts cannot have a provider session");
         }
         const mapped = item.providerSessionId;
         if (reconciliation.providerSessionId !== undefined && mapped !== undefined && reconciliation.providerSessionId !== mapped) {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "provider session identity mismatch");
+          terminalConflict("provider session identity mismatch");
         }
         if (mapped !== undefined &&
             (reconciliation.kind === "confirmed-failure" || reconciliation.kind === "confirmed-cancel") &&
             reconciliation.providerSessionId === undefined) {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "mapped provider session is required for failure or cancel");
+          terminalConflict("mapped provider session is required for failure or cancel");
         }
         if (reconciliation.kind === "verified-not-created" && mapped !== undefined) {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "verified-not-created conflicts with mapped provider session");
+          terminalConflict("verified-not-created conflicts with mapped provider session");
         }
         if (reconciliation.kind === "unknown") return current;
         if (item.state === "consumed") {
           if (reconciliation.kind === "verified-success" && reconciliation.providerSessionId === mapped) return current;
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "consumed attempt is terminal");
+          terminalConflict("consumed attempt is terminal");
         }
         if (item.state === "released") {
           if (["confirmed-failure", "confirmed-cancel", "verified-not-created"].includes(reconciliation.kind)) return current;
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "released attempt is terminal");
+          terminalConflict("released attempt is terminal");
         }
         if (reconciliation.kind === "verified-success" && item.quote.overallPayableTotal.minor === "0") {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "free attempts require free-order reconciliation");
+          terminalConflict("free attempts require free-order reconciliation");
         }
         const nextAttempt = {
           ...item,
@@ -288,7 +292,7 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
         : ["kind", "attemptId", "couponId", "ruleId", "ruleVersion", "quoteId", "orderId", "receiptId", "overallPayableTotal"];
       if (proof.kind !== "unknown" && proof.kind !== "verified-free-order") fail("free-order proof kind is invalid");
       if (keys.length !== requiredKeys.length || keys.some((key) => !requiredKeys.includes(key))) fail("free-order proof has unsupported fields");
-      if (proof.attemptId !== aid) throw new CouponRedemptionError("TERMINAL_CONFLICT", "free-order proof attemptId mismatch");
+      if (proof.attemptId !== aid) terminalConflict("free-order proof attemptId mismatch");
       if (proof.kind === "verified-free-order") {
         required(proof.orderId, "orderId"); required(proof.receiptId, "receiptId");
         if (!proof.overallPayableTotal || typeof proof.overallPayableTotal !== "object" || Array.isArray(proof.overallPayableTotal) ||
@@ -301,23 +305,23 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
         const item = find(current, aid);
         if (proof.couponId !== item.couponId || proof.ruleId !== item.ruleId ||
             proof.ruleVersion !== item.ruleVersion || proof.quoteId !== item.quoteId) {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "free-order proof does not match frozen attempt");
+          terminalConflict("free-order proof does not match frozen attempt");
         }
         if (item.quote.overallPayableTotal.minor !== "0" || item.providerSessionId) {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "attempt is not a free order");
+          terminalConflict("attempt is not a free order");
         }
         if (proof.kind === "unknown") return current;
         if (item.state === "consumed") {
           if (item.freeOrder?.orderId === proof.orderId && item.freeOrder?.receiptId === proof.receiptId) {
             return current;
           }
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "consumed attempt has different free order receipt");
+          terminalConflict("consumed attempt has different free order receipt");
         }
         if (item.state === "released") {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "released free attempt cannot consume");
+          terminalConflict("released free attempt cannot consume");
         }
         if (item.state !== "pending") {
-          throw new CouponRedemptionError("TERMINAL_CONFLICT", "free attempt is terminal");
+          terminalConflict("free attempt is terminal");
         }
         return {
           ...current,
