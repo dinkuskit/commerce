@@ -13,7 +13,9 @@
     "url": "https://github.com/dinkuskit/commerce/security"
   },
   "repo": "https://github.com/dinkuskit/commerce",
-  "capabilities": [],
+  "capabilities": [
+    "media:read"
+  ],
   "allowedHosts": [],
   "storage": {
     "catalog_items": {
@@ -32,6 +34,10 @@
       "uniqueIndexes": []
     },
     "catalog_prices": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "catalog_media": {
       "indexes": [],
       "uniqueIndexes": []
     },
@@ -55,6 +61,10 @@
       "uniqueIndexes": []
     },
     "storefront_out_of_stock_listing": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "storefront_placeholder_image": {
       "indexes": [],
       "uniqueIndexes": []
     },

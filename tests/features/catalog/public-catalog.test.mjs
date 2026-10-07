@@ -14,6 +14,7 @@ function context({ hasMore = false, cursor, count = 1, status = 'in-stock', mana
     catalog_manual_availability: { async get() { return { recordKind: 'catalog-manual-availability', recordId: 'hat', catalogItemId: 'hat', status }; } },
     catalog_backorder_policies: empty, store_inventory_configurations: empty, storefront_availability_settings: empty,
     storefront_out_of_stock_listing: { async get() { return { recordKind: 'storefront-out-of-stock-listing', recordId: 'active', hideOutOfStock: hide, updatedAt: '2026-10-07T00:00:00Z' }; } },
+    catalog_media: empty, storefront_placeholder_image: empty,
   } };
 }
 
@@ -23,7 +24,8 @@ test('public projection preserves authoritative sale, listing and managed fail-c
   assert.deepEqual((await readPublicCatalog(context({ status: 'out-of-stock', hide: true }))).products, []);
   const managed = (await readPublicCatalog(context({ managed: true }))).products[0];
   assert.deepEqual(managed.availability, { status: 'availability-unavailable', sellable: false, listable: true });
-  assert.deepEqual(Object.keys(managed).sort(), ['availability', 'id', 'name', 'price', 'sku']);
+  assert.deepEqual(Object.keys(managed).sort(), ['availability', 'gallery', 'id', 'image', 'name', 'price', 'sku']);
+  assert.deepEqual([managed.image, managed.gallery], [null, []], 'no media record and no placeholder yields no image');
 });
 
 test('catalog page keeps continuation across filtered rows and refuses oversized/nonprogressing pages', async () => {

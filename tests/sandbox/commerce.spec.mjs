@@ -186,3 +186,133 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     console.log("sandbox_proof=pass create replay price-refusal coming-soon-disabled malicious-enable-refused settings anonymous-denial unmanaged-without-Inventory; DB=" + filename);
   } finally { await db.destroy(); }
 });
+
+// Product media: a clerk chooses images from the Media Library through the
+// Commerce-rendered chooser (Block Kit 1.2.0 renders no media_picker on plugin
+// pages); the public catalog carries media ids and alt read live; the
+// server-rendered storefront resolves public URLs and srcset through EmDash.
+test("clerk sets product images from the Media Library and the storefront renders them", async ({ page, request, browser }) => {
+  const { solidPng } = await import("./png.mjs");
+  const filename = process.env.COMMERCE_PROOF_DB.slice(5);
+  const database = new Database(filename);
+  const raw = (name) => database.prepare("SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ?").all("dinkus-commerce", name).map(row => JSON.parse(row.data));
+  const capture = async (name) => page.screenshot({ path: process.env.COMMERCE_PROOF_ARTIFACTS + "/" + name + ".png", animations: "disabled", fullPage: true });
+  const adminPath = "/_emdash/admin/plugins/dinkus-commerce/";
+  const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
+  const interact = async (name) => {
+    const response = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
+    await page.getByRole("button", { name, exact: true }).click();
+    const body = await (await response).json();
+    expect(body.success).toBe(true);
+    return body.data;
+  };
+  try {
+    await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath + "products");
+    const started = page.getByRole("button", { name: "Get Started" });
+    if (await started.count()) await started.click();
+    const upload = async (name, colour, fields = {}) => {
+      const response = await page.request.post("/_emdash/api/media", {
+        multipart: { file: { name, mimeType: "image/png", buffer: solidPng(640, 480, colour) }, ...fields },
+        headers: { "X-EmDash-Request": "1" },
+      });
+      expect(response.status()).toBe(201);
+      return (await response.json()).data.item;
+    };
+    const front = await upload("red-hat-front.png", [200, 30, 30], { alt: "Red hat, front" });
+    const side = await upload("red-hat-side.png", [30, 120, 200]);
+    const back = await upload("red-hat-back.png", [30, 160, 60], { caption: "Back view" });
+    const placeholder = await upload("store-placeholder.png", [120, 120, 120]);
+    expect(front.storageKey.split(".")[0]).not.toBe(front.id);
+
+    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    // The first spec leaves Hide out-of-stock on and Red hat out of stock; make it listable again.
+    await page.getByRole("radio", { name: "In stock", exact: true }).check();
+    expect((await interact("Save")).toast.type).toBe("success");
+    await expect(page.getByText("No image", { exact: true })).toBeVisible();
+    await expect(page.getByText("Gallery (0 of 8)", { exact: true })).toBeVisible();
+    expect((await interact("Choose image")).blocks[0].text).toBe("Choose an image");
+    await expect(page.getByRole("heading", { name: "Choose an image" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Red hat, front" })).toBeVisible();
+    await capture("media-chooser");
+    expect((await interact("Use red-hat-front.png")).toast.message).toBe("Image saved");
+    expect(raw("catalog_media")[0]).toMatchObject({ recordKind: "catalog-media", image: { mediaId: front.id }, gallery: [] });
+    await expect(page.getByRole("img", { name: "Red hat, front" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Change image", exact: true })).toBeVisible();
+    await capture("product-image-chosen");
+
+    await interact("Add to gallery");
+    expect((await interact("Use red-hat-side.png")).toast.message).toBe("Added to gallery");
+    await interact("Add to gallery");
+    expect((await interact("Use red-hat-back.png")).toast.message).toBe("Added to gallery");
+    await expect(page.getByText("Gallery (2 of 8)", { exact: true })).toBeVisible();
+    expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }, { mediaId: back.id }]);
+    await interact("Add to gallery");
+    const duplicate = await interact("Use red-hat-side.png");
+    expect(duplicate.toast.type).toBe("error");
+    expect(duplicate.toast.message).toContain("already in the gallery");
+    expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }, { mediaId: back.id }]);
+    await expect(page.getByText("That image is already in the gallery", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Gallery (2 of 8)", { exact: true })).toBeVisible();
+    await capture("product-gallery");
+    expect((await interact("Move image 2 up")).toast.message).toBe("Gallery reordered");
+    expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: back.id }, { mediaId: side.id }]);
+    expect((await interact("Remove image 1")).toast.message).toBe("Image removed");
+    expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }]);
+    expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1325" }, sale: { minor: "850" } });
+    await page.reload();
+    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    await expect(page.getByRole("img", { name: "Red hat, front" })).toBeVisible();
+    await expect(page.getByText("Gallery (1 of 8)", { exact: true })).toBeVisible();
+
+    await page.goto(adminPath + "settings");
+    await expect(page.getByRole("heading", { name: "Placeholder image" })).toBeVisible();
+    await interact("Choose placeholder");
+    await expect(page.getByRole("heading", { name: "Choose a placeholder image" })).toBeVisible();
+    expect((await interact("Use store-placeholder.png")).toast.message).toBe("Placeholder saved");
+    expect(raw("storefront_placeholder_image")[0].image).toEqual({ mediaId: placeholder.id });
+    await expect(page.getByRole("button", { name: "Remove placeholder", exact: true })).toBeVisible();
+    await capture("settings-placeholder");
+
+    await page.goto(adminPath + "products");
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Blue hat");
+    await page.getByRole("textbox", { name: "SKU", exact: true }).fill("BLUE-HAT");
+    expect((await interact("Add product")).toast.message).toBe("Product added");
+    await page.getByRole("textbox", { name: "Regular", exact: true }).fill("5");
+    expect((await interact("Save")).toast.type).toBe("success");
+
+    const shopper = await browser.newContext();
+    const catalog = (await (await shopper.request.get(new URL("/_emdash/api/plugins/dinkus-commerce/catalog/public", test.info().project.use.baseURL).href)).json()).data;
+    const red = catalog.products.find((product) => product.sku === "RED-HAT");
+    const blue = catalog.products.find((product) => product.sku === "BLUE-HAT");
+    expect(red.image).toEqual({ id: front.id, alt: "Red hat, front", width: 640, height: 480, placeholder: false });
+    expect(red.gallery).toEqual([{ id: side.id, alt: "Red hat", width: 640, height: 480, placeholder: false }]);
+    expect(blue.image).toEqual({ id: placeholder.id, alt: "Blue hat", width: 640, height: 480, placeholder: true });
+    expect(blue.gallery).toEqual([]);
+    expect(JSON.stringify(catalog)).not.toContain("/_emdash/api/media/asset/");
+    writeFileSync(process.env.COMMERCE_PROOF_ARTIFACTS + "/public-catalog-media.json", JSON.stringify(catalog, null, 2));
+
+    const storefront = await shopper.newPage();
+    await storefront.goto("/");
+    const hero = storefront.locator('li[data-product="RED-HAT"] img').first();
+    await expect(hero).toHaveAttribute("alt", "Red hat, front");
+    const src = await hero.getAttribute("src");
+    const srcset = await hero.getAttribute("srcset");
+    expect(src).toContain("/_emdash/api/media/file/" + front.storageKey);
+    expect(srcset).toContain("/_image?href=");
+    expect(srcset).toContain(" 300w");
+    expect(srcset).toContain(" 600w");
+    expect(srcset).not.toContain("1200w");
+    const candidate = srcset.split(",")[0].trim().split(" ")[0];
+    const transformed = await shopper.request.get(new URL(candidate, test.info().project.use.baseURL).href);
+    expect(transformed.status()).toBe(200);
+    expect(transformed.headers()["content-type"]).toContain("image/webp");
+    await expect(storefront.locator('li[data-product="RED-HAT"] .gallery img')).toHaveCount(1);
+    await expect(storefront.locator('li[data-product="BLUE-HAT"] img[data-placeholder="true"]')).toHaveAttribute("alt", "Blue hat");
+    await expect.poll(() => hero.evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
+    const chosen = await hero.evaluate((img) => img.currentSrc);
+    expect(chosen).toContain("/_image?href=");
+    await storefront.screenshot({ path: process.env.COMMERCE_PROOF_ARTIFACTS + "/storefront-images.png", animations: "disabled", fullPage: true });
+    await shopper.close();
+    console.log("media_proof=pass chooser gallery-reorder placeholder public-ids storefront-srcset; DB=" + filename);
+  } finally { database.close(); }
+});

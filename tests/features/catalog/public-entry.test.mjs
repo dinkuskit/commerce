@@ -196,6 +196,8 @@ test("installed public catalog projects only priced listable products", async ()
       store_inventory_configurations: empty,
       storefront_availability_settings: empty,
       storefront_out_of_stock_listing: empty,
+      catalog_media: empty,
+      storefront_placeholder_image: empty,
     },
     request: new Request("http://127.0.0.1/catalog/public", { method: "GET" }),
     site: { url: "http://127.0.0.1" },
@@ -207,6 +209,8 @@ test("installed public catalog projects only priced listable products", async ()
       sku: "INSTALLED-1",
       price: { currency: "USD", minor: "1250" },
       availability: { status: "in-stock", sellable: true, listable: true },
+      image: null,
+      gallery: [],
     }],
   });
 });

@@ -214,6 +214,8 @@ function sandboxContext(store) {
       catalog_manual_availability: store.availability,
       managed_sku_claims: store.claims,
       storefront_out_of_stock_listing: new MemoryCollection(),
+      catalog_media: new MemoryCollection(),
+      storefront_placeholder_image: new MemoryCollection(),
     },
   };
 }

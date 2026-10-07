@@ -1,1 +1,82 @@
-<!doctype html><html lang="en"><head><title>Commerce sandbox proof</title></head><body><h1>Commerce sandbox proof host</h1><p>Disposable SQLite host. No live shop or payment connection.</p></body></html>
+---
+// Disposable storefront fixture. The public catalog carries media ids; the
+// host maps them to public file URLs and builds srcset through EmDash's image
+// endpoint with Commerce's preset constants. No live shop or payment connection.
+import { handleMediaGet } from "emdash";
+import { getDb } from "emdash/runtime";
+import {
+  COMMERCE_IMAGE_PRESETS,
+  COMMERCE_IMAGE_SIZES,
+  commerceImageSrcset,
+  commerceImageTransformUrl,
+} from "../../../../dist/features/catalog/index.js";
+
+const origin = Astro.url.origin;
+const emdash = Astro.locals.emdash;
+const errors = [];
+let products = [];
+try {
+  const response = await fetch(origin + "/_emdash/api/plugins/dinkus-commerce/catalog/public");
+  const body = await response.json();
+  products = body.data?.products ?? body.products ?? [];
+} catch (error) {
+  errors.push("catalog: " + (error instanceof Error ? error.message : String(error)));
+}
+async function resolveImage(image, width) {
+  if (!image) return null;
+  let result;
+  try {
+    // The host maps a media id to its public file URL. Anonymous page requests
+    // carry only getPublicMediaUrl/storage on locals, so use the package handler.
+    result = emdash?.handleMediaGet ? await emdash.handleMediaGet(image.id) : await handleMediaGet(await getDb(), image.id);
+  } catch (error) {
+    errors.push("media " + image.id + ": " + (error instanceof Error ? error.message : String(error)));
+    return null;
+  }
+  const item = result?.success ? result.data?.item : null;
+  if (!item?.storageKey) return null;
+  // Public file URL: the storage's configured public URL or EmDash's file route.
+  const src = emdash?.getPublicMediaUrl ? emdash.getPublicMediaUrl(item.storageKey) : "/_emdash/api/media/file/" + item.storageKey;
+  return {
+    ...image,
+    src,
+    srcset: commerceImageSrcset(src, image.width, origin),
+    thumbnail: commerceImageTransformUrl(src, width, origin),
+  };
+}
+const rendered = [];
+for (const product of products) {
+  const gallery = [];
+  for (const entry of product.gallery ?? []) {
+    const resolved = await resolveImage(entry, COMMERCE_IMAGE_PRESETS.gallery_thumbnail);
+    if (resolved) gallery.push(resolved);
+  }
+  rendered.push({ product, image: await resolveImage(product.image, COMMERCE_IMAGE_PRESETS.thumbnail), gallery });
+}
+---
+<!doctype html><html lang="en"><head><meta charset="utf-8" /><title>Commerce sandbox proof</title></head><body>
+<h1>Commerce sandbox proof host</h1>
+<p>Disposable SQLite host. No live shop or payment connection.</p>
+{errors.length ? <pre data-errors>{errors.join("\n")}</pre> : null}
+<ul id="products" data-count={rendered.length}>
+  {rendered.map(({ product, image, gallery }) => (
+    <li data-product={product.sku}>
+      <h2>{product.name}</h2>
+      {image ? (
+        <img src={image.src} srcset={image.srcset} sizes={COMMERCE_IMAGE_SIZES} alt={image.alt}
+          width={image.width ?? undefined} height={image.height ?? undefined} data-placeholder={String(image.placeholder)}
+          style="max-width: 300px; height: auto;" />
+      ) : (
+        <p data-no-image={product.sku}>No image</p>
+      )}
+      {gallery.length ? (
+        <ul class="gallery">
+          {gallery.map((entry) => (
+            <li><img src={entry.thumbnail} alt={entry.alt} width="100" loading="lazy" /></li>
+          ))}
+        </ul>
+      ) : null}
+    </li>
+  ))}
+</ul>
+</body></html>

@@ -1,0 +1,56 @@
+{
+  "products": [
+    {
+      "id": "445fc15d-d77d-47bb-a763-0276da908df1",
+      "name": "Red hat",
+      "sku": "RED-HAT",
+      "price": {
+        "currency": "USD",
+        "minor": "850"
+      },
+      "availability": {
+        "status": "in-stock",
+        "sellable": true,
+        "listable": true
+      },
+      "image": {
+        "id": "01M4CB4N1CVZ4J9CH80XR9E29C",
+        "alt": "Red hat, front",
+        "width": 640,
+        "height": 480,
+        "placeholder": false
+      },
+      "gallery": [
+        {
+          "id": "01M4CB4N9MS73DQD65CH34AW2V",
+          "alt": "Red hat",
+          "width": 640,
+          "height": 480,
+          "placeholder": false
+        }
+      ]
+    },
+    {
+      "id": "0766d2f8-3ced-4628-81a3-651f38514408",
+      "name": "Blue hat",
+      "sku": "BLUE-HAT",
+      "price": {
+        "currency": "USD",
+        "minor": "500"
+      },
+      "availability": {
+        "status": "in-stock",
+        "sellable": true,
+        "listable": true
+      },
+      "image": {
+        "id": "01M4CB4NBKNJ1RY7C18FKV8FB0",
+        "alt": "Blue hat",
+        "width": 640,
+        "height": 480,
+        "placeholder": true
+      },
+      "gallery": []
+    }
+  ]
+}

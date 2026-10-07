@@ -11,9 +11,19 @@ const stage = resolve('.tmp/sandbox-source');
 await mkdir(resolve(stage, 'src'), { recursive: true });
 await checkCouponCatalog(resolve('.'));
 const authTransform = await auditedCouponTransformFrom(resolve('.'));
+// Commerce reaches only hasPermission/toRoleLevel from the audited auth
+// package; its passkey/OAuth closure imports pure @oslojs crypto and encoding
+// modules that never run here. Marking them side-effect-free lets Rolldown drop
+// the unused code (about 5.6 KB) without touching the audited transform.
+const pureVendorModules = {
+  name: 'commerce-pure-vendor-modules',
+  transform(code, id) {
+    return id.includes('/node_modules/@oslojs/') ? { code, moduleSideEffects: false } : null;
+  },
+};
 const bundle = await rolldown({
   input: resolve('src/plugin.ts'), platform: 'browser',
-  plugins: [authTransform],
+  plugins: [authTransform, pureVendorModules],
   onwarn(warning) {
     if (warning.code === 'UNRESOLVED_IMPORT') throw new Error(warning.message);
     console.warn(warning.message);
