@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-07T15:35:02+00:00",
-    "domain": "Installed public catalog and canonical checkout seam",
-    "started_at": "2026-10-07T15:35:02+00:00",
+    "confirmed_at": "2026-10-07T21:30:24+00:00",
+    "domain": "Backend bundle headroom through behavior-preserving coupon factoring",
+    "started_at": "2026-10-07T21:30:23+00:00",
     "status": "confirmed",
-    "summary": "Bobby approved the installed catalog seam and canonical unmanaged coupon checkout fixture; implementation, focused commits, draft PR and required review authorized, merge and activation excluded."
+    "summary": "The delegated headroom task authorizes smallest behavior-preserving coupon source factoring, fresh deterministic size/hash evidence, behavior/full verification and exact-source review before a review-ready PR; no merge or deployment authority."
   },
   "decisions": [
     {
@@ -6912,6 +6912,83 @@
       "superseded_by": null,
       "updated_at": "2026-10-07T20:15:30+00:00",
       "verification_ref": ".grilltrack/proof/installed-public-catalog-20261007/REVIEW.md"
+    },
+    {
+      "baseline_ref": "git:4a8fac510772dcce7be5280c9b9d7c0360d15e92",
+      "candidate_refs": [],
+      "choice": "Factor repeated coupon validation and redemption error construction and per-line labels without changing conditions, evaluation order, classes, codes or messages; retain dependencies, build pipeline, manifests, grants and localization; measure deterministic clean build and verify contracts before review-ready PR.",
+      "context_ref": null,
+      "created_at": "2026-10-07T21:30:23+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Backend bundle headroom through behavior-preserving coupon factoring",
+      "history": [
+        {
+          "at": "2026-10-07T21:30:24+00:00",
+          "choice": "Factor repeated coupon validation and redemption error construction and per-line labels without changing conditions, evaluation order, classes, codes or messages; retain dependencies, build pipeline, manifests, grants and localization; measure deterministic clean build and verify contracts before review-ready PR.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T21:32:42+00:00",
+          "choice": "Factor repeated coupon validation and redemption error construction and per-line labels without changing conditions, evaluation order, classes, codes or messages; retain dependencies, build pipeline, manifests, grants and localization; measure deterministic clean build and verify contracts before review-ready PR.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T21:35:39+00:00",
+          "choice": "Factor repeated coupon validation and redemption error construction and per-line labels without changing conditions, evaluation order, classes, codes or messages; retain dependencies, build pipeline, manifests, grants and localization; measure deterministic clean build and verify contracts before review-ready PR.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/coupons/validation.ts;src/features/coupons/composition.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "backend-headroom-20261007",
+      "implementation_ref": "file:src/features/coupons/validation.ts;src/features/coupons/composition.ts",
+      "question": "How can the merged backend recover safe margin below its enforced 128KiB cap?",
+      "rationale": "Merged backend is 131027 of 131072 bytes. Source-map attribution identifies coupon composition and validation among dominant own modules. Scope authorized by the bounded headroom task.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": ".grilltrack/proof/backend-headroom-20261007/REVIEW.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-07T21:35:40+00:00",
+          "source_identity": "git:e5b1812cc61476bfa95a470e3f674ebe8ec8049a"
+        }
+      ],
+      "review_ref": ".grilltrack/proof/backend-headroom-20261007/REVIEW.md",
+      "review_result": "clean",
+      "review_source_identity": "git:e5b1812cc61476bfa95a470e3f674ebe8ec8049a",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-07T21:35:40+00:00",
+      "verification_ref": ".grilltrack/proof/backend-headroom-20261007/PROOF.md"
     }
   ],
   "last_activation": {
@@ -6919,7 +6996,15 @@
     "mechanism": "implicit"
   },
   "last_pause": null,
-  "pause": null,
+  "pause": {
+    "artifact_refs": [
+      ".grilltrack/proof/backend-headroom-20261007/PROOF.md",
+      ".grilltrack/proof/backend-headroom-20261007/REVIEW.md"
+    ],
+    "next_safe_action": "Inspect final immutable head AutoReview, independent CI and native ClawSweeper; adjudicate findings before human merge approval.",
+    "paused_at": "2026-10-07T21:35:40+00:00",
+    "reason": "Verified backend headroom candidate awaiting final PR review evidence and human merge approval."
+  },
   "recommendation": null,
   "reconciliation": {
     "plan_id": "1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
@@ -6931,8 +7016,8 @@
     "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
+  "status": "paused",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-07T20:15:30+00:00"
+  "updated_at": "2026-10-07T21:35:40+00:00"
 }
