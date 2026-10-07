@@ -78,8 +78,11 @@ admin lists the library itself:
   value, `null` or `""` clears) and `settings/placeholder-image` (GET, or POST
   `{ image }`). The compatibility React Products and Store pages are unchanged.
 
-A refused choice (duplicate gallery image, full gallery, unknown media id,
-storage failure) leaves every stored value unchanged and reports why.
+A refused choice (duplicate gallery image, full gallery, malformed media id,
+a gallery that changed since the page loaded, storage failure) leaves every
+stored value unchanged and returns the clerk to the product or Settings with
+the reason. A well-formed id that no longer exists in the library is stored
+as a reference and resolves to nothing at read time, as decision 2 allows.
 
 ## Registry artifact
 
@@ -89,7 +92,10 @@ sandbox Rolldown input, and `couponText` formats the pinned compiled coupon
 catalog with a local interpolator instead of the `@lingui/core` runtime.
 `scripts/coupon-catalog.mjs` already restricts the catalog to plain strings
 and single-name placeholders; `tests/coupon-i18n.test.mjs` proves the output
-equals Lingui's for every message and edge value.
+equals Lingui's for every catalog message with sampled values (missing, null,
+numbers, braces). One deliberate difference: Lingui decodes literal `\u` and
+`\x` escape sequences in the final string, including interpolated runtime
+values; the local formatter leaves them as typed.
 
 ## Deferred
 

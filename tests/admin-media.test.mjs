@@ -86,8 +86,10 @@ test("a clerk chooses, reorders and removes product images from the Media Librar
   assert.ok(page.blocks.some((block) => block.type === "image" && block.url === library[HAT].url));
   assert.deepEqual(labels(page).filter((label) => /image|gallery/i.test(label)), ["Change image", "Remove image", "Add to gallery"]);
 
-  const back = await act(ctx, button(page, "Cancel") ?? button(chooser, "Cancel"));
-  assert.equal(back.blocks[0].text, "Red hat", "Cancel returns to the product without a write");
+  const before = JSON.stringify(storage.catalog_media.map.get("hat"));
+  const back = await act(ctx, button(await act(ctx, button(page, "Change image")), "Cancel"));
+  assert.equal(back.blocks[0].text, "Red hat", "Cancel returns to the product");
+  assert.equal(JSON.stringify(storage.catalog_media.map.get("hat")), before, "Cancel writes nothing");
 
   for (const name of ["side.png", "back.png"]) {
     const add = await act(ctx, button(page, "Add to gallery"));
@@ -113,9 +115,12 @@ test("a clerk chooses, reorders and removes product images from the Media Librar
   assert.deepEqual(storage.catalog_media.map.get("hat"), { recordKind: "catalog-media", recordId: "hat", catalogItemId: "hat", image: null, gallery: [{ mediaId: SIDE }] });
   assert.deepEqual(storage.catalog_prices.map.get("hat").regular, { currency: "USD", minor: "400" }, "prices stay untouched");
 
-  const forged = await commerceAdmin(route({ type: "block_action", action_id: "media.up", value: { id: "hat", index: 7 } }), ctx);
+  const forged = await commerceAdmin(route({ type: "block_action", action_id: "media.up", value: { id: "hat", index: 7, m: SIDE } }), ctx);
   assert.equal(forged.toast.type, "error");
-  assert.deepEqual(storage.catalog_media.map.get("hat").gallery, [{ mediaId: SIDE }]);
+  const stale = await commerceAdmin(route({ type: "block_action", action_id: "media.remove", value: { id: "hat", index: 0, m: BACK } }), ctx);
+  assert.match(stale.toast.message, /gallery changed/);
+  assert.equal(stale.blocks[1].text, "Red hat", "a stale page returns to the product");
+  assert.deepEqual(storage.catalog_media.map.get("hat").gallery, [{ mediaId: SIDE }], "a stale page never removes a different image");
 });
 
 test("the library page paginates and the placeholder uses the same chooser", async () => {
@@ -133,6 +138,10 @@ test("the library page paginates and the placeholder uses the same chooser", asy
   assert.deepEqual(labels(settings).filter((label) => /placeholder/i.test(label)), ["Change placeholder", "Remove placeholder"]);
   const cancelled = await act(ctx, button(chooser, "Cancel"));
   assert.equal(cancelled.blocks[0].text, "Commerce settings");
+  const refused = await commerceAdmin(route({ type: "block_action", action_id: "media.use", value: { t: "placeholder", id: "", m: "not an id!" } }), ctx);
+  assert.equal(refused.toast.type, "error");
+  assert.equal(refused.blocks[1].text, "Commerce settings", "a refused placeholder choice returns to Settings");
+  assert.deepEqual(storage.storefront_placeholder_image.map.get("active").image, { mediaId: BACK });
   settings = await act(ctx, button(settings, "Remove placeholder"));
   assert.equal(settings.toast.message, "Placeholder removed");
   assert.equal(storage.storefront_placeholder_image.map.get("active").image, null);

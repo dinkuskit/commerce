@@ -1,7 +1,7 @@
 {
   "products": [
     {
-      "id": "445fc15d-d77d-47bb-a763-0276da908df1",
+      "id": "fcf2417e-1809-4ed2-8dd4-8d2f253e2d89",
       "name": "Red hat",
       "sku": "RED-HAT",
       "price": {
@@ -14,7 +14,7 @@
         "listable": true
       },
       "image": {
-        "id": "01M4CB4N1CVZ4J9CH80XR9E29C",
+        "id": "01M4CC5ZQSWWT7ZMQBMTRE2FB0",
         "alt": "Red hat, front",
         "width": 640,
         "height": 480,
@@ -22,7 +22,7 @@
       },
       "gallery": [
         {
-          "id": "01M4CB4N9MS73DQD65CH34AW2V",
+          "id": "01M4CC5ZXQJFMVYP91WR37TZTJ",
           "alt": "Red hat",
           "width": 640,
           "height": 480,
@@ -31,7 +31,7 @@
       ]
     },
     {
-      "id": "0766d2f8-3ced-4628-81a3-651f38514408",
+      "id": "09851fff-54a5-42ef-a474-0ae094bcc6d7",
       "name": "Blue hat",
       "sku": "BLUE-HAT",
       "price": {
@@ -44,7 +44,7 @@
         "listable": true
       },
       "image": {
-        "id": "01M4CB4NBKNJ1RY7C18FKV8FB0",
+        "id": "01M4CC5ZZ2BCN7BTYS091S5FX8",
         "alt": "Blue hat",
         "width": 640,
         "height": 480,

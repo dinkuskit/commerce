@@ -128,8 +128,8 @@ async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: 
   ] }, { type: "context", text: "Gallery (" + media.gallery.length + " of " + CATALOG_GALLERY_LIMIT + ")" }];
   for (const [index, entry] of media.gallery.entries()) {
     blocks.push(await preview(ctx, entry, name + " gallery image " + (index + 1)), { type: "actions", elements: [
-      ...(index ? [{ type: "button" as const, label: "Move image " + (index + 1) + " up", action_id: "media.up", value: { id, index } }] : []),
-      { type: "button", label: "Remove image " + (index + 1), action_id: "media.remove", value: { id, index } },
+      ...(index ? [{ type: "button" as const, label: "Move image " + (index + 1) + " up", action_id: "media.up", value: { id, index, m: entry.mediaId } }] : []),
+      { type: "button", label: "Remove image " + (index + 1), action_id: "media.remove", value: { id, index, m: entry.mediaId } },
     ] });
   }
   if (media.gallery.length < CATALOG_GALLERY_LIMIT) {
@@ -179,8 +179,10 @@ async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: strin
   await saveCatalogItemMedia(store, { catalogItemId: id, gallery: edit(current.gallery.map((entry) => entry.mediaId)) });
   return product(ctx, id, undefined, toast);
 }
-function galleryIndex(value: unknown, length: number): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= length) throw new Error("Invalid gallery image");
+// A stale page must never act on a different image than its label named.
+function galleryIndex(value: unknown, mediaId: string, gallery: string[]): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= gallery.length) throw new Error("Invalid gallery image");
+  if (gallery[value] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed since this page loaded. Reload and try again.");
   return value;
 }
 async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
@@ -252,8 +254,9 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
       if (action === "media.remove" || action === "media.up") {
         const v = object(input.value);
         const id = text(v.id);
+        const mediaId = text(v.m);
         return await saveGallery(ctx, id, (gallery) => {
-          const index = galleryIndex(v.index, gallery.length);
+          const index = galleryIndex(v.index, mediaId, gallery);
           if (action === "media.remove") return gallery.filter((_, position) => position !== index);
           if (index > 0) [gallery[index - 1], gallery[index]] = [gallery[index] as string, gallery[index - 1] as string];
           return gallery;
@@ -294,15 +297,13 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     throw new Error("Unknown interaction");
   } catch (error) {
     const failure = message(error);
-    // A refused media choice returns the clerk to the product with the reason; stored values are unchanged.
+    // A refused media choice returns the clerk to the product or Settings with the reason; stored values are unchanged.
     if (input.type === "block_action" && /^media\.(use|clear|remove|up)$/.test(String(input.action_id))) {
       const v = input.value as { t?: unknown; id?: unknown } | null;
-      if (typeof v?.id === "string" && v.id && v.t !== "placeholder") {
-        try {
-          const back = await product(ctx, v.id);
-          return { blocks: [alert(failure), ...back.blocks], toast: { type: "error", message: failure } };
-        } catch { /* fall through to the generic alert */ }
-      }
+      try {
+        const back = v?.t === "placeholder" ? await settings(ctx) : typeof v?.id === "string" && v.id ? await product(ctx, v.id) : null;
+        if (back) return { blocks: [alert(failure), ...back.blocks], toast: { type: "error", message: failure } };
+      } catch { /* fall through to the generic alert */ }
     }
     // Preserve clerk input for a refused create; retry uses the same command identity.
     if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.startsWith("create:") &&

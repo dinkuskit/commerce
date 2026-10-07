@@ -32,8 +32,9 @@ export interface ProductMediaReader {
 
 /**
  * One public catalog image. `id` is the EmDash media id; the storefront host
- * maps it to the public file URL (for example `Astro.locals.emdash.handleMediaGet`)
- * and builds `srcset` with {@link commerceImageSrcset}.
+ * maps it to the public file URL (for example `handleMediaGet(await getDb(), id)`
+ * then `Astro.locals.emdash.getPublicMediaUrl(item.storageKey)`) and builds
+ * `srcset` with {@link commerceImageSrcset}.
  */
 export interface PublicCatalogImage {
   readonly id: string;

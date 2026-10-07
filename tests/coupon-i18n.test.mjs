@@ -8,6 +8,9 @@ import { couponText, formatCouponMessage } from "../dist/admin/coupon-i18n.js";
 // The Registry artifact no longer ships the Lingui runtime. The pinned catalog
 // (scripts/coupon-catalog.mjs) holds only plain strings and single-name
 // placeholders, so a local interpolator must match Lingui for every message.
+// Deliberate difference not sampled here: Lingui decodes literal \u and \x
+// escape sequences in the final string (including interpolated runtime
+// values); the local formatter leaves values as typed.
 const samples = [
   undefined,
   {},
