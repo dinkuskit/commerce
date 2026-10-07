@@ -58,8 +58,14 @@ async function runD1Contender(persistTo, command) {
   const maxAttempts = 5;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const result = await runD1(persistTo, command);
-    const retryableBusy = result.code !== 0 && /SQLITE_BUSY/.test(result.output);
-    if (!retryableBusy || attempt === maxAttempts) return result;
+    const retryableBusy = /SQLITE_BUSY/.test(result.output);
+    // Local Wrangler can hide a racing write's diagnostic behind this opaque
+    // workerd error. Replay only this fixture's same idempotent INSERT/UPSERT,
+    // preserving its record identity; never infer a constraint from the error.
+    // The caller still requires the named unique constraint and one stored row.
+    const opaqueLocalError = /"text":\s*"internal error; reference = [a-z0-9]+"/.test(result.output);
+    const retryable = result.code !== 0 && (retryableBusy || opaqueLocalError);
+    if (!retryable || attempt === maxAttempts) return result;
     await new Promise((resolve) => setTimeout(resolve, attempt * 100));
   }
   throw new Error("unreachable D1 contender retry state");
