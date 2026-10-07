@@ -75,8 +75,9 @@ another creation. Stripe's finite idempotency-key retention alone is insufficien
 for indefinite retry safety. `lookup` must never create a payment session.
 
 The bounded harness uses Stripe-hosted, one-time, immediate card payments and
-positive USD totals. Zero-total orders and delayed payment methods are rejected
-or unavailable pending their own settlement policy. No shipping, tax, discount,
+positive USD totals. Canonical zero totals use the
+[Commerce zero-payable order writer](checkout-zero-payable-orders.md).
+Delayed payment methods remain unavailable pending their settlement policy. No shipping, tax, discount,
 subscription, live merchant connection or customer-account behavior is implied.
 An adapter must disable processor changes to frozen Commerce totals.
 

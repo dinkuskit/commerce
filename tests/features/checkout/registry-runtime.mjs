@@ -142,10 +142,10 @@ export async function runtimeFixture({ grants = true, config = configuration(), 
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },
   });
-  async function coupon() {
+  async function coupon(amount = '100') {
     const now = Date.now();
     return createCouponAdmin(collections.coupons).create({ code: 'SAVE10', globalCap: 8, rule: {
-      ruleId: 'synthetic-rule', version: 1, discount: { kind: 'fixed', amount: { currency: 'USD', minor: '100' } },
+      ruleId: 'synthetic-rule', version: 1, discount: { kind: 'fixed', amount: { currency: 'USD', minor: amount } },
       appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
       minimumEligibleMerchandise: { currency: 'USD', minor: '0' },
       startsAt: new Date(now - 86400000).toISOString(), endsAt: new Date(now + 86400000).toISOString(), timeZone: 'UTC' } });

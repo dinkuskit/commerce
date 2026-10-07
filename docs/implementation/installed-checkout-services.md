@@ -112,8 +112,9 @@ Managed availability and reservation remain unavailable without the configured
 Inventory provider. Its binding and managed product state are preserved.
 Inventory's current checkout kernel has no Worker reserve/release HTTP boundary;
 ordinary admin stock mutation is not a substitute. Unmanaged checkout can be
-proved independently. Zero-payable canonical orders remain a separate required
-slice; no fake payment/session ID is created here.
+proved independently. Zero-payable canonical orders use the same owner aggregate without Payments
+transport; see [zero-payable orders](checkout-zero-payable-orders.md).
+Configuration/credential admission remains required, including with empty grants.
 
 ## Runtime fixtures and next gate
 

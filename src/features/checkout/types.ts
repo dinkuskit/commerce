@@ -126,15 +126,17 @@ export interface CheckoutPaymentPort {
   /** Authoritative lookup. Events are hints only. not-created is a terminal creation fence. */
   lookup(request: PaymentRequest): Promise<PaymentOutcome>;
 }
-export interface CommerceOrder {
+interface CommerceOrderBase {
   orderId: string;
   receiptId: string;
   attemptId: string;
-  paymentId: string;
   lines: CheckoutLine[];
   total: Money;
   pricing?: CheckoutPricingSnapshot;
 }
+export type CommerceOrder =
+  | (CommerceOrderBase & { paymentId: string })
+  | (CommerceOrderBase & { paymentId?: never });
 export interface CheckoutAttempt {
   attemptId: string;
   cart: CartLine[];
