@@ -16,12 +16,118 @@ test('nullish and primitive core cart inputs reject before storage or payment ef
   assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 0);
 });
 
-test('final zero is rejected before attempt, coupon or provider creation in positive-only slice', async t => {
+test('zero-total coupon checkout writes a payment-free order and never resolves Payments', async t => {
   const f = await pricingFixture(t, { discount: { kind: 'percentage', basisPoints: 10000 }, shipping: '0' });
-  await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Zero-total/);
-  assert.equal(await f.execution.store.read('cart'), null);
-  assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 0);
+  f.execution.resolvePayments = async () => { throw new Error('zero checkout must not resolve Payments'); };
+  const completed = await startCheckout(f.execution, 'cart', f.input);
+  assert.equal(completed.phase, 'paid');
+  assert.equal(completed.order.paymentId, undefined);
+  assert.equal(completed.order.total.minor, '0');
+  assert.equal(completed.coupon.status, 'consumed');
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 1);
   assert.equal(f.sessions.size, 0);
+});
+
+test('zero order and coupon consumption converge under concurrent repeat/status calls', async t => {
+  const f = await pricingFixture(t, { discount: { kind: 'percentage', basisPoints: 10000 }, shipping: '0' });
+  f.execution.resolvePayments = async () => { throw new Error('zero checkout must not resolve Payments'); };
+  const results = await Promise.all([
+    startCheckout(f.execution, 'cart', f.input),
+    startCheckout(f.execution, 'cart', f.input),
+    startCheckout(f.execution, 'cart', f.input),
+  ]);
+  assert.equal(new Set(results.map(result => result.order.orderId)).size, 1);
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 1);
+  assert.deepEqual((await f.execution.store.read('cart')).record.attempts[0].order, results[0].order);
+});
+
+test('zero checkout retains the reserved coupon when canonical order storage is interrupted', async t => {
+  const f = await pricingFixture(t, { discount: { kind: 'percentage', basisPoints: 10000 }, shipping: '0' });
+  const original = f.execution.store.compareAndSet;
+  f.execution.store.compareAndSet = async (id, version, record) => {
+    if (record.attempts.some(attempt => attempt.order)) throw new Error('checkout storage unavailable');
+    return original(id, version, record);
+  };
+  await assert.rejects(startCheckout(f.execution, 'cart', f.input), /checkout storage unavailable/);
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 1);
+  assert.equal((await f.execution.store.read('cart')).record.attempts[0].order, undefined);
+  f.execution.store.compareAndSet = original;
+  const recovered = await reconcileCheckout(f.execution, 'cart', (await f.execution.store.read('cart')).record.attempts[0].attemptId);
+  assert.equal(recovered.coupon.status, 'consumed');
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 1);
+});
+
+test('zero checkout recovers an order write that applied before its response was lost', async t => {
+  const f = await pricingFixture(t, { discount: { kind: 'percentage', basisPoints: 10000 }, shipping: '0' });
+  const original = f.execution.store.compareAndSet;
+  let interrupted = true;
+  f.execution.store.compareAndSet = async (id, version, record) => {
+    const applied = await original(id, version, record);
+    if (applied && interrupted && record.attempts.some(attempt => attempt.order)) {
+      interrupted = false;
+      throw new Error('order write response lost');
+    }
+    return applied;
+  };
+  await assert.rejects(startCheckout(f.execution, 'cart', f.input), /order write response lost/);
+  const persisted = (await f.execution.store.read('cart')).record.attempts[0];
+  assert.equal(persisted.phase, 'paid');
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 1);
+  const recovered = await reconcileCheckout(f.execution, 'cart', persisted.attemptId);
+  assert.deepEqual(recovered.order, persisted.order);
+  assert.equal(recovered.coupon.status, 'consumed');
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 1);
+  assert.equal(f.sessions.size, 0);
+});
+
+test('canonical zero prices complete without coupon or payment identity', async t => {
+  const f = await pricingFixture(t, { shipping: '0' });
+  for (const [id, price] of f.execution.catalog.prices.records) {
+    const { sale, ...original } = price;
+    f.execution.catalog.prices.records.set(id, { ...original, regular: { currency: 'USD', minor: '0' } });
+  }
+  let payments = 0;
+  f.execution.resolvePayments = async () => { payments++; return null; };
+  const completed = await startCheckout(f.execution, 'cart', { lines: f.input.lines });
+  assert.equal(completed.phase, 'paid');
+  assert.equal(completed.order.total.minor, '0');
+  assert.equal(Object.hasOwn(completed.order, 'paymentId'), false);
+  assert.equal(completed.session, undefined);
+  assert.equal(completed.coupon, undefined);
+  assert.equal(payments, 0);
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 0);
+});
+
+test('unknown managed reservation cannot complete a zero order or consume a coupon', async t => {
+  const f = await pricingFixture(t, { managed: true, discount: { kind: 'percentage', basisPoints: 10000 }, shipping: '0' });
+  f.setStock('unknown');
+  const pending = await startCheckout(f.execution, 'cart', f.input);
+  assert.equal(pending.phase, 'reserving');
+  assert.equal(pending.order, undefined);
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 0);
+  assert.equal(f.sessions.size, 0);
+});
+
+test('zero checkout recovers the same canonical order when coupon storage is interrupted', async t => {
+  const f = await pricingFixture(t, { discount: { kind: 'percentage', basisPoints: 10000 }, shipping: '0' });
+  const original = f.coupons.compareAndSet.bind(f.coupons);
+  let interrupted = true;
+  f.coupons.compareAndSet = async (id, revision, value) => {
+    const result = await original(id, revision, value);
+    if (interrupted && value.attempts.some(attempt => attempt.state === 'consumed')) {
+      interrupted = false;
+      throw new Error('coupon storage unavailable');
+    }
+    return result;
+  };
+  const first = await startCheckout(f.execution, 'cart', f.input);
+  assert.equal(first.phase, 'paid');
+  assert.equal(first.coupon.status, 'pending');
+  const order = first.order;
+  const recovered = await reconcileCheckout(f.execution, 'cart', first.attemptId);
+  assert.deepEqual(recovered.order, order);
+  assert.equal(recovered.coupon.status, 'consumed');
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 1);
 });
 
 test('schema support loss after ambiguous provider creation retains the coupon and frozen attempt', async t => {

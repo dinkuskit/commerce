@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-07T01:42:37+00:00",
-    "domain": "Default Registry checkout service assembly",
-    "started_at": "2026-10-07T01:42:36+00:00",
+    "confirmed_at": "2026-10-07T12:00:23+00:00",
+    "domain": "Canonical zero-payable order completion",
+    "started_at": "2026-10-07T12:00:23+00:00",
     "status": "confirmed",
-    "summary": "Implement the authorized default Registry module-local installed service assembly source slice and real local runtime fixtures with synthetic identity/transport. Preserve current grants, canonical money/order/storage ownership and managed provider failure, prepare declaration/configuration proposal only, and finish with focused PR at maintainer review gate. No real identity, activation, provider, deployment, Registry release or zero-order changes."
+    "summary": "Implement the approved required zero-payable canonical order slice before publication/slugs, preserve accepted coupon free-order identities and current authorization/stock failure, prove replay and recovery without Payments contact, and deliver focused implementation PR with exact-source review at human merge gate."
   },
   "decisions": [
     {
@@ -6629,6 +6629,87 @@
       "superseded_by": null,
       "updated_at": "2026-10-07T02:20:32+00:00",
       "verification_ref": ".grilltrack/proof/registry-services-20261006-PROOF.md"
+    },
+    {
+      "baseline_ref": "git:396fb238875825d3e68fcf7a9f7860ee0ef1acee",
+      "candidate_refs": [],
+      "choice": "Extend the existing canonical checkout/order writer for authoritative zero USD final totals, writing one stable Commerce order and receipt without provider session or payment identity. Reserve the existing coupon aggregate and consume only using verified-free-order proof after durable canonical order persistence; retain unknown completion and recover idempotently. Preserve current installation/site/capability authorization, frozen pricing, one Inventory binding and managed-stock fail-closed behavior. Positive shipping or other positive final totals retain current Payments flow. No new tax, refund, expiry, shipping, identity issuance, provider transport or activation policy.",
+      "context_ref": "docs/implementation/checkout-pricing-payments-handoff.md",
+      "created_at": "2026-10-07T12:00:23+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "coupons-v1-free-reconcile-001",
+        "checkout-totals-composition-001",
+        "installed-checkout-service-assembly-001"
+      ],
+      "domain": "Canonical zero-payable order completion",
+      "history": [
+        {
+          "at": "2026-10-07T12:00:23+00:00",
+          "choice": "Extend the existing canonical checkout/order writer for authoritative zero USD final totals, writing one stable Commerce order and receipt without provider session or payment identity. Reserve the existing coupon aggregate and consume only using verified-free-order proof after durable canonical order persistence; retain unknown completion and recover idempotently. Preserve current installation/site/capability authorization, frozen pricing, one Inventory binding and managed-stock fail-closed behavior. Positive shipping or other positive final totals retain current Payments flow. No new tax, refund, expiry, shipping, identity issuance, provider transport or activation policy.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T12:09:54+00:00",
+          "choice": "Extend the existing canonical checkout/order writer for authoritative zero USD final totals, writing one stable Commerce order and receipt without provider session or payment identity. Reserve the existing coupon aggregate and consume only using verified-free-order proof after durable canonical order persistence; retain unknown completion and recover idempotently. Preserve current installation/site/capability authorization, frozen pricing, one Inventory binding and managed-stock fail-closed behavior. Positive shipping or other positive final totals retain current Payments flow. No new tax, refund, expiry, shipping, identity issuance, provider transport or activation policy.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T12:09:54+00:00",
+          "choice": "Extend the existing canonical checkout/order writer for authoritative zero USD final totals, writing one stable Commerce order and receipt without provider session or payment identity. Reserve the existing coupon aggregate and consume only using verified-free-order proof after durable canonical order persistence; retain unknown completion and recover idempotently. Preserve current installation/site/capability authorization, frozen pricing, one Inventory binding and managed-stock fail-closed behavior. Positive shipping or other positive final totals retain current Payments flow. No new tax, refund, expiry, shipping, identity issuance, provider transport or activation policy.",
+          "from": "implemented",
+          "implementation_ref": "src/features/checkout/orchestrate.ts;docs/implementation/checkout-zero-payable-orders.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-zero-payable-order-composition-001",
+      "implementation_ref": "src/features/checkout/orchestrate.ts;docs/implementation/checkout-zero-payable-orders.md",
+      "question": "How does canonical Commerce checkout complete accepted zero-payable orders?",
+      "rationale": "Approved required implementation continuation of settled free-order/coupon decision.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [],
+          "ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md",
+          "result": "clean",
+          "reviewed_at": "2026-10-07T12:09:54+00:00",
+          "source_identity": "sha256:3eddb2bba65f311f0762dc72f05bcf88cfeb4ae5181a8430e07e03ada43f5a4a"
+        }
+      ],
+      "review_ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md",
+      "review_result": "clean",
+      "review_source_identity": "sha256:3eddb2bba65f311f0762dc72f05bcf88cfeb4ae5181a8430e07e03ada43f5a4a",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-07T12:09:54+00:00",
+      "verification_ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md"
     }
   ],
   "last_activation": {
@@ -6651,5 +6732,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-07T02:20:32+00:00"
+  "updated_at": "2026-10-07T12:09:54+00:00"
 }

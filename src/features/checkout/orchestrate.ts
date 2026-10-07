@@ -66,8 +66,6 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
   else if (couponCode !== undefined) fail("Pricing composition is unavailable");
   const minor = lines.reduce((sum, line) => sum + parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity), 0n).toString();
   const total = pricing?.snapshot.finalTotal ?? normalizeMoney({ currency: "USD", minor });
-  // This slice has no free-order or delayed-payment settlement policy.
-  if (total.minor === "0") fail("Zero-total checkout is outside this payment slice");
   return { attemptId, cart, payment: createCurrentPaymentRequest({
     attemptId, bindingRef: e.paymentBindingRef, lines, total,
     ...(pricing ? { pricing: pricing.snapshot } : {}),
@@ -153,6 +151,28 @@ async function reconcileCoupon(
   if (!e.pricing) throw new Error("Coupon owner unavailable");
   const owner = createCouponAttemptOwner(e.pricing.coupons);
   if (result === "paid") {
+    if (attempt.payment.total.currency === "USD" && attempt.payment.total.minor === "0") {
+      const quote = attempt.payment.pricing?.coupon?.quote;
+      if (!quote || !attempt.order || attempt.order.paymentId !== undefined) {
+        throw new Error("Free checkout lacks canonical coupon proof");
+      }
+      await owner.reconcileFreeOrder({
+        couponId: attempt.coupon.couponId,
+        attemptId: attempt.attemptId,
+        proof: {
+          kind: "verified-free-order",
+          attemptId: attempt.attemptId,
+          couponId: attempt.coupon.couponId,
+          ruleId: quote.ruleId,
+          ruleVersion: quote.ruleVersion,
+          quoteId: quote.quoteId,
+          orderId: attempt.order.orderId,
+          receiptId: attempt.order.receiptId,
+          overallPayableTotal: { currency: "USD", minor: "0" },
+        },
+      });
+      return;
+    }
     if (!attempt.session) throw new Error("Paid checkout has no payment session");
     await owner.reconcile(attempt.coupon.couponId, attempt.attemptId, {
       kind: "verified-success",
@@ -264,37 +284,49 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       }
       next.phase = "released";
     } else {
-      // Current host support is not an authoritative provider creation fence.
-      if (attempt.payment.pricing && e.pricing?.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
-      let outcome: PaymentOutcome;
-      try {
-        const payments = await e.resolvePayments(attempt.payment.bindingRef);
-        if (!payments || attempt.payment.pricing && payments.pricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
-        outcome = await (create ? payments.ensureSession(structuredClone(attempt.payment)) : payments.lookup(structuredClone(attempt.payment)));
-      } catch { return attempt; }
-      validateOutcome(outcome, attempt);
-      if (outcome.outcome === "unknown") return attempt;
-      if (outcome.outcome === "not-created") {
-        next.phase = "releasing";
-        next.paymentReleaseReason = "not-created";
-      }
-      else {
-        if (attempt.coupon) {
-          try {
-            const owner = createCouponAttemptOwner(e.pricing!.coupons);
-            await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);
-          } catch {
-            return attempt;
-          }
-        }
-        next.session = outcome.session;
-        if (outcome.outcome === "paid") {
-          next.phase = "paid";
-          next.order = { orderId: `order:${attemptId}`, receiptId: `receipt:${attemptId}`, attemptId, paymentId: outcome.paymentId, lines: attempt.payment.lines, total: attempt.payment.total,
-            ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}) };
-        } else if (outcome.outcome === "expired-unpaid") {
+      if (attempt.payment.total.currency === "USD" && attempt.payment.total.minor === "0") {
+        next.phase = "paid";
+        next.order = {
+          orderId: `order:${attemptId}`,
+          receiptId: `receipt:${attemptId}`,
+          attemptId,
+          lines: attempt.payment.lines,
+          total: attempt.payment.total,
+          ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
+        };
+      } else {
+        // Current host support is not an authoritative provider creation fence.
+        if (attempt.payment.pricing && e.pricing?.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
+        let outcome: PaymentOutcome;
+        try {
+          const payments = await e.resolvePayments(attempt.payment.bindingRef);
+          if (!payments || attempt.payment.pricing && payments.pricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
+          outcome = await (create ? payments.ensureSession(structuredClone(attempt.payment)) : payments.lookup(structuredClone(attempt.payment)));
+        } catch { return attempt; }
+        validateOutcome(outcome, attempt);
+        if (outcome.outcome === "unknown") return attempt;
+        if (outcome.outcome === "not-created") {
           next.phase = "releasing";
-          next.paymentReleaseReason = "expired-unpaid";
+          next.paymentReleaseReason = "not-created";
+        }
+        else {
+          if (attempt.coupon) {
+            try {
+              const owner = createCouponAttemptOwner(e.pricing!.coupons);
+              await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);
+            } catch {
+              return attempt;
+            }
+          }
+          next.session = outcome.session;
+          if (outcome.outcome === "paid") {
+            next.phase = "paid";
+            next.order = { orderId: `order:${attemptId}`, receiptId: `receipt:${attemptId}`, attemptId, paymentId: outcome.paymentId, lines: attempt.payment.lines, total: attempt.payment.total,
+              ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}) };
+          } else if (outcome.outcome === "expired-unpaid") {
+            next.phase = "releasing";
+            next.paymentReleaseReason = "expired-unpaid";
+          }
         }
       }
     }

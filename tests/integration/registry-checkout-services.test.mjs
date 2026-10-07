@@ -27,6 +27,53 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   assert.deepEqual(await state.cartRecords(), []);
 });
 
+test('actual compiled default workerd zero-payable coupon writes one payment-free order', async t => {
+  const state = await runtimeFixture({ grants: false, config: configuration() });
+  t.after(() => state.close());
+  await state.coupon('250');
+  const { token, result } = await start(state, { ...basket, couponCode: 'save10' });
+  assert.equal(result.ok, true);
+  assert.equal(result.checkout.state, 'paid');
+  assert.equal(result.checkout.order.total.minor, '0');
+  const stored = (await state.cartRecords())[0].attempts[0];
+  assert.equal(Object.hasOwn(stored.order, 'paymentId'), false);
+  assert.equal(stored.session, undefined);
+  assert.equal(state.requests.length, 0);
+  const repeat = await state.invoke(STATUS, {}, token);
+  assert.deepEqual(repeat.checkout.order, result.checkout.order);
+  assert.equal((await state.cartRecords())[0].attempts[0].coupon.status, 'consumed');
+  assert.equal(state.counts.transport, 0);
+  assert.equal(state.counts.scheduler, 0);
+});
+
+test('zero-payable compiled route rejects missing/foreign capability and browser totals before order creation', async t => {
+  const state = await runtimeFixture({ grants: false });
+  t.after(() => state.close());
+  await state.coupon('250');
+  const prepared = await state.invoke(PREPARE);
+  const input = { ...basket, couponCode: 'SAVE10' };
+  assert.equal((await state.invoke(START, input)).error.code, 'CAPABILITY_DENIED');
+  assert.equal((await state.invoke(START, input, 'guessed')).error.code, 'CAPABILITY_DENIED');
+  assert.equal((await state.invoke(START, input, prepared.capability.capability, 'https://foreign.example.test')).error.code, 'ORIGIN_DENIED');
+  assert.equal((await state.invoke(START, { ...input, total: { currency: 'USD', minor: '0' } }, prepared.capability.capability)).error.code, 'INVALID_CART');
+  assert.deepEqual(await state.cartRecords(), []);
+  assert.equal(state.counts.transport, 0);
+});
+
+test('compiled fully discounted merchandise with positive shipping still uses Payments', async t => {
+  const state = await runtimeFixture({ config: configuration({ configurationId: 'ship-flat', revision: 1,
+    mode: 'flat', amount: { currency: 'USD', minor: '50' } }) });
+  t.after(() => state.close());
+  await state.coupon('250');
+  const { result } = await start(state, { ...basket, couponCode: 'SAVE10' });
+  assert.equal(result.ok, true);
+  assert.equal(result.checkout.pricing.netMerchandise.minor, '0');
+  assert.equal(result.checkout.total.minor, '50');
+  assert.equal(state.requests.length, 1);
+  assert.equal(state.requests[0].total.minor, '50');
+  assert.equal((await state.cartRecords())[0].attempts[0].order, undefined);
+});
+
 test('actual SDK CAS and manifest uniqueness retain one winner and owner configuration revisions', async t => {
   const state = await runtimeFixture({ config: null, token: null });
   t.after(() => state.close());

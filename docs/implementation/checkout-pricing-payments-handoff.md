@@ -90,11 +90,11 @@ server-side. Historical guest projections remain valid without a pricing field.
 
 ## Acceptance limits and next owner
 
-This slice retains explicit rejection of a **zero final payable total**. The
-accepted zero-order behavior remains required for v1 and is the next separate
-Commerce slice: one canonical order/receipt writer and trusted free-order
-redemption, with no fake payment/session ID. A zero merchandise amount with a
-positive shipping charge is still payable.
+Canonical zero final payable totals now complete through the existing Commerce
+order/receipt writer and trusted free-order coupon reconciliation, with no
+payment/session identity or Payments transport. See
+[zero-payable orders](checkout-zero-payable-orders.md). A zero merchandise
+amount with a positive shipping charge remains payable.
 
 Inventory remains optional for unmanaged baskets and fail-closed for managed
 ones. There is no new tax, shipping-address, stacking, advanced-promotion,
