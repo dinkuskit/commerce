@@ -1,0 +1,40 @@
+import { chromium, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+const output = process.env.ORDERS_PROOF_DIR;
+if (!output) throw new Error('Set ORDERS_PROOF_DIR outside the checkout');
+await mkdir(output, { recursive: true });
+const browser = await chromium.launch();
+try {
+ const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+ const errors = []; page.on('pageerror', error => errors.push(error.message));
+ await page.goto('http://127.0.0.1:47831');
+ await expect(page.getByRole('button', { name: 'Inspect synthetic-order-paid-001', exact: true })).toBeVisible();
+ await page.screenshot({ path: output + '/desktop-list.png', fullPage: true, animations: 'disabled' });
+ // Focus begins on the view region. Tab and Enter exercise the renderer's actual button.
+ await page.locator('section').focus(); await page.keyboard.press('Tab');
+ await expect(page.getByRole('button', { name: 'Inspect synthetic-order-paid-001', exact: true })).toBeFocused();
+ await page.keyboard.press('Enter');
+ await expect(page.getByText('synthetic-receipt-paid-001', { exact: true })).toBeVisible();
+ await expect(page.getByText('SYNTHETIC5', { exact: true })).toBeVisible();
+ await page.screenshot({ path: output + '/desktop-detail.png', fullPage: true, animations: 'disabled' });
+ await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Back to orders' })).toBeFocused();
+ await page.keyboard.press('Enter');
+ await expect(page.getByRole('button', { name: 'Inspect synthetic-order-zero-002', exact: true })).toBeVisible();
+ await page.getByRole('button', { name: 'Inspect synthetic-order-zero-002', exact: true }).click();
+ await expect(page.getByText('Zero payable — no payment required', { exact: true })).toBeVisible();
+ await page.screenshot({ path: output + '/zero-detail.png', fullPage: true, animations: 'disabled' });
+ await page.setViewportSize({ width: 390, height: 844 });
+ await page.getByRole('button', { name: 'Back to orders' }).click();
+ await page.screenshot({ path: output + '/mobile-list.png', fullPage: true, animations: 'disabled' });
+ await page.getByRole('button', { name: 'Inspect synthetic-order-paid-001', exact: true }).click();
+ await page.screenshot({ path: output + '/mobile-detail.png', fullPage: true, animations: 'disabled' });
+ if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error('Horizontal overflow');
+ await page.getByRole('button', { name: 'Empty', exact: true }).click();
+ await expect(page.getByText('No orders recorded yet.', { exact: true })).toBeVisible();
+ await page.screenshot({ path: output + '/empty.png', fullPage: true, animations: 'disabled' });
+ await page.getByRole('button', { name: 'Unavailable', exact: true }).click();
+ await expect(page.getByText('Orders unavailable', { exact: true })).toBeVisible();
+ await page.screenshot({ path: output + '/unavailable.png', fullPage: true, animations: 'disabled' });
+ expect(errors).toEqual([]);
+ console.log('PASS: list/detail/back by keyboard; zero payable; empty/outage; desktop/mobile; no horizontal overflow; no browser errors.');
+} finally { await browser.close(); }
