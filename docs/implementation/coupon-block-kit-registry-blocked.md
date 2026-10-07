@@ -17,7 +17,7 @@ provider, payment integration or coupon checkout authority.
 
 The initial public-helper dependency prebundle produced a 216,639-byte backend
 and failed the official 131,072-byte decompressed file cap. The supported public
-RBAC entry still has a large authentication closure in the pinned 1.0.1 package.
+RBAC entry still has a large authentication closure in the pinned 1.2.0 package.
 Commerce now prebundles browser dependencies before the official plugin builder,
 using a narrowly scoped TypeScript AST transform on exact, hash-guarded auth
 modules. Unexpected package bytes, closure files, source or initializer bytes
@@ -54,7 +54,7 @@ foreign or unnamed constraint failures remain unconfirmed.
 ## Proof fidelity and remaining gate
 
 The local installed profile loads the exact official artifact through EmDash
-1.0.1's Registry state/storage loader and real workerd sandbox under the derived
+1.2.0's Registry state/storage loader and real workerd sandbox under the derived
 Registry ID, with no configured Commerce descriptor. The disposable fixture
 seeds unsigned local install state and invokes the genuine index materializer.
 This proves installed-runtime HTTP dispatch, host-rendered Block Kit and storage

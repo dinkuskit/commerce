@@ -27,7 +27,7 @@ validation through `existing-binding` for lookup. It sends the original frozen
 responses. Commerce still performs canonical outcome, amount, identity, and
 1800..1860 / historical exact-1800 validation.
 
-Descriptor `options` are JSON serialized by EmDash 1.0.1. They cannot transport
+Descriptor `options` are JSON serialized by EmDash 1.2.0. They cannot transport
 credential or function resolvers. A dedicated native host module may export
 named `createPlugin(serializableOptions)`, resolve the approved functions
 lazily, and call Commerce's existing `createPlugin` with this host object.

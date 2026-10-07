@@ -39,12 +39,19 @@ export async function credential(changes = {}) {
     .setProtectedHeader({ alg: 'RS256' }).sign(pair.privateKey);
 }
 
-export async function runtimeFixture({ grants = true, config = configuration(), token, managed = false } = {}) {
-  const sqlite = new BetterSqlite3(':memory:');
+export async function runtimeFixture({
+  grants = true,
+  config = configuration(),
+  token,
+  managed = false,
+  databasePath = ':memory:',
+  seed = true,
+} = {}) {
+  const sqlite = new BetterSqlite3(databasePath);
   // Minimal tables match the pinned SDK's options and plugin-storage schemas.
   // Storage operations below use the real repositories/bridge, never emulated CAS.
-  sqlite.exec(`CREATE TABLE options (name TEXT PRIMARY KEY, value TEXT NOT NULL, revision TEXT NOT NULL);
-    CREATE TABLE _plugin_storage (plugin_id TEXT NOT NULL, collection TEXT NOT NULL, id TEXT NOT NULL,
+  sqlite.exec(`CREATE TABLE IF NOT EXISTS options (name TEXT PRIMARY KEY, value TEXT NOT NULL, revision TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS _plugin_storage (plugin_id TEXT NOT NULL, collection TEXT NOT NULL, id TEXT NOT NULL,
       data TEXT NOT NULL, revision TEXT NOT NULL DEFAULT '0', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
       PRIMARY KEY(plugin_id,collection,id));`);
   const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0 };
@@ -69,23 +76,23 @@ export async function runtimeFixture({ grants = true, config = configuration(), 
       const fieldList = Array.isArray(fields) ? fields : [fields];
       assert.ok(fieldList.every(field => /^[A-Za-z_][A-Za-z0-9_]*$/.test(field)));
       const expressions = fieldList.map(field => `json_extract(data, '$.${field}')`).join(',');
-      sqlite.exec(`CREATE UNIQUE INDEX "fixture_${name}_${index}" ON _plugin_storage(plugin_id,collection,${expressions})`);
+      sqlite.exec(`CREATE UNIQUE INDEX IF NOT EXISTS "fixture_${name}_${index}" ON _plugin_storage(plugin_id,collection,${expressions})`);
     }
   }
   const settings = createSettingsAccess(new OptionsRepository(db), owner, manifest.admin.settingsSchema);
   if (config !== null) await settings.set('installedCheckout', JSON.stringify(config));
   if (token !== null) await settings.set('installedCheckoutCredential', token ?? await credential());
-  await collections.catalog_items.put('hat', {
+  if (seed) await collections.catalog_items.put('hat', {
     recordKind: 'catalog-item', itemId: 'hat', commandId: 'synthetic-create-hat', sku: 'HAT', skuKey: 'HAT',
     creationIntent: { manageStock: managed }, kind: 'simple-product', name: 'Hat', state: 'draft',
     stockManagement: managed ? { mode: 'managed', status: 'active', inventorySkuId: 'sku-synthetic' } : { mode: 'unmanaged' },
     createdAt: new Date().toISOString(),
   });
-  await collections.catalog_prices.put('hat', { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat',
+  if (seed) await collections.catalog_prices.put('hat', { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat',
     regular: { currency: 'USD', minor: '250' } });
-  await collections.catalog_manual_availability.put('hat', {
+  if (seed) await collections.catalog_manual_availability.put('hat', {
     recordKind: 'catalog-manual-availability', recordId: 'hat', catalogItemId: 'hat', status: 'in-stock' });
-  if (managed) await collections.store_inventory_configurations.put('active', {
+  if (seed && managed) await collections.store_inventory_configurations.put('active', {
     recordKind: 'store-inventory-configuration', recordId: 'active', configurationKey: 'active', siteId: SITE_ID,
     binding: { providerRef: 'inventory-synthetic', poolId: 'pool-synthetic', defaultFulfillmentLocationId: 'location-synthetic' },
     configuredAt: new Date().toISOString(), updatedAt: new Date().toISOString(),

@@ -20,7 +20,7 @@ const emdashPackage = JSON.parse(
   await readFile(new URL("../../node_modules/emdash/package.json", import.meta.url), "utf8"),
 );
 
-assert.equal(emdashPackage.version, "1.0.1");
+assert.equal(emdashPackage.version, "1.2.0");
 
 async function runContenders(databasePath, contenders) {
   const children = contenders.map(({ operationId, poolId }) =>
@@ -61,7 +61,7 @@ async function runContenders(databasePath, contenders) {
   );
 }
 
-test("two EmDash 1.0.1 repository processes converge on one registration operation", async (t) => {
+test("two EmDash 1.2.0 repository processes converge on one registration operation", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "commerce-registration-claim-race-"));
   t.after(() => rm(directory, { force: true, recursive: true }));
   const databasePath = join(directory, "commerce.db");
@@ -98,7 +98,7 @@ test("two EmDash 1.0.1 repository processes converge on one registration operati
   );
 });
 
-test("EmDash 1.0.1 claim storage fails closed when either unique index is absent", async (t) => {
+test("EmDash 1.2.0 claim storage fails closed when either unique index is absent", async (t) => {
   for (const activeUniqueField of ["claimKey", "operationId"]) {
     await t.test(`only ${activeUniqueField} is active`, async (t) => {
       const directory = await mkdtemp(join(tmpdir(), "commerce-registration-claim-missing-"));

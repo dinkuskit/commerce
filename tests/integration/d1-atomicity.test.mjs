@@ -242,7 +242,7 @@ test("two local Wrangler/D1 processes enforce one managed-SKU registration claim
     "LIVE_PROOF " +
       JSON.stringify({
         case: "wrangler-d1-atomic-managed-sku-registration-claim",
-        emdash: "1.0.1",
+        emdash: "1.2.0",
         processes: results.length,
         writesSucceeded: results.filter((result) => result.code === 0).length,
         writesRejected: results.filter((result) => result.code !== 0).length,
@@ -300,7 +300,7 @@ test("two local Wrangler/D1 processes enforce one permanent store identity", asy
     "LIVE_PROOF " +
       JSON.stringify({
         case: "wrangler-d1-atomic-store-inventory-configuration",
-        emdash: "1.0.1",
+        emdash: "1.2.0",
         processes: results.length,
         writesSucceeded: results.filter((result) => result.code === 0).length,
         writesRejected: results.filter((result) => result.code !== 0).length,

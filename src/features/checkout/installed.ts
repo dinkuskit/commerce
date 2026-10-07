@@ -20,7 +20,7 @@ import type { CommercePaymentWakePort, WakeReconciliationResult } from "./wake.j
 
 export const COMMERCE_CHECKOUT_WAKES_TASK = "commerce-checkout-wakes";
 export const INSTALLED_COMMERCE_PLUGIN_ID = "dinkus-commerce";
-/** EmDash 1.0.1 runtime ID for the manifest publisher DID and slug. */
+/** EmDash 1.2.0 runtime ID for the manifest publisher DID and slug. */
 export const COMMERCE_REGISTRY_RUNTIME_ID = "r_gshdrqaldna3r7sn";
 
 export interface InstalledGuestCheckoutRequest {
