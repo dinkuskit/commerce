@@ -1,1 +1,38 @@
-<!doctype html><html lang="en"><head><title>Installed coupon proof</title></head><body><h1>Disposable installed coupon proof host</h1><p>Unsigned local Registry state profile. No publisher release, external provider or live shop.</p></body></html>
+---
+const pluginId = process.env.COMMERCE_COUPON_PLUGIN_ID;
+---
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Installed catalog proof</title></head>
+<body><h1>Disposable installed Commerce consumer</h1>
+<p>Unsigned local Registry profile. Shipped grants are empty; Payments is unconfigured.</p>
+<button id="load">Load catalog</button><ul id="products"></ul><p id="cart">Cart: empty</p>
+<button id="prepare">Prepare checkout</button><button id="start">Start checkout</button><p id="status"></p>
+<script define:vars={{ pluginId }}>
+const endpoint = '/_emdash/api/plugins/' + pluginId + '/';
+let selected, capability;
+const status = document.getElementById('status');
+async function call(path, options) {
+  const response = await fetch(endpoint + path, options);
+  const body = await response.json(); return body.data ?? body;
+}
+document.getElementById('load').onclick = async () => {
+  const result = await call('catalog/public');
+  const list = document.getElementById('products'); list.replaceChildren();
+  for (const product of result.products) {
+    const row = document.createElement('li'), button = document.createElement('button');
+    row.textContent = product.name + ' — ' + product.price.currency + ' ' + product.price.minor + ' minor units ';
+    button.textContent = 'Add ' + product.name; button.disabled = !product.availability.sellable;
+    button.onclick = () => { selected = product; document.getElementById('cart').textContent = 'Cart: ' + product.name + ' × 1'; };
+    row.append(button); list.append(row);
+  }
+};
+document.getElementById('prepare').onclick = async () => {
+  const result = await call('checkout/guest/prepare', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  capability = result.capability?.capability; status.textContent = result.ok ? 'Prepared' : result.error.code;
+};
+document.getElementById('start').onclick = async () => {
+  if (!selected || !capability) return;
+  const result = await call('checkout/guest/start', { method: 'POST', headers: { 'content-type': 'application/json', 'x-commerce-guest-capability': capability },
+    body: JSON.stringify({ lines: [{ catalogItemId: selected.id, quantity: 1 }] }) });
+  status.textContent = result.ok ? result.checkout.state : result.error.code;
+};
+</script></body></html>

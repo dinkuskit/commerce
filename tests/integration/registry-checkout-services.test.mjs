@@ -126,6 +126,46 @@ test('EmDash 1.2 original storage shares admin prices, storefront helpers and ca
   assert.deepEqual(paid.checkout.order.total, price.customerPays);
 });
 
+test('public installed catalog reads an admin-created product and canonical coupon order', async t => {
+  const directory = await mkdtemp('/tmp/commerce-public-catalog-restart-');
+  const databasePath = join(directory, 'runtime.db');
+  let state = await runtimeFixture({ seed: false, databasePath });
+  t.after(async () => { await state.close(); await rm(directory, { recursive: true, force: true }); });
+  const admin = input => state.plugin.invokeRoute('admin', input, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/admin`, method: 'POST' });
+  const created = await admin({ type: 'form_submit', action_id: 'create:public-catalog-flow', values: { name: 'Public Hat', sku: 'PUBLIC-HAT' } });
+  assert.equal(created.toast.type, 'success');
+  const products = (await state.collections.catalog_items.query()).items.filter(row => row.data.recordKind === 'catalog-item');
+  assert.equal(products.length, 1);
+  const id = products[0].id;
+  assert.equal((await admin({ type: 'form_submit', action_id: 'save:' + id, values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' } })).toast.type, 'success');
+  const catalog = await state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
+  assert.deepEqual(catalog, { products: [{ id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true } }] });
+  await state.coupon('100');
+  const input = { lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }], couponCode: 'SAVE10' };
+  const { token, result } = await start(state, input);
+  assert.equal(result.ok, true);
+  assert.equal(state.requests[0].total.minor, '500');
+  state.setPaid();
+  const paid = await state.invoke(STATUS, {}, token);
+  assert.equal(paid.checkout.state, 'paid');
+  assert.equal(paid.checkout.order.total.minor, '500');
+  const replay = await state.invoke(START, input, token);
+  assert.deepEqual(replay.checkout.order, paid.checkout.order);
+  const stored = (await state.cartRecords())[0];
+  assert.equal(stored.attempts.length, 1);
+  assert.equal(stored.attempts[0].coupon.status, 'consumed');
+  assert.equal(state.requests.length, 1);
+  assert.equal(typeof paid.checkout.order.receiptId, 'string');
+  assert.deepEqual(stored.attempts[0].order.total, state.requests[0].total);
+  assert.equal(stored.attempts[0].payment.pricing.couponDiscount.minor, '100');
+  await state.close();
+  state = await runtimeFixture({ seed: false, databasePath, config: null, token: null, grants: false });
+  const recovered = await state.invoke(STATUS, {}, token);
+  assert.deepEqual(recovered.checkout.order, paid.checkout.order);
+  assert.equal((await state.cartRecords())[0].attempts.length, 1);
+  assert.equal(state.counts.transport, 0);
+});
+
 test('zero-payable compiled route rejects missing/foreign capability and browser totals before order creation', async t => {
   const state = await runtimeFixture({ grants: false });
   t.after(() => state.close());

@@ -159,3 +159,54 @@ test("built public catalog entry keeps default-disabled route objects with handl
   );
   assert.deepEqual(records.get("item-public"), before);
 });
+
+test("installed public catalog projects only priced listable products", async () => {
+  const record = {
+    recordKind: "catalog-item",
+    itemId: "item-public",
+    commandId: "catalog:create:installed",
+    creationIntent: { manageStock: false },
+    kind: "simple-product",
+    name: "Installed Product",
+    sku: "INSTALLED-1",
+    skuKey: "INSTALLED-1",
+    stockManagement: { mode: "unmanaged" },
+    state: "draft",
+    createdAt: "2026-10-07T00:00:00.000Z",
+  };
+  const catalogItems = {
+    async query() { return { items: [{ id: record.itemId, data: record }], hasMore: false }; },
+    async get() { return record; },
+  };
+  const prices = {
+    async get() {
+      return {
+        recordKind: "catalog-price", recordId: record.itemId,
+        catalogItemId: record.itemId, regular: { currency: "USD", minor: "1250" },
+      };
+    },
+  };
+  const empty = { async get() { return null; }, async query() { return { items: [], hasMore: false }; } };
+  const response = await catalog.readPublicCatalog({
+    storage: {
+      catalog_items: catalogItems,
+      catalog_prices: prices,
+      catalog_manual_availability: empty,
+      catalog_backorder_policies: empty,
+      store_inventory_configurations: empty,
+      storefront_availability_settings: empty,
+      storefront_out_of_stock_listing: empty,
+    },
+    request: new Request("http://127.0.0.1/catalog/public", { method: "GET" }),
+    site: { url: "http://127.0.0.1" },
+  });
+  assert.deepEqual(response, {
+    products: [{
+      id: "item-public",
+      name: "Installed Product",
+      sku: "INSTALLED-1",
+      price: { currency: "USD", minor: "1250" },
+      availability: { status: "in-stock", sellable: true, listable: true },
+    }],
+  });
+});

@@ -177,6 +177,31 @@ test('packaged coupon Block Kit survives validation, conflicts, reload and forbi
     expect((await interact('Add product')).body.toast.type).toBe('success');
     await page.getByRole('textbox', { name: 'Regular', exact: true }).fill('12.34');
     expect((await interact('Save')).body.toast.type).toBe('success');
+    if (installed) {
+      const guest = await browser.newContext();
+      const base = test.info().project.use.baseURL;
+      const catalogResponse = await guest.request.get(base + `/_emdash/api/plugins/${pluginId}/catalog/public`);
+      expect(catalogResponse.status()).toBe(200);
+      expect(catalogResponse.headers()['cache-control']).toContain('no-store');
+      const catalog = (await catalogResponse.json()).data;
+      const product = catalog.products.find(product => product.sku === 'EDITOR-PROOF');
+      expect(product).toEqual({ id: expect.any(String), name: 'Editor product', sku: 'EDITOR-PROOF',
+        price: { currency: 'USD', minor: '1234' }, availability: { status: 'in-stock', sellable: true, listable: true } });
+      const shopper = await guest.newPage();
+      await shopper.goto('/');
+      await shopper.getByRole('button', { name: 'Load catalog' }).click();
+      await expect(shopper.getByRole('button', { name: 'Add Editor product' })).toBeVisible();
+      await shopper.getByRole('button', { name: 'Add Editor product' }).click();
+      await expect(shopper.getByText('Cart: Editor product × 1')).toBeVisible();
+      await shopper.getByRole('button', { name: 'Prepare checkout' }).click();
+      await expect(shopper.getByText('Prepared')).toBeVisible();
+      await shopper.getByRole('button', { name: 'Start checkout' }).click();
+      await expect(shopper.getByText('PAYMENTS_UNAVAILABLE')).toBeVisible();
+      await shopper.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'public-catalog-cart.png'), fullPage: true });
+      writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'public-catalog.json'), JSON.stringify(catalog, null, 2));
+      expect(database.prepare("SELECT COUNT(*) n FROM _plugin_storage WHERE plugin_id=? AND collection='checkout_carts'").get(pluginId).n).toBe(0);
+      await guest.close();
+    }
     await page.goto(path+'settings');
     await expect(page.getByRole('switch',{name:'Hide out-of-stock products',exact:true})).toBeVisible();
     await page.getByRole('switch', { name: 'Hide out-of-stock products', exact: true }).click();
