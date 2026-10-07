@@ -21,3 +21,17 @@ No findings on: second media store, admin URL leakage in the public catalog, cap
 Not checked by the reviewer: nothing was built or executed; unit counts, browser results, artifact size and hash were taken from PROOF.md.
 
 Required fixes route decisions 1, 3, 4 and 5 back through implementation and verification; round 2 below binds the repaired source.
+
+## Round 2 — source `git:5cb59c6c302b8255e5c23b55fca8f31d28037361`
+
+Separate read-only review (new subagent, no build or test execution) of the repair commit against round one. Verdict: **clean**. Each required fix (1, 2, 3, 8, 9) was confirmed resolved with file and test evidence; the stale-page check refuses before any write, the placeholder recovery path is render-only, proof size/hash/run claims match the on-disk artifact and run record, the ledger shows the round-one classifications bound to `1e0995c` and the re-implementation/re-verification of decisions 1, 3, 4 and 5, and the committed captures and JSON are public-safe.
+
+Three non-blocking notes, adjudicated:
+
+| # | Note | Adjudicated | Action |
+| --- | --- | --- | --- |
+| A | A stale page whose gallery shrank below the clicked index gets the generic "reload and try again" message instead of the "gallery changed" wording | **reject_false_positive** | Both paths refuse, tell the clerk to reload, recover to the product and change nothing. |
+| B | Decision 5's locked text names `Astro.locals.emdash.handleMediaGet`; the verified anonymous path is `handleMediaGet(await getDb(), id)` + `getPublicMediaUrl(storageKey)` | **defer** | Recorded in PROOF.md fidelity and the product-media doc; the decision text's "for example" wording is a maintainer-owned amendment, not a code change. |
+| C | PROOF.md "affected suites 37/37" was undefined | **defer** (wording) | PROOF.md now names the four suites behind that count. |
+
+Round 2 binds the product source at `5cb59c6`; the commit that records this adjudication changes only `.grilltrack/` ledger, event and proof files.

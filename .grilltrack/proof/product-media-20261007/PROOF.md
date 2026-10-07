@@ -37,7 +37,7 @@ Measured levers (minified, pure-vendor attribution): `@oslojs/*` side-effect-fre
 
 ## Review repairs (round one, see REVIEW.md)
 
-Gallery Move up / Remove buttons now carry the media id and the handler refuses a stale page whose image at that position changed; a refused placeholder choice returns the clerk to Commerce Settings with the reason; the product-media doc describes the refusal set and the Lingui escape-sequence difference accurately; the projection comment names the verified host resolution path; the admin test asserts Cancel writes nothing and that a stale page never removes a different image. Unit 318/318, affected suites 37/37, browser 6/6 and the repository audit were rerun on the repaired build (this section's artifact numbers).
+Gallery Move up / Remove buttons now carry the media id and the handler refuses a stale page whose image at that position changed; a refused placeholder choice returns the clerk to Commerce Settings with the reason; the product-media doc describes the refusal set and the Lingui escape-sequence difference accurately; the projection comment names the verified host resolution path; the admin test asserts Cancel writes nothing and that a stale page never removes a different image. Unit 318/318, the four directly affected suites (`tests/admin-media.test.mjs`, `tests/coupon-i18n.test.mjs`, `tests/features/catalog/media.test.mjs`, `tests/features/catalog/v1-stock-admission.test.mjs`) 37/37, browser 6/6 and the repository audit were rerun on the repaired build (this section's artifact numbers).
 
 ## Fidelity, limits and remaining risk
 
