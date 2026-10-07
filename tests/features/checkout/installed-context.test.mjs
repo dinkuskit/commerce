@@ -204,7 +204,7 @@ test("exact Registry owner ID is derived from manifest and other Registry owners
   assert.equal(result.error.code, "UNAVAILABLE");
 });
 
-test("compiled default sandbox entry preserves prepare and unavailable Payments with genuine handler argument shape", async () => {
+test("compiled default sandbox entry preserves prepare and unavailable Payments without configuration", async () => {
   const ctx = context();
   const prepared = await sandboxPlugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE].handler({ input: {}, request: request({}) }, ctx);
   assert.equal(prepared.ok, true);

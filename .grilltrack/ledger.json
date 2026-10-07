@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-06T21:59:55+00:00",
-    "domain": "Accepted checkout coupon and free/flat shipping totals composition",
-    "started_at": "2026-10-06T21:59:54+00:00",
+    "confirmed_at": "2026-10-07T01:42:37+00:00",
+    "domain": "Default Registry checkout service assembly",
+    "started_at": "2026-10-07T01:42:36+00:00",
     "status": "confirmed",
-    "summary": "Build and verify the accepted positive-payable basic coupon plus merchant-configured free/flat shipping totals integration, with immutable versioned Payments handoff, recovery-safe coupon redemption and one canonical order. Preserve fail-closed host/provider and Inventory contracts. Zero-total orchestration is not newly selected by this bounded confirmation."
+    "summary": "Implement the authorized default Registry module-local installed service assembly source slice and real local runtime fixtures with synthetic identity/transport. Preserve current grants, canonical money/order/storage ownership and managed provider failure, prepare declaration/configuration proposal only, and finish with focused PR at maintainer review gate. No real identity, activation, provider, deployment, Registry release or zero-order changes."
   },
   "decisions": [
     {
@@ -6545,6 +6545,90 @@
       "superseded_by": null,
       "updated_at": "2026-10-06T23:10:15+00:00",
       "verification_ref": "file:.grilltrack/proof/checkout-totals-20261006-PROOF.md"
+    },
+    {
+      "baseline_ref": "git:ad84fe07c6dda1c493cc68a72c4f49cb6e179653",
+      "candidate_refs": [],
+      "choice": "Use a package-owned per-invocation resolver over the original installed context settings, declared storage and scoped HTTP. Validate versioned trusted configuration, site and TEST Payments binding with explicit pricing/v1, use owned shipping configuration and existing canonical catalog/coupon/order writers, and bounded wake transport where supported. Keep shipped grants empty and default unavailable; reject missing/invalid/expired authority, preserve managed Inventory binding and unavailable behavior without a local ledger. Identity issuance/renewal, Inventory checkout HTTP transport, real configuration/activation, publication/deployment and zero-payable orders remain separate gates.",
+      "context_ref": "docs/implementation/installed-checkout-services.md",
+      "created_at": "2026-10-07T01:42:36+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "installed-checkout-context-001",
+        "checkout-totals-composition-001"
+      ],
+      "domain": "Default Registry checkout service assembly",
+      "history": [
+        {
+          "at": "2026-10-07T01:42:36+00:00",
+          "choice": "Use a package-owned per-invocation resolver over the original installed context settings, declared storage and scoped HTTP. Validate versioned trusted configuration, site and TEST Payments binding with explicit pricing/v1, use owned shipping configuration and existing canonical catalog/coupon/order writers, and bounded wake transport where supported. Keep shipped grants empty and default unavailable; reject missing/invalid/expired authority, preserve managed Inventory binding and unavailable behavior without a local ledger. Identity issuance/renewal, Inventory checkout HTTP transport, real configuration/activation, publication/deployment and zero-payable orders remain separate gates.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T02:20:32+00:00",
+          "choice": "Use a package-owned per-invocation resolver over the original installed context settings, declared storage and scoped HTTP. Validate versioned trusted configuration, site and TEST Payments binding with explicit pricing/v1, use owned shipping configuration and existing canonical catalog/coupon/order writers, and bounded wake transport where supported. Keep shipped grants empty and default unavailable; reject missing/invalid/expired authority, preserve managed Inventory binding and unavailable behavior without a local ledger. Identity issuance/renewal, Inventory checkout HTTP transport, real configuration/activation, publication/deployment and zero-payable orders remain separate gates.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T02:20:32+00:00",
+          "choice": "Use a package-owned per-invocation resolver over the original installed context settings, declared storage and scoped HTTP. Validate versioned trusted configuration, site and TEST Payments binding with explicit pricing/v1, use owned shipping configuration and existing canonical catalog/coupon/order writers, and bounded wake transport where supported. Keep shipped grants empty and default unavailable; reject missing/invalid/expired authority, preserve managed Inventory binding and unavailable behavior without a local ledger. Identity issuance/renewal, Inventory checkout HTTP transport, real configuration/activation, publication/deployment and zero-payable orders remain separate gates.",
+          "from": "implemented",
+          "implementation_ref": "src/features/checkout/registry-services.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "installed-checkout-service-assembly-001",
+      "implementation_ref": "src/features/checkout/registry-services.ts",
+      "question": "How does the default Registry checkout assemble canonical services without injected descriptor callbacks?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [
+        "defer"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer"
+          ],
+          "ref": ".grilltrack/proof/registry-services-20261006-PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-07T02:20:32+00:00",
+          "source_identity": "sha256:695672c4d1e516e0d47cf5ecca7d3f3bb31c40c5bc8c9dc3c8e1154e63d276d6"
+        }
+      ],
+      "review_ref": ".grilltrack/proof/registry-services-20261006-PROOF.md",
+      "review_result": "findings",
+      "review_source_identity": "sha256:695672c4d1e516e0d47cf5ecca7d3f3bb31c40c5bc8c9dc3c8e1154e63d276d6",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-07T02:20:32+00:00",
+      "verification_ref": ".grilltrack/proof/registry-services-20261006-PROOF.md"
     }
   ],
   "last_activation": {
@@ -6567,5 +6651,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-06T23:10:15+00:00"
+  "updated_at": "2026-10-07T02:20:32+00:00"
 }
