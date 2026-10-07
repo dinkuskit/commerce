@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-07T21:30:24+00:00",
-    "domain": "Backend bundle headroom through behavior-preserving coupon factoring",
-    "started_at": "2026-10-07T21:30:23+00:00",
+    "confirmed_at": "2026-10-07T23:13:39+00:00",
+    "domain": "Behavior-preserving checkout and coupon headroom for installed Orders",
+    "started_at": "2026-10-07T23:13:38+00:00",
     "status": "confirmed",
-    "summary": "The delegated headroom task authorizes smallest behavior-preserving coupon source factoring, fresh deterministic size/hash evidence, behavior/full verification and exact-source review before a review-ready PR; no merge or deployment authority."
+    "summary": "Explicit authorization 2026-10-07 19:12 EDT: refactor existing checkout/coupon owners for installed Orders headroom; verify official bundle, regression tests, real SQLite and installed sandbox proof; keep PR55 draft, no provider mutation, deployment or merge."
   },
   "decisions": [
     {
@@ -6989,22 +6989,160 @@
       "superseded_by": null,
       "updated_at": "2026-10-07T21:35:40+00:00",
       "verification_ref": ".grilltrack/proof/backend-headroom-20261007/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Authenticated sandbox admin reads canonical checkout orders; list/detail/back, recorded totals, fulfillment Not recorded; installed proof and backend-size measurement; no payment or fulfillment mutation.",
+      "context_ref": null,
+      "created_at": "2026-10-07T22:53:05+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Installed read-only Orders inspection",
+      "history": [
+        {
+          "at": "2026-10-07T22:53:05+00:00",
+          "choice": "Authenticated sandbox admin reads canonical checkout orders; list/detail/back, recorded totals, fulfillment Not recorded; installed proof and backend-size measurement; no payment or fulfillment mutation.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T23:37:50+00:00",
+          "choice": "Authenticated sandbox admin reads canonical checkout orders; list/detail/back, recorded totals, fulfillment Not recorded; installed proof and backend-size measurement; no payment or fulfillment mutation.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T23:40:42+00:00",
+          "choice": "Authenticated sandbox admin reads canonical checkout orders; list/detail/back, recorded totals, fulfillment Not recorded; installed proof and backend-size measurement; no payment or fulfillment mutation.",
+          "from": "implemented",
+          "implementation_ref": "src/admin/orders-blocks.ts; src/admin/orders-view.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "installed-orders-001",
+      "implementation_ref": "src/admin/orders-blocks.ts; src/admin/orders-view.ts",
+      "question": "Where should Orders inspection operate?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-07T23:40:42+00:00",
+      "verification_ref": ".tmp/orders-final-full.log; installed Orders canonical read-only browser proof"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Bounded behavior-preserving source refactor; preserve localization runtime, payment behavior, public API, validation and authorization; unchanged official backend cap.",
+      "context_ref": null,
+      "created_at": "2026-10-07T23:13:39+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Behavior-preserving checkout and coupon headroom for installed Orders",
+      "history": [
+        {
+          "at": "2026-10-07T23:13:39+00:00",
+          "choice": "Bounded behavior-preserving source refactor; preserve localization runtime, payment behavior, public API, validation and authorization; unchanged official backend cap.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T23:37:50+00:00",
+          "choice": "Bounded behavior-preserving source refactor; preserve localization runtime, payment behavior, public API, validation and authorization; unchanged official backend cap.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-07T23:40:42+00:00",
+          "choice": "Bounded behavior-preserving source refactor; preserve localization runtime, payment behavior, public API, validation and authorization; unchanged official backend cap.",
+          "from": "implemented",
+          "implementation_ref": "src/features/checkout; src/features/coupons; src/admin/blocks.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "orders-headroom-20261007",
+      "implementation_ref": "src/features/checkout; src/features/coupons; src/admin/blocks.ts",
+      "question": "May existing checkout and coupon owners be refactored to fit installed Orders?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-07T23:40:42+00:00",
+      "verification_ref": ".tmp/orders-final-full.log; official backend 131057 bytes of 131072"
     }
   ],
   "last_activation": {
-    "at": "2026-10-06T13:54:15+00:00",
+    "at": "2026-10-07T23:13:38+00:00",
     "mechanism": "implicit"
   },
-  "last_pause": null,
-  "pause": {
+  "last_pause": {
     "artifact_refs": [
-      ".grilltrack/proof/backend-headroom-20261007/PROOF.md",
-      ".grilltrack/proof/backend-headroom-20261007/REVIEW.md"
+      ".grilltrack/work/installed-orders-handoff.md"
     ],
-    "next_safe_action": "Inspect final immutable head AutoReview, independent CI and native ClawSweeper; adjudicate findings before human merge approval.",
-    "paused_at": "2026-10-07T21:35:40+00:00",
-    "reason": "Verified backend headroom candidate awaiting final PR review evidence and human merge approval."
+    "next_safe_action": "Reduce runtime below unchanged package cap, validate controller on real storage and run installed proof before review.",
+    "paused_at": "2026-10-07T23:03:40+00:00",
+    "reason": "Installed proof blocked by 3026-byte backend overflow and workerd startup failure; partial candidate requires further implementation.",
+    "resumed_at": "2026-10-07T23:13:38+00:00"
   },
+  "pause": null,
   "recommendation": null,
   "reconciliation": {
     "plan_id": "1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
@@ -7016,8 +7154,8 @@
     "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "paused",
+  "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-07T21:35:40+00:00"
+  "updated_at": "2026-10-07T23:40:42+00:00"
 }

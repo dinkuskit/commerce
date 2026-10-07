@@ -1,3 +1,4 @@
+import { recordObject } from "./record-object.js";
 import { normalizeCouponInstant, deepFreeze } from "./admin.js";
 import {
   CouponRedemptionError,
@@ -13,7 +14,11 @@ import { CouponRecordValidationError, validateCouponRecord, validateCouponQuoteS
 import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 
 const MAX_RETRIES = 32;
+function detached<T>(value: T): T { return deepFreeze(structuredClone(value)); }
 const fail = (message: string): never => { throw new CouponRedemptionError("INVALID_INPUT", message); };
+function conflictingAttempt(): never {
+  throw new CouponRedemptionError("CONFLICTING_ATTEMPT", "checkout attempt identity is frozen");
+}
 function terminalConflict(message: string): never {
   throw new CouponRedemptionError("TERMINAL_CONFLICT", message);
 }
@@ -22,6 +27,10 @@ const required = (value: unknown, name: string): string => {
   if (typeof value !== "string" || value.trim() === "") fail(`${name} must be non-empty`);
   return (value as string).trim();
 };
+
+function attemptIdentity(couponId: unknown, attemptId: unknown): [string, string] {
+  return [required(couponId, "couponId"), required(attemptId, "attemptId")];
+}
 
 function canonicalStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
@@ -81,7 +90,7 @@ function snapshot(quote: CouponQuote, overall: unknown): CouponQuoteSnapshot {
 }
 
 function validateReconciliation(value: unknown): asserts value is CouponProviderReconciliation {
-  if (!value || typeof value !== "object" || Array.isArray(value)) fail("reconciliation must be a non-null object");
+  if (!recordObject(value)) fail("reconciliation must be a non-null object");
   const record = value as Record<string, unknown>;
   const allowed = ["kind", "providerSessionId"];
   if (Object.keys(record).some((key) => !allowed.includes(key))) fail("reconciliation has unsupported fields");
@@ -120,6 +129,18 @@ export interface CouponAttemptPort {
   getCounts(couponId: string): Promise<{ couponId: string; cap: number; capacity: number; pending: number; consumed: number; released: number; remaining: number } | null>;
 }
 
+function countState(record: CouponRecord, state: CouponAttempt["state"]): number {
+  return record.attempts.filter(item => item.state === state).length;
+}
+
+function newAttempt(attemptId: string, couponId: string, quote: CouponQuoteSnapshot, state: "pending" | "released"): CouponAttempt {
+  return { attemptId, couponId, ruleId: quote.ruleId, ruleVersion: quote.ruleVersion, quoteId: quote.quoteId, quote, state };
+}
+
+function replaceAttempt(record: CouponRecord, attemptId: string, next: CouponAttempt): CouponRecord {
+  return { ...record, attempts: record.attempts.map(item => item.attemptId === attemptId ? next : item) };
+}
+
 export function createCouponAttemptOwner(collection: CouponCollection): CouponAttemptPort {
   async function read(id: string) {
     const stored = await collection.getVersioned(id);
@@ -127,18 +148,18 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
     return { stored, record: storedRecord(stored.value, id) };
   }
 
-  async function update(id: string, fn: (record: CouponRecord) => CouponRecord): Promise<CouponRecord> {
+  async function update(id: string, fn: (record: CouponRecord) => CouponRecord, contention = "coupon CAS contention did not settle"): Promise<CouponRecord> {
     for (let retry = 0; retry < MAX_RETRIES; retry += 1) {
       const { stored, record } = await read(id);
       const next = fn(record);
       if (next === record) {
-        return deepFreeze(structuredClone(record));
+        return detached(record);
       }
       if ((await collection.compareAndSet(id, stored.revision, next)).applied) {
-        return deepFreeze(structuredClone(next));
+        return detached(next);
       }
     }
-    throw new CouponRedemptionError("CONTENTION", "coupon CAS contention did not settle");
+    throw new CouponRedemptionError("CONTENTION", contention);
   }
 
   const find = (record: CouponRecord, attemptId: string): CouponAttempt => {
@@ -149,75 +170,57 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
 
   return {
     async releaseUnstarted({ couponId, attemptId, quote, overallPayableTotal }) {
-      const id = required(couponId, "couponId");
-      const aid = required(attemptId, "attemptId");
+      const [id, aid] = attemptIdentity(couponId, attemptId);
       const frozen = snapshot(quote, overallPayableTotal);
       if (frozen.couponId !== id) fail("coupon identity mismatch");
       const record = await update(id, (current) => {
         const existing = current.attempts.find(item => item.attemptId === aid);
         if (existing && !sameQuote(existing.quote, frozen)) {
-          throw new CouponRedemptionError("CONFLICTING_ATTEMPT", "checkout attempt identity is frozen");
+          conflictingAttempt();
         }
         if (existing?.providerSessionId || existing?.freeOrder || existing?.state === "consumed") {
           terminalConflict("payment-bound attempt is not unstarted");
         }
         if (existing?.state === "released") return current;
-        const released: CouponAttempt = existing ? { ...existing, state: "released" } : {
-          attemptId: aid, couponId: id, ruleId: frozen.ruleId, ruleVersion: frozen.ruleVersion,
-          quoteId: frozen.quoteId, quote: frozen, state: "released",
-        };
+        const released: CouponAttempt = existing ? { ...existing, state: "released" } : newAttempt(aid, id, frozen, "released");
         return { ...current, attempts: existing
           ? current.attempts.map(item => item.attemptId === aid ? released : item)
           : [...current.attempts, released] };
       });
-      return deepFreeze(structuredClone(find(record, aid)));
+      return detached(find(record, aid));
     },
     async reserve({ couponId, attemptId, quote, overallPayableTotal, now }) {
-      const id = required(couponId, "couponId");
-      const aid = required(attemptId, "attemptId");
+      const [id, aid] = attemptIdentity(couponId, attemptId);
       const frozen = snapshot(quote, overallPayableTotal);
-      for (let retry = 0; retry < MAX_RETRIES; retry += 1) {
-        const { stored, record } = await read(id);
+      const record = await update(id, (record) => {
         const existing = record.attempts.find((item) => item.attemptId === aid);
         if (existing) {
           if (existing.quoteId !== frozen.quoteId || existing.ruleId !== frozen.ruleId ||
               existing.ruleVersion !== frozen.ruleVersion || !sameQuote(existing.quote, frozen)) {
-            throw new CouponRedemptionError("CONFLICTING_ATTEMPT", "checkout attempt identity is frozen");
+            conflictingAttempt();
           }
-          return deepFreeze(structuredClone(existing));
+          return record;
         }
         if (frozen.couponId !== id || frozen.ruleId !== record.rule.ruleId || frozen.ruleVersion !== record.rule.version) {
           throw new CouponRedemptionError("CONFLICTING_ATTEMPT", "quote is fenced to the current coupon rule");
         }
         const instant = normalizeCouponInstant(now, "now");
         if (record.disabled || instant < record.rule.startsAt || instant >= record.rule.endsAt) {
-          throw new CouponRedemptionError("INVALID_INPUT", "coupon is disabled or not active");
+          fail("coupon is disabled or not active");
         }
         if (parseMinorUnits(frozen.eligibleSubtotal.minor) < parseMinorUnits(record.rule.minimumEligibleMerchandise.minor)) {
-          throw new CouponRedemptionError("INVALID_INPUT", "minimum eligible merchandise spend not met");
+          fail("minimum eligible merchandise spend not met");
         }
         const used = record.attempts.filter((item) => item.state === "pending" || item.state === "consumed").length;
         if (used >= record.globalCap) throw new CouponRedemptionError("CAPACITY_EXHAUSTED", "coupon redemption capacity is exhausted");
-        const attempt: CouponAttempt = deepFreeze({
-          attemptId: aid,
-          couponId: id,
-          ruleId: frozen.ruleId,
-          ruleVersion: frozen.ruleVersion,
-          quoteId: frozen.quoteId,
-          quote: frozen,
-          state: "pending",
-        });
-        const next = deepFreeze({ ...record, attempts: [...record.attempts, attempt] });
-        if ((await collection.compareAndSet(id, stored.revision, next)).applied) {
-          return deepFreeze(structuredClone(attempt));
-        }
-      }
-      throw new CouponRedemptionError("CONTENTION", "coupon reservation contention did not settle");
+        const attempt: CouponAttempt = deepFreeze(newAttempt(aid, id, frozen, "pending"));
+        return deepFreeze({ ...record, attempts: [...record.attempts, attempt] });
+      }, "coupon reservation contention did not settle");
+      return detached(find(record, aid));
     },
 
     async attachProviderSession(couponId, attemptId, providerSessionId) {
-      const id = required(couponId, "couponId");
-      const aid = required(attemptId, "attemptId");
+      const [id, aid] = attemptIdentity(couponId, attemptId);
       const session = required(providerSessionId, "providerSessionId");
       const record = await update(id, (current) => {
         const item = find(current, aid);
@@ -228,17 +231,13 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
         if (item.state !== "pending" || item.freeOrder || item.quote.overallPayableTotal.minor === "0") {
           terminalConflict("provider session cannot attach to this attempt");
         }
-        return {
-          ...current,
-          attempts: current.attempts.map((candidate) => candidate.attemptId === aid ? { ...candidate, providerSessionId: session } : candidate),
-        };
+        return replaceAttempt(current, aid, { ...item, providerSessionId: session });
       });
-      return deepFreeze(structuredClone(find(record, aid)));
+      return detached(find(record, aid));
     },
 
     async reconcile(couponId, attemptId, reconciliation) {
-      const id = required(couponId, "couponId");
-      const aid = required(attemptId, "attemptId");
+      const [id, aid] = attemptIdentity(couponId, attemptId);
       validateReconciliation(reconciliation);
       const record = await update(id, (current) => {
         const item = find(current, aid);
@@ -274,18 +273,14 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
           state: reconciliation.kind === "verified-success" ? ("consumed" as const) : ("released" as const),
           ...(reconciliation.providerSessionId ? { providerSessionId: reconciliation.providerSessionId } : {}),
         };
-        return {
-          ...current,
-          attempts: current.attempts.map((candidate) => candidate.attemptId === aid ? nextAttempt : candidate),
-        };
+        return replaceAttempt(current, aid, nextAttempt);
       });
-      return deepFreeze(structuredClone(find(record, aid)));
+      return detached(find(record, aid));
     },
 
     async reconcileFreeOrder({ couponId, attemptId, proof }) {
-      const id = required(couponId, "couponId");
-      const aid = required(attemptId, "attemptId");
-      if (!proof || typeof proof !== "object" || Array.isArray(proof)) fail("free-order proof must be an object");
+      const [id, aid] = attemptIdentity(couponId, attemptId);
+      if (!recordObject(proof)) fail("free-order proof must be an object");
       const keys = Object.keys(proof);
       const requiredKeys = proof.kind === "unknown"
         ? ["kind", "attemptId", "couponId", "ruleId", "ruleVersion", "quoteId"]
@@ -295,7 +290,7 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
       if (proof.attemptId !== aid) terminalConflict("free-order proof attemptId mismatch");
       if (proof.kind === "verified-free-order") {
         required(proof.orderId, "orderId"); required(proof.receiptId, "receiptId");
-        if (!proof.overallPayableTotal || typeof proof.overallPayableTotal !== "object" || Array.isArray(proof.overallPayableTotal) ||
+        if (!recordObject(proof.overallPayableTotal) ||
             Object.keys(proof.overallPayableTotal).length !== 2 || proof.overallPayableTotal.currency !== "USD" || proof.overallPayableTotal.minor !== "0") {
           fail("free-order proof must have canonical zero USD total");
         }
@@ -323,26 +318,18 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
         if (item.state !== "pending") {
           terminalConflict("free attempt is terminal");
         }
-        return {
-          ...current,
-          attempts: current.attempts.map((candidate) =>
-            candidate.attemptId === aid
-              ? { ...candidate, state: "consumed" as const, freeOrder: { orderId: proof.orderId, receiptId: proof.receiptId } }
-              : candidate
-          ),
-        };
+        return replaceAttempt(current, aid, { ...item, state: "consumed", freeOrder: { orderId: proof.orderId, receiptId: proof.receiptId } });
       });
-      return deepFreeze(structuredClone(find(record, aid)));
+      return detached(find(record, aid));
     },
 
     async get(couponId, attemptId) {
-      const id = required(couponId, "couponId");
-      const aid = required(attemptId, "attemptId");
+      const [id, aid] = attemptIdentity(couponId, attemptId);
       const stored = await collection.get(id);
       if (!stored) return null;
       const record = storedRecord(stored, id);
       const item = record.attempts.find((candidate) => candidate.attemptId === aid);
-      return item ? deepFreeze(structuredClone(item)) : null;
+      return item ? detached(item) : null;
     },
 
     async getCounts(couponId) {
@@ -350,9 +337,9 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
       const stored = await collection.get(id);
       if (!stored) return null;
       const record = storedRecord(stored, id);
-      const pending = record.attempts.filter((item) => item.state === "pending").length;
-      const consumed = record.attempts.filter((item) => item.state === "consumed").length;
-      const released = record.attempts.filter((item) => item.state === "released").length;
+      const pending = countState(record, "pending");
+      const consumed = countState(record, "consumed");
+      const released = countState(record, "released");
       return deepFreeze({
         couponId: id,
         cap: record.globalCap,

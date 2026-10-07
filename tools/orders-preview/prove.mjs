@@ -14,14 +14,14 @@ try {
  await page.locator('section').focus(); await page.keyboard.press('Tab');
  await expect(page.getByRole('button', { name: 'Inspect synthetic-order-paid-001', exact: true })).toBeFocused();
  await page.keyboard.press('Enter');
- await expect(page.getByText('synthetic-receipt-paid-001', { exact: true })).toBeVisible();
+ await expect(page.getByText('Receipt: synthetic-receipt-paid-001')).toBeVisible();
  await expect(page.getByText('SYNTHETIC5', { exact: true })).toBeVisible();
  await page.screenshot({ path: output + '/desktop-detail.png', fullPage: true, animations: 'disabled' });
  await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Back to orders' })).toBeFocused();
  await page.keyboard.press('Enter');
  await expect(page.getByRole('button', { name: 'Inspect synthetic-order-zero-002', exact: true })).toBeVisible();
  await page.getByRole('button', { name: 'Inspect synthetic-order-zero-002', exact: true }).click();
- await expect(page.getByText('Zero payable — no payment required', { exact: true })).toBeVisible();
+ await expect(page.getByText('Payment: Zero payable — no payment required')).toBeVisible();
  await page.screenshot({ path: output + '/zero-detail.png', fullPage: true, animations: 'disabled' });
  await page.setViewportSize({ width: 390, height: 844 });
  await page.getByRole('button', { name: 'Back to orders' }).click();

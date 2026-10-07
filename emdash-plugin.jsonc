@@ -93,6 +93,7 @@
       }
     },
     "pages": [
+      { "path": "/orders", "label": "Commerce Orders", "icon": "storefront" },
       {
         "path": "/products",
         "label": "Commerce Products",

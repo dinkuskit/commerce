@@ -132,6 +132,8 @@ unavailable. Synthetic fixture injection proves transport. Actual Stripe is
 not run. See
 [docs/implementation/guest-checkout-public.md](docs/implementation/guest-checkout-public.md).
 
+Commerce Orders now provides authenticated, read-only inspection in the sandbox admin. It reads canonical completed checkout records, retains recorded prices and receipt identities, distinguishes provider-paid from zero-payable orders, and reports fulfillment as Not recorded. It exposes no payment or fulfillment mutation. See [installed Orders inspection](docs/implementation/orders-inspection.md) for bounds and local-proof limits.
+
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
 ## Sandbox distribution

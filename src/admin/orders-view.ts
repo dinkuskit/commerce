@@ -1,9 +1,10 @@
+import { fields } from './blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { CommerceOrder } from '../features/checkout/kernel/index.js';
 import type { Money } from '../features/catalog/kernel/index.js';
 import { normalizeMoney } from '../features/catalog/kernel/index.js';
 
-/** Read-only projection. The eventual authenticated controller owns loading and authorization. */
+/** Read-only projection. The authenticated controller owns loading and authorization. */
 export type OrdersInspection = { status: 'available'; orders: readonly CommerceOrder[] } | { status: 'unavailable' };
 function amount(value: Money): string {
   const minor = BigInt(normalizeMoney(value).minor);
@@ -13,48 +14,56 @@ function payment(order: CommerceOrder): string {
   if (order.paymentId) return 'Provider-paid';
   return normalizeMoney(order.total).minor === '0' ? 'Zero payable — no payment required' : 'Payment not recorded';
 }
-const back: Block = { type: 'actions', elements: [{ type: 'button', label: 'Back to orders', action_id: 'orders.list' }] };
+// Keep repeated Block Kit wire keys in one place: this view ships in the backend.
+function action(label: string, action_id: string): Block {
+  return { type: 'actions', elements: [{ type: 'button', label, action_id }] };
+}
+function unavailable(title: string, description: string): Block {
+  return { type: 'banner', variant: 'error', title, description };
+}
+function header(): Block {
+  return { type: 'header', text: 'Orders' };
+}
+function detailFields(...pairs: string[]): Block {
+  return { type: 'section', text: pairs.map((value, i) => i % 2 ? value : value + ':').join('\n') };
+}
+const notRecorded = 'Not recorded';
+const back = action('Back to orders', 'orders.list');
 /** Selection is the exact canonical order ID, never a row offset or payment ID. */
 export function ordersView(input: OrdersInspection, selectedOrderId?: string): BlockResponse {
-  const blocks: Block[] = [{ type: 'header', text: 'Orders' }];
+  const blocks: Block[] = [header()];
   if (selectedOrderId !== undefined) blocks.push(back);
-  if (input.status === 'unavailable') return { blocks: [...blocks, { type: 'banner', variant: 'error', title: 'Orders unavailable', description: 'Order records could not be loaded. Try again.' }] };
+  if (input.status === 'unavailable') return { blocks: [...blocks, unavailable('Orders unavailable', 'Order records could not be loaded. Try again.')] };
   try {
     if (selectedOrderId === undefined) {
       if (!input.orders.length) blocks.push({ type: 'section', text: 'No orders recorded yet.' });
       for (const order of input.orders) blocks.push(
-        { type: 'fields', fields: [{ label: 'Order', value: order.orderId }, { label: 'Total', value: amount(order.total) }, { label: 'Payment', value: payment(order) }, { label: 'Fulfillment', value: 'Not recorded' }] },
-        { type: 'actions', elements: [{ type: 'button', label: 'Inspect ' + order.orderId, action_id: 'orders.open:' + encodeURIComponent(order.orderId) }] },
+        fields('Order', order.orderId, 'Total', amount(order.total), 'Payment', payment(order), 'Fulfillment', notRecorded),
+        action('Inspect ' + order.orderId, 'orders.open:' + encodeURIComponent(order.orderId)),
         { type: 'divider' },
       );
       return { blocks };
     }
     const matches = input.orders.filter(order => order.orderId === selectedOrderId);
-    if (matches.length !== 1) return { blocks: [...blocks, { type: 'banner', variant: 'error', title: 'Order unavailable', description: 'The selected order could not be identified.' }] };
+    if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
     const order = matches[0];
-    blocks.push({ type: 'fields', fields: [
-      { label: 'Order', value: order.orderId }, { label: 'Receipt', value: order.receiptId },
-      { label: 'Checkout attempt', value: order.attemptId }, { label: 'Payment', value: payment(order) },
-      { label: 'Provider payment', value: order.paymentId ?? 'Not recorded' }, { label: 'Fulfillment', value: 'Not recorded' },
-    ] }, { type: 'header', text: 'Items' });
-    for (const line of order.lines) blocks.push({ type: 'fields', fields: [
-      { label: 'Item', value: line.name }, { label: 'Catalog ID', value: line.catalogItemId },
-      { label: 'Quantity', value: String(line.quantity) }, { label: 'Unit price', value: amount(line.unitPrice) },
-    ] });
+    blocks.push(detailFields('Order', order.orderId, 'Receipt', order.receiptId,
+      'Checkout attempt', order.attemptId, 'Payment', payment(order),
+      'Provider payment', order.paymentId ?? notRecorded, 'Fulfillment', notRecorded), { type: 'header', text: 'Items' });
+    for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
+      'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
     if (order.pricing) {
       const pricing = order.pricing;
-      blocks.push({ type: 'header', text: 'Recorded pricing' }, { type: 'fields', fields: [
-        { label: 'Item subtotal', value: amount(pricing.merchandiseSubtotal) },
-        { label: 'Coupon', value: pricing.coupon?.code ?? 'None recorded' },
-        { label: 'Coupon discount', value: amount(pricing.couponDiscount) },
-        { label: 'Net items', value: amount(pricing.netMerchandise) },
-        { label: 'Shipping', value: amount(pricing.shipping.charge) },
-        { label: 'Pricing total', value: amount(pricing.finalTotal) },
-      ] });
+      blocks.push({ type: 'header', text: 'Recorded pricing' }, fields('Item subtotal', amount(pricing.merchandiseSubtotal),
+        'Coupon', pricing.coupon?.code ?? 'None recorded',
+        'Coupon discount', amount(pricing.couponDiscount),
+        'Net items', amount(pricing.netMerchandise),
+        'Shipping', amount(pricing.shipping.charge),
+        'Pricing total', amount(pricing.finalTotal)));
     } else blocks.push({ type: 'context', text: 'Item subtotal, coupon and shipping breakdown not recorded.' });
-    blocks.push({ type: 'fields', fields: [{ label: 'Order total', value: amount(order.total) }] });
+    blocks.push(fields('Order total', amount(order.total)));
     return { blocks };
   } catch {
-    return { blocks: [{ type: 'header', text: 'Orders' }, back, { type: 'banner', variant: 'error', title: 'Orders unavailable', description: 'Recorded amounts could not be displayed safely.' }] };
+    return { blocks: [header(), back, unavailable('Orders unavailable', 'Recorded amounts could not be displayed safely.')] };
   }
 }

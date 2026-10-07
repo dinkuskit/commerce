@@ -1,4 +1,4 @@
-import { hasPermission, toRoleLevel } from '@emdash-cms/auth';
+import { adminAuthorized, pageOffset, pagination, navigation, fields } from './blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PluginContext, SandboxedRouteContext } from 'emdash/plugin';
 import { CouponAdminError, type CouponCollection, type CouponRecord } from '../features/coupons/index.js';
@@ -14,18 +14,6 @@ export function couponInteraction(input: unknown): boolean {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return false;
   const value = input as Record<string, unknown>;
   return value.page === '/coupons' || (typeof value.action_id === 'string' && value.action_id.startsWith('coupon.'));
-}
-function authorized(route: SandboxedRouteContext): boolean {
-  if (route.ui?.surface !== 'admin-page' || !route.user) return false;
-  try { return hasPermission({ role: toRoleLevel(route.user.role) }, 'plugins:manage'); }
-  catch { return false; }
-}
-function navigation(t: Text): Block {
-  return { type: 'actions', elements: [
-    { type: 'link', label: t('Products'), target: { kind: 'plugin-page', path: '/products' } },
-    { type: 'link', label: t('Settings'), target: { kind: 'plugin-page', path: '/settings' } },
-    { type: 'link', label: t('Coupons'), target: { kind: 'plugin-page', path: '/coupons' } },
-  ] };
 }
 function form(action: string, values: CouponBasicForm, t: Text): Block {
   return { type: 'form', block_id: 'coupon-' + crypto.randomUUID(), fields: [
@@ -66,7 +54,7 @@ function lifecycle(coupon: CouponRecord, t: Text) {
 
 export async function couponBlocks(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
   const t = couponText(route);
-  if (!authorized(route)) return { blocks: [{ type: 'banner', variant: 'error', title: t('Coupons require plugins:manage') }],
+  if (!adminAuthorized(route)) return { blocks: [{ type: 'banner', variant: 'error', title: t('Coupons require plugins:manage') }],
     toast: { type: 'error', message: t('Coupons require plugins:manage') } };
   const ports = createCouponAdminPorts({ coupons: ctx.storage.coupons as CouponCollection });
   let selectedId: string | null = null;
@@ -113,30 +101,27 @@ export async function couponBlocks(route: SandboxedRouteContext, ctx: PluginCont
     stale = error instanceof CouponAdminError && error.code === 'REVISION_CONFLICT';
     failure = error instanceof CouponAdminError ? t('Coupon changes were not saved. {reason}', { reason: error.message }) : t('Could not complete the request. Reload and try again.');
   }
-  const blocks: Block[] = [{ type: 'header', text: t('Coupons') }, navigation(t), ...(failure ? [{ type: 'banner' as const, variant: 'error' as const, title: failure }] : [])];
+  const blocks: Block[] = [{ type: 'header', text: t('Coupons') }, navigation(t('Products'), t('Settings'), t('Coupons')), ...(failure ? [{ type: 'banner' as const, variant: 'error' as const, title: failure }] : [])];
   try {
     const listed = await listCoupons(ports);
     const selected = selectedId ? listed.find(item => item.coupon.couponId === selectedId) : undefined;
     if (selectedId && !selected) throw new CouponAdminError('NOT_FOUND', 'Coupon was not found');
     if (!listed.length) blocks.push({ type: 'empty', title: t('No coupons yet'), description: t('Create your first coupon below.') });
-    offset = Math.min(offset, Math.max(0, Math.floor((listed.length - 1) / PAGE_SIZE) * PAGE_SIZE));
+    offset = pageOffset(offset, listed.length);
     for (const item of listed.slice(offset, offset + PAGE_SIZE)) {
       blocks.push({ type: 'section', text: t('{code} — {state} — {consumed} consumed / {remaining} remaining', {
         code: item.coupon.code, state: lifecycle(item.coupon, t), consumed: item.counts?.consumed ?? 0, remaining: item.counts?.remaining ?? 0 }),
         accessory: { type: 'button', label: t('Open {code}', { code: item.coupon.code }), action_id: 'coupon.open', value: item.coupon.couponId } });
     }
-    const paging: Block & { type: 'actions' } = { type: 'actions', elements: [] };
-    if (offset > 0) paging.elements.push({ type: 'button', label: t('Previous'), action_id: 'coupon.list', value: offset - PAGE_SIZE });
-    if (offset + PAGE_SIZE < listed.length) paging.elements.push({ type: 'button', label: t('Next'), action_id: 'coupon.list', value: offset + PAGE_SIZE });
-    if (paging.elements.length) blocks.push(paging);
+    pagination(blocks, offset, listed.length, 'coupon.list', t('Previous'), t('Next'));
     blocks.push({ type: 'divider' }, { type: 'header', text: selected ? t('Edit coupon') : t('Create coupon') },
       { type: 'context', text: t('Dates require an explicit offset. End is exclusive. Percentage values are 0–100; fixed values are USD.') });
     if (selected) {
       if (!draft) action = `coupon.save:${selected.coupon.couponId}:${selected.coupon.revision}`;
-      if (selected.counts) blocks.push({ type: 'fields', fields: [
-        { label: t('Consumed redemptions'), value: String(selected.counts.consumed) }, { label: t('Pending holds'), value: String(selected.counts.pending) },
-        { label: t('Released attempts'), value: String(selected.counts.released) }, { label: t('Remaining capacity'), value: String(selected.counts.remaining) },
-      ] });
+      if (selected.counts) blocks.push(fields(
+        t('Consumed redemptions'), String(selected.counts.consumed), t('Pending holds'), String(selected.counts.pending),
+        t('Released attempts'), String(selected.counts.released), t('Remaining capacity'), String(selected.counts.remaining),
+      ));
       if (stale) blocks.push({ type: 'context', text: t('This coupon changed. Reopen it to review current values before saving.') });
       if (!selected.coupon.disabled && !stale) blocks.push({ type: 'actions', elements: [{ type: 'button', label: t('Disable coupon'),
         action_id: `coupon.disable:${selected.coupon.couponId}:${selected.coupon.revision}`, style: 'danger',
