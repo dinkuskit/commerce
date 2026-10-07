@@ -191,3 +191,9 @@ after the standard sandbox suite. Install Chromium first with
 `npx playwright install chromium`. No live site or Registry publication is used.
 
 Under construction. MIT licensed.
+
+## Local verification
+
+Run `bin/verify-commerce quick` during edits and `bin/verify-commerce full` before
+delivery. See [the project verification skill](skills/commerce-verification/SKILL.md)
+for prerequisites, checks, and proof limits.
