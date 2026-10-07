@@ -15,15 +15,19 @@ async function call(path, options) {
   const body = await response.json(); return body.data ?? body;
 }
 document.getElementById('load').onclick = async () => {
-  const result = await call('catalog/public');
   const list = document.getElementById('products'); list.replaceChildren();
-  for (const product of result.products) {
-    const row = document.createElement('li'), button = document.createElement('button');
-    row.textContent = product.name + ' — ' + product.price.currency + ' ' + product.price.minor + ' minor units ';
-    button.textContent = 'Add ' + product.name; button.disabled = !product.availability.sellable;
-    button.onclick = () => { selected = product; document.getElementById('cart').textContent = 'Cart: ' + product.name + ' × 1'; };
-    row.append(button); list.append(row);
-  }
+  let cursor;
+  do {
+    const result = await call('catalog/public' + (cursor ? '?cursor=' + encodeURIComponent(cursor) : ''));
+    for (const product of result.products) {
+      const row = document.createElement('li'), button = document.createElement('button');
+      row.textContent = product.name + ' — ' + product.price.currency + ' ' + product.price.minor + ' minor units ';
+      button.textContent = 'Add ' + product.name; button.disabled = !product.availability.sellable;
+      button.onclick = () => { selected = product; document.getElementById('cart').textContent = 'Cart: ' + product.name + ' × 1'; };
+      row.append(button); list.append(row);
+    }
+    cursor = result.cursor;
+  } while (cursor);
 };
 document.getElementById('prepare').onclick = async () => {
   const result = await call('checkout/guest/prepare', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });

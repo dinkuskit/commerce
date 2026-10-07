@@ -187,6 +187,16 @@ test('packaged coupon Block Kit survives validation, conflicts, reload and forbi
       const product = catalog.products.find(product => product.sku === 'EDITOR-PROOF');
       expect(product).toEqual({ id: expect.any(String), name: 'Editor product', sku: 'EDITOR-PROOF',
         price: { currency: 'USD', minor: '1234' }, availability: { status: 'in-stock', sellable: true, listable: true } });
+      // Real installed storage pagination: an empty filtered first page must
+      // still lead the consumer to the authenticated admin-created product.
+      const pad = database.prepare("INSERT INTO _plugin_storage (plugin_id,collection,id,data,revision,created_at,updated_at) VALUES (?, 'catalog_items', ?, ?, ?, ?, ?)");
+      for (let index = 0; index < 50; index++) {
+        pad.run(pluginId, 'pagination-proof-' + index, JSON.stringify({ recordKind: 'pagination-proof' }),
+          'pagination-revision-' + index, '2000-01-01T00:00:00.000Z', '2000-01-01T00:00:00.000Z');
+      }
+      const firstPage = (await (await guest.request.get(base + `/_emdash/api/plugins/${pluginId}/catalog/public`)).json()).data;
+      expect(firstPage.products).toEqual([]);
+      expect(firstPage.cursor).toEqual(expect.any(String));
       const shopper = await guest.newPage();
       await shopper.goto('/');
       await shopper.getByRole('button', { name: 'Load catalog' }).click();
@@ -200,6 +210,7 @@ test('packaged coupon Block Kit survives validation, conflicts, reload and forbi
       await shopper.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'public-catalog-cart.png'), fullPage: true });
       writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'public-catalog.json'), JSON.stringify(catalog, null, 2));
       expect(database.prepare("SELECT COUNT(*) n FROM _plugin_storage WHERE plugin_id=? AND collection='checkout_carts'").get(pluginId).n).toBe(0);
+      database.prepare("DELETE FROM _plugin_storage WHERE plugin_id=? AND collection='catalog_items' AND json_extract(data,'$.recordKind')='pagination-proof'").run(pluginId);
       await guest.close();
     }
     await page.goto(path+'settings');
