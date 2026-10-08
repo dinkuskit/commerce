@@ -215,7 +215,7 @@ export async function commitCatalogItemPrice(
     input.regular !== null &&
     !saleIsStrictlyLower(input.sale, input.regular)
   ) {
-    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular in the same currency",);
+    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
   }
   const existing = await readPrice(storage.prices, input.catalogItemId);
   if (input.regular === null) {
@@ -252,7 +252,7 @@ export async function setCatalogItemRegularPrice(
   await requireCatalogItem(storage.catalog, input.catalogItemId);
   const existing = await readPrice(storage.prices, input.catalogItemId);
   if (existing?.sale !== undefined && !saleIsStrictlyLower(existing.sale, input.amount)) {
-    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular in the same currency",);
+    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
   }
   if (existing !== null && moneyEquals(existing.regular, input.amount)) {
     return { changed: false, price: existing };
@@ -279,7 +279,7 @@ export async function setCatalogItemSalePrice(
     catalogFail("SALE_REQUIRES_REGULAR", "Sale cannot be set until Regular exists",);
   }
   if (!saleIsStrictlyLower(input.amount, existing.regular)) {
-    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular in the same currency",);
+    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
   }
   if (existing.sale !== undefined && moneyEquals(existing.sale, input.amount)) {
     return { changed: false, price: existing };

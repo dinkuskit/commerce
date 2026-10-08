@@ -103,7 +103,6 @@ function assertTestBinding(value: unknown, expected: TrustedTestPaymentsConfig):
       throw new Error("Payments binding mismatch");
     }
   } else {
-    // Dedicated field only — never read or fall back to stripeAccountId for authorize_net.
     if (binding.stripeAccountId !== undefined) throw new Error("Payments binding mismatch");
     if (expected.authorizeNetMerchantId !== undefined &&
         binding.authorizeNetMerchantId !== expected.authorizeNetMerchantId) {

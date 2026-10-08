@@ -33,7 +33,7 @@ export function normalizeSku(value: unknown): string {
     catalogFail("INVALID_INPUT", "sku must be between 1 and 64 characters");
   }
   if (!SKU_PATTERN.test(canonical)) {
-    catalogFail("INVALID_INPUT", "sku must use uppercase alphanumeric segments separated by single hyphens",);
+    catalogFail("INVALID_INPUT", "sku must be uppercase alphanumeric hyphen segments",);
   }
   return canonical;
 }
@@ -48,12 +48,12 @@ export function normalizeCreateCatalogItemInput(
   const candidate = input as Partial<CreateCatalogItemInput>;
   const commandId = requireString(candidate.commandId, "commandId");
   if (commandId.trim() !== commandId || !COMMAND_ID_PATTERN.test(commandId)) {
-    catalogFail("INVALID_INPUT", "commandId must be 1-128 ASCII letters, digits, colons, underscores, or hyphens",);
+    catalogFail("INVALID_INPUT", "commandId must be 1-128 ASCII [A-Za-z0-9:_-]",);
   }
 
   const name = requireString(candidate.name, "name").normalize("NFKC").trim();
   if (name.length < 1 || name.length > 160 || CONTROL_PATTERN.test(name)) {
-    catalogFail("INVALID_INPUT", "name must be 1-160 characters without control characters",);
+    catalogFail("INVALID_INPUT", "name must be 1-160 characters without controls",);
   }
 
   const sku = normalizeSku(candidate.sku);

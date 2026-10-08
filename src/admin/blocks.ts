@@ -1,21 +1,8 @@
 import type { Block } from '@emdash-cms/blocks/server';
 import type { SandboxedRouteContext } from 'emdash/plugin';
 
-/** Numeric EmDash roles from @emdash-cms/auth `Role` (subscriber…admin). */
-const ROLES = new Set([10, 20, 30, 40, 50]);
-
-/**
- * Coupon and Orders pages require `plugins:manage`.
- * Same outcome as `hasPermission({ role: toRoleLevel(user.role) }, 'plugins:manage')`
- * without pulling `@emdash-cms/auth` into the sandbox graph.
- */
 export function adminAuthorized(route: SandboxedRouteContext): boolean {
-  try {
-    const role = route.user?.role;
-    return route.ui?.surface === 'admin-page' && ROLES.has(role as number) && (role as number) >= 50;
-  } catch {
-    return false;
-  }
+  return route.ui?.surface === "admin-page" && route.user?.role === 50;
 }
 export function pageOffset(offset: number, count: number): number {
   return Math.min(offset, Math.max(0, Math.floor((count - 1) / 25) * 25));

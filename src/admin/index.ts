@@ -57,7 +57,7 @@ function alert(message: string): Block {
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
     { type: "header", text: "Add product" },
-    { type: "context", text: "Customer-facing title. New products stay unmanaged. Manage stock is coming soon." },
+    { type: "context", text: "Customer-facing title. Unmanaged until Manage stock ships." },
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
@@ -84,17 +84,11 @@ type ProductFields = {
   manageStock: boolean | null;
   stockStatus: CatalogProductPriceForm["stockStatus"];
 };
-// Registry/sandbox Block Kit 1.2.0 ToggleElement has no disabled field and never
-// forwards disabled to Kumo Switch. Emitting a live toggle would not fulfill the
-// requested disabled slider. This notice is an honest temporary fallback.
 function manageStockNotice(managed: boolean | null): Block {
+  const base = "Manage stock — Coming soon";
   return {
     type: "context",
-    text: managed === true
-      ? "Manage stock — Coming soon (managed)."
-      : managed === false
-        ? "Manage stock — Coming soon"
-        : "Manage stock — Coming soon (status hidden).",
+    text: managed === true ? base + " (managed)." : managed === false ? base : base + " (status hidden).",
   };
 }
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
@@ -170,7 +164,7 @@ async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<
   const page = await ctx.media.list({ limit: LIBRARY_PAGE, mimeType: "image/", ...(cursor ? { cursor } : {}) });
   const blocks: Block[] = [
     { type: "header", text: t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image" },
-    navigation(), { type: "context", text: "Media Library images. Upload on the Media page." },
+    navigation(), { type: "context", text: "Images from the Media Library." },
     { type: "actions", elements: [{ type: "button", label: "Cancel", action_id: t.t === "placeholder" ? "settings" : "open", value: t.id }] },
   ];
   for (const item of page.items) {
@@ -228,7 +222,7 @@ async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
 function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockResponse {
   return { blocks: [
     { type: "header", text: "Commerce settings" }, navigation(), { type: "header", text: "Catalog" },
-    ...(failure ? [alert(failure), { type: "context" as const, text: "Save was not confirmed. Choice retained; review or retry." }] : []),
+    ...(failure ? [alert(failure), { type: "context" as const, text: "Save not confirmed; choice retained." }] : []),
     { type: "form", block_id: "catalog-settings-" + crypto.randomUUID(), fields: [
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
     ], submit: { label: "Save", action_id: "settings.save" } },
@@ -395,7 +389,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const managed = typeof values.manageStock === "boolean" ? values.manageStock : null;
         return { blocks: [
           { type: "header", text: "Product changes" }, { type: "context", text: "Commerce / Products" }, navigation(),
-          alert(failure), { type: "context", text: "Save was not confirmed. Entries retained; review or retry." },
+          alert(failure), { type: "context", text: "Save not confirmed; entries retained." },
           manageStockNotice(managed),
           productForm(input.action_id.slice(5), {
             regular: values.regular,

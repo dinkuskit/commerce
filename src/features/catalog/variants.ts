@@ -130,7 +130,7 @@ export async function addCatalogVariantOption(
   }
   if (!Array.isArray(raw.values) || raw.values.length < 2 || raw.values.length > 50 ||
       !raw.values[0]?.member || raw.values[0].member.catalogItemId !== productId)
-    catalogFail("INVALID_INPUT", "a variant choice needs two to fifty values and must preserve the default member");
+    catalogFail("INVALID_INPUT", "variant choice needs 2-50 values and keeps the default member");
   const optionId = id(raw.optionId, "optionId"), values: CatalogVariantOptionValue[] = [], members: CatalogVariantMember[] = [], seen = new Set<string>();
   for (const [i, input] of raw.values.entries()) {
     if (!input || !input.member || typeof input.member !== "object") catalogFail("INVALID_INPUT", "variant member is required");

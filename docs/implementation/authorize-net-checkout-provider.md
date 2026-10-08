@@ -30,6 +30,17 @@ recomputed price.
 4. An order is marked paid only by an authoritative transaction lookup whose
    amount and currency match. A signed webhook alone never marks paid.
 
+## Compiled backend size
+
+Measured on the compiled `dist/sandbox/plugin.mjs` (not source):
+
+- Before (main after #65/#67 baseline): **130243** bytes
+- After authorize_net + headroom factoring on post-#66 main: **124560** bytes
+- Limit **131072** → headroom **6512** bytes
+
+Splitting source only helps when unused code actually leaves this compiled
+bundle (Ryan #68).
+
 ## Product rules
 
 1. `providerId` may be `stripe` or `authorize_net`.

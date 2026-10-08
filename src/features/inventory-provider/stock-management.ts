@@ -24,7 +24,6 @@ function identity(value: unknown): InventorySkuIdentity | null {
   return inventorySkuId && sku && displayName ? { inventorySkuId, sku, displayName } : null;
 }
 
-/** Soft parse for stored records; invalid shapes degrade to setup-required. */
 function registration(value: unknown): ManagedSkuRegistration | null {
   const c = asRecord(value), r = asRecord(c?.request);
   if (!c || !r) return null;

@@ -34,7 +34,7 @@ function normalizeInput(value: unknown): SetCatalogItemManualAvailabilityInput {
   ) {
     throw new CatalogError(
       "INVALID_INPUT",
-      "manual availability accepts only catalogItemId and a supported status",
+      "manual availability accepts catalogItemId and status only",
     );
   }
   return {

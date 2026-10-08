@@ -14,7 +14,6 @@ function jwtPart(encoded: string): unknown {
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, c => c.charCodeAt(0))));
 }
 
-/** Admission filtering only. The Payments issuer/audience verifier owns authentication. */
 export function admitCredential(token: unknown, config: RegistryCheckoutConfig): string {
   if (!text(token, 16384)) unavailable();
   try {

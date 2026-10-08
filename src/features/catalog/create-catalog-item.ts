@@ -99,7 +99,7 @@ function resolveExistingCommand(
   if (!sameCommandPayload(existing, input)) {
     throw new CatalogError(
       "COMMAND_CONFLICT",
-      "commandId was already used with different catalog input",
+      "commandId already used with different catalog input",
     );
   }
   return { created: false, item: existing };
@@ -177,7 +177,7 @@ export async function createCatalogItem(
     }
     throw new CatalogError(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      "catalog command conflict could not be resolved",
+      "catalog command conflict unresolved",
       { cause: error },
     );
   }

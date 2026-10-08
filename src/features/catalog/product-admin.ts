@@ -473,7 +473,7 @@ export async function bulkSaveCatalogProductPrices(
   inputs: readonly BulkCatalogProductPriceInput[],
 ): Promise<{ outcomes: BulkCatalogProductPriceOutcome[] }> {
   if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 100) {
-    catalogFail("INVALID_INPUT", "bulk price input must contain one to one hundred rows");
+    catalogFail("INVALID_INPUT", "bulk price input needs 1-100 rows");
   }
   const outcomes: BulkCatalogProductPriceOutcome[] = [];
   for (const input of inputs) {
@@ -547,7 +547,7 @@ async function persistManageStock(
     });
   }
   if (!applied.applied) {
-    catalogFail("STORAGE_UNAVAILABLE", "Manage Stock update lost to a concurrent write",);
+    catalogFail("STORAGE_UNAVAILABLE", "Manage Stock lost to concurrent write",);
   }
 }
 
