@@ -32,8 +32,6 @@ function sameCommandPayload(
     item.commandId === input.commandId &&
     item.kind === input.kind &&
     item.name === input.name &&
-    item.sku === input.sku &&
-    item.skuKey === input.skuKey &&
     (item.creationIntent?.manageStock ?? false) === input.creationIntent.manageStock
   );
 }

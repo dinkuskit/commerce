@@ -20,8 +20,11 @@ Commerce exposes the same filtered projection through:
 
 The single-item response is one product object or `null`. It includes only
 the authoritative `id` (`itemId`), name, current SKU, customer-facing price,
-availability, and the existing live media projection. Missing, unpriced,
-non-listable, and fail-closed managed items return `null`. Both routes are
+availability, and the existing live media projection. A missing, unpriced, or
+non-listable item returns `null`. A priced managed item whose inventory
+provider is unavailable remains in the projection with
+`availability-unavailable`, `sellable: false`, and `listable: true`, matching
+the existing fail-closed public catalog behavior. Both routes are
 `no-store`. Neither route returns a page, slug, URL, publication state, or CMS
 field.
 

@@ -325,6 +325,21 @@ test("itemId remains permanent while an authenticated SKU update changes only th
   assert.equal((await storage.get("item-permanent")).itemId, "item-permanent");
 });
 
+test("replaying the original create command after a SKU edit returns the existing item", async () => {
+  const storage = new MemoryCatalogStorage();
+  const input = { commandId: "cmd:sku-replay", name: "Replayable", sku: "ORIGINAL-SKU" };
+  const created = await createCatalogItem(storage, input, { createId: () => "item-sku-replay" });
+  await setCatalogItemSku(storage, {
+    catalogItemId: created.item.itemId,
+    sku: "EDITED-SKU",
+  });
+
+  const replay = await createCatalogItem(storage, input, { createId: () => "must-not-be-used" });
+  assert.equal(replay.created, false);
+  assert.equal(replay.item.itemId, "item-sku-replay");
+  assert.equal(replay.item.sku, "EDITED-SKU");
+});
+
 test("SKU updates fail closed without both unique indexes", async () => {
   const storage = new MemoryCatalogStorage(["commandId"]);
   storage.records.set("item-no-sku-index", {
