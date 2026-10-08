@@ -13,6 +13,8 @@ test('inspection preserves canonical IDs, recorded amounts and independent fulfi
  for (const value of ['synthetic-order-paid-001','synthetic-receipt-paid-001','Provider-paid','Not recorded']) assert.ok(rendered.includes(value));
  assert.equal(f['Item subtotal'], 'USD 25.00'); assert.equal(f['Coupon discount'], 'USD 5.00'); assert.equal(f.Shipping, 'USD 5.00'); assert.equal(f['Order total'], 'USD 25.00');
  assert.equal(detail.blocks[1].elements[0].action_id, 'orders.list');
+ const pack = detail.blocks.find(block => block.type === 'actions' && block.elements[0]?.label === 'Pack');
+ assert.equal(pack.elements[0].action_id, 'orders.pack:' + encodeURIComponent(paid.orderId));
  assert.ok(JSON.stringify(ordersView(input, zero.orderId)).includes('Zero payable — no payment required'));
 });
 test('empty, outage, missing order and absent legacy breakdown remain distinct', () => {

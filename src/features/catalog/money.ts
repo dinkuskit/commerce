@@ -36,7 +36,7 @@ export function normalizeMoney(value: unknown, label = "money"): Money {
   ) {
     throw new CatalogError(
       "INVALID_INPUT",
-      `${label} must be { currency: "USD", minor } with a string integer minor`,
+      `${label} bad money`,
     );
   }
   parseMinorUnits(value.minor);

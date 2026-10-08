@@ -99,14 +99,14 @@ export async function couponBlocks(route: SandboxedRouteContext, ctx: PluginCont
     } else throw new Error('Invalid interaction');
   } catch (error) {
     stale = error instanceof CouponAdminError && error.code === 'REVISION_CONFLICT';
-    failure = error instanceof CouponAdminError ? t('Coupon changes were not saved. {reason}', { reason: error.message }) : t('Could not complete the request. Reload and try again.');
+    failure = error instanceof CouponAdminError ? t('Coupon changes were not saved. {reason}', { reason: error.message }) : t('Reload and try again.');
   }
   const blocks: Block[] = [{ type: 'header', text: t('Coupons') }, navigation(t('Products'), t('Settings'), t('Coupons')), ...(failure ? [{ type: 'banner' as const, variant: 'error' as const, title: failure }] : [])];
   try {
     const listed = await listCoupons(ports);
     const selected = selectedId ? listed.find(item => item.coupon.couponId === selectedId) : undefined;
     if (selectedId && !selected) throw new CouponAdminError('NOT_FOUND', 'Coupon was not found');
-    if (!listed.length) blocks.push({ type: 'empty', title: t('No coupons yet'), description: t('Create your first coupon below.') });
+    if (!listed.length) blocks.push({ type: 'empty', title: t('No coupons yet'), description: t('None yet.') });
     offset = pageOffset(offset, listed.length);
     for (const item of listed.slice(offset, offset + PAGE_SIZE)) {
       blocks.push({ type: 'section', text: t('{code} — {state} — {consumed} consumed / {remaining} remaining', {
@@ -115,22 +115,22 @@ export async function couponBlocks(route: SandboxedRouteContext, ctx: PluginCont
     }
     pagination(blocks, offset, listed.length, 'coupon.list', t('Previous'), t('Next'));
     blocks.push({ type: 'divider' }, { type: 'header', text: selected ? t('Edit coupon') : t('Create coupon') },
-      { type: 'context', text: t('Dates require an explicit offset. End is exclusive. Percentage values are 0–100; fixed values are USD.') });
+      { type: 'context', text: t('Offset required. End exclusive.') });
     if (selected) {
       if (!draft) action = `coupon.save:${selected.coupon.couponId}:${selected.coupon.revision}`;
       if (selected.counts) blocks.push(fields(
         t('Consumed redemptions'), String(selected.counts.consumed), t('Pending holds'), String(selected.counts.pending),
         t('Released attempts'), String(selected.counts.released), t('Remaining capacity'), String(selected.counts.remaining),
       ));
-      if (stale) blocks.push({ type: 'context', text: t('This coupon changed. Reopen it to review current values before saving.') });
+      if (stale) blocks.push({ type: 'context', text: t('This coupon changed. Reopen it.') });
       if (!selected.coupon.disabled && !stale) blocks.push({ type: 'actions', elements: [{ type: 'button', label: t('Disable coupon'),
         action_id: `coupon.disable:${selected.coupon.couponId}:${selected.coupon.revision}`, style: 'danger',
-        confirm: { title: t('Disable coupon?'), text: t('New redemptions will be refused.'), confirm: t('Disable'), deny: t('Keep enabled'), style: 'danger' } }] });
+        confirm: { title: t('Disable coupon?'), text: t('New redemptions stop.'), confirm: t('Disable'), deny: t('Keep enabled'), style: 'danger' } }] });
     }
     blocks.push(form(action, draft ?? (selected ? valuesOf(selected.coupon) : EMPTY), t));
     blocks.push({ type: 'actions', elements: [{ type: 'button', label: t('New coupon'), action_id: 'coupon.new' }] });
   } catch {
-    failure ??= t('Coupons are unavailable. Reload and try again.');
+    failure ??= t('Coupons unavailable. Reload.');
     blocks.push({ type: 'banner', variant: 'error', title: failure });
     if (draft) blocks.push(form(action, draft, t));
   }

@@ -64,20 +64,20 @@ function normalizeConfigurationRecord(
   value: unknown,
 ): StoreInventoryConfigurationRecord {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid");
+    throw fail("STORAGE_UNAVAILABLE", "stored inventory");
   }
   const record = value as Record<string, unknown>;
   if (
     record.recordKind !== "store-inventory-configuration" ||
     record.configurationKey !== CONFIGURATION_KEY
   ) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid");
+    throw fail("STORAGE_UNAVAILABLE", "stored inventory");
   }
   let binding;
   try {
     binding = normalizeInventoryProviderBinding(record.binding);
   } catch (error) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid", error);
+    throw fail("STORAGE_UNAVAILABLE", "stored inventory", error);
   }
   return {
     recordKind: "store-inventory-configuration",
@@ -92,7 +92,7 @@ function normalizeConfigurationRecord(
 
 function asStoredString(value: unknown, field: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw fail("STORAGE_UNAVAILABLE", `stored inventory configuration ${field} is invalid`);
+    throw fail("STORAGE_UNAVAILABLE", `stored inventory ${field}`);
   }
   return value.trim();
 }
@@ -179,14 +179,14 @@ async function assertConfigurationKeyConstraint(
         if (isConfigurationKeyViolation(error)) return;
         throw fail(
           "STORAGE_CONSTRAINTS_UNAVAILABLE",
-          "store inventory configuration uniqueness could not be proven",
+          "store inventory unique",
           error,
         );
       }
     }
     throw fail(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      "store inventory configuration unique constraint is not active",
+      "store inventory unique off",
     );
   } finally {
     let cleanupCause: unknown;

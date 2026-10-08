@@ -49,7 +49,8 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
     const order = matches[0];
     blocks.push(detailFields('Order', order.orderId, 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
-      'Provider payment', order.paymentId ?? notRecorded, 'Fulfillment', notRecorded), { type: 'header', text: 'Items' });
+      'Provider payment', order.paymentId ?? notRecorded, 'Fulfillment', notRecorded),
+      action('Pack', 'orders.pack:' + encodeURIComponent(order.orderId)), { type: 'header', text: 'Items' });
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
       'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
     if (order.pricing) {

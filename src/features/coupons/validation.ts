@@ -43,11 +43,11 @@ function fields(candidate: Record<string, unknown>, names: string[], prefix: str
 function date(value: unknown, name: string): void {
   text(value, name);
   if (!instantPattern.test(value) || !Number.isFinite(Date.parse(value))) {
-    fail(`${name} must be a canonical UTC instant`);
+    fail(`${name} bad date`);
   }
   const parsed = new Date(value);
   if (parsed.toISOString() !== value) {
-    fail(`${name} must be a canonical UTC instant representing a real calendar date`);
+    fail(`${name} bad date`);
   }
 }
 
@@ -152,22 +152,22 @@ export function validateCouponQuoteSnapshot(value: unknown, name: string): asser
   }
 
   if (sumSubtotal !== BigInt(merchandise.minor)) {
-    fail(`${name}.merchandiseTotal must equal sum of lineSubtotals`);
+    fail(`${name} bad total`);
   }
   if (sumEligible !== BigInt(eligibleSubtotal.minor)) {
-    fail(`${name}.eligibleSubtotal must equal sum of eligible lineSubtotals`);
+    fail(`${name} bad eligible`);
   }
   if (sumLineDiscount !== BigInt(discount.minor)) {
-    fail(`${name}.discount must equal sum of line discounts`);
+    fail(`${name} bad discount`);
   }
   if (BigInt(merchandise.minor) - BigInt(discount.minor) !== BigInt(payableMerchandise.minor)) {
-    fail(`${name}.payableMerchandiseTotal must equal merchandiseTotal - discount`);
+    fail(`${name} bad payable`);
   }
   if (BigInt(overall.minor) < BigInt(payableMerchandise.minor)) {
-    fail(`${name}.overallPayableTotal is below merchandise payable total`);
+    fail(`${name} bad overall`);
   }
   if (BigInt(overall.minor) === 0n && BigInt(payableMerchandise.minor) !== 0n) {
-    fail(`${name}.overallPayableTotal cannot be zero for a payable merchandise total`);
+    fail(`${name} bad overall`);
   }
 }
 

@@ -51,7 +51,7 @@ function bool(value: unknown): boolean {
 }
 function message(error: unknown): string {
   return error instanceof CatalogError || error instanceof StorefrontAvailabilityError
-    ? error.message : "Could not complete the request. Reload and try again.";
+    ? error.message : "Reload and try again.";
 }
 function alert(message: string): Block {
   return { type: "banner", title: message, variant: "error" };
@@ -60,7 +60,7 @@ function alert(message: string): Block {
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
     { type: "header", text: "Add product" },
-    { type: "context", text: "Name is the customer-facing product title (the product page heading). New products stay unmanaged. Manage stock is coming soon." },
+    { type: "context", text: "Name is the product title. New products stay unmanaged." },
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
@@ -169,11 +169,11 @@ async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: 
   return blocks;
 }
 async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<BlockResponse> {
-  if (!ctx.media) throw new Error("Media Library access is unavailable. Commerce needs the media:read capability.");
+  if (!ctx.media) throw new Error("Media Library unavailable.");
   const page = await ctx.media.list({ limit: LIBRARY_PAGE, mimeType: "image/", ...(cursor ? { cursor } : {}) });
   const blocks: Block[] = [
     { type: "header", text: t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image" },
-    navigation(), { type: "context", text: "Images from the Media Library. Upload new images on the Media page." },
+    navigation(), { type: "context", text: "Media Library images." },
     { type: "actions", elements: [{ type: "button", label: "Cancel", action_id: t.t === "placeholder" ? "settings" : "open", value: t.id }] },
   ];
   for (const item of page.items) {

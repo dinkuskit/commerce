@@ -128,7 +128,7 @@ async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueFie
       if (isConfirmedUniqueViolation(error, field, collection, pluginId)) return;
       throw new CatalogError(
         "STORAGE_CONSTRAINTS_UNAVAILABLE",
-        `catalog ${field} uniqueness could not be proven`,
+        `catalog ${field} unique`,
         { cause: error },
       );
     }
@@ -140,14 +140,14 @@ async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueFie
       if (isConfirmedUniqueViolation(error, field, collection, pluginId)) return;
       throw new CatalogError(
         "STORAGE_CONSTRAINTS_UNAVAILABLE",
-        `catalog ${field} uniqueness could not be proven`,
+        `catalog ${field} unique`,
         { cause: error },
       );
     }
 
     throw new CatalogError(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      `catalog ${field} unique constraint is not active`,
+      `catalog ${field} unique off`,
     );
   } finally {
     let cleanupFailed = false;
@@ -163,7 +163,7 @@ async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueFie
     if (cleanupFailed) {
       throw new CatalogError(
         "STORAGE_CONSTRAINTS_UNAVAILABLE",
-        `catalog ${field} uniqueness probe cleanup failed`,
+        `catalog ${field} probe`,
         { cause: cleanupCause },
       );
     }

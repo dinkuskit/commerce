@@ -65,7 +65,7 @@ function whole(value: unknown, name: string): number {
 
 function decimal(value: unknown, name: string): { whole: bigint; fraction: string } {
   if (typeof value !== "string" || !/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(value.trim())) {
-    invalid(`${name} must be a non-negative decimal with at most 2 decimal places`);
+    invalid(`${name} bad decimal`);
   }
   const [wholePart, fraction = ""] = value.trim().split(".");
   return { whole: BigInt(wholePart), fraction: fraction.padEnd(2, "0") };

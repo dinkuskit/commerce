@@ -65,7 +65,7 @@ export function normalizeMediaReference(value: unknown, field: string): MediaRef
 export function normalizeGallery(value: unknown): MediaReference[] {
   if (!Array.isArray(value)) invalid("gallery must be a list of Media Library media ids");
   if (value.length > CATALOG_GALLERY_LIMIT) {
-    invalid(`Gallery holds at most ${CATALOG_GALLERY_LIMIT} images`);
+    invalid(`at most ${CATALOG_GALLERY_LIMIT}`);
   }
   const gallery = value.map((entry) => normalizeMediaReference(entry, "gallery"));
   if (new Set(gallery.map((entry) => entry.mediaId)).size !== gallery.length) {

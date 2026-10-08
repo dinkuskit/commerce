@@ -51,10 +51,12 @@ export interface StockRequest {
   binding: InventoryProviderBinding;
   requirements: StockRequirement[];
 }
+export interface InventoryTicketHold { siteId: string; poolId: string; ticketIds: readonly string[] }
+export type ReserveResult = "reserved" | "rejected" | "unknown" | { outcome: "reserved"; ticketIds: readonly string[] };
 /** Durable whole-basket operation. Never substitute a local stock ledger. */
 export interface CheckoutInventoryPort {
-  /** Same operation/request forever; terminal rejection has no holds and cannot later succeed. */
-  reserve(request: StockRequest): Promise<"reserved" | "rejected" | "unknown">;
+  /** Same operation/request forever; terminal rejection has no holds and cannot later succeed. A string reserved stores no ticket ids. */
+  reserve(request: StockRequest): Promise<ReserveResult>;
   /** Idempotent terminal fence, including an in-flight reserve. No subsequent reacquisition. */
   release(request: StockRequest): Promise<"released" | "unknown">;
 }
@@ -148,6 +150,7 @@ interface CommerceOrderBase {
   total: Money;
   pricing?: CheckoutPricingSnapshot;
   variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
+  inventoryHold?: InventoryTicketHold;
 }
 export type CommerceOrder =
   | (CommerceOrderBase & { paymentId: string })
@@ -157,6 +160,8 @@ export interface CheckoutAttempt {
   cart: CartLine[];
   payment: PaymentRequest;
   stock?: StockRequest;
+  inventorySiteId?: string;
+  inventoryHold?: InventoryTicketHold;
   phase: "reserving" | "paying" | "releasing" | "released" | "paid";
   session?: PaymentSession;
   order?: CommerceOrder;

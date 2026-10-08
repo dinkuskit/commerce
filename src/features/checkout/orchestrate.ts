@@ -31,6 +31,7 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
   const lines: CheckoutLine[] = [];
   const selections: CheckoutVariantSelectionSnapshot[] = [];
   let stock: StockRequest | undefined;
+  let inventorySiteId: string | undefined;
   const attemptId = (e.createAttemptId ?? (() => globalThis.crypto.randomUUID()))();
   if (!attemptId) fail("Invalid attempt identity");
   if (!e.paymentBindingRef.trim()) fail("Payment binding required");
@@ -61,6 +62,7 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
       if (!stock) {
         const config = await loadStoreInventoryConfiguration(e.catalog.configurations);
         if (!config) fail("Inventory unavailable");
+        inventorySiteId = config.siteId;
         stock = { operationId: attemptId, binding: config.binding, requirements: [] };
       }
       const policy = await loadCatalogItemBackorderPolicy(e.catalog.backorderPolicies, item.itemId);
@@ -80,7 +82,7 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
   return { attemptId, cart, ...(selections.length ? { variantSelections: selections } : {}), payment: createCurrentPaymentRequest({
     attemptId, bindingRef: e.paymentBindingRef, lines, total,
     ...(pricing ? { pricing: pricing.snapshot } : {}),
-  }), ...(stock ? { stock } : {}),
+  }), ...(stock ? { stock, inventorySiteId } : {}),
     ...(pricing?.couponId ? { coupon: { couponId: pricing.couponId, code: pricing.couponCode!, status: "unreserved" as const } } : {}),
     phase: "reserving" };
 }
@@ -236,6 +238,14 @@ async function finishPaidCoupon(e: CheckoutExecution, cartId: string, attempt: C
   return attempt;
 }
 
+function reservedTickets(result: unknown, count: number): "rejected" | "unknown" | "plain" | readonly string[] {
+  if (result === "unknown" || result === "rejected") return result;
+  if (result === "reserved") return "plain";
+  const ids = result && typeof result === "object" && (result as { outcome?: unknown }).outcome === "reserved"
+    ? (result as { ticketIds?: unknown }).ticketIds : undefined;
+  if (!Array.isArray(ids) || ids.length !== count || ids.some((id) => typeof id !== "string" || !id.trim())) fail("Invalid reservation outcome");
+  return ids.map((id) => (id as string).trim());
+}
 function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptId: string, paymentId?: string): void {
   next.phase = "paid";
   next.order = {
@@ -244,6 +254,7 @@ function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptI
     lines: attempt.payment.lines, total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
     ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
+    ...(attempt.inventoryHold ? { inventoryHold: { siteId: attempt.inventoryHold.siteId, poolId: attempt.inventoryHold.poolId, ticketIds: [...attempt.inventoryHold.ticketIds] } } : {}),
   };
 }
 
@@ -263,10 +274,16 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         if (!provider) return attempt;
         let result;
         try { result = await provider.reserve(structuredClone(attempt.stock)); } catch { return attempt; }
-        if (result === "unknown") return attempt;
-        if (result !== "reserved" && result !== "rejected") fail("Invalid reservation outcome");
-        next.phase = result === "reserved" ? "paying" : next.coupon ? "releasing" : "released";
-        if (result === "rejected") next.paymentReleaseReason = "never-started";
+        const tickets = reservedTickets(result, attempt.stock.requirements.length);
+        if (tickets === "unknown") return attempt;
+        if (tickets === "rejected") { next.phase = next.coupon ? "releasing" : "released"; next.paymentReleaseReason = "never-started"; }
+        else {
+          next.phase = "paying";
+          if (tickets !== "plain") {
+            if (!attempt.inventorySiteId || !attempt.stock.binding.poolId) fail("Invalid reservation outcome");
+            next.inventoryHold = { siteId: attempt.inventorySiteId, poolId: attempt.stock.binding.poolId, ticketIds: tickets };
+          }
+        }
       } else next.phase = "paying";
       if (next.phase === "paying" && next.coupon?.status === "unreserved") {
         try {

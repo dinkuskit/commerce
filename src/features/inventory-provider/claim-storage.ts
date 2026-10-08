@@ -188,7 +188,7 @@ async function proveUniqueIndex(
       await storage.put(left.recordId, left);
     } catch (error) {
       if (isNamedUniqueViolation(error, field)) return;
-      throw unavailable(`registration claim ${field} uniqueness could not be proven`, error);
+      throw unavailable(`claim ${field} unique`, error);
     }
 
     attempted.push(right);
@@ -196,10 +196,10 @@ async function proveUniqueIndex(
       await storage.put(right.recordId, right);
     } catch (error) {
       if (isNamedUniqueViolation(error, field)) return;
-      throw unavailable(`registration claim ${field} uniqueness could not be proven`, error);
+      throw unavailable(`claim ${field} unique`, error);
     }
 
-    throw unavailable(`registration claim ${field} unique constraint is not active`);
+    throw unavailable(`claim ${field} unique off`);
   } finally {
     let cleanupCause: unknown;
     for (const probe of attempted.reverse()) {
@@ -211,7 +211,7 @@ async function proveUniqueIndex(
     }
     if (cleanupCause !== undefined) {
       throw unavailable(
-        `registration claim ${field} uniqueness probe cleanup failed`,
+        `claim ${field} probe`,
         cleanupCause,
       );
     }
