@@ -1,5 +1,7 @@
-import { normalizeInventoryProviderBinding } from "../inventory-provider/binding.js";
-import { InventoryProviderBindingError } from "../inventory-provider/errors.js";
+import {
+  InventoryProviderBindingError,
+  normalizeInventoryProviderBinding,
+} from "../inventory-provider/kernel/index.js";
 import { InventorySetupError } from "./errors.js";
 import { loadStoreInventoryConfiguration } from "./store-configuration-read.js";
 import {

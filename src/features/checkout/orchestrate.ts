@@ -1,7 +1,7 @@
-import { loadCatalogItemBackorderPolicy } from "../catalog/backorder-policy.js";
+import { loadCatalogItemBackorderPolicy } from "../catalog/kernel/index.js";
 import { normalizeMoney, parseMinorUnits, resolveCatalogItemPrice, resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
-import { normalizeStoredStockManagement } from "../inventory-provider/stock-management.js";
-import { loadStoreInventoryConfiguration } from "../inventory-setup/store-configuration-read.js";
+import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
+import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import { resolveStorefrontAvailability } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import { composeCheckoutPricing } from "./pricing.js";

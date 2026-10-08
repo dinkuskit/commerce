@@ -5,7 +5,7 @@ import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   type ManagedSkuRegistrationClaimUniqueField,
 } from "./claim-constants.js";
-import { ManagedSkuRegistrationError } from "./errors.js";
+import { ManagedSkuRegistrationError } from "./registration-errors.js";
 import { normalizeManagedSkuRegistration } from "./registration-normalize.js";
 import type {
   ManagedSkuRegistrationClaimInput,

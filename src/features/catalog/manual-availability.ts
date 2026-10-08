@@ -1,4 +1,4 @@
-import { normalizeStoredStockManagement } from "../inventory-provider/stock-management.js";
+import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { CatalogError } from "./errors.js";
 import {
   DEFAULT_CATALOG_MANUAL_AVAILABILITY,

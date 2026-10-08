@@ -1,18 +1,13 @@
 export { createCatalogItem } from "../create-catalog-item.js";
 export type { CreateCatalogItemOptions } from "../create-catalog-item.js";
 export { loadCatalogItemBackorderPolicy } from "../backorder-policy.js";
-export { setCatalogItemBackorders } from "../set-backorders.js";
 export {
   loadCatalogItemManualAvailability,
   setCatalogItemManualAvailability,
 } from "../manual-availability.js";
 export {
-  clearCatalogItemRegularPrice,
-  clearCatalogItemSalePrice,
   loadCatalogItemPrice,
   resolveCatalogItemPrice,
-  setCatalogItemRegularPrice,
-  setCatalogItemSalePrice,
 } from "../price.js";
 export { CatalogError } from "../errors.js";
 export type { CatalogErrorCode } from "../errors.js";
@@ -35,28 +30,12 @@ export {
   saveCatalogProductPrices,
 } from "../product-admin.js";
 export {
-  LOCAL_STOCK_MANAGEMENT_OPTION,
-  isLocalLoopbackContext,
-  isLocalStockManagementEnabled,
-  isLoopbackUrl,
-  manageStockControlFromAdmission,
-  normalizeHostLocalStockOption,
-  readLocalStockAdmission,
-  trustedSiteUrlSources,
-} from "../local-stock-development.js";
-export type {
-  LocalStockAdmissionContext,
-  LocalStockHostOptions,
-  ManageStockControl,
-} from "../local-stock-development.js";
-export {
   admitV1CatalogCreateInput,
   admitV1CatalogPriceSaveInput,
   isManagedCatalogRecord,
   MANAGE_STOCK_LOCKED_MESSAGE,
   MANAGE_STOCK_UNAVAILABLE_MESSAGE,
 } from "../v1-stock-admission.js";
-export { manageStockMutationsAllowed } from "../local-stock-development.js";
 export type {
   CatalogProductListItem,
   CatalogProductListStorage,

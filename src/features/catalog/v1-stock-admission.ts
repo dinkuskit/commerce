@@ -1,5 +1,5 @@
 import { CatalogError } from "./errors.js";
-import { normalizeStoredStockManagement } from "../inventory-provider/stock-management.js";
+import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import type { CatalogStorageRecord } from "./types.js";
 
 export const MANAGE_STOCK_UNAVAILABLE_MESSAGE =

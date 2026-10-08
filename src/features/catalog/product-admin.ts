@@ -1,7 +1,7 @@
 import {
   normalizeStoredStockManagement,
   setManageStock,
-} from "../inventory-provider/stock-management.js";
+} from "../inventory-provider/kernel/index.js";
 import { CatalogError } from "./errors.js";
 import {
   CLERK_DOLLAR_MESSAGE,

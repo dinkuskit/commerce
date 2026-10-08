@@ -1,4 +1,4 @@
-import { ManagedSkuRegistrationError } from "./errors.js";
+import { ManagedSkuRegistrationError } from "./registration-errors.js";
 import type {
   ManagedSkuRegistration,
   ManagedSkuRegistrationRejection,

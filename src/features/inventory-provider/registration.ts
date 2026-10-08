@@ -3,7 +3,7 @@ import {
   normalizeManagedSkuRegistrationClaimRecord,
   sameManagedSkuRegistrationRequest,
 } from "./claim.js";
-import { ManagedSkuRegistrationError } from "./errors.js";
+import { ManagedSkuRegistrationError } from "./registration-errors.js";
 import {
   normalizeManagedSkuRegistration,
   normalizeManagedSkuRegistrationRejection,

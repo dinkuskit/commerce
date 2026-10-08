@@ -1,5 +1,5 @@
 import { CatalogError } from "./errors.js";
-import { createInitialStockManagement } from "../inventory-provider/stock-management.js";
+import { createInitialStockManagement } from "../inventory-provider/kernel/index.js";
 import type {
   CatalogFulfillment,
   CreateCatalogItemInput,

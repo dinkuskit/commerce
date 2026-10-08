@@ -4,7 +4,7 @@ import {
   createManagedSkuRegistrationClaimKey,
   normalizeManagedSkuRegistrationClaimRecord,
 } from "./claim.js";
-import { ManagedSkuRegistrationError } from "./errors.js";
+import { ManagedSkuRegistrationError } from "./registration-errors.js";
 import type {
   ManagedSkuRegistrationClaimRecord,
   StockManagement,

@@ -1,4 +1,4 @@
-import { normalizeInventoryProviderBinding } from "../inventory-provider/binding.js";
+import { normalizeInventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import { InventorySetupError } from "./errors.js";
 import type {
   StoreInventoryConfigurationRecord,
@@ -6,6 +6,7 @@ import type {
 } from "./types.js";
 
 const CONFIGURATION_KEY = "active" as const;
+const INVALID_CONFIG = "stored inventory configuration is invalid";
 
 function fail(
   code: "STORAGE_CONSTRAINTS_UNAVAILABLE" | "STORAGE_UNAVAILABLE",
@@ -17,7 +18,7 @@ function fail(
 
 function asStoredString(value: unknown, field: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw fail("STORAGE_UNAVAILABLE", `stored inventory configuration ${field} is invalid`);
+    throw fail("STORAGE_UNAVAILABLE", `inventory configuration ${field} invalid`);
   }
   return value.trim();
 }
@@ -26,20 +27,20 @@ function normalizeConfigurationRecord(
   value: unknown,
 ): StoreInventoryConfigurationRecord {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid");
+    throw fail("STORAGE_UNAVAILABLE", INVALID_CONFIG);
   }
   const record = value as Record<string, unknown>;
   if (
     record.recordKind !== "store-inventory-configuration" ||
     record.configurationKey !== CONFIGURATION_KEY
   ) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid");
+    throw fail("STORAGE_UNAVAILABLE", INVALID_CONFIG);
   }
   let binding;
   try {
     binding = normalizeInventoryProviderBinding(record.binding);
   } catch (error) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid", error);
+    throw fail("STORAGE_UNAVAILABLE", INVALID_CONFIG, error);
   }
   return {
     recordKind: "store-inventory-configuration",
@@ -59,12 +60,12 @@ export async function loadStoreInventoryConfiguration(
   try {
     result = await storage.query({ where: { configurationKey: CONFIGURATION_KEY }, limit: 2 });
   } catch (error) {
-    throw fail("STORAGE_UNAVAILABLE", "store inventory configuration lookup failed", error);
+    throw fail("STORAGE_UNAVAILABLE", "inventory configuration lookup failed", error);
   }
   if (result.hasMore || result.items.length > 1) {
     throw fail(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      "store inventory configuration is ambiguous",
+      "inventory configuration is ambiguous",
     );
   }
   if (result.items.length === 0) return null;

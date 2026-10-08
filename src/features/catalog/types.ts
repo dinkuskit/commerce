@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 
-import type { StockManagement } from "../inventory-provider/index.js";
+import type { StockManagement } from "../inventory-provider/kernel/index.js";
 
 export const CATALOG_FEATURE_ID = "dinkus.catalog";
 export const CATALOG_COLLECTION = "catalogItems";

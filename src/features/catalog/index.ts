@@ -1,4 +1,29 @@
 export * from "./kernel/index.js";
+
+/** Native-only catalog surface (not part of the sandbox kernel). */
+export { setCatalogItemBackorders } from "./set-backorders.js";
+export {
+  clearCatalogItemRegularPrice,
+  clearCatalogItemSalePrice,
+  setCatalogItemRegularPrice,
+  setCatalogItemSalePrice,
+} from "./price.js";
+export {
+  LOCAL_STOCK_MANAGEMENT_OPTION,
+  isLocalLoopbackContext,
+  isLocalStockManagementEnabled,
+  isLoopbackUrl,
+  manageStockControlFromAdmission,
+  manageStockMutationsAllowed,
+  normalizeHostLocalStockOption,
+  readLocalStockAdmission,
+  trustedSiteUrlSources,
+} from "./local-stock-development.js";
+export type {
+  LocalStockAdmissionContext,
+  LocalStockHostOptions,
+  ManageStockControl,
+} from "./local-stock-development.js";
 export {
   COMMERCE_IMAGE_ENDPOINT_ROUTE,
   COMMERCE_IMAGE_PRESETS,

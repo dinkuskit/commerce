@@ -41,8 +41,10 @@ import {
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
 } from "./route-ids.js";
-import { releaseManagedSkuRegistrationClaims } from "../inventory-provider/claim-release.js";
-import type { ManagedSkuRegistrationClaimRecord } from "../inventory-provider/index.js";
+import {
+  releaseManagedSkuRegistrationClaims,
+  type ManagedSkuRegistrationClaimRecord,
+} from "../inventory-provider/index.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogManualAvailabilityRecord,

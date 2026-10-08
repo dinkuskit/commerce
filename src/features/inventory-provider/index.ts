@@ -1,12 +1,8 @@
 export { normalizeInventoryProviderBinding } from "./binding.js";
-export {
-  InventoryProviderBindingError,
-  ManagedSkuRegistrationError,
-} from "./errors.js";
-export type {
-  InventoryProviderBindingErrorCode,
-  ManagedSkuRegistrationErrorCode,
-} from "./errors.js";
+export { InventoryProviderBindingError } from "./errors.js";
+export type { InventoryProviderBindingErrorCode } from "./errors.js";
+export { ManagedSkuRegistrationError } from "./registration-errors.js";
+export type { ManagedSkuRegistrationErrorCode } from "./registration-errors.js";
 export {
   createConcurrentManagedSkuRegistrationFeedback,
   createManagedSkuRegistrationClaimKey,
