@@ -84,9 +84,12 @@ Offer `price` is `customerPays` as an exact decimal from integer minor units
 
 | Build | `dist/sandbox/plugin.mjs` bytes | Headroom vs 131072 |
 | --- | ---: | ---: |
-| Baseline main (post-#67) | 130243 | 829 |
-| This slice | 130989 | 83 |
+| Main tip after #66 | 130798 | 274 |
+| This slice (on that tip) | 131001 | 71 |
 
-Delta +746 bytes. The JSON-LD builder stays on the host export and is not in
-the sandbox graph. Only the thin `policies/public` reader and optional
-identifier projection touch the backend.
+The JSON-LD builder stays on the host export and is not in the sandbox graph.
+Optional identifier projection remains in the public catalog. The sandboxed
+`policies/public` route is deferred for Registry installs: after #66 only ~274
+bytes remain, which cannot hold the policy reader. Hosts and native installs
+use `@dinkuskit/commerce/features/store-policies`
+(`readPublicStorePolicies` / `readPublicStorePoliciesFromStorage`) instead.
