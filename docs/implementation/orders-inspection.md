@@ -8,10 +8,10 @@ Recorded order/receipt/attempt/provider IDs, item names, catalog IDs, quantities
 
 The Orders installer and shared admin helpers plus bounded checkout/coupon factoring retain the localization runtime, payment behavior, validation and unchanged official backend cap. Packaging must be revalidated after every source change; build success alone is insufficient.
 
-Proof uses local SQLite and real workerd with the installed coupon fixture. Canonical completion uses a synthetic payment port and free checkout; no provider payment is mutated. Installed checks cover anonymous and forged-editor list/detail denial, keyboard selection, desktop/mobile, empty/unavailable recovery, and unchanged canonical storage during inspection. See FEATURE_MAP for executable drivers.
+Proof uses local SQLite and real workerd with the installed harness site (`tests/installed-coupon-site`, kept under its original name). Canonical completion uses a synthetic payment port and free checkout; no provider payment is mutated. Installed checks cover anonymous and forged-editor list/detail denial, keyboard selection, desktop/mobile, empty/unavailable recovery, and unchanged canonical storage during inspection. See FEATURE_MAP for executable drivers.
 
 The initial delivery verifier reproduced a browser-proof mismatch: metadata now renders in one section, but the proof required each value to occupy a separate text element. Independent AutoReview P3 reported the same issue. Both installed and preview proofs now assert the visible labeled values without depending on that element subdivision; the installed and preview reruns passed. This is a proof repair, not removal of receipt/payment assertions.
 
-The backend remains close to the official 131072-byte per-file limit. No minifier, dependency, localization, or limit bypass is part of this change. Future edits must repeat official package validation; this is fragile headroom, not a maintenance reserve.
+When this was written the backend was close to the official 131072-byte per-file limit. Coupons have since left the Registry artifact (`docs/implementation/registry-coupons-deferred.md`), and `npm run build:sandbox` now repeats official package validation on every build.
 
 Local installation uses the fixture’s genuine Registry-source runtime loading path with an unsigned package. Publisher verification, Registry discovery/consent, populated native migration, production deployment and live Stripe acceptance are not established.

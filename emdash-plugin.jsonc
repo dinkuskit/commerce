@@ -80,14 +80,6 @@
       "indexes": [],
       "uniqueIndexes": []
     },
-    "coupons": {
-      "indexes": [
-        "normalizedCode"
-      ],
-      "uniqueIndexes": [
-        "normalizedCode"
-      ]
-    },
     "store_shipping_policy": {
       "indexes": [],
       "uniqueIndexes": []
@@ -121,11 +113,6 @@
         "path": "/settings",
         "label": "Commerce Settings",
         "icon": "settings"
-      },
-      {
-        "path": "/coupons",
-        "label": "Coupons",
-        "icon": "tag"
       }
     ]
   }
