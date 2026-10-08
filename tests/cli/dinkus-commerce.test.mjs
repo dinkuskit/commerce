@@ -323,6 +323,43 @@ test("a site URL is required, validated, and resolved flag > env > project confi
   }
 });
 
+test("admin commands never send the token to a site URL from project config", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "dinkus-commerce-cli-"));
+  const configHome = await mkdtemp(join(tmpdir(), "dinkus-commerce-home-"));
+  try {
+    await mkdir(join(cwd, ".dinkuskit"));
+    await writeFile(join(cwd, ".dinkuskit", "commerce.json"), JSON.stringify({ url: "https://project.example" }));
+    const routes = { "catalog-items/list": ok({ products: [] }), "catalog/public": ok({ products: [] }) };
+
+    const refused = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN } });
+    assert.equal(refused.code, 4);
+    assert.equal(refused.calls.length, 0, "nothing is sent to the project-config host");
+    assert.equal(singleJson(refused.stdout).error.code, "untrusted_site_url");
+
+    const publicRead = await run(["catalog", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN } });
+    assert.equal(publicRead.code, 0, "public reads may still use the project URL");
+    assert.equal(publicRead.calls[0].init.headers?.authorization, undefined);
+
+    for (const [argv, env] of [
+      [["--url", SITE], { EMDASH_TOKEN: TOKEN }],
+      [[], { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE }],
+      [[], { EMDASH_TOKEN: TOKEN, XDG_CONFIG_HOME: configHome }],
+    ]) {
+      if (env.XDG_CONFIG_HOME) {
+        await mkdir(join(configHome, "dinkuskit", "commerce"), { recursive: true });
+        await writeFile(join(configHome, "dinkuskit", "commerce", "config.json"), JSON.stringify({ url: SITE }));
+        await rm(join(cwd, ".dinkuskit", "commerce.json"));
+      }
+      const allowed = await run([...argv, "products", "list", "--json"], { cwd, routes, env });
+      assert.equal(allowed.code, 0, allowed.stderr);
+      assert.equal(allowed.calls[0].url.origin, SITE);
+    }
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+    await rm(configHome, { recursive: true, force: true });
+  }
+});
+
 test("the credential never appears in stdout or stderr", async () => {
   const scenarios = [
     [["products", "list"], { "catalog-items/list": ok({ products: [] }) }],

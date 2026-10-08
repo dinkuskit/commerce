@@ -10,8 +10,9 @@ Run it from a checkout as `bin/dinkus-commerce.mjs` (Node 22.23.2, no build
 needed) and start with `--help` at the depth you need.
 
 1. Point it at a site with `--url <site-url>` or `EMDASH_URL`, or a
-   `.dinkuskit/commerce.json` profile. Use `--plugin-id` only when the site
-   installed Commerce under a different id.
+   `.dinkuskit/commerce.json` profile for public reads. Admin commands refuse
+   a project-config URL (`untrusted_site_url`); pass `--url` for them. Use
+   `--plugin-id` only when the site installed Commerce under a different id.
 2. Pick the command for the install. `catalog list|show` reads the public
    storefront projection on the Registry (sandboxed) build and needs no
    credential. `products list` needs the native build and `EMDASH_TOKEN`.

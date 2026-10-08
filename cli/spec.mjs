@@ -17,6 +17,7 @@ function connect(ctx) {
 	const { siteUrl, pluginId } = resolveSite(ctx.config.resolve);
 	const client = createCommerceClient({
 		siteUrl,
+		siteUrlSource: ctx.config.source("url"),
 		pluginId,
 		token: ctx.env[TOKEN_ENV] || undefined,
 		timeoutMs: ctx.timeoutMs,

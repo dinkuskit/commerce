@@ -78,13 +78,22 @@ function checkPublicProduct(product, what) {
 	return product;
 }
 
-export function createCommerceClient({ siteUrl, pluginId, token, timeoutMs, fetchImpl, signal }) {
+export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, token, timeoutMs, fetchImpl, signal }) {
 	const baseUrl = `${siteUrl}/_emdash/api/plugins/${pluginId}`;
 	// Public reads never carry the credential, even when one is set.
 	const publicHttp = createHttp({ baseUrl, timeoutMs, fetchImpl, signal });
 	const adminHttp = () => {
 		if (!token) {
 			throw new CliError("credential_required", `This command needs an EmDash API token in ${TOKEN_ENV}.`, { exit: EXIT.blocked });
+		}
+		// A project config file comes with the working directory, so it must not
+		// decide which host receives the token.
+		if (siteUrlSource === "project") {
+			throw new CliError(
+				"untrusted_site_url",
+				`Refusing to send ${TOKEN_ENV} to a site URL from project config. Pass --url or set ${URL_ENV} for admin commands.`,
+				{ exit: EXIT.blocked },
+			);
 		}
 		return createHttp({ baseUrl, headers: { authorization: `Bearer ${token}` }, timeoutMs, fetchImpl, signal });
 	};

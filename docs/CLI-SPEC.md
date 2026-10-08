@@ -237,7 +237,7 @@ JSON and plain field names are compatibility surfaces within
 | `1` | Ordinary failure with no change: `not_found`, `route_not_available` (HTTP 404), `not_implemented`, a 4xx business error, or `page_limit`. |
 | `2` | Usage: unknown command or flag, missing argument, `--json` with `--plain`, invalid `--url`, `--plugin-id`, `--cursor`, `--timeout`, missing site URL, invalid or secret-bearing config. |
 | `3` | Site unreachable, timeout, interrupted, or HTTP 5xx. |
-| `4` | Credential missing (`credential_required`), rejected (401), or not permitted (403, including `INSUFFICIENT_SCOPE`), or a confirmation gate. |
+| `4` | Credential missing (`credential_required`), rejected (401), or not permitted (403, including `INSUFFICIENT_SCOPE`), an admin command whose site URL came from project config (`untrusted_site_url`), or a confirmation gate. |
 | `5` | The response is not the EmDash `{ success, data }` envelope or the payload breaks the documented shape. |
 
 Service error codes such as `INVALID_TOKEN` or `INSUFFICIENT_SCOPE` are passed
@@ -284,6 +284,12 @@ and `products list` requires a user with
 printing of the token or the authorization header. Public `catalog` reads never
 send the token, even when it is set. Admin commands without it exit `4`, naming
 `EMDASH_TOKEN`.
+
+Admin commands send the token only to a site URL from `--url`, `EMDASH_URL`,
+or user config. Project config comes with the working directory (a cloned
+repository, for example), so when it supplies the URL an admin command exits
+`4` with `untrusted_site_url` before sending anything. Public `catalog` reads
+may still use a project-config URL because they carry no credential.
 
 ## Examples
 
@@ -391,7 +397,8 @@ change, rebuild, and compare.
 - help at every depth and `--version` (including spawning the bin);
 - exactly one JSON document in `--json` mode and escaped `--plain` records;
 - the stdout/stderr split and the next-page hint on stderr;
-- that the token never appears in output and is never sent to public routes;
+- that the token never appears in output, is never sent to public routes, and
+  is never sent to a site URL from project config;
 - the exit-code mapping `0`-`5`, including EmDash 401/403/404/5xx envelopes;
 - required and validated `--url`, `--plugin-id`, and config precedence;
 - that planned mutations fail closed under `--no-input` and contact nothing;
