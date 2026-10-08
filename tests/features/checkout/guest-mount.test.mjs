@@ -94,6 +94,8 @@ test("guest routes reject malformed bodies before capability or checkout storage
     [GUEST_CHECKOUT_STATUS_ROUTE, "not-an-object"],
     [GUEST_CHECKOUT_STATUS_ROUTE, { attemptId: "x".repeat(257) }],
     [GUEST_CHECKOUT_STATUS_ROUTE, { paid: true }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { wake: false }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { wake: true, paid: true }],
   ];
   for (const [route, input] of cases) {
     await assert.rejects(
@@ -489,7 +491,7 @@ test("forged success, unknown provider, and out-of-order wakes never replace a d
   const unknown = await invokeGuest(
     f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE],
     f.storage,
-    {},
+    { wake: true },
     { capability: token },
   );
   assert.equal(unknown.checkout.state, "pending");

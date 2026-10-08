@@ -69,13 +69,17 @@ export function admitGuestCheckoutStatusInput(raw: unknown): { attemptId?: strin
   const input = raw === undefined ? {} : asObject(raw);
   const inputKeys = Object.keys(input).sort().join();
   if (inputKeys === "") return {};
-  if (inputKeys !== "attemptId" ||
-      typeof input.attemptId !== "string" ||
-      !input.attemptId.trim() ||
-      input.attemptId.length > MAX_GUEST_ATTEMPT_ID_LENGTH) {
-    fail("INVALID_CART");
+  const wakeOnly = inputKeys === "wake";
+  const attemptOnly = inputKeys === "attemptId";
+  const documentedHint = inputKeys === "attemptId,wake";
+  if (!wakeOnly && !attemptOnly && !documentedHint) fail("INVALID_CART");
+  if ((wakeOnly || documentedHint) && input.wake !== true) fail("INVALID_CART");
+  if (attemptOnly || documentedHint) {
+    if (typeof input.attemptId !== "string" || !input.attemptId.trim() ||
+        input.attemptId.length > MAX_GUEST_ATTEMPT_ID_LENGTH) fail("INVALID_CART");
+    return { attemptId: input.attemptId.trim() };
   }
-  return { attemptId: input.attemptId.trim() };
+  return {};
 }
 
 function mapCheckoutError(error: unknown): never {
