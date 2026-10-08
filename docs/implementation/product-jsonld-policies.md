@@ -3,18 +3,24 @@
 Parent tracker: [#61](https://github.com/dinkuskit/commerce/issues/61). Spec:
 [#59](https://github.com/dinkuskit/commerce/issues/59).
 
-## Provisional decisions (awaiting Ryan lock)
+## Locked decisions
 
-GrillTrack entries `jsonld-*-059` are **proposed**, not locked. This slice
-implements the recommended options:
+All five `#59` GrillTrack entries are **locked** (partial lock
+[comment 6067853218](https://github.com/dinkuskit/commerce/pull/73#issuecomment-6067853218);
+completing lock
+[comment 6067898015](https://github.com/dinkuskit/commerce/pull/73#issuecomment-6067898015)):
 
-| ID | Recommendation |
+| ID | Lock |
 | --- | --- |
 | `jsonld-availability-low-stock-059` | `low-stock` → `LimitedAvailability` |
-| `jsonld-availability-unavailable-059` | `availability-unavailable` → `OutOfStock` (never `InStock`) |
+| `jsonld-availability-unavailable-059` | Emit `Offer` with `OutOfStock` (never omit; never `InStock`) |
 | `jsonld-optional-identifiers-059` | Optional `gtin`, `mpn`, and `brand` |
 | `jsonld-policy-records-059` | Versioned `store_shipping_policy` / `store_return_policy` |
 | `jsonld-builder-export-059` | Host export `@dinkuskit/commerce/features/structured-data` |
+
+Follow-ups remain **proposed** (not this PR; 83-byte backend headroom):
+`storefront-stock-qty-display-followup-059` and
+`catalog-hide-oos-structured-data-followup-059`.
 
 ## Identity and host boundary
 
