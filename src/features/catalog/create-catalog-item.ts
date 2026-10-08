@@ -6,6 +6,7 @@ import {
 } from "./storage-constraints.js";
 import type {
   CatalogItemRecord,
+  CatalogCreationPayload,
   CatalogStorage,
   CreateCatalogItemResult,
   NormalizedCreateCatalogItemInput,
@@ -28,13 +29,20 @@ function sameCommandPayload(
   item: CatalogItemRecord,
   input: NormalizedCreateCatalogItemInput,
 ): boolean {
+  const original = item.creationPayload ?? {
+    kind: item.kind,
+    name: item.name,
+    sku: item.sku,
+    skuKey: item.skuKey,
+    manageStock: item.creationIntent?.manageStock ?? false,
+  };
   return (
     item.commandId === input.commandId &&
-    item.kind === input.kind &&
-    item.name === input.name &&
-    item.sku === input.sku &&
-    item.skuKey === input.skuKey &&
-    (item.creationIntent?.manageStock ?? false) === input.creationIntent.manageStock
+    original.kind === input.kind &&
+    original.name === input.name &&
+    original.sku === input.sku &&
+    original.skuKey === input.skuKey &&
+    original.manageStock === input.creationIntent.manageStock
   );
 }
 
@@ -101,6 +109,13 @@ export async function createCatalogItem(
     ...input,
     state: "draft",
     createdAt: (options.now ?? (() => new Date()))().toISOString(),
+    creationPayload: {
+      kind: input.kind,
+      name: input.name,
+      sku: input.sku,
+      skuKey: input.skuKey,
+      manageStock: input.creationIntent.manageStock,
+    } satisfies CatalogCreationPayload,
   };
 
   try {

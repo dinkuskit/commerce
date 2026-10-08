@@ -36,11 +36,20 @@ export interface NormalizedCreateCatalogItemInput {
   stockManagement: StockManagement;
 }
 
+export interface CatalogCreationPayload {
+  kind: "simple-product";
+  name: string;
+  sku: string;
+  skuKey: string;
+  manageStock: boolean;
+}
+
 export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   recordKind: "catalog-item";
   itemId: string;
   state: "draft";
   createdAt: string;
+  creationPayload?: CatalogCreationPayload;
 }
 
 export interface CatalogIntegrityProbeRecord {
