@@ -1,5 +1,7 @@
 # Checkout contact composed candidate
 
+Latest composed checkpoint evidence: [.grilltrack composition](../../.grilltrack/proof/checkout-contact-country-composition-20261008/COMPOSITION.md) and [main contract propagation](../../.grilltrack/proof/checkout-contact-country-composition-20261008/MAIN-INTEGRATION.md). The proof below is the retained original candidate, not current cumulative qualification.
+
 Status: implementation candidate, not accepted delivery. Email is required for
 all newly frozen checkout attempts; phone is optional by default and required
 by authoritative merchant settings when enabled. Existing frozen originals
