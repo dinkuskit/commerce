@@ -96,6 +96,7 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
   const products: PublicCatalogProduct[] = [];
   for (const row of page.items) {
     const item = row.data as unknown as CatalogStorageRecord;
+    if (item.recordKind !== "catalog-item") continue;
     if (row.id !== item.itemId) unavailable();
     const product = await projectPublicCatalogProduct(ctx, storage, item, images, placeholder);
     if (product) products.push(product);

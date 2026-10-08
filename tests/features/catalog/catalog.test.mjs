@@ -33,6 +33,7 @@ class MemoryCatalogStorage {
   constructor(activeUniqueFields = ["commandId", "skuKey"]) {
     this.activeUniqueFields = new Set(activeUniqueFields);
     this.records = new Map();
+    this.revisions = new Map();
     this.puts = [];
   }
 
@@ -49,7 +50,20 @@ class MemoryCatalogStorage {
       if (collision) throw uniqueViolation(field);
     }
     this.records.set(id, structuredClone(data));
+    this.revisions.set(id, String(Number(this.revisions.get(id) ?? "-1") + 1));
     this.puts.push({ id, data: structuredClone(data) });
+  }
+
+  async getVersioned(id) {
+    const record = await this.get(id);
+    return record ? { value: record, revision: this.revisions.get(id) ?? "0" } : null;
+  }
+
+  async compareAndSet(id, revision, data) {
+    const current = await this.getVersioned(id);
+    if (!current || current.revision !== revision) return { applied: false };
+    await this.put(id, data);
+    return { applied: true, revision: this.revisions.get(id) };
   }
 
   async delete(id) {
@@ -309,6 +323,60 @@ test("itemId remains permanent while an authenticated SKU update changes only th
   assert.equal(changed.item.sku, "NEW-SKU");
   assert.equal(changed.item.skuKey, "NEW-SKU");
   assert.equal((await storage.get("item-permanent")).itemId, "item-permanent");
+});
+
+test("SKU updates fail closed without both unique indexes", async () => {
+  const storage = new MemoryCatalogStorage(["commandId"]);
+  storage.records.set("item-no-sku-index", {
+    recordKind: "catalog-item",
+    itemId: "item-no-sku-index",
+    commandId: "cmd:no-sku-index",
+    creationIntent: { manageStock: false },
+    kind: "simple-product",
+    name: "No SKU Index",
+    sku: "OLD",
+    skuKey: "OLD",
+    stockManagement: { mode: "unmanaged" },
+    state: "draft",
+    createdAt: "2026-08-28T00:00:00.000Z",
+  });
+  await rejectsWithCode(
+    setCatalogItemSku(storage, { catalogItemId: "item-no-sku-index", sku: "NEW" }),
+    "STORAGE_CONSTRAINTS_UNAVAILABLE",
+  );
+});
+
+test("a concurrent SKU edit retries from the latest row and preserves stock and catalog changes", async () => {
+  const storage = new MemoryCatalogStorage();
+  const created = await createCatalogItem(
+    storage,
+    { commandId: "cmd:sku-race", name: "Original", sku: "OLD-RACE" },
+    { createId: () => "item-sku-race" },
+  );
+  const compareAndSet = storage.compareAndSet.bind(storage);
+  let raced = false;
+  storage.compareAndSet = async (id, revision, data) => {
+    if (!raced) {
+      raced = true;
+      await storage.put(id, {
+        ...created.item,
+        name: "Concurrent edit",
+        stockManagement: { mode: "managed", status: "setup-required" },
+      });
+    }
+    return compareAndSet(id, revision, data);
+  };
+
+  const result = await setCatalogItemSku(storage, {
+    catalogItemId: "item-sku-race",
+    sku: "NEW-RACE",
+  });
+  assert.equal(result.item.sku, "NEW-RACE");
+  assert.equal(result.item.name, "Concurrent edit");
+  assert.deepEqual(result.item.stockManagement, {
+    mode: "managed",
+    status: "setup-required",
+  });
 });
 
 test("creation fails closed before a product write when either unique index is absent", async () => {
