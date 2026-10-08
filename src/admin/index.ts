@@ -16,7 +16,6 @@ import {
   StorefrontAvailabilityError, type StorefrontOutOfStockListingRecord, type StorefrontPlaceholderImageStorage,
 } from "../features/storefront-availability/kernel/index.js";
 import { ordersInteraction, ordersBlocks } from "./orders-blocks.js";
-import { couponInteraction, couponBlocks } from "./coupons-blocks.js";
 
 const PAGE_SIZE = 25;
 const LIBRARY_PAGE = 12;
@@ -246,7 +245,6 @@ async function settings(ctx: PluginContext, toast?: string): Promise<BlockRespon
 /** Private Block Kit transport. The host authenticates and authorizes this route. */
 export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
   if (ordersInteraction(route.input)) return ordersBlocks(route, ctx);
-  if (couponInteraction(route.input)) return couponBlocks(route, ctx);
   let input: Record<string, unknown> = {};
   let values: Record<string, unknown> = {};
   try {
