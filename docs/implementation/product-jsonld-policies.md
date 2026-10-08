@@ -73,3 +73,14 @@ so it stays outside the Registry sandbox backend byte budget.
 
 Offer `price` is `customerPays` as an exact decimal from integer minor units
 (sale when present).
+
+## Registry backend size (matched installs, Node 22.23.2 / npm 10.9.8)
+
+| Build | `dist/sandbox/plugin.mjs` bytes | Headroom vs 131072 |
+| --- | ---: | ---: |
+| Baseline main (post-#67) | 130243 | 829 |
+| This slice | 130989 | 83 |
+
+Delta +746 bytes. The JSON-LD builder stays on the host export and is not in
+the sandbox graph. Only the thin `policies/public` reader and optional
+identifier projection touch the backend.
