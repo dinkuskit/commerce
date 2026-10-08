@@ -102,6 +102,20 @@ test('bulk applies independent valid rows, reports stale and invalid rows, and p
   assert.equal((await availability.get('product')).status, 'out-of-stock');
 });
 
+test('variant bulk pricing refuses an ordinary product without changing its price or revision', async () => {
+  const catalog = new Catalog(); await catalog.put('product', base);
+  const prices = new Catalog(), availability = new Catalog();
+  prices.put = availability.put = async function(id, value) { this.records.set(id, structuredClone(value)); this.revisions.set(id, crypto.randomUUID()); };
+  const storage = { catalog, prices, availability, claims: new Catalog() };
+  await saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '20', sale: '' });
+  const before = await prices.getVersioned('product');
+  const result = await bulkSaveCatalogProductPrices(storage, [
+    { catalogItemId: 'product', regular: '25', sale: '', expectedRevision: before.revision },
+  ]);
+  assert.deepEqual(result.outcomes.map(r => [r.applied, r.code]), [[false, 'CATALOG_ITEM_NOT_FOUND']]);
+  assert.deepEqual(await prices.getVersioned('product'), before);
+});
+
 test('failed stock save cannot roll back a later identical price write', async () => {
   const catalog = new Catalog(); await catalog.put('product', base);
   const prices = new Catalog(), availability = new Catalog();

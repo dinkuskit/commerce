@@ -163,7 +163,13 @@ test('merchant creates choices and edits independent and bulk prices through the
   const capture = async suffix => page.screenshot({ path: `${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-merchant-${native ? 'native' : 'sandbox'}-${suffix}.png`, fullPage:true });
   try {
     await page.goto('/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/products');
-    await page.getByRole('button',{name:'Get Started'}).click({timeout:10000}).catch(() => {});
+    const getStarted = page.getByRole('button',{name:'Get Started'});
+    const skuField = page.getByRole('textbox',{name:'SKU',exact:true});
+    await getStarted.or(skuField).first().waitFor({state:'visible',timeout:60000});
+    if (await getStarted.isVisible()) await getStarted.click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    if (native) await expect(page.locator('h1')).toHaveText('Products', {timeout:30000});
+    await expect(skuField).toBeVisible({timeout:30000});
     await expect.poll(() => db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(`uidx_plugin_dinkus-commerce_${catalog}_skuKey`), {timeout:90000}).toBeTruthy();
     await page.getByRole('textbox',{name:'Name',exact:true}).fill(name);
     await page.getByRole('textbox',{name:'SKU',exact:true}).fill('MERCHANT-PROOF-SMALL');

@@ -18,7 +18,7 @@ regressions. Final source gate counts and artifact hashes are recorded in the
 adjacent receipt before commit. Added regressions include orphan hiding,
 incompatible replay, permanent IDs and label revision conflicts, independent
 bulk outcomes and stale revisions, price-only bulk admission, foreign-member
-refusal, parent-CAS retry, same-price concurrent-write rollback protection,
+refusal, ordinary non-member bulk refusal, parent-CAS retry, same-price concurrent-write rollback protection,
 and immutable paid selection snapshots.
 
 The browser exercises actual pages, mounted routes and SQLite. Registry proof
@@ -46,5 +46,6 @@ This proof does not assert exact-source review or native ClawSweeper clearance.
 Those receipts belong to the final pushed base/head tuple and are recorded in
 the run closeout after review. Publishing, deployment, production payment,
 credentials, permissions changes and merges remain outside this implementation.
-The architecture dependency is same-repository PR64; it requires a human
-parent-first merge decision before default-branch native admission.
+The architecture dependency is same-repository PR64, now merged into main.
+This implementation targets main; native clearance still requires its final
+eligible base/head tuple after comprehensive review and draft readiness.
