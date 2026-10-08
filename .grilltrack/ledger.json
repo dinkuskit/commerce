@@ -8066,20 +8066,35 @@
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-08T19:54:52+00:00",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) InStock for both in-stock and low-stock; (B) InStock for in-stock and LimitedAvailability for low-stock. Tradeoffs: (A) matches simple WooCommerce defaults and avoids a second Google Merchant state, but understates scarcity for agentic shoppers; (B) follows schema.org OfferItemCondition/ItemAvailability vocabulary and Google Merchant LimitedAvailability, preserving the Commerce distinction already projected as low-stock. Recommendation: B \u2014 map in-stock\u2192https://schema.org/InStock and low-stock\u2192https://schema.org/LimitedAvailability.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "jsonld-availability-low-stock-059",
       "implementation_ref": null,
       "question": "How should storefront low-stock map to schema.org Offer.availability?",
-      "rationale": "Commerce already distinguishes low-stock in storefront-availability; structured data should not collapse it. LimitedAvailability is the established schema.org/Google Merchant token for constrained supply.",
+      "rationale": "Maintainer partial lock on PR #73 comment 6067853218: low-stock maps to schema.org LimitedAvailability for JSON-LD (not plain InStock). WooCommerce-style shopper qty display settings are follow-up.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T19:11:34+00:00",
+      "updated_at": "2026-10-08T19:54:52+00:00",
       "verification_ref": null
     },
     {
@@ -8146,20 +8161,35 @@
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-08T19:54:52+00:00",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Extend installed checkout settings only; (B) Dedicated store-level versioned collections store_shipping_policy and store_return_policy (snake_case sandbox / camelCase native), with public read composing the same revision for policy pages and JSON-LD. Shipping record holds charge fields in TrustedShippingConfiguration shape plus optional display facts (destination countries, handling/transit day bounds, policy page URL) only when merchant-set. Return record holds MerchantReturnPolicy-mapped fields plus policy page URL, omitting unset fields. Tradeoffs: (A) reuses checkout config but cannot hold return policy or display facts and couples structured data to Payments install; (B) single source for page+JSON-LD revisions, leaves checkout installedShipping as-is for this slice (note overlap with draft #68/#70 country/delivery settings \u2014 no invented US-wide defaults here). Recommendation: B.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "jsonld-policy-records-059",
       "implementation_ref": null,
       "question": "Where do shipping and return policy records live, and how are they versioned?",
-      "rationale": "Acceptance requires one revision shared by policy page data and JSON-LD. Returns have no home in checkout settings. Keeping charge shape aligned with TrustedShippingConfiguration preserves a path to unify checkout later without copying divergent charge fields inside the builder.",
+      "rationale": "Maintainer partial lock on PR #73 comment 6067853218: versioned store shipping and return policy collections as recommended; policy page and JSON-LD read the same revision.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T19:11:34+00:00",
+      "updated_at": "2026-10-08T19:54:52+00:00",
       "verification_ref": null
     },
     {
@@ -8174,20 +8204,35 @@
         "jsonld-policy-records-059"
       ],
       "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-08T19:54:52+00:00",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Sandbox backend / plugin.ts graph; (B) Host-side package export @dinkuskit/commerce/features/structured-data with pure buildProductJsonLd({ product, page, policies }) returning a schema.org Product graph (no network, no storage). Tradeoffs: (A) colocates with public catalog but main is already ~130243/131072 backend bytes after #67 \u2014 builder logic would risk the Registry cap; (B) matches media-projection host helpers, keeps Template Store as the page assembler, and leaves only thin policy public-read + identifier projection in the sandbox. Recommendation: B.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "jsonld-builder-export-059",
       "implementation_ref": null,
       "question": "Where does the Product/Offer JSON-LD builder live and what is its export shape?",
-      "rationale": "Issue acceptance and owner guidance require measuring backend bytes and keeping heavy JSON-LD logic out of the sandbox unless budget allows. It does not.",
+      "rationale": "Maintainer partial lock on PR #73 comment 6067853218: host-side export @dinkuskit/commerce/features/structured-data as recommended; keep it out of the sandbox backend.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T19:11:34+00:00",
+      "updated_at": "2026-10-08T19:54:52+00:00",
       "verification_ref": null
     }
   ],
@@ -8225,5 +8270,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T19:11:34+00:00"
+  "updated_at": "2026-10-08T19:54:52+00:00"
 }

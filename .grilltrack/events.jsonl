@@ -156,3 +156,6 @@
 {"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-optional-identifiers-059"}, "event_id": "c5f8b9cc-2195-4fe9-a134-7111b765fc36"}
 {"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-policy-records-059"}, "event_id": "cfbf2691-f363-47e2-add0-83324bc57ee9"}
 {"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-builder-export-059"}, "event_id": "ba936473-6c95-4089-8715-c50eb40f611f"}
+{"action": "decision_locked", "at": "2026-10-08T19:54:52+00:00", "data": {"decision_id": "jsonld-availability-low-stock-059"}, "event_id": "59f36a29-f455-4f1b-a90c-d6ce4d3ff81b"}
+{"action": "decision_locked", "at": "2026-10-08T19:54:52+00:00", "data": {"decision_id": "jsonld-policy-records-059"}, "event_id": "6f2235b1-d536-4af5-b779-43fda0979e3f"}
+{"action": "decision_locked", "at": "2026-10-08T19:54:52+00:00", "data": {"decision_id": "jsonld-builder-export-059"}, "event_id": "e50b240f-f7c3-4ecb-bf56-f49724af8bb0"}
