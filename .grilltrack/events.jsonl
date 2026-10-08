@@ -150,3 +150,7 @@
 {"action": "decision_verified", "at": "2026-10-08T17:03:42+00:00", "data": {"decision_id": "product-variant-model-20261008"}, "event_id": "de3334ea-30d1-40d6-999d-7bd53a0384d4"}
 {"action": "decision_verified", "at": "2026-10-08T17:03:43+00:00", "data": {"decision_id": "variant-price-availability-20261008"}, "event_id": "dc8c8727-641f-4cad-9563-95d9ff9cbf80"}
 {"action": "decision_verified", "at": "2026-10-08T17:03:43+00:00", "data": {"decision_id": "variant-fictional-fixtures-20261008"}, "event_id": "f07cafb8-5687-4ed9-a0ac-bb5fe35bd39c"}
+{"action": "focus_started", "at": "2026-10-08T17:19:37+00:00", "data": {"cadence": "sequential", "domain": "Required checkout contact capture"}, "event_id": "4960a8e3-fddf-4c6f-a429-c18da988fe12"}
+{"action": "decision_proposed", "at": "2026-10-08T17:19:37+00:00", "data": {"decision_id": "checkout-contact-email-phone-20261008"}, "event_id": "803e5fc2-5d86-411f-ab52-5a69ccdb3a05"}
+{"action": "decision_locked", "at": "2026-10-08T17:19:37+00:00", "data": {"decision_id": "checkout-contact-email-phone-20261008"}, "event_id": "984ffc05-e0f8-4bb7-8212-04eee88ffb5f"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-08T17:19:37+00:00", "data": {"summary": "Direct Bobby decisions relayed by coordinator explicitly approve this bounded email/phone capture implementation, using the separately owned authoritative settings getter, unchanged Payments handoff and public status, before provider contact."}, "event_id": "d895af2a-29d0-41ce-92ea-2c842acb19f4"}
