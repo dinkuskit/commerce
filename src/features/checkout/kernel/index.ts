@@ -136,6 +136,7 @@ export type {
   ScopedPaymentFetch,
   TrustedTestPaymentsCheckoutHost,
   TrustedTestPaymentsConfig,
+  TrustedTestPaymentsProviderId,
 } from "../test-payments.js";
 export {
   REGISTRY_CHECKOUT_CONFIG_SCHEMA,
@@ -144,3 +145,9 @@ export {
   resolveRegistryCheckoutServices,
 } from "../registry-services.js";
 export type { RegistryCheckoutConfig } from "../registry-services.js";
+export {
+  admitRegistryCheckoutConfig,
+  trustedPaymentsHostConfig,
+} from "../registry-provider-admission.js";
+export type { RegistryCheckoutProviderId } from "../registry-provider-admission.js";
+

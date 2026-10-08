@@ -15,6 +15,10 @@ import {
   type GuestCheckoutResult,
 } from "./types.js";
 
+function routeFail(code: string, message: string, status: number): never {
+  throw new PluginRouteError(code, message, status);
+}
+
 export {
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
@@ -74,7 +78,7 @@ export function createGuestCheckoutPrepareRoute(
     request: GUEST_REQUEST,
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
-        throw new PluginRouteError("METHOD_NOT_ALLOWED", "guest checkout prepare requires POST", 405);
+        routeFail("METHOD_NOT_ALLOWED", "guest checkout prepare requires POST", 405);
       }
       return runNative(ctx, options, (runtime) => prepareGuestCheckout(runtime, ctx.input));
     },
@@ -90,7 +94,7 @@ export function createGuestCheckoutStartRoute(
     request: GUEST_REQUEST,
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
-        throw new PluginRouteError("METHOD_NOT_ALLOWED", "guest checkout start requires POST", 405);
+        routeFail("METHOD_NOT_ALLOWED", "guest checkout start requires POST", 405);
       }
       return runNative(ctx, options, (runtime) =>
         startGuestCheckout(runtime, ctx.input, ctx.request.headers),
@@ -108,7 +112,7 @@ export function createGuestCheckoutStatusRoute(
     request: GUEST_REQUEST,
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
-        throw new PluginRouteError("METHOD_NOT_ALLOWED", "guest checkout status requires POST", 405);
+        routeFail("METHOD_NOT_ALLOWED", "guest checkout status requires POST", 405);
       }
       return runNative(ctx, options, (runtime) =>
         statusGuestCheckout(runtime, ctx.input, ctx.request.headers),

@@ -15,7 +15,7 @@ import type {
 import {
   createInitialStockManagement,
   normalizeStoredStockManagement,
-} from "../inventory-provider/index.js";
+} from "../inventory-provider/stock-management.js";
 
 export interface CreateCatalogItemOptions {
   /** Trusted host collection name, never taken from clerk input. */

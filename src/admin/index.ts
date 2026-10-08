@@ -10,7 +10,6 @@ import {
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage, type MediaReference,
 } from "../features/catalog/kernel/index.js";
-import { type ManagedSkuRegistrationClaimRecord } from "../features/inventory-provider/index.js";
 import {
   loadOutOfStockListing, setOutOfStockListing, loadStorefrontPlaceholderImage, setStorefrontPlaceholderImage,
   StorefrontAvailabilityError, type StorefrontOutOfStockListingRecord, type StorefrontPlaceholderImageStorage,
@@ -29,7 +28,6 @@ function storage(ctx: PluginContext) {
     catalog: ctx.storage["catalog_items"] as StorageCollection<CatalogStorageRecord>,
     prices: ctx.storage["catalog_prices"] as StorageCollection<CatalogPriceRecord>,
     availability: ctx.storage["catalog_manual_availability"] as StorageCollection<CatalogManualAvailabilityRecord>,
-    claims: ctx.storage["managed_sku_claims"] as StorageCollection<ManagedSkuRegistrationClaimRecord>,
     media: ctx.storage["catalog_media"] as CatalogMediaStorage,
   };
 }

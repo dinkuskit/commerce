@@ -31,6 +31,14 @@ export function configuration(shipping = { configurationId: 'shipping-synthetic'
     providerId: 'stripe', mode: 'test', stripeAccountId: ACCOUNT, pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
     issuer: ISSUER, audience: AUDIENCE, shipping };
 }
+/** Exact legacy enabled v1 shape: no mode, no authorizeNetMerchantId. */
+export function legacyStripeConfiguration(shipping) {
+  return configuration(shipping);
+}
+export function authorizeNetConfiguration(extra = {}, shipping = { configurationId: 'shipping-synthetic', revision: 1, mode: 'free' }) {
+  const { stripeAccountId: _omit, ...base } = configuration(shipping);
+  return { ...base, providerId: 'authorize_net', ...extra };
+}
 export async function credential(changes = {}) {
   const now = Math.floor(Date.now() / 1000);
   return new SignJWT({ iss: ISSUER, aud: AUDIENCE, sub: 'synthetic-owner', site_id: SITE_ID,
@@ -114,7 +122,12 @@ export async function runtimeFixture({
     assert.ok(payload.scope.split(' ').includes('payments:checkout'));
     const path = new URL(url).pathname;
     if (override) return override(path, init);
-    if (path.endsWith('-binding')) return json({ bindingRef: BINDING, providerId: 'stripe', stripeAccountId: ACCOUNT, mode: 'test', ready: true });
+    if (path.endsWith('-binding')) {
+      const providerId = config?.providerId === 'authorize_net' ? 'authorize_net' : 'stripe';
+      return json(providerId === 'authorize_net'
+        ? { bindingRef: BINDING, providerId, authorizeNetMerchantId: config?.authorizeNetMerchantId ?? 'anet_merchant', mode: 'test', ready: true }
+        : { bindingRef: BINDING, providerId, stripeAccountId: ACCOUNT, mode: 'test', ready: true });
+    }
     if (path === '/v1/checkout/wakes') return json(pending);
     if (path === '/v1/checkout/wakes/ack') {
       const event = JSON.parse(new TextDecoder().decode(init.body));

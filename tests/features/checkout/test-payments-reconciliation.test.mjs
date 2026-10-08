@@ -321,6 +321,119 @@ test("trusted TEST adapter denies wrong mode/account and preserves lookup create
   assert.equal(sessionCreates, 1);
 });
 
+test("authorize_net TEST adapter admits sandbox bindings and rejects live or stripe overload", async () => {
+  assert.throws(() => createTrustedTestPaymentPort({
+    ...CONFIG,
+    providerId: "authorize_net",
+    stripeAccountId: "acct_test",
+    credentialResolver: async () => "credential",
+    fetch: async () => response({}),
+  }), /must not set stripeAccountId/);
+  assert.throws(() => createTrustedTestPaymentPort({
+    ...CONFIG,
+    authorizeNetMerchantId: "anet",
+    credentialResolver: async () => "credential",
+    fetch: async () => response({}),
+  }), /must not set authorizeNetMerchantId/);
+  const anet = {
+    paymentsOrigin: CONFIG.paymentsOrigin,
+    commerceOrigin: CONFIG.commerceOrigin,
+    siteId: CONFIG.siteId,
+    bindingRef: CONFIG.bindingRef,
+    providerId: "authorize_net",
+    authorizeNetMerchantId: "authorize_net",
+  };
+  const port = createTrustedTestPaymentPort({
+    ...anet,
+    credentialResolver: async () => "credential",
+    fetch: async (url) => {
+      if (url.includes("binding")) {
+        return response({
+          bindingRef: anet.bindingRef,
+          providerId: "authorize_net",
+          authorizeNetMerchantId: "authorize_net",
+          mode: "live",
+          ready: true,
+        });
+      }
+      return response({ outcome: "unknown" });
+    },
+  });
+  const request = {
+    attemptId: "anet-1",
+    bindingRef: anet.bindingRef,
+    lines: [{ catalogItemId: "hat", quantity: 1, name: "Hat", unitPrice: { currency: "USD", minor: "250" } }],
+    total: { currency: "USD", minor: "250" },
+    paymentWindow: { minSeconds: 1800, maxSeconds: 1860 },
+    paymentMethods: ["card"],
+  };
+  await assert.rejects(() => port.ensureSession(request), /binding mismatch/);
+  const ok = createTrustedTestPaymentPort({
+    ...anet,
+    credentialResolver: async () => "credential",
+    fetch: async (url) => {
+      if (url.includes("binding")) {
+        return response({
+          bindingRef: anet.bindingRef,
+          providerId: "authorize_net",
+          authorizeNetMerchantId: "authorize_net",
+          mode: "test",
+          ready: true,
+        });
+      }
+      return response({
+        outcome: "open",
+        attemptId: request.attemptId,
+        total: request.total,
+        session: {
+          sessionId: "token",
+          redirectUrl: "https://test.authorize.net/payment/payment?token=x",
+          createdAt: 1000,
+          expiresAt: 2800,
+        },
+      });
+    },
+  });
+  assert.equal((await ok.ensureSession(request)).outcome, "open");
+});
+
+
+test("authorize_net binding rejects stripeAccountId wire field with no fallback", async () => {
+  const anet = {
+    paymentsOrigin: CONFIG.paymentsOrigin,
+    commerceOrigin: CONFIG.commerceOrigin,
+    siteId: CONFIG.siteId,
+    bindingRef: CONFIG.bindingRef,
+    providerId: "authorize_net",
+    authorizeNetMerchantId: "anet_merchant",
+  };
+  const port = createTrustedTestPaymentPort({
+    ...anet,
+    credentialResolver: async () => "credential",
+    fetch: async (url) => {
+      if (url.includes("binding")) {
+        return response({
+          bindingRef: anet.bindingRef,
+          providerId: "authorize_net",
+          stripeAccountId: "anet_merchant",
+          mode: "test",
+          ready: true,
+        });
+      }
+      return response({ outcome: "unknown" });
+    },
+  });
+  const request = {
+    attemptId: "anet-wire",
+    bindingRef: anet.bindingRef,
+    lines: [{ catalogItemId: "hat", quantity: 1, name: "Hat", unitPrice: { currency: "USD", minor: "250" } }],
+    total: { currency: "USD", minor: "250" },
+    paymentWindow: { minSeconds: 1800, maxSeconds: 1860 },
+    paymentMethods: ["card"],
+  };
+  await assert.rejects(() => port.ensureSession(request), /binding mismatch/);
+});
+
 test("trusted host returns the canonical Commerce site and hardens transport", async () => {
   const calls = [];
   const host = createTrustedTestPaymentsCheckoutHost({
@@ -458,6 +571,88 @@ test("wake reconciliation uses durable association, is at-least-once, and retain
   assert.deepEqual(staleGeneration, [{ wake: { ...wake, deliveryGeneration: 0 }, status: "retained", reason: "unknown" }]);
 });
 
+test("authorize_net wake alone never marks paid; amount or currency mismatch stays unpaid", async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "commerce-anet-paid-authority-"));
+  const opened = openStore(join(dir, "checkout.sqlite"));
+  const f = fixture(opened.store, false);
+  t.after(() => {
+    opened.db.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+  const associations = new Map();
+  f.execution.paymentAssociations = {
+    async claim(record) {
+      const existing = associations.get(record.attemptId);
+      if (existing) return JSON.stringify(existing) === JSON.stringify(record);
+      associations.set(record.attemptId, structuredClone(record));
+      return true;
+    },
+    async get(attemptId) {
+      return structuredClone(associations.get(attemptId) ?? null);
+    },
+  };
+  const attempt = await startCheckout(f.execution, "anet-wake-cart", cart);
+  const session = structuredClone(attempt.session);
+  assert.ok(session);
+  const wake = {
+    eventId: "evt_anet1",
+    attemptId: attempt.attemptId,
+    bindingRef: "stripe-test-binding",
+    deliveryGeneration: 1,
+    wokeAt: 2000,
+  };
+  let acknowledged = 0;
+  const wakes = {
+    async list() { return [wake]; },
+    async acknowledge() { acknowledged++; return true; },
+  };
+  // Signed webhook wake with lookup still open: never paid.
+  f.execution.payments.lookup = async () => ({
+    outcome: "open", attemptId: attempt.attemptId, total: attempt.payment.total, session,
+  });
+  const pending = await reconcilePaymentWakes(f.execution, f.execution.paymentAssociations, wakes);
+  assert.equal(pending[0].status, "retained");
+  assert.equal(acknowledged, 0);
+  assert.equal((await f.execution.store.read("anet-wake-cart")).record.attempts[0].phase, "paying");
+
+  // Authoritative lookup claims paid but amount mismatches: never paid.
+  f.execution.payments.lookup = async (request) => ({
+    outcome: "paid",
+    attemptId: request.attemptId,
+    total: { currency: "USD", minor: "1" },
+    session,
+    paymentId: "txn_mismatch_amount",
+  });
+  const amountMismatch = await reconcilePaymentWakes(f.execution, f.execution.paymentAssociations, wakes);
+  assert.equal(amountMismatch[0].status, "retained");
+  assert.equal(acknowledged, 0);
+  assert.equal((await f.execution.store.read("anet-wake-cart")).record.attempts[0].phase, "paying");
+
+  f.execution.payments.lookup = async (request) => ({
+    outcome: "paid",
+    attemptId: request.attemptId,
+    total: { currency: "EUR", minor: request.total.minor },
+    session,
+    paymentId: "txn_mismatch_currency",
+  });
+  const currencyMismatch = await reconcilePaymentWakes(f.execution, f.execution.paymentAssociations, wakes);
+  assert.equal(currencyMismatch[0].status, "retained");
+  assert.equal(acknowledged, 0);
+
+  // Matching authoritative lookup is the only path to paid.
+  f.execution.payments.lookup = async (request) => ({
+    outcome: "paid",
+    attemptId: request.attemptId,
+    total: request.total,
+    session,
+    paymentId: "txn_authoritative",
+  });
+  const paid = await reconcilePaymentWakes(f.execution, f.execution.paymentAssociations, wakes);
+  assert.equal(paid[0].status, "acknowledged");
+  assert.equal(acknowledged, 1);
+  assert.equal(paid[0].attempt.phase, "paid");
+  assert.equal(paid[0].attempt.order.paymentId, "txn_authoritative");
+});
 test("paid wake without a matching durable order retains without acknowledgement", async (t) => {
   const dir = mkdtempSync(join(tmpdir(), "commerce-test-payments-missing-order-"));
   const opened = openStore(join(dir, "checkout.sqlite"));

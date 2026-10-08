@@ -1,8 +1,7 @@
-import {
-  InventoryProviderBindingError,
-  normalizeInventoryProviderBinding,
-} from "../inventory-provider/index.js";
+import { normalizeInventoryProviderBinding } from "../inventory-provider/binding.js";
+import { InventoryProviderBindingError } from "../inventory-provider/errors.js";
 import { InventorySetupError } from "./errors.js";
+import { loadStoreInventoryConfiguration } from "./store-configuration-read.js";
 import {
   STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
   type CreateStoreInventoryConfigurationOptions,
@@ -11,6 +10,8 @@ import {
   type StoreInventoryConfigurationStorage,
   type StoreInventoryConfigurationStorageRecord,
 } from "./types.js";
+
+export { loadStoreInventoryConfiguration } from "./store-configuration-read.js";
 
 export type StoreInventoryConfigurationUniqueField = "configurationKey";
 
@@ -58,43 +59,6 @@ function normalizeConfigurationInput(value: unknown) {
     }
     throw error;
   }
-}
-
-function normalizeConfigurationRecord(
-  value: unknown,
-): StoreInventoryConfigurationRecord {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid");
-  }
-  const record = value as Record<string, unknown>;
-  if (
-    record.recordKind !== "store-inventory-configuration" ||
-    record.configurationKey !== CONFIGURATION_KEY
-  ) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid");
-  }
-  let binding;
-  try {
-    binding = normalizeInventoryProviderBinding(record.binding);
-  } catch (error) {
-    throw fail("STORAGE_UNAVAILABLE", "stored inventory configuration is invalid", error);
-  }
-  return {
-    recordKind: "store-inventory-configuration",
-    recordId: asStoredString(record.recordId, "recordId"),
-    configurationKey: CONFIGURATION_KEY,
-    siteId: asStoredString(record.siteId, "siteId"),
-    binding,
-    configuredAt: asStoredString(record.configuredAt, "configuredAt"),
-    updatedAt: asStoredString(record.updatedAt, "updatedAt"),
-  };
-}
-
-function asStoredString(value: unknown, field: string): string {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw fail("STORAGE_UNAVAILABLE", `stored inventory configuration ${field} is invalid`);
-  }
-  return value.trim();
 }
 
 function errorChain(error: unknown): unknown[] {
@@ -204,30 +168,6 @@ async function assertConfigurationKeyConstraint(
         cleanupCause,
       );
     }
-  }
-}
-
-export async function loadStoreInventoryConfiguration(
-  storage: StoreInventoryConfigurationStorage,
-): Promise<StoreInventoryConfigurationRecord | null> {
-  let result;
-  try {
-    result = await storage.query({ where: { configurationKey: CONFIGURATION_KEY }, limit: 2 });
-  } catch (error) {
-    throw fail("STORAGE_UNAVAILABLE", "store inventory configuration lookup failed", error);
-  }
-  if (result.hasMore || result.items.length > 1) {
-    throw fail(
-      "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      "store inventory configuration is ambiguous",
-    );
-  }
-  if (result.items.length === 0) return null;
-  try {
-    return normalizeConfigurationRecord(result.items[0]?.data);
-  } catch (error) {
-    if (error instanceof InventorySetupError) return null;
-    throw error;
   }
 }
 

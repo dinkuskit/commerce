@@ -1,9 +1,7 @@
 export { createCatalogItem } from "../create-catalog-item.js";
 export type { CreateCatalogItemOptions } from "../create-catalog-item.js";
-export {
-  loadCatalogItemBackorderPolicy,
-  setCatalogItemBackorders,
-} from "../set-backorders.js";
+export { loadCatalogItemBackorderPolicy } from "../backorder-policy.js";
+export { setCatalogItemBackorders } from "../set-backorders.js";
 export {
   loadCatalogItemManualAvailability,
   setCatalogItemManualAvailability,
@@ -55,10 +53,10 @@ export {
   admitV1CatalogCreateInput,
   admitV1CatalogPriceSaveInput,
   isManagedCatalogRecord,
-  manageStockMutationsAllowed,
   MANAGE_STOCK_LOCKED_MESSAGE,
   MANAGE_STOCK_UNAVAILABLE_MESSAGE,
 } from "../v1-stock-admission.js";
+export { manageStockMutationsAllowed } from "../local-stock-development.js";
 export type {
   CatalogProductListItem,
   CatalogProductListStorage,
@@ -178,18 +176,12 @@ export type {
   SaveCatalogItemMediaStorage,
 } from "../media.js";
 export {
-  COMMERCE_IMAGE_ENDPOINT_ROUTE,
-  COMMERCE_IMAGE_PRESETS,
-  COMMERCE_IMAGE_SIZES,
-  COMMERCE_IMAGE_SRCSET_WIDTHS,
-  commerceImageSrcset,
-  commerceImageTransformUrl,
   createProductImageProjector,
-} from "../media-projection.js";
+} from "../media-projector.js";
 export type {
   ProductImageProjector,
   ProductMediaItem,
   ProductMediaReader,
   PublicCatalogImage,
-} from "../media-projection.js";
+} from "../media-projector.js";
 export { SAVE_CATALOG_ITEM_MEDIA_ROUTE } from "../route-ids.js";

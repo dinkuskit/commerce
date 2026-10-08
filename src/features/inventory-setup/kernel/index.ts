@@ -2,9 +2,9 @@ export { configureCatalogItemInventory } from "../configure-inventory.js";
 export { InventorySetupError } from "../errors.js";
 export type { InventorySetupErrorCode } from "../errors.js";
 
+export { loadStoreInventoryConfiguration } from "../store-configuration-read.js";
 export {
   createStoreInventoryConfiguration,
-  loadStoreInventoryConfiguration,
   storeInventoryConfigurationUniqueIndexName,
 } from "../store-configuration.js";
 export type { StoreInventoryConfigurationUniqueField } from "../store-configuration.js";

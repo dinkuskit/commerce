@@ -17,6 +17,10 @@ import type {
   StorefrontOutOfStockListingRecord,
 } from "./types.js";
 
+function routeFail(code: string, message: string, status: number): never {
+  throw new PluginRouteError(code, message, status);
+}
+
 export {
   OUT_OF_STOCK_LISTING_ROUTE,
   PLACEHOLDER_IMAGE_ROUTE,
@@ -27,11 +31,7 @@ export const setStorefrontAvailabilityPolicyRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "storefront availability setting requires POST",
-        405,
-      );
+      routeFail("METHOD_NOT_ALLOWED", "storefront availability setting requires POST", 405);
     }
     try {
       return await setStorefrontAvailabilityPolicy(
@@ -82,11 +82,7 @@ export const outOfStockListingRoute: PluginRoute = {
       }
     }
     if (method !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "out-of-stock listing requires GET or POST",
-        405,
-      );
+      routeFail("METHOD_NOT_ALLOWED", "out-of-stock listing requires GET or POST", 405);
     }
     try {
       return await setOutOfStockListing(listingStorage(ctx), ctx.input);
@@ -115,11 +111,7 @@ export const placeholderImageRoute: PluginRoute = {
       }
     }
     if (method !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "placeholder image requires GET or POST",
-        405,
-      );
+      routeFail("METHOD_NOT_ALLOWED", "placeholder image requires GET or POST", 405);
     }
     try {
       return await setStorefrontPlaceholderImage(placeholderStorage(ctx), ctx.input);

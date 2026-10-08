@@ -2,7 +2,7 @@ import type { InventorySkuIdentity, StockManagement } from "./types.js";
 import {
   normalizeManagedSkuRegistration,
   normalizeManagedSkuRegistrationRejection,
-} from "./registration.js";
+} from "./registration-normalize.js";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)

@@ -17,24 +17,28 @@ export {
 export {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES,
+} from "./claim-constants.js";
+export type { ManagedSkuRegistrationClaimUniqueField } from "./claim-constants.js";
+export {
   assertManagedSkuRegistrationClaimStorageConstraints,
   createManagedSkuRegistrationClaimPort,
   identifyManagedSkuRegistrationClaimUniqueViolation,
   managedSkuRegistrationClaimUniqueIndexName,
-  releaseManagedSkuRegistrationClaims,
 } from "./claim-storage.js";
+export { releaseManagedSkuRegistrationClaims } from "./claim-release.js";
 export type {
   ManagedSkuRegistrationClaimPortOptions,
-  ManagedSkuRegistrationClaimReleaseStorage,
   ManagedSkuRegistrationClaimStorage,
-  ManagedSkuRegistrationClaimUniqueField,
 } from "./claim-storage.js";
+export type { ManagedSkuRegistrationClaimReleaseStorage } from "./claim-release.js";
+export {
+  normalizeManagedSkuRegistration,
+  normalizeManagedSkuRegistrationRejection,
+} from "./registration-normalize.js";
 export {
   applyManagedSkuRegistrationResult,
   confirmExistingManagedSku,
   createManagedSkuRegistrationRequest,
-  normalizeManagedSkuRegistration,
-  normalizeManagedSkuRegistrationRejection,
   normalizeManagedSkuRegistrationResult,
   retryManagedSkuRegistration,
   startManagedSkuRegistration,
