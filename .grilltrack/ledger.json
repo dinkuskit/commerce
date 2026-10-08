@@ -7778,7 +7778,7 @@
       "baseline_ref": null,
       "candidate_refs": [],
       "choice": "EmDash page routing is a separate host contract. Slugs, URL patterns, redirects and sitemap behavior are not owned or inferred by Commerce and are handled with the Template Store contract in template-store#34.",
-      "context_ref": "https://github.com/dinkuskit/commerce/issues/58#issuecomment-6059015959; https://github.com/dinkuskit/commerce/issues/58#issuecomment-6059044194; template-store#34",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/58#issuecomment-6059015959; https://github.com/dinkuskit/commerce/issues/58#issuecomment-6059044194; https://github.com/dinkuskit/template-store/issues/34; template-store#34",
       "created_at": "2026-10-08T13:10:00+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
@@ -7791,6 +7791,34 @@
           "from": "proposed",
           "implementation_ref": null,
           "note": "Maintainer separated routing from Commerce identity and lookup in issue comments 6059015959 and 6059044194; direct ledger edit approved for this PR.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T13:49:37+00:00",
+          "choice": "EmDash page routing is a separate host contract. Slugs, URL patterns, redirects and sitemap behavior are not owned or inferred by Commerce and are handled with the Template Store contract in template-store#34.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Repair the dependency reference type without changing the approved routing boundary; external Template issue remains context, not an internal decision ID.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T13:57:17+00:00",
+          "choice": "EmDash page routing is a separate host contract. Slugs, URL patterns, redirects and sitemap behavior are not owned or inferred by Commerce and are handled with the Template Store contract in template-store#34.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Preserve the concurrent PR routing-context clarification while retaining the validated dependency recovery history.",
           "repair_required": false,
           "review_classifications": [],
           "review_ref": null,
@@ -7812,7 +7840,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T13:10:00+00:00",
+      "updated_at": "2026-10-08T13:57:17+00:00",
       "verification_ref": null
     }
   ],
@@ -7859,5 +7887,5 @@
   "status": "paused",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T13:10:00+00:00"
+  "updated_at": "2026-10-08T13:57:17+00:00"
 }

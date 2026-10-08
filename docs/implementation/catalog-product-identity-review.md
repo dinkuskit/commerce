@@ -1,8 +1,9 @@
 # Review re-proof for the catalog identity slice
 
-This note records the interim-review evidence without changing the GrillTrack
-ledger. The GrillTrack CLI was not installed in the implementation
-environment, so no ledger entry, event, or decision status was hand-authored.
+The five locked `catalog-product-*-058` decisions are recorded in the GrillTrack
+ledger. The maintainer approved their initial direct recording. A later repair
+moved the external Template issue from internal dependencies to context using
+GrillTrack's validated writer, preserving all decisions and appending an event.
 The source decisions are the maintainer's
 [identity/page-link decision](https://github.com/dinkuskit/commerce/issues/58#issuecomment-6059015959)
 and [lookup/concurrency clarification](https://github.com/dinkuskit/commerce/issues/58#issuecomment-6059044194).
@@ -51,51 +52,24 @@ SKU edit, while the original command still replays the existing item after
 the edit. Unique-violation classification receives the trusted custom
 collection and plugin namespace used by the preflight.
 
-## Browser/migration comparison
+## Browser/migration comparison and backend size
 
-The local comparison used the same Node `v22.14.0`, npm `10.9.7`,
-`package-lock.json` SHA-256
-`865ece395c6ead0ffa60825343780f12c5690d4e27fb38a48674659453705b1f`,
-fixture, and command:
+The [matched installed proof](../../.grilltrack/proof/catalog-identity-pr62-finish/PROOF.md)
+uses the repository-pinned Node 22.23.2, npm 10.9.8, identical locked dependencies,
+physical dependency trees, the same fixture and fresh disposable databases.
+Both main at `e5a9189` and the candidate runtime at `e45e9bd` pass the build and
+installed coupon browser scenario, including migration, conflicts, reload and
+forbidden actions. The ledger/docs repair does not change runtime or test sources.
 
-```text
-COMMERCE_COUPON_INSTALLED_PROFILE=1 npm run test:sandbox:coupons
-```
+The extracted backend measures 128,497 bytes on main and 129,476 on the
+candidate (+979 bytes), below the 131,072-byte cap with 1,596 bytes remaining.
+The prior 128,485-byte artifact is historical, not the matched baseline.
 
-The side-by-side result was:
-
-| checkout | build result | browser result |
-| --- | --- | --- |
-| detached `main` at `e5a9189` | 210,216 bytes; stopped by the 131,072-byte bundle validator | did not start |
-| candidate `b64585c` | 129,266 bytes | reached EmDash and reported the migration error below |
-
-On candidate `b64585c`, the browser server reached the EmDash runtime, which
-reported:
-
-```text
-MigrationFailedError: Migration failed: statement.columns is not a function
-```
-
-The detached `main` checkout under the same local runtime and command rebuilt
-to 210,216 bytes and stopped earlier at the official 131,072-byte bundle
-validator, so it did not reach the browser migration stage. Therefore this
-local pair does not support calling the migration error pre-existing: main
-stopped before browser startup under the identical command. The independent
-same-workflow main CI run above passed the coupon browser test without that
-error; the candidate CI failure was the catalog regression instead. Both
-outcomes are retained here rather than conflated, and this is the explicit
-limitation on a browser-level migration comparison.
-
-## Backend-size reconciliation
-
-Two prior main proofs report different official-build measurements:
-
-- `128,485` bytes in `product-media-20261007/PROOF.md`;
-- `128,497` bytes in `product-media-rebase-20261007/PROOF.md`.
-
-They are retained as distinct measurements from their respective official
-build records, not treated as interchangeable. The current local candidate
-build under the reproducibility metadata above is `129,266 / 131,072` bytes.
+The earlier local comparison used Node 22.14.0 and a main dependency layout
+that rebuilt to 210,216 bytes, stopping before migration. That pair could not
+establish whether the candidate migration failure was pre-existing. Node's
+`statement.columns()` API was added in 22.16.0, above that old runtime; the
+repository-pinned pair now completes migration successfully on both revisions.
 
 ## Page-proof boundary
 
