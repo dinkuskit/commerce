@@ -62,12 +62,29 @@ export async function setCatalogItemSku(
     if (current.sku === sku && current.skuKey === sku) {
       return { changed: false, item: current };
     }
-    const item = { ...current, sku, skuKey: sku };
+    const item = {
+      ...current,
+      sku,
+      skuKey: sku,
+      creationPayload: current.creationPayload ?? {
+        kind: current.kind,
+        name: current.name,
+        sku: current.sku,
+        skuKey: current.skuKey,
+        manageStock: current.creationIntent?.manageStock ?? false,
+      },
+    };
     try {
       const result = await storage.compareAndSet(item.itemId, stored.revision, item);
       if (result.applied) return { changed: true, item };
     } catch (error) {
-      if (identifyConfirmedUniqueViolation(error) === "skuKey") {
+      if (
+        identifyConfirmedUniqueViolation(
+          error,
+          options.collection,
+          options.pluginId,
+        ) === "skuKey"
+      ) {
         throw new CatalogError("SKU_CONFLICT", "sku is already assigned to another catalog item");
       }
       throw new CatalogError("STORAGE_UNAVAILABLE", "catalog SKU update failed", {

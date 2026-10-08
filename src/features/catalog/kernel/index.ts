@@ -95,6 +95,7 @@ export {
 } from "../types.js";
 export type {
   CatalogBackorderPolicyRecord,
+  CatalogCreationPayload,
   CatalogBackorderPolicyStorage,
   CatalogIntegrityProbeRecord,
   CatalogItemPriceResolution,

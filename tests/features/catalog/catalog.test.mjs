@@ -21,17 +21,23 @@ import {
 
 const commercePlugin = createPlugin();
 
-function uniqueViolation(field) {
+function uniqueViolation(field, collection = "catalogItems", pluginId = "dinkus-commerce") {
   const error = new Error(
-    `UNIQUE constraint failed: index '${catalogUniqueIndexName(field)}'`,
+    `UNIQUE constraint failed: index 'uidx_plugin_${pluginId}_${collection}_${field}'`,
   );
   error.code = "SQLITE_CONSTRAINT_UNIQUE";
   return error;
 }
 
 class MemoryCatalogStorage {
-  constructor(activeUniqueFields = ["commandId", "skuKey"]) {
+  constructor(
+    activeUniqueFields = ["commandId", "skuKey"],
+    collection = "catalogItems",
+    pluginId = "dinkus-commerce",
+  ) {
     this.activeUniqueFields = new Set(activeUniqueFields);
+    this.collection = collection;
+    this.pluginId = pluginId;
     this.records = new Map();
     this.revisions = new Map();
     this.puts = [];
@@ -47,7 +53,7 @@ class MemoryCatalogStorage {
       const collision = [...this.records.entries()].find(
         ([otherId, record]) => otherId !== id && record[field] === data[field],
       );
-      if (collision) throw uniqueViolation(field);
+      if (collision) throw uniqueViolation(field, this.collection, this.pluginId);
     }
     this.records.set(id, structuredClone(data));
     this.revisions.set(id, String(Number(this.revisions.get(id) ?? "-1") + 1));
@@ -116,6 +122,13 @@ test("one command writes one complete draft row and a retry returns the original
     stockManagement: { mode: "unmanaged" },
     state: "draft",
     createdAt: "2026-08-28T00:00:00.000Z",
+    creationPayload: {
+      kind: "simple-product",
+      name: "Grill 42",
+      sku: "GRILL-42",
+      skuKey: "GRILL-42",
+      manageStock: false,
+    },
   });
   assert.equal(storage.puts.filter(({ data }) => data.recordKind === "catalog-item").length, 1);
   assert.equal(storage.records.size, 1);
@@ -329,6 +342,10 @@ test("replaying the original create command after a SKU edit returns the existin
   const storage = new MemoryCatalogStorage();
   const input = { commandId: "cmd:sku-replay", name: "Replayable", sku: "ORIGINAL-SKU" };
   const created = await createCatalogItem(storage, input, { createId: () => "item-sku-replay" });
+  await rejectsWithCode(
+    createCatalogItem(storage, { ...input, sku: "DIFFERENT-BEFORE-EDIT" }),
+    "COMMAND_CONFLICT",
+  );
   await setCatalogItemSku(storage, {
     catalogItemId: created.item.itemId,
     sku: "EDITED-SKU",
@@ -338,6 +355,10 @@ test("replaying the original create command after a SKU edit returns the existin
   assert.equal(replay.created, false);
   assert.equal(replay.item.itemId, "item-sku-replay");
   assert.equal(replay.item.sku, "EDITED-SKU");
+  await rejectsWithCode(
+    createCatalogItem(storage, { ...input, sku: "DIFFERENT-AFTER-EDIT" }),
+    "COMMAND_CONFLICT",
+  );
 });
 
 test("SKU updates fail closed without both unique indexes", async () => {
@@ -358,6 +379,48 @@ test("SKU updates fail closed without both unique indexes", async () => {
   await rejectsWithCode(
     setCatalogItemSku(storage, { catalogItemId: "item-no-sku-index", sku: "NEW" }),
     "STORAGE_CONSTRAINTS_UNAVAILABLE",
+  );
+});
+
+test("SKU conflicts use the trusted custom collection and plugin namespace", async () => {
+  const storage = new MemoryCatalogStorage(
+    ["commandId", "skuKey"],
+    "catalog_items",
+    "r_namespace",
+  );
+  storage.records.set("item-one", {
+    recordKind: "catalog-item",
+    itemId: "item-one",
+    commandId: "cmd:one-custom",
+    creationIntent: { manageStock: false },
+    kind: "simple-product",
+    name: "One",
+    sku: "SHARED",
+    skuKey: "SHARED",
+    stockManagement: { mode: "unmanaged" },
+    state: "draft",
+    createdAt: "2026-08-28T00:00:00.000Z",
+  });
+  storage.records.set("item-two", {
+    recordKind: "catalog-item",
+    itemId: "item-two",
+    commandId: "cmd:two-custom",
+    creationIntent: { manageStock: false },
+    kind: "simple-product",
+    name: "Two",
+    sku: "TWO",
+    skuKey: "TWO",
+    stockManagement: { mode: "unmanaged" },
+    state: "draft",
+    createdAt: "2026-08-28T00:00:00.000Z",
+  });
+  await rejectsWithCode(
+    setCatalogItemSku(
+      storage,
+      { catalogItemId: "item-two", sku: "SHARED" },
+      { collection: "catalog_items", pluginId: "r_namespace" },
+    ),
+    "SKU_CONFLICT",
   );
 });
 
