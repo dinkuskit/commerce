@@ -10,6 +10,10 @@ for EmDash sites. Assume every committed byte is immediately public.
 3. `.grilltrack/ledger.json`, maintained only through the GrillTrack CLI.
 4. Current source, tests, and committed proof.
 
+Use Node 22.23.2 per `.nvmrc`; in cloud agents put nvm's Node ahead of
+`/exec-daemon` on `PATH` with `export PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH"`
+and verify `node -v`.
+
 ## Running GrillTrack
 
 Run `./scripts/agent-skills` before agent work to install the pinned

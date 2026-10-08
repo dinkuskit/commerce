@@ -4,6 +4,9 @@
   "description": "The open-source commerce layer for EmDash sites",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=22.16.0 <23"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -66,7 +69,7 @@
   "dinkuskit": {
     "emdashCompatibility": {
       "apiPeer": "1.2.0",
-      "nodeEngine": ">=22.16",
+      "nodeEngine": ">=22.16.0 <23",
       "packageIntegrity": "sha512-f9s7khWeuOxX5cRimlu9o224hn9TuKnYk/0Vsu1CS9oaVn78V1+MWyfEsZc2iDv8JYWrezEZFkpy/Q6pRgVgzg==",
       "mountedSitePilot": "private",
       "requiredSourceVisibility": "public",
