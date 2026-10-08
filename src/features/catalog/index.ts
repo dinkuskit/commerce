@@ -15,6 +15,7 @@ export {
   createListCatalogProductsRouteWithLocalStock,
   createSaveCatalogProductPricesRouteWithLocalStock,
   listCatalogProductsRoute,
+  saveCatalogItemMediaRoute,
   saveCatalogProductPricesRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,

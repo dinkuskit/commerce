@@ -113,6 +113,17 @@ live site or hide them. The default is to show them. Hide is opt-in and
 applies to clerk Out of stock and Inventory-at-zero. On backorder stays
 visible. Unpriced products stay hidden. Admin still lists every product.
 
+Product images follow WooCommerce's model on EmDash's Media Library: a product
+references one primary image and an ordered gallery (up to 8) by media id, a
+store placeholder lives in Commerce → Settings → Catalog, and Commerce stores
+no file, URL, alt text or size. The sandbox admin lists the library itself
+(Block Kit 1.2.0 renders no `media_picker` on plugin pages) through the
+`media:read` capability; `GET catalog/public` returns image ids with alt
+(media alt, caption, then product name) and dimensions read live, and the
+storefront maps ids to public URLs and `srcset` with the exported preset
+helpers. See
+[docs/implementation/product-media.md](docs/implementation/product-media.md).
+
 Mounted-site work remains a private pilot; this package does not publish
 Commerce or claim a trusted Registry installation. This migration targets the
 official public `emdash@1.2.0` package and verifies native and local

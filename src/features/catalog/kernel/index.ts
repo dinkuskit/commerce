@@ -124,3 +124,35 @@ export type {
 
 export { PUBLIC_CATALOG_ROUTE, readPublicCatalog } from "../public.js";
 export type { PublicCatalogProduct, PublicCatalogResponse } from "../public.js";
+export {
+  CATALOG_GALLERY_LIMIT,
+  CATALOG_MEDIA_COLLECTION,
+  loadCatalogItemMedia,
+  normalizeGallery,
+  normalizeMediaReference,
+  saveCatalogItemMedia,
+} from "../media.js";
+export type {
+  CatalogMediaRecord,
+  CatalogMediaStorage,
+  MediaReference,
+  SaveCatalogItemMediaInput,
+  SaveCatalogItemMediaResult,
+  SaveCatalogItemMediaStorage,
+} from "../media.js";
+export {
+  COMMERCE_IMAGE_ENDPOINT_ROUTE,
+  COMMERCE_IMAGE_PRESETS,
+  COMMERCE_IMAGE_SIZES,
+  COMMERCE_IMAGE_SRCSET_WIDTHS,
+  commerceImageSrcset,
+  commerceImageTransformUrl,
+  createProductImageProjector,
+} from "../media-projection.js";
+export type {
+  ProductImageProjector,
+  ProductMediaItem,
+  ProductMediaReader,
+  PublicCatalogImage,
+} from "../media-projection.js";
+export { SAVE_CATALOG_ITEM_MEDIA_ROUTE } from "../route-ids.js";

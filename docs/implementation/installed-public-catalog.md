@@ -29,9 +29,16 @@ type PublicCatalogResponse = {
       sellable: boolean;
       listable: boolean;
     };
+    image: { id: string; alt: string; width: number | null; height: number | null; placeholder: boolean } | null;
+    gallery: { id: string; alt: string; width: number | null; height: number | null; placeholder: boolean }[];
   }[];
 };
 ```
+
+`image` and `gallery` carry EmDash media ids resolved live through the
+`media:read` capability; the storefront host maps ids to public file URLs and
+builds `srcset` with the exported Commerce preset helpers. See
+[product-media.md](./product-media.md).
 
 Only products with an authoritative customer price and `availability.listable`
 are projected. The price is `customerPays` (sale when present, otherwise
@@ -49,8 +56,9 @@ Installation prerequisites are the original runtime plugin identity and
 declared Commerce storage namespace, a configured product and authoritative
 price, and the existing storefront availability configuration. Registry
 identity, installation flags, native aliases, and test overrides do not imply
-readiness. The shipped capabilities and allowed hosts remain empty, so this
-route does not activate Payments or make external checkout available.
+readiness. The shipped capabilities are `media:read` only and allowed hosts
+remain empty, so this route does not activate Payments or make external
+checkout available.
 
 The compiled package exports `readPublicCatalog(ctx, cursor?)` and
 `PUBLIC_CATALOG_ROUTE` from `@dinkuskit/commerce/features/catalog`. Call the reader

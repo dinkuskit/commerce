@@ -11,3 +11,4 @@ export const CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE =
   "catalog-items/clear-regular-price";
 export const LIST_CATALOG_PRODUCTS_ROUTE = "catalog-items/list";
 export const SAVE_CATALOG_PRODUCT_PRICES_ROUTE = "catalog-items/save-prices";
+export const SAVE_CATALOG_ITEM_MEDIA_ROUTE = "catalog-items/save-media";

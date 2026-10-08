@@ -6,6 +6,11 @@ import {
 
 import { StorefrontAvailabilityError } from "./errors.js";
 import { loadOutOfStockListing, setOutOfStockListing } from "./listing.js";
+import {
+  loadStorefrontPlaceholderImage,
+  setStorefrontPlaceholderImage,
+  type StorefrontPlaceholderImageRecord,
+} from "./placeholder.js";
 import { setStorefrontAvailabilityPolicy } from "./settings.js";
 import type {
   StorefrontAvailabilitySettingsRecord,
@@ -14,6 +19,7 @@ import type {
 
 export {
   OUT_OF_STOCK_LISTING_ROUTE,
+  PLACEHOLDER_IMAGE_ROUTE,
   SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
 } from "./route-ids.js";
 
@@ -84,6 +90,39 @@ export const outOfStockListingRoute: PluginRoute = {
     }
     try {
       return await setOutOfStockListing(listingStorage(ctx), ctx.input);
+    } catch (error) {
+      listingError(error);
+    }
+  },
+};
+
+function placeholderStorage(
+  ctx: { storage: Record<string, unknown> },
+): StorageCollection<StorefrontPlaceholderImageRecord> {
+  return ctx.storage
+    .storefrontPlaceholderImage as StorageCollection<StorefrontPlaceholderImageRecord>;
+}
+
+export const placeholderImageRoute: PluginRoute = {
+  permission: "content:edit_any",
+  handler: async (ctx) => {
+    const method = ctx.request.method.toUpperCase();
+    if (method === "GET") {
+      try {
+        return await loadStorefrontPlaceholderImage(placeholderStorage(ctx));
+      } catch (error) {
+        listingError(error);
+      }
+    }
+    if (method !== "POST") {
+      throw new PluginRouteError(
+        "METHOD_NOT_ALLOWED",
+        "placeholder image requires GET or POST",
+        405,
+      );
+    }
+    try {
+      return await setStorefrontPlaceholderImage(placeholderStorage(ctx), ctx.input);
     } catch (error) {
       listingError(error);
     }

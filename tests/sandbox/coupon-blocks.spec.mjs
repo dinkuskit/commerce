@@ -186,7 +186,7 @@ test('packaged coupon Block Kit survives validation, conflicts, reload and forbi
       const catalog = (await catalogResponse.json()).data;
       const product = catalog.products.find(product => product.sku === 'EDITOR-PROOF');
       expect(product).toEqual({ id: expect.any(String), name: 'Editor product', sku: 'EDITOR-PROOF',
-        price: { currency: 'USD', minor: '1234' }, availability: { status: 'in-stock', sellable: true, listable: true } });
+        price: { currency: 'USD', minor: '1234' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [] });
       // Real installed storage pagination: an empty filtered first page must
       // still lead the consumer to the authenticated admin-created product.
       const pad = database.prepare("INSERT INTO _plugin_storage (plugin_id,collection,id,data,revision,created_at,updated_at) VALUES (?, 'catalog_items', ?, ?, ?, ?, ?)");

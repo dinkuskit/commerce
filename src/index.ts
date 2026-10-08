@@ -3,6 +3,7 @@ import { definePlugin, type PluginDescriptor, type ResolvedPlugin } from "emdash
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
   CATALOG_MANUAL_AVAILABILITY_COLLECTION,
+  CATALOG_MEDIA_COLLECTION,
   CATALOG_PRICES_COLLECTION,
   CATALOG_UNIQUE_INDEXES,
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -10,6 +11,7 @@ import {
   COMMERCE_PLUGIN_ID,
   CREATE_CATALOG_ITEM_ROUTE,
   LIST_CATALOG_PRODUCTS_ROUTE,
+  SAVE_CATALOG_ITEM_MEDIA_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
@@ -20,6 +22,7 @@ import {
   createCatalogItemRouteWithLocalStock,
   createListCatalogProductsRouteWithLocalStock,
   createSaveCatalogProductPricesRouteWithLocalStock,
+  saveCatalogItemMediaRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
@@ -38,10 +41,13 @@ import {
 } from "./features/inventory-setup/index.js";
 import {
   OUT_OF_STOCK_LISTING_ROUTE,
+  PLACEHOLDER_IMAGE_ROUTE,
   SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
   STOREFRONT_AVAILABILITY_SETTINGS_COLLECTION,
   STOREFRONT_OUT_OF_STOCK_LISTING_COLLECTION,
+  STOREFRONT_PLACEHOLDER_IMAGE_COLLECTION,
   outOfStockListingRoute,
+  placeholderImageRoute,
   setStorefrontAvailabilityPolicyRoute,
 } from "./features/storefront-availability/index.js";
 import {
@@ -142,6 +148,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
   return definePlugin({
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
+    // Product media reads alt text and dimensions live from the Media Library.
+    capabilities: ["media:read"],
     storage: {
       catalogItems: {
         indexes: [],
@@ -159,6 +167,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [CATALOG_MEDIA_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
       [MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION]: {
         indexes: ["catalogItemId"],
         uniqueIndexes: [...MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES],
@@ -172,6 +184,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         uniqueIndexes: [],
       },
       [STOREFRONT_OUT_OF_STOCK_LISTING_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
+      [STOREFRONT_PLACEHOLDER_IMAGE_COLLECTION]: {
         indexes: [],
         uniqueIndexes: [],
       },
@@ -209,12 +225,14 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [LIST_CATALOG_PRODUCTS_ROUTE]: createListCatalogProductsRouteWithLocalStock(localStock),
       [SAVE_CATALOG_PRODUCT_PRICES_ROUTE]:
         createSaveCatalogProductPricesRouteWithLocalStock(localStock),
+      [SAVE_CATALOG_ITEM_MEDIA_ROUTE]: saveCatalogItemMediaRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),
       [SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE]:
         setStorefrontAvailabilityPolicyRoute,
       [OUT_OF_STOCK_LISTING_ROUTE]: outOfStockListingRoute,
+      [PLACEHOLDER_IMAGE_ROUTE]: placeholderImageRoute,
       [GUEST_CHECKOUT_PREPARE_ROUTE]: createGuestCheckoutPrepareRoute(checkoutHost),
       [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(checkoutHost),
       [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(checkoutHost),
