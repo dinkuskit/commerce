@@ -274,19 +274,23 @@ export function ProductsPage() {
       : products.find(p => p.catalogItemId === selectedId)?.variantProduct?.options.length
         ? createElement(VariantProductEditor, { product: products.find(p => p.catalogItemId === selectedId)!, reload: () => loadProducts(selectedId) })
       : createElement(
-          "form",
-          { onSubmit: (event: FormEvent) => void savePrices(event), className: "space-y-3" },
-          createElement("h2", { className: "text-lg font-semibold" }, "Price"),
-          labeledField("Regular", "regular-price", regular, setRegular),
-          labeledField("Sale", "sale-price", sale, setSale),
-          manageStockSwitch(manageStock, manageStockEnabled, setManageStock),
-          manageStock
-            ? null
-            : stockStatusFields(stockStatus, (status) => {
-                setStockStatus(status);
-                setStockStatusChanged(true);
-              }),
-          createElement("button", { type: "submit", disabled: pending }, "Save"),
+          "div",
+          { className: "space-y-6" },
+          createElement(
+            "form",
+            { onSubmit: (event: FormEvent) => void savePrices(event), className: "space-y-3" },
+            createElement("h2", { className: "text-lg font-semibold" }, "Price"),
+            labeledField("Regular", "regular-price", regular, setRegular),
+            labeledField("Sale", "sale-price", sale, setSale),
+            manageStockSwitch(manageStock, manageStockEnabled, setManageStock),
+            manageStock
+              ? null
+              : stockStatusFields(stockStatus, (status) => {
+                  setStockStatus(status);
+                  setStockStatusChanged(true);
+                }),
+            createElement("button", { type: "submit", disabled: pending }, "Save"),
+          ),
           createElement(
             "div",
             { className: "space-y-3" },
@@ -301,21 +305,16 @@ export function ProductsPage() {
               "Save identifiers",
             ),
           ),
-          (() => {
-            const variant = (products.find(product => product.catalogItemId === selectedId) as CatalogProductListItem & {
-              variantProduct?: { options: readonly unknown[]; members: readonly { selections: readonly { valueId: string }[]; fulfillment: string }[] };
-            } | undefined)?.variantProduct;
-            return createElement("div", null,
-              createElement("h3", null, "Add choices"),
-              labeledField("Option", "variant-option", optionLabel, setOptionLabel),
-              labeledField("First value", "variant-small", smallLabel, setSmallLabel),
-              labeledField("Second value", "variant-large", largeLabel, setLargeLabel),
-              labeledField("New variant SKU", "variant-sku", newSku, setNewSku),
-              fulfillmentSelect("First fulfillment", firstFulfillment, setFirstFulfillment),
-              fulfillmentSelect("Second fulfillment", secondFulfillment, setSecondFulfillment),
-              createElement("button", { type: "button", onClick: () => void addChoices(), disabled: pending }, "Add choices"),
-            );
-          })(),
+          createElement("div", null,
+            createElement("h3", null, "Add choices"),
+            labeledField("Option", "variant-option", optionLabel, setOptionLabel),
+            labeledField("First value", "variant-small", smallLabel, setSmallLabel),
+            labeledField("Second value", "variant-large", largeLabel, setLargeLabel),
+            labeledField("New variant SKU", "variant-sku", newSku, setNewSku),
+            fulfillmentSelect("First fulfillment", firstFulfillment, setFirstFulfillment),
+            fulfillmentSelect("Second fulfillment", secondFulfillment, setSecondFulfillment),
+            createElement("button", { type: "button", onClick: () => void addChoices(), disabled: pending }, "Add choices"),
+          ),
         ),
   );
 }

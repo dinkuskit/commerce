@@ -172,7 +172,7 @@ test.describe("Native populated-browser continuity fixture", () => {
     ).get("dinkus-commerce", collection, id).data);
     const saveNativeProduct = async (expectedSaved = true) => {
       const response = page.waitForResponse(r => r.url().endsWith("/catalog-items/save-prices") && r.request().method() === "POST");
-      await page.locator("form:has(#regular-price) button:has-text('Save')").click();
+      await page.locator("form:has(#regular-price)").getByRole("button", { name: "Save", exact: true }).click();
       const received = await response;
       const body = await received.json();
       if (expectedSaved) {
@@ -229,7 +229,7 @@ test.describe("Native populated-browser continuity fixture", () => {
     await inStockRadio.check();
 
     // Click Save
-    await page.locator("form:has(#regular-price) button:has-text('Save')").click();
+    await page.locator("form:has(#regular-price)").getByRole("button", { name: "Save", exact: true }).click();
     await page.waitForLoadState("networkidle");
 
     // Verify fields retain saved values in UI
