@@ -1,12 +1,12 @@
 import type { StructuredAvailabilityStatus } from "./types.js";
 
 /**
- * Provisional mapping (GrillTrack jsonld-availability-*-059, pending Ryan lock):
+ * Locked mapping (PR #73 comments 6067853218 + 6067895247 / 6067898015):
  * - in-stock → InStock
  * - low-stock → LimitedAvailability
  * - out-of-stock → OutOfStock
  * - available-on-backorder → BackOrder
- * - availability-unavailable → OutOfStock (never InStock)
+ * - availability-unavailable → OutOfStock (emit Offer; never omit; never InStock)
  */
 export function mapAvailabilityToSchemaOrg(
   status: StructuredAvailabilityStatus,

@@ -89,7 +89,7 @@ function returnPolicy(policy: StructuredReturnPolicy): JsonLdNode | undefined {
  * No network, no storage. Host supplies canonical URL and page facts; Commerce
  * supplies the public product projection and versioned policy records.
  *
- * Provisional decisions (pending Ryan lock): see GrillTrack jsonld-*-059.
+ * Locked GrillTrack jsonld-*-059 (PR #73 comments 6067853218 + 6067895247).
  */
 export function buildProductJsonLd(input: BuildProductJsonLdInput): ProductJsonLd {
   const { product, page, policies } = input;
