@@ -140,6 +140,10 @@ export async function prepareGuestCheckout(
   }
 }
 
+function projected(capabilityId: string, attempt: CheckoutAttempt | undefined, now: number): GuestCheckoutResult {
+  return { ok: true, capabilityId, checkout: projectGuestCheckout(attempt, now) };
+}
+
 export async function startGuestCheckout(
   runtime: GuestCheckoutRuntime,
   input: unknown,
@@ -161,11 +165,7 @@ export async function startGuestCheckout(
       previous?.phase === "released" ? previous.attemptId : undefined;
     const attempt = await startCheckout(executionOf(runtime), authorized.cartId, admitted, retryAfter);
     const currentNow = runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
-    return {
-      ok: true,
-      capabilityId: authorized.capabilityId,
-      checkout: projectGuestCheckout(attempt, currentNow),
-    };
+    return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {
     return guestSafeResult(error);
   }
@@ -184,11 +184,7 @@ export async function statusGuestCheckout(
     const currentNow = runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
     if (!paymentsReady(runtime.host)) {
       const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
-      return {
-        ok: true,
-        capabilityId: authorized.capabilityId,
-        checkout: projectGuestCheckout(currentAttempt(stored?.record.attempts ?? []), currentNow),
-      };
+      return projected(authorized.capabilityId, currentAttempt(stored?.record.attempts ?? []), currentNow);
     }
     const body = input && typeof input === "object" && !Array.isArray(input)
       ? (input as Record<string, unknown>)
@@ -205,11 +201,7 @@ export async function statusGuestCheckout(
       authorized.cartId,
       hinted || current.attemptId,
     );
-    return {
-      ok: true,
-      capabilityId: authorized.capabilityId,
-      checkout: projectGuestCheckout(attempt, currentNow),
-    };
+    return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {
     return guestSafeResult(error);
   }

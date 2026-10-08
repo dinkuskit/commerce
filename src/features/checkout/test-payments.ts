@@ -188,12 +188,13 @@ function normalizedConfig(
 }
 
 const MAX_PAYMENT_RESPONSE_BYTES = 131072;
+function malformedResponse(): never { throw new Error("Malformed Payments response"); }
 
 /** Shared finite-body reader for authenticated Payments responses. */
 export async function readBoundedPaymentsJson(response: Response): Promise<unknown> {
   const body = response.body;
   if (!body || typeof body.getReader !== "function") {
-    throw new Error("Malformed Payments response");
+    malformedResponse();
   }
 
   const reader = body.getReader();
@@ -205,12 +206,12 @@ export async function readBoundedPaymentsJson(response: Response): Promise<unkno
       if (result.done) break;
       if (!(result.value instanceof Uint8Array)) {
         try { await reader.cancel(); } catch { /* fail closed */ }
-        throw new Error("Malformed Payments response");
+        malformedResponse();
       }
       byteLength += result.value.byteLength;
       if (byteLength > MAX_PAYMENT_RESPONSE_BYTES) {
         try { await reader.cancel(); } catch { /* fail closed */ }
-        throw new Error("Malformed Payments response");
+        malformedResponse();
       }
       chunks.push(result.value);
     }
@@ -227,7 +228,7 @@ export async function readBoundedPaymentsJson(response: Response): Promise<unkno
   try {
     return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   } catch {
-    throw new Error("Malformed Payments response");
+    malformedResponse();
   }
 }
 
@@ -263,7 +264,7 @@ function createPaymentPort(
     try {
       return await readBoundedPaymentsJson(response);
     } catch {
-      throw new Error("Malformed Payments response");
+      malformedResponse();
     }
   }
 
@@ -274,28 +275,17 @@ function createPaymentPort(
     );
   }
 
-  async function ensureSession(request: PaymentRequest): Promise<PaymentOutcome> {
+  async function requestOutcome(request: PaymentRequest, create: boolean): Promise<PaymentOutcome> {
     const exact = exactRequest(request, config.bindingRef);
     if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
       throw new Error("Payments pricing schema unsupported");
     }
-    const ready = await binding("/v1/checkout-binding");
-    if (ready.ready === false) throw new Error("Payments binding unavailable");
-    return outcome(await call("POST", "/v1/checkout/session", exact));
+    const ready = await binding(create ? "/v1/checkout-binding" : "/v1/existing-binding");
+    if (create && ready.ready === false) throw new Error("Payments binding unavailable");
+    return outcome(await call("POST", create ? "/v1/checkout/session" : "/v1/checkout/lookup", exact));
   }
-
-  async function lookup(request: PaymentRequest): Promise<PaymentOutcome> {
-    const exact = exactRequest(request, config.bindingRef);
-    if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
-      throw new Error("Payments pricing schema unsupported");
-    }
-    await binding("/v1/existing-binding");
-    return outcome(await call(
-      "POST",
-      "/v1/checkout/lookup",
-      exact,
-    ));
-  }
+  const ensureSession = (request: PaymentRequest) => requestOutcome(request, true);
+  const lookup = (request: PaymentRequest) => requestOutcome(request, false);
 
   return Object.freeze({ ensureSession, lookup, ...(config.pricingSchema ? { pricingSchema: config.pricingSchema } : {}) });
 }

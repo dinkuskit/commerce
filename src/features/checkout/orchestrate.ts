@@ -213,6 +213,26 @@ async function persistCouponStatus(
   return null;
 }
 
+async function finishPaidCoupon(e: CheckoutExecution, cartId: string, attempt: CheckoutAttempt): Promise<CheckoutAttempt> {
+  if (attempt.coupon?.status === "pending") {
+    try {
+      await reconcileCoupon(e, attempt, "paid");
+      return await persistCouponStatus(e, cartId, attempt.attemptId, "consumed") ?? attempt;
+    } catch { return attempt; }
+  }
+  return attempt;
+}
+
+function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptId: string, paymentId?: string): void {
+  next.phase = "paid";
+  next.order = {
+    orderId: "order:" + attemptId, receiptId: "receipt:" + attemptId, attemptId,
+    ...(paymentId === undefined ? {} : { paymentId }),
+    lines: attempt.payment.lines, total: attempt.payment.total,
+    ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
+  };
+}
+
 async function drive(e: CheckoutExecution, cartId: string, attemptId: string, create: boolean): Promise<CheckoutAttempt> {
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
@@ -220,15 +240,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
     const index = stored.record.attempts.findIndex(a => a.attemptId === attemptId);
     const attempt = stored.record.attempts[index];
     if (!attempt) fail("Checkout not found");
-    if (attempt.phase === "paid") {
-      if (attempt.coupon?.status === "pending") {
-        try {
-          await reconcileCoupon(e, attempt, "paid");
-          return await persistCouponStatus(e, cartId, attemptId, "consumed") ?? attempt;
-        } catch { return attempt; }
-      }
-      return attempt;
-    }
+    if (attempt.phase === "paid") return finishPaidCoupon(e, cartId, attempt);
     if (attempt.phase === "released") return attempt;
     const next = structuredClone(attempt);
     if (attempt.phase === "reserving") {
@@ -285,15 +297,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       next.phase = "released";
     } else {
       if (attempt.payment.total.currency === "USD" && attempt.payment.total.minor === "0") {
-        next.phase = "paid";
-        next.order = {
-          orderId: `order:${attemptId}`,
-          receiptId: `receipt:${attemptId}`,
-          attemptId,
-          lines: attempt.payment.lines,
-          total: attempt.payment.total,
-          ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
-        };
+        completeOrder(next, attempt, attemptId);
       } else {
         // Current host support is not an authoritative provider creation fence.
         if (attempt.payment.pricing && e.pricing?.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
@@ -320,9 +324,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           }
           next.session = outcome.session;
           if (outcome.outcome === "paid") {
-            next.phase = "paid";
-            next.order = { orderId: `order:${attemptId}`, receiptId: `receipt:${attemptId}`, attemptId, paymentId: outcome.paymentId, lines: attempt.payment.lines, total: attempt.payment.total,
-              ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}) };
+            completeOrder(next, attempt, attemptId, outcome.paymentId);
           } else if (outcome.outcome === "expired-unpaid") {
             next.phase = "releasing";
             next.paymentReleaseReason = "expired-unpaid";
@@ -338,15 +340,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
         return next;
       }
-      if (next.phase === "paid") {
-        if (next.coupon?.status === "pending") {
-          try {
-            await reconcileCoupon(e, next, "paid");
-            return await persistCouponStatus(e, cartId, attemptId, "consumed") ?? next;
-          } catch { return next; }
-        }
-        return next;
-      }
+      if (next.phase === "paid") return finishPaidCoupon(e, cartId, next);
       if (next.phase === "released") return next;
     }
   }

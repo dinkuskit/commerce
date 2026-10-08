@@ -71,14 +71,8 @@ export function projectGuestCheckout(
 ): GuestCheckoutProjection {
   if (!attempt) {
     return {
-      schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
+      ...projectPreparedGuestCheckout(),
       state: "recoverable-failure",
-      attemptId: null,
-      lines: [],
-      total: null,
-      redirectUrl: null,
-      order: null,
-      retryAfter: null,
       unavailable: { code: "CHECKOUT_NOT_FOUND", message: "Checkout not found" },
     };
   }

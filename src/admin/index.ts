@@ -1,3 +1,4 @@
+import { pageOffset, pagination, navigation } from './blocks.js';
 import type { Block, BlockResponse } from "@emdash-cms/blocks";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
@@ -13,6 +14,7 @@ import {
   loadOutOfStockListing, setOutOfStockListing, StorefrontAvailabilityError,
   type StorefrontOutOfStockListingRecord,
 } from "../features/storefront-availability/kernel/index.js";
+import { ordersInteraction, ordersBlocks } from "./orders-blocks.js";
 import { couponInteraction, couponBlocks } from "./coupons-blocks.js";
 
 const PAGE_SIZE = 25;
@@ -48,13 +50,6 @@ function message(error: unknown): string {
 function alert(message: string): Block {
   return { type: "banner", title: message, variant: "error" };
 }
-function navigation(): Block {
-  return { type: "actions", elements: [
-    { type: "link", label: "Products", target: { kind: "plugin-page", path: "/products" } },
-    { type: "link", label: "Settings", target: { kind: "plugin-page", path: "/settings" } },
-    { type: "link", label: "Coupons", target: { kind: "plugin-page", path: "/coupons" } },
-  ] };
-}
 
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
@@ -68,7 +63,7 @@ function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): 
 }
 async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> {
   const { products } = await listCatalogProducts(storage(ctx));
-  const start = Math.min(offset, Math.max(0, Math.floor((products.length - 1) / PAGE_SIZE) * PAGE_SIZE));
+  const start = pageOffset(offset, products.length);
   const blocks: Block[] = [{ type: "header", text: "Products" }, { type: "context", text: "Commerce" }, navigation(),
     ...addForm(), { type: "divider" }];
   for (const product of products.slice(start, start + PAGE_SIZE)) {
@@ -76,10 +71,7 @@ async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> 
       accessory: { type: "button", label: "Open " + product.name, action_id: "open", value: product.catalogItemId } });
   }
   if (!products.length) blocks.push({ type: "empty", title: "No products yet", description: "Add your first product above." });
-  const paging: Block & { type: "actions" } = { type: "actions", elements: [] };
-  if (start > 0) paging.elements.push({ type: "button", label: "Previous", action_id: "list", value: start - PAGE_SIZE });
-  if (start + PAGE_SIZE < products.length) paging.elements.push({ type: "button", label: "Next", action_id: "list", value: start + PAGE_SIZE });
-  if (paging.elements.length) blocks.push(paging);
+  pagination(blocks, start, products.length, 'list');
   return { blocks };
 }
 type ProductFields = {
@@ -141,6 +133,7 @@ async function settings(ctx: PluginContext): Promise<BlockResponse> {
 
 /** Private Block Kit transport. The host authenticates and authorizes this route. */
 export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
+  if (ordersInteraction(route.input)) return ordersBlocks(route, ctx);
   if (couponInteraction(route.input)) return couponBlocks(route, ctx);
   let input: Record<string, unknown> = {};
   let values: Record<string, unknown> = {};

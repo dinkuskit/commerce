@@ -237,6 +237,79 @@ test('packaged coupon Block Kit survives validation, conflicts, reload and forbi
     await expect(page.getByRole('heading', { name: 'Coupons', exact: true })).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Code', exact: true })).toBeVisible();
     await capture('coupons-arabic-direction');
+
+    // Read-only Orders acceptance uses canonical checkout writes and synthetic
+    // payment outcomes, never a payment provider or a production order.
+    if (installed) {
+      const { createCheckoutStore, startCheckout } = await import('../../dist/features/checkout/index.js');
+      const { fixture, cart } = await import('../features/checkout/fixture.mjs');
+      const orders = new PluginStorageRepository(db, pluginId, 'checkout_carts', []);
+      await page.context().addCookies([{ name:'emdash-locale', value:'en', url:test.info().project.use.baseURL }]);
+      await page.goto(path+'orders');
+      await expect(page.getByText('No orders recorded yet.',{exact:true})).toBeVisible();
+      await capture('orders-empty');
+      const f=fixture(createCheckoutStore(orders),false);
+      f.setPayment('paid');
+      const paid=await startCheckout(f.execution,'orders-paid',cart);
+      expect(paid.phase).toBe('paid');
+      for(const price of f.execution.catalog.prices.records.values()) { price.regular.minor='0'; delete price.sale; }
+      const free=await startCheckout(f.execution,'orders-free',cart);
+      expect(free.phase).toBe('paid');
+      const snapshot=()=>database.prepare("SELECT data FROM _plugin_storage WHERE plugin_id=? AND collection='checkout_carts' ORDER BY id").all(pluginId);
+      const original=snapshot();
+      // Installed transport denial is distinct from controller-only unit proof.
+      const deniedInputs = [{type:'page_load',page:'/orders'},
+        {type:'block_action',page:'/orders',action_id:'orders.open:'+encodeURIComponent(paid.order.orderId)}];
+      const guestOrders = await browser.newContext();
+      for (const input of deniedInputs) {
+        const response = await guestOrders.request.post(new URL(endpoint,test.info().project.use.baseURL).href,
+          {headers:{'X-EmDash-Request':'1'},data:input});
+        expect([401,403]).toContain(response.status());
+        expect(await response.text()).not.toContain(paid.order.receiptId);
+      }
+      await guestOrders.close();
+      database.prepare('UPDATE users SET role=40').run();
+      for (const input of deniedInputs) {
+        const response = await page.request.post(endpoint,{headers:{'X-EmDash-Request':'1'},
+          data:{...input,user:{role:50},ui:{surface:'admin-page'}}});
+        expect(await response.text()).toContain('Orders require plugins:manage');
+      }
+      await page.reload();
+      await expect(page.getByText('Orders require plugins:manage',{exact:true})).toBeVisible();
+      await capture('orders-editor-denied');
+      database.prepare('UPDATE users SET role=50').run();
+      expect(snapshot()).toEqual(original);
+      matrix.push({actor:'Orders anonymous and forged editor',result:'list/detail denied; canonical storage unchanged'});
+      await page.reload();
+      await expect(page.getByRole('button',{name:'Inspect '+paid.order.orderId,exact:true})).toBeVisible();
+      await capture('orders-list-desktop');
+      const open=page.getByRole('button',{name:'Inspect '+paid.order.orderId,exact:true});
+      await open.focus(); await page.keyboard.press('Enter');
+      await expect(page.getByText('Receipt: '+paid.order.receiptId)).toBeVisible();
+      await expect(page.getByText('Checkout attempt: '+paid.order.attemptId)).toBeVisible();
+      await expect(page.getByText('Payment: Provider-paid')).toBeVisible();
+      await expect(page.getByText('USD 2.50',{exact:true})).toBeVisible();
+      await expect(page.getByText('Fulfillment: Not recorded')).toBeVisible();
+      await capture('orders-provider-detail');
+      await interact('Back to orders');
+      await interact('Inspect '+free.order.orderId);
+      await expect(page.getByText('Payment: Zero payable — no payment required')).toBeVisible();
+      await expect(page.getByText('USD 0.00',{exact:true}).last()).toBeVisible();
+      await page.setViewportSize({width:390,height:844});
+      await capture('orders-zero-mobile');
+      await interact('Back to orders');
+      expect(snapshot()).toEqual(original);
+      // A malformed aggregate is not an empty shop and must fail closed.
+      await orders.compareAndSet('orders-invalid',null,{attempts:null});
+      await page.reload();
+      await expect(page.getByText('Orders unavailable',{exact:true})).toBeVisible();
+      await capture('orders-unavailable');
+      await orders.delete('orders-invalid');
+      await page.reload();
+      await expect(page.getByRole('button',{name:'Inspect '+paid.order.orderId,exact:true})).toBeVisible();
+      await page.setViewportSize({width:1440,height:1000});
+      writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS,'orders-canonical.json'),JSON.stringify({paid:paid.order,free:free.order},null,2));
+    }
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'http-matrix.json'), JSON.stringify(matrix, null, 2));
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS,'storage.json'),JSON.stringify(rows(),null,2));
   } finally { await db.destroy(); }

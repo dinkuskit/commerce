@@ -1,3 +1,4 @@
+import { recordObject as object } from "./record-object.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
 import type { CouponAttempt, CouponRecord, CouponRule, CouponQuoteSnapshot } from "./types.js";
 
@@ -35,6 +36,10 @@ function money(value: unknown, name: string): void {
   }
 }
 
+function fields(candidate: Record<string, unknown>, names: string[], prefix: string, validate: (value: unknown, name: string) => void): void {
+  for (const field of names) validate(candidate[field], prefix + "." + field);
+}
+
 function date(value: unknown, name: string): void {
   text(value, name);
   if (!instantPattern.test(value) || !Number.isFinite(Date.parse(value))) {
@@ -47,13 +52,13 @@ function date(value: unknown, name: string): void {
 }
 
 function rule(value: unknown): asserts value is CouponRule {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!object(value)) {
     fail("rule must be an object");
   }
   const candidate = value as Record<string, unknown>;
   text(candidate.ruleId, "rule.ruleId");
   integer(candidate.version, "rule.version", 1);
-  if (!candidate.discount || typeof candidate.discount !== "object" || Array.isArray(candidate.discount)) {
+  if (!object(candidate.discount)) {
     fail("rule.discount is invalid");
   }
   const discount = candidate.discount as Record<string, unknown>;
@@ -91,13 +96,11 @@ function rule(value: unknown): asserts value is CouponRule {
 }
 
 export function validateCouponQuoteSnapshot(value: unknown, name: string): asserts value is CouponQuoteSnapshot {
-  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${name} is invalid`);
+  if (!object(value)) fail(`${name} is invalid`);
   const candidate = value as Record<string, unknown>;
-  for (const field of ["quoteId", "couponId", "ruleId"]) text(candidate[field], `${name}.${field}`);
+  fields(candidate, ["quoteId", "couponId", "ruleId"], name, text);
   integer(candidate.ruleVersion, `${name}.ruleVersion`, 1);
-  for (const field of ["eligibleSubtotal", "discount", "payableMerchandiseTotal", "merchandiseTotal", "overallPayableTotal"]) {
-    money(candidate[field], `${name}.${field}`);
-  }
+  fields(candidate, ["eligibleSubtotal", "discount", "payableMerchandiseTotal", "merchandiseTotal", "overallPayableTotal"], name, money);
 
   const overall = candidate.overallPayableTotal as { currency: string; minor: string };
   const merchandise = candidate.merchandiseTotal as { currency: string; minor: string };
@@ -112,13 +115,13 @@ export function validateCouponQuoteSnapshot(value: unknown, name: string): asser
   let sumLineDiscount = 0n;
 
   for (const [index, line] of candidate.lines.entries()) {
-    if (!line || typeof line !== "object" || Array.isArray(line)) fail(`${name}.lines[${index}] is invalid`);
+    if (!object(line)) fail(`${name}.lines[${index}] is invalid`);
     const item = line as Record<string, unknown>;
     const lineName = `${name}.lines[${index}]`;
     text(item.productId, `${lineName}.productId`);
     integer(item.quantity, `${lineName}.quantity`, 1);
     if (typeof item.eligible !== "boolean") fail(`${lineName}.eligible is invalid`);
-    for (const field of ["unitPrice", "lineSubtotal", "discount"]) money(item[field], `${lineName}.${field}`);
+    fields(item, ["unitPrice", "lineSubtotal", "discount"], lineName, money);
 
     const u = item.unitPrice as { currency: string; minor: string };
     const ls = item.lineSubtotal as { currency: string; minor: string };
@@ -169,9 +172,9 @@ export function validateCouponQuoteSnapshot(value: unknown, name: string): asser
 }
 
 function attempt(value: unknown, couponId: string): asserts value is CouponAttempt {
-  if (!value || typeof value !== "object" || Array.isArray(value)) fail("attempt is invalid");
+  if (!object(value)) fail("attempt is invalid");
   const item = value as Record<string, unknown>;
-  for (const field of ["attemptId", "couponId", "ruleId", "quoteId"]) text(item[field], `attempt.${field}`);
+  fields(item, ["attemptId", "couponId", "ruleId", "quoteId"], "attempt", text);
   if (item.couponId !== couponId) fail("attempt couponId mismatch");
   integer(item.ruleVersion, "attempt.ruleVersion", 1);
   if (typeof item.state !== "string" || !states.has(item.state)) fail("attempt.state is invalid");
@@ -182,7 +185,7 @@ function attempt(value: unknown, couponId: string): asserts value is CouponAttem
   }
   if (item.providerSessionId !== undefined) text(item.providerSessionId, "attempt.providerSessionId");
   if (item.freeOrder !== undefined) {
-    if (!item.freeOrder || typeof item.freeOrder !== "object" || Array.isArray(item.freeOrder)) fail("attempt.freeOrder is invalid");
+    if (!object(item.freeOrder)) fail("attempt.freeOrder is invalid");
     text((item.freeOrder as Record<string, unknown>).orderId, "attempt.freeOrder.orderId");
     text((item.freeOrder as Record<string, unknown>).receiptId, "attempt.freeOrder.receiptId");
   }
@@ -216,7 +219,7 @@ function attempt(value: unknown, couponId: string): asserts value is CouponAttem
 }
 
 export function validateCouponRecord(value: unknown, expectedCouponId?: string): CouponRecord {
-  if (!value || typeof value !== "object" || Array.isArray(value)) fail("stored coupon must be an object");
+  if (!object(value)) fail("stored coupon must be an object");
   const record = value as Record<string, unknown>;
   if (record.recordKind !== "coupon") fail("stored coupon recordKind is invalid");
   text(record.couponId, "coupon.couponId");
