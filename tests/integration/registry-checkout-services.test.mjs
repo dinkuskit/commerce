@@ -222,6 +222,7 @@ test('malformed or copied configuration is rejected before encrypted credential/
     { ...configuration(), schema: 'unsupported' },
     { ...configuration(), paymentsOrigin: 'http://8.8.8.8' },
     { ...configuration(), providerId: 'unsupported' },
+    { ...configuration(), mode: 'live' },
     { ...configuration(), pricingSchema: 'unsupported' },
     { ...configuration(), shipping: { configurationId: 'ship', revision: 1, mode: 'flat', amount: { currency: 'USD', minor: '-1' } } },
     { ...configuration(), shipping: { configurationId: 'ship', revision: 1, mode: 'free', amount: { currency: 'USD', minor: '1' } } },
