@@ -217,6 +217,7 @@ function normalizedConfig(
       credentialResolver: input.credentialResolver,
       fetch: input.fetch,
       pricingSchema: input.pricingSchema,
+      validateCouponQuoteSnapshot: input.validateCouponQuoteSnapshot,
     });
   }
   if (input.stripeAccountId !== undefined) invalid("authorize_net must not set stripeAccountId");
