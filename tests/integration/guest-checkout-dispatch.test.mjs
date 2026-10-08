@@ -39,7 +39,7 @@ test("native PluginStorageRepository dispatch retains one paid order across conn
     const paid = await invokeGuest(
       plugin.routes["checkout/guest/status"],
       left.storage,
-      { wake: true },
+      {},
       { capability: token },
     );
     assert.equal(paid.checkout.state, "paid");
@@ -50,7 +50,7 @@ test("native PluginStorageRepository dispatch retains one paid order across conn
     const recovered = await invokeGuest(
       plugin.routes["checkout/guest/status"],
       reopened.storage,
-      { wake: true, paid: false },
+      {},
       { capability: token },
     );
     assert.deepEqual(recovered.checkout.order, paid.checkout.order);
