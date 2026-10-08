@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-08T14:58:09+00:00",
-    "domain": "Product/variant architecture and shared UI/agent authority",
-    "started_at": "2026-10-08T14:58:09+00:00",
-    "status": "inspected",
-    "summary": "Confirmed five-point architecture only: one product/variant model with hidden default variant in simple editing; optional variant-defining choices distinct from attributes; independent purchasable-variant fulfillment; shared UI/agent validation and identities; customizations, bundles and protocols deferred. Decision/document recording now; no variants or tool APIs marked implemented. Coordinator may route bounded foundation build when ready."
+    "confirmed_at": "2026-10-08T17:40:29+00:00",
+    "domain": "Registry Stripe TEST checkout binding and guest checkout configuration",
+    "started_at": "2026-10-08T17:40:00+00:00",
+    "status": "confirmed",
+    "summary": "Keep the approved server-owned Stripe TEST binding for demo.dinkuskit.com guest checkout. Predecessor v1 installedCheckout JSON that omits mode stays valid; Payments still proves the binding is TEST. No live keys, browser-selected provider, or webhook-only paid decision."
   },
   "decisions": [
     {
@@ -7886,10 +7886,79 @@
       "superseded_by": null,
       "updated_at": "2026-10-08T14:58:09+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
+      "context_ref": "https://github.com/dinkuskit/payments/pull/21;file:docs/demo-checkout.md",
+      "created_at": "2026-10-08T17:40:30+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Registry Stripe TEST checkout binding and guest checkout configuration",
+      "history": [
+        {
+          "at": "2026-10-08T17:40:30+00:00",
+          "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T17:43:45+00:00",
+          "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T17:43:45+00:00",
+          "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/registry-services.ts;file:docs/demo-checkout.md;file:tests/integration/registry-checkout-services.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "demo-payments-binding-20261008",
+      "implementation_ref": "file:src/features/checkout/registry-services.ts;file:docs/demo-checkout.md;file:tests/integration/registry-checkout-services.test.mjs",
+      "question": "What Commerce configuration unlocks demo.dinkuskit.com guest checkout for the approved Payments TEST binding?",
+      "rationale": "Ryan (GitHub saariuslystoned) approved this follow-up after Payments PR #21; the handoff is https://github.com/dinkuskit/payments/pull/21 and docs/stripe-test-mode.md. Issue #33 contact and delivery snapshots remain unresolved and do not block this line-only demo checkout.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T17:43:45+00:00",
+      "verification_ref": "node --test tests/integration/registry-checkout-services.test.mjs (17 pass, predecessor v1 without mode)"
     }
   ],
   "last_activation": {
-    "at": "2026-10-08T14:59:58+00:00",
+    "at": "2026-10-08T17:39:59+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -7897,20 +7966,12 @@
       "docs/contracts/product-variant-model.md",
       ".grilltrack/proof/product-variant-model-20261008/PROOF.md"
     ],
-    "next_safe_action": "Review the decision PR, then reserve and route an in-process catalog read-tool adapter over existing canonical readers. Resolve identity migration and fulfillment semantics before broader variants/issue33 adoption.",
-    "paused_at": "2026-10-08T14:58:09+00:00",
-    "reason": "Architectural lock recorded; focused decision PR and bounded source-owner handoff remain separate from implementation.",
-    "resumed_at": "2026-10-08T14:59:58+00:00"
-  },
-  "pause": {
-    "artifact_refs": [
-      "docs/contracts/product-variant-model.md",
-      ".grilltrack/proof/product-variant-model-20261008/PROOF.md"
-    ],
     "next_safe_action": "Review decision PR, reserve and route the canonical catalog read-tool foundation; decide identity migration and fulfillment policy before broader variants/issue33 adoption.",
     "paused_at": "2026-10-08T14:59:59+00:00",
-    "reason": "Architectural lock recorded; decision PR and bounded source-owner handoff remain separate from implementation."
+    "reason": "Architectural lock recorded; decision PR and bounded source-owner handoff remain separate from implementation.",
+    "resumed_at": "2026-10-08T17:39:59+00:00"
   },
+  "pause": null,
   "recommendation": {
     "alternatives": [],
     "reason": "The confirmed shared UI/agent authority boundary supports this independent foundation without new variants, migrations, permissions or protocols. Broader variant identity and fulfillment policy remain genuine decisions.",
@@ -7927,8 +7988,8 @@
     "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "paused",
+  "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T14:59:59+00:00"
+  "updated_at": "2026-10-08T17:43:45+00:00"
 }

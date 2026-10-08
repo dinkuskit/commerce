@@ -214,6 +214,16 @@ test('actual SDK CAS and manifest uniqueness retain one winner and owner configu
   assert.equal(await state.collections.coupons.get('unique-b'), null);
 });
 
+test('predecessor v1 enabled config without mode still uses TEST Payments binding', async t => {
+  const { mode: _ignored, ...legacy } = configuration();
+  const state = await runtimeFixture({ config: legacy });
+  t.after(() => state.close());
+  const { result } = await start(state);
+  assert.equal(result.ok, true);
+  assert.equal(state.requests.length, 1);
+  assert.equal(state.requests[0].total.minor, '250');
+});
+
 test('malformed or copied configuration is rejected before encrypted credential/transport', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());

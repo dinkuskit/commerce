@@ -32,6 +32,10 @@ angle-bracket placeholders with values issued for this site:
 }
 ```
 
+Predecessor v1 enabled snapshots that omit `mode` remain valid under this
+schema. Payments still has to prove the remote binding is TEST before a
+session or lookup is created. Stored `mode`, when present, must be `test`.
+
 The host must also provision `installedCheckoutCredential` as an encrypted
 secret setting containing a short-lived signed server-to-server token. It must
 be issued for the same `siteId`, `issuer`, `audience`, and
