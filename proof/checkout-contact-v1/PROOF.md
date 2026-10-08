@@ -28,7 +28,7 @@ Supported Node22.23.2 verification:
 - Actual default workerd/SDK required-phone regression passed. Existing Registry
   runtime fixture is unchanged; native and installed overrides use original
   ctx.settings through the existing store-settings kernel export.
-- Desktop and phone captures under visuals/ were inspected: fields usable,
+- Retained desktop and phone captures linked in [ASSET-PROVENANCE.md](ASSET-PROVENANCE.md) were inspected: fields usable,
   response contains the paid projection without original contact. The visible
   edited draft deliberately differs from the preserved paid snapshot.
 

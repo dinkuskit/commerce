@@ -1,14 +1,26 @@
 [
   {
-    "path": "proof/checkout-contact-v1/visuals/contact-phone.png",
-    "sha256": "9776ae8958fba84367114c82bac1a8e321169e3150b546592625b05c80a6a07f",
-    "classification": "synthetic",
-    "inspected": true
+    "sourcePath": "proof/checkout-contact-v1/visuals/contact-desktop.png",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-pr-69-235afd68b0f9/contact-desktop.png",
+    "bytes": 178084,
+    "sha256": "8fdd087e3e5cfa6cf9ba6f675727f098699aa0f21babf502656f30fa800daef4",
+    "classification": "synthetic inactive local proof",
+    "redaction": "none",
+    "inspected": true,
+    "sourceHead": "235afd68b0f9e8235d853995bdd5a5f36fdc58a3",
+    "captureRun": "contact-20261008-c2-recheck",
+    "access": "private repository; authorized GitHub access required"
   },
   {
-    "path": "proof/checkout-contact-v1/visuals/contact-desktop.png",
-    "sha256": "8fdd087e3e5cfa6cf9ba6f675727f098699aa0f21babf502656f30fa800daef4",
-    "classification": "synthetic",
-    "inspected": true
+    "sourcePath": "proof/checkout-contact-v1/visuals/contact-phone.png",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-pr-69-235afd68b0f9/contact-phone.png",
+    "bytes": 147775,
+    "sha256": "9776ae8958fba84367114c82bac1a8e321169e3150b546592625b05c80a6a07f",
+    "classification": "synthetic inactive local proof",
+    "redaction": "none",
+    "inspected": true,
+    "sourceHead": "235afd68b0f9e8235d853995bdd5a5f36fdc58a3",
+    "captureRun": "contact-20261008-c2-recheck",
+    "access": "private repository; authorized GitHub access required"
   }
 ]
