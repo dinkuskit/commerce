@@ -35,6 +35,9 @@ paid amount checks must use that frozen total — never a recomputed price.
    implementation depends on payments #22 adding that binding field.
 3. Split more Registry backend into cohesive modules for about **6500 bytes**
    of headroom under the 131072-byte file limit, behavior unchanged.
+   Measured after this factoring (post-#66 main baseline **130243** for the
+   prior checkout graph; candidate after authorize_net + headroom factoring):
+   **124560** bytes (headroom **6512** under 131072).
 
 ## Product rules
 

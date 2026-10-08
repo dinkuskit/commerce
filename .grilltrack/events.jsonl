@@ -164,3 +164,7 @@
 {"action": "decision_implemented", "at": "2026-10-08T20:19:13+00:00", "data": {"decision_id": "registry-coupons-deferred-20261008"}, "event_id": "53e851c2-c7d1-4a74-a18c-cc23c90a145f"}
 {"action": "decision_verified", "at": "2026-10-08T20:27:24+00:00", "data": {"decision_id": "registry-coupons-deferred-20261008"}, "event_id": "7b703aab-a877-45bc-a9c8-0f47eb011887"}
 {"action": "decision_verified", "at": "2026-10-08T20:27:24+00:00", "data": {"decision_id": "coupons-registry-packaging-001"}, "event_id": "2ac645ee-45f8-4956-9c4b-6edad444eb60"}
+{"action": "focus_started", "at": "2026-10-08T20:28:00+00:00", "data": {"cadence": "sequential", "domain": "Installed Registry checkout payment-provider admission"}, "event_id": "8f894faa-a79c-4d0d-959f-eddae1f19656"}
+{"action": "decision_proposed", "at": "2026-10-08T20:29:54+00:00", "data": {"decision_id": "checkout-authorize-net-provider-20261008"}, "event_id": "b8a646ec-9fda-4e48-b317-57abb6bfd4c8"}
+{"action": "decision_proposed", "at": "2026-10-08T20:29:54+00:00", "data": {"decision_id": "checkout-authorize-net-provider-ryan-notes-20261008"}, "event_id": "da2db2fa-6f2a-484b-a88d-ea2c3e25c738"}
+{"action": "decision_proposed", "at": "2026-10-08T20:29:54+00:00", "data": {"decision_id": "checkout-authorize-net-provider-ryan-notes-20261008b"}, "event_id": "b26d83c2-b63f-47a6-b246-a78b7fb81d2b"}
