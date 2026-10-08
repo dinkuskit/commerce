@@ -5,9 +5,9 @@
     "cadence": "frontier-batch",
     "confirmed": false,
     "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
-    "started_at": "2026-10-08T19:11:06+00:00",
+    "started_at": "2026-10-08T20:11:12+00:00",
     "status": "grilling",
-    "summary": "Provisional decisions for availability mapping, optional identifiers, policy records, and host-side JSON-LD builder. Ryan locks; implementation proceeds on recommended options pending lock."
+    "summary": "All five #59 GrillTrack decisions locked per PR #73 comments 6067853218 and 6067898015. Implementation matches locks; follow-ups for shopper qty display and hide-OOS catalog remain proposed. Awaiting ClawSweeper verdict; no merge."
   },
   "decisions": [
     {
@@ -8356,5 +8356,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T19:56:36+00:00"
+  "updated_at": "2026-10-08T20:11:12+00:00"
 }
