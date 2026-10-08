@@ -44,6 +44,13 @@ Tests cover missing unique indexes and a concurrent edit that changes both
 stock-management state and another catalog field. The SKU update preserves
 those changes rather than writing a stale full row.
 
+The catalog row also retains the normalized creation payload separately from
+the editable SKU fields. Create-command replay compares that immutable
+snapshot, so a SKU-only different command is rejected both before and after a
+SKU edit, while the original command still replays the existing item after
+the edit. Unique-violation classification receives the trusted custom
+collection and plugin namespace used by the preflight.
+
 ## Browser/migration comparison
 
 The local comparison used the same Node `v22.14.0`, npm `10.9.7`,
