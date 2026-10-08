@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-08T00:41:36+00:00",
-    "domain": "Product media: image, gallery, placeholder, sizes and alt text referencing EmDash's Media Library (WooCommerce model)",
-    "started_at": "2026-10-08T00:41:35+00:00",
+    "confirmed_at": "2026-10-08T14:58:09+00:00",
+    "domain": "Product/variant architecture and shared UI/agent authority",
+    "started_at": "2026-10-08T14:58:09+00:00",
     "status": "inspected",
-    "summary": "Replay PR57 previously confirmed product-media choices onto installed Orders main at explicit user request. Preserve both feature contracts; old media reviews are historical, not current-head review."
+    "summary": "Confirmed five-point architecture only: one product/variant model with hidden default variant in simple editing; optional variant-defining choices distinct from attributes; independent purchasable-variant fulfillment; shared UI/agent validation and identities; customizations, bundles and protocols deferred. Decision/document recording now; no variants or tool APIs marked implemented. Coordinator may route bounded foundation build when ready."
   },
   "decisions": [
     {
@@ -7844,19 +7844,22 @@
       "verification_ref": null
     },
     {
-      "baseline_ref": null,
+      "baseline_ref": "git:938cb06cc6c0a1e7f457e514076d608219e38c65",
       "candidate_refs": [],
-      "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision.",
-      "context_ref": "https://github.com/dinkuskit/payments/pull/21;file:docs/demo-checkout.md",
-      "created_at": "2026-10-08T15:56:35+00:00",
+      "choice": "One product/variant model; simple editing hides the single default variant. Optional variant-defining choices are separate from descriptive attributes. Fulfillment is defined independently for the purchasable variant. Human UI and future agent tools share authoritative validation and identities. Customizations, bundles, and protocol integrations remain later work.",
+      "context_ref": "file:docs/contracts/product-variant-model.md",
+      "created_at": "2026-10-08T14:58:09+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
-      "dependencies": [],
-      "domain": "Product media: image, gallery, placeholder, sizes and alt text referencing EmDash's Media Library (WooCommerce model)",
+      "dependencies": [
+        "catalog-product-identity-058",
+        "catalog-product-page-boundary-058"
+      ],
+      "domain": "Product/variant architecture and shared UI/agent authority",
       "history": [
         {
-          "at": "2026-10-08T15:56:35+00:00",
-          "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision.",
+          "at": "2026-10-08T14:58:09+00:00",
+          "choice": "One product/variant model; simple editing hides the single default variant. Optional variant-defining choices are separate from descriptive attributes. Fulfillment is defined independently for the purchasable variant. Human UI and future agent tools share authoritative validation and identities. Customizations, bundles, and protocol integrations remain later work.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -7869,10 +7872,10 @@
           "verification_ref": null
         }
       ],
-      "id": "demo-payments-binding-20261008",
+      "id": "product-variant-model-20261008",
       "implementation_ref": null,
-      "question": "What Commerce configuration unlocks demo.dinkuskit.com guest checkout for the approved Payments TEST binding?",
-      "rationale": "Ryan (GitHub saariuslystoned) approved this follow-up after Payments PR #21; the handoff is https://github.com/dinkuskit/payments/pull/21 and docs/stripe-test-mode.md. Issue #33 contact and delivery snapshots remain unresolved and do not block this line-only demo checkout.",
+      "question": "What product/variant and shared UI/agent boundary governs the next Commerce slices?",
+      "rationale": "Explicit shared-understanding confirmation after official Shopify/BigCommerce reference review. Preserve stable itemId, editable SKU, host editorial identity and optional Inventory. Source implementation, migration/defaults and inheritance remain separately scoped.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -7881,32 +7884,38 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T15:56:35+00:00",
+      "updated_at": "2026-10-08T14:58:09+00:00",
       "verification_ref": null
     }
   ],
   "last_activation": {
-    "at": "2026-10-08T15:56:35+00:00",
+    "at": "2026-10-08T14:59:58+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
     "artifact_refs": [
-      ".grilltrack/proof/product-media-rebase-20261007/PROOF.md"
+      "docs/contracts/product-variant-model.md",
+      ".grilltrack/proof/product-variant-model-20261008/PROOF.md"
     ],
-    "next_safe_action": "Inspect native review on pushed PR57 head; do not merge without authorization.",
-    "paused_at": "2026-10-08T00:45:29+00:00",
-    "reason": "Requested rebase locally verified; independent review of new tuple and merge authorization remain separate.",
-    "resumed_at": "2026-10-08T15:56:35+00:00"
+    "next_safe_action": "Review the decision PR, then reserve and route an in-process catalog read-tool adapter over existing canonical readers. Resolve identity migration and fulfillment semantics before broader variants/issue33 adoption.",
+    "paused_at": "2026-10-08T14:58:09+00:00",
+    "reason": "Architectural lock recorded; focused decision PR and bounded source-owner handoff remain separate from implementation.",
+    "resumed_at": "2026-10-08T14:59:58+00:00"
   },
-  "pause": null,
-  "recommendation": {
-    "alternatives": [
-      "Variations: sellable variants with a per-variation image that falls back to the parent product image, then to the store placeholder (rule recorded in product-media-reference-001), together with variant price and SKU identity.",
-      "Host picker and URL parity: when Block Kit renders media_picker on plugin admin pages and the plugin media item carries a public URL or storage key, replace the Commerce-rendered chooser with the host element and let the public catalog carry src/srcset directly; includes batching or bounded caching of per-request media reads."
+  "pause": {
+    "artifact_refs": [
+      "docs/contracts/product-variant-model.md",
+      ".grilltrack/proof/product-variant-model-20261008/PROOF.md"
     ],
-    "reason": "Decision 7 deferred imports and extensions to a media plugin by design; it is the next WooCommerce-shaped gap now that product references, live alt and the placeholder exist. Variations are the next catalog gap the recorded fallback rule already anticipates. The host-parity alternative depends on EmDash changes outside this repository.",
-    "recommended": "Media plugin as WooCommerce's extension layer: bulk and feed import deduped by recorded source URL and content hash, CDN offload, size regeneration and video galleries, implemented as a separate plugin that talks to EmDash's media API (media:write / media:bytes:read) and to Commerce's product references (catalog-items/save-media), never to a store of its own; first grill settles the import contract and the dedupe keys.",
-    "recorded_at": "2026-10-08T00:45:29+00:00"
+    "next_safe_action": "Review decision PR, reserve and route the canonical catalog read-tool foundation; decide identity migration and fulfillment policy before broader variants/issue33 adoption.",
+    "paused_at": "2026-10-08T14:59:59+00:00",
+    "reason": "Architectural lock recorded; decision PR and bounded source-owner handoff remain separate from implementation."
+  },
+  "recommendation": {
+    "alternatives": [],
+    "reason": "The confirmed shared UI/agent authority boundary supports this independent foundation without new variants, migrations, permissions or protocols. Broader variant identity and fulfillment policy remain genuine decisions.",
+    "recommended": "Route an in-process typed catalog read-tool adapter over existing canonical list/item readers after reserving its source paths.",
+    "recorded_at": "2026-10-08T14:59:58+00:00"
   },
   "reconciliation": {
     "plan_id": "1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc",
@@ -7918,8 +7927,8 @@
     "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
+  "status": "paused",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T15:56:35+00:00"
+  "updated_at": "2026-10-08T14:59:59+00:00"
 }
