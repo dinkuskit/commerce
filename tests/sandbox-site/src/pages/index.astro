@@ -4,11 +4,13 @@
 // endpoint with Commerce's preset constants. No live shop or payment connection.
 import { handleMediaGet } from "emdash";
 import { getDb } from "emdash/runtime";
+import { PluginStorageRepository } from "emdash";
 import {
   COMMERCE_IMAGE_PRESETS,
   COMMERCE_IMAGE_SIZES,
   commerceImageSrcset,
   commerceImageTransformUrl,
+  readPublicCatalog,
 } from "../../../../dist/features/catalog/index.js";
 
 const origin = Astro.url.origin;
@@ -16,9 +18,30 @@ const emdash = Astro.locals.emdash;
 const errors = [];
 let products = [];
 try {
-  const response = await fetch(origin + "/_emdash/api/plugins/dinkus-commerce/catalog/public");
-  const body = await response.json();
-  products = body.data?.products ?? body.products ?? [];
+  if (import.meta.env.COMMERCE_NATIVE_PUBLIC_CATALOG === "1") {
+    const db = await getDb();
+    const repository = (collection, indexes = []) =>
+      new PluginStorageRepository(db, "dinkus-commerce", collection, indexes);
+    const body = await readPublicCatalog({
+      storage: {
+        catalog_items: repository("catalogItems", ["commandId", "skuKey"]),
+        catalog_prices: repository("catalogPrices"),
+        catalog_manual_availability: repository("catalogManualAvailability"),
+        catalog_backorder_policies: repository("catalogBackorderPolicies"),
+        store_inventory_configurations: repository("storeInventoryConfigurations"),
+        storefront_availability_settings: repository("storefrontAvailabilitySettings"),
+        storefront_out_of_stock_listing: repository("storefrontOutOfStockListing"),
+        catalog_media: repository("catalogMedia"),
+        storefront_placeholder_image: repository("storefrontPlaceholderImage"),
+      },
+      site: { url: origin },
+    });
+    products = body.products;
+  } else {
+    const response = await fetch(origin + "/_emdash/api/plugins/dinkus-commerce/catalog/public");
+    const body = await response.json();
+    products = body.data?.products ?? body.products ?? [];
+  }
 } catch (error) {
   errors.push("catalog: " + (error instanceof Error ? error.message : String(error)));
 }
@@ -54,7 +77,7 @@ for (const product of products) {
   rendered.push({ product, image: await resolveImage(product.image, COMMERCE_IMAGE_PRESETS.thumbnail), gallery });
 }
 ---
-<!doctype html><html lang="en"><head><meta charset="utf-8" /><title>Commerce sandbox proof</title></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8" /><title>Commerce sandbox proof</title><style>pre{white-space:pre-wrap;overflow-wrap:anywhere}fieldset label{display:block}body{max-width:60rem}fieldset{min-width:0}</style></head><body>
 <h1>Commerce sandbox proof host</h1>
 <p>Disposable SQLite host. No live shop or payment connection.</p>
 {errors.length ? <pre data-errors>{errors.join("\n")}</pre> : null}
@@ -62,6 +85,21 @@ for (const product of products) {
   {rendered.map(({ product, image, gallery }) => (
     <li data-product={product.sku}>
       <h2>{product.name}</h2>
+      {product.variants ? (
+        <fieldset data-variants={product.variants.productId}>
+          <legend>{product.variants.options.map((option) => option.label).join(" / ")}</legend>
+          {product.variants.members.map((member) => (
+            <label>
+              <input type="radio" name={`variant-${product.variants.productId}`} value={member.catalogItemId}
+                disabled={!member.availability.sellable} />
+              {member.selections.map((selection) => selection.valueLabel).join(" / ")}
+              {" — "}{member.price?.minor ?? "unpriced"}{" "}
+              {member.availability.status}{" "}
+              {member.fulfillment}
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
       {image ? (
         <img src={image.src} srcset={image.srcset} sizes={COMMERCE_IMAGE_SIZES} alt={image.alt}
           width={image.width ?? undefined} height={image.height ?? undefined} data-placeholder={String(image.placeholder)}
@@ -79,4 +117,60 @@ for (const product of products) {
     </li>
   ))}
 </ul>
+{rendered.some(({ product }) => product.variants) ? (
+  <section data-checkout="guest">
+    <h2>Guest checkout proof</h2>
+    <button type="button" data-action="prepare">Prepare checkout</button>
+    <button type="button" data-action="start" disabled>Start checkout</button>
+    <button type="button" data-action="status" disabled>Refresh payment status</button>
+    <p data-frozen-order>Selection is not frozen</p>
+    <pre data-checkout-result>Not prepared</pre>
+  </section>
+) : null}
+<script is:inline>
+  const checkout = document.querySelector('[data-checkout="guest"]');
+  if (checkout) {
+    const result = checkout.querySelector("[data-checkout-result]");
+    const prepareButton = checkout.querySelector('[data-action="prepare"]');
+    const startButton = checkout.querySelector('[data-action="start"]');
+    const statusButton = checkout.querySelector('[data-action="status"]');
+    const route = (name) => `/_emdash/api/plugins/dinkus-commerce/checkout/guest/${name}`;
+    let capability;
+    let attemptId;
+    const selectedLine = () => ({
+      lines: [{
+        catalogItemId: document.querySelector('input[name^="variant-"]:checked')?.value ?? "",
+        quantity: 1,
+      }],
+    });
+    const call = async (name, body) => {
+      const response = await fetch(route(name), {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(capability ? { "x-commerce-guest-capability": capability } : {}) },
+        body: JSON.stringify(body),
+      });
+      const json = await response.json();
+      result.textContent = JSON.stringify(json, null, 2);
+      return json.data ?? json;
+    };
+    prepareButton.addEventListener("click", async () => {
+      const payload = await call("prepare", {});
+      capability = payload.capability?.capability;
+      startButton.disabled = !capability;
+      result.dataset.state = "prepared";
+    });
+    startButton.addEventListener("click", async () => {
+      const payload = await call("start", selectedLine());
+      attemptId = payload.checkout?.attemptId ?? null;
+      statusButton.disabled = !attemptId;
+      const selected = document.querySelector('input[name^="variant-"]:checked')?.closest("label")?.textContent?.trim() ?? "";
+      checkout.querySelector("[data-frozen-order]").textContent = `Frozen selection: ${selected}`;
+      result.dataset.state = "pending";
+    });
+    statusButton.addEventListener("click", async () => {
+      await call("status", { attemptId });
+      result.dataset.state = "paid";
+    });
+  }
+</script>
 </body></html>

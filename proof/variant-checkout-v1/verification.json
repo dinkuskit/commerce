@@ -1,0 +1,33 @@
+{
+  "verification": "bin/verify-commerce full",
+  "result": "passed",
+  "unitTests": 349,
+  "integrationTests": 39,
+  "mainBrowserTests": 10,
+  "nativeLocalStockTests": 1,
+  "installedCouponBrowserTests": 1,
+  "sandboxArtifact": {
+    "bytes": 130243,
+    "sha256": "fcde0795062c9ec95fb352c1f8d39cede8acd8e76c51999d546c7f81a0a79268",
+    "maximumBytes": 131072
+  },
+  "logSha256": "5e0e56f71a82de395c7a81f65a9e8295d11a890987c9638fe6fe57f5e4f3fb8e",
+  "review": "Accepted bulk-member and public-listability findings repaired; exact final tuple review pending",
+  "limitations": [
+    "Native paid proof uses a disposable synthetic Payments port",
+    "No real Stripe or Registry paid checkout claim"
+  ],
+  "finalUiVerification": {
+    "nativeVariantTests": 2,
+    "result": "passed",
+    "logSha256": "60f94a9bc07160244cc79b619dd55d2984e6d7f48dafd1a51497f9b85add6dad",
+    "reason": "Disabled Manage stock controls retained on variant rows; editor waits for completed refresh",
+    "sandboxVariantTests": 2,
+    "sandboxLogSha256": "38680b2827768c399aaeb2a05e58e25d9924e05d9c0e0b9a118c9152ef0c696e",
+    "mainBrowserTests": 10,
+    "onboardingFix": "Wait for visible Get Started or SKU, dismiss welcome dialog when present, then verify editor",
+    "onboardingLogSha256": "f036e04b914f5d6a37568ef46afb078712b2dcf47887b5325b10538f29172d27",
+    "regression": "Ordinary non-member bulk pricing refuses without changing price or revision",
+    "listingPolicy": "Reads existing Hide-out-of-stock setting; Small is hidden or disabled, Large remains available"
+  }
+}

@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-08T17:40:29+00:00",
-    "domain": "Registry Stripe TEST checkout binding and guest checkout configuration",
-    "started_at": "2026-10-08T17:40:00+00:00",
+    "confirmed_at": "2026-10-08T15:41:16+00:00",
+    "domain": "Authoritative variant checkout journey",
+    "started_at": "2026-10-08T15:41:15+00:00",
     "status": "confirmed",
-    "summary": "Keep the approved server-owned Stripe TEST binding for demo.dinkuskit.com guest checkout. Predecessor v1 installedCheckout JSON that omits mode stays valid; Payments still proves the binding is TEST. No live keys, browser-selected provider, or webhook-only paid decision."
+    "summary": "Bobby confirmed one product and variant model with a hidden simple default, optional variant-defining choices, independent per-variant fulfillment, shared authoritative operations, independent price and availability, and explicit bulk writes. Implement the bounded Small sold-out USD2000 / Large available USD2400 merchant-to-guest synthetic paid-order journey, preserving default itemId and frozen originals. Fixture reseeding is authorized; contact, delivery effects, bundles, protocols, Inventory activation and host page routing remain excluded."
   },
   "decisions": [
     {
@@ -7870,51 +7870,10 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
-        }
-      ],
-      "id": "product-variant-model-20261008",
-      "implementation_ref": null,
-      "question": "What product/variant and shared UI/agent boundary governs the next Commerce slices?",
-      "rationale": "Explicit shared-understanding confirmation after official Shopify/BigCommerce reference review. Preserve stable itemId, editable SKU, host editorial identity and optional Inventory. Source implementation, migration/defaults and inheritance remain separately scoped.",
-      "repair_required": false,
-      "review_classifications": [],
-      "review_history": [],
-      "review_ref": null,
-      "review_result": null,
-      "review_source_identity": null,
-      "status": "locked",
-      "superseded_by": null,
-      "updated_at": "2026-10-08T14:58:09+00:00",
-      "verification_ref": null
-    },
-    {
-      "baseline_ref": null,
-      "candidate_refs": [],
-      "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
-      "context_ref": "https://github.com/dinkuskit/payments/pull/21;file:docs/demo-checkout.md",
-      "created_at": "2026-10-08T17:40:30+00:00",
-      "deferred_reason": null,
-      "delivery_ref": null,
-      "dependencies": [],
-      "domain": "Registry Stripe TEST checkout binding and guest checkout configuration",
-      "history": [
-        {
-          "at": "2026-10-08T17:40:30+00:00",
-          "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
-          "from": "proposed",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
         },
         {
-          "at": "2026-10-08T17:43:45+00:00",
-          "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
+          "at": "2026-10-08T16:58:59+00:00",
+          "choice": "One product/variant model; simple editing hides the single default variant. Optional variant-defining choices are separate from descriptive attributes. Fulfillment is defined independently for the purchasable variant. Human UI and future agent tools share authoritative validation and identities. Customizations, bundles, and protocol integrations remain later work.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -7927,10 +7886,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-08T17:43:45+00:00",
-          "choice": "Enable only an explicit server-owned Stripe TEST binding for demo.dinkuskit.com: providerId stripe, mode test, immutable Payments bindingRef and Stripe Connect test account, signed payments:checkout credential, scoped Payments origin, and the existing authoritative guest prepare/start/status plus wake reconciliation. No live keys, browser-selected provider or webhook-only paid decision. Predecessor v1 enabled snapshots that omit mode remain valid; Payments still has to prove the remote binding is TEST.",
+          "at": "2026-10-08T17:03:42+00:00",
+          "choice": "One product/variant model; simple editing hides the single default variant. Optional variant-defining choices are separate from descriptive attributes. Fulfillment is defined independently for the purchasable variant. Human UI and future agent tools share authoritative validation and identities. Customizations, bundles, and protocol integrations remain later work.",
           "from": "implemented",
-          "implementation_ref": "file:src/features/checkout/registry-services.ts;file:docs/demo-checkout.md;file:tests/integration/registry-checkout-services.test.mjs",
+          "implementation_ref": "docs/implementation/variant-checkout-v1.md",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -7941,10 +7900,10 @@
           "verification_ref": null
         }
       ],
-      "id": "demo-payments-binding-20261008",
-      "implementation_ref": "file:src/features/checkout/registry-services.ts;file:docs/demo-checkout.md;file:tests/integration/registry-checkout-services.test.mjs",
-      "question": "What Commerce configuration unlocks demo.dinkuskit.com guest checkout for the approved Payments TEST binding?",
-      "rationale": "Ryan (GitHub saariuslystoned) approved this follow-up after Payments PR #21; the handoff is https://github.com/dinkuskit/payments/pull/21 and docs/stripe-test-mode.md. Issue #33 contact and delivery snapshots remain unresolved and do not block this line-only demo checkout.",
+      "id": "product-variant-model-20261008",
+      "implementation_ref": "docs/implementation/variant-checkout-v1.md",
+      "question": "What product/variant and shared UI/agent boundary governs the next Commerce slices?",
+      "rationale": "Explicit shared-understanding confirmation after official Shopify/BigCommerce reference review. Preserve stable itemId, editable SKU, host editorial identity and optional Inventory. Source implementation, migration/defaults and inheritance remain separately scoped.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -7953,12 +7912,154 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-08T17:43:45+00:00",
-      "verification_ref": "node --test tests/integration/registry-checkout-services.test.mjs (17 pass, predecessor v1 without mode)"
+      "updated_at": "2026-10-08T17:03:42+00:00",
+      "verification_ref": "proof/variant-checkout-v1/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+      "context_ref": "docs/implementation/variant-checkout-v1.md",
+      "created_at": "2026-10-08T15:41:15+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-model-20261008"
+      ],
+      "domain": "Authoritative variant checkout journey",
+      "history": [
+        {
+          "at": "2026-10-08T15:41:15+00:00",
+          "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T16:58:59+00:00",
+          "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T17:03:43+00:00",
+          "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "variant-price-availability-20261008",
+      "implementation_ref": "src/features/catalog/product-admin.ts",
+      "question": "How are variant price and availability edited?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T17:03:43+00:00",
+      "verification_ref": "proof/variant-checkout-v1/verification.json"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+      "context_ref": null,
+      "created_at": "2026-10-08T15:41:15+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-model-20261008"
+      ],
+      "domain": "Authoritative variant checkout journey",
+      "history": [
+        {
+          "at": "2026-10-08T15:41:16+00:00",
+          "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T16:58:59+00:00",
+          "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T17:03:43+00:00",
+          "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+          "from": "implemented",
+          "implementation_ref": "tests/sandbox/variant-checkout.spec.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "variant-fictional-fixtures-20261008",
+      "implementation_ref": "tests/sandbox/variant-checkout.spec.mjs",
+      "question": "May owned proof products be adapted for the model?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T17:03:43+00:00",
+      "verification_ref": "proof/variant-checkout-v1/visuals.json"
     }
   ],
   "last_activation": {
-    "at": "2026-10-08T17:39:59+00:00",
+    "at": "2026-10-08T15:41:14+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -7969,7 +8070,7 @@
     "next_safe_action": "Review decision PR, reserve and route the canonical catalog read-tool foundation; decide identity migration and fulfillment policy before broader variants/issue33 adoption.",
     "paused_at": "2026-10-08T14:59:59+00:00",
     "reason": "Architectural lock recorded; decision PR and bounded source-owner handoff remain separate from implementation.",
-    "resumed_at": "2026-10-08T17:39:59+00:00"
+    "resumed_at": "2026-10-08T15:41:14+00:00"
   },
   "pause": null,
   "recommendation": {
@@ -7991,5 +8092,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T17:43:45+00:00"
+  "updated_at": "2026-10-08T17:03:43+00:00"
 }

@@ -1,12 +1,12 @@
-import { loadCatalogItemBackorderPolicy, normalizeMoney, parseMinorUnits, resolveCatalogItemPrice } from "../catalog/kernel/index.js";
+import { loadCatalogItemBackorderPolicy, normalizeMoney, parseMinorUnits, resolveCatalogItemPrice, resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
 import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import { resolveStorefrontAvailability } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import { composeCheckoutPricing } from "./pricing.js";
 import { createCouponAttemptOwner, CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
-import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
-import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
+import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
+import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
 
 export class CheckoutError extends Error {}
 function fail(message: string): never { throw new CheckoutError(message); }
@@ -29,6 +29,7 @@ function current(attempts: CheckoutAttempt[]): CheckoutAttempt {
 }
 async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: string): Promise<CheckoutAttempt> {
   const lines: CheckoutLine[] = [];
+  const selections: CheckoutVariantSelectionSnapshot[] = [];
   let stock: StockRequest | undefined;
   const attemptId = (e.createAttemptId ?? (() => globalThis.crypto.randomUUID()))();
   if (!attemptId) fail("Invalid attempt identity");
@@ -37,8 +38,18 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
     fail("Payments pricing schema unsupported");
   }
   for (const line of cart) {
-    const item = await e.catalog.catalog.get(line.catalogItemId);
-    if (!item || item.recordKind !== "catalog-item" || item.itemId !== line.catalogItemId) fail("Product unavailable");
+    const variant = await resolveCatalogVariantMember(e.catalog.catalog, line.catalogItemId);
+    if (!variant) fail("Product unavailable");
+    const item = variant.item;
+    if (variant.product && variant.member) {
+      selections.push({
+        schema: CHECKOUT_VARIANT_SELECTION_SCHEMA,
+        productId: variant.product.productId,
+        catalogItemId: line.catalogItemId,
+        selections: variantSelections(variant.product, variant.member),
+        fulfillment: variant.member.fulfillment,
+      });
+    }
     const availability = await resolveStorefrontAvailability(e.catalog, { catalogItemId: line.catalogItemId }, e.availability);
     if (!availability.sellable) fail("Product unavailable");
     const price = await resolveCatalogItemPrice(e.catalog.prices, line.catalogItemId);
@@ -66,13 +77,15 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
   else if (couponCode !== undefined) fail("Pricing composition is unavailable");
   const minor = lines.reduce((sum, line) => sum + parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity), 0n).toString();
   const total = pricing?.snapshot.finalTotal ?? normalizeMoney({ currency: "USD", minor });
-  return { attemptId, cart, payment: createCurrentPaymentRequest({
+  return { attemptId, cart, ...(selections.length ? { variantSelections: selections } : {}), payment: createCurrentPaymentRequest({
     attemptId, bindingRef: e.paymentBindingRef, lines, total,
     ...(pricing ? { pricing: pricing.snapshot } : {}),
   }), ...(stock ? { stock } : {}),
     ...(pricing?.couponId ? { coupon: { couponId: pricing.couponId, code: pricing.couponCode!, status: "unreserved" as const } } : {}),
     phase: "reserving" };
 }
+
+
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string): Promise<CheckoutAttempt> {
@@ -230,6 +243,7 @@ function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptI
     ...(paymentId === undefined ? {} : { paymentId }),
     lines: attempt.payment.lines, total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
+    ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
   };
 }
 

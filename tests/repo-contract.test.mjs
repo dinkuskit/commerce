@@ -8,6 +8,7 @@ import { auditRepository, repositoryRoot } from "../scripts/repo-contract.mjs";
 
 const requiredPublicFiles = [
   ".gitattributes",
+  ".npmrc",
   ".gitignore",
   "AGENTS.md",
   "CLAUDE.md",
@@ -37,7 +38,7 @@ const requiredPublicManifest = {
   dinkuskit: {
     emdashCompatibility: {
       apiPeer: "1.2.0",
-      nodeEngine: ">=22.16",
+      nodeEngine: ">=22.16.0 <23",
       packageIntegrity: "sha512-f9s7khWeuOxX5cRimlu9o224hn9TuKnYk/0Vsu1CS9oaVn78V1+MWyfEsZc2iDv8JYWrezEZFkpy/Q6pRgVgzg==",
       mountedSitePilot: "private",
       requiredSourceVisibility: "public",
@@ -58,7 +59,7 @@ async function withSyntheticPublicRoot(extraFiles, run) {
   const root = await mkdtemp(join(tmpdir(), "commerce-repo-contract-"));
   try {
     for (const path of requiredPublicFiles) {
-      await writeFileAt(root, path, "public-audit fixture\n");
+      await writeFileAt(root, path, path === ".npmrc" ? "engine-strict=true\n" : "public-audit fixture\n");
     }
     await writeFileAt(root, "package.json", `${JSON.stringify(requiredPublicManifest, null, 2)}\n`);
     for (const [path, contents] of Object.entries(extraFiles)) {
@@ -94,11 +95,23 @@ test("forbidden public paths outside working output remain rejected", async () =
     {
       ".grilltrack/proof/fixture.sql": "-- public-audit fixture\n",
       "src/.env": "PUBLIC_AUDIT_SENTINEL\n",
+      "src/.npmrc": "registry=https://registry.example.invalid\n",
     },
     async (root) => {
       const findings = await auditRepository(root);
       assert.ok(findings.includes("forbidden SQL path: .grilltrack/proof/fixture.sql"));
       assert.ok(findings.includes("forbidden public path: src/.env"));
+      assert.ok(findings.includes("forbidden public path: src/.npmrc"));
+    },
+  );
+});
+
+test("only the root npm config with the exact engine guard is public", async () => {
+  await withSyntheticPublicRoot(
+    { ".npmrc": "registry=https://registry.example.invalid\n" },
+    async (root) => {
+      const findings = await auditRepository(root);
+      assert.ok(findings.includes("root .npmrc must contain only engine-strict=true"));
     },
   );
 });

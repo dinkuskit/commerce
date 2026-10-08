@@ -76,6 +76,7 @@ export {
 export {
   CHECKOUT_FEATURE_ID,
   CHECKOUT_PRICING_SCHEMA,
+  CHECKOUT_VARIANT_SELECTION_SCHEMA,
   CHECKOUT_GUEST_CAPABILITY_COLLECTION,
   CHECKOUT_GUEST_CAPABILITY_SANDBOX_COLLECTION,
   CHECKOUT_SANDBOX_COLLECTION,
@@ -101,6 +102,7 @@ export type {
   CheckoutExecution,
   CheckoutInventoryPort,
   CheckoutLine,
+  CheckoutVariantSelectionSnapshot,
   CheckoutPaymentPort,
   CheckoutRecord,
   CheckoutStore,
