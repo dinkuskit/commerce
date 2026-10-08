@@ -150,3 +150,9 @@
 {"action": "decision_verified", "at": "2026-10-08T17:03:42+00:00", "data": {"decision_id": "product-variant-model-20261008"}, "event_id": "de3334ea-30d1-40d6-999d-7bd53a0384d4"}
 {"action": "decision_verified", "at": "2026-10-08T17:03:43+00:00", "data": {"decision_id": "variant-price-availability-20261008"}, "event_id": "dc8c8727-641f-4cad-9563-95d9ff9cbf80"}
 {"action": "decision_verified", "at": "2026-10-08T17:03:43+00:00", "data": {"decision_id": "variant-fictional-fixtures-20261008"}, "event_id": "f07cafb8-5687-4ed9-a0ac-bb5fe35bd39c"}
+{"action": "focus_started", "at": "2026-10-08T19:11:06+00:00", "data": {"cadence": "frontier-batch", "domain": "Product JSON-LD and single-source shipping/return policies (#59)"}, "event_id": "f645e69e-5130-4fee-b995-19a86c00dd29"}
+{"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-availability-low-stock-059"}, "event_id": "33ac10f8-6e25-4e85-a328-1e586e23bb5f"}
+{"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-availability-unavailable-059"}, "event_id": "f633e147-5e16-4bfd-9128-b99376e1529c"}
+{"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-optional-identifiers-059"}, "event_id": "c5f8b9cc-2195-4fe9-a134-7111b765fc36"}
+{"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-policy-records-059"}, "event_id": "cfbf2691-f363-47e2-add0-83324bc57ee9"}
+{"action": "decision_proposed", "at": "2026-10-08T19:11:34+00:00", "data": {"decision_id": "jsonld-builder-export-059"}, "event_id": "ba936473-6c95-4089-8715-c50eb40f611f"}

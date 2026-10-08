@@ -87,6 +87,14 @@
       "uniqueIndexes": [
         "normalizedCode"
       ]
+    },
+    "store_shipping_policy": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "store_return_policy": {
+      "indexes": [],
+      "uniqueIndexes": []
     }
   },
   "admin": {

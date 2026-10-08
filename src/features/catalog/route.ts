@@ -23,6 +23,7 @@ import {
 import { setCatalogItemBackorders } from "./set-backorders.js";
 import { saveCatalogItemMedia, type CatalogMediaStorage } from "./media.js";
 import { setCatalogItemSku } from "./set-sku.js";
+import { setCatalogItemIdentifiers } from "./set-identifiers.js";
 import { addCatalogVariantOption, updateCatalogVariantLabels } from "./variants.js";
 import {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -31,6 +32,7 @@ import {
   LIST_CATALOG_PRODUCTS_ROUTE,
   SAVE_CATALOG_ITEM_MEDIA_ROUTE,
   SET_CATALOG_ITEM_SKU_ROUTE,
+  SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   ADD_CATALOG_VARIANT_OPTION_ROUTE,
   UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
   BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
@@ -336,6 +338,26 @@ export const setCatalogItemSkuRoute: PluginRoute = {
     }
     try {
       return await setCatalogItemSku(
+        ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
+        ctx.input,
+      );
+    } catch (error) {
+      if (error instanceof CatalogError) {
+        throw new PluginRouteError(error.code, error.message, error.status);
+      }
+      throw error;
+    }
+  },
+};
+
+export const setCatalogItemIdentifiersRoute: PluginRoute = {
+  permission: "content:edit_any",
+  handler: async (ctx) => {
+    if (ctx.request.method.toUpperCase() !== "POST") {
+      throw new PluginRouteError("METHOD_NOT_ALLOWED", "identifier setting requires POST", 405);
+    }
+    try {
+      return await setCatalogItemIdentifiers(
         ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
         ctx.input,
       );

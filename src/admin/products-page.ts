@@ -7,6 +7,7 @@ import {
   CREATE_CATALOG_ITEM_ROUTE,
   LIST_CATALOG_PRODUCTS_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   catalogProductCreateInput,
   type CatalogProductListItem,
   type CatalogProductPriceForm,
@@ -53,6 +54,9 @@ export function ProductsPage() {
   const [firstFulfillment, setFirstFulfillment] = useState("");
   const [secondFulfillment, setSecondFulfillment] = useState("");
   const [creationFulfillment, setCreationFulfillment] = useState("");
+  const [gtin, setGtin] = useState("");
+  const [mpn, setMpn] = useState("");
+  const [brand, setBrand] = useState("");
   const [choiceIds, setChoiceIds] = useState(() => Array.from({ length: 4 }, () => crypto.randomUUID()));
   useEffect(() => { setChoiceIds(Array.from({ length: 4 }, () => crypto.randomUUID())); setFirstFulfillment(""); setSecondFulfillment(""); }, [selectedId]);
 
@@ -78,6 +82,9 @@ export function ProductsPage() {
     setSale(selected.sale ?? "");
     setManageStock(selected.manageStock);
     setStockStatus(selected.stockStatus ?? "in-stock");
+    setGtin(selected.gtin ?? "");
+    setMpn(selected.mpn ?? "");
+    setBrand(selected.brand ?? "");
     const variant = (selected as CatalogProductListItem & { variantProduct?: {
       options: readonly { label: string }[]; members: readonly { selections: readonly { valueId: string }[]; fulfillment: string }[];
     }}).variantProduct;
@@ -97,8 +104,35 @@ export function ProductsPage() {
     setSale(product.sale ?? "");
     setManageStock(product.manageStock);
     setStockStatus(product.stockStatus ?? "in-stock");
+    setGtin(product.gtin ?? "");
+    setMpn(product.mpn ?? "");
+    setBrand(product.brand ?? "");
     setStockStatusChanged(false);
     setMessage(null);
+  }
+
+  async function saveIdentifiers(): Promise<void> {
+    if (selectedId === null) return;
+    setPending(true);
+    setMessage(null);
+    try {
+      await postPlugin(
+        SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
+        {
+          catalogItemId: selectedId,
+          gtin: gtin.trim() ? gtin.trim() : null,
+          mpn: mpn.trim() ? mpn.trim() : null,
+          brand: brand.trim() ? brand.trim() : null,
+        },
+        "Could not save identifiers",
+      );
+      await loadProducts(selectedId);
+      setMessage("Identifiers saved");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not save identifiers");
+    } finally {
+      setPending(false);
+    }
   }
 
   async function addProduct(event: FormEvent): Promise<void> {
@@ -253,6 +287,20 @@ export function ProductsPage() {
                 setStockStatusChanged(true);
               }),
           createElement("button", { type: "submit", disabled: pending }, "Save"),
+          createElement(
+            "div",
+            { className: "space-y-3" },
+            createElement("h3", { className: "text-base font-semibold" }, "Identifiers"),
+            createElement("p", { className: "text-sm opacity-80" }, "Optional. Leave blank to omit from structured data."),
+            labeledField("GTIN", "product-gtin", gtin, setGtin),
+            labeledField("MPN", "product-mpn", mpn, setMpn),
+            labeledField("Brand", "product-brand", brand, setBrand),
+            createElement(
+              "button",
+              { type: "button", disabled: pending, onClick: () => void saveIdentifiers() },
+              "Save identifiers",
+            ),
+          ),
           (() => {
             const variant = (products.find(product => product.catalogItemId === selectedId) as CatalogProductListItem & {
               variantProduct?: { options: readonly unknown[]; members: readonly { selections: readonly { valueId: string }[]; fulfillment: string }[] };
