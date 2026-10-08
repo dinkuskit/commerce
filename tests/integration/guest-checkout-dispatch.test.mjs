@@ -31,7 +31,7 @@ test("native PluginStorageRepository dispatch retains one paid order across conn
     const started = await invokeGuest(
       plugin.routes[GUEST_CHECKOUT_START_ROUTE],
       left.storage,
-      { lines: [{ catalogItemId: "hat", quantity: 1 }] },
+      { contact: { email: 'dispatch-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] },
       { capability: token },
     );
     assert.equal(typeof started.checkout.attemptId, "string");

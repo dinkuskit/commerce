@@ -142,6 +142,7 @@ test("missing loader fails before payment and concurrent writers leave one winni
   assert.ok(["first@example.test", "second@example.test"].includes(
     stored.record.attempts[0].contactSnapshot.contact.email,
   ));
+  for (const result of results) assert.deepEqual(result.contactSnapshot, stored.record.attempts[0].contactSnapshot);
 });
 
 test("new attempt after a released legacy original requires contact authority without rewriting the original", async (t) => {
@@ -247,4 +248,52 @@ test('native guest contact denies missing email and cross-cart injection, corrup
   await f.settings.set('merchantStoreSettings',{recordKind:'merchant-store-settings',requirePhoneNumber:'false'});
   await assert.rejects(prepareGuest(f.routes[GUEST_CHECKOUT_PREPARE_ROUTE],f.storage,{settings:f.settings}),e=>e.code==='UNAVAILABLE'&&!e.message.includes('a@example.test'));
   assert.equal((await f.storage.checkoutGuestCapabilities.query()).items.length,1);
+});
+
+test('active historical original replays without new contact or a current requirements read', async t => {
+  const {opened,f}=checkoutFixture();t.after(()=>opened.db.close());
+  let requirementReads=0;
+  f.execution.loadCheckoutContactRequirements=async()=>{requirementReads++;throw Error('unavailable');};
+  const legacy={attemptId:'active-legacy',cart:[{catalogItemId:'one',quantity:1}],payment:{attemptId:'active-legacy',bindingRef:'stripe-test-binding',lines:[{catalogItemId:'one',quantity:1,name:'one',unitPrice:{currency:'USD',minor:'75'}}],total:{currency:'USD',minor:'75'},paymentMethods:['card'],paymentWindowSeconds:1800},phase:'paying'};
+  await opened.store.compareAndSet('active-legacy-cart',null,{attempts:[legacy]});
+  const replay=await startCheckout(f.execution,'active-legacy-cart',legacy.cart);
+  assert.equal(requirementReads,0);
+  assert.equal(replay.contactSnapshot,undefined);
+  assert.deepEqual(replay.payment,legacy.payment);
+  f.setPayment('paid');
+  const paid=await reconcileCheckout(f.execution,'active-legacy-cart',legacy.attemptId);
+  assert.equal(paid.phase,'paid');
+  assert.equal(paid.order.contactSnapshot,undefined);
+  assert.deepEqual(paid.order.total,legacy.payment.total);
+});
+
+import { runtimeFixture } from './registry-runtime.mjs';
+
+test('actual default workerd bindings enforce current SDK phone setting and keep contact out of payment/public transport', async t => {
+  const f=await runtimeFixture(); t.after(()=>f.close());
+  const prepare='checkout/guest/prepare',start='checkout/guest/start',status='checkout/guest/status';
+  const optional=await f.invoke(prepare);
+  assert.deepEqual(optional.contactRequirements,{requirePhoneNumber:false});
+  assert.equal('contactRequirements' in optional.checkout,false);
+  const token=optional.capability.capability;
+  const saved=await saveMerchantStoreSettings(f.settings,{expectedRevision:null,requirePhoneNumber:true});
+  const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'workerd-shopper@example.test'}};
+  const denied=await f.invoke(start,body,token);
+  assert.equal(denied.error.code,'INVALID_CART');
+  assert.equal(f.counts.transport,0);
+  assert.deepEqual(await f.cartRecords(),[]);
+  const started=await f.invoke(start,{...body,contact:{...body.contact,phone:'555 0134'}},token);
+  assert.equal(started.ok,true);
+  const frozen=(await f.cartRecords())[0].attempts[0].contactSnapshot;
+  assert.deepEqual(frozen,{schema:'dinkuskit.commerce.checkout-contact/v1',contact:{email:'workerd-shopper@example.test',phone:'555 0134'},requirePhoneNumber:true,revision:saved.revision});
+  assert.equal(JSON.stringify(f.requests).includes('workerd-shopper@example.test'),false);
+  await saveMerchantStoreSettings(f.settings,{expectedRevision:saved.revision,requirePhoneNumber:false});
+  f.setPaid();
+  const paid=await f.invoke(status,{},token);
+  assert.equal(paid.checkout.state,'paid');
+  const attempt=(await f.cartRecords())[0].attempts[0];
+  assert.deepEqual(attempt.contactSnapshot,frozen);
+  assert.deepEqual(attempt.order.contactSnapshot,frozen);
+  assert.equal(JSON.stringify(paid).includes('workerd-shopper@example.test'),false);
+  assert.equal(JSON.stringify(paid).includes('555 0134'),false);
 });

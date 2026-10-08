@@ -109,10 +109,11 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       expect((refreshed.data ?? refreshed).contactRequirements).toEqual({requirePhoneNumber:true});
       await page.getByRole('textbox', {name:'Phone'}).fill('555 0142');
       await page.getByRole("button", { name: "Start checkout" }).click();
+      await expect(page.locator('[data-checkout-result]')).toContainText('"state": "pending"');
       await saveMerchantStoreSettings(settings, {expectedRevision:required.revision,requirePhoneNumber:false});
       await page.getByRole('textbox', {name:'Email'}).fill('changed-draft@example.test');
       await page.getByRole('textbox', {name:'Phone'}).fill('555 9999');
-      await expect(page.locator('[data-checkout-result]')).toContainText('"state": "pending"');
+
       await expect(page.locator('[data-frozen-order]')).toContainText("Large");
 
       const parent = db.prepare("SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?")

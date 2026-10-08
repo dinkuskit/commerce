@@ -9417,7 +9417,14 @@
     "mechanism": "implicit"
   },
   "last_pause": null,
-  "pause": null,
+  "pause": {
+    "artifact_refs": [
+      "proof/checkout-contact-v1/PROOF.md"
+    ],
+    "next_safe_action": "Resolve supported packaging architecture with explicit owner scope, then rerun full installed coupon/artifact acceptance and final exact-source canonical/native/CI gates. Preserve contact source and all decision lineage.",
+    "paused_at": "2026-10-08T17:44:14+00:00",
+    "reason": "Contact behavior verified but official installed packager rejects141134-byte backend against131072 cap; no accepted supported packaging repair. Draft source frozen pending separate architecture decision."
+  },
   "recommendation": null,
   "reconciliation": {
     "plan_id": "0799629bf6af08c280fff52618d375016555acdc8960f79b7df5bee7b8576352",
@@ -9429,8 +9436,8 @@
     "snapshot_ref": ".grilltrack/lineage/0799629bf6af08c280fff52618d375016555acdc8960f79b7df5bee7b8576352"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "active",
+  "status": "paused",
   "title": "Checkout contact on merchant settings",
   "track_id": "gt-join-0799629bf6af08c280fff52618d37501",
-  "updated_at": "2026-10-08T17:34:52+00:00"
+  "updated_at": "2026-10-08T17:44:14+00:00"
 }

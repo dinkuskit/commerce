@@ -329,3 +329,21 @@ test("capability from one owner namespace does not authorize another context's c
   assert.equal(synth.counts().paymentCreates, 0);
   assert.deepEqual(two.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot(), []);
 });
+
+test('installed handlers override supplied contact policy with original context settings and deny required-phone capture before provider', async () => {
+  const ctx=context();
+  ctx.settings={async getVersioned(){return {revision:'merchant-require-phone',value:{recordKind:'merchant-store-settings',storeCountry:null,sellingCountries:[],shippingCountries:[],requirePhoneNumber:true}};}};
+  const synth=syntheticCheckoutHost({managed:false,host:{loadCheckoutContactRequirements:async()=>({requirePhoneNumber:false,revision:'forged-host'})}});
+  const handlers=createInstalledCheckoutHandlers(async()=>({host:synth.host}));
+  const prepared=await handlers.prepare({input:{},request:request({})},ctx);
+  assert.equal(prepared.ok,true);
+  assert.deepEqual(prepared.contactRequirements,{requirePhoneNumber:true});
+  assert.equal('contactRequirements' in prepared.checkout,false);
+  const capability=prepared.capability.capability;
+  const input={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'installed@example.test'}};
+  const denied=await handlers.start({input,request:request(input,capability)},ctx);
+  assert.equal(denied.ok,false);
+  assert.equal(denied.error.code,'INVALID_CART');
+  assert.equal(synth.counts().paymentCreates,0);
+  assert.deepEqual(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot(),[]);
+});

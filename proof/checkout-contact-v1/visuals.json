@@ -1,0 +1,14 @@
+[
+  {
+    "path": "proof/checkout-contact-v1/visuals/contact-phone.png",
+    "sha256": "9776ae8958fba84367114c82bac1a8e321169e3150b546592625b05c80a6a07f",
+    "classification": "synthetic",
+    "inspected": true
+  },
+  {
+    "path": "proof/checkout-contact-v1/visuals/contact-desktop.png",
+    "sha256": "8fdd087e3e5cfa6cf9ba6f675727f098699aa0f21babf502656f30fa800daef4",
+    "classification": "synthetic",
+    "inspected": true
+  }
+]
