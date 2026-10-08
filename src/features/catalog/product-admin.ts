@@ -471,7 +471,7 @@ export async function bulkSaveCatalogProductPrices(
       if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision")) {
         throw new CatalogError("INVALID_INPUT", "each bulk row requires its loaded price revision");
       }
-      if (!await resolveCatalogVariantMember(storage.catalog, input.catalogItemId)) {
+      if (!(await resolveCatalogVariantMember(storage.catalog, input.catalogItemId))?.member) {
         throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
       }
       if (Object.keys(input).some(key => !["catalogItemId", "regular", "sale", "expectedRevision"].includes(key))) {

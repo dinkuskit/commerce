@@ -58,9 +58,15 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
     price(ids.parent, "2000"); price(ids.large, "2400"); availability(ids.parent, "out-of-stock"); availability(ids.large, "in-stock");
     await page.goto(new URL("/", baseURL).toString());
     const variants = page.locator(`[data-variants="${ids.parent}"]`);
-    await expect(variants).toContainText("Small");
     await expect(variants).toContainText("2400");
-    await expect(variants.locator(`input[value="${ids.parent}"]`)).toBeDisabled();
+    const listingCollection = native ? 'storefrontOutOfStockListing' : 'storefront_out_of_stock_listing';
+    const listing = db.prepare('SELECT data FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').get('dinkus-commerce',listingCollection,'active');
+    const hideOutOfStock = listing && JSON.parse(listing.data).hideOutOfStock === true;
+    if (hideOutOfStock) await expect(variants.locator(`input[value="${ids.parent}"]`)).toHaveCount(0);
+    else {
+      await expect(variants).toContainText('Small');
+      await expect(variants.locator(`input[value="${ids.parent}"]`)).toBeDisabled();
+    }
     await expect(variants.locator(`input[value="${ids.large}"]`)).toBeEnabled();
 
     if (native) {
@@ -93,13 +99,17 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
 
       await expect(page.getByRole('textbox', { name: 'Phone' })).not.toHaveAttribute('required');
       const cartsBeforeDenial = db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n;
+      const emailDenied = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
       await page.getByRole("button", { name: "Start checkout" }).click();
+      expect((await emailDenied).status()).toBe(400);
       await expect(page.locator('[data-checkout-result]')).toContainText('INVALID_CART');
       expect(db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n).toBe(cartsBeforeDenial);
       await page.getByRole('textbox', { name: 'Email' }).fill('variant-shopper@example.test');
       const required = await saveMerchantStoreSettings(settings, {expectedRevision: optional.revision, requirePhoneNumber:true});
       capturedRequirementRevision = required.revision;
+      const phoneDenied = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
       await page.getByRole("button", { name: "Start checkout" }).click();
+      expect((await phoneDenied).status()).toBe(400);
       await expect(page.locator('[data-checkout-result]')).toContainText('INVALID_CART');
       expect(db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n).toBe(cartsBeforeDenial);
       await page.getByRole('button', {name:'Prepare checkout'}).click();
@@ -108,7 +118,12 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       ownedCapabilityId = (refreshed.data ?? refreshed).capabilityId;
       expect((refreshed.data ?? refreshed).contactRequirements).toEqual({requirePhoneNumber:true});
       await page.getByRole('textbox', {name:'Phone'}).fill('555 0142');
+      const checkoutStarted = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
       await page.getByRole("button", { name: "Start checkout" }).click();
+      const startResponse = await checkoutStarted;
+      expect(startResponse.status()).toBe(200);
+      const startedBody = await startResponse.json();
+      expect((startedBody.data ?? startedBody).checkout.state).toBe('pending');
       await expect(page.locator('[data-checkout-result]')).toContainText('"state": "pending"');
       await saveMerchantStoreSettings(settings, {expectedRevision:required.revision,requirePhoneNumber:false});
       await page.getByRole('textbox', {name:'Email'}).fill('changed-draft@example.test');
@@ -205,7 +220,13 @@ test('merchant creates choices and edits independent and bulk prices through the
   const capture = async suffix => page.screenshot({ path: `${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-merchant-${native ? 'native' : 'sandbox'}-${suffix}.png`, fullPage:true });
   try {
     await page.goto('/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/products');
-    await page.getByRole('button',{name:'Get Started'}).click({timeout:10000}).catch(() => {});
+    const getStarted = page.getByRole('button',{name:'Get Started'});
+    const skuField = page.getByRole('textbox',{name:'SKU',exact:true});
+    await getStarted.or(skuField).first().waitFor({state:'visible',timeout:60000});
+    if (await getStarted.isVisible()) await getStarted.click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    if (native) await expect(page.locator('h1')).toHaveText('Products', {timeout:30000});
+    await expect(skuField).toBeVisible({timeout:30000});
     await expect.poll(() => db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(`uidx_plugin_dinkus-commerce_${catalog}_skuKey`), {timeout:90000}).toBeTruthy();
     await page.getByRole('textbox',{name:'Name',exact:true}).fill(name);
     await page.getByRole('textbox',{name:'SKU',exact:true}).fill('MERCHANT-PROOF-SMALL');

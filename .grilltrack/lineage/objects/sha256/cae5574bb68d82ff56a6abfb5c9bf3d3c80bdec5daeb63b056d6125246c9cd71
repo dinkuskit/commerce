@@ -1,0 +1,1621 @@
+{
+  "adjudicated_decisions": {
+    "backend-headroom-20261007": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "block-admin-create-002": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "block-admin-save-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "block-admin-settings-003": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "block-admin-settings-label-004": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "catalog-product-identity-058": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "catalog-product-lookup-058": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "catalog-product-page-boundary-058": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "catalog-product-page-uniqueness-058": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "catalog-product-routing-058": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "checkout-guest-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "checkout-hosted-first-002": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "checkout-payment-window-004": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "checkout-payments-response-bound-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "checkout-stock-hold-003": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "checkout-totals-composition-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "checkout-zero-payable-order-composition-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "commerce-guest-runtime-mount-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "commerce-v1-inventory-unavailable-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "coupons-admin-native-v1-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "coupons-redemption-core-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "coupons-registry-block-kit-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "coupons-registry-packaging-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "coupons-v1-cap-fence-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "coupons-v1-free-reconcile-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "coupons-v1-independent-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "emdash-1-2-compatibility-composition-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "fixed-bundle-component-snapshot-003": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "fixed-bundle-nonblocking-002": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "fixed-bundle-shape-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "installed-checkout-context-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "installed-checkout-service-assembly-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "installed-orders-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "installed-public-catalog-20261007": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-checkbox-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-existing-sku-confirm-006": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-hide-status-002": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-no-price-rewrite-007": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-reenable-fresh-005": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-same-save-008": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-setup-required-003": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "manage-stock-uncheck-restores-004": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "merchant-country-settings-001": {
+      "reason": "Preserve the owner-confirmed initial US physical-delivery constraint and independent merchant identity/customer/billing scope recorded in this decision branch.",
+      "role": "current"
+    },
+    "merchant-phone-requirement-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "orders-headroom-20261007": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-media-admin-003": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-media-artifact-budget-006": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-media-imports-deferred-007": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-media-placeholder-004": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-media-read-capability-002": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-media-reference-001": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-media-sizes-005": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "product-variant-model-20261008": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "variant-fictional-fixtures-20261008": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    },
+    "variant-price-availability-20261008": {
+      "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+      "role": "current"
+    }
+  },
+  "adjudication": {
+    "decisions": {
+      "backend-headroom-20261007": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "block-admin-create-002": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "block-admin-save-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "block-admin-settings-003": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "block-admin-settings-label-004": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "catalog-product-identity-058": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "catalog-product-lookup-058": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "catalog-product-page-boundary-058": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "catalog-product-page-uniqueness-058": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "catalog-product-routing-058": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "checkout-guest-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "checkout-hosted-first-002": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "checkout-payment-window-004": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "checkout-payments-response-bound-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "checkout-stock-hold-003": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "checkout-totals-composition-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "checkout-zero-payable-order-composition-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "commerce-guest-runtime-mount-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "commerce-v1-inventory-unavailable-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "coupons-admin-native-v1-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "coupons-redemption-core-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "coupons-registry-block-kit-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "coupons-registry-packaging-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "coupons-v1-cap-fence-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "coupons-v1-free-reconcile-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "coupons-v1-independent-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "emdash-1-2-compatibility-composition-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "fixed-bundle-component-snapshot-003": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "fixed-bundle-nonblocking-002": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "fixed-bundle-shape-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "installed-checkout-context-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "installed-checkout-service-assembly-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "installed-orders-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "installed-public-catalog-20261007": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-checkbox-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-existing-sku-confirm-006": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-hide-status-002": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-no-price-rewrite-007": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-reenable-fresh-005": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-same-save-008": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-setup-required-003": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "manage-stock-uncheck-restores-004": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "merchant-country-settings-001": {
+        "reason": "Preserve the owner-confirmed initial US physical-delivery constraint and independent merchant identity/customer/billing scope recorded in this decision branch.",
+        "role": "current"
+      },
+      "merchant-phone-requirement-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "orders-headroom-20261007": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-media-admin-003": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-media-artifact-budget-006": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-media-imports-deferred-007": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-media-placeholder-004": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-media-read-capability-002": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-media-reference-001": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-media-sizes-005": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "product-variant-model-20261008": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "variant-fictional-fixtures-20261008": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      },
+      "variant-price-availability-20261008": {
+        "reason": "Preserve the current decision record and invalidated proof lifecycle while retaining both source histories; the incoming choice is identical.",
+        "role": "current"
+      }
+    },
+    "refs": {
+      "base": "c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+      "current": "8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+      "incoming": "c6349b54f9295958fe6ced90f44fc9bd25bc48b6"
+    },
+    "schema": "grilltrack/adjudication/v1"
+  },
+  "composed_review": false,
+  "composed_verification": false,
+  "decision_ids": [
+    "backend-headroom-20261007",
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "catalog-product-identity-058",
+    "catalog-product-lookup-058",
+    "catalog-product-page-boundary-058",
+    "catalog-product-page-uniqueness-058",
+    "catalog-product-routing-058",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-payments-response-bound-001",
+    "checkout-stock-hold-003",
+    "checkout-totals-composition-001",
+    "checkout-zero-payable-order-composition-001",
+    "commerce-guest-runtime-mount-001",
+    "commerce-v1-inventory-unavailable-001",
+    "coupons-admin-native-v1-001",
+    "coupons-redemption-core-001",
+    "coupons-registry-block-kit-001",
+    "coupons-registry-packaging-001",
+    "coupons-v1-cap-fence-001",
+    "coupons-v1-free-reconcile-001",
+    "coupons-v1-independent-001",
+    "emdash-1-2-compatibility-composition-001",
+    "fixed-bundle-component-snapshot-003",
+    "fixed-bundle-nonblocking-002",
+    "fixed-bundle-shape-001",
+    "initial-foreign-billing-us-delivery-001",
+    "initial-physical-delivery-coverage-001",
+    "installed-checkout-context-001",
+    "installed-checkout-service-assembly-001",
+    "installed-orders-001",
+    "installed-public-catalog-20261007",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004",
+    "merchant-country-settings-001",
+    "merchant-phone-requirement-001",
+    "orders-headroom-20261007",
+    "product-media-admin-003",
+    "product-media-artifact-budget-006",
+    "product-media-imports-deferred-007",
+    "product-media-placeholder-004",
+    "product-media-read-capability-002",
+    "product-media-reference-001",
+    "product-media-sizes-005",
+    "product-variant-model-20261008",
+    "variant-fictional-fixtures-20261008",
+    "variant-price-availability-20261008"
+  ],
+  "decision_provenance": {
+    "backend-headroom-20261007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "block-admin-create-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "block-admin-save-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "block-admin-settings-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "block-admin-settings-label-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "catalog-product-identity-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "catalog-product-lookup-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "catalog-product-page-boundary-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "catalog-product-page-uniqueness-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "catalog-product-routing-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "checkout-guest-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "checkout-hosted-first-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "checkout-payment-window-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "checkout-payments-response-bound-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "checkout-stock-hold-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "checkout-totals-composition-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "checkout-zero-payable-order-composition-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "commerce-guest-runtime-mount-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "commerce-v1-inventory-unavailable-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "coupons-admin-native-v1-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "coupons-redemption-core-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "coupons-registry-block-kit-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "coupons-registry-packaging-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "coupons-v1-cap-fence-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "coupons-v1-free-reconcile-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "coupons-v1-independent-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "emdash-1-2-compatibility-composition-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "fixed-bundle-component-snapshot-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "fixed-bundle-nonblocking-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "fixed-bundle-shape-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "initial-foreign-billing-us-delivery-001": [
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      }
+    ],
+    "initial-physical-delivery-coverage-001": [
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      }
+    ],
+    "installed-checkout-context-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "installed-checkout-service-assembly-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "installed-orders-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "installed-public-catalog-20261007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-checkbox-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-existing-sku-confirm-006": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-hide-status-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-no-price-rewrite-007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-reenable-fresh-005": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-same-save-008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-setup-required-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "manage-stock-uncheck-restores-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "merchant-country-settings-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "merchant-phone-requirement-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "orders-headroom-20261007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-media-admin-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-media-artifact-budget-006": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-media-imports-deferred-007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-media-placeholder-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-media-read-capability-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-media-reference-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-media-sizes-005": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "product-variant-model-20261008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "variant-fictional-fixtures-20261008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ],
+    "variant-price-availability-20261008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:c6349b54f9295958fe6ced90f44fc9bd25bc48b6",
+        "track_id": "gt-join-67c22fe9c24311b111c220f2077ee152"
+      }
+    ]
+  },
+  "joined_track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4",
+  "needs_reverification": [
+    "backend-headroom-20261007",
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "catalog-product-identity-058",
+    "catalog-product-lookup-058",
+    "catalog-product-page-boundary-058",
+    "catalog-product-page-uniqueness-058",
+    "catalog-product-routing-058",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-payments-response-bound-001",
+    "checkout-stock-hold-003",
+    "checkout-totals-composition-001",
+    "checkout-zero-payable-order-composition-001",
+    "commerce-guest-runtime-mount-001",
+    "commerce-v1-inventory-unavailable-001",
+    "coupons-admin-native-v1-001",
+    "coupons-redemption-core-001",
+    "coupons-registry-block-kit-001",
+    "coupons-registry-packaging-001",
+    "coupons-v1-cap-fence-001",
+    "coupons-v1-free-reconcile-001",
+    "coupons-v1-independent-001",
+    "emdash-1-2-compatibility-composition-001",
+    "fixed-bundle-component-snapshot-003",
+    "fixed-bundle-nonblocking-002",
+    "initial-foreign-billing-us-delivery-001",
+    "initial-physical-delivery-coverage-001",
+    "installed-checkout-context-001",
+    "installed-checkout-service-assembly-001",
+    "installed-orders-001",
+    "installed-public-catalog-20261007",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004",
+    "merchant-country-settings-001",
+    "merchant-phone-requirement-001",
+    "orders-headroom-20261007",
+    "product-media-admin-003",
+    "product-media-artifact-budget-006",
+    "product-media-placeholder-004",
+    "product-media-read-capability-002",
+    "product-media-reference-001",
+    "product-media-sizes-005",
+    "product-variant-model-20261008",
+    "variant-fictional-fixtures-20261008",
+    "variant-price-availability-20261008"
+  ],
+  "plan_id": "a81bddd0af9513d3a7eff674546d84b4adce2e9e6a370d9e879130299571b85a",
+  "refs": {
+    "base": "c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+    "current": "8ba8853f0ada35ce73218b0c066fdbc5772c1477",
+    "incoming": "c6349b54f9295958fe6ced90f44fc9bd25bc48b6"
+  },
+  "retention": {
+    "lineage": {
+      "base": "5fd9bfc04167bcdcc6338b969a36899c2441499349c9f23bba4d18cdabb0bb8d",
+      "current": "5fd9bfc04167bcdcc6338b969a36899c2441499349c9f23bba4d18cdabb0bb8d",
+      "incoming": "b4f649f78c5b832379d3d69e2b4c8d8355a9ee4cbf92adbfa319ff034bcbfba2"
+    },
+    "schema": "grilltrack/retained/v2"
+  },
+  "schema": "grilltrack/reconcile/v2",
+  "snapshot_ref": ".grilltrack/lineage/a81bddd0af9513d3a7eff674546d84b4adce2e9e6a370d9e879130299571b85a",
+  "snapshots": {
+    "base": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "40ba62d4889135f8be7a89b2b8c075d7c94b9a56cf47f536ac7f40b15b97f89d",
+      "ledger.json": "01f56aff4d450ee65f7b56634bcf6d356ad6052cc736aa0ec0b3788dfe3ca7bc"
+    },
+    "current": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "3e565f5cc284d22d761bfe05bcb14199acb86469c9055913600f6fd35c30d1f4",
+      "ledger.json": "8ebcf9c477e0f60a52966672e1dd32eb241f8f4f066871fd8bb57418f0e9fa5b"
+    },
+    "incoming": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "fd0456ab745c3b478691f607ad4e1b3bd32d36c9c660df0587a1b1c9c7083402",
+      "ledger.json": "1c6c719254af4ca410d01a5d748faf2339a5de85c72b4946bddcb8b3be4e5cb3"
+    }
+  },
+  "title": "Initial US physical delivery on qualified country settings"
+}

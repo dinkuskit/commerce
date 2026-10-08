@@ -1,0 +1,1630 @@
+{
+  "adjudicated_decisions": {
+    "backend-headroom-20261007": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "block-admin-create-002": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "block-admin-save-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "block-admin-settings-003": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "block-admin-settings-label-004": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "catalog-product-identity-058": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "catalog-product-lookup-058": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "catalog-product-page-boundary-058": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "catalog-product-page-uniqueness-058": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "catalog-product-routing-058": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "checkout-guest-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "checkout-hosted-first-002": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "checkout-payment-window-004": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "checkout-payments-response-bound-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "checkout-stock-hold-003": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "checkout-totals-composition-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "checkout-zero-payable-order-composition-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "commerce-guest-runtime-mount-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "commerce-v1-inventory-unavailable-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "coupons-admin-native-v1-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "coupons-redemption-core-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "coupons-registry-block-kit-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "coupons-registry-packaging-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "coupons-v1-cap-fence-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "coupons-v1-free-reconcile-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "coupons-v1-independent-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "emdash-1-2-compatibility-composition-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "fixed-bundle-component-snapshot-003": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "fixed-bundle-nonblocking-002": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "fixed-bundle-shape-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "installed-checkout-context-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "installed-checkout-service-assembly-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "installed-orders-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "installed-public-catalog-20261007": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-checkbox-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-existing-sku-confirm-006": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-hide-status-002": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-no-price-rewrite-007": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-reenable-fresh-005": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-same-save-008": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-setup-required-003": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "manage-stock-uncheck-restores-004": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "merchant-country-settings-001": {
+      "reason": "Retain the explicitly accepted initial-US delivery and independent foreign-billing country choice plus complete prior choice history from released70; no new product decision.",
+      "role": "incoming"
+    },
+    "merchant-phone-requirement-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "orders-headroom-20261007": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-media-admin-003": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-media-artifact-budget-006": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-media-imports-deferred-007": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-media-placeholder-004": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-media-read-capability-002": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-media-reference-001": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-media-sizes-005": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "product-variant-model-20261008": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "variant-fictional-fixtures-20261008": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    },
+    "variant-price-availability-20261008": {
+      "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+      "role": "incoming"
+    }
+  },
+  "adjudication": {
+    "decisions": {
+      "backend-headroom-20261007": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "block-admin-create-002": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "block-admin-save-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "block-admin-settings-003": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "block-admin-settings-label-004": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "catalog-product-identity-058": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "catalog-product-lookup-058": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "catalog-product-page-boundary-058": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "catalog-product-page-uniqueness-058": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "catalog-product-routing-058": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "checkout-guest-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "checkout-hosted-first-002": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "checkout-payment-window-004": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "checkout-payments-response-bound-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "checkout-stock-hold-003": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "checkout-totals-composition-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "checkout-zero-payable-order-composition-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "commerce-guest-runtime-mount-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "commerce-v1-inventory-unavailable-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "coupons-admin-native-v1-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "coupons-redemption-core-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "coupons-registry-block-kit-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "coupons-registry-packaging-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "coupons-v1-cap-fence-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "coupons-v1-free-reconcile-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "coupons-v1-independent-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "emdash-1-2-compatibility-composition-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "fixed-bundle-component-snapshot-003": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "fixed-bundle-nonblocking-002": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "fixed-bundle-shape-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "installed-checkout-context-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "installed-checkout-service-assembly-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "installed-orders-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "installed-public-catalog-20261007": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-checkbox-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-existing-sku-confirm-006": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-hide-status-002": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-no-price-rewrite-007": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-reenable-fresh-005": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-same-save-008": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-setup-required-003": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "manage-stock-uncheck-restores-004": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "merchant-country-settings-001": {
+        "reason": "Retain the explicitly accepted initial-US delivery and independent foreign-billing country choice plus complete prior choice history from released70; no new product decision.",
+        "role": "incoming"
+      },
+      "merchant-phone-requirement-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "orders-headroom-20261007": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-media-admin-003": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-media-artifact-budget-006": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-media-imports-deferred-007": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-media-placeholder-004": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-media-read-capability-002": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-media-reference-001": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-media-sizes-005": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "product-variant-model-20261008": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "variant-fictional-fixtures-20261008": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      },
+      "variant-price-availability-20261008": {
+        "reason": "Retain released country/variant composition lifecycle and historical proof; shared choice is identical. Contact-only decision remains current; all input histories are preserved and cumulative proof must be reverified.",
+        "role": "incoming"
+      }
+    },
+    "refs": {
+      "base": "c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+      "current": "39107444d1df41712f7fc3d6643bc8588102f2e5",
+      "incoming": "ca38c1c8c4f136f25469ded0c200f74773802668"
+    },
+    "schema": "grilltrack/adjudication/v1"
+  },
+  "composed_review": false,
+  "composed_verification": false,
+  "decision_ids": [
+    "backend-headroom-20261007",
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "catalog-product-identity-058",
+    "catalog-product-lookup-058",
+    "catalog-product-page-boundary-058",
+    "catalog-product-page-uniqueness-058",
+    "catalog-product-routing-058",
+    "checkout-contact-email-phone-20261008",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-payments-response-bound-001",
+    "checkout-stock-hold-003",
+    "checkout-totals-composition-001",
+    "checkout-zero-payable-order-composition-001",
+    "commerce-guest-runtime-mount-001",
+    "commerce-v1-inventory-unavailable-001",
+    "coupons-admin-native-v1-001",
+    "coupons-redemption-core-001",
+    "coupons-registry-block-kit-001",
+    "coupons-registry-packaging-001",
+    "coupons-v1-cap-fence-001",
+    "coupons-v1-free-reconcile-001",
+    "coupons-v1-independent-001",
+    "emdash-1-2-compatibility-composition-001",
+    "fixed-bundle-component-snapshot-003",
+    "fixed-bundle-nonblocking-002",
+    "fixed-bundle-shape-001",
+    "initial-foreign-billing-us-delivery-001",
+    "initial-physical-delivery-coverage-001",
+    "installed-checkout-context-001",
+    "installed-checkout-service-assembly-001",
+    "installed-orders-001",
+    "installed-public-catalog-20261007",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004",
+    "merchant-country-settings-001",
+    "merchant-phone-requirement-001",
+    "orders-headroom-20261007",
+    "product-media-admin-003",
+    "product-media-artifact-budget-006",
+    "product-media-imports-deferred-007",
+    "product-media-placeholder-004",
+    "product-media-read-capability-002",
+    "product-media-reference-001",
+    "product-media-sizes-005",
+    "product-variant-model-20261008",
+    "variant-fictional-fixtures-20261008",
+    "variant-price-availability-20261008"
+  ],
+  "decision_provenance": {
+    "backend-headroom-20261007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "block-admin-create-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "block-admin-save-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "block-admin-settings-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "block-admin-settings-label-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "catalog-product-identity-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "catalog-product-lookup-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "catalog-product-page-boundary-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "catalog-product-page-uniqueness-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "catalog-product-routing-058": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "checkout-contact-email-phone-20261008": [
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      }
+    ],
+    "checkout-guest-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "checkout-hosted-first-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "checkout-payment-window-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "checkout-payments-response-bound-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "checkout-stock-hold-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "checkout-totals-composition-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "checkout-zero-payable-order-composition-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "commerce-guest-runtime-mount-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "commerce-v1-inventory-unavailable-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "coupons-admin-native-v1-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "coupons-redemption-core-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "coupons-registry-block-kit-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "coupons-registry-packaging-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "coupons-v1-cap-fence-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "coupons-v1-free-reconcile-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "coupons-v1-independent-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "emdash-1-2-compatibility-composition-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "fixed-bundle-component-snapshot-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "fixed-bundle-nonblocking-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "fixed-bundle-shape-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "initial-foreign-billing-us-delivery-001": [
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "initial-physical-delivery-coverage-001": [
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "installed-checkout-context-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "installed-checkout-service-assembly-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "installed-orders-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "installed-public-catalog-20261007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-checkbox-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-existing-sku-confirm-006": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-hide-status-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-no-price-rewrite-007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-reenable-fresh-005": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-same-save-008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-setup-required-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "manage-stock-uncheck-restores-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "merchant-country-settings-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "merchant-phone-requirement-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "orders-headroom-20261007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-media-admin-003": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-media-artifact-budget-006": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-media-imports-deferred-007": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-media-placeholder-004": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-media-read-capability-002": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-media-reference-001": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-media-sizes-005": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "product-variant-model-20261008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "variant-fictional-fixtures-20261008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ],
+    "variant-price-availability-20261008": [
+      {
+        "role": "base",
+        "source_identity": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+        "track_id": "gt-join-a51a81cff81f0beca975969b7b448b79"
+      },
+      {
+        "role": "current",
+        "source_identity": "git:39107444d1df41712f7fc3d6643bc8588102f2e5",
+        "track_id": "gt-join-0799629bf6af08c280fff52618d37501"
+      },
+      {
+        "role": "incoming",
+        "source_identity": "git:ca38c1c8c4f136f25469ded0c200f74773802668",
+        "track_id": "gt-join-a81bddd0af9513d3a7eff674546d84b4"
+      }
+    ]
+  },
+  "joined_track_id": "gt-join-87ce7f2c35670b3993b32c695b488654",
+  "needs_reverification": [
+    "backend-headroom-20261007",
+    "block-admin-create-002",
+    "block-admin-save-001",
+    "block-admin-settings-003",
+    "block-admin-settings-label-004",
+    "catalog-product-identity-058",
+    "catalog-product-lookup-058",
+    "catalog-product-page-boundary-058",
+    "catalog-product-page-uniqueness-058",
+    "catalog-product-routing-058",
+    "checkout-contact-email-phone-20261008",
+    "checkout-guest-001",
+    "checkout-hosted-first-002",
+    "checkout-payment-window-004",
+    "checkout-payments-response-bound-001",
+    "checkout-stock-hold-003",
+    "checkout-totals-composition-001",
+    "checkout-zero-payable-order-composition-001",
+    "commerce-guest-runtime-mount-001",
+    "commerce-v1-inventory-unavailable-001",
+    "coupons-admin-native-v1-001",
+    "coupons-redemption-core-001",
+    "coupons-registry-block-kit-001",
+    "coupons-registry-packaging-001",
+    "coupons-v1-cap-fence-001",
+    "coupons-v1-free-reconcile-001",
+    "coupons-v1-independent-001",
+    "emdash-1-2-compatibility-composition-001",
+    "fixed-bundle-component-snapshot-003",
+    "fixed-bundle-nonblocking-002",
+    "initial-foreign-billing-us-delivery-001",
+    "initial-physical-delivery-coverage-001",
+    "installed-checkout-context-001",
+    "installed-checkout-service-assembly-001",
+    "installed-orders-001",
+    "installed-public-catalog-20261007",
+    "manage-stock-checkbox-001",
+    "manage-stock-existing-sku-confirm-006",
+    "manage-stock-hide-status-002",
+    "manage-stock-no-price-rewrite-007",
+    "manage-stock-reenable-fresh-005",
+    "manage-stock-same-save-008",
+    "manage-stock-setup-required-003",
+    "manage-stock-uncheck-restores-004",
+    "merchant-country-settings-001",
+    "merchant-phone-requirement-001",
+    "orders-headroom-20261007",
+    "product-media-admin-003",
+    "product-media-artifact-budget-006",
+    "product-media-placeholder-004",
+    "product-media-read-capability-002",
+    "product-media-reference-001",
+    "product-media-sizes-005",
+    "product-variant-model-20261008",
+    "variant-fictional-fixtures-20261008",
+    "variant-price-availability-20261008"
+  ],
+  "plan_id": "87ce7f2c35670b3993b32c695b488654d0e45fcc43a528cfe7f1915e59ac4d5c",
+  "refs": {
+    "base": "c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+    "current": "39107444d1df41712f7fc3d6643bc8588102f2e5",
+    "incoming": "ca38c1c8c4f136f25469ded0c200f74773802668"
+  },
+  "retention": {
+    "lineage": {
+      "base": "5fd9bfc04167bcdcc6338b969a36899c2441499349c9f23bba4d18cdabb0bb8d",
+      "current": "34f8fd5abeec13309f08bcf5e6de62a485908ef4048458a07c982dc4a0ff7b02",
+      "incoming": "429e99dd44a17328890ec95760693d9ca8ab0c98fa81fe42113449441205def9"
+    },
+    "schema": "grilltrack/retained/v2"
+  },
+  "schema": "grilltrack/reconcile/v2",
+  "snapshot_ref": ".grilltrack/lineage/87ce7f2c35670b3993b32c695b488654d0e45fcc43a528cfe7f1915e59ac4d5c",
+  "snapshots": {
+    "base": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "40ba62d4889135f8be7a89b2b8c075d7c94b9a56cf47f536ac7f40b15b97f89d",
+      "ledger.json": "01f56aff4d450ee65f7b56634bcf6d356ad6052cc736aa0ec0b3788dfe3ca7bc"
+    },
+    "current": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "2386779c6dae49de6721b95da1e995338bd290f0124d3e20591e4dfdf6241723",
+      "ledger.json": "4a5ffbfe1730e5b64f71f833049bb4376e62ad47acdf5eacfdd0a8453717d363"
+    },
+    "incoming": {
+      "archive/atomic-managed-sku-registration-claim-20260829/events.jsonl": "051af28c316c63e20f490faf87b5b705bf480afdb03cf1f61ddb783c8f81244e",
+      "archive/atomic-managed-sku-registration-claim-20260829/ledger.json": "28d9afa487ba9583253a1e1d43c6e6439e2bddb6a7a3238e713f5175859c9060",
+      "archive/dinkuskit-commerce-v1/events.jsonl": "726961ec5147305fe0584095193cd25b04c2862d185cd3800de017512c386248",
+      "archive/dinkuskit-commerce-v1/ledger.json": "6381051431e6b10fb8d3cfe760d59ee15ccce6ad6d775529ecac345e886e29b2",
+      "archive/gt-20260829171724-494811/events.jsonl": "3b827d39f3cc868fd3ac8188cd2b8324e6aa54d81579c6a08f0d90712a89a674",
+      "archive/gt-20260829171724-494811/ledger.json": "3096670b73cdb36bc867cb41d5db70de8fdedbda76df10f99cf7b6133a5ab48a",
+      "archive/gt-20260830194146-7a94e6/events.jsonl": "ec3463aeb6274e27dc5889a909dd682d8159d081706984d0c7284d59154e82d0",
+      "archive/gt-20260830194146-7a94e6/ledger.json": "cf33731d9dec6cf4142b60ab00d7ccbf65a800d1a1d746b2d42397f968d37c1a",
+      "archive/gt-20260830205754-677931/events.jsonl": "a746983b95b6f90fae21af0c88dd42716736e9858c94586e6bfb6429632670bc",
+      "archive/gt-20260830205754-677931/ledger.json": "fc3c9670179a5f6ea26a267330dbb5dfb970ca7a2fde696753007c3d638d60f8",
+      "archive/gt-20260925212117-b02bdf/events.jsonl": "cd7ff0ba7c2e2a299c57c7c98b6bc74bca6137cca730f78e1252af1c1e9c217b",
+      "archive/gt-20260925212117-b02bdf/ledger.json": "a0074ee497097702ce310c65524d95dd2f392cbf252206cca72a6278756bbb2b",
+      "archive/gt-20260926123539-d964d3/events.jsonl": "728167b0660b6d73c356fbc9ff9929302dbc532ecf8e5343a59f8e1393291cff",
+      "archive/gt-20260926123539-d964d3/ledger.json": "17afdbb24332517f3371ce69051152d2d487358029c7d0459e130f3c51289bab",
+      "archive/gt-20260926151731-84df4c/events.jsonl": "2b83c10d2f7b956449b7e0fa8f3b6e7e774259cff7a9e01edf962137d4a5578b",
+      "archive/gt-20260926151731-84df4c/ledger.json": "a2525a6e21a11f2296c17aa018881ae0438995839f6d559e6cbf65fe748be46b",
+      "archive/gt-20260926183503-6113fc/events.jsonl": "4bfab544a32df2636af2f23fcadfbc657e13e5207cc75275f2d15e2b3b0d6bcb",
+      "archive/gt-20260926183503-6113fc/ledger.json": "9880e478b6ec706e6f54760b9ef7d8c7207d032acea5b3580f84c2ef50d82063",
+      "archive/managed-sku-compatibility-repair-20260828/events.jsonl": "7e17f8928da3f2f459f721a161460d0617ae74b34c97b41dff7ac3a52a0e6e22",
+      "archive/managed-sku-compatibility-repair-20260828/ledger.json": "b7ead3e994f9aa2df4d0b5d4642105a138c74a9a190e2fa221c177fe43abffd9",
+      "archive/retry-safe-inventory-registration-20260828/events.jsonl": "6d3ff55ccc4fda06e7cf16ca884b5ebb392a0c187abf5a41b894bf2e11b88d09",
+      "archive/retry-safe-inventory-registration-20260828/ledger.json": "90af6445b7cb9dade3868d2c926a72fac86556bd1a1731b0079a07ee551b27f0",
+      "events.jsonl": "222c866da90e3c8ae3452321d0a794d7dd29b61a1ab87dddd069b1fb54ee0af9",
+      "ledger.json": "351aa4fb4bd7a72be0ddaa035831e2a5c138ca36fd57a5189d7e5e7ec3cfc535"
+    }
+  },
+  "title": "Checkout contact on qualified variants and release country decisions"
+}

@@ -9963,14 +9963,7 @@
     "mechanism": "implicit"
   },
   "last_pause": null,
-  "pause": {
-    "artifact_refs": [
-      ".grilltrack/proof/checkout-contact-country-composition-20261008/COMPOSITION.md"
-    ],
-    "next_safe_action": "Preserve source checkpoint; integrate released main Node contract delta, review exact final tuple, and route separately approved supported packaging architecture. No merge or address/provider expansion.",
-    "paused_at": "2026-10-08T18:52:48+00:00",
-    "reason": "Composed contact functional profiles pass; official backend141201 exceeds131072 cap. Installed delivery and final exact-source review/CI are not qualified."
-  },
+  "pause": null,
   "recommendation": null,
   "reconciliation": {
     "plan_id": "87ce7f2c35670b3993b32c695b488654d0e45fcc43a528cfe7f1915e59ac4d5c",
@@ -9982,8 +9975,8 @@
     "snapshot_ref": ".grilltrack/lineage/87ce7f2c35670b3993b32c695b488654d0e45fcc43a528cfe7f1915e59ac4d5c"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "paused",
+  "status": "active",
   "title": "Checkout contact on qualified variants and release country decisions",
   "track_id": "gt-join-87ce7f2c35670b3993b32c695b488654",
-  "updated_at": "2026-10-08T18:52:48+00:00"
+  "updated_at": "2026-10-08T17:47:59+00:00"
 }
