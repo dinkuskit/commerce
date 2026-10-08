@@ -33,7 +33,8 @@ export function configuration(shipping = { configurationId: 'shipping-synthetic'
 }
 /** Exact legacy enabled v1 shape: no mode, no authorizeNetMerchantId. */
 export function legacyStripeConfiguration(shipping) {
-  return configuration(shipping);
+  const { mode: _omitMode, ...legacy } = configuration(shipping);
+  return legacy;
 }
 export function authorizeNetConfiguration(extra = {}, shipping = { configurationId: 'shipping-synthetic', revision: 1, mode: 'free' }) {
   const { stripeAccountId: _omit, ...base } = configuration(shipping);
