@@ -72,7 +72,7 @@ export function createGuestCheckoutPrepareRoute(
       if (ctx.request.method.toUpperCase() !== "POST") {
         throw new PluginRouteError("METHOD_NOT_ALLOWED", "guest checkout prepare requires POST", 405);
       }
-      return runNative(ctx, options, (runtime) => prepareGuestCheckout(runtime));
+      return runNative(ctx, options, (runtime) => prepareGuestCheckout(runtime, ctx.input));
     },
   };
 }
