@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices } from '../../../dist/features/catalog/kernel/index.js';
+import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
 // Small isolated store retains the same unique indexes and revision fence as the catalog contract.
 class Catalog {
@@ -29,6 +30,40 @@ const input = { productId: 'product', optionId: 'size', optionLabel: 'Size', val
   { valueId: 'small', label: 'Small', member: { catalogItemId: 'product', fulfillment: 'physical' } },
   { valueId: 'large', label: 'Large', member: { commandId: 'create-large', name: 'Proof shirt', sku: 'PROOF-LARGE', fulfillment: 'physical' } },
 ] };
+
+function publicContext(catalog, prices) {
+  const empty = new Catalog();
+  return { site: { url: 'https://shop.example.test' }, storage: {
+    catalog_items: catalog, catalog_prices: prices, catalog_manual_availability: empty,
+    catalog_backorder_policies: empty, store_inventory_configurations: empty,
+    storefront_availability_settings: empty, storefront_out_of_stock_listing: empty,
+    catalog_media: empty, storefront_placeholder_image: empty,
+  } };
+}
+
+test('hidden default member is absent from public list and lookup until priced', async () => {
+  const catalog = new Catalog(), prices = new Catalog();
+  await createCatalogItem(catalog, { commandId: 'hidden', name: 'Proof shirt', sku: 'HIDDEN', fulfillment: 'digital' }, { createId: () => 'product' });
+  const ctx = publicContext(catalog, prices);
+  assert.deepEqual((await readPublicCatalog(ctx)).products, []);
+  assert.equal(await readPublicCatalogItem(ctx, 'product'), null);
+  prices.records.set('product', { recordKind: 'catalog-price', recordId: 'product', catalogItemId: 'product', regular: { currency: 'USD', minor: '2400' } });
+  const product = await readPublicCatalogItem(ctx, 'product');
+  assert.equal(product.price.minor, '2400');
+  assert.equal(product.availability.sellable, true);
+});
+
+test('public variant group retains priced members and excludes an unpriced sibling', async () => {
+  const catalog = new Catalog(), prices = new Catalog(); await catalog.put('product', base);
+  await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
+  prices.records.set('large-item', { recordKind: 'catalog-price', recordId: 'large-item', catalogItemId: 'large-item', regular: { currency: 'USD', minor: '2400' } });
+  const product = (await readPublicCatalog(publicContext(catalog, prices))).products[0];
+  const unpriced = product.variants.members.find(m => m.catalogItemId === 'product');
+  if (unpriced) assert.deepEqual(unpriced.availability, { status: 'availability-unavailable', sellable: false, listable: false });
+  assert.deepEqual(product.variants.members.map(m => m.catalogItemId), ['large-item']);
+  assert.equal(product.variants.members[0].price.minor, '2400');
+  assert.equal(product.variants.members[0].availability.sellable, true);
+});
 
 test('failed parent commit leaves additional rows unavailable to purchase', async () => {
   const catalog = new Catalog(); await catalog.put('product', base); catalog.rejectParent = true;
@@ -100,6 +135,20 @@ test('bulk applies independent valid rows, reports stale and invalid rows, and p
   assert.equal((await prices.get('product')).regular.minor, '2500');
   assert.equal((await prices.get('large-item')).regular.minor, '2400');
   assert.equal((await availability.get('product')).status, 'out-of-stock');
+});
+
+test('variant bulk pricing refuses an ordinary product without changing its price or revision', async () => {
+  const catalog = new Catalog(); await catalog.put('product', base);
+  const prices = new Catalog(), availability = new Catalog();
+  prices.put = availability.put = async function(id, value) { this.records.set(id, structuredClone(value)); this.revisions.set(id, crypto.randomUUID()); };
+  const storage = { catalog, prices, availability, claims: new Catalog() };
+  await saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '20', sale: '' });
+  const before = await prices.getVersioned('product');
+  const result = await bulkSaveCatalogProductPrices(storage, [
+    { catalogItemId: 'product', regular: '25', sale: '', expectedRevision: before.revision },
+  ]);
+  assert.deepEqual(result.outcomes.map(r => [r.applied, r.code]), [[false, 'CATALOG_ITEM_NOT_FOUND']]);
+  assert.deepEqual(await prices.getVersioned('product'), before);
 });
 
 test('failed stock save cannot roll back a later identical price write', async () => {
