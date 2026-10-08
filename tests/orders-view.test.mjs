@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ordersView } from '../dist/admin/orders-view.js';
+import { orderPackAttempt, orderPackBody, ordersView } from '../dist/admin/orders-view.js';
 import { validateBlocks } from '@emdash-cms/blocks/server';
 import { paid, zero } from '../tools/orders-preview/fixtures.mjs';
 const input = { status: 'available', orders: [paid, zero] };
@@ -20,11 +20,28 @@ test('empty, outage, missing order and absent legacy breakdown remain distinct',
  assert.match(JSON.stringify(ordersView({ status: 'unavailable' })), /Orders unavailable/);
  assert.match(JSON.stringify(ordersView(input, 'missing')), /Order unavailable/);
  const legacy = { ...paid, pricing: undefined };
- assert.match(JSON.stringify(ordersView({ status: 'available', orders: [legacy] }, legacy.orderId)), /breakdown not recorded/);
+ assert.match(JSON.stringify(ordersView({ status: 'available', orders: [legacy] }, legacy.orderId)), /Breakdown not recorded/);
 });
 test('invalid money fails closed and large valid money keeps every cent', () => {
  const large = { ...paid, total: { currency: 'USD', minor: '9007199254740991' } };
  assert.equal(fields(ordersView({ status: 'available', orders: [large] }, large.orderId))['Order total'], 'USD 90071992547409.91');
  const bad = { ...paid, total: { currency: 'USD', minor: '-1' } };
  assert.match(JSON.stringify(ordersView({ status: 'available', orders: [bad] })), /could not be displayed safely/);
+});
+test('Pack builds one ticket or every ticket and does not claim the order packed', () => {
+ const one = orderPackBody(['hat-ticket']);
+ assert.deepEqual(one, { commandId: 'stock.pack:hat-ticket', type: 'stock.pack', reservationId: 'hat-ticket' });
+ assert.deepEqual(Object.keys(one), ['commandId', 'type', 'reservationId']);
+ const every = orderPackBody(['hat-ticket', 'shirt-ticket']);
+ assert.deepEqual(every, { commandId: 'stock.pack_all:hat-ticket\nshirt-ticket', type: 'stock.pack_all', reservationIds: ['hat-ticket', 'shirt-ticket'] });
+ assert.deepEqual(Object.keys(every), ['commandId', 'type', 'reservationIds']);
+ assert.equal(JSON.stringify(one).includes('orderNumber'), false);
+ assert.deepEqual(orderPackAttempt(['hat-ticket']), { packed: false, body: one });
+ assert.deepEqual(orderPackAttempt(undefined), { packed: false, body: null });
+ const ticketed = { ...paid, ticketIds: ['hat-ticket'] };
+ const detail = ordersView({ status: 'available', orders: [ticketed] }, ticketed.orderId);
+ assert.equal(validateBlocks(detail.blocks).valid, true);
+ assert.equal(detail.blocks.find(block => block.type === 'actions' && block.elements[0].label === 'Pack').elements[0].action_id, 'orders.pack:' + encodeURIComponent(ticketed.orderId));
+ assert.match(JSON.stringify(detail), /Not recorded/);
+ assert.equal(JSON.stringify(detail).includes('Tickets'), false);
 });

@@ -19,6 +19,31 @@ function reversedSession(session) {
   return reordered;
 }
 
+test('reserved ticket ids persist on the order and a string reserved result still pays', async t => {
+  const named = setup(t);
+  named.inventory.reserve = async (request) => {
+    assert.equal(request.requirements.length, 2);
+    assert.equal(request.requirements.find(line => line.skuId === 'sku-one').quantity, 3);
+    return { outcome: 'reserved', ticketIds: ['hat-ticket', 'shirt-ticket'] };
+  };
+  const started = await startCheckout(named.execution, 'guest-cart', [...cart, { catalogItemId: 'one', quantity: 1 }]);
+  assert.deepEqual(started.ticketIds, ['hat-ticket', 'shirt-ticket']);
+  named.setPayment('paid');
+  const paid = await reconcileCheckout(named.execution, 'guest-cart', started.attemptId);
+  assert.deepEqual(paid.order.ticketIds, ['hat-ticket', 'shirt-ticket']);
+  assert.equal(Object.hasOwn(paid.order, 'orderNumber'), false);
+  const legacy = setup(t);
+  legacy.setPayment('paid');
+  const old = await startCheckout(legacy.execution, 'legacy-cart', cart);
+  const done = await reconcileCheckout(legacy.execution, 'legacy-cart', old.attemptId);
+  assert.equal(done.phase, 'paid');
+  assert.equal(done.order.ticketIds, undefined);
+  const split = setup(t);
+  split.inventory.reserve = async () => ({ outcome: 'reserved', ticketIds: ['a', 'b', 'c'] });
+  await assert.rejects(startCheckout(split.execution, 'split-cart', cart), /Invalid reservation outcome/);
+  assert.equal(split.sessions.size, 0);
+});
+
 test('canonical sale price, duplicate lines, guest checkout and complete basket before redirect',async t => {
   const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',[...cart,{catalogItemId:'one',quantity:1}]);
   assert.equal(a.payment.total.minor,'325'); assert.equal(a.payment.total.currency,'USD');

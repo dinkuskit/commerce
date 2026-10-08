@@ -3,7 +3,7 @@ import type { BlockResponse } from '@emdash-cms/blocks/server';
 import type { PluginContext, SandboxedRouteContext } from 'emdash/plugin';
 import type { StorageCollection } from 'emdash';
 import type { CheckoutRecord, CommerceOrder } from '../features/checkout/kernel/index.js';
-import { ordersView } from './orders-view.js';
+import { orderPackAttempt, ordersView } from './orders-view.js';
 
 export function ordersInteraction(input: unknown): boolean {
   if (!input || typeof input !== 'object') return false;
@@ -13,6 +13,7 @@ export function ordersInteraction(input: unknown): boolean {
 export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
   if (!adminAuthorized(route)) return { blocks: [{ type: 'banner', variant: 'error', title: 'Orders require plugins:manage' }] };
   let selected: string | undefined;
+  let pack = false;
   let offset = 0;
   try {
     const input = route.input as Record<string, unknown>;
@@ -22,7 +23,8 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
         if (!Number.isSafeInteger(input.value) || (input.value as number) < 0) throw new Error('Invalid page');
         offset = input.value as number;
       }
-    } else if (input.type === 'block_action' && typeof input.action_id === 'string' && input.action_id.startsWith('orders.open:')) {
+    } else if (input.type === 'block_action' && typeof input.action_id === 'string' && (input.action_id.startsWith('orders.open:') || input.action_id.startsWith('orders.pack:'))) {
+      pack = input.action_id.startsWith('orders.pack:');
       selected = decodeURIComponent(input.action_id.slice(12));
       if (!selected || selected.length > 1024) throw new Error('Invalid order');
     } else throw new Error('Invalid interaction');
@@ -48,7 +50,15 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
       cursor = result.cursor; cursors.add(cursor);
     }
     orders.sort((a, b) => a.orderId < b.orderId ? -1 : a.orderId > b.orderId ? 1 : 0);
-    if (selected !== undefined) return ordersView({ status: 'available', orders }, selected);
+    if (selected !== undefined) {
+      const view = ordersView({ status: 'available', orders }, selected);
+      if (!pack) return view;
+      const order = orders.find(item => item.orderId === selected);
+      const attempt = orderPackAttempt(order?.ticketIds);
+      if (attempt.packed || !attempt.body) throw new Error('Pack unavailable');
+      view.blocks.push({ type: 'banner', variant: 'error', title: 'Not packed', description: attempt.body.type });
+      return view;
+    }
     offset = pageOffset(offset, orders.length);
     const response = ordersView({ status: 'available', orders: orders.slice(offset, offset + 25) });
     pagination(response.blocks, offset, orders.length, 'orders.list');

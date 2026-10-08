@@ -102,6 +102,7 @@ export type {
   CheckoutExecution,
   CheckoutInventoryPort,
   CheckoutLine,
+  CheckoutReserveResult,
   CheckoutVariantSelectionSnapshot,
   CheckoutPaymentPort,
   CheckoutRecord,

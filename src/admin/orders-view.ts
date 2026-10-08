@@ -29,11 +29,23 @@ function detailFields(...pairs: string[]): Block {
 }
 const notRecorded = 'Not recorded';
 const back = action('Back to orders', 'orders.list');
+/** Exact Inventory pack body. One ticket is stock.pack; every ticket is stock.pack_all. No order number. */
+export function orderPackBody(ticketIds: readonly string[]) {
+  if (ticketIds.length === 1) {
+    return { commandId: 'stock.pack:' + ticketIds[0], type: 'stock.pack' as const, reservationId: ticketIds[0] };
+  }
+  return { commandId: 'stock.pack_all:' + ticketIds.join('\n'), type: 'stock.pack_all' as const, reservationIds: [...ticketIds] };
+}
+/** Inventory main has no POST /v1/stock/pack yet, so Pack never records the order as packed. */
+export function orderPackAttempt(ticketIds: readonly string[] | undefined): { packed: false; body: ReturnType<typeof orderPackBody> | null } {
+  if (!ticketIds?.length) return { packed: false, body: null };
+  return { packed: false, body: orderPackBody(ticketIds) };
+}
 /** Selection is the exact canonical order ID, never a row offset or payment ID. */
 export function ordersView(input: OrdersInspection, selectedOrderId?: string): BlockResponse {
   const blocks: Block[] = [header()];
   if (selectedOrderId !== undefined) blocks.push(back);
-  if (input.status === 'unavailable') return { blocks: [...blocks, unavailable('Orders unavailable', 'Order records could not be loaded. Try again.')] };
+  if (input.status === 'unavailable') return { blocks: [...blocks, unavailable('Orders unavailable', 'Try again.')] };
   try {
     if (selectedOrderId === undefined) {
       if (!input.orders.length) blocks.push({ type: 'section', text: 'No orders recorded yet.' });
@@ -45,11 +57,12 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
       return { blocks };
     }
     const matches = input.orders.filter(order => order.orderId === selectedOrderId);
-    if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
+    if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'Missing order.')] };
     const order = matches[0];
     blocks.push(detailFields('Order', order.orderId, 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
       'Provider payment', order.paymentId ?? notRecorded, 'Fulfillment', notRecorded), { type: 'header', text: 'Items' });
+    if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + encodeURIComponent(order.orderId)));
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
       'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
     if (order.pricing) {
@@ -60,10 +73,10 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
         'Net items', amount(pricing.netMerchandise),
         'Shipping', amount(pricing.shipping.charge),
         'Pricing total', amount(pricing.finalTotal)));
-    } else blocks.push({ type: 'context', text: 'Item subtotal, coupon and shipping breakdown not recorded.' });
+    } else blocks.push({ type: 'context', text: 'Breakdown not recorded.' });
     blocks.push(fields('Order total', amount(order.total)));
     return { blocks };
   } catch {
-    return { blocks: [header(), back, unavailable('Orders unavailable', 'Recorded amounts could not be displayed safely.')] };
+    return { blocks: [header(), back, unavailable('Orders unavailable', 'could not be displayed safely')] };
   }
 }

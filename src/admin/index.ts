@@ -59,7 +59,7 @@ function alert(message: string): Block {
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
     { type: "header", text: "Add product" },
-    { type: "context", text: "Name is the customer-facing product title (the product page heading). New products stay unmanaged. Manage stock is coming soon." },
+    { type: "context", text: "Manage stock is coming soon." },
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
@@ -90,14 +90,8 @@ type ProductFields = {
 // forwards disabled to Kumo Switch. Emitting a live toggle would not fulfill the
 // requested disabled slider. This notice is an honest temporary fallback.
 function manageStockNotice(managed: boolean | null): Block {
-  return {
-    type: "context",
-    text: managed === true
-      ? "Manage stock — Coming soon. This product stays managed; tracking cannot be changed."
-      : managed === false
-        ? "Manage stock — Coming soon"
-        : "Manage stock — Coming soon. Manual status is hidden until stored tracking can be proven.",
-  };
+  const soon = "Manage stock — Coming soon";
+  return { type: "context", text: managed === true ? soon + ". This product stays managed." : managed === false ? soon : soon + " until stored tracking can be proven." };
 }
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
   return { type: "form", block_id: "product-" + id + "-" + crypto.randomUUID(), fields: [
@@ -149,7 +143,7 @@ function target(value: unknown): Target {
 async function preview(ctx: PluginContext, reference: MediaReference | null, alt: string): Promise<Block> {
   const item = reference && ctx.media ? await ctx.media.get(reference.mediaId).catch(() => null) : null;
   return item ? { type: "image", url: item.url, alt: item.alt || alt }
-    : { type: "context", text: reference ? "Image " + reference.mediaId + " is not available in the Media Library." : "No image" };
+    : { type: "context", text: reference ? "Image unavailable" : "No image" };
 }
 async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: CatalogMediaRecord): Promise<Block[]> {
   const blocks: Block[] = [{ type: "header", text: "Images" }, await preview(ctx, media.image, name), { type: "actions", elements: [
@@ -168,18 +162,18 @@ async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: 
   return blocks;
 }
 async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<BlockResponse> {
-  if (!ctx.media) throw new Error("Media Library access is unavailable. Commerce needs the media:read capability.");
+  if (!ctx.media) throw new Error("No media");
   const page = await ctx.media.list({ limit: LIBRARY_PAGE, mimeType: "image/", ...(cursor ? { cursor } : {}) });
   const blocks: Block[] = [
     { type: "header", text: t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image" },
-    navigation(), { type: "context", text: "Images from the Media Library. Upload new images on the Media page." },
+    navigation(),
     { type: "actions", elements: [{ type: "button", label: "Cancel", action_id: t.t === "placeholder" ? "settings" : "open", value: t.id }] },
   ];
   for (const item of page.items) {
     blocks.push({ type: "image", url: item.url, alt: item.alt || item.filename },
       { type: "actions", elements: [{ type: "button", label: "Use " + item.filename, action_id: "media.use", value: { ...t, m: item.id } }] });
   }
-  if (!page.items.length) blocks.push({ type: "empty", title: "No images yet", description: "Upload images on the Media page first." });
+  if (!page.items.length) blocks.push({ type: "empty", title: "No images yet", description: "Upload images first." });
   if (page.hasMore && page.cursor) {
     blocks.push({ type: "actions", elements: [{ type: "button", label: "Next", action_id: "media.pick", value: { ...t, c: page.cursor } }] });
   }
@@ -189,13 +183,13 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const store = storage(ctx);
   const listed = await listCatalogProducts(store);
   const selected = listed.products.find((item) => item.catalogItemId === id);
-  if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product was not found. Return to Products.");
+  if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Not found.");
   const dormant = await loadCatalogItemManualAvailability(store.availability, id);
   const status = dormant.status === "available-on-backorder" ? "on-backorder" : dormant.status;
   const media = await loadCatalogItemMedia(store.media, id);
   const values = form ?? { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus };
   return { blocks: [
-    { type: "header", text: selected.name }, { type: "context", text: "Commerce / Products" }, navigation(),
+    { type: "header", text: selected.name }, navigation(),
     { type: "context", text: "SKU: " + selected.sku },
     ...(form?.message ? [alert(form.message)] : []),
     manageStockNotice(values.manageStock),
@@ -213,13 +207,13 @@ async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: strin
 // A stale page must never act on a different image than its label named.
 function galleryIndex(value: unknown, mediaId: string, gallery: string[]): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= gallery.length) throw new Error("Invalid gallery image");
-  if (gallery[value] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed since this page loaded. Reload and try again.");
+  if (gallery[value] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed.");
   return value;
 }
 async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
   const placeholder = (await loadStorefrontPlaceholderImage(placeholderStorage(ctx))).image;
   return [
-    { type: "header", text: "Placeholder image" }, { type: "context", text: "Shown on the shop for products without an image." },
+    { type: "header", text: "Placeholder image" },
     await preview(ctx, placeholder, "Placeholder image"),
     { type: "actions", elements: [
       { type: "button", label: placeholder ? "Change placeholder" : "Choose placeholder", action_id: "media.pick", value: { t: "placeholder", id: "" } },
@@ -230,7 +224,7 @@ async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
 function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockResponse {
   return { blocks: [
     { type: "header", text: "Commerce settings" }, navigation(), { type: "header", text: "Catalog" },
-    ...(failure ? [alert(failure), { type: "context" as const, text: "Save was not confirmed. Your choice is retained; review or retry." }] : []),
+    ...(failure ? [alert(failure), { type: "context" as const, text: "Not saved." }] : []),
     { type: "form", block_id: "catalog-settings-" + crypto.randomUUID(), fields: [
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
     ], submit: { label: "Save", action_id: "settings.save" } },
@@ -322,7 +316,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const [operation, id, ...args] = JSON.parse(action.slice(8));
         const store = storage(ctx);
         const selected = (await listCatalogProducts(store)).products.find(item => item.catalogItemId === id);
-        if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product was not found. Return to Products.");
+        if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Not found.");
         if (operation === "add") await addCatalogVariantOption(store, {
           productId: id, optionId: args[0], optionLabel: text(values.optionLabel), values: [
             { valueId: args[1], label: text(values.smallLabel), member: { catalogItemId: id, fulfillment: values.first as never } },
@@ -396,8 +390,8 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
           ? values.stockStatus as ProductFields["stockStatus"] : null;
         const managed = typeof values.manageStock === "boolean" ? values.manageStock : null;
         return { blocks: [
-          { type: "header", text: "Product changes" }, { type: "context", text: "Commerce / Products" }, navigation(),
-          alert(failure), { type: "context", text: "Save was not confirmed. Your entries are retained; review or retry." },
+          { type: "header", text: "Product changes" }, navigation(),
+          alert(failure), { type: "context", text: "Not saved." },
           manageStockNotice(managed),
           productForm(input.action_id.slice(5), {
             regular: values.regular,
