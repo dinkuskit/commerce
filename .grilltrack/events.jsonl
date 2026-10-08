@@ -168,3 +168,6 @@
 {"action": "decision_proposed", "at": "2026-10-08T20:29:54+00:00", "data": {"decision_id": "checkout-authorize-net-provider-20261008"}, "event_id": "b8a646ec-9fda-4e48-b317-57abb6bfd4c8"}
 {"action": "decision_proposed", "at": "2026-10-08T20:29:54+00:00", "data": {"decision_id": "checkout-authorize-net-provider-ryan-notes-20261008"}, "event_id": "da2db2fa-6f2a-484b-a88d-ea2c3e25c738"}
 {"action": "decision_proposed", "at": "2026-10-08T20:29:54+00:00", "data": {"decision_id": "checkout-authorize-net-provider-ryan-notes-20261008b"}, "event_id": "b26d83c2-b63f-47a6-b246-a78b7fb81d2b"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-08T20:59:24+00:00", "data": {"summary": "Ryan locked authorize_net admission on #71 (comment 6067094917 at 3:07 PM ET) and confirmed the lock in chat at 3:20 PM ET. Decision and #71 notes only; merge not approved."}, "event_id": "a036e587-420c-454c-bae8-8c93a0cb0d23"}
+{"action": "decision_locked", "at": "2026-10-08T20:59:24+00:00", "data": {"decision_id": "checkout-authorize-net-provider-20261008"}, "event_id": "1dd4ae9d-38b4-4747-8489-f374f0ed2d99"}
+{"action": "decision_locked", "at": "2026-10-08T20:59:43+00:00", "data": {"decision_id": "checkout-authorize-net-provider-ryan-notes-20261008"}, "event_id": "78ba96e3-3e9a-42db-9e26-7499adb4b779"}
