@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
 import { resolveCatalogItemPrice } from '../../dist/features/catalog/index.js';
@@ -40,15 +40,15 @@ test('EmDash 1.2 SDK storage preserves checkout records across runtime restart w
   const databasePath = join(directory, 'runtime.db');
   t.after(() => rm(directory, { recursive: true, force: true }));
 
-  const first = await runtimeFixture({ grants: false, databasePath });
-  await first.coupon('250');
-  const { token, result } = await start(first, { ...basket, couponCode: 'SAVE10' }).catch(async error => {
-    await first.close();
-    throw error;
-  });
-  assert.equal(result.ok, true);
-  assert.equal(result.checkout.state, 'paid');
-  await first.close();
+  const first = await runtimeFixture({ databasePath });
+  const { token } = await (async () => {
+    const started = await start(first);
+    assert.equal(started.result.ok, true);
+    first.setPaid();
+    const paid = await first.invoke(STATUS, {}, started.token);
+    assert.equal(paid.checkout.state, 'paid');
+    return started;
+  })().finally(() => first.close());
 
   const restarted = await runtimeFixture({
     grants: false,
@@ -61,22 +61,49 @@ test('EmDash 1.2 SDK storage preserves checkout records across runtime restart w
   const replay = await restarted.invoke(STATUS, {}, token);
   assert.equal(replay.ok, true);
   assert.equal(replay.checkout.state, 'paid');
-  assert.equal(replay.checkout.order.total.minor, '0');
+  assert.equal(replay.checkout.order.total.minor, '250');
   assert.equal((await restarted.collections.catalog_items.get('hat')).sku, 'HAT');
-  const coupons = await restarted.collections.coupons.query({ where: { normalizedCode: 'SAVE10' } });
-  assert.equal(coupons.items.length, 1);
-  assert.equal(coupons.items[0].data.normalizedCode, 'SAVE10');
   const persistedAttempt = (await restarted.cartRecords())[0].attempts[0];
-  assert.equal(persistedAttempt.coupon.status, 'consumed');
+  assert.equal(persistedAttempt.coupon, undefined);
   assert.equal(persistedAttempt.order.orderId, replay.checkout.order.orderId);
   assert.equal(persistedAttempt.order.total.minor, replay.checkout.order.total.minor);
 });
 
-test('actual compiled default workerd zero-payable coupon writes one payment-free order', async t => {
+test('compiled Registry runtime declares no coupons and rejects coupon codes before attempts or Payments', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  assert.equal(Object.hasOwn(state.artifact.storage, 'coupons'), false);
+  assert.equal(state.artifact.admin.pages.some(page => page.path === '/coupons'), false);
+  // Coupon evaluation and redemption code is absent from the shipped backend, not merely unreachable.
+  const backend = await readFile(new URL('../../dist/sandbox/plugin.mjs', import.meta.url), 'utf8');
+  for (const marker of ['browser totals are not authority', 'coupon CAS contention did not settle', 'normalized-code uniqueness']) {
+    assert.equal(backend.includes(marker), false, marker);
+  }
+  const prepared = await state.invoke(PREPARE);
+  const token = prepared.capability.capability;
+  for (const couponCode of ['SAVE10', 'save10']) {
+    const rejected = await state.invoke(START, { ...basket, couponCode }, token);
+    assert.equal(rejected.ok, false);
+    assert.equal(rejected.error.code, 'UNAVAILABLE');
+  }
+  assert.deepEqual(await state.cartRecords(), []);
+  assert.equal(state.requests.length, 0);
+  // The same capability still checks out without a coupon.
+  const plain = await state.invoke(START, basket, token);
+  assert.equal(plain.ok, true);
+  assert.equal(state.requests.length, 1);
+  assert.equal(state.requests[0].pricing.couponDiscount.minor, '0');
+  assert.equal(Object.hasOwn(state.requests[0].pricing, 'coupon'), false);
+  assert.equal(state.counts.scheduler, 0);
+});
+
+const zeroPrice = { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat', regular: { currency: 'USD', minor: '0' } };
+
+test('actual compiled default workerd zero-priced cart writes one payment-free order', async t => {
   const state = await runtimeFixture({ grants: false, config: configuration() });
   t.after(() => state.close());
-  await state.coupon('250');
-  const { token, result } = await start(state, { ...basket, couponCode: 'save10' });
+  await state.collections.catalog_prices.put('hat', zeroPrice);
+  const { token, result } = await start(state);
   assert.equal(result.ok, true);
   assert.equal(result.checkout.state, 'paid');
   assert.equal(result.checkout.order.total.minor, '0');
@@ -86,9 +113,22 @@ test('actual compiled default workerd zero-payable coupon writes one payment-fre
   assert.equal(state.requests.length, 0);
   const repeat = await state.invoke(STATUS, {}, token);
   assert.deepEqual(repeat.checkout.order, result.checkout.order);
-  assert.equal((await state.cartRecords())[0].attempts[0].coupon.status, 'consumed');
   assert.equal(state.counts.transport, 0);
   assert.equal(state.counts.scheduler, 0);
+});
+
+test('compiled zero-priced merchandise with positive shipping still uses Payments', async t => {
+  const state = await runtimeFixture({ config: configuration({ configurationId: 'ship-flat', revision: 1,
+    mode: 'flat', amount: { currency: 'USD', minor: '50' } }) });
+  t.after(() => state.close());
+  await state.collections.catalog_prices.put('hat', zeroPrice);
+  const { result } = await start(state);
+  assert.equal(result.ok, true);
+  assert.equal(result.checkout.pricing.netMerchandise.minor, '0');
+  assert.equal(result.checkout.total.minor, '50');
+  assert.equal(state.requests.length, 1);
+  assert.equal(state.requests[0].total.minor, '50');
+  assert.equal((await state.cartRecords())[0].attempts[0].order, undefined);
 });
 
 test('EmDash 1.2 original storage shares admin prices, storefront helpers and canonical checkout', async t => {
@@ -126,7 +166,7 @@ test('EmDash 1.2 original storage shares admin prices, storefront helpers and ca
   assert.deepEqual(paid.checkout.order.total, price.customerPays);
 });
 
-test('public installed catalog reads an admin-created product and canonical coupon order', async t => {
+test('public installed catalog reads an admin-created product and canonical order', async t => {
   const directory = await mkdtemp('/tmp/commerce-public-catalog-restart-');
   const databasePath = join(directory, 'runtime.db');
   let state = await runtimeFixture({ seed: false, databasePath });
@@ -140,24 +180,23 @@ test('public installed catalog reads an admin-created product and canonical coup
   assert.equal((await admin({ type: 'form_submit', action_id: 'save:' + id, values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' } })).toast.type, 'success');
   const catalog = await state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
   assert.deepEqual(catalog, { products: [{ id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [] }] });
-  await state.coupon('100');
-  const input = { lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }], couponCode: 'SAVE10' };
+  const input = { lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
   const { token, result } = await start(state, input);
   assert.equal(result.ok, true);
-  assert.equal(state.requests[0].total.minor, '500');
+  assert.equal(state.requests[0].total.minor, '600');
   state.setPaid();
   const paid = await state.invoke(STATUS, {}, token);
   assert.equal(paid.checkout.state, 'paid');
-  assert.equal(paid.checkout.order.total.minor, '500');
+  assert.equal(paid.checkout.order.total.minor, '600');
   const replay = await state.invoke(START, input, token);
   assert.deepEqual(replay.checkout.order, paid.checkout.order);
   const stored = (await state.cartRecords())[0];
   assert.equal(stored.attempts.length, 1);
-  assert.equal(stored.attempts[0].coupon.status, 'consumed');
+  assert.equal(stored.attempts[0].coupon, undefined);
   assert.equal(state.requests.length, 1);
   assert.equal(typeof paid.checkout.order.receiptId, 'string');
   assert.deepEqual(stored.attempts[0].order.total, state.requests[0].total);
-  assert.equal(stored.attempts[0].payment.pricing.couponDiscount.minor, '100');
+  assert.equal(stored.attempts[0].payment.pricing.couponDiscount.minor, '0');
   await state.close();
   state = await runtimeFixture({ seed: false, databasePath, config: null, token: null, grants: false });
   const recovered = await state.invoke(STATUS, {}, token);
@@ -166,32 +205,17 @@ test('public installed catalog reads an admin-created product and canonical coup
   assert.equal(state.counts.transport, 0);
 });
 
-test('zero-payable compiled route rejects missing/foreign capability and browser totals before order creation', async t => {
+test('compiled route rejects missing/foreign capability and browser totals before order creation', async t => {
   const state = await runtimeFixture({ grants: false });
   t.after(() => state.close());
-  await state.coupon('250');
   const prepared = await state.invoke(PREPARE);
-  const input = { ...basket, couponCode: 'SAVE10' };
+  const input = basket;
   assert.equal((await state.invoke(START, input)).error.code, 'CAPABILITY_DENIED');
   assert.equal((await state.invoke(START, input, 'guessed')).error.code, 'CAPABILITY_DENIED');
   assert.equal((await state.invoke(START, input, prepared.capability.capability, 'https://foreign.example.test')).error.code, 'ORIGIN_DENIED');
   assert.equal((await state.invoke(START, { ...input, total: { currency: 'USD', minor: '0' } }, prepared.capability.capability)).error.code, 'INVALID_CART');
   assert.deepEqual(await state.cartRecords(), []);
   assert.equal(state.counts.transport, 0);
-});
-
-test('compiled fully discounted merchandise with positive shipping still uses Payments', async t => {
-  const state = await runtimeFixture({ config: configuration({ configurationId: 'ship-flat', revision: 1,
-    mode: 'flat', amount: { currency: 'USD', minor: '50' } }) });
-  t.after(() => state.close());
-  await state.coupon('250');
-  const { result } = await start(state, { ...basket, couponCode: 'SAVE10' });
-  assert.equal(result.ok, true);
-  assert.equal(result.checkout.pricing.netMerchandise.minor, '0');
-  assert.equal(result.checkout.total.minor, '50');
-  assert.equal(state.requests.length, 1);
-  assert.equal(state.requests[0].total.minor, '50');
-  assert.equal((await state.cartRecords())[0].attempts[0].order, undefined);
 });
 
 test('actual SDK CAS and manifest uniqueness retain one winner and owner configuration revisions', async t => {
@@ -209,9 +233,9 @@ test('actual SDK CAS and manifest uniqueness retain one winner and owner configu
   assert.equal(first.applied, true);
   assert.equal((await state.settings.compareAndSet('installedCheckout', null, 'stale')).applied, false);
   assert.equal((await state.settings.getVersioned('installedCheckout')).revision, first.revision);
-  await state.collections.coupons.put('unique-a', { normalizedCode: 'SYNTHETIC' });
-  await assert.rejects(state.collections.coupons.compareAndSet('unique-b', null, { normalizedCode: 'SYNTHETIC' }), /UNIQUE/);
-  assert.equal(await state.collections.coupons.get('unique-b'), null);
+  await state.collections.catalog_items.put('unique-a', { skuKey: 'SYNTHETIC' });
+  await assert.rejects(state.collections.catalog_items.compareAndSet('unique-b', null, { skuKey: 'SYNTHETIC' }), /UNIQUE/);
+  assert.equal(await state.collections.catalog_items.get('unique-b'), null);
 });
 
 test('malformed or copied configuration is rejected before encrypted credential/transport', async t => {
@@ -281,20 +305,19 @@ test('workerd bridge denies missing grants even with configured services and HTT
   assert.equal(state.counts.scheduler, 0);
 });
 
-for (const mode of ['free', 'flat']) test(`compiled default workerd ${mode} shipping and coupon retain canonical payment/order replay`, async t => {
+for (const mode of ['free', 'flat']) test(`compiled default workerd ${mode} shipping retains canonical payment/order replay`, async t => {
   const shipping = { configurationId: 'ship-synthetic', revision: 3, mode,
     ...(mode === 'flat' ? { amount: { currency: 'USD', minor: '50' } } : {}) };
   const state = await runtimeFixture({ config: configuration(shipping) });
   t.after(() => state.close());
-  await state.coupon();
-  const { token, result } = await start(state, { ...basket, couponCode: 'save10' });
+  const { token, result } = await start(state);
   assert.equal(result.ok, true);
   assert.equal(state.requests.length, 1);
   const original = structuredClone(state.requests[0]);
-  assert.equal(original.total.minor, mode === 'flat' ? '200' : '150');
+  assert.equal(original.total.minor, mode === 'flat' ? '300' : '250');
   assert.equal(original.pricing.merchandiseSubtotal.minor, '250');
-  assert.equal(original.pricing.couponDiscount.minor, '100');
-  assert.equal(original.pricing.netMerchandise.minor, '150');
+  assert.equal(original.pricing.couponDiscount.minor, '0');
+  assert.equal(original.pricing.netMerchandise.minor, '250');
   assert.equal(original.pricing.shipping.mode, mode);
   assert.equal(original.pricing.shipping.revision, 3);
   state.setPaid();
@@ -308,16 +331,14 @@ for (const mode of ['free', 'flat']) test(`compiled default workerd ${mode} ship
   assert.equal(record.attempts.length, 1);
   assert.equal(record.attempts[0].order.total.minor, original.total.minor);
   assert.deepEqual(record.attempts[0].order.pricing, original.pricing);
-  assert.equal(record.attempts[0].coupon.status, 'consumed');
   assert.equal(state.requests.length, 1);
   assert.equal(state.counts.scheduler, 0);
 });
 
-test('real workerd cron wake applies canonical paid order/coupon before exact ACK and replay', async t => {
+test('real workerd cron wake applies canonical paid order before exact ACK and replay', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
-  await state.coupon();
-  await start(state, { ...basket, couponCode: 'save10' });
+  await start(state);
   state.setPaid();
   state.setWakes([{ eventId: 'evt_SYNTHETIC', attemptId: state.requests[0].attemptId,
     bindingRef: configuration().bindingRef, deliveryGeneration: 2, wokeAt: Date.now() }]);

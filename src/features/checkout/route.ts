@@ -1,5 +1,6 @@
 import { PluginRouteError, type PluginRoute } from "emdash";
 
+import { COUPONS_COLLECTION, createCheckoutCouponPort, type CouponCollection } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
 import { prepareGuestCheckout, startGuestCheckout, statusGuestCheckout } from "./guest.js";
 import { admitBoundGuestCheckoutRuntime, NATIVE_GUEST_CHECKOUT_STORAGE } from "./runtime.js";
@@ -29,14 +30,17 @@ function nativeRuntime(
   ctx: Parameters<PluginRoute["handler"]>[0],
   options: GuestCheckoutHostOptions,
 ) {
+  const storage = ctx.storage as Record<string, unknown>;
+  const coupons = storage[COUPONS_COLLECTION] as CouponCollection | undefined;
   return admitBoundGuestCheckoutRuntime(
     {
-      storage: ctx.storage as Record<string, unknown>,
+      storage,
       request: ctx.request,
       site: ctx.site,
     },
     NATIVE_GUEST_CHECKOUT_STORAGE,
     options,
+    coupons ? createCheckoutCouponPort(coupons) : undefined,
   );
 }
 

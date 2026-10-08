@@ -20,6 +20,8 @@ export {
 export { evaluateCoupon } from "./evaluator.js";
 export { createCouponAttemptOwner } from "./composition.js";
 export type { CouponAttemptPort } from "./composition.js";
+export { createCheckoutCouponPort } from "./checkout.js";
+export type { CheckoutCouponPort } from "./checkout.js";
 export {
   COUPONS_COLLECTION,
   COUPON_UNIQUE_INDEXES,

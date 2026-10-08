@@ -1,7 +1,7 @@
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import { isCurrentPaymentRequest } from "./payment-window.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
-import { normalizeCouponCode, validateCouponQuoteSnapshot } from "../coupons/index.js";
+import { normalizeCouponCode } from "../coupons/index.js";
 import type {
   CheckoutPaymentPort,
   CurrentPaymentRequest,
@@ -27,6 +27,11 @@ export interface TrustedTestPaymentsConfig {
   credentialResolver: () => Promise<string>;
   fetch: ScopedPaymentFetch;
   pricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
+  /**
+   * Coupon quote validation for entries that bind coupon support. Without
+   * it, a request carrying a coupon is malformed.
+   */
+  validateCouponQuoteSnapshot?: (value: unknown, name: string) => void;
 }
 
 interface PaymentBinding {
@@ -105,7 +110,10 @@ function outcome(value: unknown): PaymentOutcome {
   return result;
 }
 
-function assertPricing(request: PaymentRequest): void {
+function assertPricing(
+  request: PaymentRequest,
+  validateCouponQuoteSnapshot: TrustedTestPaymentsConfig["validateCouponQuoteSnapshot"],
+): void {
   const pricing = request.pricing;
   if (!pricing) return;
   const minor = (value: unknown) => BigInt(normalizeMoney(value).minor);
@@ -135,6 +143,7 @@ function assertPricing(request: PaymentRequest): void {
     }
     check(sumSubtotal === subtotal && sumDiscount === discount && sumNet === net);
     if (pricing.coupon) {
+      if (!validateCouponQuoteSnapshot) throw new Error("Coupon validation unavailable");
       check(normalizeCouponCode(pricing.coupon.code) === pricing.coupon.code);
       const quote = pricing.coupon.quote;
       validateCouponQuoteSnapshot(quote, "payment pricing coupon");
@@ -153,7 +162,11 @@ function assertPricing(request: PaymentRequest): void {
   }
 }
 
-function exactRequest(request: PaymentRequest, bindingRef: string): PaymentRequest {
+function exactRequest(
+  request: PaymentRequest,
+  bindingRef: string,
+  validateCouponQuoteSnapshot?: TrustedTestPaymentsConfig["validateCouponQuoteSnapshot"],
+): PaymentRequest {
   const copy = structuredClone(request);
   if (copy.bindingRef !== request.bindingRef ||
       copy.bindingRef !== bindingRef ||
@@ -165,7 +178,7 @@ function exactRequest(request: PaymentRequest, bindingRef: string): PaymentReque
   if (copy.pricing && (copy.pricing.schema !== CHECKOUT_PRICING_SCHEMA || !isCurrentPaymentRequest(copy))) {
     throw new Error("Unsupported payment pricing request");
   }
-  assertPricing(copy);
+  assertPricing(copy, validateCouponQuoteSnapshot);
   return copy;
 }
 
@@ -184,6 +197,7 @@ function normalizedConfig(
     credentialResolver: input.credentialResolver,
     fetch: input.fetch,
     pricingSchema: input.pricingSchema,
+    validateCouponQuoteSnapshot: input.validateCouponQuoteSnapshot,
   });
 }
 
@@ -276,7 +290,7 @@ function createPaymentPort(
   }
 
   async function requestOutcome(request: PaymentRequest, create: boolean): Promise<PaymentOutcome> {
-    const exact = exactRequest(request, config.bindingRef);
+    const exact = exactRequest(request, config.bindingRef, config.validateCouponQuoteSnapshot);
     if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
       throw new Error("Payments pricing schema unsupported");
     }

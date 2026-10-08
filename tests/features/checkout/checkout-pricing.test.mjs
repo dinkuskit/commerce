@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { openStore, fixture, cart } from "./fixture.mjs";
-import { createCouponAdmin } from "../../../dist/features/coupons/index.js";
+import { createCheckoutCouponPort, createCouponAdmin } from "../../../dist/features/coupons/index.js";
 import { startCheckout } from "../../../dist/features/checkout/index.js";
 
 function couponCollection() {
@@ -55,7 +55,7 @@ test("pricing composes real coupon evaluation, flat shipping, conservation, and 
   t.after(() => state.opened.db.close());
   let calls = 0;
   state.execution.pricing = {
-    coupons: state.coupons,
+    coupons: createCheckoutCouponPort(state.coupons),
     resolveShippingConfiguration: async () => ({
       configurationId: "ship-1",
       revision: 3,
@@ -106,7 +106,7 @@ test("unsupported pricing schema fails before payment resolution", async (t) => 
   t.after(() => state.opened.db.close());
   let resolved = 0;
   state.execution.pricing = {
-    coupons: state.coupons,
+    coupons: createCheckoutCouponPort(state.coupons),
     resolveShippingConfiguration: async () => ({
       configurationId: "ship-1", revision: 1, mode: "free",
     }),

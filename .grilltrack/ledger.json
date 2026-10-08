@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-08T15:41:16+00:00",
-    "domain": "Authoritative variant checkout journey",
-    "started_at": "2026-10-08T15:41:15+00:00",
+    "confirmed_at": "2026-10-08T20:05:21+00:00",
+    "domain": "Registry artifact size and coupon deferral",
+    "started_at": "2026-10-08T20:05:21+00:00",
     "status": "confirmed",
-    "summary": "Bobby confirmed one product and variant model with a hidden simple default, optional variant-defining choices, independent per-variant fulfillment, shared authoritative operations, independent price and availability, and explicit bulk writes. Implement the bounded Small sold-out USD2000 / Large available USD2400 merchant-to-guest synthetic paid-order journey, preserving default itemId and frozen originals. Fixture reseeding is authorized; contact, delivery effects, bundles, protocols, Inventory activation and host page routing remain excluded."
+    "summary": "The project owner (GitHub saariuslystoned) chose on 2026-10-08 to ship the first Registry release without coupons and bring coupons back later as their own unit. Native coupon storage, admin and checkout stay; no publication, deployment or merge is authorized by this choice."
   },
   "decisions": [
     {
@@ -3058,6 +3058,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T20:05:22+00:00",
+          "choice": "Yes. Every coupon page and action is admitted only when the host-attested caller has plugins:manage, checked with the pinned EmDash RBAC helper inside the sandbox handler; Products and Settings remain on the existing content:edit_any admin route. The Registry descriptor registers the coupons collection with normalizedCode uniqueness and the Block Kit admin page. The handler uses host-attested page/locale/direction, preserves submitted invalid drafts, uses the canonical coupon admin/controller and usage owner, and supports list/create/edit/disable with fixed or percentage discounts, expiry, limits, normalized-code collision, revision CAS, reload persistence, and authoritative usage. No second evaluator, money/order writer, UI-only or body-supplied authorization, translation invention, Registry publication, commit, merge, push, deployment, or provider integration.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
+          "note": "The installed coupon Block Kit page leaves the Registry artifact to restore backend headroom; its source stays in the repository unmounted.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "coupons-registry-block-kit-001",
@@ -3087,9 +3101,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
+      "status": "superseded",
+      "superseded_by": "registry-coupons-deferred-20261008",
+      "updated_at": "2026-10-08T20:05:22+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
@@ -3174,6 +3188,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T20:05:22+00:00",
+          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
+          "note": "dependency coupons-registry-block-kit-001 changed: The installed coupon Block Kit page leaves the Registry artifact to restore backend headroom; its source stays in the repository unmounted.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+        },
+        {
+          "at": "2026-10-08T20:16:49+00:00",
+          "choice": "Use option 1: narrowly audited source-aware auth build elimination with exact dependency/source/initializer guards and precompiled complete English fallback catalogs. Preserve genuine public hasPermission/toRoleLevel and the shared-route coupon permission guard; unexpected pinned source fails closed. Actual installed HTTP and visual proof remains required; no Registry publication or permission change.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/coupon-block-kit-registry-blocked.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "coupons-registry-packaging-001",
@@ -3205,8 +3247,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
-      "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+      "updated_at": "2026-10-08T20:16:49+00:00",
+      "verification_ref": ".grilltrack/proof/registry-coupons-deferred-20261008-PROOF.md"
     },
     {
       "baseline_ref": "git:58cbda5cab40fa0003bd6ed837cab1fb8ae93b72",
@@ -8056,6 +8098,91 @@
       "superseded_by": null,
       "updated_at": "2026-10-08T17:03:43+00:00",
       "verification_ref": "proof/variant-checkout-v1/visuals.json"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Remove coupons from the Registry artifact: no coupons storage, no /coupons admin page and no coupon admin, evaluator or redemption code in the installed backend. Checkout reaches coupons only through an entry-bound CheckoutCouponPort that the native entry binds from its own storage and the sandbox entry leaves unbound, so coupon codes there fail closed as unavailable before attempt writes or Payments calls. The sandbox build runs the official bundlePlugin size validation on every build. Coupon admin source and the audited auth transform stay in the repository, unmounted from the sandbox admin.",
+      "context_ref": "docs/implementation/registry-coupons-deferred.md",
+      "created_at": "2026-10-08T20:05:22+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "coupons-registry-block-kit-001"
+      ],
+      "domain": "Registry artifact size and coupon deferral",
+      "history": [
+        {
+          "at": "2026-10-08T20:05:22+00:00",
+          "choice": "Remove coupons from the Registry artifact: no coupons storage, no /coupons admin page and no coupon admin, evaluator or redemption code in the installed backend. Checkout reaches coupons only through an entry-bound CheckoutCouponPort that the native entry binds from its own storage and the sandbox entry leaves unbound, so coupon codes there fail closed as unavailable before attempt writes or Payments calls. The sandbox build runs the official bundlePlugin size validation on every build. Coupon admin source and the audited auth transform stay in the repository, unmounted from the sandbox admin.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T20:05:22+00:00",
+          "choice": "Remove coupons from the Registry artifact: no coupons storage, no /coupons admin page and no coupon admin, evaluator or redemption code in the installed backend. Checkout reaches coupons only through an entry-bound CheckoutCouponPort that the native entry binds from its own storage and the sandbox entry leaves unbound, so coupon codes there fail closed as unavailable before attempt writes or Payments calls. The sandbox build runs the official bundlePlugin size validation on every build. Coupon admin source and the audited auth transform stay in the repository, unmounted from the sandbox admin.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency coupons-registry-block-kit-001 changed: The installed coupon Block Kit page leaves the Registry artifact to restore backend headroom; its source stays in the repository unmounted.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T20:05:47+00:00",
+          "choice": "Remove coupons from the Registry artifact: no coupons storage, no /coupons admin page and no coupon admin, evaluator or redemption code in the installed backend. Checkout reaches coupons only through an entry-bound CheckoutCouponPort that the native entry binds from its own storage and the sandbox entry leaves unbound, so coupon codes there fail closed as unavailable before attempt writes or Payments calls. The sandbox build runs the official bundlePlugin size validation on every build. Coupon admin source and the audited auth transform stay in the repository, unmounted from the sandbox admin.",
+          "from": "needs_reverification",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T20:16:49+00:00",
+          "choice": "Remove coupons from the Registry artifact: no coupons storage, no /coupons admin page and no coupon admin, evaluator or redemption code in the installed backend. Checkout reaches coupons only through an entry-bound CheckoutCouponPort that the native entry binds from its own storage and the sandbox entry leaves unbound, so coupon codes there fail closed as unavailable before attempt writes or Payments calls. The sandbox build runs the official bundlePlugin size validation on every build. Coupon admin source and the audited auth transform stay in the repository, unmounted from the sandbox admin.",
+          "from": "implemented",
+          "implementation_ref": "src/features/coupons/checkout.ts scripts/check-registry-bundle.mjs docs/implementation/registry-coupons-deferred.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "registry-coupons-deferred-20261008",
+      "implementation_ref": "src/features/coupons/checkout.ts scripts/check-registry-bundle.mjs docs/implementation/registry-coupons-deferred.md",
+      "question": "How does the Registry artifact regain headroom under the 128KiB backend cap so PRs 68 and 69 can land?",
+      "rationale": "Measured backend.js: main 130243, PR 68 137927, PR 69 141201, this change 101493 bytes (29579 spare). Re-minification saved nothing, and EmDash 1.2 offers no cross-plugin call, so coupons return as a hosted service reached over HTTP like Payments and Inventory. Chosen by the project owner on 2026-10-08.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T20:16:49+00:00",
+      "verification_ref": ".grilltrack/proof/registry-coupons-deferred-20261008-PROOF.md"
     }
   ],
   "last_activation": {
@@ -8092,5 +8219,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T17:03:43+00:00"
+  "updated_at": "2026-10-08T20:16:49+00:00"
 }

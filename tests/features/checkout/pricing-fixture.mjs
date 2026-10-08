@@ -1,5 +1,5 @@
 import { openStore, fixture, cart } from './fixture.mjs';
-import { createCouponAdmin, createCouponAttemptOwner } from '../../../dist/features/coupons/index.js';
+import { createCheckoutCouponPort, createCouponAdmin, createCouponAttemptOwner } from '../../../dist/features/coupons/index.js';
 
 export function couponCollection() {
   const records = new Map();
@@ -31,7 +31,7 @@ export async function pricingFixture(t, { cap = 1, discount = { kind: 'fixed', a
     rule: { ruleId: 'totals-rule', version: 1, discount, appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
       minimumEligibleMerchandise: { currency: 'USD', minor: '0' }, startsAt: '2026-01-01T00:00:00Z', endsAt: '2027-01-01T00:00:00Z', timeZone: 'UTC' },
   });
-  f.execution.pricing = { coupons, paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1', resolveShippingConfiguration: async () => ({
+  f.execution.pricing = { coupons: createCheckoutCouponPort(coupons), paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1', resolveShippingConfiguration: async () => ({
     configurationId: 'shipping-rule', revision: 1, mode: shipping === '0' ? 'free' : 'flat', amount: { currency: 'USD', minor: shipping },
   }) };
   return { ...f, coupons, coupon, admin, owner: createCouponAttemptOwner(coupons), input: { lines: cart, couponCode: 'SAVE' } };
