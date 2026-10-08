@@ -79,6 +79,7 @@ export function projectGuestCheckout(
   const lines = linesOf(attempt);
   const paid = attempt.phase === "paid" && attempt.order
     ? {
+        ...(attempt.order.variantSelections ? { variantSelections: structuredClone(attempt.order.variantSelections) } : {}),
         orderId: attempt.order.orderId,
         receiptId: attempt.order.receiptId,
         lines,
@@ -99,6 +100,7 @@ export function projectGuestCheckout(
     schema: GUEST_CHECKOUT_PROJECTION_SCHEMA,
     state: stateOf(attempt),
     attemptId: attempt.attemptId,
+    ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
     lines,
     total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: publicPricing(attempt.payment.pricing) } : {}),

@@ -14,6 +14,9 @@ import {
   SAVE_CATALOG_ITEM_MEDIA_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   SET_CATALOG_ITEM_SKU_ROUTE,
+  ADD_CATALOG_VARIANT_OPTION_ROUTE,
+  BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -29,6 +32,9 @@ import {
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
   setCatalogItemSalePriceRoute,
+  addCatalogVariantOptionRoute,
+  updateCatalogVariantLabelsRoute,
+  bulkSaveCatalogProductPricesRoute,
 } from "./features/catalog/index.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
@@ -229,6 +235,9 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         createSaveCatalogProductPricesRouteWithLocalStock(localStock),
       [SAVE_CATALOG_ITEM_MEDIA_ROUTE]: saveCatalogItemMediaRoute,
       [SET_CATALOG_ITEM_SKU_ROUTE]: setCatalogItemSkuRoute,
+      [ADD_CATALOG_VARIANT_OPTION_ROUTE]: addCatalogVariantOptionRoute,
+      [UPDATE_CATALOG_VARIANT_LABELS_ROUTE]: updateCatalogVariantLabelsRoute,
+      [BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: bulkSaveCatalogProductPricesRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

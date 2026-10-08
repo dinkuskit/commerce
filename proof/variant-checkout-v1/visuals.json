@@ -1,0 +1,63 @@
+{
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "placement": "local disposable artifacts; no binary publication",
+  "files": [
+    {
+      "path": ".tmp/sandbox-proof/variant-native-ui-qualified-20261008/variant-merchant-native-desktop.png",
+      "bytes": 87354,
+      "sha256": "616ab7d5e414eaaeab8f4e9693586e0585dda511b46639b874a905a067812fab",
+      "fixture": "fictional merchant products and synthetic payments",
+      "redaction": "no credentials or real tenant data",
+      "inspected": true
+    },
+    {
+      "path": ".tmp/sandbox-proof/variant-native-ui-qualified-20261008/variant-merchant-native-phone.png",
+      "bytes": 37352,
+      "sha256": "7ef3e7f8b2307521588d9e6d0858feeb5e04bd39fcb52a4625089a52aca60ade",
+      "fixture": "fictional merchant products and synthetic payments",
+      "redaction": "no credentials or real tenant data",
+      "inspected": true
+    },
+    {
+      "path": ".tmp/sandbox-proof/variant-sandbox-ui-qualified-20261008/variant-merchant-sandbox-desktop.png",
+      "bytes": 82855,
+      "sha256": "298341430f7d4ea6ab1b2ce89b02a0d7e3367316c535a0d4c3ca7621455dabde",
+      "fixture": "fictional merchant products and synthetic payments",
+      "redaction": "no credentials or real tenant data",
+      "inspected": true
+    },
+    {
+      "path": ".tmp/sandbox-proof/variant-sandbox-ui-qualified-20261008/variant-merchant-sandbox-phone.png",
+      "bytes": 32217,
+      "sha256": "22446758446105a30b85ca0ee8e0c2f4fd0928cd4dabc83ec178fc1656082d20",
+      "fixture": "fictional merchant products and synthetic payments",
+      "redaction": "no credentials or real tenant data",
+      "inspected": true
+    },
+    {
+      "path": ".tmp/sandbox-proof/variant-native-ui-qualified-20261008/variant-journey-desktop.png",
+      "bytes": 195779,
+      "sha256": "0b54a19e74e0ed2221ec264b0033ab34051af9509f0ff0aa4299ebce1b9b18b8",
+      "fixture": "fictional merchant products and synthetic payments",
+      "redaction": "no credentials or real tenant data",
+      "inspected": true
+    },
+    {
+      "path": ".tmp/sandbox-proof/variant-native-ui-qualified-20261008/variant-journey-phone.png",
+      "bytes": 167398,
+      "sha256": "7f008246c749329f9ac1a9e1a0b48835b9decba1fe502684120d11204057affa",
+      "fixture": "fictional merchant products and synthetic payments",
+      "redaction": "no credentials or real tenant data",
+      "inspected": true
+    }
+  ]
+}
