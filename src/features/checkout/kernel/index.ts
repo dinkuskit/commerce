@@ -27,6 +27,8 @@ export {
 } from "../payment-window.js";
 export { GuestCheckoutError, guestCheckoutErrorMessage } from "../errors.js";
 export {
+  admitGuestCheckoutPrepareInput,
+  admitGuestCheckoutStatusInput,
   admitGuestCheckoutStartInput,
   admitGuestCheckoutPricingStartInput,
   guestCheckoutFailure,

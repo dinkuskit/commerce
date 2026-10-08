@@ -81,6 +81,46 @@ test("default createPlugin mounts checkout storage and public guest routes witho
   assert.equal(typeof createGuestCheckoutStartRoute, "function");
 });
 
+test("guest routes reject malformed bodies before capability or checkout storage access", async (t) => {
+  const f = setup(t);
+  const beforeCapabilities = await countCollection(f.storage, "checkoutGuestCapabilities");
+  const beforeCarts = await countCollection(f.storage, "checkoutCarts");
+  const cases = [
+    [GUEST_CHECKOUT_PREPARE_ROUTE, { unexpected: true }],
+    [GUEST_CHECKOUT_START_ROUTE, null],
+    [GUEST_CHECKOUT_START_ROUTE, { lines: [{ catalogItemId: "hat", quantity: 1, extra: true }] }],
+    [GUEST_CHECKOUT_START_ROUTE, { lines: [{ catalogItemId: "hat", quantity: 1_000_001 }] }],
+    [GUEST_CHECKOUT_START_ROUTE, { lines: [{ catalogItemId: "x".repeat(257), quantity: 1 }] }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, "not-an-object"],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { attemptId: "x".repeat(257) }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { paid: true }],
+  ];
+  for (const [route, input] of cases) {
+    await assert.rejects(
+      () => invokeGuest(f.plugin.routes[route], f.storage, input),
+      (error) => error instanceof PluginRouteError && error.code === "INVALID_CART",
+    );
+  }
+  assert.equal(await countCollection(f.storage, "checkoutGuestCapabilities"), beforeCapabilities);
+  assert.equal(await countCollection(f.storage, "checkoutCarts"), beforeCarts);
+});
+
+test("tampered client price is rejected before Commerce freezes a payment amount", async (t) => {
+  const f = setup(t);
+  await seedGuestCatalog(f.storage);
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage);
+  await assert.rejects(
+    () => invokeGuest(
+      f.plugin.routes[GUEST_CHECKOUT_START_ROUTE],
+      f.storage,
+      { lines: [{ catalogItemId: "hat", quantity: 1, unitPrice: { currency: "USD", minor: "1" } }] },
+      { capability: capabilityOf(prepared) },
+    ),
+    (error) => error instanceof PluginRouteError && error.code === "INVALID_CART",
+  );
+  assert.equal(await countCollection(f.storage, "checkoutCarts"), 0);
+});
+
 test("mint without trusted tenant scope is denied and writes no capability", async (t) => {
   const f = setup(t, { inject: false });
   await seedGuestCatalog(f.storage);
