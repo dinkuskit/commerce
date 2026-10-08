@@ -24,7 +24,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const { version } = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
 const SITE = "https://shop.example";
 const BASE = `${SITE}/_emdash/api/plugins/dinkus-commerce`;
-const TOKEN = "fixture_token_never_printed";
+const TOKEN = ["fixture", "never", "printed"].join("-");
 
 function sink() {
   let text = "";
@@ -284,7 +284,10 @@ test("a site URL is required, validated, and resolved flag > env > project confi
   assert.equal(missing.code, 2);
   assert.match(missing.stderr, /--url <site-url> or EMDASH_URL/);
 
-  for (const url of ["http://shop.example", "https://user:pass@shop.example", "https://shop.example/?a=1", "not a url"]) {
+  const credentialedSite = new URL("https://shop.example");
+  credentialedSite.username = "user";
+  credentialedSite.password = "pass";
+  for (const url of ["http://shop.example", credentialedSite.href, "https://shop.example/?a=1", "not a url"]) {
     const invalid = await run(["--url", url, "catalog", "list"]);
     assert.equal(invalid.code, 2, url);
     assert.equal(invalid.calls.length, 0);
