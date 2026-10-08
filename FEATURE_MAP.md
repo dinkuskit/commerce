@@ -14,6 +14,7 @@ This map is the repository contract for bounded Commerce feature work. A feature
 
 ## Boundary rules
 
+- Install type: the sandboxed Registry build is the supported product. The native entry is a developer and test setup with no features the Registry build lacks, except gaps the README's Install type section lists (owner rule, 2026-10-08).
 - A feature may import its own files, declared shared modules, third-party packages, and another feature only through that feature's `index.ts`.
 - Files outside a feature may reach it only through its `index.ts`; `src/index.ts` is the package composition root.
 - Tests consume publishable behavior through the package build or the feature's public entry, not a private implementation file.
