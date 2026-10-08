@@ -6,8 +6,9 @@ import {
   CatalogError, createCatalogItem, catalogProductCreateInput, listCatalogProducts,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogCreateInput, admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
+  addCatalogVariantOption, bulkSaveCatalogProductPrices, updateCatalogVariantLabels,
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
-  type CatalogProductPriceForm, type CatalogMediaRecord, type CatalogMediaStorage, type MediaReference,
+  type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage, type MediaReference,
 } from "../features/catalog/kernel/index.js";
 import { type ManagedSkuRegistrationClaimRecord } from "../features/inventory-provider/index.js";
 import {
@@ -63,6 +64,7 @@ function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): 
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
+      { type: "radio", action_id: "fulfillment", label: "Fulfillment", options: FULFILLMENT },
     ], submit: { label: "Add product", action_id: "create:" + commandId } },
   ];
 }
@@ -98,13 +100,42 @@ function manageStockNotice(managed: boolean | null): Block {
         : "Manage stock — Coming soon. Manual status is hidden until stored tracking can be proven.",
   };
 }
-function productForm(id: string, values: ProductFields): Block {
+function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
   return { type: "form", block_id: "product-" + id + "-" + crypto.randomUUID(), fields: [
       { type: "text_input", action_id: "regular", label: "Regular", initial_value: values.regular },
       { type: "text_input", action_id: "sale", label: "Sale", initial_value: values.sale },
       ...(values.manageStock === false ? [{ type: "radio" as const, action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS,
         initial_value: values.stockStatus ?? undefined }] : []),
-    ], submit: { label: "Save", action_id: "save:" + id } };
+    ], submit: { label: "Save", action_id: action } };
+}
+const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
+function variantEditor(id: string, variant: CatalogProductListItem["variantProduct"]): Block[] {
+  if (!variant?.options.length) return [{
+    type: "form", block_id: "variant-add-" + id, fields: [
+      { type: "text_input", action_id: "optionLabel", label: "Option (for example Size)", initial_value: "Size" },
+      { type: "text_input", action_id: "smallLabel", label: "First value", initial_value: "Small" },
+      { type: "text_input", action_id: "largeLabel", label: "Second value", initial_value: "Large" },
+      { type: "text_input", action_id: "sku", label: "Second SKU" },
+      ...["first", "second"].map(key => ({ type: "radio" as const, action_id: key, label: key === "first" ? "First fulfillment" : "Second fulfillment", options: FULFILLMENT })),
+    ], submit: { label: "Add choices", action_id: "variant:" + JSON.stringify(["add", id, ...Array.from({ length: 4 }, () => crypto.randomUUID())]) },
+  }];
+  const label = (m: typeof variant.members[number]) => m.selections.map(s => s.valueLabel).join(" / ");
+  return [
+    ...variant.members.flatMap(m => [
+      { type: "header" as const, text: label(m) }, manageStockNotice(m.manageStock),
+      productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" },
+        "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision])),
+    ]),
+    { type: "form", block_id: "variant-details-" + crypto.randomUUID(), fields: [
+      { type: "text_input", action_id: "optionLabel", label: "Option", initial_value: variant.options[0].label },
+      ...variant.options[0].values.map(v => ({ type: "text_input" as const, action_id: "label:" + v.valueId, label: "Value: " + v.label, initial_value: v.label })),
+      ...variant.members.map(m => ({ type: "radio" as const, action_id: "fulfillment:" + m.catalogItemId, label: label(m) + " fulfillment", options: FULFILLMENT, initial_value: m.fulfillment })),
+    ], submit: { label: "Save choices", action_id: "variant:" + JSON.stringify(["details", id, variant.revision]) } },
+    { type: "form", block_id: "variant-bulk-" + crypto.randomUUID(), fields: [
+      { type: "text_input", action_id: "regular", label: "Same regular price" },
+      ...variant.members.map(m => ({ type: "toggle" as const, action_id: JSON.stringify([m.catalogItemId, m.priceRevision, m.sale ?? ""]), label: "Apply to " + label(m), initial_value: false })),
+    ], submit: { label: "Apply same price", action_id: "variant:" + JSON.stringify(["bulk", id]) } },
+  ];
 }
 // Images reference the EmDash Media Library by id. Block Kit 1.2.0 renders no
 // media_picker on plugin admin pages, so Commerce lists the library itself
@@ -169,7 +200,8 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     { type: "context", text: "SKU: " + selected.sku },
     ...(form?.message ? [alert(form.message)] : []),
     manageStockNotice(values.manageStock),
-    productForm(id, { ...values, stockStatus: values.stockStatus ?? status }),
+    ...(!selected.variantProduct?.options.length ? [productForm(id, { ...values, stockStatus: values.stockStatus ?? status })] : []),
+    ...variantEditor(id, selected.variantProduct),
     ...await mediaBlocks(ctx, id, selected.name, media),
   ], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
@@ -269,7 +301,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const commandId = action.slice(7);
         admitV1CatalogCreateInput(values);
         const created = await createCatalogItem(storage(ctx).catalog,
-          catalogProductCreateInput(text(values.name), text(values.sku), commandId), { collection: "catalog_items", pluginId: ctx.plugin?.id });
+          { ...catalogProductCreateInput(text(values.name), text(values.sku), commandId), ...(values.fulfillment ? { fulfillment: values.fulfillment } : {}) }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
         return { ...await product(ctx, created.item.itemId), toast: { type: "success", message: "Product added" } };
       }
       if (action.startsWith("save:")) {
@@ -288,6 +320,40 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
           admitV1CatalogPriceSaveInput(payload, wasManaged));
         return { ...await product(ctx, id, saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }
+      if (action.startsWith("variant:")) {
+        const [operation, id, ...args] = JSON.parse(action.slice(8));
+        const store = storage(ctx);
+        const selected = (await listCatalogProducts(store)).products.find(item => item.catalogItemId === id);
+        if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product was not found. Return to Products.");
+        if (operation === "add") await addCatalogVariantOption(store, {
+          productId: id, optionId: args[0], optionLabel: text(values.optionLabel), values: [
+            { valueId: args[1], label: text(values.smallLabel), member: { catalogItemId: id, fulfillment: values.first as never } },
+            { valueId: args[2], label: text(values.largeLabel), member: { commandId: args[3], name: selected.name, sku: text(values.sku), fulfillment: values.second as never } },
+          ],
+        }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
+        else if (operation === "price") {
+          const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]);
+          if (!member) throw new Error("Member unavailable");
+          const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: args[1], regular: text(values.regular), sale: text(values.sale),
+            ...(!member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {}) });
+          if (!saved.saved) throw new Error(saved.message ?? "Could not save price");
+        } else if (operation === "details") await updateCatalogVariantLabels(store, {
+          productId: id, expectedRevision: args[0], optionLabel: text(values.optionLabel),
+          values: Object.entries(values).filter(([k]) => k.startsWith("label:")).map(([k,v]) => ({ valueId: k.slice(6), label: text(v) })),
+          members: Object.entries(values).filter(([k]) => k.startsWith("fulfillment:")).map(([k,v]) => ({ catalogItemId: k.slice(12), fulfillment: v as never })),
+        });
+        else if (operation === "bulk") {
+          const rows = Object.entries(values).filter(([k,v]) => k.startsWith("[") && v === true).map(([k]) => {
+            const [catalogItemId, expectedRevision, sale] = JSON.parse(k);
+            if (!selected.variantProduct?.members.some(m => m.catalogItemId === catalogItemId)) throw new Error("Member unavailable");
+            return { catalogItemId, expectedRevision, sale, regular: text(values.regular) };
+          });
+          const result = await bulkSaveCatalogProductPrices(store, rows);
+          const back = await product(ctx, id);
+          return { blocks: [{ type: "context", text: result.outcomes.map(r => r.catalogItemId + ": " + (r.applied ? "Saved" : r.message)).join("; ") }, ...back.blocks] };
+        } else throw new Error("Unknown variant action");
+        return product(ctx, id, undefined, "Changes saved");
+      }
       if (action === "settings.save") {
         await setOutOfStockListing(ctx.storage["storefront_out_of_stock_listing"] as StorageCollection<StorefrontOutOfStockListingRecord>,
           { hideOutOfStock: bool(values.hideOutOfStock) });
@@ -304,6 +370,19 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const back = v?.t === "placeholder" ? await settings(ctx) : typeof v?.id === "string" && v.id ? await product(ctx, v.id) : null;
         if (back) return { blocks: [alert(failure), ...back.blocks], toast: { type: "error", message: failure } };
       } catch { /* fall through to the generic alert */ }
+    }
+    if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.startsWith("variant:")) {
+      try {
+        const args = JSON.parse(input.action_id.slice(8));
+        const back = await product(ctx, args[1]);
+        for (const block of back.blocks) if (block.type === "form" && block.submit.action_id.startsWith("variant:")) {
+          const next = JSON.parse(block.submit.action_id.slice(8));
+          if (next[0] !== args[0] || (args[0] === "price" && next[2] !== args[2])) continue;
+          block.submit.action_id = input.action_id;
+          for (const field of block.fields) if (Object.hasOwn(values, field.action_id)) Object.assign(field, { initial_value: values[field.action_id] });
+        }
+        return { blocks: [alert(failure), ...back.blocks], toast: { type: "error", message: failure } };
+      } catch { /* storage recovery falls through to the render-only alert */ }
     }
     // Preserve clerk input for a refused create; retry uses the same command identity.
     if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.startsWith("create:") &&

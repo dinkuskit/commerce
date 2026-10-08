@@ -1,5 +1,5 @@
 import type { StorageCollection } from "emdash";
-import type { Money } from "../catalog/kernel/index.js";
+import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
 import type { CouponCollection, CouponQuoteSnapshot } from "../coupons/index.js";
@@ -7,6 +7,20 @@ import type { CouponCollection, CouponQuoteSnapshot } from "../coupons/index.js"
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
 export interface CartLine { catalogItemId: string; quantity: number }
 export interface CheckoutLine extends CartLine { name: string; unitPrice: Money }
+export const CHECKOUT_VARIANT_SELECTION_SCHEMA =
+  "dinkuskit.commerce.checkout-variant-selection/v1" as const;
+export interface CheckoutVariantSelectionSnapshot {
+  schema: typeof CHECKOUT_VARIANT_SELECTION_SCHEMA;
+  productId: string;
+  catalogItemId: string;
+  selections: readonly {
+    optionId: string;
+    optionLabel: string;
+    valueId: string;
+    valueLabel: string;
+  }[];
+  fulfillment: CatalogFulfillment;
+}
 export const CHECKOUT_PRICING_SCHEMA = "dinkuskit.commerce.checkout-pricing/v1" as const;
 export interface CheckoutPricingLine {
   catalogItemId: string;
@@ -133,6 +147,7 @@ interface CommerceOrderBase {
   lines: CheckoutLine[];
   total: Money;
   pricing?: CheckoutPricingSnapshot;
+  variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
 }
 export type CommerceOrder =
   | (CommerceOrderBase & { paymentId: string })
@@ -145,6 +160,7 @@ export interface CheckoutAttempt {
   phase: "reserving" | "paying" | "releasing" | "released" | "paid";
   session?: PaymentSession;
   order?: CommerceOrder;
+  variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
   /** Durable canonical reason for releasing; host support or elapsed time is never a reason. */
   paymentReleaseReason?: "never-started" | "not-created" | "expired-unpaid";
   coupon?: {
@@ -247,6 +263,7 @@ export interface GuestCheckoutPricingSummary {
 }
 
 export interface GuestCheckoutOrderSummary {
+  variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
   orderId: string;
   receiptId: string;
   lines: GuestCheckoutLine[];
@@ -255,6 +272,7 @@ export interface GuestCheckoutOrderSummary {
 }
 
 export interface GuestCheckoutProjection {
+  variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
   schema: typeof GUEST_CHECKOUT_PROJECTION_SCHEMA;
   state: GuestCheckoutState;
   attemptId: string | null;

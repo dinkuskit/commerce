@@ -34,8 +34,10 @@ import type {
   CatalogPriceRecord,
   CatalogPriceStorage,
   CatalogStorageRecord,
+  CatalogVariantProduct,
   Money,
 } from "./types.js";
+import { resolveCatalogVariantMember, variantSelections } from "./variants.js";
 
 export { CLERK_STOCK_STATUSES, type ClerkStockStatus } from "./clerk-stock.js";
 
@@ -50,6 +52,7 @@ interface PageResult<T> {
 
 export interface CatalogProductListStorage {
   catalog: {
+    get(id: string): Promise<CatalogStorageRecord | null>;
     query(options?: {
       limit?: number;
       cursor?: string;
@@ -67,6 +70,23 @@ export interface CatalogProductListItem {
   sale: string | null;
   manageStock: boolean;
   stockStatus: ClerkStockStatus | null;
+  variantProduct?: {
+    productId: string;
+    revision: number;
+    options: CatalogVariantProduct["options"];
+    members: readonly CatalogProductVariantListItem[];
+  };
+}
+
+export interface CatalogProductVariantListItem {
+  catalogItemId: string;
+  selections: ReturnType<typeof variantSelections>;
+  regular: string | null;
+  sale: string | null;
+  manageStock: boolean;
+  stockStatus: ClerkStockStatus | null;
+  fulfillment: "physical" | "digital";
+  priceRevision: string | null;
 }
 
 export interface SaveCatalogProductPricesInput {
@@ -75,6 +95,7 @@ export interface SaveCatalogProductPricesInput {
   sale: string;
   manageStock?: boolean;
   stockStatus?: string;
+  expectedRevision?: string | null;
 }
 
 export interface CatalogProductPriceForm {
@@ -154,13 +175,14 @@ export async function listCatalogProducts(
   const products: CatalogProductListItem[] = [];
   for (const record of records) {
     if (record.recordKind !== "catalog-item") continue;
+    if (record.variantProductId) continue;
     const price = await resolveCatalogItemPrice(storage.prices, record.itemId);
     const managed =
       normalizeStoredStockManagement(record.stockManagement).mode === "managed";
     const availability = managed
       ? null
       : await loadCatalogItemManualAvailability(storage.availability, record.itemId);
-    products.push({
+    const product: CatalogProductListItem = {
       catalogItemId: record.itemId,
       name: record.name,
       sku: record.sku,
@@ -172,7 +194,38 @@ export async function listCatalogProducts(
       manageStock: managed,
       stockStatus:
         availability === null ? null : toClerkStockStatus(availability.status),
-    });
+    };
+    if (record.variantProduct) {
+      const members: CatalogProductVariantListItem[] = [];
+      for (const member of record.variantProduct.members) {
+        const resolved = await resolveCatalogVariantMember(storage.catalog, member.catalogItemId);
+        if (!resolved?.member || !resolved.product) continue;
+        const priceState = await storage.prices.getVersioned(member.catalogItemId);
+        const memberPrice = await resolveCatalogItemPrice({ ...storage.prices, get: async () => priceState?.value ?? null }, member.catalogItemId);
+        const memberManaged =
+          resolved.item.stockManagement && normalizeStoredStockManagement(resolved.item.stockManagement).mode === "managed";
+        const memberAvailability = memberManaged
+          ? null
+          : await loadCatalogItemManualAvailability(storage.availability, member.catalogItemId);
+        members.push({
+          catalogItemId: member.catalogItemId,
+          selections: variantSelections(resolved.product, resolved.member),
+          regular: memberPrice.regular ? formatClerkDollar(memberPrice.regular) : null,
+          sale: memberPrice.sale ? formatClerkDollar(memberPrice.sale) : null,
+          manageStock: memberManaged,
+          stockStatus: memberAvailability ? toClerkStockStatus(memberAvailability.status) : null,
+          fulfillment: member.fulfillment,
+          priceRevision: priceState?.revision ?? null,
+        });
+      }
+      product.variantProduct = {
+        productId: record.variantProduct.productId,
+        revision: record.variantProduct.revision,
+        options: record.variantProduct.options,
+        members,
+      };
+    }
+    products.push(product);
   }
   products.sort((left, right) => {
     const byName = left.name.localeCompare(right.name);
@@ -237,12 +290,16 @@ function normalizeSaveInput(value: unknown): SaveCatalogProductPricesInput {
   if (input.manageStock !== undefined && typeof input.manageStock !== "boolean") {
     throw new CatalogError("INVALID_INPUT", "manageStock must be a boolean");
   }
+  if (input.expectedRevision !== undefined && input.expectedRevision !== null && typeof input.expectedRevision !== "string") {
+    throw new CatalogError("INVALID_INPUT", "invalid price revision");
+  }
   return {
     catalogItemId: input.catalogItemId,
     regular: input.regular,
     sale: input.sale,
     manageStock: input.manageStock,
     stockStatus: input.stockStatus,
+    expectedRevision: input.expectedRevision as string | null | undefined,
   };
 }
 
@@ -299,7 +356,11 @@ export async function saveCatalogProductPrices(
 
   const targetRegular = regular.status === "amount" ? regular.amount : null;
   const targetSale = sale.status === "amount" ? sale.amount : null;
-  const current = await resolveCatalogItemPrice(storage.prices, catalogItemId);
+  const versioned = input.expectedRevision === undefined ? undefined : await storage.prices.getVersioned(catalogItemId);
+  const current = await resolveCatalogItemPrice(versioned === undefined ? storage.prices : { ...storage.prices, get: async () => versioned?.value ?? null }, catalogItemId);
+  if (versioned !== undefined && (versioned?.revision ?? null) !== input.expectedRevision) {
+    throw new CatalogError("COMMAND_CONFLICT", "Price changed; reload before saving");
+  }
   const currentRegular = current.regular ?? null;
   const currentSale = current.sale ?? null;
 
@@ -329,9 +390,18 @@ export async function saveCatalogProductPrices(
   }
 
   let priceCommitted = false;
+  let committedRevision: string | undefined;
   try {
     if (!priceUnchanged) {
-      await commitCatalogItemPrice(storage, {
+      if (versioned !== undefined) {
+        const record: CatalogPriceRecord = { recordKind: "catalog-price", recordId: catalogItemId, catalogItemId,
+          regular: targetRegular!, ...(targetSale ? { sale: targetSale } : {}) };
+        const applied = targetRegular === null
+          ? await storage.prices.compareAndDelete(catalogItemId, versioned!.revision)
+          : await storage.prices.compareAndSet(catalogItemId, versioned?.revision ?? null, record);
+        if (!applied.applied) throw new CatalogError("COMMAND_CONFLICT", "Price changed; reload before saving");
+        if ("revision" in applied && typeof applied.revision === "string") committedRevision = applied.revision;
+      } else await commitCatalogItemPrice(storage, {
         catalogItemId,
         regular: targetRegular,
         sale: targetSale,
@@ -363,6 +433,7 @@ export async function saveCatalogProductPrices(
           targetSale,
           currentRegular,
           currentSale,
+          committedRevision,
         );
       } catch {
         // Keep the original stock-write error.
@@ -371,6 +442,54 @@ export async function saveCatalogProductPrices(
     throw error;
   }
   return displayForm(targetRegular, targetSale, nextManaged, nextStockStatus);
+}
+
+export interface BulkCatalogProductPriceInput {
+  catalogItemId: string;
+  regular: string;
+  sale: string;
+  expectedRevision: string | null;
+}
+
+export interface BulkCatalogProductPriceOutcome {
+  catalogItemId: string;
+  applied: boolean;
+  code?: "INVALID_INPUT" | "CATALOG_ITEM_NOT_FOUND" | "CONFLICT" | "STORAGE_UNAVAILABLE";
+  message?: string;
+}
+
+export async function bulkSaveCatalogProductPrices(
+  storage: SaveStorage,
+  inputs: readonly BulkCatalogProductPriceInput[],
+): Promise<{ outcomes: BulkCatalogProductPriceOutcome[] }> {
+  if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 100) {
+    throw new CatalogError("INVALID_INPUT", "bulk price input must contain one to one hundred rows");
+  }
+  const outcomes: BulkCatalogProductPriceOutcome[] = [];
+  for (const input of inputs) {
+    try {
+      if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision")) {
+        throw new CatalogError("INVALID_INPUT", "each bulk row requires its loaded price revision");
+      }
+      if (!await resolveCatalogVariantMember(storage.catalog, input.catalogItemId)) {
+        throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
+      }
+      if (Object.keys(input).some(key => !["catalogItemId", "regular", "sale", "expectedRevision"].includes(key))) {
+        throw new CatalogError("INVALID_INPUT", "bulk edits accept price fields only");
+      }
+      const saved = await saveCatalogProductPrices(storage, input);
+      if (!saved.saved) throw new CatalogError("INVALID_INPUT", saved.message ?? "invalid price");
+      outcomes.push({ catalogItemId: input.catalogItemId, applied: true });
+    } catch (error) {
+      const code = error instanceof CatalogError && ["INVALID_INPUT", "CATALOG_ITEM_NOT_FOUND"].includes(error.code)
+        ? error.code as BulkCatalogProductPriceOutcome["code"]
+        : error instanceof CatalogError && error.code === "COMMAND_CONFLICT"
+          ? "CONFLICT"
+          : "STORAGE_UNAVAILABLE";
+      outcomes.push({ catalogItemId: input?.catalogItemId ?? "", applied: false, code, message: error instanceof Error ? error.message : "bulk price update failed" });
+    }
+  }
+  return { outcomes };
 }
 
 async function persistManageStock(
@@ -455,9 +574,10 @@ async function restoreCommittedPrice(
   committedSale: Money | null,
   previousRegular: Money | null,
   previousSale: Money | null,
+  committedRevision?: string,
 ): Promise<void> {
   const latest = await storage.prices.getVersioned(catalogItemId);
-  if (latest === null) return;
+  if (latest === null || (committedRevision !== undefined && latest.revision !== committedRevision)) return;
   if (
     !moneySame(latest.value.regular, committedRegular) ||
     !moneySame(latest.value.sale ?? null, committedSale)

@@ -46,6 +46,15 @@ export function ProductsPage() {
   const [manageStockEnabled, setManageStockEnabled] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [optionLabel, setOptionLabel] = useState("Size");
+  const [smallLabel, setSmallLabel] = useState("Small");
+  const [largeLabel, setLargeLabel] = useState("Large");
+  const [newSku, setNewSku] = useState("");
+  const [firstFulfillment, setFirstFulfillment] = useState("");
+  const [secondFulfillment, setSecondFulfillment] = useState("");
+  const [creationFulfillment, setCreationFulfillment] = useState("");
+  const [choiceIds, setChoiceIds] = useState(() => Array.from({ length: 4 }, () => crypto.randomUUID()));
+  useEffect(() => { setChoiceIds(Array.from({ length: 4 }, () => crypto.randomUUID())); setFirstFulfillment(""); setSecondFulfillment(""); }, [selectedId]);
 
   async function loadProducts(selectId?: string): Promise<void> {
     const listed = await postPlugin<{
@@ -69,6 +78,10 @@ export function ProductsPage() {
     setSale(selected.sale ?? "");
     setManageStock(selected.manageStock);
     setStockStatus(selected.stockStatus ?? "in-stock");
+    const variant = (selected as CatalogProductListItem & { variantProduct?: {
+      options: readonly { label: string }[]; members: readonly { selections: readonly { valueId: string }[]; fulfillment: string }[];
+    }}).variantProduct;
+    setOptionLabel(variant?.options[0]?.label ?? "Size");
   }
 
   useEffect(() => {
@@ -95,7 +108,7 @@ export function ProductsPage() {
     try {
       const created = await postPlugin<{ item: { itemId: string } }>(
         CREATE_CATALOG_ITEM_ROUTE,
-        catalogProductCreateInput(name, sku, crypto.randomUUID()),
+        { ...catalogProductCreateInput(name, sku, crypto.randomUUID()), ...(creationFulfillment ? { fulfillment: creationFulfillment } : {}) },
         "Could not add the product",
       );
       setName("");
@@ -159,9 +172,33 @@ export function ProductsPage() {
     }
   }
 
+  async function addChoices(): Promise<void> {
+    if (!selectedId) return;
+    setPending(true);
+    try {
+      await postPlugin("catalog-items/add-variant-option", {
+        productId: selectedId, optionId: choiceIds[0], optionLabel,
+        values: [
+          { valueId: choiceIds[1], label: smallLabel, member: { catalogItemId: selectedId, fulfillment: firstFulfillment } },
+          { valueId: choiceIds[2], label: largeLabel, member: {
+            commandId: choiceIds[3], name: products.find(product => product.catalogItemId === selectedId)?.name ?? "Product",
+            sku: newSku, fulfillment: secondFulfillment,
+          } },
+        ],
+      }, "Could not add choices");
+      await loadProducts(selectedId);
+      setMessage("Variant choices saved");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not add choices");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return createElement(
     "section",
-    { className: "space-y-6" },
+    { className: "dk-products space-y-6" },
+    createElement("style", null, PRODUCTS_STYLE),
     createElement("h1", { className: "text-2xl font-semibold" }, "Products"),
     message === null
       ? null
@@ -172,6 +209,7 @@ export function ProductsPage() {
       createElement("h2", { className: "text-lg font-semibold" }, "Add product"),
       labeledField("Name", "product-name", name, setName),
       labeledField("SKU", "product-sku", sku, setSku),
+      fulfillmentSelect("Fulfillment", creationFulfillment, setCreationFulfillment),
       createElement(
         "button",
         { type: "submit", disabled: pending },
@@ -199,6 +237,8 @@ export function ProductsPage() {
     ),
     selectedId === null
       ? null
+      : products.find(p => p.catalogItemId === selectedId)?.variantProduct?.options.length
+        ? createElement(VariantProductEditor, { product: products.find(p => p.catalogItemId === selectedId)!, reload: () => loadProducts(selectedId) })
       : createElement(
           "form",
           { onSubmit: (event: FormEvent) => void savePrices(event), className: "space-y-3" },
@@ -213,9 +253,100 @@ export function ProductsPage() {
                 setStockStatusChanged(true);
               }),
           createElement("button", { type: "submit", disabled: pending }, "Save"),
+          (() => {
+            const variant = (products.find(product => product.catalogItemId === selectedId) as CatalogProductListItem & {
+              variantProduct?: { options: readonly unknown[]; members: readonly { selections: readonly { valueId: string }[]; fulfillment: string }[] };
+            } | undefined)?.variantProduct;
+            return createElement("div", null,
+              createElement("h3", null, "Add choices"),
+              labeledField("Option", "variant-option", optionLabel, setOptionLabel),
+              labeledField("First value", "variant-small", smallLabel, setSmallLabel),
+              labeledField("Second value", "variant-large", largeLabel, setLargeLabel),
+              labeledField("New variant SKU", "variant-sku", newSku, setNewSku),
+              fulfillmentSelect("First fulfillment", firstFulfillment, setFirstFulfillment),
+              fulfillmentSelect("Second fulfillment", secondFulfillment, setSecondFulfillment),
+              createElement("button", { type: "button", onClick: () => void addChoices(), disabled: pending }, "Add choices"),
+            );
+          })(),
         ),
   );
 }
+
+function fulfillmentSelect(label: string, value: string, change: (value: string) => void) {
+  return createElement("label", null, label, createElement("select", {
+    value, onChange: (e: ChangeEvent<HTMLSelectElement>) => change(e.currentTarget.value),
+  }, createElement("option", { value: "" }, "Choose fulfillment"),
+    createElement("option", { value: "physical" }, "Physical"), createElement("option", { value: "digital" }, "Digital")));
+}
+
+function VariantProductEditor({ product, reload }: { product: CatalogProductListItem; reload: () => Promise<void> }) {
+  const variant = product.variantProduct!;
+  const [forms, setForms] = useState<Record<string, { regular: string; sale: string; status: ClerkStockStatus; fulfillment: string }>>({});
+  const [labels, setLabels] = useState<string[]>([]); const [option, setOption] = useState("");
+  const [checked, setChecked] = useState<string[]>([]); const [amount, setAmount] = useState("");
+  const [message, setMessage] = useState<string | null>(null); const [pending, setPending] = useState(false);
+  useEffect(() => {
+    setForms(Object.fromEntries(variant.members.map(m => [m.catalogItemId, { regular: m.regular ?? "", sale: m.sale ?? "", status: m.stockStatus ?? "in-stock", fulfillment: m.fulfillment }])));
+    setLabels(variant.options[0].values.map(v => v.label)); setOption(variant.options[0].label);
+  }, [variant]);
+  const label = (id: string) => variant.members.find(m => m.catalogItemId === id)?.selections.map(s => s.valueLabel).join(" / ") ?? "Variant";
+  async function run(work: () => Promise<void>) {
+    setPending(true); setMessage(null);
+    try { await work(); } catch (e) { setMessage(e instanceof Error ? e.message : "Could not save changes"); } finally { setPending(false); }
+  }
+  const change = (id: string, field: string, value: string) => setForms({ ...forms, [id]: { ...forms[id], [field]: value } });
+  async function save(id: string, event: FormEvent) {
+    event.preventDefault(); const m = variant.members.find(m => m.catalogItemId === id)!; const f = forms[id];
+    await run(async () => {
+      const result = await postPlugin<CatalogProductPriceForm>(SAVE_CATALOG_PRODUCT_PRICES_ROUTE, {
+        catalogItemId: id, regular: f.regular, sale: f.sale, expectedRevision: m.priceRevision,
+        ...(!m.manageStock ? { stockStatus: f.status } : {}),
+      }, "Could not save variant");
+      if (!result.saved) throw new Error(result.message ?? "Invalid price");
+      await reload(); setMessage(`${label(id)} saved`);
+    });
+  }
+  async function details(event: FormEvent) {
+    event.preventDefault(); await run(async () => {
+      await postPlugin("catalog-items/update-variant-labels", { productId: product.catalogItemId, expectedRevision: variant.revision, optionLabel: option,
+        values: variant.options[0].values.map((v, i) => ({ valueId: v.valueId, label: labels[i] })),
+        members: variant.members.map(m => ({ catalogItemId: m.catalogItemId, fulfillment: forms[m.catalogItemId].fulfillment })),
+      }, "Could not save choices"); await reload(); setMessage("Choices saved");
+    });
+  }
+  async function bulk() {
+    await run(async () => {
+      const result = await postPlugin<{ outcomes: { catalogItemId: string; applied: boolean; message?: string }[] }>("catalog-items/bulk-save-prices", {
+        rows: variant.members.filter(m => checked.includes(m.catalogItemId)).map(m => ({ catalogItemId: m.catalogItemId, expectedRevision: m.priceRevision, regular: amount, sale: m.sale ?? "" })),
+      }, "Could not apply prices"); await reload(); setMessage(result.outcomes.map(o => `${label(o.catalogItemId)}: ${o.applied ? "saved" : o.message}`).join("; "));
+    });
+  }
+  return createElement("div", null, createElement("h2", null, product.name), message ? createElement("p", { role: "alert" }, message) : null,
+    ...variant.members.map(m => {
+      const f = forms[m.catalogItemId]; if (!f) return null;
+      return createElement("fieldset", { key: m.catalogItemId }, createElement("legend", null, label(m.catalogItemId)),
+        createElement("label", null, createElement("input", { type: "checkbox", checked: checked.includes(m.catalogItemId),
+          onChange: () => setChecked(checked.includes(m.catalogItemId) ? checked.filter(id => id !== m.catalogItemId) : [...checked, m.catalogItemId]) }), "Include in bulk price"),
+        createElement("form", { onSubmit: (e: FormEvent) => void save(m.catalogItemId, e) },
+          labeledField("Regular", `regular-${m.catalogItemId}`, f.regular, v => change(m.catalogItemId, "regular", v)),
+          labeledField("Sale", `sale-${m.catalogItemId}`, f.sale, v => change(m.catalogItemId, "sale", v)),
+          manageStockSwitch(m.manageStock, false, () => {}, `manage-stock-${m.catalogItemId}`),
+          !m.manageStock ? stockStatusFields(f.status, v => change(m.catalogItemId, "status", v)) : createElement("p", null, "Managed stock"),
+          createElement("button", { type: "submit", disabled: pending }, `Save ${label(m.catalogItemId)}`)),
+        fulfillmentSelect(`${label(m.catalogItemId)} fulfillment`, f.fulfillment, v => change(m.catalogItemId, "fulfillment", v)));
+    }),
+    labeledField("Same Regular price", "bulk-regular", amount, setAmount), createElement("button", { type: "button", disabled: pending || !checked.length, onClick: () => void bulk() }, "Apply to selected variants"),
+    createElement("form", { onSubmit: (e: FormEvent) => void details(e) }, labeledField("Option", "choice-option", option, setOption),
+      ...variant.options[0].values.map((v, i) => labeledField(`Value ${i + 1}`, `choice-${v.valueId}`, labels[i] ?? "", value => setLabels(labels.map((x, n) => n === i ? value : x)))),
+      createElement("button", { type: "submit", disabled: pending }, "Save choices")));
+}
+
+const PRODUCTS_STYLE = `
+.dk-products{max-width:48rem}.dk-products form{display:grid;gap:.75rem}.dk-products label{display:block}
+.dk-products input:not([type]),.dk-products select{display:block;width:min(100%,24rem);padding:.5rem;border:1px solid #9ca3af;border-radius:.375rem;background:transparent}
+.dk-products fieldset{min-width:0;border:1px solid #9ca3af;border-radius:.5rem;padding:1rem;margin:.75rem 0}
+.dk-products legend{font-weight:600;padding:0 .25rem}.dk-products button{border:1px solid #9ca3af;border-radius:.375rem;padding:.375rem .75rem;margin:.25rem 0;width:fit-content}
+`;
 
 const SWITCH_STYLE = `
 .dk-manage-stock-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
@@ -230,21 +361,22 @@ function manageStockSwitch(
   value: boolean,
   enabled: boolean,
   setValue: (value: boolean) => void,
+  id = "manage-stock",
 ) {
   return createElement(
     "div",
     { className: "dk-manage-stock-row" },
     createElement("style", null, SWITCH_STYLE),
-    createElement("label", { htmlFor: "manage-stock" }, "Manage stock"),
+    createElement("label", { htmlFor: id }, "Manage stock"),
     createElement("input", {
-      id: "manage-stock",
+      id,
       type: "checkbox",
       role: "switch",
       checked: value,
       disabled: !enabled,
       "aria-checked": value,
       "aria-disabled": enabled ? undefined : "true",
-      "aria-describedby": enabled ? undefined : "manage-stock-coming-soon",
+      "aria-describedby": enabled ? undefined : id + "-coming-soon",
       onChange: enabled
         ? (event: ChangeEvent<HTMLInputElement>) => {
             setValue(event.currentTarget.checked);
@@ -253,7 +385,7 @@ function manageStockSwitch(
     }),
     enabled
       ? null
-      : createElement("span", { id: "manage-stock-coming-soon" }, "Coming soon"),
+      : createElement("span", { id: id + "-coming-soon" }, "Coming soon"),
   );
 }
 

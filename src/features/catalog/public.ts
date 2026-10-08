@@ -8,6 +8,11 @@ import {
   type StorefrontPlaceholderImageStorage,
 } from "../storefront-availability/kernel/index.js";
 import type { CatalogStorageRecord } from "./types.js";
+import {
+  resolveCatalogVariantMember,
+  variantSelections,
+  type CatalogVariantProduct,
+} from "./variants.js";
 import { bindGuestCheckoutRuntime, SANDBOX_GUEST_CHECKOUT_STORAGE } from "../checkout/kernel/index.js";
 import type { StorefrontAvailabilityResult } from "../storefront-availability/kernel/index.js";
 
@@ -19,11 +24,23 @@ export interface PublicCatalogProduct {
   readonly id: string;
   readonly name: string;
   readonly sku: string;
-  readonly price: { readonly currency: "USD"; readonly minor: string };
+  readonly price?: { readonly currency: "USD"; readonly minor: string };
   readonly availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable">;
   /** Primary image, the store placeholder (placeholder: true), or null when neither resolves. The host maps ids to URLs. */
   readonly image: PublicCatalogImage | null;
   readonly gallery: readonly PublicCatalogImage[];
+  readonly variants?: {
+    readonly schema: "dinkuskit.commerce.product-variants/v1";
+    readonly productId: string;
+    readonly options: CatalogVariantProduct["options"];
+    readonly members: readonly {
+      catalogItemId: string;
+      selections: readonly ReturnType<typeof variantSelections>[number][];
+      price: { readonly currency: "USD"; readonly minor: string } | null;
+      availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable">;
+      fulfillment: "physical" | "digital";
+    }[];
+  };
 }
 export interface PublicCatalogResponse {
   readonly products: readonly PublicCatalogProduct[];
@@ -49,11 +66,10 @@ async function projectPublicCatalogProduct(
   ) {
     unavailable();
   }
-  const availability = await resolveStorefrontAvailability(storage, {
-    catalogItemId: item.itemId,
-  });
+  const variant = await resolveCatalogVariantMember(storage.catalog, item.itemId);
+  if (variant === null) return null;
+  const availability = await resolveStorefrontAvailability(storage, { catalogItemId: item.itemId });
   const price = await resolveCatalogItemPrice(storage.prices, item.itemId);
-  if (!price.listable || !price.customerPays || !availability.listable) return null;
   const media = await loadCatalogItemMedia(
     ctx.storage.catalog_media as CatalogMediaStorage,
     item.itemId,
@@ -67,6 +83,45 @@ async function projectPublicCatalogProduct(
     const projected = await images.project(entry, item.name);
     if (projected) gallery.push(projected);
   }
+  if (variant.product) {
+    const members = [];
+    for (const member of variant.product.members) {
+      const memberItem = await resolveCatalogVariantMember(storage.catalog, member.catalogItemId);
+      if (!memberItem?.member || memberItem.product?.productId !== variant.product.productId) continue;
+      const memberPrice = await resolveCatalogItemPrice(storage.prices, member.catalogItemId);
+      const memberAvailability = await resolveStorefrontAvailability(storage, {
+        catalogItemId: member.catalogItemId,
+      });
+      members.push({
+        catalogItemId: member.catalogItemId,
+        selections: variantSelections(variant.product, member),
+        price: memberPrice.customerPays ?? null,
+        availability: {
+          status: memberAvailability.status,
+          sellable: memberAvailability.sellable,
+          listable: memberAvailability.listable,
+        },
+        fulfillment: member.fulfillment,
+      });
+    }
+    if (!members.length) return null;
+    return {
+      id: variant.product.productId,
+      name: item.name,
+      sku: item.sku,
+      ...(!variant.product.options.length && price.customerPays ? { price: price.customerPays } : {}),
+      availability: { status: availability.status, sellable: !variant.product.options.length && availability.sellable, listable: members.some((member) => member.availability.listable) },
+      image,
+      gallery,
+      variants: {
+        schema: variant.product.schema,
+        productId: variant.product.productId,
+        options: variant.product.options,
+        members,
+      },
+    };
+  }
+  if (!price.listable || !price.customerPays || !availability.listable) return null;
   return {
     id: item.itemId,
     name: item.name,
@@ -96,7 +151,7 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
   const products: PublicCatalogProduct[] = [];
   for (const row of page.items) {
     const item = row.data as unknown as CatalogStorageRecord;
-    if (item.recordKind !== "catalog-item") continue;
+    if (item.recordKind !== "catalog-item" || item.variantProductId) continue;
     if (row.id !== item.itemId) unavailable();
     const product = await projectPublicCatalogProduct(ctx, storage, item, images, placeholder);
     if (product) products.push(product);
@@ -119,8 +174,14 @@ export async function readPublicCatalogItem(
   }).catalog;
   const row = await c.catalog_items!.get(itemId);
   if (!row) return null;
-  const item = row as unknown as CatalogStorageRecord;
+  let item = row as unknown as CatalogStorageRecord;
   if (item.recordKind !== "catalog-item" || item.itemId !== itemId) unavailable();
+  if (item.variantProductId) {
+    if (!await resolveCatalogVariantMember(storage.catalog, itemId)) return null;
+    const parent = await c.catalog_items!.get(item.variantProductId);
+    if (!parent) return null;
+    item = parent as unknown as CatalogStorageRecord;
+  }
   const images = createProductImageProjector(ctx.media);
   const placeholder = (
     await loadStorefrontPlaceholderImage(

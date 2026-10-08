@@ -1,6 +1,7 @@
 import { CatalogError } from "./errors.js";
 import { createInitialStockManagement } from "../inventory-provider/index.js";
 import type {
+  CatalogFulfillment,
   CreateCatalogItemInput,
   NormalizedCreateCatalogItemInput,
 } from "./types.js";
@@ -67,6 +68,14 @@ export function normalizeCreateCatalogItemInput(
   if (typeof manageStock !== "boolean") {
     throw new CatalogError("INVALID_INPUT", "manageStock must be a boolean");
   }
+  const fulfillment = candidate.fulfillment;
+  if (
+    fulfillment !== undefined &&
+    fulfillment !== "physical" &&
+    fulfillment !== "digital"
+  ) {
+    throw new CatalogError("INVALID_INPUT", "fulfillment must be physical or digital");
+  }
   return {
     commandId,
     creationIntent: { manageStock },
@@ -75,5 +84,6 @@ export function normalizeCreateCatalogItemInput(
     sku,
     skuKey: sku,
     stockManagement: createInitialStockManagement(manageStock),
+    ...(fulfillment === undefined ? {} : { fulfillment: fulfillment as CatalogFulfillment }),
   };
 }

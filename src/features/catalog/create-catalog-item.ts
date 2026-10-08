@@ -10,6 +10,7 @@ import type {
   CatalogStorage,
   CreateCatalogItemResult,
   NormalizedCreateCatalogItemInput,
+  CatalogVariantProduct,
 } from "./types.js";
 import {
   createInitialStockManagement,
@@ -23,6 +24,12 @@ export interface CreateCatalogItemOptions {
   pluginId?: string;
   createId?: () => string;
   now?: () => Date;
+  /** Internal member linkage must be durable before a parent commits membership. */
+  variantMember?: {
+    productId: string;
+    selections: import("./types.js").CatalogVariantSelection[];
+    fulfillment: import("./types.js").CatalogFulfillment;
+  };
 }
 
 function sameCommandPayload(
@@ -42,7 +49,8 @@ function sameCommandPayload(
     original.name === input.name &&
     original.sku === input.sku &&
     original.skuKey === input.skuKey &&
-    original.manageStock === input.creationIntent.manageStock
+    original.manageStock === input.creationIntent.manageStock &&
+    original.fulfillment === input.fulfillment
   );
 }
 
@@ -82,7 +90,12 @@ async function findCommand(
 function resolveExistingCommand(
   existing: CatalogItemRecord,
   input: NormalizedCreateCatalogItemInput,
+  options: CreateCatalogItemOptions,
 ): CreateCatalogItemResult {
+  if (JSON.stringify([existing.variantProductId, existing.variantSelections, existing.variantFulfillment]) !==
+      JSON.stringify([options.variantMember?.productId, options.variantMember?.selections, options.variantMember?.fulfillment])) {
+    throw new CatalogError("COMMAND_CONFLICT", "commandId belongs to another member");
+  }
   if (!sameCommandPayload(existing, input)) {
     throw new CatalogError(
       "COMMAND_CONFLICT",
@@ -101,7 +114,7 @@ export async function createCatalogItem(
   await assertCatalogStorageConstraints(storage, options.collection, options.pluginId);
 
   const existing = await findCommand(storage, input.commandId);
-  if (existing) return resolveExistingCommand(existing, input);
+  if (existing) return resolveExistingCommand(existing, input, options);
 
   const item: CatalogItemRecord = {
     recordKind: "catalog-item",
@@ -109,14 +122,42 @@ export async function createCatalogItem(
     ...input,
     state: "draft",
     createdAt: (options.now ?? (() => new Date()))().toISOString(),
+    ...(options.variantMember ? {
+      variantProductId: options.variantMember.productId,
+      variantSelections: options.variantMember.selections,
+      variantFulfillment: options.variantMember.fulfillment,
+    } : {}),
     creationPayload: {
       kind: input.kind,
       name: input.name,
       sku: input.sku,
       skuKey: input.skuKey,
       manageStock: input.creationIntent.manageStock,
+      ...(input.fulfillment === undefined ? {} : { fulfillment: input.fulfillment }),
     } satisfies CatalogCreationPayload,
   };
+  if (input.fulfillment !== undefined && !options.variantMember) {
+    item.variantProduct = {
+      creationPayload: JSON.stringify({
+        commandId: input.commandId,
+        fulfillment: input.fulfillment,
+        kind: input.kind,
+        name: input.name,
+        sku: input.sku,
+        skuKey: input.skuKey,
+      }),
+      schema: "dinkuskit.commerce.product-variants/v1",
+      productId: item.itemId,
+      revision: 0,
+      defaultMemberId: item.itemId,
+      options: [],
+      members: [{
+        catalogItemId: item.itemId,
+        selections: [],
+        fulfillment: input.fulfillment,
+      }],
+    } satisfies CatalogVariantProduct;
+  }
 
   try {
     await storage.put(item.itemId, item);
@@ -130,7 +171,7 @@ export async function createCatalogItem(
     }
 
     const concurrentCommand = await findCommand(storage, input.commandId);
-    if (concurrentCommand) return resolveExistingCommand(concurrentCommand, input);
+    if (concurrentCommand) return resolveExistingCommand(concurrentCommand, input, options);
     if (uniqueField === "skuKey") {
       throw new CatalogError("SKU_CONFLICT", "sku is already assigned to another catalog item");
     }

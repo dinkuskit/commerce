@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-08T14:58:09+00:00",
-    "domain": "Product/variant architecture and shared UI/agent authority",
-    "started_at": "2026-10-08T14:58:09+00:00",
-    "status": "inspected",
-    "summary": "Confirmed five-point architecture only: one product/variant model with hidden default variant in simple editing; optional variant-defining choices distinct from attributes; independent purchasable-variant fulfillment; shared UI/agent validation and identities; customizations, bundles and protocols deferred. Decision/document recording now; no variants or tool APIs marked implemented. Coordinator may route bounded foundation build when ready."
+    "confirmed_at": "2026-10-08T15:41:16+00:00",
+    "domain": "Authoritative variant checkout journey",
+    "started_at": "2026-10-08T15:41:15+00:00",
+    "status": "confirmed",
+    "summary": "Bobby confirmed one product and variant model with a hidden simple default, optional variant-defining choices, independent per-variant fulfillment, shared authoritative operations, independent price and availability, and explicit bulk writes. Implement the bounded Small sold-out USD2000 / Large available USD2400 merchant-to-guest synthetic paid-order journey, preserving default itemId and frozen originals. Fixture reseeding is authorized; contact, delivery effects, bundles, protocols, Inventory activation and host page routing remain excluded."
   },
   "decisions": [
     {
@@ -7870,10 +7870,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T16:58:59+00:00",
+          "choice": "One product/variant model; simple editing hides the single default variant. Optional variant-defining choices are separate from descriptive attributes. Fulfillment is defined independently for the purchasable variant. Human UI and future agent tools share authoritative validation and identities. Customizations, bundles, and protocol integrations remain later work.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T17:03:42+00:00",
+          "choice": "One product/variant model; simple editing hides the single default variant. Optional variant-defining choices are separate from descriptive attributes. Fulfillment is defined independently for the purchasable variant. Human UI and future agent tools share authoritative validation and identities. Customizations, bundles, and protocol integrations remain later work.",
+          "from": "implemented",
+          "implementation_ref": "docs/implementation/variant-checkout-v1.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "product-variant-model-20261008",
-      "implementation_ref": null,
+      "implementation_ref": "docs/implementation/variant-checkout-v1.md",
       "question": "What product/variant and shared UI/agent boundary governs the next Commerce slices?",
       "rationale": "Explicit shared-understanding confirmation after official Shopify/BigCommerce reference review. Preserve stable itemId, editable SKU, host editorial identity and optional Inventory. Source implementation, migration/defaults and inheritance remain separately scoped.",
       "repair_required": false,
@@ -7882,14 +7910,156 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-08T14:58:09+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-08T17:03:42+00:00",
+      "verification_ref": "proof/variant-checkout-v1/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+      "context_ref": "docs/implementation/variant-checkout-v1.md",
+      "created_at": "2026-10-08T15:41:15+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-model-20261008"
+      ],
+      "domain": "Authoritative variant checkout journey",
+      "history": [
+        {
+          "at": "2026-10-08T15:41:15+00:00",
+          "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T16:58:59+00:00",
+          "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T17:03:43+00:00",
+          "choice": "Each purchasable variant has independent authoritative price and availability. Bulk same-price editing applies explicit validated per-row writes with reported outcomes; it creates no ongoing inheritance.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "variant-price-availability-20261008",
+      "implementation_ref": "src/features/catalog/product-admin.ts",
+      "question": "How are variant price and availability edited?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T17:03:43+00:00",
+      "verification_ref": "proof/variant-checkout-v1/verification.json"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+      "context_ref": null,
+      "created_at": "2026-10-08T15:41:15+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-model-20261008"
+      ],
+      "domain": "Authoritative variant checkout journey",
+      "history": [
+        {
+          "at": "2026-10-08T15:41:16+00:00",
+          "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T16:58:59+00:00",
+          "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T17:03:43+00:00",
+          "choice": "Existing products in this build are fictional proof fixtures and may be adapted or reseeded. Preserve Git and proof lineage and unrelated data; no real merchant or order deletion is authorized.",
+          "from": "implemented",
+          "implementation_ref": "tests/sandbox/variant-checkout.spec.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "variant-fictional-fixtures-20261008",
+      "implementation_ref": "tests/sandbox/variant-checkout.spec.mjs",
+      "question": "May owned proof products be adapted for the model?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T17:03:43+00:00",
+      "verification_ref": "proof/variant-checkout-v1/visuals.json"
     }
   ],
   "last_activation": {
-    "at": "2026-10-08T14:59:58+00:00",
+    "at": "2026-10-08T15:41:14+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -7897,20 +8067,12 @@
       "docs/contracts/product-variant-model.md",
       ".grilltrack/proof/product-variant-model-20261008/PROOF.md"
     ],
-    "next_safe_action": "Review the decision PR, then reserve and route an in-process catalog read-tool adapter over existing canonical readers. Resolve identity migration and fulfillment semantics before broader variants/issue33 adoption.",
-    "paused_at": "2026-10-08T14:58:09+00:00",
-    "reason": "Architectural lock recorded; focused decision PR and bounded source-owner handoff remain separate from implementation.",
-    "resumed_at": "2026-10-08T14:59:58+00:00"
-  },
-  "pause": {
-    "artifact_refs": [
-      "docs/contracts/product-variant-model.md",
-      ".grilltrack/proof/product-variant-model-20261008/PROOF.md"
-    ],
     "next_safe_action": "Review decision PR, reserve and route the canonical catalog read-tool foundation; decide identity migration and fulfillment policy before broader variants/issue33 adoption.",
     "paused_at": "2026-10-08T14:59:59+00:00",
-    "reason": "Architectural lock recorded; decision PR and bounded source-owner handoff remain separate from implementation."
+    "reason": "Architectural lock recorded; decision PR and bounded source-owner handoff remain separate from implementation.",
+    "resumed_at": "2026-10-08T15:41:14+00:00"
   },
+  "pause": null,
   "recommendation": {
     "alternatives": [],
     "reason": "The confirmed shared UI/agent authority boundary supports this independent foundation without new variants, migrations, permissions or protocols. Broader variant identity and fulfillment policy remain genuine decisions.",
@@ -7927,8 +8089,8 @@
     "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "paused",
+  "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T14:59:59+00:00"
+  "updated_at": "2026-10-08T17:03:43+00:00"
 }
