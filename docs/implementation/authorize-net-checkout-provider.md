@@ -1,43 +1,34 @@
-# Authorize.net installed checkout provider (proposal)
+# Authorize.net installed checkout provider
 
-GrillTrack decisions below are **proposed**, not locked. Only Ryan may lock.
+GrillTrack status:
 
-- `checkout-authorize-net-provider-20261008`
-- `checkout-authorize-net-provider-ryan-notes-20261008` (#71 answers)
-- `checkout-authorize-net-provider-ryan-notes-20261008b` (#72 answers)
+- `checkout-authorize-net-provider-20261008` — **locked**
+- `checkout-authorize-net-provider-ryan-notes-20261008` (#71 answers) — **locked**
+- `checkout-authorize-net-provider-ryan-notes-20261008b` (#72 answers) — still **proposed**
+
+Locked by Ryan, 2026-10-08 3:07 PM ET, confirmed 3:20 PM ET.
+Cite: https://github.com/dinkuskit/commerce/pull/71#issuecomment-6067094917
+
+The lock covers these decisions only. It does **not** approve merging #71 or #72.
 
 Context: Payments exposes an `authorize_net` adapter and sandbox Accept Hosted
-wiring ([payments PR #22](https://github.com/dinkuskit/payments/pull/22)).
-Commerce [#67](https://github.com/dinkuskit/commerce/pull/67) freezes chosen
-variant IDs, labels, price, and fulfillment before Payments contact. Charge and
-paid amount checks must use that frozen total — never a recomputed price.
+wiring ([payments PR #22](https://github.com/dinkuskit/payments/pull/22) at
+`c1ae709b`). Commerce [#67](https://github.com/dinkuskit/commerce/pull/67)
+freezes chosen variant IDs, labels, price, and fulfillment before Payments
+contact. Charge and paid amount checks must use that frozen total — never a
+recomputed price.
 
-## Ryan answers
+## Locked terms
 
-### From #71 (“Go with your picks”)
-
-1. Keep `dinkuskit.commerce.registry-checkout/v1`. Legacy enabled configs without
-   new fields keep loading. Test an old saved config.
-2. Separate optional `authorizeNetMerchantId`. Do not reuse/overload
-   `stripeAccountId`.
-3. Sandbox only until Ryan approves live.
-4. Implement now against payments #22. Paid only from authoritative transaction
-   lookup (`gateway.getTransaction` / `getTransactionDetailsRequest`) plus
-   amount and currency match against the **frozen** checkout total. Webhook
-   alone never marks paid.
-
-### From #72
-
-1. Keep the settings name `authorizeNetMerchantId`.
-2. Do **not** match Authorize.net against the Payments binding wire field
-   `stripeAccountId`. Commerce reads a dedicated binding field also named
-   `authorizeNetMerchantId`. No `stripeAccountId` fallback. The Commerce
-   implementation depends on payments #22 adding that binding field.
-3. Split more Registry backend into cohesive modules for about **6500 bytes**
-   of headroom under the 131072-byte file limit, behavior unchanged.
-   Measured after this factoring (post-#66 main baseline **130243** for the
-   prior checkout graph; candidate after authorize_net + headroom factoring):
-   **124560** bytes (headroom **6512** under 131072).
+1. Keep `dinkuskit.commerce.registry-checkout/v1`. Older saved configs without
+   the new fields must keep loading, with a test proving an old saved config.
+2. Authorize.net merchant identity uses optional **`authorizeNetMerchantId`**
+   only. `stripeAccountId` stays Stripe-only. The `authorize_net` sentinel and
+   any cross-provider field fail closed.
+3. Sandbox only. No live endpoints, live credentials, or live-mode toggle until
+   Ryan approves live.
+4. An order is marked paid only by an authoritative transaction lookup whose
+   amount and currency match. A signed webhook alone never marks paid.
 
 ## Product rules
 
@@ -46,8 +37,10 @@ paid amount checks must use that frozen total — never a recomputed price.
 3. Optional `mode`, when present, must be `test`.
 4. Paid requires authoritative Payments lookup matching the frozen attempt
    total and currency; webhook/return/token/timer never write paid.
-5. Backend under 131072 bytes with meaningful headroom via cohesive factoring.
+5. Backend under 131072 bytes with meaningful headroom via cohesive factoring
+   that actually leaves the compiled sandbox bundle.
 
 ## Non-goals
 
-No secrets, live traffic, merge, or GrillTrack lock by agents.
+No secrets, live traffic, merge, or agent-initiated GrillTrack lock beyond
+Ryan’s explicit maintainer lock.
