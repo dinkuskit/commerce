@@ -2,7 +2,9 @@ import { pluginRoute, type SandboxedPlugin } from "emdash/plugin";
 import { commerceAdmin } from "./admin/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
+  PUBLIC_CATALOG_ITEM_ROUTE,
   readPublicCatalog,
+  readPublicCatalogItem,
 } from "./features/catalog/kernel/index.js";
 import {
   createInstalledCheckoutHandlers,
@@ -33,6 +35,19 @@ const plugin: SandboxedPlugin = {
         const query = new URL(route.request.url).searchParams;
         if ([...query.keys()].some(key => key !== "cursor") || query.getAll("cursor").length > 1) throw new Error("Invalid catalog query");
         return readPublicCatalog(ctx, query.get("cursor") ?? undefined);
+      },
+    }),
+    [PUBLIC_CATALOG_ITEM_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["GET"],
+      request: { body: "none" },
+      cacheControl: "no-store",
+      handler: async (route, ctx) => {
+        const query = new URL(route.request.url).searchParams;
+        if ([...query.keys()].some((key) => key !== "itemId") || query.getAll("itemId").length !== 1) {
+          throw new Error("Invalid catalog item query");
+        }
+        return readPublicCatalogItem(ctx, query.get("itemId")!);
       },
     }),
     admin: {

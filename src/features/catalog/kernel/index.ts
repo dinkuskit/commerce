@@ -72,6 +72,7 @@ export {
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+  SET_CATALOG_ITEM_SKU_ROUTE,
 } from "../route-ids.js";
 
 export {
@@ -122,7 +123,12 @@ export type {
   SetCatalogItemPriceStorage,
 } from "../types.js";
 
-export { PUBLIC_CATALOG_ROUTE, readPublicCatalog } from "../public.js";
+export {
+  PUBLIC_CATALOG_ITEM_ROUTE,
+  PUBLIC_CATALOG_ROUTE,
+  readPublicCatalog,
+  readPublicCatalogItem,
+} from "../public.js";
 export type { PublicCatalogProduct, PublicCatalogResponse } from "../public.js";
 export {
   CATALOG_GALLERY_LIMIT,

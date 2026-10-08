@@ -13,6 +13,7 @@ import {
   LIST_CATALOG_PRODUCTS_ROUTE,
   SAVE_CATALOG_ITEM_MEDIA_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  SET_CATALOG_ITEM_SKU_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -23,6 +24,7 @@ import {
   createListCatalogProductsRouteWithLocalStock,
   createSaveCatalogProductPricesRouteWithLocalStock,
   saveCatalogItemMediaRoute,
+  setCatalogItemSkuRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
@@ -226,6 +228,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SAVE_CATALOG_PRODUCT_PRICES_ROUTE]:
         createSaveCatalogProductPricesRouteWithLocalStock(localStock),
       [SAVE_CATALOG_ITEM_MEDIA_ROUTE]: saveCatalogItemMediaRoute,
+      [SET_CATALOG_ITEM_SKU_ROUTE]: setCatalogItemSkuRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

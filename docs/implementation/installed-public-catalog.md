@@ -78,3 +78,13 @@ no checkout/order aggregate. The compiled workerd/SDK fixture separately exercis
 canonical coupon-adjusted payment/order/receipt behavior with synthetic intercepted
 issuer/provider transport. Neither fixture proves a signed Registry release,
 hosted identity, real Stripe TEST readiness, shipping checkout or scheduler.
+
+## Single-item identity lookup
+
+`GET catalog/public/item?itemId={itemId}` is the bounded single-item form. It
+returns one product object or `null` and uses the same price, listability,
+availability, managed fail-closed, and media projection rules as the paginated
+route. It also sends `Cache-Control: no-store`. The response contains no page,
+slug, URL, CMS entry, or publication state: the host's explicit page resolver
+owns canonical published-page selection. See
+[catalog-product-identity.md](./catalog-product-identity.md).

@@ -16,6 +16,7 @@ import {
   listCatalogProductsRoute,
   normalizeSku,
   saveCatalogProductPricesRoute,
+  setCatalogItemSku,
 } from "../../../dist/index.js";
 
 const commercePlugin = createPlugin();
@@ -290,6 +291,24 @@ test("distinct commands cannot claim the same canonical SKU", async () => {
     createCatalogItem(storage, { commandId: "cmd:two", name: "Second", sku: "SHARED-SKU" }),
     "SKU_CONFLICT",
   );
+});
+
+test("itemId remains permanent while an authenticated SKU update changes only the merchant attribute", async () => {
+  const storage = new MemoryCatalogStorage();
+  const created = await createCatalogItem(
+    storage,
+    { commandId: "cmd:editable-sku", name: "Editable", sku: "OLD-SKU" },
+    { createId: () => "item-permanent" },
+  );
+  const changed = await setCatalogItemSku(storage, {
+    catalogItemId: created.item.itemId,
+    sku: "NEW-SKU",
+  });
+  assert.equal(changed.changed, true);
+  assert.equal(changed.item.itemId, "item-permanent");
+  assert.equal(changed.item.sku, "NEW-SKU");
+  assert.equal(changed.item.skuKey, "NEW-SKU");
+  assert.equal((await storage.get("item-permanent")).itemId, "item-permanent");
 });
 
 test("creation fails closed before a product write when either unique index is absent", async () => {
