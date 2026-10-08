@@ -10,6 +10,15 @@ for EmDash sites. Assume every committed byte is immediately public.
 3. `.grilltrack/ledger.json`, maintained only through the GrillTrack CLI.
 4. Current source, tests, and committed proof.
 
+## Running GrillTrack
+
+Run `./scripts/agent-skills` before agent work to install the pinned
+SaariusSkills copy into ignored `.cursor/skills/`; use
+`./scripts/grilltrack --project . validate` (or `show`) for ledger reads.
+The wrapper uses an existing `~/.codex` install when available and never
+replaces the CLI-only ledger rule. SmokySkills remains gated on maintainer
+access and an immutable public-safe commit pin.
+
 ## Public-safe boundary
 
 - Never commit credentials, environment files, customer or tenant data,
