@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 const headers = { "X-EmDash-Request": "1" };
 test("merchant settings persist independently and reject stale or unauthorized writes", async ({ page, request, browser }, info) => {
+  page.on("pageerror", error => console.log("Browser script error:", error.message.slice(0, 500)));
   const native = info.project.name === "native";
-  const endpoint = "/_emdash/api/plugins/dinkus-commerce/" + (native ? "merchant-store-settings" : "admin");
+  const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
   const adminPath = "/_emdash/admin/plugins/dinkus-commerce/" + (native ? "store" : "settings");
   expect((await request.get("/_emdash/api/setup/dev-bypass")).status()).toBe(200);
   await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath);
@@ -52,7 +53,7 @@ test("merchant settings persist independently and reject stale or unauthorized w
   const replay = await page.request.post(endpoint, { data: { ...stale, values: { ...stale.values, storeCountry: "AU", requirePhoneNumber: true } }, headers });
   const refusal = await replay.json();
   expect(refusal.data.blocks.some(b => b.type === "banner" && b.variant === "error")).toBe(true);
-  const retained = refusal.data.blocks.find(b => b.type === "form");
+  const retained = refusal.data.blocks.find(b => b.type === "form" && b.block_id.startsWith("merchant-store-settings:"));
   expect(retained.block_id).toBe(stale.block_id);
   await page.reload();
   await expect(store).toHaveValue("GB");

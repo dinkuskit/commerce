@@ -31,8 +31,8 @@ export function MerchantSettingsSection() {
       : createElement("p", null, "Loading merchant settings…"));
 }
 async function send(input: BlockInteraction): Promise<BlockResponse> {
-  const result = await apiFetch("/_emdash/api/plugins/dinkus-commerce/merchant-store-settings", {
-    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+  const result = await apiFetch("/_emdash/api/plugins/dinkus-commerce/admin", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...input, page: "/store" }),
   });
   return parseApiResponse<BlockResponse>(result, "Could not access merchant settings");
 }

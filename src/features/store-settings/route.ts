@@ -5,7 +5,7 @@ export { merchantStoreSettingsAuthorized } from "./authorization.js";
 import { merchantStoreSettingsBlocks } from "./admin/index.js";
 import { StoreSettingsError } from "./types.js";
 
-export const MERCHANT_STORE_SETTINGS_ROUTE = "merchant-store-settings";
+export const MERCHANT_STORE_SETTINGS_ROUTE = "admin";
 
 function routeError(error: unknown): PluginRouteError {
   if (error instanceof StoreSettingsError) return new PluginRouteError(error.code, error.message, error.status);

@@ -37,7 +37,7 @@ History is retained and composed decisions honestly need new verification.
 
 Shared registration is now wired: Registry existing private admin Settings appends
 merchant form; native Store adds the same BlockRenderer form via private
-merchant-store-settings route with the existing content:edit_any permission.
+admin route with the existing content:edit_any permission.
 Package export and unit-test glob are additive. No manifest grant change.
 
 Composed TypeScript/official build,12 focused tests, repo audit and diff check pass.
@@ -46,3 +46,36 @@ Official dist/sandbox/plugin.mjs is137860 bytes, SHA256
 which EXCEEDS131072 by6788. Build emission is not Registry installation acceptance.
 The coordinator routed a separate behavior-preserving headroom refactor.
 Full native/Registry browser proof and review remain pending.
+
+
+## Installed behavior proof
+
+On the composed source with the native adapter correction, Node22.23.2 checks:
+
+- `npm run build`: TypeScript and official CLI emission pass (137860-byte budget
+  blocker remains; build emission alone is not size acceptance).
+- Unit command from `package.json#scripts.test:unit` after the same build:
+  358 passed,0 failed,0 skipped.
+- `node --test tests/integration/*.test.mjs`:39 passed,0 failed,0 skipped.
+- `COMMERCE_SETTINGS_PROOF_PROFILE=native npx playwright test
+  --config=tests/merchant-settings.playwright.config.mjs --project=native`:1 passed.
+- Equivalent Registry profile/project command:1 passed.
+
+The browser proof runs actual EmDash authentication, CSRF-aware admin requests,
+SQLite settings CAS and installed native/Registry-workerd rendering. It drives
+phone-only save before country setup, first-country defaults, distinct selling and
+shipping lists, country edit preserving lists, phone toggle persistence, invalid
+country input retention, stale replay refusal, and anonymous HTTP denial.
+Native Store retains its existing out-of-stock controls. Both saved screenshots
+were visually inspected. Synthetic dev-site data only; no private operator data.
+
+Local immutable captures (ignored work output, not product media):
+`.grilltrack/work/country-settings-20261008/browser/1791480338699/native-saved.png`
+and `browser/1791480385138/registry-saved.png`; public media shelf placement pending.
+Host-rendered BaseUI warns about uncontrolled FieldControl defaults after response
+updates; assertions prove visible/saved values. No production code workaround is
+introduced for that host warning.
+
+Registry local-workerd functional proof passes even though emitted bytes exceed
+the required131072 distribution budget. The size gate remains unresolved and no
+full feature acceptance, clean review, ready PR or merge is claimed yet.
