@@ -1,0 +1,187 @@
+[
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/storefront-images.png",
+    "bytes": 23878,
+    "sha256": "7d41984af7a3e650642308b799c64444a9af8d0d694a5af94bad1360cc08620b"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/product-gallery.png",
+    "bytes": 60878,
+    "sha256": "b58c7161709fbf87914e3b2faf3960065680437fcf5ec87db504dfe73e9a9e8c"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/native-products-edited.png",
+    "bytes": 75872,
+    "sha256": "e75cb284a7a688ab3699ab9ad8132cb414ff12518cd5939646a00338527e2cf6"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/product-image-chosen.png",
+    "bytes": 69088,
+    "sha256": "b2c89f3f91887c25e60cd13bbc2a0fa2b72569f5aa09e08f03931a5ccb022958"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/manage-stock-enable-refused.png",
+    "bytes": 81819,
+    "sha256": "b3327bc07f836fc1ab1932a34cc7c72826f12b4a4b86b966b010ef0c1b349c7c"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/price-refused.png",
+    "bytes": 88023,
+    "sha256": "c361481c725a9b9498fce613a1c8abb9cb98583f43a34b026c30d9300a7e7bc8"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/settings-catalog.png",
+    "bytes": 72779,
+    "sha256": "02d28bb2018b7849d3d9aa63da0ba3545eda01ce108492df297871a35bf571f6"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/settings-storage-refused.png",
+    "bytes": 74501,
+    "sha256": "7104ca1f4bda6f3f0263e8b8bbfcf7c45f91c9349dd20c1f74894e7490522c7f"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/native-managed-price-preserved.png",
+    "bytes": 68258,
+    "sha256": "683c4e436bd718b4feea7576314ee3beb3bf2bffa81669d16afd275e6ce32003"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/save-storage-refused.png",
+    "bytes": 80260,
+    "sha256": "d95c5de76fe8c09cdbca4b2c0da44b8f94516b41b0e5bf881c1dd1a89dffc12f"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/product-mobile.png",
+    "bytes": 37002,
+    "sha256": "db77375fb8fef547f4c50a670401dc7c9f2f0e4dca8112644655e841b89648ed"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/media-chooser.png",
+    "bytes": 65854,
+    "sha256": "f3af7664321dd3b5f3fb784bec1a481faed514be32d830cb2076df0733503ea6"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/native-managed-setup.png",
+    "bytes": 66203,
+    "sha256": "e177f8d1d5433417cb30e89fc2f5eee3431e845c125fd78a4a39d36d7584f9d6"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/guest-checkout-native-unavailability.png",
+    "bytes": 20069,
+    "sha256": "15eb35a7d51292660c2502e8c2ec8b638acb8d063e2ca67f344e2ef2ea07230c"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/native-store-edited.png",
+    "bytes": 59006,
+    "sha256": "1232900357d2dfe7526d0ce3a03da12e999ab09b8e17d58dc0594c78cfaedd70"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/manage-stock-coming-soon.png",
+    "bytes": 80282,
+    "sha256": "78dd8e559be8410e566405cb5625944b8c8873bfa9b3f213295fb0ef2cfe29ad"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/products-empty.png",
+    "bytes": 79986,
+    "sha256": "236452e48e85aa65eea448304994316c9270c79885b9d15c86b7c415682e7b99"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/guest-checkout-sandbox-unavailability.png",
+    "bytes": 26555,
+    "sha256": "855d414368371f418c048212d16d4215cd77dc235d974237b96b07f1b6a0c5d8"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/native-store-populated.png",
+    "bytes": 59010,
+    "sha256": "536eae702065c905e43d687350a78a44bc56d75fe4c9e22dfe3dd3a98c81fee2"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/price-stock-saved.png",
+    "bytes": 81829,
+    "sha256": "bdf75b2ab3bbf0c3b8b5cf4b406f531146cb792c610218d0632ea96af8d7e00d"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/settings-placeholder.png",
+    "bytes": 75774,
+    "sha256": "45eb59d85c957a885e7d49200958bfd556efe6b22e0ef3741dca828f38a51547"
+  },
+  {
+    "path": ".tmp/sandbox-proof/1791420148799/native-products-populated.png",
+    "bytes": 75840,
+    "sha256": "d16f6faf1163c44d201b869bd0c62976961696d2b2426f088a003fe5532436db"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/public-catalog-cart.png",
+    "bytes": 39476,
+    "sha256": "164aa5c59ffbb645057b244bd306442829e320da5074f45e569c9f8dcdc1712d"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/orders-editor-denied.png",
+    "bytes": 47899,
+    "sha256": "005e669f21ea0358f50687b66fa58c2a162c96236f0dee7e922d3ee836a4e26b"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/orders-provider-detail.png",
+    "bytes": 96970,
+    "sha256": "f268710db191f74aa7f6d8b544be00283dccf19dd9268afefea20726aeb5c65e"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/orders-list-desktop.png",
+    "bytes": 90476,
+    "sha256": "827fd88eb756df1013f28afd408cd9edd04bb9e93749e8f260e905014795bdc2"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/orders-zero-mobile.png",
+    "bytes": 53151,
+    "sha256": "660180be06bc2d4543efe470e44e8c5f9c1e0c6f6c035237b59be02a990b4ec6"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/orders-empty.png",
+    "bytes": 52085,
+    "sha256": "81912839e9f11cb90f099e817e784114d71a58fc89107d7d9aef68a7b2500faa"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupon-usage.png",
+    "bytes": 106869,
+    "sha256": "c1b4da945dc96958b7441024c544e50c834601b8afba12c17d0ce86187fdef81"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/orders-unavailable.png",
+    "bytes": 13732,
+    "sha256": "b37ad2cfac85e38a9cb8aa6f4788a5421291114db1f1cd38a0b805cd05ef0cae"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupon-disabled.png",
+    "bytes": 107073,
+    "sha256": "5a447805ee757b794b0666c0f642212474bd652cb568f78220777fed4ca55c97"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupon-stale.png",
+    "bytes": 114553,
+    "sha256": "bfc01d2a74ea51b22cdb058f8012d21890139ab9a92d0b2827fe945feec630b9"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupon-created.png",
+    "bytes": 99428,
+    "sha256": "28eb1d1787f73137800b341a4390794da9e02eeb2247a5f1e6e46ebb60bbe840"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupon-fixed.png",
+    "bytes": 108998,
+    "sha256": "18a06a60ff8201c4b46d18e7f6aa6f55ae45cdfaa0691fa304fe5a9752e74270"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupons-empty.png",
+    "bytes": 86613,
+    "sha256": "99c88bf63933a9860c44a7662b0ed6a3b7562b476c2e005f2f5092d7c597442e"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupon-editor-denied.png",
+    "bytes": 52264,
+    "sha256": "0df31d954daef96e1ec3bf9c7cfb16637d3805abcbc743175774fd920c7e25b0"
+  },
+  {
+    "path": ".tmp/coupon-blocks-proof/1791420264520/coupons-arabic-direction.png",
+    "bytes": 96387,
+    "sha256": "1faef7f39f8ee0991f45c826d0febbb684513a6c5568022576bda391ad57f9e8"
+  }
+]
