@@ -2,7 +2,7 @@ import type { Block, BlockResponse } from "@emdash-cms/blocks/server";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 
 import { loadMerchantStoreSettings, saveMerchantStoreSettings } from "../operations.js";
-import { merchantStoreSettingsAuthorized } from "../route.js";
+import { merchantStoreSettingsAuthorized } from "../authorization.js";
 import { StoreSettingsError, type MerchantStoreSettings } from "../types.js";
 import { DEFAULT_SETTINGS } from "../normalize.js";
 

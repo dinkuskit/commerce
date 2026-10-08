@@ -10,6 +10,8 @@ export const CATALOG_MANUAL_AVAILABILITY_COLLECTION =
 export const CATALOG_PRICES_COLLECTION = "catalogPrices";
 export const COMMERCE_CURRENCY_USD = "USD" as const;
 export const DEFAULT_CATALOG_MANUAL_AVAILABILITY = "in-stock" as const;
+export const CATALOG_VARIANT_SCHEMA =
+  "dinkuskit.commerce.product-variants/v1" as const;
 // EmDash mounts plugin IDs as one URL segment and uses them in storage-index
 // provisioning. Keep the scoped npm package identity separate from this
 // runtime slug so both the HTTP route and declared unique indexes materialize.
@@ -20,6 +22,7 @@ export const CATALOG_UNIQUE_INDEXES = ["commandId", "skuKey"] as const;
 export interface CreateCatalogItemInput {
   commandId: string;
   manageStock?: boolean;
+  fulfillment?: CatalogFulfillment;
   name: string;
   sku: string;
 }
@@ -34,6 +37,7 @@ export interface NormalizedCreateCatalogItemInput {
   sku: string;
   skuKey: string;
   stockManagement: StockManagement;
+  fulfillment?: CatalogFulfillment;
 }
 
 export interface CatalogCreationPayload {
@@ -42,6 +46,7 @@ export interface CatalogCreationPayload {
   sku: string;
   skuKey: string;
   manageStock: boolean;
+  fulfillment?: CatalogFulfillment;
 }
 
 export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
@@ -50,6 +55,45 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   state: "draft";
   createdAt: string;
   creationPayload?: CatalogCreationPayload;
+  variantProduct?: CatalogVariantProduct;
+  variantProductId?: string;
+  variantSelections?: readonly CatalogVariantSelection[];
+  variantFulfillment?: CatalogFulfillment;
+}
+
+export type CatalogFulfillment = "physical" | "digital";
+
+export interface CatalogVariantSelection {
+  optionId: string;
+  valueId: string;
+}
+
+export interface CatalogVariantOptionValue {
+  valueId: string;
+  label: string;
+}
+
+export interface CatalogVariantOption {
+  optionId: string;
+  label: string;
+  values: readonly CatalogVariantOptionValue[];
+}
+
+export interface CatalogVariantMember {
+  catalogItemId: string;
+  selections: readonly CatalogVariantSelection[];
+  fulfillment: CatalogFulfillment;
+}
+
+export interface CatalogVariantProduct {
+  /** Immutable first membership intent, distinct from later labels. */
+  creationPayload?: string;
+  schema: typeof CATALOG_VARIANT_SCHEMA;
+  productId: string;
+  revision: number;
+  defaultMemberId: string;
+  options: readonly CatalogVariantOption[];
+  members: readonly CatalogVariantMember[];
 }
 
 export interface CatalogIntegrityProbeRecord {

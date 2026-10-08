@@ -14,7 +14,7 @@ export default defineConfig({
   ],
   webServer: ["sandbox-site", "native-site"].map((site, index) => ({
     command: "../../node_modules/.bin/astro dev --host 127.0.0.1 --port " + (port + index * 2),
-    cwd: "tests/" + site, url: "http://127.0.0.1:" + (port + index * 2), reuseExistingServer: false,
+    cwd: resolve("tests/" + site), url: "http://127.0.0.1:" + (port + index * 2), reuseExistingServer: false,
     timeout: 120000, env: { ASTRO_DEV_BACKGROUND: "1", COMMERCE_PROOF_DB: "file:" + directory + "/" + site + ".db",
       EMDASH_SITE_URL: "http://127.0.0.1:" + (port + index * 2), COMMERCE_SITE_URL: "http://127.0.0.1:" + (port + index * 2),
       NO_PROXY: "127.0.0.1,localhost,::1", no_proxy: "127.0.0.1,localhost,::1" },

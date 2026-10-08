@@ -1,21 +1,11 @@
-import { hasPermission, toRoleLevel } from "@emdash-cms/auth";
 import { PluginRouteError, type PluginRoute } from "emdash";
-import type { SandboxedRouteContext } from "emdash/plugin";
+import { merchantStoreSettingsAuthorized } from "./authorization.js";
+export { merchantStoreSettingsAuthorized } from "./authorization.js";
 
 import { merchantStoreSettingsBlocks } from "./admin/index.js";
 import { StoreSettingsError } from "./types.js";
 
 export const MERCHANT_STORE_SETTINGS_ROUTE = "merchant-store-settings";
-
-export function merchantStoreSettingsAuthorized(route: Pick<SandboxedRouteContext, "ui" | "user">): boolean {
-  try {
-    return route.ui?.surface === "admin-page"
-      && route.user !== undefined
-      && hasPermission({ role: toRoleLevel(route.user.role) }, "content:edit_any");
-  } catch {
-    return false;
-  }
-}
 
 function routeError(error: unknown): PluginRouteError {
   if (error instanceof StoreSettingsError) return new PluginRouteError(error.code, error.message, error.status);

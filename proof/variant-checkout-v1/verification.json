@@ -1,0 +1,29 @@
+{
+  "verification": "bin/verify-commerce full",
+  "result": "passed",
+  "unitTests": 346,
+  "integrationTests": 39,
+  "mainBrowserTests": 10,
+  "nativeLocalStockTests": 1,
+  "installedCouponBrowserTests": 1,
+  "sandboxArtifact": {
+    "bytes": 130176,
+    "sha256": "3f4aca20c84ae905a14e292dcb9ca5b18a06d59ba9350d17523156bb486d9c5d",
+    "maximumBytes": 131072
+  },
+  "logSha256": "3024dd1a3c5022bab6a55d0fca4cf4f8f6dc986d574897d4e50cfeef274d8878",
+  "review": "pending pushed exact-source tuple",
+  "limitations": [
+    "Native paid proof uses a disposable synthetic Payments port",
+    "No real Stripe or Registry paid checkout claim",
+    "Architecture PR64 parent-first merge gate"
+  ],
+  "finalUiVerification": {
+    "nativeVariantTests": 2,
+    "result": "passed",
+    "logSha256": "60f94a9bc07160244cc79b619dd55d2984e6d7f48dafd1a51497f9b85add6dad",
+    "reason": "Disabled Manage stock controls retained on variant rows; editor waits for completed refresh",
+    "sandboxVariantTests": 2,
+    "sandboxLogSha256": "38680b2827768c399aaeb2a05e58e25d9924e05d9c0e0b9a118c9152ef0c696e"
+  }
+}

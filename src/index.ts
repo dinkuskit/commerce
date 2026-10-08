@@ -14,6 +14,9 @@ import {
   SAVE_CATALOG_ITEM_MEDIA_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   SET_CATALOG_ITEM_SKU_ROUTE,
+  ADD_CATALOG_VARIANT_OPTION_ROUTE,
+  BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
   SET_CATALOG_ITEM_BACKORDERS_ROUTE,
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -29,6 +32,9 @@ import {
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
   setCatalogItemSalePriceRoute,
+  addCatalogVariantOptionRoute,
+  updateCatalogVariantLabelsRoute,
+  bulkSaveCatalogProductPricesRoute,
 } from "./features/catalog/index.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
@@ -73,6 +79,9 @@ export * from "./features/catalog/index.js";
 export * from "./features/inventory-setup/index.js";
 
 export * from "./features/storefront-availability/index.js";
+
+import { MERCHANT_STORE_SETTINGS_ROUTE, createMerchantStoreSettingsRoute } from "./features/store-settings/index.js";
+export * from "./features/store-settings/index.js";
 
 const COMMERCE_PLUGIN_VERSION = "0.0.0";
 
@@ -215,6 +224,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
     },
     routes: {
+      [MERCHANT_STORE_SETTINGS_ROUTE]: createMerchantStoreSettingsRoute(),
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
       [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:
@@ -229,6 +239,9 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         createSaveCatalogProductPricesRouteWithLocalStock(localStock),
       [SAVE_CATALOG_ITEM_MEDIA_ROUTE]: saveCatalogItemMediaRoute,
       [SET_CATALOG_ITEM_SKU_ROUTE]: setCatalogItemSkuRoute,
+      [ADD_CATALOG_VARIANT_OPTION_ROUTE]: addCatalogVariantOptionRoute,
+      [UPDATE_CATALOG_VARIANT_LABELS_ROUTE]: updateCatalogVariantLabelsRoute,
+      [BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: bulkSaveCatalogProductPricesRoute,
       [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
         options.inventorySetup,
       ),

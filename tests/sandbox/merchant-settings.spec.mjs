@@ -7,7 +7,7 @@ test("merchant settings persist independently and reject stale or unauthorized w
   expect((await request.get("/_emdash/api/setup/dev-bypass")).status()).toBe(200);
   await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath);
   const getStarted = page.getByRole("button", { name: "Get Started", exact: true });
-  if (await getStarted.isVisible()) await getStarted.click();
+  await getStarted.click({ timeout: 90000 });
   const store = page.getByRole("textbox", { name: "Store country (ISO alpha-2 code)", exact: true });
   const selling = page.getByRole("textbox", { name: "Allowed selling/customer countries (comma-separated codes)", exact: true });
   const shipping = page.getByRole("textbox", { name: "Allowed physical shipping destinations (comma-separated codes)", exact: true });
@@ -22,7 +22,7 @@ test("merchant settings persist independently and reject stale or unauthorized w
     return { body: result.data, input: response.request().postDataJSON() };
   };
   const capture = name => page.screenshot({ path: process.env.COMMERCE_SETTINGS_ARTIFACTS + "/" + info.project.name + "-" + name + ".png", fullPage: true });
-  await expect(store).toHaveValue("");
+  await expect(store).toHaveValue("", { timeout: 60000 });
   await expect(phone).not.toBeChecked();
   await capture("unconfigured");
   await phone.check();

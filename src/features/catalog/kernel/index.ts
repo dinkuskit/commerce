@@ -31,7 +31,11 @@ export { normalizeMoney, parseMinorUnits } from "../money.js";
 export { catalogProductCreateInput } from "../product-create-input.js";
 export { CLERK_STOCK_STATUSES } from "../clerk-stock.js";
 export type { ClerkStockStatus } from "../clerk-stock.js";
-export { listCatalogProducts, saveCatalogProductPrices } from "../product-admin.js";
+export {
+  bulkSaveCatalogProductPrices,
+  listCatalogProducts,
+  saveCatalogProductPrices,
+} from "../product-admin.js";
 export {
   LOCAL_STOCK_MANAGEMENT_OPTION,
   isLocalLoopbackContext,
@@ -60,6 +64,9 @@ export type {
   CatalogProductListStorage,
   CatalogProductPriceForm,
   SaveCatalogProductPricesInput,
+  BulkCatalogProductPriceInput,
+  BulkCatalogProductPriceOutcome,
+  CatalogProductVariantListItem,
 } from "../product-admin.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "../normalize.js";
 export {
@@ -73,7 +80,27 @@ export {
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
   SET_CATALOG_ITEM_SKU_ROUTE,
+  ADD_CATALOG_VARIANT_OPTION_ROUTE,
+  UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
+  BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
 } from "../route-ids.js";
+export {
+  addCatalogVariantOption,
+  resolveCatalogVariantMember,
+  updateCatalogVariantLabels,
+  variantSelections,
+} from "../variants.js";
+export type {
+  AddCatalogVariantOptionInput,
+  UpdateCatalogVariantLabelsInput,
+  CatalogVariantMember,
+  CatalogVariantOption,
+  CatalogVariantOptionValue,
+  CatalogVariantProduct,
+  CatalogVariantResolution,
+  CatalogVariantStorage,
+  VariantMemberInput,
+} from "../variants.js";
 
 export {
   assertCatalogStorageConstraints,
@@ -92,6 +119,7 @@ export {
   COMMERCE_CURRENCY_USD,
   COMMERCE_PLUGIN_ID,
   DEFAULT_CATALOG_MANUAL_AVAILABILITY,
+  CATALOG_VARIANT_SCHEMA,
 } from "../types.js";
 export type {
   CatalogBackorderPolicyRecord,
@@ -108,6 +136,8 @@ export type {
   CatalogPriceStorage,
   CatalogStorage,
   CatalogStorageRecord,
+  CatalogFulfillment,
+  CatalogVariantSelection,
   ClearCatalogItemPriceInput,
   CreateCatalogItemInput,
   CreateCatalogItemResult,
