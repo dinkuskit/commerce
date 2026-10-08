@@ -18,15 +18,26 @@ function fail(code: GuestCheckoutError["code"]): never {
   throw new GuestCheckoutError(code);
 }
 
+const MAX_GUEST_CART_LINES = 100;
+const MAX_GUEST_CART_ITEM_ID_LENGTH = 256;
+const MAX_GUEST_QUANTITY = 1_000_000;
+const MAX_GUEST_COUPON_LENGTH = 128;
+const MAX_GUEST_ATTEMPT_ID_LENGTH = 256;
+
 function asObject(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) fail("INVALID_CART");
   return value as Record<string, unknown>;
 }
 
+export function admitGuestCheckoutPrepareInput(raw: unknown): void {
+  const input = raw === undefined ? {} : asObject(raw);
+  if (Object.keys(input).length !== 0) fail("INVALID_CART");
+}
+
 export function admitGuestCheckoutStartInput(raw: unknown): CartLine[] {
   const input = asObject(raw);
   if (Object.keys(input).join() !== "lines") fail("INVALID_CART");
-  if (!Array.isArray(input.lines) || input.lines.length === 0 || input.lines.length > 100) {
+  if (!Array.isArray(input.lines) || input.lines.length === 0 || input.lines.length > MAX_GUEST_CART_LINES) {
     fail("INVALID_CART");
   }
   return input.lines.map((line) => {
@@ -35,8 +46,10 @@ export function admitGuestCheckoutStartInput(raw: unknown): CartLine[] {
     if (keys !== "catalogItemId,quantity") fail("INVALID_CART");
     const catalogItemId = (line as { catalogItemId: unknown }).catalogItemId;
     const quantity = (line as { quantity: unknown }).quantity;
-    if (typeof catalogItemId !== "string" || !catalogItemId.trim()) fail("INVALID_CART");
-    if (!Number.isSafeInteger(quantity) || (quantity as number) <= 0) fail("INVALID_CART");
+    if (typeof catalogItemId !== "string" || !catalogItemId.trim() ||
+        catalogItemId.length > MAX_GUEST_CART_ITEM_ID_LENGTH) fail("INVALID_CART");
+    if (!Number.isSafeInteger(quantity) || (quantity as number) <= 0 ||
+        (quantity as number) > MAX_GUEST_QUANTITY) fail("INVALID_CART");
     return { catalogItemId: catalogItemId.trim(), quantity: quantity as number };
   });
 }
@@ -47,8 +60,26 @@ export function admitGuestCheckoutPricingStartInput(raw: unknown): CartLine[] | 
   if (keys.join() !== "lines" && keys.join() !== "couponCode,lines") fail("INVALID_CART");
   const lines = admitGuestCheckoutStartInput({ lines: input.lines });
   if (keys.join() === "lines") return lines;
-  if (typeof input.couponCode !== "string" || !input.couponCode.trim()) fail("INVALID_CART");
+  if (typeof input.couponCode !== "string" || !input.couponCode.trim() ||
+      input.couponCode.length > MAX_GUEST_COUPON_LENGTH) fail("INVALID_CART");
   return { lines, couponCode: input.couponCode.trim() };
+}
+
+export function admitGuestCheckoutStatusInput(raw: unknown): { attemptId?: string } {
+  const input = raw === undefined ? {} : asObject(raw);
+  const inputKeys = Object.keys(input).sort().join();
+  if (inputKeys === "") return {};
+  const wakeOnly = inputKeys === "wake";
+  const attemptOnly = inputKeys === "attemptId";
+  const documentedHint = inputKeys === "attemptId,wake";
+  if (!wakeOnly && !attemptOnly && !documentedHint) fail("INVALID_CART");
+  if ((wakeOnly || documentedHint) && input.wake !== true) fail("INVALID_CART");
+  if (attemptOnly || documentedHint) {
+    if (typeof input.attemptId !== "string" || !input.attemptId.trim() ||
+        input.attemptId.length > MAX_GUEST_ATTEMPT_ID_LENGTH) fail("INVALID_CART");
+    return { attemptId: input.attemptId.trim() };
+  }
+  return {};
 }
 
 function mapCheckoutError(error: unknown): never {
@@ -126,8 +157,10 @@ function guestSafeResult(error: unknown): GuestCheckoutResult {
 
 export async function prepareGuestCheckout(
   runtime: GuestCheckoutRuntime,
+  input?: unknown,
 ): Promise<GuestCheckoutResult> {
   try {
+    admitGuestCheckoutPrepareInput(input);
     const minted = await mintGuestCapability(runtime);
     return {
       ok: true,
@@ -177,6 +210,7 @@ export async function statusGuestCheckout(
   headers?: Headers | Record<string, string>,
 ): Promise<GuestCheckoutResult> {
   try {
+    const admitted = admitGuestCheckoutStatusInput(input);
     const authorized = await authorizeGuestCapability(
       runtime,
       readGuestCapabilityHeader(headers),
@@ -186,13 +220,10 @@ export async function statusGuestCheckout(
       const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
       return projected(authorized.capabilityId, currentAttempt(stored?.record.attempts ?? []), currentNow);
     }
-    const body = input && typeof input === "object" && !Array.isArray(input)
-      ? (input as Record<string, unknown>)
-      : {};
     const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
     const current = currentAttempt(stored?.record.attempts ?? []);
     if (!current) fail("CHECKOUT_NOT_FOUND");
-    const hinted = typeof body.attemptId === "string" ? body.attemptId.trim() : "";
+    const hinted = admitted.attemptId ?? "";
     if (hinted && !stored?.record.attempts.some((attempt) => attempt.attemptId === hinted)) {
       fail("CHECKOUT_NOT_FOUND");
     }

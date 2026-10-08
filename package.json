@@ -114,10 +114,10 @@
     "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features",
     "verify:quick": "bin/verify-commerce quick",
     "verify:full": "bin/verify-commerce full",
-    "build:sandbox": "emdash-plugin validate && node scripts/build-sandbox.mjs",
+    "build:sandbox": "emdash-plugin validate && node scripts/build-sandbox.mjs && node scripts/check-registry-bundle.mjs",
     "test:sandbox": "playwright test",
     "test:sandbox:native-local-stock": "playwright test --config=playwright.native-local-stock.config.mjs",
-    "test:sandbox:coupons": "COMMERCE_COUPON_INSTALLED_PROFILE=1 playwright test --config=tests/coupon-blocks.playwright.config.mjs"
+    "test:sandbox:orders": "playwright test --config=tests/orders-blocks.playwright.config.mjs"
   },
   "devDependencies": {
     "@astrojs/node": "11.0.2",

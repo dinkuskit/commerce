@@ -18,7 +18,7 @@ case "$mode" in
     npm run test:integration
     npm run test:sandbox
     npm run test:sandbox:native-local-stock
-    npm run test:sandbox:coupons
+    npm run test:sandbox:orders
     ;;
   *)
     echo "Usage: bin/verify-commerce [quick|full]" >&2

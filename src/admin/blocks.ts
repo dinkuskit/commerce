@@ -21,10 +21,11 @@ export function fields(...pairs: string[]): Block {
   return { type: 'fields', fields };
 }
 
-export function navigation(products = 'Products', settings = 'Settings', coupons = 'Coupons'): Block {
+/** The Coupons link renders only where a coupon admin page is mounted. */
+export function navigation(products = 'Products', settings = 'Settings', coupons?: string): Block {
   return { type: 'actions', elements: [
     { type: 'link', label: products, target: { kind: 'plugin-page', path: '/products' } },
     { type: 'link', label: settings, target: { kind: 'plugin-page', path: '/settings' } },
-    { type: 'link', label: coupons, target: { kind: 'plugin-page', path: '/coupons' } },
+    ...(coupons ? [{ type: 'link' as const, label: coupons, target: { kind: 'plugin-page' as const, path: '/coupons' } }] : []),
   ] };
 }
