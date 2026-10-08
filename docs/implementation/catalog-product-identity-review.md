@@ -62,8 +62,15 @@ fixture, and command:
 COMMERCE_COUPON_INSTALLED_PROFILE=1 npm run test:sandbox:coupons
 ```
 
-On candidate `b64585c`, the build produced a 129,266-byte backend and the
-browser server reached the EmDash runtime, which reported:
+The side-by-side result was:
+
+| checkout | build result | browser result |
+| --- | --- | --- |
+| detached `main` at `e5a9189` | 210,216 bytes; stopped by the 131,072-byte bundle validator | did not start |
+| candidate `b64585c` | 129,266 bytes | reached EmDash and reported the migration error below |
+
+On candidate `b64585c`, the browser server reached the EmDash runtime, which
+reported:
 
 ```text
 MigrationFailedError: Migration failed: statement.columns is not a function
@@ -72,10 +79,12 @@ MigrationFailedError: Migration failed: statement.columns is not a function
 The detached `main` checkout under the same local runtime and command rebuilt
 to 210,216 bytes and stopped earlier at the official 131,072-byte bundle
 validator, so it did not reach the browser migration stage. Therefore this
-local pair does not support calling the migration error pre-existing. The
-independent same-workflow main CI run above passed the coupon browser test
-without that error; the candidate CI failure was the catalog regression
-instead. Both outcomes are retained here rather than conflated.
+local pair does not support calling the migration error pre-existing: main
+stopped before browser startup under the identical command. The independent
+same-workflow main CI run above passed the coupon browser test without that
+error; the candidate CI failure was the catalog regression instead. Both
+outcomes are retained here rather than conflated, and this is the explicit
+limitation on a browser-level migration comparison.
 
 ## Backend-size reconciliation
 
