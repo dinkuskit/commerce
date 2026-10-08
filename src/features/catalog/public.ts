@@ -89,9 +89,11 @@ async function projectPublicCatalogProduct(
       const memberItem = await resolveCatalogVariantMember(storage.catalog, member.catalogItemId);
       if (!memberItem?.member || memberItem.product?.productId !== variant.product.productId) continue;
       const memberPrice = await resolveCatalogItemPrice(storage.prices, member.catalogItemId);
+      if (!memberPrice.listable || !memberPrice.customerPays) continue;
       const memberAvailability = await resolveStorefrontAvailability(storage, {
         catalogItemId: member.catalogItemId,
       });
+      if (!memberAvailability.listable) continue;
       members.push({
         catalogItemId: member.catalogItemId,
         selections: variantSelections(variant.product, member),
