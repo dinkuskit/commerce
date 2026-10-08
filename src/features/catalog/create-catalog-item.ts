@@ -81,7 +81,7 @@ async function findCommand(
   if (items.length > 1) {
     throw new CatalogError(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      "catalog command uniqueness is not trustworthy",
+      "catalog command uniqueness untrustworthy",
     );
   }
   return items[0] ?? null;
@@ -165,7 +165,7 @@ export async function createCatalogItem(
   } catch (error) {
     const uniqueField = identifyConfirmedUniqueViolation(error, options.collection, options.pluginId);
     if (!uniqueField) {
-      throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item creation failed", {
+      throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item create failed", {
         cause: error,
       });
     }

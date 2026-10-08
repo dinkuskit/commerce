@@ -6,7 +6,7 @@ import type {
 
 function requireOpaqueIdentity(value: unknown, field: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new InventoryProviderBindingError(`${field} must be a non-empty string`);
+    throw new InventoryProviderBindingError(`${field} must be non-empty`);
   }
   return value.trim();
 }

@@ -48,7 +48,7 @@ function bool(value: unknown): boolean {
 }
 function message(error: unknown): string {
   return error instanceof CatalogError || error instanceof StorefrontAvailabilityError
-    ? error.message : "Could not complete. Reload and try again.";
+    ? error.message : "Could not complete. Reload and retry.";
 }
 function alert(message: string): Block {
   return { type: "banner", title: message, variant: "error" };
@@ -57,7 +57,7 @@ function alert(message: string): Block {
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
     { type: "header", text: "Add product" },
-    { type: "context", text: "Customer-facing title. Unmanaged until Manage stock ships." },
+    { type: "context", text: "Customer-facing title; unmanaged until Manage stock ships." },
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
@@ -88,7 +88,11 @@ function manageStockNotice(managed: boolean | null): Block {
   const base = "Manage stock — Coming soon";
   return {
     type: "context",
-    text: managed === true ? base + " (managed)." : managed === false ? base : base + " (status hidden).",
+    text: managed === true
+      ? base + ". This product stays managed; tracking cannot be changed."
+      : managed === false
+        ? base
+        : base + ". Manual status is hidden until stored tracking can be proven.",
   };
 }
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
@@ -164,7 +168,7 @@ async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<
   const page = await ctx.media.list({ limit: LIBRARY_PAGE, mimeType: "image/", ...(cursor ? { cursor } : {}) });
   const blocks: Block[] = [
     { type: "header", text: t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image" },
-    navigation(), { type: "context", text: "Images from the Media Library." },
+    navigation(), { type: "context", text: "Media Library images." },
     { type: "actions", elements: [{ type: "button", label: "Cancel", action_id: t.t === "placeholder" ? "settings" : "open", value: t.id }] },
   ];
   for (const item of page.items) {
@@ -205,7 +209,7 @@ async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: strin
 // A stale page must never act on a different image than its label named.
 function galleryIndex(value: unknown, mediaId: string, gallery: string[]): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= gallery.length) throw new Error("Invalid gallery image");
-  if (gallery[value] !== mediaId) throw new CatalogError("INVALID_INPUT", "Gallery changed. Reload and try again.");
+  if (gallery[value] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed since this page loaded. Reload and try again.");
   return value;
 }
 async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
@@ -222,7 +226,7 @@ async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
 function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockResponse {
   return { blocks: [
     { type: "header", text: "Commerce settings" }, navigation(), { type: "header", text: "Catalog" },
-    ...(failure ? [alert(failure), { type: "context" as const, text: "Save not confirmed; choice retained." }] : []),
+    ...(failure ? [alert(failure), { type: "context" as const, text: "Save not confirmed; choice kept." }] : []),
     { type: "form", block_id: "catalog-settings-" + crypto.randomUUID(), fields: [
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
     ], submit: { label: "Save", action_id: "settings.save" } },
@@ -389,7 +393,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const managed = typeof values.manageStock === "boolean" ? values.manageStock : null;
         return { blocks: [
           { type: "header", text: "Product changes" }, { type: "context", text: "Commerce / Products" }, navigation(),
-          alert(failure), { type: "context", text: "Save not confirmed; entries retained." },
+          alert(failure), { type: "context", text: "Save not confirmed; entries kept." },
           manageStockNotice(managed),
           productForm(input.action_id.slice(5), {
             regular: values.regular,

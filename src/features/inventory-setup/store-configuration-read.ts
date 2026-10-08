@@ -6,7 +6,7 @@ import type {
 } from "./types.js";
 
 const CONFIGURATION_KEY = "active" as const;
-const INVALID_CONFIG = "stored inventory configuration is invalid";
+const INVALID_CONFIG = "stored inventory config invalid";
 
 function fail(
   code: "STORAGE_CONSTRAINTS_UNAVAILABLE" | "STORAGE_UNAVAILABLE",

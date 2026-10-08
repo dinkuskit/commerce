@@ -52,7 +52,7 @@ function normalizeInput(value: unknown): ResolveManagedStorefrontAvailabilityInp
   ) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "storefront availability accepts only catalogItemId",
+      "storefront availability accepts catalogItemId only",
     );
   }
   return { catalogItemId: input.catalogItemId.trim() };

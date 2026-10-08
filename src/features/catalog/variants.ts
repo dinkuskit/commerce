@@ -126,7 +126,7 @@ export async function addCatalogVariantOption(
   if (current) {
     const p = valid(current, productId);
     const empty = !p.options.length && p.members.length === 1 && p.defaultMemberId === productId && !p.members[0].selections.length;
-    if (!empty) return p.creationPayload === payload(raw) ? { changed: false, product: p } : (() => { catalogFail("COMMAND_CONFLICT", "variant choices already exist; reload before editing"); })();
+    if (!empty) return p.creationPayload === payload(raw) ? { changed: false, product: p } : (() => { catalogFail("COMMAND_CONFLICT", "variant choices already exist; reload first"); })();
   }
   if (!Array.isArray(raw.values) || raw.values.length < 2 || raw.values.length > 50 ||
       !raw.values[0]?.member || raw.values[0].member.catalogItemId !== productId)
@@ -168,7 +168,7 @@ export async function updateCatalogVariantLabels(storage: CatalogVariantStorage,
   const parent = await storage.catalog.getVersioned(productId);
   if (!parent || parent.value.recordKind !== "catalog-item" || !parent.value.variantProduct) catalogFail("CATALOG_ITEM_NOT_FOUND", "product has no variant choices");
   const p = valid(parent.value.variantProduct, productId);
-  if (p.revision !== raw.expectedRevision) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload before editing");
+  if (p.revision !== raw.expectedRevision) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload first");
   const labels = new Map(raw.values.map(v => [id(v.valueId, "valueId"), text(v.label, "value label")]));
   if (labels.size !== raw.values.length || [...labels.keys()].some(k => !p.options.some(o => o.values.some(v => v.valueId === k))))
     catalogFail("INVALID_INPUT", "unknown or duplicate value");

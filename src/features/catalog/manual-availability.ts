@@ -111,7 +111,7 @@ export async function setCatalogItemManualAvailability(
   if (normalizeStoredStockManagement(item.stockManagement).mode === "managed") {
     throw new CatalogError(
       "MANAGE_STOCK_ENABLED",
-      "manual availability requires Manage Stock to be disabled",
+      "manual availability requires Manage Stock off",
     );
   }
 

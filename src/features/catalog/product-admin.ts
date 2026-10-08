@@ -479,7 +479,7 @@ export async function bulkSaveCatalogProductPrices(
   for (const input of inputs) {
     try {
       if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision")) {
-        catalogFail("INVALID_INPUT", "each bulk row requires its loaded price revision");
+        catalogFail("INVALID_INPUT", "each bulk row needs its loaded price revision");
       }
       if (!(await resolveCatalogVariantMember(storage.catalog, input.catalogItemId))?.member) {
         catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
