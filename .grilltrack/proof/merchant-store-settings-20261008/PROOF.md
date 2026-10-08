@@ -79,3 +79,23 @@ introduced for that host warning.
 Registry local-workerd functional proof passes even though emitted bytes exceed
 the required131072 distribution budget. The size gate remains unresolved and no
 full feature acceptance, clean review, ready PR or merge is claimed yet.
+
+
+## Remaining profiles and concrete size gate
+
+The existing sandbox suite verified its10 cases across the initial run (9 passed)
+and a retry of both native continuity cases (2 passed). The only repair was the
+legacy native Store catalog Save selector, now exact to avoid matching the new
+merchant-settings submit button. Native local-stock profile:1 passed.
+
+`COMMERCE_PROOF_PORT=64765 npm run test:sandbox:coupons` stops before browser
+startup at official `bundlePlugin` validation: backend.js is134.6KB and exceeds
+its128.0KB per-file maximum (`VALIDATION_FAILED`). This proves the unchanged
+131072-byte distribution gate is enforced, despite configured local-workerd
+functional rendering. No cap bypass, feature removal or custom size transform.
+The complete final gate remains blocked; a separate coordinator-owned headroom
+refactor must be integrated and reverified before review/ready status.
+
+Spark read-only route preflight succeeded through the assigned alias with bounded
+BatchMode/10-second timeout/strict-host-key probe. No review was submitted because
+the current acceptance artifact is oversized.
