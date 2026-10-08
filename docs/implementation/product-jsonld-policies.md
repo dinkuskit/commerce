@@ -84,12 +84,12 @@ Offer `price` is `customerPays` as an exact decimal from integer minor units
 
 | Build | `dist/sandbox/plugin.mjs` bytes | Headroom vs 131072 |
 | --- | ---: | ---: |
-| Main tip after #66 | 130798 | 274 |
-| This slice (on that tip) | 131001 | 71 |
+| Main tip after #75 (coupons deferred) | 102045 | 29027 |
+| This slice (with sandboxed `policies/public`) | 102792 | 28280 |
 
 The JSON-LD builder stays on the host export and is not in the sandbox graph.
-Optional identifier projection remains in the public catalog. The sandboxed
-`policies/public` route is deferred for Registry installs: after #66 only ~274
-bytes remain, which cannot hold the policy reader. Hosts and native installs
-use `@dinkuskit/commerce/features/store-policies`
-(`readPublicStorePolicies` / `readPublicStorePoliciesFromStorage`) instead.
+Optional identifier projection remains in the public catalog. After #75 restored
+Registry headroom, sandboxed `GET policies/public` is mounted again so policy
+pages and JSON-LD share the same revision in Registry installs. Hosts and native
+installs may still use `@dinkuskit/commerce/features/store-policies`
+(`readPublicStorePolicies` / `readPublicStorePoliciesFromStorage`).
