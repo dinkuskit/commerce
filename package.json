@@ -4,6 +4,9 @@
   "description": "The open-source commerce layer for EmDash sites",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=22.16.0 <23"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [

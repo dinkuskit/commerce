@@ -23,7 +23,6 @@ const requiredRootFiles = [
 
 const forbiddenSegments = new Set([
   ".env",
-  ".npmrc",
   ".pi",
   "data",
   "node_modules",
