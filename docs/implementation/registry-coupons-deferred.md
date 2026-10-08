@@ -12,12 +12,13 @@ backend is one file, so every feature in the sandbox entry shares that cap.
 
 | Build | `backend.js` bytes | Result |
 | --- | ---: | --- |
-| `main` before this change | 130,243 | passes with 829 spare |
+| `main` before PR 66 | 130,243 | passes with 829 spare |
+| `main` after PR 66 | 130,798 | passes with 274 spare |
 | PR 68 head | 137,927 | rejected |
 | PR 69 head | 141,201 | rejected |
 | PR 68 with coupons stubbed | 108,764 | passes |
 | PR 69 with coupons stubbed | 112,035 | passes |
-| This change on `main` | 101,493 | passes with 29,579 spare |
+| This change on `main` after PR 66 | 102,045 | passes with 29,027 spare |
 
 Re-minifying with another tool saved nothing. EmDash 1.2 has no
 plugin-to-plugin call (`PluginContext` has no cross-plugin port, `ctx.http`

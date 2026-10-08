@@ -28,7 +28,7 @@ const ACCOUNT = 'acct_synthetic';
 export function configuration(shipping = { configurationId: 'shipping-synthetic', revision: 1, mode: 'free' }) {
   return { schema: REGISTRY_CHECKOUT_CONFIG_SCHEMA, enabled: true, commerceOrigin: SITE,
     siteId: SITE_ID, paymentsOrigin: TRANSPORT_ORIGIN, bindingRef: BINDING,
-    providerId: 'stripe', stripeAccountId: ACCOUNT, pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+    providerId: 'stripe', mode: 'test', stripeAccountId: ACCOUNT, pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
     issuer: ISSUER, audience: AUDIENCE, shipping };
 }
 export async function credential(changes = {}) {

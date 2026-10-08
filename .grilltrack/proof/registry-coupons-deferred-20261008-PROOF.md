@@ -1,7 +1,7 @@
 # Registry coupon deferral proof
 
 Source intent: CLI-locked `registry-coupons-deferred-20261008`, superseding
-`coupons-registry-block-kit-001`. Base: `89bb9f6`. Details and measurements:
+`coupons-registry-block-kit-001`. Base: `717c895` (main after PR 66). Details and measurements:
 `docs/implementation/registry-coupons-deferred.md`.
 
 ## Artifact
@@ -9,11 +9,11 @@ Source intent: CLI-locked `registry-coupons-deferred-20261008`, superseding
 `npm run build:sandbox` packages the staged source with the official
 `@emdash-cms/plugin-cli` 0.13.3 `bundlePlugin` and reports:
 
-- `backend.js`: 101,493 bytes, 29,579 under the 131,072-byte file limit.
-- `backend.js` SHA-256: `4ccb2b9e1714a767843290e026a451399fecab6d4a2eb60edfb620778d9c4bb6`.
+- `backend.js`: 102,045 bytes, 29,027 under the 131,072-byte file limit.
+- `backend.js` SHA-256: `f70eab9e628a1df5caccbedfab4c6826bd5dab30e371982d0602f2946ec4ac49`.
 - Storage: no `coupons` collection. Admin pages: no `/coupons`.
 
-The same base measured 130,243 bytes before this change.
+The same base measured 130,798 bytes (274 spare) before this change.
 
 ## Behavior
 
@@ -39,8 +39,8 @@ Playwright used the container's Chromium build:
 - `npm run typecheck`: PASS.
 - `npm run audit:repo`: clean.
 - `npm run build:sandbox`: `registry_bundle=pass`.
-- `npm run test:unit`: 351 PASS.
-- `npm run test:integration`: 40 PASS, including real compiled workerd.
+- `npm run test:unit`: 353 PASS.
+- `npm run test:integration`: 41 PASS, including real compiled workerd.
 - `npm run test:sandbox`: 10 PASS.
 - `npm run test:sandbox:native-local-stock`: 1 PASS.
 - `npm run test:sandbox:orders`: 1 PASS on the installed Registry-format artifact.
