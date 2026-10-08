@@ -1,5 +1,6 @@
 import type { PluginContext } from "emdash";
 import type { CronEvent } from "emdash/plugin";
+import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
 
 import { GuestCheckoutError } from "./errors.js";
 import {
@@ -29,7 +30,7 @@ export interface InstalledGuestCheckoutRequest {
 }
 
 type InstalledStorage = Record<string, unknown>;
-type InstalledContext = Pick<PluginContext, "plugin" | "storage" | "site">;
+type InstalledContext = Pick<PluginContext, "plugin" | "storage" | "site" | "settings">;
 
 export interface InstalledCheckoutServices {
   host: GuestCheckoutHostOptions;
@@ -102,7 +103,11 @@ function siteOrigin(ctx: InstalledContext) {
 function runtimeFor(ctx: PluginContext, services: InstalledCheckoutServices) {
   const storage = installedStorage(ctx);
   const origin = siteOrigin(ctx);
-  const host = Object.freeze({ ...services.host });
+  const host = Object.freeze({
+    ...services.host,
+    loadCheckoutContactRequirements: () =>
+      loadCheckoutContactRequirements(ctx.settings),
+  });
   const resolved = resolveTrustedSiteOrigin({
     constructorSiteUrl: host.siteUrl,
     runtimeSiteUrl: origin,

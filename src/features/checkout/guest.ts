@@ -5,6 +5,10 @@ import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js
 import { createCheckoutStore } from "./storage.js";
 import { reconcilePaymentWakes } from "./wake.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
+import {
+  CheckoutContactError,
+  type CheckoutContactRequirements,
+} from "../checkout-contact/index.js";
 import type {
   CartLine,
   CheckoutAttempt,
@@ -25,7 +29,8 @@ function asObject(value: unknown): Record<string, unknown> {
 
 export function admitGuestCheckoutStartInput(raw: unknown): CartLine[] {
   const input = asObject(raw);
-  if (Object.keys(input).join() !== "lines") fail("INVALID_CART");
+  const keys = Object.keys(input).sort().join();
+  if (!["contact,lines", "lines"].includes(keys)) fail("INVALID_CART");
   if (!Array.isArray(input.lines) || input.lines.length === 0 || input.lines.length > 100) {
     fail("INVALID_CART");
   }
@@ -44,15 +49,43 @@ export function admitGuestCheckoutStartInput(raw: unknown): CartLine[] {
 export function admitGuestCheckoutPricingStartInput(raw: unknown): CartLine[] | { lines: CartLine[]; couponCode?: string } {
   const input = asObject(raw);
   const keys = Object.keys(input).sort();
-  if (keys.join() !== "lines" && keys.join() !== "couponCode,lines") fail("INVALID_CART");
+  if (!["contact,lines", "contact,couponCode,lines", "lines", "couponCode,lines"].includes(keys.join())) fail("INVALID_CART");
   const lines = admitGuestCheckoutStartInput({ lines: input.lines });
-  if (keys.join() === "lines") return lines;
+  if (!Object.hasOwn(input, "couponCode")) return lines;
   if (typeof input.couponCode !== "string" || !input.couponCode.trim()) fail("INVALID_CART");
   return { lines, couponCode: input.couponCode.trim() };
 }
 
+function contactRequirements(
+  runtime: GuestCheckoutRuntime,
+): Promise<CheckoutContactRequirements> {
+  if (!runtime.host.loadCheckoutContactRequirements) {
+    return Promise.reject(new CheckoutContactError("REQUIREMENTS_UNAVAILABLE"));
+  }
+  return runtime.host.loadCheckoutContactRequirements().then((value) => {
+    if (
+      !value ||
+      typeof value !== "object" ||
+      Array.isArray(value) ||
+      Object.keys(value).sort().join(",") !== "requirePhoneNumber,revision" ||
+      typeof value.requirePhoneNumber !== "boolean" ||
+      (value.revision !== null && typeof value.revision !== "string")
+    ) {
+      throw new CheckoutContactError("REQUIREMENTS_UNAVAILABLE");
+    }
+    return { requirePhoneNumber: value.requirePhoneNumber, revision: value.revision };
+  }).catch((error) => {
+    if (error instanceof CheckoutContactError) throw error;
+    throw new CheckoutContactError("REQUIREMENTS_UNAVAILABLE");
+  });
+}
+
 function mapCheckoutError(error: unknown): never {
   if (error instanceof GuestCheckoutError) throw error;
+  if (error instanceof CheckoutContactError) {
+    if (error.code === "REQUIREMENTS_UNAVAILABLE") fail("UNAVAILABLE");
+    fail("INVALID_CART");
+  }
   const message = error instanceof Error ? error.message : "";
   if (/Invalid cart|Invalid quantity|Zero-total/i.test(message)) fail("INVALID_CART");
   if (/frozen/i.test(message)) fail("CHECKOUT_FROZEN");
@@ -81,6 +114,7 @@ export function executionOf(runtime: GuestCheckoutRuntime) {
     resolvePayments: runtime.host.resolvePayments!,
     createAttemptId: runtime.host.createAttemptId,
     now: runtime.host.now,
+    loadCheckoutContactRequirements: runtime.host.loadCheckoutContactRequirements,
     pricing: runtime.pricing,
   };
 }
@@ -128,11 +162,13 @@ export async function prepareGuestCheckout(
   runtime: GuestCheckoutRuntime,
 ): Promise<GuestCheckoutResult> {
   try {
+    const requirements = await contactRequirements(runtime);
     const minted = await mintGuestCapability(runtime);
     return {
       ok: true,
       capabilityId: minted.record.capabilityId,
       capability: minted.presentation,
+      contactRequirements: { requirePhoneNumber: requirements.requirePhoneNumber },
       checkout: projectPreparedGuestCheckout(),
     };
   } catch (error) {
@@ -163,7 +199,12 @@ export async function startGuestCheckout(
     const previous = existing ? currentAttempt(existing.record.attempts) : undefined;
     const retryAfter =
       previous?.phase === "released" ? previous.attemptId : undefined;
-    const attempt = await startCheckout(executionOf(runtime), authorized.cartId, admitted, retryAfter);
+    const attempt = await startCheckout(
+      executionOf(runtime),
+      authorized.cartId,
+      { ...(input as Record<string, unknown>), lines: Array.isArray(admitted) ? admitted : admitted.lines },
+      retryAfter,
+    );
     const currentNow = runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
     return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {

@@ -34,5 +34,5 @@ export async function pricingFixture(t, { cap = 1, discount = { kind: 'fixed', a
   f.execution.pricing = { coupons, paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1', resolveShippingConfiguration: async () => ({
     configurationId: 'shipping-rule', revision: 1, mode: shipping === '0' ? 'free' : 'flat', amount: { currency: 'USD', minor: shipping },
   }) };
-  return { ...f, coupons, coupon, admin, owner: createCouponAttemptOwner(coupons), input: { lines: cart, couponCode: 'SAVE' } };
+  return { ...f, coupons, coupon, admin, owner: createCouponAttemptOwner(coupons), input: { contact: { email: 'pricing-fixture@example.test' }, lines: cart, couponCode: 'SAVE' } };
 }

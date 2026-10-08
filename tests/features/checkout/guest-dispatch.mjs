@@ -150,6 +150,7 @@ export function syntheticCheckoutHost(overrides = {}) {
     return f.execution.availability.resolveProvider(...args);
   };
   const host = {
+    loadCheckoutContactRequirements: f.execution.loadCheckoutContactRequirements,
     siteUrl: TRUSTED_SITE,
     paymentBindingRef: "stripe-test-binding",
     now: f.execution.now,
@@ -181,6 +182,7 @@ export function guestContext(storage, input, {
   route = GUEST_CHECKOUT_START_ROUTE,
   origin,
   fetchSite = "same-origin",
+  settings = { async getVersioned() { return null; } },
 } = {}) {
   const headers = { "content-type": "application/json" };
   if (origin !== null) headers.origin = origin === undefined ? siteUrl : origin;
@@ -195,6 +197,7 @@ export function guestContext(storage, input, {
   }
   return {
     storage,
+    settings,
     input,
     request: new Request(`${siteUrl}/_emdash/api/plugins/dinkus-commerce/${route}`, requestInit),
     site: { url: runtimeSiteUrl, name: "Test", locale: "en" },

@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import {writeFileSync} from "node:fs";
+import { Kysely, SqliteDialect } from 'kysely';
+import { createSettingsAccess } from 'emdash';
+import { OptionsRepository } from 'emdash/internal/plugins/host';
+import { loadMerchantStoreSettings, saveMerchantStoreSettings } from '../../dist/features/store-settings/kernel/index.js';
 
 function proofDb() {
   const native = test.info().project.name === "native-variant";
@@ -24,6 +28,8 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
   let ownedCartId;
   let ownedCapabilityId;
   let ownedAttemptId;
+  let firstCapabilityId;
+  let settingsDb, settings, originalSettings, capturedRequirementRevision;
   const row = (id, data) => put.run("dinkus-commerce", collections.catalog, id, JSON.stringify(data), now, now);
   const price = (id, minor) => put.run("dinkus-commerce", collections.prices, id, JSON.stringify({
     recordKind: "catalog-price", recordId: id, catalogItemId: id, regular: { currency: "USD", minor },
@@ -58,6 +64,10 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
     await expect(variants.locator(`input[value="${ids.large}"]`)).toBeEnabled();
 
     if (native) {
+      settingsDb = new Kysely({ dialect: new SqliteDialect({ database: new Database(filename) }) });
+      settings = createSettingsAccess(new OptionsRepository(settingsDb), 'dinkus-commerce', {});
+      originalSettings = await loadMerchantStoreSettings(settings);
+      const optional = await saveMerchantStoreSettings(settings, { expectedRevision: originalSettings.revision, requirePhoneNumber: false });
       await variants.locator(`input[value="${ids.large}"]`).check();
       await page.getByRole("button", { name: "Prepare checkout" }).click();
       await expect(page.locator('[data-checkout-result]')).toContainText('"ok": true');
@@ -67,6 +77,9 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       const prepared = JSON.parse(capability);
       const token = (prepared.data ?? prepared).capability.capability;
       ownedCapabilityId = (prepared.data ?? prepared).capabilityId;
+      firstCapabilityId = ownedCapabilityId;
+      expect((prepared.data ?? prepared).contactRequirements).toEqual({requirePhoneNumber:false});
+      expect((prepared.data ?? prepared).checkout.contactRequirements).toBeUndefined();
       const forged = await page.evaluate(async ({ token, id }) => {
         const response = await fetch("/_emdash/api/plugins/dinkus-commerce/checkout/guest/start", {
           method: "POST",
@@ -78,7 +91,27 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       expect(forged.status).toBe(400);
       expect(JSON.stringify(forged.body)).toMatch(/INVALID_CART|Invalid cart/);
 
+      await expect(page.getByRole('textbox', { name: 'Phone' })).not.toHaveAttribute('required');
+      const cartsBeforeDenial = db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n;
       await page.getByRole("button", { name: "Start checkout" }).click();
+      await expect(page.locator('[data-checkout-result]')).toContainText('INVALID_CART');
+      expect(db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n).toBe(cartsBeforeDenial);
+      await page.getByRole('textbox', { name: 'Email' }).fill('variant-shopper@example.test');
+      const required = await saveMerchantStoreSettings(settings, {expectedRevision: optional.revision, requirePhoneNumber:true});
+      capturedRequirementRevision = required.revision;
+      await page.getByRole("button", { name: "Start checkout" }).click();
+      await expect(page.locator('[data-checkout-result]')).toContainText('INVALID_CART');
+      expect(db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n).toBe(cartsBeforeDenial);
+      await page.getByRole('button', {name:'Prepare checkout'}).click();
+      await expect(page.getByRole('textbox', {name:'Phone'})).toHaveAttribute('required');
+      const refreshed = JSON.parse(await page.locator('[data-checkout-result]').textContent());
+      ownedCapabilityId = (refreshed.data ?? refreshed).capabilityId;
+      expect((refreshed.data ?? refreshed).contactRequirements).toEqual({requirePhoneNumber:true});
+      await page.getByRole('textbox', {name:'Phone'}).fill('555 0142');
+      await page.getByRole("button", { name: "Start checkout" }).click();
+      await saveMerchantStoreSettings(settings, {expectedRevision:required.revision,requirePhoneNumber:false});
+      await page.getByRole('textbox', {name:'Email'}).fill('changed-draft@example.test');
+      await page.getByRole('textbox', {name:'Phone'}).fill('555 9999');
       await expect(page.locator('[data-checkout-result]')).toContainText('"state": "pending"');
       await expect(page.locator('[data-frozen-order]')).toContainText("Large");
 
@@ -119,6 +152,11 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       expect(attempt.order.total).toEqual({ currency: "USD", minor: "2400" });
       expect(attempt.order.variantSelections[0].selections[0].valueLabel).toBe("Large");
       expect(attempt.order.paymentId).toMatch(/^synthetic-payment:/);
+      expect(attempt.contactSnapshot).toMatchObject({contact:{email:'variant-shopper@example.test',phone:'555 0142'},requirePhoneNumber:true,revision:capturedRequirementRevision});
+      expect(attempt.order.contactSnapshot).toEqual(attempt.contactSnapshot);
+      expect(JSON.stringify(attempt.payment)).not.toContain('variant-shopper@example.test');
+      expect(JSON.stringify(paidProjection)).not.toContain('variant-shopper@example.test');
+      expect(JSON.stringify(paidProjection)).not.toContain('555 0142');
     } else {
       await page.screenshot({ path: `${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-checkout-sandbox.png`, fullPage: true });
     }
@@ -145,6 +183,9 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
             .run("dinkus-commerce", collections.associations, row.id);
       }
     }
+    if (firstCapabilityId) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce',collections.capabilities,firstCapabilityId);
+    if (settings) { const current = await loadMerchantStoreSettings(settings); await saveMerchantStoreSettings(settings,{expectedRevision:current.revision,requirePhoneNumber:originalSettings.settings.requirePhoneNumber}); }
+    if (settingsDb) await settingsDb.destroy();
     db.close();
   }
 });
@@ -218,6 +259,7 @@ test('merchant creates choices and edits independent and bulk prices through the
       guestId = (prepared.data ?? prepared).capabilityId;
       const capability = all('checkoutGuestCapabilities').find(r => r.capabilityId === guestId);
       guestCartId = capability.cartId;
+      await shopper.getByRole('textbox',{name:'Email'}).fill('guest-shopper@example.test');
       await shopper.getByRole('button',{name:'Start checkout'}).click();
       await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "pending"');
       await expect(shopper.locator('[data-checkout-result]')).toContainText('\"minor\": \"2400\"');

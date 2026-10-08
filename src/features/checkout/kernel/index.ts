@@ -18,6 +18,17 @@ export type {
 } from "../wake.js";
 export { startCheckout, reconcileCheckout, CheckoutError } from "../orchestrate.js";
 export {
+  CheckoutContactError,
+  captureCheckoutContact,
+  normalizeCheckoutContactInput,
+} from "../../checkout-contact/index.js";
+export type {
+  CheckoutContactRequirements,
+  CheckoutContactRequirementsLoader,
+  CheckoutContactSnapshot,
+  NormalizedCheckoutContact,
+} from "../../checkout-contact/index.js";
+export {
   createCurrentPaymentRequest,
   isCurrentPaymentRequest,
   isLegacyExact1800PaymentRequest,

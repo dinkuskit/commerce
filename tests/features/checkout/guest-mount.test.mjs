@@ -51,7 +51,7 @@ function setup(t, { managed = false, inject = true, host } = {}) {
 }
 
 function lines(itemId = "hat", quantity = 1) {
-  return { lines: [{ catalogItemId: itemId, quantity }] };
+  return { contact: { email: 'guest-fixture@example.test' }, lines: [{ catalogItemId: itemId, quantity }] };
 }
 
 function capabilityOf(result) {

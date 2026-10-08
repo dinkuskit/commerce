@@ -11,7 +11,7 @@ import {
 } from '../../dist/features/checkout/index.js';
 
 const PREPARE = 'checkout/guest/prepare', START = 'checkout/guest/start', STATUS = 'checkout/guest/status';
-const basket = { lines: [{ catalogItemId: 'hat', quantity: 1 }] };
+const basket = { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: 'hat', quantity: 1 }] };
 
 async function start(state, input = basket) {
   const prepared = await state.invoke(PREPARE);
@@ -141,7 +141,7 @@ test('public installed catalog reads an admin-created product and canonical coup
   const catalog = await state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
   assert.deepEqual(catalog, { products: [{ id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [] }] });
   await state.coupon('100');
-  const input = { lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }], couponCode: 'SAVE10' };
+  const input = { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }], couponCode: 'SAVE10' };
   const { token, result } = await start(state, input);
   assert.equal(result.ok, true);
   assert.equal(state.requests[0].total.minor, '500');

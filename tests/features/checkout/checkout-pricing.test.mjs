@@ -1,3 +1,4 @@
+import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from "node:assert/strict";
 import test from "node:test";
 import { openStore, fixture, cart } from "./fixture.mjs";
@@ -82,7 +83,7 @@ test("pricing composes real coupon evaluation, flat shipping, conservation, and 
     },
     lookup: async () => ({ outcome: "unknown" }),
   });
-  const first = await startCheckout(state.execution, "priced-cart", { lines: cart, couponCode: "save10" });
+  const first = await startCheckout(state.execution, "priced-cart", withSyntheticCheckoutContact({ lines: cart, couponCode: "save10" }));
   assert.equal(first.payment.pricing.finalTotal.minor, "200");
   assert.equal(first.payment.pricing.merchandiseSubtotal.minor, "250");
   assert.equal(first.payment.pricing.couponDiscount.minor, "100");
@@ -95,7 +96,7 @@ test("pricing composes real coupon evaluation, flat shipping, conservation, and 
     mode: "flat",
     amount: { currency: "USD", minor: "999" },
   });
-  const replay = await startCheckout(state.execution, "priced-cart", { lines: cart, couponCode: "SAVE10" });
+  const replay = await startCheckout(state.execution, "priced-cart", withSyntheticCheckoutContact({ lines: cart, couponCode: "SAVE10" }));
   assert.equal(replay.payment.pricing.finalTotal.minor, "200");
   assert.equal(replay.payment.pricing.shipping.configurationId, "ship-1");
   assert.equal(calls, 2);
@@ -116,7 +117,7 @@ test("unsupported pricing schema fails before payment resolution", async (t) => 
     throw new Error("must not resolve");
   };
   await assert.rejects(
-    () => startCheckout(state.execution, "unsupported", { lines: cart, couponCode: "SAVE10" }),
+    () => startCheckout(state.execution, "unsupported", withSyntheticCheckoutContact({ lines: cart, couponCode: "SAVE10" })),
     /pricing schema unsupported/,
   );
   assert.equal(resolved, 0);
