@@ -67,10 +67,20 @@ export async function auditRepository(root = repositoryRoot) {
     if (segments.some((segment) => forbiddenSegments.has(segment))) {
       findings.push(`forbidden public path: ${path}`);
     }
+    if (segments.includes(".npmrc") && path !== ".npmrc") {
+      findings.push(`forbidden public path: ${path}`);
+    }
     if (segments.some((segment) => segment.startsWith(".env."))) {
       findings.push(`forbidden environment path: ${path}`);
     }
     if (path.endsWith(".sql")) findings.push(`forbidden SQL path: ${path}`);
+  }
+
+  if (files.includes(".npmrc")) {
+    const npmrc = await readFile(join(root, ".npmrc"), "utf8");
+    if (npmrc.trim() !== "engine-strict=true") {
+      findings.push("root .npmrc must contain only engine-strict=true");
+    }
   }
 
   const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
@@ -89,7 +99,7 @@ export async function auditRepository(root = repositoryRoot) {
   const compatibility = manifest.dinkuskit?.emdashCompatibility;
   const requiredCompatibility = {
     apiPeer: "1.2.0",
-    nodeEngine: ">=22.16",
+    nodeEngine: ">=22.16.0 <23",
     packageIntegrity: "sha512-f9s7khWeuOxX5cRimlu9o224hn9TuKnYk/0Vsu1CS9oaVn78V1+MWyfEsZc2iDv8JYWrezEZFkpy/Q6pRgVgzg==",
     mountedSitePilot: "private",
     requiredSourceVisibility: "public",
