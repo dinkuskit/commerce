@@ -74,7 +74,7 @@ Driver: `tests/integration/orders-inspection.test.mjs` exercises the real EmDash
 
 ## Command-line client boundary
 
-The draft `dinkus-commerce` CLI ([docs/CLI-SPEC.md](docs/CLI-SPEC.md)) owns
+The `dinkus-commerce` CLI ([docs/CLI-SPEC.md](docs/CLI-SPEC.md)) owns
 `cli/`, `bin/dinkus-commerce.mjs`, and `tests/cli/`. It is not a feature and is
 not part of the package build: it reaches Commerce only over the mounted
 EmDash plugin HTTP routes, imports nothing from `src/` or `dist/`, and nothing

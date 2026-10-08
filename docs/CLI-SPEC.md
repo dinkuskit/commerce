@@ -1,7 +1,7 @@
 # `dinkus-commerce` CLI Specification
 
-Status: Draft, not locked. Needs a GrillTrack decision before it is treated as a
-contract.
+Status: Locked for the scaffold slice (`commerce-cli-scaffold-001`). Write
+commands remain planned.
 
 An unpublished scaffold executable implements the read commands below against
 the HTTP routes Commerce already serves; see
