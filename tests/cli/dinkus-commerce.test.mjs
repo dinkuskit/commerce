@@ -323,6 +323,47 @@ test("a site URL is required, validated, and resolved flag > env > project confi
   }
 });
 
+test("admin commands never send the token to a plugin id from project config", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "dinkus-commerce-cli-"));
+  const configHome = await mkdtemp(join(tmpdir(), "dinkus-commerce-home-"));
+  try {
+    await mkdir(join(cwd, ".dinkuskit"));
+    await writeFile(join(cwd, ".dinkuskit", "commerce.json"), JSON.stringify({ "plugin-id": "other-plugin" }));
+    const routes = { "catalog-items/list": ok({ products: [] }), "catalog/public": ok({ products: [] }) };
+
+    // Trusted site URL from the environment, plugin id from the working directory.
+    const refused = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE } });
+    assert.equal(refused.code, 4);
+    assert.equal(refused.calls.length, 0, "nothing is sent to the project-config plugin route");
+    assert.equal(singleJson(refused.stdout).error.code, "untrusted_plugin_id");
+
+    const publicRead = await run(["catalog", "list", "--json"], { cwd, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE }, fetchImpl: async (url, init) => {
+      assert.equal(new URL(url).pathname, "/_emdash/api/plugins/other-plugin/catalog/public");
+      assert.equal(init?.headers?.authorization, undefined);
+      return new Response(JSON.stringify({ success: true, data: { products: [] } }));
+    } });
+    assert.equal(publicRead.code, 0, "public reads may still use the project plugin id");
+
+    const fromFlag = await run(["--plugin-id", "dinkus-commerce", "products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE } });
+    assert.equal(fromFlag.code, 0, fromFlag.stderr);
+    assert.equal(fromFlag.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog-items/list");
+
+    await rm(join(cwd, ".dinkuskit", "commerce.json"));
+    const fromDefault = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE } });
+    assert.equal(fromDefault.code, 0, fromDefault.stderr);
+    assert.equal(fromDefault.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog-items/list");
+
+    await mkdir(join(configHome, "dinkuskit", "commerce"), { recursive: true });
+    await writeFile(join(configHome, "dinkuskit", "commerce", "config.json"), JSON.stringify({ "plugin-id": "dinkus-commerce" }));
+    const fromUser = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE, XDG_CONFIG_HOME: configHome } });
+    assert.equal(fromUser.code, 0, fromUser.stderr);
+    assert.equal(fromUser.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog-items/list");
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+    await rm(configHome, { recursive: true, force: true });
+  }
+});
+
 test("admin commands never send the token to a site URL from project config", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "dinkus-commerce-cli-"));
   const configHome = await mkdtemp(join(tmpdir(), "dinkus-commerce-home-"));

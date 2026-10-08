@@ -78,7 +78,7 @@ function checkPublicProduct(product, what) {
 	return product;
 }
 
-export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, token, timeoutMs, fetchImpl, signal }) {
+export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginIdSource, token, timeoutMs, fetchImpl, signal }) {
 	const baseUrl = `${siteUrl}/_emdash/api/plugins/${pluginId}`;
 	// Public reads never carry the credential, even when one is set.
 	const publicHttp = createHttp({ baseUrl, timeoutMs, fetchImpl, signal });
@@ -92,6 +92,15 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, token, 
 			throw new CliError(
 				"untrusted_site_url",
 				`Refusing to send ${TOKEN_ENV} to a site URL from project config. Pass --url or set ${URL_ENV} for admin commands.`,
+				{ exit: EXIT.blocked },
+			);
+		}
+		// The plugin id picks the route path on that host, so it is part of the
+		// token's destination too.
+		if (pluginIdSource === "project") {
+			throw new CliError(
+				"untrusted_plugin_id",
+				`Refusing to send ${TOKEN_ENV} to a plugin id from project config. Pass --plugin-id or use the default for admin commands.`,
 				{ exit: EXIT.blocked },
 			);
 		}

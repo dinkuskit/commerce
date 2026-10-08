@@ -19,6 +19,7 @@ function connect(ctx) {
 		siteUrl,
 		siteUrlSource: ctx.config.source("url"),
 		pluginId,
+		pluginIdSource: ctx.config.source("plugin-id"),
 		token: ctx.env[TOKEN_ENV] || undefined,
 		timeoutMs: ctx.timeoutMs,
 		fetchImpl: ctx.fetchImpl,

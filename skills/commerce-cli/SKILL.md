@@ -11,7 +11,8 @@ needed) and start with `--help` at the depth you need.
 
 1. Point it at a site with `--url <site-url>` or `EMDASH_URL`, or a
    `.dinkuskit/commerce.json` profile for public reads. Admin commands refuse
-   a project-config URL (`untrusted_site_url`); pass `--url` for them. Use
+   a project-config URL (`untrusted_site_url`) or plugin id
+   (`untrusted_plugin_id`); pass `--url` and `--plugin-id` for them. Use
    `--plugin-id` only when the site installed Commerce under a different id.
 2. Pick the command for the install. `catalog list|show` reads the public
    storefront projection on the Registry (sandboxed) build and needs no
