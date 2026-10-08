@@ -164,3 +164,13 @@
 {"action": "decision_implemented", "at": "2026-10-08T20:19:13+00:00", "data": {"decision_id": "registry-coupons-deferred-20261008"}, "event_id": "53e851c2-c7d1-4a74-a18c-cc23c90a145f"}
 {"action": "decision_verified", "at": "2026-10-08T20:27:24+00:00", "data": {"decision_id": "registry-coupons-deferred-20261008"}, "event_id": "7b703aab-a877-45bc-a9c8-0f47eb011887"}
 {"action": "decision_verified", "at": "2026-10-08T20:27:24+00:00", "data": {"decision_id": "coupons-registry-packaging-001"}, "event_id": "2ac645ee-45f8-4956-9c4b-6edad444eb60"}
+{"action": "focus_started", "at": "2026-10-08T21:23:05+00:00", "data": {"cadence": "sequential", "domain": "Merchant country and checkout contact settings"}, "event_id": "212b7204-5483-42fa-8f20-098b42fb1601"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-08T21:23:05+00:00", "data": {"summary": "A merchant configures store country and optional extra selling/shipping countries in Commerce settings, plus an off-by-default Require phone number toggle. Checkout does not yet enforce country eligibility. Absent country setup is not a checkout gate."}, "event_id": "c6d663d4-9589-4aec-9b9f-30bbe879c528"}
+{"action": "decision_proposed", "at": "2026-10-08T21:23:05+00:00", "data": {"decision_id": "merchant-country-settings-001"}, "event_id": "7526b40d-ef9e-407f-a3b9-0e703da5e336"}
+{"action": "decision_locked", "at": "2026-10-08T21:23:05+00:00", "data": {"decision_id": "merchant-country-settings-001"}, "event_id": "cf5637b9-334c-4d80-9367-e27de757b61e"}
+{"action": "decision_proposed", "at": "2026-10-08T21:23:05+00:00", "data": {"decision_id": "merchant-phone-requirement-001"}, "event_id": "4d9b7b76-67c5-4626-bdcd-6ed7a8cfae38"}
+{"action": "decision_locked", "at": "2026-10-08T21:23:05+00:00", "data": {"decision_id": "merchant-phone-requirement-001"}, "event_id": "a6ded07c-a3f2-4491-afa4-41644d367f34"}
+{"action": "decision_implemented", "at": "2026-10-08T21:23:05+00:00", "data": {"decision_id": "merchant-country-settings-001"}, "event_id": "1b81ee25-c1b5-4744-926d-4bf8ecdc7090"}
+{"action": "decision_implemented", "at": "2026-10-08T21:23:06+00:00", "data": {"decision_id": "merchant-phone-requirement-001"}, "event_id": "7ea16229-6a04-4018-864e-f53d0f0c8f88"}
+{"action": "decision_verified", "at": "2026-10-08T21:23:06+00:00", "data": {"decision_id": "merchant-country-settings-001"}, "event_id": "be3947a0-2109-47d9-860a-951b64f4386b"}
+{"action": "decision_verified", "at": "2026-10-08T21:23:06+00:00", "data": {"decision_id": "merchant-phone-requirement-001"}, "event_id": "f14c2770-f629-493e-9fb5-355289940e1c"}
