@@ -8109,20 +8109,35 @@
         "jsonld-availability-low-stock-059"
       ],
       "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-08T19:56:36+00:00",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Omit the Offer entirely; (B) Emit Offer with availability OutOfStock. Tradeoffs: (A) never claims a buyable offer when Inventory truth is unproven, but Product rich results without Offer are weaker and policy links on the Offer are lost; (B) keeps Product+Offer for rich results and agentic readers while never claiming InStock/sellable, matching the public projection (listable:true, sellable:false). Recommendation: B \u2014 emit Offer with https://schema.org/OutOfStock when status is availability-unavailable.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "jsonld-availability-unavailable-059",
       "implementation_ref": null,
       "question": "How should availability-unavailable be represented in Product/Offer JSON-LD?",
-      "rationale": "Public catalog keeps availability-unavailable listable so the page can render; omitting Offer would diverge from the visible product. OutOfStock is honest fail-closed without inventing InStock.",
+      "rationale": "Maintainer completing lock on PR #73 comment 6067898015 (with partial lock 6067853218): when a product page is shown and the item cannot be bought, emit Offer with availability OutOfStock; do not omit Offer; never InStock. Matches Google merchant-listing structured-data guidance.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T19:11:34+00:00",
+      "updated_at": "2026-10-08T19:56:36+00:00",
       "verification_ref": null
     },
     {
@@ -8135,20 +8150,35 @@
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-08T19:56:36+00:00",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) GTIN only (validated GTIN-8/12/13/14 with check digit); (B) GTIN plus optional MPN and brand. Tradeoffs: (A) smallest admin/surface and matches the issue minimum; (B) aligns with Google Merchant / WooCommerce structured-data norms and agentic commerce identity without requiring any field. Absent means omitted; never invent. Recommendation: B \u2014 optional gtin, mpn, and brand on the catalog item, keyed and looked up by itemId; SKU remains the editable merchant attribute already projected.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "jsonld-optional-identifiers-059",
       "implementation_ref": null,
       "question": "Which optional product identifiers should Commerce store and emit in JSON-LD?",
-      "rationale": "EmDash/WooCommerce/Google Merchant pages commonly expose brand and MPN when merchants have them. Keeping all three optional preserves the never-invent rule.",
+      "rationale": "Maintainer completing lock on PR #73 comment 6067898015 (with partial lock 6067853218): optional GTIN + MPN + brand on the item, keyed by itemId; omit unset fields; never invent.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T19:11:34+00:00",
+      "updated_at": "2026-10-08T19:56:36+00:00",
       "verification_ref": null
     },
     {
@@ -8234,6 +8264,62 @@
       "superseded_by": null,
       "updated_at": "2026-10-08T19:54:52+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "FOLLOW-UP (proposed, not this PR). Options deferred to a later slice: always show quantity / only show when low / never show quantity, with a configurable low-stock threshold for shopper-facing UI. JSON-LD availability for low-stock remains LimitedAvailability per locked jsonld-availability-low-stock-059 regardless of display format.",
+      "context_ref": "issuecomment:6067853218",
+      "created_at": "2026-10-08T19:56:36+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "jsonld-availability-low-stock-059"
+      ],
+      "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
+      "history": [],
+      "id": "storefront-stock-qty-display-followup-059",
+      "implementation_ref": null,
+      "question": "How should Commerce expose WooCommerce-style shopper stock quantity display settings?",
+      "rationale": "Ryan's partial lock 6067853218 and completing lock 6067898015 call out shopper display as separate from this PR's schema mapping. Backend headroom on #73 is 83 bytes; do not grow the sandbox here.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T19:56:36+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "FOLLOW-UP (proposed, not this PR). Add store setting Hide out-of-stock items from the catalog, default off (WooCommerce-compatible). When hidden, those listings do not appear in shop/category and must not emit public Product/Offer JSON-LD for that storefront listing. Existing hideOutOfStock listing policy may partially overlap; unify carefully. Size-gated off #73 (83 bytes headroom).",
+      "context_ref": "issuecomment:6067898015",
+      "created_at": "2026-10-08T19:56:36+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "jsonld-availability-unavailable-059"
+      ],
+      "domain": "Product JSON-LD and single-source shipping/return policies (#59)",
+      "history": [],
+      "id": "catalog-hide-oos-structured-data-followup-059",
+      "implementation_ref": null,
+      "question": "Should Commerce add a WooCommerce-style Hide out-of-stock items from the catalog setting that also suppresses public product structured data?",
+      "rationale": "Completing lock comment 6067898015: catalog visibility is separate from Offer+OutOfStock when a product page is shown; small follow-up if it does not fit this PR's backend budget.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T19:56:36+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -8270,5 +8356,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-08T19:54:52+00:00"
+  "updated_at": "2026-10-08T19:56:36+00:00"
 }

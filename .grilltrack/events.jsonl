@@ -159,3 +159,7 @@
 {"action": "decision_locked", "at": "2026-10-08T19:54:52+00:00", "data": {"decision_id": "jsonld-availability-low-stock-059"}, "event_id": "59f36a29-f455-4f1b-a90c-d6ce4d3ff81b"}
 {"action": "decision_locked", "at": "2026-10-08T19:54:52+00:00", "data": {"decision_id": "jsonld-policy-records-059"}, "event_id": "6f2235b1-d536-4af5-b779-43fda0979e3f"}
 {"action": "decision_locked", "at": "2026-10-08T19:54:52+00:00", "data": {"decision_id": "jsonld-builder-export-059"}, "event_id": "e50b240f-f7c3-4ecb-bf56-f49724af8bb0"}
+{"action": "decision_locked", "at": "2026-10-08T19:56:36+00:00", "data": {"decision_id": "jsonld-availability-unavailable-059"}, "event_id": "f3b2b46b-208f-44c6-b684-00d6dd27b422"}
+{"action": "decision_locked", "at": "2026-10-08T19:56:36+00:00", "data": {"decision_id": "jsonld-optional-identifiers-059"}, "event_id": "89ac6373-a368-404f-9978-7ce6c237f2af"}
+{"action": "decision_proposed", "at": "2026-10-08T19:56:36+00:00", "data": {"decision_id": "storefront-stock-qty-display-followup-059"}, "event_id": "61a327ca-ef2c-4fa4-ba02-5a0eb7d6d999"}
+{"action": "decision_proposed", "at": "2026-10-08T19:56:36+00:00", "data": {"decision_id": "catalog-hide-oos-structured-data-followup-059"}, "event_id": "84e37c91-4030-40e4-95c7-d2b7285b38a9"}
