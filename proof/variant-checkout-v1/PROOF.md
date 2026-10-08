@@ -19,7 +19,8 @@ adjacent receipt before commit. Added regressions include orphan hiding,
 incompatible replay, permanent IDs and label revision conflicts, independent
 bulk outcomes and stale revisions, price-only bulk admission, foreign-member
 refusal, ordinary non-member bulk refusal, parent-CAS retry, same-price concurrent-write rollback protection,
-and immutable paid selection snapshots.
+immutable paid selection snapshots, and public price/listability admission
+for hidden defaults and independent variant siblings.
 
 The browser exercises actual pages, mounted routes and SQLite. Registry proof
 covers merchant editing/grouping using the official sandbox artifact. Paid

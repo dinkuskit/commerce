@@ -52,9 +52,15 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
     price(ids.parent, "2000"); price(ids.large, "2400"); availability(ids.parent, "out-of-stock"); availability(ids.large, "in-stock");
     await page.goto(new URL("/", baseURL).toString());
     const variants = page.locator(`[data-variants="${ids.parent}"]`);
-    await expect(variants).toContainText("Small");
     await expect(variants).toContainText("2400");
-    await expect(variants.locator(`input[value="${ids.parent}"]`)).toBeDisabled();
+    const listingCollection = native ? 'storefrontOutOfStockListing' : 'storefront_out_of_stock_listing';
+    const listing = db.prepare('SELECT data FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').get('dinkus-commerce',listingCollection,'active');
+    const hideOutOfStock = listing && JSON.parse(listing.data).hideOutOfStock === true;
+    if (hideOutOfStock) await expect(variants.locator(`input[value="${ids.parent}"]`)).toHaveCount(0);
+    else {
+      await expect(variants).toContainText('Small');
+      await expect(variants.locator(`input[value="${ids.parent}"]`)).toBeDisabled();
+    }
     await expect(variants.locator(`input[value="${ids.large}"]`)).toBeEnabled();
 
     if (native) {
