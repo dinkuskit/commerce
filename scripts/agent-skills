@@ -18,10 +18,13 @@ command -v "$python_bin" >/dev/null 2>&1 || die "Python 3.10+ is required"
   die "Python 3.10+ is required"
 
 install_saarius() {
+  mkdir -p "$CACHE_DIR"
+  lock="$CACHE_DIR/.saarius-$SAARIUS_SHA.lock"
+  while ! mkdir "$lock" 2>/dev/null; do sleep 1; done
+  trap 'rm -rf "$lock"' EXIT
   if [ ! -f "$SAARIUS_DIR/skills/grilltrack/scripts/grilltrack_ledger.py" ]; then
-    mkdir -p "$CACHE_DIR"
     tmp="$CACHE_DIR/.saarius-$$"
-    trap 'rm -rf "$tmp"' EXIT
+    trap 'rm -rf "$tmp" "$lock"' EXIT
     git clone --quiet --filter=blob:none --no-checkout "$SAARIUS_REPO" "$tmp"
     git -C "$tmp" fetch --quiet --depth 1 origin "$SAARIUS_SHA"
     git -C "$tmp" sparse-checkout set skills/grilltrack
@@ -33,6 +36,8 @@ install_saarius() {
   mkdir -p "$SKILLS_DIR"
   rm -rf "$SKILLS_DIR/grilltrack"
   cp -R "$SAARIUS_DIR/skills/grilltrack" "$SKILLS_DIR/grilltrack"
+  rm -rf "$lock"
+  trap - EXIT
 }
 
 find_cli() {
