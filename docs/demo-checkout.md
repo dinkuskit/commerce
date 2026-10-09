@@ -53,10 +53,12 @@ is an identity assertion checked against the Payments binding; it is not a
 credential. Do not accept provider, mode, binding, account, amount, or
 redirect values from the guest request.
 
-The installed Commerce runtime also needs the host's explicit scoped
-`network:request` grant for the exact bare `paymentsOrigin`. The shipped
-Commerce manifest is intentionally unavailable by default; adding a grant or
-deploying it is a host approval step, not a repository-side default.
+The installed Commerce runtime also needs the host's scoped `network:request`
+grant for the exact bare `paymentsOrigin`. The shipped Commerce manifest
+declares that capability with exactly one allowed host,
+`payments.dinkuskit.com`, so `paymentsOrigin` must be
+`https://payments.dinkuskit.com`. Activating the grant or deploying it is still
+a host approval step, not a repository-side default.
 
 ## Guest flow
 
