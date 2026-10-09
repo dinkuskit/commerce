@@ -157,7 +157,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
     // Product media reads alt text and dimensions live from the Media Library.
-    capabilities: ["media:read"],
+    capabilities: ["media:read", "network:request"],
+    allowedHosts: ["payments.dinkuskit.com"],
     storage: {
       catalogItems: {
         indexes: [],
