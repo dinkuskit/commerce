@@ -97,6 +97,9 @@ export * from "./features/inventory-setup/index.js";
 
 export * from "./features/storefront-availability/index.js";
 
+import { MERCHANT_STORE_SETTINGS_ROUTE, createMerchantStoreSettingsRoute } from "./features/store-settings/index.js";
+export * from "./features/store-settings/index.js";
+
 export * from "./features/store-policies/index.js";
 
 export * from "./features/structured-data/index.js";
@@ -254,6 +257,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
     },
     routes: {
+      [MERCHANT_STORE_SETTINGS_ROUTE]: createMerchantStoreSettingsRoute(),
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
       [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:

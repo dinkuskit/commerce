@@ -75,6 +75,17 @@ Authenticated admins with `plugins:manage` open Commerce Orders (`/orders`) in t
 
 Driver: `tests/integration/orders-inspection.test.mjs` exercises the real EmDash SQLite repository, canonical checkout writes, storage/UI pagination, duplicate and malformed records, and read-only inspection. `tests/sandbox/orders-blocks.spec.mjs`, via `npm run test:sandbox:orders`, exercises the installed Registry-format artifact, list/detail/back, keyboard, mobile, empty and unavailable states with synthetic completed orders. `tests/orders-blocks.test.mjs` owns forged-caller authorization denial. Run `bin/verify-commerce full`. Local installed proof is not Registry publication or live Stripe acceptance.
 
+## Merchant settings (`dinkus.store-settings`)
+
+`src/features/store-settings/` owns the plugin-scoped revision-fenced country and
+phone configuration, shared contact requirement getter, and BlockKit form. Public
+entry: `./features/store-settings`. Native Store embeds the same form through a
+private `content:edit_any` route; Registry Settings uses the existing private admin
+route. No new grant, public endpoint, or country eligibility enforcement is added.
+Focused proof: `tests/features/store-settings/` and
+`.grilltrack/proof/merchant-store-settings-20261008/PROOF.md`. Installed browser proof:
+`tests/merchant-settings.playwright.config.mjs`.
+
 ## Command-line client boundary
 
 The `dinkus-commerce` CLI ([docs/CLI-SPEC.md](docs/CLI-SPEC.md)) owns

@@ -1,5 +1,6 @@
 import { createElement, useEffect, useState, type FormEvent } from "react";
 import { apiFetch, parseApiResponse } from "emdash/plugin-utils";
+import { MerchantSettingsSection } from "./merchant-settings-page.js";
 
 import { COMMERCE_PLUGIN_ID } from "../features/catalog/browser/index.js";
 import {
@@ -68,6 +69,7 @@ export function StorePage() {
     "section",
     { className: "space-y-6" },
     createElement("h1", { className: "text-2xl font-semibold" }, "Store"),
+    createElement(MerchantSettingsSection),
     message === null
       ? null
       : createElement("p", { role: "alert", className: "text-kumo-danger" }, message),
