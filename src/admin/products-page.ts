@@ -229,6 +229,22 @@ export function ProductsPage() {
     }
   }
 
+  // Variant parents carry identifiers too; their public projection feeds structured data.
+  const identifiersForm = createElement(
+    "div",
+    { className: "space-y-3" },
+    createElement("h3", { className: "text-base font-semibold" }, "Identifiers"),
+    createElement("p", { className: "text-sm opacity-80" }, "Optional. Leave blank to omit from structured data."),
+    labeledField("GTIN", "product-gtin", gtin, setGtin),
+    labeledField("MPN", "product-mpn", mpn, setMpn),
+    labeledField("Brand", "product-brand", brand, setBrand),
+    createElement(
+      "button",
+      { type: "button", disabled: pending, onClick: () => void saveIdentifiers() },
+      "Save identifiers",
+    ),
+  );
+
   return createElement(
     "section",
     { className: "dk-products space-y-6" },
@@ -272,7 +288,12 @@ export function ProductsPage() {
     selectedId === null
       ? null
       : products.find(p => p.catalogItemId === selectedId)?.variantProduct?.options.length
-        ? createElement(VariantProductEditor, { product: products.find(p => p.catalogItemId === selectedId)!, reload: () => loadProducts(selectedId) })
+        ? createElement(
+            "div",
+            { className: "space-y-6" },
+            identifiersForm,
+            createElement(VariantProductEditor, { product: products.find(p => p.catalogItemId === selectedId)!, reload: () => loadProducts(selectedId) }),
+          )
       : createElement(
           "div",
           { className: "space-y-6" },
@@ -291,20 +312,7 @@ export function ProductsPage() {
                 }),
             createElement("button", { type: "submit", disabled: pending }, "Save"),
           ),
-          createElement(
-            "div",
-            { className: "space-y-3" },
-            createElement("h3", { className: "text-base font-semibold" }, "Identifiers"),
-            createElement("p", { className: "text-sm opacity-80" }, "Optional. Leave blank to omit from structured data."),
-            labeledField("GTIN", "product-gtin", gtin, setGtin),
-            labeledField("MPN", "product-mpn", mpn, setMpn),
-            labeledField("Brand", "product-brand", brand, setBrand),
-            createElement(
-              "button",
-              { type: "button", disabled: pending, onClick: () => void saveIdentifiers() },
-              "Save identifiers",
-            ),
-          ),
+          identifiersForm,
           createElement("div", null,
             createElement("h3", null, "Add choices"),
             labeledField("Option", "variant-option", optionLabel, setOptionLabel),
