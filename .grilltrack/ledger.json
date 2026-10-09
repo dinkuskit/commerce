@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-09T01:49:24+00:00",
-    "domain": "initial-release-physical-delivery",
-    "started_at": "2026-10-09T01:49:24+00:00",
+    "confirmed_at": "2026-10-09T02:36:07+00:00",
+    "domain": "Required checkout contact capture",
+    "started_at": "2026-10-09T02:36:07+00:00",
     "status": "confirmed",
-    "summary": "Initial release ships physical delivery to all 50 US states plus DC, including Alaska and Hawaii; territories and military addresses are deferred. Non-US billing is allowed for supported US delivery, subject to provider and legal eligibility. Tax remains deferred."
+    "summary": "Every new checkout, including account-free guests, captures a required email. Phone is shown and optional by default and required only when the merchant's Require phone number setting is on. The validated contact and the settings revision are frozen on the Commerce attempt and order, kept out of Payments requests and public status."
   },
   "decisions": [
     {
@@ -8810,6 +8810,61 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T01:49:24+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:631d3b9fac6e55f1af4d8ff100ee48d487d83efa",
+      "candidate_refs": [],
+      "choice": "Email required for every new checkout including guests with no account required. Phone visible and optional when Require phone number is off (default), required when on. Authoritative current settings resolved before attempt CAS/provider contact; freeze validated contact and exact nullable settings revision/flag on Commerce attempt and order. Later edits preserve original contact and paid money. No verification, sends, marketing, address or shipping consent; public status excludes contact.",
+      "context_ref": "file:docs/implementation/checkout-contact-v1.md",
+      "created_at": "2026-10-09T02:36:07+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Required checkout contact capture",
+      "history": [
+        {
+          "at": "2026-10-09T02:36:07+00:00",
+          "choice": "Email required for every new checkout including guests with no account required. Phone visible and optional when Require phone number is off (default), required when on. Authoritative current settings resolved before attempt CAS/provider contact; freeze validated contact and exact nullable settings revision/flag on Commerce attempt and order. Later edits preserve original contact and paid money. No verification, sends, marketing, address or shipping consent; public status excludes contact.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T02:36:07+00:00",
+          "choice": "Email required for every new checkout including guests with no account required. Phone visible and optional when Require phone number is off (default), required when on. Authoritative current settings resolved before attempt CAS/provider contact; freeze validated contact and exact nullable settings revision/flag on Commerce attempt and order. Later edits preserve original contact and paid money. No verification, sends, marketing, address or shipping consent; public status excludes contact.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-contact-email-phone-20261008",
+      "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
+      "question": "What contact does every new checkout capture and freeze?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T02:36:07+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -8846,5 +8901,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T01:49:24+00:00"
+  "updated_at": "2026-10-09T02:36:07+00:00"
 }

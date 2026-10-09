@@ -1,3 +1,4 @@
+import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startCheckout, reconcileCheckout, reconcilePaymentWakes, projectGuestCheckout, createTrustedTestPaymentPort, bindGuestCheckoutRuntime, NATIVE_GUEST_CHECKOUT_STORAGE } from '../../../dist/features/checkout/index.js';
@@ -10,7 +11,7 @@ test('nullish and primitive core cart inputs reject before storage or payment ef
   f.execution.store.read = async () => { reads++; throw new Error('must not read'); };
   f.execution.resolvePayments = async () => { paymentResolution++; throw new Error('must not resolve'); };
   for (const input of [null, undefined, 42, '', true]) {
-    await assert.rejects(startCheckout(f.execution, 'cart', input), { message: 'Invalid cart' });
+    await assert.rejects(startCheckout(f.execution, 'cart', withSyntheticCheckoutContact(input)), { message: 'Invalid cart' });
   }
   assert.equal(reads, 0);
   assert.equal(paymentResolution, 0);
@@ -89,7 +90,7 @@ test('canonical zero prices complete without coupon or payment identity', async 
   }
   let payments = 0;
   f.execution.resolvePayments = async () => { payments++; return null; };
-  const completed = await startCheckout(f.execution, 'cart', { lines: f.input.lines });
+  const completed = await startCheckout(f.execution, 'cart', withSyntheticCheckoutContact({ lines: f.input.lines }));
   assert.equal(completed.phase, 'paid');
   assert.equal(completed.order.total.minor, '0');
   assert.equal(Object.hasOwn(completed.order, 'paymentId'), false);
@@ -219,7 +220,7 @@ test('eight concurrent cart starts reserve one original coupon attempt; other ca
 
 test('core input rejects a non-string coupon and cannot silently drop it', async t => {
   const f = await pricingFixture(t);
-  await assert.rejects(startCheckout(f.execution, 'cart', { ...f.input, couponCode: 100 }), /Invalid cart/);
+  await assert.rejects(startCheckout(f.execution, 'cart', withSyntheticCheckoutContact({ ...f.input, couponCode: 100 })), /Invalid cart/);
   assert.equal(f.sessions.size, 0);
 });
 
@@ -423,7 +424,7 @@ test('shipping validation and absent coupon never create attempts or calls', asy
     assert.equal(f.sessions.size, 0);
   }
   const f = await pricingFixture(t);
-  await assert.rejects(startCheckout(f.execution, 'cart', { ...f.input, couponCode: 'MISSING' }), /Coupon unavailable/);
+  await assert.rejects(startCheckout(f.execution, 'cart', withSyntheticCheckoutContact({ ...f.input, couponCode: 'MISSING' })), /Coupon unavailable/);
   assert.equal(f.sessions.size, 0);
 });
 
@@ -434,7 +435,7 @@ test('pricing without bound coupon support rejects every coupon code before atte
   assert.equal(await f.execution.store.read('cart'), null);
   assert.equal(f.sessions.size, 0);
   assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 0);
-  const plain = await startCheckout(f.execution, 'cart', { lines: f.input.lines });
+  const plain = await startCheckout(f.execution, 'cart', withSyntheticCheckoutContact({ lines: f.input.lines }));
   assert.equal(plain.payment.pricing.couponDiscount.minor, '0');
   assert.equal(plain.payment.pricing.coupon, undefined);
   assert.equal(plain.coupon, undefined);
