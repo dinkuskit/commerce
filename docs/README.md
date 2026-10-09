@@ -2,6 +2,9 @@
 
 - [CHARTER.md](CHARTER.md) records the current public product and clean-room
   repository decisions.
+- [implementation/authorize-net-checkout-provider.md](implementation/authorize-net-checkout-provider.md)
+  is the proposal-only note for admitting `authorize_net` beside `stripe` in
+  installed checkout (GrillTrack `checkout-authorize-net-provider-20261008`).
 - [implementation/guest-checkout-public.md](implementation/guest-checkout-public.md)
   is the Template Store issue 20 handoff for mounted guest checkout.
 - [implementation/checkout-payment-window.md](implementation/checkout-payment-window.md)
@@ -11,6 +14,8 @@
   contract over EmDash's Media Library.
 - [REVIEW_RAIL.md](REVIEW_RAIL.md) describes the fail-closed ClawSweeper
   command boundary.
+- [CLI-SPEC.md](CLI-SPEC.md) is the draft `dinkus-commerce` command-line
+  client specification.
 
 Documentation must remain generic and public-safe. Private operating rationale,
 tenant specifics, and production configuration belong outside this repository.

@@ -1,3 +1,4 @@
+import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -45,7 +46,7 @@ test('reserved ticket ids persist on the order and a string reserved result stil
 });
 
 test('canonical sale price, duplicate lines, guest checkout and complete basket before redirect',async t => {
-  const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',[...cart,{catalogItemId:'one',quantity:1}]);
+  const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact([...cart,{catalogItemId:'one',quantity:1}]));
   assert.equal(a.payment.total.minor,'325'); assert.equal(a.payment.total.currency,'USD');
   assert.equal(a.phase,'paying'); assert.equal(a.session.expiresAt-a.session.createdAt,1800);
   assert.deepEqual(a.payment.paymentWindow,{minSeconds:1800,maxSeconds:1860});
@@ -55,10 +56,10 @@ test('canonical sale price, duplicate lines, guest checkout and complete basket 
 });
 
 test('concurrent start and durable restart reuse one reservation and one fixed session',async t => {
-  const f=setup(t); const results=await Promise.all(Array.from({length:8},() => startCheckout(f.execution,'guest-cart',cart)));
+  const f=setup(t); const results=await Promise.all(Array.from({length:8},() => startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart))));
   assert.equal(new Set(results.map(r => r.attemptId)).size,1); assert.equal(f.holds.size,1); assert.equal(f.sessions.size,1);
   const second=openStore(f.path); t.after(() => second.db.close()); f.setNow(1500);
-  const restarted={...f.execution,store:second.store}; const a=await startCheckout(restarted,'guest-cart',cart);
+  const restarted={...f.execution,store:second.store}; const a=await startCheckout(restarted,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.deepEqual(a.session,results[0].session);
   f.setPayment('paid'); const paid=await reconcileCheckout(restarted,'guest-cart',a.attemptId);
   assert.equal(paid.phase,'paid'); assert.equal(paid.order.total.minor,'250');
@@ -67,71 +68,71 @@ test('concurrent start and durable restart reuse one reservation and one fixed s
 });
 
 test('local deadline and unknown payment never release; confirmed expiry releases then retry reprices',async t => {
-  const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',cart);
-  f.setNow(3000); const elapsed=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
+  f.setNow(3000); const elapsed=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(elapsed.session,undefined); assert.equal(f.counts().releaseCalls,0);
   f.setPayment('unknown'); assert.equal((await reconcileCheckout(f.execution,'guest-cart',a.attemptId)).phase,'paying');
   assert.equal(f.counts().releaseCalls,0);
-  await assert.rejects(startCheckout(f.execution,'guest-cart',[{catalogItemId:'one',quantity:1}],a.attemptId),/frozen/);
+  await assert.rejects(startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact([{catalogItemId:'one',quantity:1}]),a.attemptId),/frozen/);
   f.setPayment('expired-unpaid'); const released=await reconcileCheckout(f.execution,'guest-cart',a.attemptId);
   assert.equal(released.phase,'released'); assert.equal(f.holds.get(a.attemptId).state,'released');
-  await assert.rejects(startCheckout(f.execution,'guest-cart',cart),/Retry requires/);
+  await assert.rejects(startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart)),/Retry requires/);
   f.execution.catalog.prices.records.get('one').sale.minor='50'; f.setPayment('open');
-  const next=await startCheckout(f.execution,'guest-cart',cart,a.attemptId);
+  const next=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart),a.attemptId);
   assert.notEqual(next.attemptId,a.attemptId); assert.equal(next.payment.total.minor,'200');
   assert.equal((await reconcileCheckout(f.execution,'guest-cart',a.attemptId)).phase,'released');
   assert.equal((await f.execution.store.read('guest-cart')).record.attempts.length,2);
 });
 
 test('ambiguous stock commit resumes same operation; partial hold never produces a session',async t => {
-  const f=setup(t); f.setStock('ambiguous'); const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t); f.setStock('ambiguous'); const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(a.phase,'reserving'); assert.equal(f.sessions.size,0);
-  f.setStock('reserved'); const resumed=await startCheckout(f.execution,'guest-cart',cart);
+  f.setStock('reserved'); const resumed=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(resumed.attemptId,a.attemptId); assert.equal(f.holds.size,1); assert.equal(resumed.phase,'paying');
-  const g=setup(t);g.setStock('partial'); const partial=await startCheckout(g.execution,'other-cart',cart);
+  const g=setup(t);g.setStock('partial'); const partial=await startCheckout(g.execution,'other-cart',withSyntheticCheckoutContact(cart));
   assert.equal(partial.phase,'reserving'); assert.equal(g.sessions.size,0);
   // Inventory reconciles/rolls back its partial work before declaring terminal rejection.
   g.holds.set(partial.attemptId,{state:'rejected'});
-  assert.equal((await startCheckout(g.execution,'other-cart',cart)).phase,'released');
+  assert.equal((await startCheckout(g.execution,'other-cart',withSyntheticCheckoutContact(cart))).phase,'released');
 });
 
 test('shortage and provider outage fail closed; unmanaged checkout invokes no Inventory operations',async t => {
-  const f=setup(t); f.setStock('rejected'); assert.equal((await startCheckout(f.execution,'guest-cart',cart)).phase,'released');assert.equal(f.sessions.size,0);
+  const f=setup(t); f.setStock('rejected'); assert.equal((await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart))).phase,'released');assert.equal(f.sessions.size,0);
   const g=setup(t);g.execution.resolveInventory=async () => null;
-  assert.equal((await startCheckout(g.execution,'guest-cart',cart)).phase,'reserving');assert.equal(g.sessions.size,0);
+  assert.equal((await startCheckout(g.execution,'guest-cart',withSyntheticCheckoutContact(cart))).phase,'reserving');assert.equal(g.sessions.size,0);
   const u=setup(t,false);u.execution.resolveInventory=async () => {throw Error('must not call');};u.execution.availability.resolveProvider=async () => {throw Error('must not read');};
-  assert.equal((await startCheckout(u.execution,'guest-cart',cart)).phase,'paying');assert.deepEqual(u.counts(),{reserveCalls:0,releaseCalls:0});
+  assert.equal((await startCheckout(u.execution,'guest-cart',withSyntheticCheckoutContact(cart))).phase,'paying');assert.deepEqual(u.counts(),{reserveCalls:0,releaseCalls:0});
 });
 
 test('failed/ambiguous payment creation preserves holds until terminal creation fence or recovered session',async t => {
-  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(a.phase,'paying');assert.equal(a.session,undefined);assert.equal(f.counts().releaseCalls,0);
-  f.setNow(1500);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',cart);
+  f.setNow(1500);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(recovered.session.createdAt,1000);assert.equal(f.sessions.size,1);
-  const g=setup(t);g.setPayment('unknown'); const unknown=await startCheckout(g.execution,'guest-cart',cart);
+  const g=setup(t);g.setPayment('unknown'); const unknown=await startCheckout(g.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(unknown.phase,'paying');assert.equal(g.counts().releaseCalls,0);
   g.setPayment('not-created'); assert.equal((await reconcileCheckout(g.execution,'guest-cart',unknown.attemptId)).phase,'released');assert.equal(g.counts().releaseCalls,1);
 });
 
 test('duplicate and out-of-order event hints race through authoritative paid state to one order',async t => {
-  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);f.setPayment('paid');
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));f.setPayment('paid');
   const results=await Promise.all(Array.from({length:8},() => reconcileCheckout(f.execution,'guest-cart',a.attemptId)));
   assert.equal(new Set(results.map(r => r.order.orderId)).size,1);assert.equal(f.counts().releaseCalls,0);
   assert.deepEqual((await f.execution.store.read('guest-cart')).record.attempts[0].order,results[0].order);
 });
 
 test('release failure/restart remains retryable and blocks new checkout',async t => {
-  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);f.setPayment('expired-unpaid');
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));f.setPayment('expired-unpaid');
   const release=f.inventory.release;f.inventory.release=async () => 'unknown';
   assert.equal((await reconcileCheckout(f.execution,'guest-cart',a.attemptId)).phase,'releasing');
-  assert.equal((await startCheckout(f.execution,'guest-cart',cart,a.attemptId)).phase,'releasing'); assert.equal(f.sessions.size,1);
+  assert.equal((await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart),a.attemptId)).phase,'releasing'); assert.equal(f.sessions.size,1);
   f.inventory.release=release;assert.equal((await reconcileCheckout(f.execution,'guest-cart',a.attemptId)).phase,'released');
 });
 
 test('reject browser totals, invalid quantities and mismatched authoritative payment identity/amount/window',async t => {
-  const f=setup(t); await assert.rejects(startCheckout(f.execution,'guest-cart',[{...cart[0],total:'1'}]),/Invalid cart/);
-  await assert.rejects(startCheckout(f.execution,'guest-cart',[{catalogItemId:'one',quantity:0}]),/Invalid cart/);
-  const a=await startCheckout(f.execution,'guest-cart',cart);f.setPayment('paid');
+  const f=setup(t); await assert.rejects(startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact([{...cart[0],total:'1'}])),/Invalid cart/);
+  await assert.rejects(startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact([{catalogItemId:'one',quantity:0}])),/Invalid cart/);
+  const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));f.setPayment('paid');
   const lookup=f.execution.payments.lookup;
   for (const mutate of [r => ({...r,attemptId:'other'}),r => ({...r,total:{currency:'USD',minor:'1'}}),r => ({...r,session:{...r.session,expiresAt:r.session.expiresAt+1}})]) {
     f.execution.payments.lookup=async req => mutate(await lookup(req));
@@ -163,16 +164,16 @@ test('independent processes converge on persisted providers, then a fresh proces
 });
 
 test('payment binding is frozen across configuration changes and missing old adapter preserves uncertainty',async t => {
-  const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t); const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   f.execution.paymentBindingRef='replacement-binding';
-  assert.equal((await startCheckout(f.execution,'guest-cart',cart)).payment.bindingRef,'stripe-test-binding');
+  assert.equal((await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart))).payment.bindingRef,'stripe-test-binding');
   f.execution.resolvePayments=async () => null;
   assert.equal((await reconcileCheckout(f.execution,'guest-cart',a.attemptId)).phase,'paying');
   assert.equal(f.counts().releaseCalls,0);
 });
 
 test('stale open lookup racing a payment confirmation cannot overwrite the paid receipt',async t => {
-  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   let resume, captured; const blocked=new Promise(r => captured=r), gate=new Promise(r => resume=r);
   const original=f.execution.payments.lookup;let first=true;
   f.execution.payments.lookup=async request => {
@@ -185,16 +186,16 @@ test('stale open lookup racing a payment confirmation cannot overwrite the paid 
 });
 
 test('a known payment session cannot be released by a contradictory not-created response',async t => {
-  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);f.setPayment('not-created');
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));f.setPayment('not-created');
   await assert.rejects(reconcileCheckout(f.execution,'guest-cart',a.attemptId),/Known payment session/);
   assert.equal(f.counts().releaseCalls,0);
 });
 
 test('a recovered expired open session persists so restart cannot release on contradictory not-created',async t => {
-  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(a.phase,'paying');assert.equal(a.session,undefined);
   assert.equal((await f.execution.store.read('guest-cart')).record.attempts[0].session,undefined);
-  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',cart);
+  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(recovered.phase,'paying');assert.equal(recovered.session,undefined);assert.equal(f.counts().releaseCalls,0);
   const original=f.sessions.get(a.attemptId).session;
   const persisted=(await f.execution.store.read('guest-cart')).record.attempts[0].session;
@@ -209,7 +210,7 @@ test('a recovered expired open session persists so restart cannot release on con
 });
 
 test('paid lookup with reversed session keys retains the paid order',async t => {
-  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   const original=f.sessions.get(a.attemptId).session;const reordered=reversedSession(original);
   f.setPayment('paid');const lookup=f.execution.payments.lookup;
   f.execution.payments.lookup=async req => ({...await lookup(req),session:reordered});
@@ -220,21 +221,21 @@ test('paid lookup with reversed session keys retains the paid order',async t => 
 });
 
 test('paying retry ensure with reversed session keys preserves the same session and deadline',async t => {
-  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   const original=a.session;const reordered=reversedSession(original);
   const ensure=f.execution.payments.ensureSession;
   f.execution.payments.ensureSession=async req => ({...await ensure(req),session:reordered});
-  const retry=await startCheckout(f.execution,'guest-cart',cart);
+  const retry=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(retry.attemptId,a.attemptId);assert.equal(retry.phase,'paying');
   assert.deepEqual(retry.session,original);assert.equal(retry.session.createdAt,1000);assert.equal(retry.session.expiresAt,2800);
   assert.equal(f.sessions.size,1);assert.equal(f.counts().releaseCalls,0);
 });
 
 test('late recovered open then reordered paid lookup retains one order',async t => {
-  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(a.phase,'paying');assert.equal(a.session,undefined);
   const original=f.sessions.get(a.attemptId).session;const reordered=reversedSession(original);
-  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',cart);
+  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(recovered.phase,'paying');assert.equal(recovered.session,undefined);assert.equal(f.counts().releaseCalls,0);
   const persisted=(await f.execution.store.read('guest-cart')).record.attempts[0].session;
   assert.deepEqual(persisted,original);assert.equal(persisted.createdAt,1000);assert.equal(persisted.expiresAt,2800);
@@ -245,10 +246,10 @@ test('late recovered open then reordered paid lookup retains one order',async t 
 });
 
 test('late recovered open then reordered expired-unpaid releases once',async t => {
-  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',cart);
+  const f=setup(t);f.setPayment('ambiguous');const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(a.phase,'paying');assert.equal(a.session,undefined);
   const original=f.sessions.get(a.attemptId).session;const reordered=reversedSession(original);
-  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',cart);
+  f.setNow(2801);f.setPayment('open');const recovered=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   assert.equal(recovered.phase,'paying');assert.equal(recovered.session,undefined);
   const persisted=(await f.execution.store.read('guest-cart')).record.attempts[0].session;
   assert.deepEqual(persisted,original);assert.equal(persisted.createdAt,1000);assert.equal(persisted.expiresAt,2800);
@@ -259,7 +260,7 @@ test('late recovered open then reordered expired-unpaid releases once',async t =
 });
 
 test('real session field changes remain rejected while paying holds stay',async t => {
-  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',cart);const lookup=f.execution.payments.lookup;
+  const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));const lookup=f.execution.payments.lookup;
   for (const mutate of [
     s => ({...s,sessionId:'other-session'}),
     s => ({...s,redirectUrl:'https://checkout.stripe.com/other'}),

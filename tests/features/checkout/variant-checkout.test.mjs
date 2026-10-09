@@ -1,3 +1,4 @@
+import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createCatalogItem, addCatalogVariantOption, saveCatalogProductPrices, updateCatalogVariantLabels } from '../../../dist/features/catalog/kernel/index.js';
@@ -36,10 +37,10 @@ test('merchant variant writes deny Small before Payments and freeze Large money,
   assert.equal(expanded.product.defaultMemberId, 'small');
   await saveCatalogProductPrices(writes, { catalogItemId: 'small', regular: '20', sale: '', stockStatus: 'out-of-stock', expectedRevision: null });
   await saveCatalogProductPrices(writes, { catalogItemId: 'large', regular: '24', sale: '', stockStatus: 'in-stock', expectedRevision: null });
-  await assert.rejects(startCheckout(f.execution, 'small-cart', [{ catalogItemId: 'small', quantity: 1 }]));
+  await assert.rejects(startCheckout(f.execution, 'small-cart', withSyntheticCheckoutContact([{ catalogItemId: 'small', quantity: 1 }])));
   assert.equal(f.sessions.size, 0);
   assert.equal(f.holds.size, 0);
-  const started = await startCheckout(f.execution, 'large-cart', [{ catalogItemId: 'large', quantity: 1 }]);
+  const started = await startCheckout(f.execution, 'large-cart', withSyntheticCheckoutContact([{ catalogItemId: 'large', quantity: 1 }]));
   assert.equal(started.payment.total.minor, '2400');
   const frozen = structuredClone(started.payment);
   assert.equal(started.variantSelections[0].selections[0].valueLabel, 'Large');
