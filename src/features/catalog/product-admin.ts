@@ -1,9 +1,7 @@
 import {
   normalizeStoredStockManagement,
-  releaseManagedSkuRegistrationClaims,
   setManageStock,
-  type ManagedSkuRegistrationClaimReleaseStorage,
-} from "../inventory-provider/index.js";
+} from "../inventory-provider/kernel/index.js";
 import { CatalogError } from "./errors.js";
 import {
   CLERK_DOLLAR_MESSAGE,
@@ -38,6 +36,10 @@ import type {
   Money,
 } from "./types.js";
 import { resolveCatalogVariantMember, variantSelections } from "./variants.js";
+
+function catalogFail(code: ConstructorParameters<typeof CatalogError>[0], message: string, options?: ErrorOptions): never {
+  throw new CatalogError(code, message, options);
+}
 
 export { CLERK_STOCK_STATUSES, type ClerkStockStatus } from "./clerk-stock.js";
 
@@ -126,7 +128,11 @@ interface SaveStorage {
   catalog: CatalogProductSaveCatalogStorage;
   prices: CatalogPriceStorage;
   availability: CatalogManualAvailabilityStorage;
-  claims: ManagedSkuRegistrationClaimReleaseStorage;
+  /**
+   * Native Manage Stock off releases registration claims. Sandbox omits this;
+   * v1 admission refuses Manage Stock mutations there.
+   */
+  releaseRegistrationClaims?: (catalogItemId: string) => Promise<void>;
 }
 
 function isClerkStockStatus(value: string): value is ClerkStockStatus {
@@ -156,16 +162,16 @@ async function readPages<T>(
     try {
       result = await query({ limit: LIST_PAGE_LIMIT, cursor });
     } catch (error) {
-      throw new CatalogError("STORAGE_UNAVAILABLE", failure, { cause: error });
+      catalogFail("STORAGE_UNAVAILABLE", failure, { cause: error });
     }
     for (const item of result.items) rows.push(item.data);
     if (!result.hasMore) return rows;
     if (result.cursor === undefined || result.cursor === cursor) {
-      throw new CatalogError("STORAGE_UNAVAILABLE", failure);
+      catalogFail("STORAGE_UNAVAILABLE", failure);
     }
     cursor = result.cursor;
   }
-  throw new CatalogError("STORAGE_UNAVAILABLE", failure);
+  catalogFail("STORAGE_UNAVAILABLE", failure);
 }
 
 export async function listCatalogProducts(
@@ -281,23 +287,23 @@ function displayForm(
 
 function normalizeSaveInput(value: unknown): SaveCatalogProductPricesInput {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new CatalogError("INVALID_INPUT", "price save input must be an object");
+    catalogFail("INVALID_INPUT", "price save input must be an object");
   }
   const input = value as Record<string, unknown>;
   if (typeof input.catalogItemId !== "string" || input.catalogItemId.trim().length === 0) {
-    throw new CatalogError("INVALID_INPUT", "catalogItemId must be a non-empty string");
+    catalogFail("INVALID_INPUT", "catalogItemId must be a non-empty string");
   }
   if (typeof input.regular !== "string" || typeof input.sale !== "string") {
-    throw new CatalogError("INVALID_INPUT", "price fields must be strings");
+    catalogFail("INVALID_INPUT", "price fields must be strings");
   }
   if (input.stockStatus !== undefined && typeof input.stockStatus !== "string") {
-    throw new CatalogError("INVALID_INPUT", "stock status must be a string");
+    catalogFail("INVALID_INPUT", "stock status must be a string");
   }
   if (input.manageStock !== undefined && typeof input.manageStock !== "boolean") {
-    throw new CatalogError("INVALID_INPUT", "manageStock must be a boolean");
+    catalogFail("INVALID_INPUT", "manageStock must be a boolean");
   }
   if (input.expectedRevision !== undefined && input.expectedRevision !== null && typeof input.expectedRevision !== "string") {
-    throw new CatalogError("INVALID_INPUT", "invalid price revision");
+    catalogFail("INVALID_INPUT", "invalid price revision");
   }
   return {
     catalogItemId: input.catalogItemId,
@@ -317,7 +323,7 @@ export async function saveCatalogProductPrices(
   const catalogItemId = input.catalogItemId.trim();
   const item = await storage.catalog.get(catalogItemId);
   if (item === null || item.recordKind !== "catalog-item" || item.itemId !== catalogItemId) {
-    throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
+    catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
   }
 
   const currentStockManagement = normalizeStoredStockManagement(item.stockManagement);
@@ -365,7 +371,7 @@ export async function saveCatalogProductPrices(
   const versioned = input.expectedRevision === undefined ? undefined : await storage.prices.getVersioned(catalogItemId);
   const current = await resolveCatalogItemPrice(versioned === undefined ? storage.prices : { ...storage.prices, get: async () => versioned?.value ?? null }, catalogItemId);
   if (versioned !== undefined && (versioned?.revision ?? null) !== input.expectedRevision) {
-    throw new CatalogError("COMMAND_CONFLICT", "Price changed; reload before saving");
+    catalogFail("COMMAND_CONFLICT", "Price changed; reload before saving");
   }
   const currentRegular = current.regular ?? null;
   const currentSale = current.sale ?? null;
@@ -405,7 +411,7 @@ export async function saveCatalogProductPrices(
         const applied = targetRegular === null
           ? await storage.prices.compareAndDelete(catalogItemId, versioned!.revision)
           : await storage.prices.compareAndSet(catalogItemId, versioned?.revision ?? null, record);
-        if (!applied.applied) throw new CatalogError("COMMAND_CONFLICT", "Price changed; reload before saving");
+        if (!applied.applied) catalogFail("COMMAND_CONFLICT", "Price changed; reload before saving");
         if ("revision" in applied && typeof applied.revision === "string") committedRevision = applied.revision;
       } else await commitCatalogItemPrice(storage, {
         catalogItemId,
@@ -417,8 +423,12 @@ export async function saveCatalogProductPrices(
     if (!manageUnchanged) {
       await persistManageStock(storage, item, nextManaged);
     }
-    if (!nextManaged) {
-      await releaseUnmanagedRegistrationClaims(storage, catalogItemId);
+    if (!nextManaged && storage.releaseRegistrationClaims) {
+      try {
+        await storage.releaseRegistrationClaims(catalogItemId);
+      } catch (error) {
+        catalogFail("STORAGE_UNAVAILABLE", "managed SKU registration claim release failed", { cause: error });
+      }
     }
     if (!nextManaged && nextStockStatus !== null && !stockUnchanged) {
       await setCatalogItemManualAvailability(
@@ -469,22 +479,22 @@ export async function bulkSaveCatalogProductPrices(
   inputs: readonly BulkCatalogProductPriceInput[],
 ): Promise<{ outcomes: BulkCatalogProductPriceOutcome[] }> {
   if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 100) {
-    throw new CatalogError("INVALID_INPUT", "bulk price input must contain one to one hundred rows");
+    catalogFail("INVALID_INPUT", "bulk price input needs 1-100 rows");
   }
   const outcomes: BulkCatalogProductPriceOutcome[] = [];
   for (const input of inputs) {
     try {
       if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision")) {
-        throw new CatalogError("INVALID_INPUT", "each bulk row requires its loaded price revision");
+        catalogFail("INVALID_INPUT", "each bulk row needs its loaded price revision");
       }
       if (!(await resolveCatalogVariantMember(storage.catalog, input.catalogItemId))?.member) {
-        throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
+        catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
       }
       if (Object.keys(input).some(key => !["catalogItemId", "regular", "sale", "expectedRevision"].includes(key))) {
-        throw new CatalogError("INVALID_INPUT", "bulk edits accept price fields only");
+        catalogFail("INVALID_INPUT", "bulk edits accept price fields only");
       }
       const saved = await saveCatalogProductPrices(storage, input);
-      if (!saved.saved) throw new CatalogError("INVALID_INPUT", saved.message ?? "invalid price");
+      if (!saved.saved) catalogFail("INVALID_INPUT", saved.message ?? "invalid price");
       outcomes.push({ catalogItemId: input.catalogItemId, applied: true });
     } catch (error) {
       const code = error instanceof CatalogError && ["INVALID_INPUT", "CATALOG_ITEM_NOT_FOUND"].includes(error.code)
@@ -510,12 +520,12 @@ async function persistManageStock(
   try {
     latest = await storage.catalog.getVersioned(item.itemId);
   } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "Manage Stock update failed", {
+    catalogFail("STORAGE_UNAVAILABLE", "Manage Stock update failed", {
       cause: error,
     });
   }
   if (latest === null || latest.value.recordKind !== "catalog-item") {
-    throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
+    catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
   }
   const latestState = normalizeStoredStockManagement(latest.value.stockManagement);
   if (
@@ -523,10 +533,7 @@ async function persistManageStock(
     latestState.mode === "managed" &&
     latestState.status === "setup-pending"
   ) {
-    throw new CatalogError(
-      "MANAGE_STOCK_SETUP_PENDING",
-      MANAGE_STOCK_SETUP_PENDING_MESSAGE,
-    );
+    catalogFail("MANAGE_STOCK_SETUP_PENDING", MANAGE_STOCK_SETUP_PENDING_MESSAGE,);
   }
   if (manageStock && latestState.mode === "managed") return;
   const nextItem: CatalogItemRecord = {
@@ -541,30 +548,12 @@ async function persistManageStock(
       nextItem,
     );
   } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "Manage Stock update failed", {
+    catalogFail("STORAGE_UNAVAILABLE", "Manage Stock update failed", {
       cause: error,
     });
   }
   if (!applied.applied) {
-    throw new CatalogError(
-      "STORAGE_UNAVAILABLE",
-      "Manage Stock update lost to a concurrent write",
-    );
-  }
-}
-
-async function releaseUnmanagedRegistrationClaims(
-  storage: SaveStorage,
-  catalogItemId: string,
-): Promise<void> {
-  try {
-    await releaseManagedSkuRegistrationClaims(storage.claims, { catalogItemId });
-  } catch (error) {
-    throw new CatalogError(
-      "STORAGE_UNAVAILABLE",
-      "managed SKU registration claim release failed",
-      { cause: error },
-    );
+    catalogFail("STORAGE_UNAVAILABLE", "Manage Stock lost to concurrent write",);
   }
 }
 

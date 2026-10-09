@@ -1,10 +1,8 @@
-import { hasPermission, toRoleLevel } from '@emdash-cms/auth';
 import type { Block } from '@emdash-cms/blocks/server';
 import type { SandboxedRouteContext } from 'emdash/plugin';
 
 export function adminAuthorized(route: SandboxedRouteContext): boolean {
-  try { return route.ui?.surface === 'admin-page' && !!route.user && hasPermission({ role: toRoleLevel(route.user.role) }, 'plugins:manage'); }
-  catch { return false; }
+  return route.ui?.surface === "admin-page" && route.user?.role === 50;
 }
 export function pageOffset(offset: number, count: number): number {
   return Math.min(offset, Math.max(0, Math.floor((count - 1) / 25) * 25));

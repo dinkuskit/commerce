@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
-import type { InventoryProviderBinding } from "../inventory-provider/index.js";
+import type { InventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
 import type { CheckoutCouponPort, CouponQuoteSnapshot } from "../coupons/index.js";
 import type {
@@ -55,10 +55,20 @@ export interface StockRequest {
   binding: InventoryProviderBinding;
   requirements: StockRequirement[];
 }
+/**
+ * Success may name the tickets this reserve already minted, one per stock line.
+ * A string "reserved" is the previous adapter and carries no ids.
+ * Rejection and an unknown outcome stay strings.
+ */
+export type CheckoutReserveResult =
+  | "reserved"
+  | "rejected"
+  | "unknown"
+  | { readonly outcome: "reserved"; readonly ticketIds: readonly string[] };
 /** Durable whole-basket operation. Never substitute a local stock ledger. */
 export interface CheckoutInventoryPort {
   /** Same operation/request forever; terminal rejection has no holds and cannot later succeed. */
-  reserve(request: StockRequest): Promise<"reserved" | "rejected" | "unknown">;
+  reserve(request: StockRequest): Promise<CheckoutReserveResult>;
   /** Idempotent terminal fence, including an in-flight reserve. No subsequent reacquisition. */
   release(request: StockRequest): Promise<"released" | "unknown">;
 }
@@ -152,6 +162,8 @@ interface CommerceOrderBase {
   total: Money;
   pricing?: CheckoutPricingSnapshot;
   variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
+  /** Inventory hold ids from reserve. Absent when the adapter returned a string. */
+  ticketIds?: readonly string[];
   contactSnapshot?: CheckoutContactSnapshot;
 }
 export type CommerceOrder =
@@ -165,6 +177,8 @@ export interface CheckoutAttempt {
   phase: "reserving" | "paying" | "releasing" | "released" | "paid";
   session?: PaymentSession;
   order?: CommerceOrder;
+  /** Copied onto the order when payment completes. Not an order number in Inventory. */
+  ticketIds?: readonly string[];
   variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
   contactSnapshot?: CheckoutContactSnapshot;
   /** Durable canonical reason for releasing; host support or elapsed time is never a reason. */

@@ -15,7 +15,7 @@ import type {
 import {
   createInitialStockManagement,
   normalizeStoredStockManagement,
-} from "../inventory-provider/index.js";
+} from "../inventory-provider/kernel/index.js";
 
 export interface CreateCatalogItemOptions {
   /** Trusted host collection name, never taken from clerk input. */
@@ -81,7 +81,7 @@ async function findCommand(
   if (items.length > 1) {
     throw new CatalogError(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      "catalog command uniqueness is not trustworthy",
+      "catalog command uniqueness untrustworthy",
     );
   }
   return items[0] ?? null;
@@ -99,7 +99,7 @@ function resolveExistingCommand(
   if (!sameCommandPayload(existing, input)) {
     throw new CatalogError(
       "COMMAND_CONFLICT",
-      "commandId was already used with different catalog input",
+      "commandId already used with different catalog input",
     );
   }
   return { created: false, item: existing };
@@ -165,7 +165,7 @@ export async function createCatalogItem(
   } catch (error) {
     const uniqueField = identifyConfirmedUniqueViolation(error, options.collection, options.pluginId);
     if (!uniqueField) {
-      throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item creation failed", {
+      throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item create failed", {
         cause: error,
       });
     }
@@ -177,7 +177,7 @@ export async function createCatalogItem(
     }
     throw new CatalogError(
       "STORAGE_CONSTRAINTS_UNAVAILABLE",
-      "catalog command conflict could not be resolved",
+      "catalog command conflict unresolved",
       { cause: error },
     );
   }

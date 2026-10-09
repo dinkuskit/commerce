@@ -10,6 +10,7 @@ import {
   createManagedSkuRegistrationClaimKey,
   createPlugin,
   listCatalogProducts,
+  releaseManagedSkuRegistrationClaims,
   resolveCatalogItemPrice,
   saveCatalogProductPrices,
 } from "../../../dist/index.js";
@@ -117,13 +118,20 @@ function item(overrides) {
   };
 }
 
+function bindClaimRelease(stores, claims) {
+  stores.claims = claims;
+  stores.releaseRegistrationClaims = async (catalogItemId) => {
+    await releaseManagedSkuRegistrationClaims(claims, { catalogItemId });
+  };
+  return stores;
+}
+
 function storage(records = [item()]) {
-  return {
+  return bindClaimRelease({
     catalog: new MemoryCollection(records),
     prices: new MemoryCollection(),
     availability: new MemoryCollection(),
-    claims: new MemoryCollection(),
-  };
+  }, new MemoryCollection());
 }
 
 function savedForm(overrides = {}) {
@@ -568,7 +576,7 @@ test("unchecking Manage stock restores dormant status and drops the setup claim"
       status: "out-of-stock",
     },
   ]);
-  stores.claims = new MemoryCollection([
+  bindClaimRelease(stores, new MemoryCollection([
     {
       recordKind: "managed-sku-registration-claim",
       recordId: "claim-1",
@@ -578,7 +586,7 @@ test("unchecking Manage stock restores dormant status and drops the setup claim"
       request: { poolId: "pool-1", sku: "BAG-1", displayNameIfNew: "Bag" },
       createdAt: "2026-09-26T00:00:00.000Z",
     },
-  ]);
+  ]));
   const saved = await saveCatalogProductPrices(stores, {
     catalogItemId: "item-bag",
     regular: "",

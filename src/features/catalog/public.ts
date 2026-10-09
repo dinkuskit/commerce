@@ -1,7 +1,7 @@
 import type { PluginContext } from "emdash/plugin";
 import { resolveCatalogItemPrice } from "./price.js";
 import { loadCatalogItemMedia, type CatalogMediaStorage } from "./media.js";
-import { createProductImageProjector, type PublicCatalogImage } from "./media-projection.js";
+import { createProductImageProjector, type PublicCatalogImage } from "./media-projector.js";
 import {
   loadStorefrontPlaceholderImage,
   resolveStorefrontAvailability,

@@ -1,5 +1,6 @@
-import { loadCatalogItemBackorderPolicy, normalizeMoney, parseMinorUnits, resolveCatalogItemPrice, resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
-import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
+import { loadCatalogItemBackorderPolicy } from "../catalog/kernel/index.js";
+import { normalizeMoney, parseMinorUnits, resolveCatalogItemPrice, resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
+import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import { resolveStorefrontAvailability } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
@@ -281,6 +282,18 @@ async function finishPaidCoupon(e: CheckoutExecution, cartId: string, attempt: C
   return attempt;
 }
 
+function reserveTicketIds(result: unknown, lines: number): readonly string[] | null | "rejected" | "unknown" {
+  if (result === "unknown") return "unknown";
+  if (result === "rejected") return "rejected";
+  if (result === "reserved") return null;
+  if (!result || typeof result !== "object" || Array.isArray(result)) fail("Invalid reservation outcome");
+  const value = result as { outcome?: unknown; ticketIds?: unknown };
+  if (value.outcome !== "reserved" || !Array.isArray(value.ticketIds)) fail("Invalid reservation outcome");
+  const ids = value.ticketIds;
+  if (ids.length !== lines || new Set(ids).size !== ids.length) fail("Invalid reservation outcome");
+  for (const id of ids) if (typeof id !== "string" || !id.trim() || id !== id.trim()) fail("Invalid reservation outcome");
+  return ids;
+}
 function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptId: string, paymentId?: string): void {
   next.phase = "paid";
   next.order = {
@@ -289,6 +302,7 @@ function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptI
     lines: attempt.payment.lines, total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
     ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
+    ...(attempt.ticketIds ? { ticketIds: [...attempt.ticketIds] } : {}),
     ...(next.contactSnapshot ? { contactSnapshot: next.contactSnapshot } : {}),
   };
 }
@@ -312,10 +326,15 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         if (!provider) return attempt;
         let result;
         try { result = await provider.reserve(structuredClone(attempt.stock)); } catch { return attempt; }
-        if (result === "unknown") return attempt;
-        if (result !== "reserved" && result !== "rejected") fail("Invalid reservation outcome");
-        next.phase = result === "reserved" ? "paying" : next.coupon ? "releasing" : "released";
-        if (result === "rejected") next.paymentReleaseReason = "never-started";
+        const ticketIds = reserveTicketIds(result, attempt.stock.requirements.length);
+        if (ticketIds === "unknown") return attempt;
+        if (ticketIds === "rejected") {
+          next.phase = next.coupon ? "releasing" : "released";
+          next.paymentReleaseReason = "never-started";
+        } else {
+          if (ticketIds) next.ticketIds = ticketIds;
+          next.phase = "paying";
+        }
       } else next.phase = "paying";
       if (next.phase === "paying" && next.coupon?.status === "unreserved") {
         try {
