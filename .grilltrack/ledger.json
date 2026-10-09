@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-09T01:30:05+00:00",
-    "domain": "Merchant country and checkout contact settings",
-    "started_at": "2026-10-09T01:30:05+00:00",
+    "confirmed_at": "2026-10-09T01:49:24+00:00",
+    "domain": "initial-release-physical-delivery",
+    "started_at": "2026-10-09T01:49:24+00:00",
     "status": "confirmed",
-    "summary": "A merchant configures store country and optional extra selling/shipping countries in Commerce settings, plus an off-by-default Require phone number toggle. Checkout does not yet enforce country eligibility. Absent country setup is not a checkout gate."
+    "summary": "Initial release ships physical delivery to all 50 US states plus DC, including Alaska and Hawaii; territories and military addresses are deferred. Non-US billing is allowed for supported US delivery, subject to provider and legal eligibility. Tax remains deferred."
   },
   "decisions": [
     {
@@ -8724,6 +8724,92 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T01:30:05+00:00",
       "verification_ref": "file:.grilltrack/proof/merchant-store-settings-20261008/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+      "candidate_refs": [],
+      "choice": "Physical delivery only to United States all 50 states plus District of Columbia, including Alaska and Hawaii. Territories and military addresses deferred. Reject unsupported delivery regions before payable physical checkout, independently of billing-country origin. Tax rules remain deferred.",
+      "context_ref": ".grilltrack/proof/us-initial-release-scope-20261008/PROOF.md",
+      "created_at": "2026-10-09T01:49:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "merchant-country-settings-001"
+      ],
+      "domain": "initial-release-physical-delivery",
+      "history": [
+        {
+          "at": "2026-10-09T01:49:24+00:00",
+          "choice": "Physical delivery only to United States all 50 states plus District of Columbia, including Alaska and Hawaii. Territories and military addresses deferred. Reject unsupported delivery regions before payable physical checkout, independently of billing-country origin. Tax rules remain deferred.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "initial-physical-delivery-coverage-001",
+      "implementation_ref": null,
+      "question": "Which physical delivery destinations are permitted at initial release?",
+      "rationale": "Direct owner accepted 50 states plus DC and the stated deferral of territories/military.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T01:49:24+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+      "candidate_refs": [],
+      "choice": "Yes. Commerce initial-release shipping policy allows non-US billing with supported US physical delivery, including Canadian billing with New York delivery, subject to actual provider and legal eligibility. Do not require US billing solely because shipping is US-only. Preserve billing-first and separately captured immutable billing/shipping records. This does not bypass provider country/sanctions controls, admit every digital market, or enable international physical delivery.",
+      "context_ref": ".grilltrack/proof/us-initial-release-scope-20261008/PROOF.md",
+      "created_at": "2026-10-09T01:49:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "initial-physical-delivery-coverage-001"
+      ],
+      "domain": "initial-release-physical-delivery",
+      "history": [
+        {
+          "at": "2026-10-09T01:49:24+00:00",
+          "choice": "Yes. Commerce initial-release shipping policy allows non-US billing with supported US physical delivery, including Canadian billing with New York delivery, subject to actual provider and legal eligibility. Do not require US billing solely because shipping is US-only. Preserve billing-first and separately captured immutable billing/shipping records. This does not bypass provider country/sanctions controls, admit every digital market, or enable international physical delivery.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "initial-foreign-billing-us-delivery-001",
+      "implementation_ref": null,
+      "question": "May a customer use non-US billing for physical delivery to an allowed US destination?",
+      "rationale": "Direct owner explicitly accepted Canadian billing and New York delivery.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T01:49:24+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -8760,5 +8846,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T01:30:05+00:00"
+  "updated_at": "2026-10-09T01:49:24+00:00"
 }
