@@ -120,6 +120,8 @@ for (const product of products) {
 {rendered.some(({ product }) => product.variants) ? (
   <section data-checkout="guest">
     <h2>Guest checkout proof</h2>
+    <label>Email <input type="email" name="checkout-email" autocomplete="email" maxlength="254" required /></label>
+    <label>Phone <span data-phone-requirement>(optional)</span> <input type="tel" name="checkout-phone" autocomplete="tel" maxlength="64" /></label>
     <button type="button" data-action="prepare">Prepare checkout</button>
     <button type="button" data-action="start" disabled>Start checkout</button>
     <button type="button" data-action="status" disabled>Refresh payment status</button>
@@ -137,7 +139,10 @@ for (const product of products) {
     const route = (name) => `/_emdash/api/plugins/dinkus-commerce/checkout/guest/${name}`;
     let capability;
     let attemptId;
+    const emailInput = checkout.querySelector('[name="checkout-email"]');
+    const phoneInput = checkout.querySelector('[name="checkout-phone"]');
     const selectedLine = () => ({
+      contact: { email: emailInput.value, phone: phoneInput.value },
       lines: [{
         catalogItemId: document.querySelector('input[name^="variant-"]:checked')?.value ?? "",
         quantity: 1,
@@ -157,12 +162,15 @@ for (const product of products) {
       const payload = await call("prepare", {});
       capability = payload.capability?.capability;
       startButton.disabled = !capability;
-      result.dataset.state = "prepared";
+      phoneInput.required = payload.contactRequirements?.requirePhoneNumber === true;
+      checkout.querySelector('[data-phone-requirement]').textContent = phoneInput.required ? '(required)' : '(optional)';
+      result.dataset.state = capability ? "prepared" : "unavailable";
     });
     startButton.addEventListener("click", async () => {
       const payload = await call("start", selectedLine());
       attemptId = payload.checkout?.attemptId ?? null;
       statusButton.disabled = !attemptId;
+      if (!attemptId) { result.dataset.state = "denied"; return; }
       const selected = document.querySelector('input[name^="variant-"]:checked')?.closest("label")?.textContent?.trim() ?? "";
       checkout.querySelector("[data-frozen-order]").textContent = `Frozen selection: ${selected}`;
       result.dataset.state = "pending";

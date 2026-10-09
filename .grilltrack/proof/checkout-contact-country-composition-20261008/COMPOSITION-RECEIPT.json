@@ -1,0 +1,45 @@
+{
+  "schema": "commerce/contact-composition-proof/v1",
+  "refs": {
+    "base": "c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+    "current": "39107444d1df41712f7fc3d6643bc8588102f2e5",
+    "incoming": "ca38c1c8c4f136f25469ded0c200f74773802668"
+  },
+  "cliPlan": "87ce7f2c35670b3993b32c695b488654d0e45fcc43a528cfe7f1915e59ac4d5c",
+  "noncanonicalOrdinaryMerge": {
+    "tree": "5990a67e681983a5dc60f7a0be963feb97b11a7a",
+    "paths": 492,
+    "differences": 0,
+    "subsequentIntentionalChange": "tests/sandbox/variant-checkout.spec.mjs response synchronization only"
+  },
+  "runtime": "Node22.23.2",
+  "results": {
+    "focused": 28,
+    "unit": 378,
+    "integration": 39,
+    "browser": 10,
+    "nativeLocalStock": 1,
+    "merchantSettingsBrowser": 2,
+    "failedFinalFunctionalCases": 0,
+    "skipped": 0,
+    "typecheck": "passed",
+    "repoAndFeatureAudit": "clean"
+  },
+  "backend": {
+    "bytes": 141201,
+    "sha256": "77801da24220a1cce80cd584c2ea773e77d52cf3c2b2cb9ad89f510b0993004b",
+    "cap": 131072,
+    "gap": 10129
+  },
+  "installedCoupon": "official bundlePlugin VALIDATION_FAILED before browser launch; not accepted",
+  "review": "final-head comprehensive/native/CI gates pending; draft remains blocked",
+  "logHashes": {
+    "build.log": "99b7b369d1198a2eaa6afa95e0a0cf4d8b6047e753dfcc4109d51ca569b4f85f",
+    "focused.log": "13ff5a3ea28ad76e832182714c537e128a10ce15949f1dd7b5245eea07cbec57",
+    "full-gate.log": "c355de1e5b9fa1453569860bddc6629acd36c1c6d34c5e33b8c4570707916ed6",
+    "browser-recheck.log": "1e5a113d1470414df321e6abfe7b6d93c691f0912dbbebe5405a60bb49dd62b3",
+    "native-stock.log": "a6152f251eb35bc534747b116305105f0aad1da9d18df4570423f760689aea35",
+    "merchant-settings-browser-recheck.log": "98d6e1707ad5a26d4f9b1dfe6faf53cf7d47757db0257084258fd815b13a7432",
+    "installed-coupon-cap.log": "0434b92c0893d7bec84f50c6c19b435f72cac81c4aa3f9b372c2cfb9b07a80da"
+  }
+}
