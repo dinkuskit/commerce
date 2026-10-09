@@ -9,6 +9,9 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "dinkus-commerce": "./bin/dinkus-commerce.mjs"
+  },
   "files": [
     "dist",
     "emdash-plugin.jsonc"
@@ -59,6 +62,14 @@
     "./features/coupons": {
       "types": "./dist/features/coupons/index.d.ts",
       "default": "./dist/features/coupons/index.js"
+    },
+    "./features/store-policies": {
+      "types": "./dist/features/store-policies/index.d.ts",
+      "default": "./dist/features/store-policies/index.js"
+    },
+    "./features/structured-data": {
+      "types": "./dist/features/structured-data/index.d.ts",
+      "default": "./dist/features/structured-data/index.js"
     }
   },
   "license": "MIT",
@@ -103,7 +114,7 @@
     "build": "node scripts/build.mjs && npm run build:sandbox",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit",
-    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs tests/features/storefront-availability/*.test.mjs tests/features/checkout/*.test.mjs tests/features/fixed-bundles/*.test.mjs tests/features/coupons/*.test.mjs",
+    "test:unit": "npm run build && node --test tests/*.test.mjs tests/workflows/*.test.mjs tests/features/catalog/*.test.mjs tests/features/inventory-provider/*.test.mjs tests/features/inventory-setup/*.test.mjs tests/features/storefront-availability/*.test.mjs tests/features/checkout/*.test.mjs tests/features/fixed-bundles/*.test.mjs tests/features/coupons/*.test.mjs tests/features/store-policies/*.test.mjs tests/features/structured-data/*.test.mjs tests/cli/*.test.mjs",
     "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
     "proof:registration-retry:real": "npm run build && node --no-warnings --experimental-sqlite --experimental-strip-types tools/prove-registration-retry-real.mjs",
     "audit:features": "node scripts/check-features.mjs",

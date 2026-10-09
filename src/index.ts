@@ -14,6 +14,7 @@ import {
   SAVE_CATALOG_ITEM_MEDIA_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   SET_CATALOG_ITEM_SKU_ROUTE,
+  SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   ADD_CATALOG_VARIANT_OPTION_ROUTE,
   BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
@@ -28,6 +29,7 @@ import {
   createSaveCatalogProductPricesRouteWithLocalStock,
   saveCatalogItemMediaRoute,
   setCatalogItemSkuRoute,
+  setCatalogItemIdentifiersRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
@@ -36,6 +38,14 @@ import {
   updateCatalogVariantLabelsRoute,
   bulkSaveCatalogProductPricesRoute,
 } from "./features/catalog/index.js";
+import {
+  SET_STORE_RETURN_POLICY_ROUTE,
+  SET_STORE_SHIPPING_POLICY_ROUTE,
+  STORE_RETURN_POLICY_COLLECTION,
+  STORE_SHIPPING_POLICY_COLLECTION,
+  setStoreReturnPolicyRoute,
+  setStoreShippingPolicyRoute,
+} from "./features/store-policies/index.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES,
@@ -79,6 +89,10 @@ export * from "./features/catalog/index.js";
 export * from "./features/inventory-setup/index.js";
 
 export * from "./features/storefront-availability/index.js";
+
+export * from "./features/store-policies/index.js";
+
+export * from "./features/structured-data/index.js";
 
 const COMMERCE_PLUGIN_VERSION = "0.0.0";
 
@@ -215,6 +229,14 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: ["normalizedCode"],
         uniqueIndexes: ["normalizedCode"],
       },
+      [STORE_SHIPPING_POLICY_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
+      [STORE_RETURN_POLICY_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
     },
     admin: {
       entry: COMMERCE_ADMIN_ENTRY,
@@ -235,6 +257,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         createSaveCatalogProductPricesRouteWithLocalStock(localStock),
       [SAVE_CATALOG_ITEM_MEDIA_ROUTE]: saveCatalogItemMediaRoute,
       [SET_CATALOG_ITEM_SKU_ROUTE]: setCatalogItemSkuRoute,
+      [SET_CATALOG_ITEM_IDENTIFIERS_ROUTE]: setCatalogItemIdentifiersRoute,
       [ADD_CATALOG_VARIANT_OPTION_ROUTE]: addCatalogVariantOptionRoute,
       [UPDATE_CATALOG_VARIANT_LABELS_ROUTE]: updateCatalogVariantLabelsRoute,
       [BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: bulkSaveCatalogProductPricesRoute,
@@ -245,6 +268,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         setStorefrontAvailabilityPolicyRoute,
       [OUT_OF_STOCK_LISTING_ROUTE]: outOfStockListingRoute,
       [PLACEHOLDER_IMAGE_ROUTE]: placeholderImageRoute,
+      [SET_STORE_SHIPPING_POLICY_ROUTE]: setStoreShippingPolicyRoute,
+      [SET_STORE_RETURN_POLICY_ROUTE]: setStoreReturnPolicyRoute,
       [GUEST_CHECKOUT_PREPARE_ROUTE]: createGuestCheckoutPrepareRoute(checkoutHost),
       [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(checkoutHost),
       [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(checkoutHost),

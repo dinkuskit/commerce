@@ -59,6 +59,12 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   variantProductId?: string;
   variantSelections?: readonly CatalogVariantSelection[];
   variantFulfillment?: CatalogFulfillment;
+  /** Optional GS1 GTIN digits; absent means omitted from structured data. */
+  gtin?: string;
+  /** Optional manufacturer part number. */
+  mpn?: string;
+  /** Optional brand name. */
+  brand?: string;
 }
 
 export type CatalogFulfillment = "physical" | "digital";
