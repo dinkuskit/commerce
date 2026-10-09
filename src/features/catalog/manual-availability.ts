@@ -1,4 +1,4 @@
-import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
+import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { CatalogError } from "./errors.js";
 import {
   DEFAULT_CATALOG_MANUAL_AVAILABILITY,
@@ -34,7 +34,7 @@ function normalizeInput(value: unknown): SetCatalogItemManualAvailabilityInput {
   ) {
     throw new CatalogError(
       "INVALID_INPUT",
-      "manual availability accepts only catalogItemId and a supported status",
+      "manual availability accepts catalogItemId and status only",
     );
   }
   return {
@@ -111,7 +111,7 @@ export async function setCatalogItemManualAvailability(
   if (normalizeStoredStockManagement(item.stockManagement).mode === "managed") {
     throw new CatalogError(
       "MANAGE_STOCK_ENABLED",
-      "manual availability requires Manage Stock to be disabled",
+      "manual availability requires Manage Stock off",
     );
   }
 

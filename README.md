@@ -13,6 +13,36 @@ human-operable EmDash store first. Commerce and Inventory are crucial launch
 pieces and launch side by side. This repository's contracts and status below
 describe its own scope; the roadmap is not a claim of release readiness.
 
+## Install type
+
+DinkusKit plugins ship as EmDash Registry plugins: sandboxed and installed
+from the plugin Registry, which is how most EmDash sites add plugins. The
+Registry build is the supported product, and features are designed, tested and
+documented for it first. A native entry (code a site registers in its own
+configuration or Astro routes) is a developer and test setup only. It may not
+offer features the Registry build lacks, except temporary gaps listed here with
+the work that closes them. The project owner set this rule on 2026-10-08.
+
+Commerce's Registry build comes from `emdash-plugin.jsonc` and `src/plugin.ts`
+(see Sandbox distribution below). The package root and `./admin` export are the
+native entry. Native-only gaps:
+
+- Coupons: native installs keep coupon storage and coupon codes at checkout.
+  The default `./admin` pages mount only `/products` and `/store`; the
+  `CouponsPage` named export is there for a host to mount at `/coupons`
+  itself. The Registry build leaves coupons out to stay under
+  the Registry's per-file size limit
+  ([registry-coupons-deferred](docs/implementation/registry-coupons-deferred.md)).
+  This closes when coupons return through a hosted coupon service; the native
+  coupon path is then removed.
+- Host-wired checkout: Template Store wires checkout through the native entry's
+  host options. Registry installs use the installed checkout services instead,
+  and Template Store has to move to them to follow this rule.
+
+The local Manage stock switch (`enableLocalStockManagement`) is a
+developer-only test aid, not a product feature. Native installations get no
+data migration path to the Registry build.
+
 ## Status
 
 Pilot stage. The package name is reserved in source as

@@ -11,26 +11,27 @@ import type {
   SetCatalogItemPriceStorage,
 } from "./types.js";
 
+function catalogFail(code: ConstructorParameters<typeof CatalogError>[0], message: string, options?: ErrorOptions): never {
+  throw new CatalogError(code, message, options);
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function requireCatalogItemId(value: unknown): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new CatalogError("INVALID_INPUT", "catalogItemId must be a non-empty string");
+    catalogFail("INVALID_INPUT", "catalogItemId must be a non-empty string");
   }
   return value.trim();
 }
 
 function normalizeSetInput(value: unknown): SetCatalogItemPriceInput {
   if (!isPlainObject(value)) {
-    throw new CatalogError("INVALID_INPUT", "price input must be an object");
+    catalogFail("INVALID_INPUT", "price input must be an object");
   }
   if (Object.keys(value).length !== 2) {
-    throw new CatalogError(
-      "INVALID_INPUT",
-      "price setting accepts only catalogItemId and amount",
-    );
+    catalogFail("INVALID_INPUT", "price setting accepts only catalogItemId and amount",);
   }
   return {
     catalogItemId: requireCatalogItemId(value.catalogItemId),
@@ -40,10 +41,10 @@ function normalizeSetInput(value: unknown): SetCatalogItemPriceInput {
 
 function normalizeClearInput(value: unknown): ClearCatalogItemPriceInput {
   if (!isPlainObject(value)) {
-    throw new CatalogError("INVALID_INPUT", "price clear input must be an object");
+    catalogFail("INVALID_INPUT", "price clear input must be an object");
   }
   if (Object.keys(value).length !== 1) {
-    throw new CatalogError("INVALID_INPUT", "price clear accepts only catalogItemId");
+    catalogFail("INVALID_INPUT", "price clear accepts only catalogItemId");
   }
   return { catalogItemId: requireCatalogItemId(value.catalogItemId) };
 }
@@ -53,13 +54,10 @@ function assertCatalogItem(
   catalogItemId: string,
 ): void {
   if (value === null || value.recordKind !== "catalog-item") {
-    throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
+    catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
   }
   if (value.itemId !== catalogItemId) {
-    throw new CatalogError(
-      "STORAGE_UNAVAILABLE",
-      "stored catalog item identity does not match its key",
-    );
+    catalogFail("STORAGE_UNAVAILABLE", "stored catalog item identity does not match its key",);
   }
 }
 
@@ -86,7 +84,7 @@ function normalizeStoredPrice(
     value.recordId !== catalogItemId ||
     value.catalogItemId !== catalogItemId
   ) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "stored catalog price is invalid");
+    catalogFail("STORAGE_UNAVAILABLE", "stored catalog price is invalid");
   }
   try {
     const regular = normalizeMoney(value.regular, "stored regular");
@@ -100,7 +98,7 @@ function normalizeStoredPrice(
     }
     const sale = normalizeMoney(value.sale, "stored sale");
     if (!saleIsStrictlyLower(sale, regular)) {
-      throw new CatalogError("STORAGE_UNAVAILABLE", "stored catalog price is invalid");
+      catalogFail("STORAGE_UNAVAILABLE", "stored catalog price is invalid");
     }
     return {
       recordKind: "catalog-price",
@@ -122,7 +120,7 @@ async function readPrice(
   try {
     stored = await storage.get(catalogItemId);
   } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "catalog price lookup failed", {
+    catalogFail("STORAGE_UNAVAILABLE", "catalog price lookup failed", {
       cause: error,
     });
   }
@@ -136,7 +134,7 @@ async function writePrice(
   try {
     await storage.put(record.recordId, record);
   } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "catalog price update failed", {
+    catalogFail("STORAGE_UNAVAILABLE", "catalog price update failed", {
       cause: error,
     });
   }
@@ -149,7 +147,7 @@ async function deletePrice(
   try {
     await storage.delete(catalogItemId);
   } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "catalog price delete failed", {
+    catalogFail("STORAGE_UNAVAILABLE", "catalog price delete failed", {
       cause: error,
     });
   }
@@ -163,7 +161,7 @@ async function requireCatalogItem(
   try {
     item = await storage.get(catalogItemId);
   } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item lookup failed", {
+    catalogFail("STORAGE_UNAVAILABLE", "catalog item lookup failed", {
       cause: error,
     });
   }
@@ -198,7 +196,7 @@ export async function resolveCatalogItemPrice(
   catalogItemId: string,
 ): Promise<CatalogItemPriceResolution> {
   if (typeof catalogItemId !== "string" || catalogItemId.trim().length === 0) {
-    throw new CatalogError("INVALID_INPUT", "catalogItemId must be a non-empty string");
+    catalogFail("INVALID_INPUT", "catalogItemId must be a non-empty string");
   }
   const price = await readPrice(storage, catalogItemId.trim());
   return toResolution(catalogItemId.trim(), price);
@@ -210,20 +208,14 @@ export async function commitCatalogItemPrice(
 ): Promise<CatalogPriceRecord | null> {
   await requireCatalogItem(storage.catalog, input.catalogItemId);
   if (input.sale !== null && input.regular === null) {
-    throw new CatalogError(
-      "SALE_REQUIRES_REGULAR",
-      "Sale cannot be set until Regular exists",
-    );
+    catalogFail("SALE_REQUIRES_REGULAR", "Sale cannot be set until Regular exists",);
   }
   if (
     input.sale !== null &&
     input.regular !== null &&
     !saleIsStrictlyLower(input.sale, input.regular)
   ) {
-    throw new CatalogError(
-      "SALE_NOT_LOWER_THAN_REGULAR",
-      "Sale must be strictly lower than Regular in the same currency",
-    );
+    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
   }
   const existing = await readPrice(storage.prices, input.catalogItemId);
   if (input.regular === null) {
@@ -260,10 +252,7 @@ export async function setCatalogItemRegularPrice(
   await requireCatalogItem(storage.catalog, input.catalogItemId);
   const existing = await readPrice(storage.prices, input.catalogItemId);
   if (existing?.sale !== undefined && !saleIsStrictlyLower(existing.sale, input.amount)) {
-    throw new CatalogError(
-      "SALE_NOT_LOWER_THAN_REGULAR",
-      "Sale must be strictly lower than Regular in the same currency",
-    );
+    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
   }
   if (existing !== null && moneyEquals(existing.regular, input.amount)) {
     return { changed: false, price: existing };
@@ -287,16 +276,10 @@ export async function setCatalogItemSalePrice(
   await requireCatalogItem(storage.catalog, input.catalogItemId);
   const existing = await readPrice(storage.prices, input.catalogItemId);
   if (existing === null) {
-    throw new CatalogError(
-      "SALE_REQUIRES_REGULAR",
-      "Sale cannot be set until Regular exists",
-    );
+    catalogFail("SALE_REQUIRES_REGULAR", "Sale cannot be set until Regular exists",);
   }
   if (!saleIsStrictlyLower(input.amount, existing.regular)) {
-    throw new CatalogError(
-      "SALE_NOT_LOWER_THAN_REGULAR",
-      "Sale must be strictly lower than Regular in the same currency",
-    );
+    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
   }
   if (existing.sale !== undefined && moneyEquals(existing.sale, input.amount)) {
     return { changed: false, price: existing };
@@ -343,10 +326,7 @@ export async function clearCatalogItemRegularPrice(
     return { changed: false, price: null };
   }
   if (existing.sale !== undefined) {
-    throw new CatalogError(
-      "REGULAR_HAS_SALE",
-      "Regular cannot be cleared while Sale exists",
-    );
+    catalogFail("REGULAR_HAS_SALE", "Regular cannot be cleared while Sale exists",);
   }
   await deletePrice(storage.prices, input.catalogItemId);
   return { changed: true, price: null };

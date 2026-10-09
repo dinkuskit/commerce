@@ -1,3 +1,4 @@
+import { loadCatalogItemBackorderPolicy } from "./backorder-policy.js";
 import { CatalogError } from "./errors.js";
 import type {
   CatalogBackorderPolicyRecord,
@@ -5,6 +6,8 @@ import type {
   SetCatalogItemBackordersResult,
   SetCatalogItemBackordersStorage,
 } from "./types.js";
+
+export { loadCatalogItemBackorderPolicy } from "./backorder-policy.js";
 
 function normalizeInput(value: unknown): SetCatalogItemBackordersInput {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -41,44 +44,6 @@ function assertCatalogItem(
       "stored catalog item identity does not match its key",
     );
   }
-}
-
-function normalizeStoredPolicy(
-  value: CatalogBackorderPolicyRecord | null,
-  catalogItemId: string,
-): CatalogBackorderPolicyRecord {
-  if (value === null) {
-    return {
-      recordKind: "catalog-backorder-policy",
-      recordId: catalogItemId,
-      catalogItemId,
-      allowBackorders: false,
-    };
-  }
-  if (
-    value.recordKind !== "catalog-backorder-policy" ||
-    value.recordId !== catalogItemId ||
-    value.catalogItemId !== catalogItemId ||
-    typeof value.allowBackorders !== "boolean"
-  ) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "stored backorder policy is invalid");
-  }
-  return value;
-}
-
-export async function loadCatalogItemBackorderPolicy(
-  storage: SetCatalogItemBackordersStorage["policies"],
-  catalogItemId: string,
-): Promise<CatalogBackorderPolicyRecord> {
-  let stored: CatalogBackorderPolicyRecord | null;
-  try {
-    stored = await storage.get(catalogItemId);
-  } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "backorder policy lookup failed", {
-      cause: error,
-    });
-  }
-  return normalizeStoredPolicy(stored, catalogItemId);
 }
 
 export async function setCatalogItemBackorders(
