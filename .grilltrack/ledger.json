@@ -3,11 +3,12 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": false,
+    "confirmed": true,
+    "confirmed_at": "2026-10-09T13:11:16+00:00",
     "domain": "Inventory ticket ids and order Pack",
     "started_at": "2026-10-09T12:41:50+00:00",
-    "status": "grilling",
-    "summary": "Commerce PR #78: persist Inventory-minted reserve ticket ids on orders and send order Pack to Inventory POST /v1/stock/pack, failing closed. Owner chose to merge #78 whole rather than split."
+    "status": "confirmed",
+    "summary": "The project owner approved on 2026-10-09 (13:10 UTC) that Commerce keeps Inventory's reserve ticket ids on orders and sends order Pack to Inventory POST /v1/stock/pack, reporting Packed only on a confirmed packed answer and failing closed otherwise, and that this lands before Inventory PR #50."
   },
   "decisions": [
     {
@@ -9013,20 +9014,35 @@
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Inventory ticket ids and order Pack",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-09T13:11:06+00:00",
+          "choice": "Checkout accepts both Inventory reserve results: the old string \"reserved\" (no ids stored) and the object { outcome: \"reserved\", ticketIds } with exactly one unique, trimmed id per stock line (three hats on one line stay one ticket); any other shape fails as an invalid reservation outcome. The ids are frozen on the attempt and copied onto the paid order; Inventory stores no Commerce order number. On an order with ticket ids, the Orders admin Pack action builds stock.pack for one ticket or stock.pack_all for every ticket, with command id commerce.pack:<sha256 of type and tickets> so retries replay, and sends it to Inventory POST /v1/stock/pack through a host-wired pack port (account bearer; Inventory derives site and pool). Only a 200 answer echoing that command id with packed/packed_all reports Packed in Inventory. Any other answer, transport failure, missing credential, or no wired port (the installed Registry admin today) fails closed as Not packed. Commerce never writes packed state, buys no label, and does not mark delivery. The owner chose to merge #78 whole rather than split persistence from Pack.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "commerce-inventory-ticket-ids-pack-001",
       "implementation_ref": null,
       "question": "How does Commerce keep Inventory's reserve ticket ids and pack an order through Inventory?",
-      "rationale": "Inventory owns physical stock truth and the tickets; Commerce keeps only the ids reserve returned so Pack can name them, and fails closed when the provider is unavailable per the charter. Backward compatible with adapters that still return the string. Pairs with dinkuskit/inventory#50 (commerce-pack-route-001).",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 13:10 UTC, who also accepted landing this Commerce change before Inventory PR #50 reaches Inventory main. Proven end to end against Inventory #50's pack route (.grilltrack/proof/inventory-ticket-ids-pack-20261009/CURRENT-HEAD.md).",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-09T12:41:51+00:00",
+      "updated_at": "2026-10-09T13:11:06+00:00",
       "verification_ref": null
     }
   ],
@@ -9064,5 +9080,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T12:41:51+00:00"
+  "updated_at": "2026-10-09T13:11:16+00:00"
 }
