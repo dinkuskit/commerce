@@ -280,7 +280,7 @@ test.describe("Native populated-browser continuity fixture", () => {
 
     // 9. Edit Store setting via restored UI
     await showOutOfStockRadio.check();
-    await page.locator("button:has-text('Save')").click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
     await page.waitForLoadState("networkidle");
     await expect(showOutOfStockRadio).toBeChecked();
 
