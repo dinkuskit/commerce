@@ -40,6 +40,10 @@
       "indexes": [],
       "uniqueIndexes": []
     },
+    "product_feed_eligibility": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
     "catalog_media": {
       "indexes": [],
       "uniqueIndexes": []

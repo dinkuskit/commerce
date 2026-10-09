@@ -7,6 +7,7 @@ import {
   CREATE_CATALOG_ITEM_ROUTE,
   LIST_CATALOG_PRODUCTS_ROUTE,
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
+  SET_PRODUCT_FEED_ELIGIBILITY_ROUTE,
   SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   catalogProductCreateInput,
   type CatalogProductListItem,
@@ -45,6 +46,7 @@ export function ProductsPage() {
   const [stockStatusChanged, setStockStatusChanged] = useState(false);
   const [manageStock, setManageStock] = useState(false);
   const [manageStockEnabled, setManageStockEnabled] = useState(false);
+  const [feedChannels, setFeedChannels] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [optionLabel, setOptionLabel] = useState("Size");
@@ -82,6 +84,7 @@ export function ProductsPage() {
     setSale(selected.sale ?? "");
     setManageStock(selected.manageStock);
     setStockStatus(selected.stockStatus ?? "in-stock");
+    setFeedChannels([...(selected.feedChannels ?? [])]);
     setGtin(selected.gtin ?? "");
     setMpn(selected.mpn ?? "");
     setBrand(selected.brand ?? "");
@@ -104,6 +107,7 @@ export function ProductsPage() {
     setSale(product.sale ?? "");
     setManageStock(product.manageStock);
     setStockStatus(product.stockStatus ?? "in-stock");
+    setFeedChannels([...(product.feedChannels ?? [])]);
     setGtin(product.gtin ?? "");
     setMpn(product.mpn ?? "");
     setBrand(product.brand ?? "");
@@ -201,6 +205,24 @@ export function ProductsPage() {
       await loadProducts(selectedId);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save the price");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function saveFeedChannels(): Promise<void> {
+    if (selectedId === null) return;
+    setPending(true);
+    setMessage(null);
+    try {
+      await postPlugin(SET_PRODUCT_FEED_ELIGIBILITY_ROUTE, {
+        catalogItemId: selectedId,
+        channels: feedChannels,
+      }, "Could not save feed eligibility");
+      setMessage("Feed eligibility saved");
+      await loadProducts(selectedId);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not save feed eligibility");
     } finally {
       setPending(false);
     }
@@ -311,6 +333,34 @@ export function ProductsPage() {
                   setStockStatusChanged(true);
                 }),
             createElement("button", { type: "submit", disabled: pending }, "Save"),
+          createElement("fieldset", { className: "space-y-2" },
+            createElement("legend", null, "Product feeds"),
+            createElement("label", null,
+              createElement("input", {
+                type: "checkbox",
+                checked: feedChannels.includes("google-merchant"),
+                onChange: (event: ChangeEvent<HTMLInputElement>) => setFeedChannels(
+                  event.currentTarget.checked
+                    ? [...feedChannels, "google-merchant"]
+                    : feedChannels.filter((channel) => channel !== "google-merchant"),
+                ),
+              }),
+              " Google Merchant",
+            ),
+            createElement("label", null,
+              createElement("input", {
+                type: "checkbox",
+                checked: feedChannels.includes("meta-catalog"),
+                onChange: (event: ChangeEvent<HTMLInputElement>) => setFeedChannels(
+                  event.currentTarget.checked
+                    ? [...feedChannels, "meta-catalog"]
+                    : feedChannels.filter((channel) => channel !== "meta-catalog"),
+                ),
+              }),
+              " Meta catalog",
+            ),
+            createElement("button", { type: "button", disabled: pending, onClick: () => void saveFeedChannels() }, "Save feed eligibility"),
+          ),
           ),
           identifiersForm,
           createElement("div", null,

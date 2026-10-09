@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-09T13:39:42+00:00",
-    "domain": "Commerce Registry network access to hosted Payments",
-    "started_at": "2026-10-09T13:39:42+00:00",
+    "confirmed_at": "2026-10-09T13:55:44+00:00",
+    "domain": "Commerce #60 product feeds and per-product channel eligibility",
+    "started_at": "2026-10-09T13:55:43+00:00",
     "status": "confirmed",
-    "summary": "The project owner approved on 2026-10-09 (12:35 UTC, project thread for the commerce merge order) that Commerce's Registry build may call exactly payments.dinkuskit.com and no other host, so a Registry store can reach the hosted Payments service."
+    "summary": "The project owner approved all six product-feed decisions for issue #60 as written on 2026-10-09 (12:35 UTC, project thread for the commerce merge order): per-product opt-in to google-merchant and meta-catalog, off by default, built from the same authoritative facts as the product JSON-LD, served by the host from a paged builder outside the Registry backend."
   },
   "decisions": [
     {
@@ -9085,6 +9085,260 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T13:39:43+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce owns a persisted per-product set drawn only from the closed versioned initial enum google-merchant and meta-catalog; agent-catalog and agent-checkout are reserved and cannot be selected. Adding a later channel is a new enum value and serializer, not a model rewrite.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
+      "created_at": "2026-10-09T13:55:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Commerce #60 product feeds and per-product channel eligibility",
+      "history": [
+        {
+          "at": "2026-10-09T13:55:44+00:00",
+          "choice": "Commerce owns a persisted per-product set drawn only from the closed versioned initial enum google-merchant and meta-catalog; agent-catalog and agent-checkout are reserved and cannot be selected. Adding a later channel is a new enum value and serializer, not a model rewrite.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "feeds-channel-set-060",
+      "implementation_ref": null,
+      "question": "Which channels may a Commerce product opt into in issue #60?",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC, approving all six #60 feed decisions as written.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:55:44+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Default to no eligible channels. A merchant must explicitly opt a product into each channel; disabling a channel removes it from the next generated feed.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
+      "created_at": "2026-10-09T13:55:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "feeds-channel-set-060"
+      ],
+      "domain": "Commerce #60 product feeds and per-product channel eligibility",
+      "history": [
+        {
+          "at": "2026-10-09T13:55:44+00:00",
+          "choice": "Default to no eligible channels. A merchant must explicitly opt a product into each channel; disabling a channel removes it from the next generated feed.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "feeds-default-opt-in-060",
+      "implementation_ref": null,
+      "question": "What is the default eligibility state for a newly created product?",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC, approving all six #60 feed decisions as written.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:55:44+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "The host supplies a bounded storefront projection per Commerce itemId: published canonical URL, title, description, and public image URLs. Commerce supplies authoritative facts; a product is feed-eligible only when the host reports a published product page, the Commerce projection is listable, and a customer price exists. Missing optional content is omitted rather than invented.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
+      "created_at": "2026-10-09T13:55:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Commerce #60 product feeds and per-product channel eligibility",
+      "history": [
+        {
+          "at": "2026-10-09T13:55:44+00:00",
+          "choice": "The host supplies a bounded storefront projection per Commerce itemId: published canonical URL, title, description, and public image URLs. Commerce supplies authoritative facts; a product is feed-eligible only when the host reports a published product page, the Commerce projection is listable, and a customer price exists. Missing optional content is omitted rather than invented.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "feeds-content-boundary-060",
+      "implementation_ref": null,
+      "question": "How does a feed obtain storefront content and decide whether a product page is published?",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC, approving all six #60 feed decisions as written.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:55:44+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Emit Google Merchant Center as deterministic RSS 2.0 XML with g: fields and Meta catalog as deterministic CSV. Both use immutable Commerce itemId as the stable product id/retailer_id; SKU remains a merchant-facing attribute, and slug changes affect only link.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/60#issuecomment-6059017680",
+      "created_at": "2026-10-09T13:55:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "feeds-content-boundary-060"
+      ],
+      "domain": "Commerce #60 product feeds and per-product channel eligibility",
+      "history": [
+        {
+          "at": "2026-10-09T13:55:45+00:00",
+          "choice": "Emit Google Merchant Center as deterministic RSS 2.0 XML with g: fields and Meta catalog as deterministic CSV. Both use immutable Commerce itemId as the stable product id/retailer_id; SKU remains a merchant-facing attribute, and slug changes affect only link.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "feeds-format-contract-060",
+      "implementation_ref": null,
+      "question": "Which output formats are required for issue #60?",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC, approving all six #60 feed decisions as written.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:55:45+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Feed rows read the same authoritative catalog/public projection used by Commerce Product/Offer JSON-LD: itemId identity, SKU, customer price (sale when present, otherwise regular), currency, availability, listability, GTIN/brand/shipping only when explicitly supplied, and host canonical link/content. Products with no price, not listable, unavailable publication, or missing required channel fields are omitted or marked according to that channel specification; no values are invented.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
+      "created_at": "2026-10-09T13:55:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "feeds-content-boundary-060"
+      ],
+      "domain": "Commerce #60 product feeds and per-product channel eligibility",
+      "history": [
+        {
+          "at": "2026-10-09T13:55:45+00:00",
+          "choice": "Feed rows read the same authoritative catalog/public projection used by Commerce Product/Offer JSON-LD: itemId identity, SKU, customer price (sale when present, otherwise regular), currency, availability, listability, GTIN/brand/shipping only when explicitly supplied, and host canonical link/content. Products with no price, not listable, unavailable publication, or missing required channel fields are omitted or marked according to that channel specification; no values are invented.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "feeds-facts-consistency-060",
+      "implementation_ref": null,
+      "question": "Which Commerce facts and consistency rules govern generated feed rows?",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC, approving all six #60 feed decisions as written.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:55:45+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Expose a pure, deterministic, paged feed builder outside the size-capped sandbox backend. The host invokes it with a storefront content resolver and serves channel-specific public routes (for example /feeds/google-merchant.xml and /feeds/meta-catalog.csv), using the builder's bounded cursor/page contract; only public product data is emitted and the host owns caching, authentication policy, and HTTP delivery.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
+      "created_at": "2026-10-09T13:55:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "feeds-format-contract-060"
+      ],
+      "domain": "Commerce #60 product feeds and per-product channel eligibility",
+      "history": [
+        {
+          "at": "2026-10-09T13:55:45+00:00",
+          "choice": "Expose a pure, deterministic, paged feed builder outside the size-capped sandbox backend. The host invokes it with a storefront content resolver and serves channel-specific public routes (for example /feeds/google-merchant.xml and /feeds/meta-catalog.csv), using the builder's bounded cursor/page contract; only public product data is emitted and the host owns caching, authentication policy, and HTTP delivery.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "feeds-generation-serving-060",
+      "implementation_ref": null,
+      "question": "What bounded generation and host serving contract should issue #60 expose?",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC, approving all six #60 feed decisions as written.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:55:45+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -9121,5 +9375,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T13:39:43+00:00"
+  "updated_at": "2026-10-09T13:55:45+00:00"
 }

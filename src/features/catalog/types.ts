@@ -8,6 +8,7 @@ export const CATALOG_BACKORDER_POLICIES_COLLECTION = "catalogBackorderPolicies";
 export const CATALOG_MANUAL_AVAILABILITY_COLLECTION =
   "catalogManualAvailability";
 export const CATALOG_PRICES_COLLECTION = "catalogPrices";
+export const PRODUCT_FEED_ELIGIBILITY_COLLECTION = "productFeedEligibility";
 export const COMMERCE_CURRENCY_USD = "USD" as const;
 export const DEFAULT_CATALOG_MANUAL_AVAILABILITY = "in-stock" as const;
 export const CATALOG_VARIANT_SCHEMA =

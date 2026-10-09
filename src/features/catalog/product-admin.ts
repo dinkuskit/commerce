@@ -36,6 +36,8 @@ import type {
   Money,
 } from "./types.js";
 import { resolveCatalogVariantMember, variantSelections } from "./variants.js";
+import { loadProductFeedEligibility } from "../feeds/eligibility.js";
+import type { ProductFeedChannel, ProductFeedEligibilityStorage } from "../feeds/types.js";
 
 function catalogFail(code: ConstructorParameters<typeof CatalogError>[0], message: string, options?: ErrorOptions): never {
   throw new CatalogError(code, message, options);
@@ -62,6 +64,7 @@ export interface CatalogProductListStorage {
   };
   prices: CatalogPriceStorage;
   availability: CatalogManualAvailabilityStorage;
+  feedEligibility?: ProductFeedEligibilityStorage;
 }
 
 export interface CatalogProductListItem {
@@ -72,6 +75,7 @@ export interface CatalogProductListItem {
   sale: string | null;
   manageStock: boolean;
   stockStatus: ClerkStockStatus | null;
+  feedChannels?: readonly ProductFeedChannel[];
   gtin?: string;
   mpn?: string;
   brand?: string;
@@ -203,6 +207,9 @@ export async function listCatalogProducts(
       manageStock: managed,
       stockStatus:
         availability === null ? null : toClerkStockStatus(availability.status),
+      ...(storage.feedEligibility
+        ? { feedChannels: await loadProductFeedEligibility(storage.feedEligibility, record.itemId) }
+        : {}),
       ...(record.gtin ? { gtin: record.gtin } : {}),
       ...(record.mpn ? { mpn: record.mpn } : {}),
       ...(record.brand ? { brand: record.brand } : {}),

@@ -610,6 +610,63 @@ test("Block Kit save refuses enable and omitted tracking preserves a managed pro
   );
 });
 
+test("Block Kit refused save leaves feed eligibility unchanged and keeps the clerk's feed toggles", async () => {
+  const store = stores();
+  const feeds = new MemoryCollection();
+  const ctx = sandboxContext(store);
+  ctx.storage.product_feed_eligibility = feeds;
+  const refused = await commerceAdmin(
+    {
+      input: {
+        type: "form_submit",
+        action_id: "save:item-bag",
+        values: { regular: "99", sale: "80", manageStock: true, "feed:google-merchant": true, "feed:meta-catalog": true },
+      },
+    },
+    ctx,
+  );
+  assert.equal(refused.toast.type, "error");
+  assert.equal(feeds.records.size, 0);
+  const fields = refused.blocks.flatMap((block) => block?.type === "form" ? block.fields ?? [] : []);
+  const toggles = fields.filter((field) => String(field.action_id).startsWith("feed:"));
+  assert.deepEqual(toggles.map((field) => [field.action_id, field.initial_value]), [
+    ["feed:google-merchant", true],
+    ["feed:meta-catalog", true],
+  ]);
+
+  const invalid = await commerceAdmin(
+    {
+      input: {
+        type: "form_submit",
+        action_id: "save:item-bag",
+        values: { regular: "not money", sale: "", "feed:google-merchant": false, "feed:meta-catalog": true },
+      },
+    },
+    ctx,
+  );
+  assert.equal(invalid.toast.type, "error");
+  assert.equal(feeds.records.size, 0);
+  const invalidToggles = invalid.blocks.flatMap((block) => block?.type === "form" ? block.fields ?? [] : [])
+    .filter((field) => String(field.action_id).startsWith("feed:"));
+  assert.deepEqual(invalidToggles.map((field) => [field.action_id, field.initial_value]), [
+    ["feed:google-merchant", false],
+    ["feed:meta-catalog", true],
+  ]);
+
+  const saved = await commerceAdmin(
+    {
+      input: {
+        type: "form_submit",
+        action_id: "save:item-bag",
+        values: { regular: "12", sale: "10", "feed:google-merchant": true, "feed:meta-catalog": false },
+      },
+    },
+    ctx,
+  );
+  assert.equal(saved.toast.type, "success");
+  assert.deepEqual([...feeds.records.values()].map((record) => record.channels), [["google-merchant"]]);
+});
+
 test("CatalogError still distinguishes admission from kernel INVALID_INPUT", () => {
   const error = new CatalogError("MANAGE_STOCK_UNAVAILABLE", MANAGE_STOCK_UNAVAILABLE_MESSAGE);
   assert.equal(error.status, 409);

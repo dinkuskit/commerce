@@ -53,6 +53,7 @@ import type {
   CatalogPriceRecord,
   CatalogStorageRecord,
 } from "./types.js";
+import type { ProductFeedEligibilityRecord } from "../feeds/types.js";
 
 function routeFail(code: string, message: string, status: number): never {
   throw new PluginRouteError(code, message, status);
@@ -163,6 +164,7 @@ function productSaveStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
     ...priceStorage(ctx),
     availability: ctx.storage
       .catalogManualAvailability as StorageCollection<CatalogManualAvailabilityRecord>,
+    feedEligibility: ctx.storage.productFeedEligibility as StorageCollection<ProductFeedEligibilityRecord>,
     releaseRegistrationClaims: async (catalogItemId: string) => {
       await releaseManagedSkuRegistrationClaims(claims, { catalogItemId });
     },

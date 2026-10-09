@@ -15,6 +15,11 @@ import {
   StorefrontAvailabilityError, type StorefrontOutOfStockListingRecord, type StorefrontPlaceholderImageStorage,
 } from "../features/storefront-availability/kernel/index.js";
 import { ordersInteraction, ordersBlocks } from "./orders-blocks.js";
+import { loadProductFeedEligibility, setProductFeedEligibility } from "../features/feeds/eligibility.js";
+import type {
+  ProductFeedChannel,
+  ProductFeedEligibilityRecord,
+} from "../features/feeds/types.js";
 import { merchantStoreSettingsBlocks, merchantStoreSettingsInteraction } from "../features/store-settings/kernel/index.js";
 
 const PAGE_SIZE = 25;
@@ -30,6 +35,7 @@ function storage(ctx: PluginContext) {
     prices: ctx.storage["catalog_prices"] as StorageCollection<CatalogPriceRecord>,
     availability: ctx.storage["catalog_manual_availability"] as StorageCollection<CatalogManualAvailabilityRecord>,
     media: ctx.storage["catalog_media"] as CatalogMediaStorage,
+    feedEligibility: ctx.storage["product_feed_eligibility"] as StorageCollection<ProductFeedEligibilityRecord>,
   };
 }
 function placeholderStorage(ctx: PluginContext) {
@@ -84,6 +90,7 @@ type ProductFields = {
   sale: CatalogProductPriceForm["sale"];
   manageStock: boolean | null;
   stockStatus: CatalogProductPriceForm["stockStatus"];
+  feedChannels?: readonly ProductFeedChannel[];
 };
 function manageStockNotice(managed: boolean | null): Block {
   const base = "Manage stock — Coming soon";
@@ -102,6 +109,10 @@ function productForm(id: string, values: ProductFields, action = "save:" + id): 
       { type: "text_input", action_id: "sale", label: "Sale", initial_value: values.sale },
       ...(values.manageStock === false ? [{ type: "radio" as const, action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS,
         initial_value: values.stockStatus ?? undefined }] : []),
+      ...(values.feedChannels === undefined ? [] : [
+        { type: "toggle" as const, action_id: "feed:google-merchant", label: "Google Merchant", initial_value: values.feedChannels.includes("google-merchant") },
+        { type: "toggle" as const, action_id: "feed:meta-catalog", label: "Meta catalog", initial_value: values.feedChannels.includes("meta-catalog") },
+      ]),
     ], submit: { label: "Save", action_id: action } };
 }
 const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
@@ -182,7 +193,7 @@ async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<
   }
   return { blocks };
 }
-async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm, toast?: string): Promise<BlockResponse> {
+async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm & { feedChannels?: readonly ProductFeedChannel[] }, toast?: string): Promise<BlockResponse> {
   const store = storage(ctx);
   const listed = await listCatalogProducts(store);
   const selected = listed.products.find((item) => item.catalogItemId === id);
@@ -190,7 +201,10 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const dormant = await loadCatalogItemManualAvailability(store.availability, id);
   const status = dormant.status === "available-on-backorder" ? "on-backorder" : dormant.status;
   const media = await loadCatalogItemMedia(store.media, id);
-  const values = form ?? { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus };
+  const feedChannels = store.feedEligibility
+    ? await loadProductFeedEligibility(store.feedEligibility, id)
+    : undefined;
+  const values = form ? { ...form, feedChannels: form.feedChannels ?? feedChannels } : { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
     { type: "header", text: selected.name }, { type: "context", text: "Commerce / Products" }, navigation(),
     { type: "context", text: "SKU: " + selected.sku },
@@ -318,7 +332,16 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus);
         const saved = await saveCatalogProductPrices(store,
           admitV1CatalogPriceSaveInput(payload, wasManaged));
-        return { ...await product(ctx, id, saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
+        const feedSubmitted = Object.hasOwn(values, "feed:google-merchant") || Object.hasOwn(values, "feed:meta-catalog");
+        const channels = [
+          ...(values["feed:google-merchant"] === true ? ["google-merchant" as const] : []),
+          ...(values["feed:meta-catalog"] === true ? ["meta-catalog" as const] : []),
+        ];
+        // A refused price save writes nothing, feed choices included; the form keeps the clerk's entries.
+        if (saved.saved && store.feedEligibility && feedSubmitted) {
+          await setProductFeedEligibility(store.feedEligibility, store.catalog, { catalogItemId: id, channels });
+        }
+        return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, feedChannels: channels } : saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }
       if (action.startsWith("variant:")) {
         const [operation, id, ...args] = JSON.parse(action.slice(8));
@@ -406,6 +429,10 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
             sale: values.sale,
             manageStock: managed,
             stockStatus: managed === false ? status : null,
+            ...(typeof values["feed:google-merchant"] === "boolean" || typeof values["feed:meta-catalog"] === "boolean" ? { feedChannels: [
+              ...(values["feed:google-merchant"] === true ? ["google-merchant" as const] : []),
+              ...(values["feed:meta-catalog"] === true ? ["meta-catalog" as const] : []),
+            ] } : {}),
           }),
         ], toast: { type: "error", message: failure } };
       }
