@@ -1,5 +1,7 @@
 # Integrate approved Node 22 repository contracts
 
+> Superseded for bundle size and the distribution gate by [CURRENT-HEAD.md](CURRENT-HEAD.md): after #75 the backend is 110,484 bytes, under the 131,072-byte cap.
+
 Inputs: country checkpoint `c6349b54f9295958fe6ced90f44fc9bd25bc48b6` and approved main `89bb9f696fb2ad5ad9103da4e0cf04bd56d9d461`. Clean ordinary merge; common ancestor is qualified variant source `aacbcb3fd99d67fcfc06008b8887b1b0668fd1a8`.
 
 The imported delta is five files: root `.npmrc`, `AGENTS.md`, `package.json`, repository audit and its tests. Runtime, build scripts, feature/browser tests, lockfile, canonical GrillTrack ledger/events and retained lineage are byte-identical to the country checkpoint. No reconciliation or product-decision changes were needed. Audit/test/instruction files exactly match approved main; package integration preserves country exports and imports main's Node engine contract.

@@ -1,5 +1,7 @@
 # Qualified variant dependency composition
 
+> Superseded for bundle size and the distribution gate by [CURRENT-HEAD.md](CURRENT-HEAD.md): after #75 the backend is 110,484 bytes, under the 131,072-byte cap.
+
 Inputs: country26ef334d6f1189e318c1a5bce0d79b1f6cad8503 and qualified variant aacbcb3fd99d67fcfc06008b8887b1b0668fd1a8, retained common ledger base631d3b9fac6e55f1af4d8ff100ee48d487d83efa. The normal Git merge preserves the prior main integration and all source ancestry.
 
 GrillTrack v2 plan67c22fe9c24311b111c220f2077ee152cacc4eaa6b9777bd8f04443f558ad0d1 was explicitly approved and applied through the supported CLI. All53shared choice texts match; current composed records preserve invalidated proof lifecycle. The55decision union retains country/phone and both full source histories;53decisions still need re-verification. No manual ledger rewrite or inherited proof promoted to current proof.
