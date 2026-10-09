@@ -170,16 +170,10 @@
 {"action": "decision_locked", "at": "2026-10-08T22:34:26+00:00", "data": {"decision_id": "commerce-cli-scaffold-001"}, "event_id": "8909235f-59ba-4e85-aa3b-d7169662c0ee"}
 {"action": "decision_implemented", "at": "2026-10-08T22:34:26+00:00", "data": {"decision_id": "commerce-cli-scaffold-001"}, "event_id": "cbc205e3-bb04-438d-8c61-c85082ab30a7"}
 {"action": "decision_verified", "at": "2026-10-08T22:34:26+00:00", "data": {"decision_id": "commerce-cli-scaffold-001"}, "event_id": "4f1d56d0-be2d-4c91-a51b-2e145ed00846"}
-{"action": "focus_started", "at": "2026-10-09T00:11:09+00:00", "data": {"cadence": "frontier-batch", "domain": "Product JSON-LD and single-source shipping/return policies (#59)"}, "event_id": "144532b0-dbc0-4a01-940e-86627dfd34e3"}
-{"action": "decision_proposed", "at": "2026-10-09T00:11:09+00:00", "data": {"decision_id": "jsonld-availability-low-stock-059"}, "event_id": "517d0b0d-9957-494d-8e38-f71359fcc473"}
-{"action": "decision_proposed", "at": "2026-10-09T00:11:09+00:00", "data": {"decision_id": "jsonld-availability-unavailable-059"}, "event_id": "0535e474-33b4-441e-b8a5-c721c70d191d"}
-{"action": "decision_proposed", "at": "2026-10-09T00:11:09+00:00", "data": {"decision_id": "jsonld-optional-identifiers-059"}, "event_id": "404731a9-6258-4261-b040-9bd99b9565c2"}
-{"action": "decision_proposed", "at": "2026-10-09T00:11:09+00:00", "data": {"decision_id": "jsonld-policy-records-059"}, "event_id": "2695c109-310b-423a-ad3b-867e1023e2a3"}
-{"action": "decision_proposed", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "jsonld-builder-export-059"}, "event_id": "d4cd5146-f62f-45b1-867e-c5383ea15aa6"}
-{"action": "decision_proposed", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "storefront-stock-qty-display-followup-059"}, "event_id": "aa80fe54-75cb-46ee-92a9-4d61929d982a"}
-{"action": "decision_proposed", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "catalog-hide-oos-structured-data-followup-059"}, "event_id": "f4e90b43-6f3c-4576-a776-f1e21b617959"}
-{"action": "decision_locked", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "jsonld-availability-low-stock-059"}, "event_id": "2137e0d3-a871-49ce-8c62-55433f80e7cc"}
-{"action": "decision_locked", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "jsonld-availability-unavailable-059"}, "event_id": "a6d2abb9-dbc5-4bc0-9247-de159459d89f"}
-{"action": "decision_locked", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "jsonld-optional-identifiers-059"}, "event_id": "692b47ae-d3a7-44b3-bf5c-37e91a895bba"}
-{"action": "decision_locked", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "jsonld-policy-records-059"}, "event_id": "15bcca59-107c-401a-9712-5da693cdd35b"}
-{"action": "decision_locked", "at": "2026-10-09T00:11:10+00:00", "data": {"decision_id": "jsonld-builder-export-059"}, "event_id": "cf45c655-9a83-48e2-ac38-eef38ea2093e"}
+{"action": "focus_started", "at": "2026-10-09T01:31:27+00:00", "data": {"cadence": "sequential", "domain": "Commerce #60 product feeds and per-product channel eligibility"}, "event_id": "dde72308-2aa2-48eb-8fb7-483cc00c48fb"}
+{"action": "decision_proposed", "at": "2026-10-09T01:31:27+00:00", "data": {"decision_id": "feeds-channel-set-060"}, "event_id": "054a9f6b-0539-46ce-bbce-b35ee4179dde"}
+{"action": "decision_proposed", "at": "2026-10-09T01:31:27+00:00", "data": {"decision_id": "feeds-default-opt-in-060"}, "event_id": "be5ad897-aa48-4df0-b80e-e023f484b476"}
+{"action": "decision_proposed", "at": "2026-10-09T01:31:27+00:00", "data": {"decision_id": "feeds-content-boundary-060"}, "event_id": "e1e5d437-8d4a-4d1e-b0f7-e4d9b7f2126b"}
+{"action": "decision_proposed", "at": "2026-10-09T01:31:27+00:00", "data": {"decision_id": "feeds-format-contract-060"}, "event_id": "3da7d5d0-5a63-4b9b-924c-70f6370069e3"}
+{"action": "decision_proposed", "at": "2026-10-09T01:31:27+00:00", "data": {"decision_id": "feeds-facts-consistency-060"}, "event_id": "128597bd-c85a-4c15-9ae3-73390da8987e"}
+{"action": "decision_proposed", "at": "2026-10-09T01:31:27+00:00", "data": {"decision_id": "feeds-generation-serving-060"}, "event_id": "2a179724-8cb8-49e4-a6ca-3be09b0a4cfd"}
