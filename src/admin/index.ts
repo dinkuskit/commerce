@@ -10,7 +10,6 @@ import {
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage, type MediaReference,
 } from "../features/catalog/kernel/index.js";
-import { type ManagedSkuRegistrationClaimRecord } from "../features/inventory-provider/index.js";
 import {
   loadOutOfStockListing, setOutOfStockListing, loadStorefrontPlaceholderImage, setStorefrontPlaceholderImage,
   StorefrontAvailabilityError, type StorefrontOutOfStockListingRecord, type StorefrontPlaceholderImageStorage,
@@ -30,7 +29,6 @@ function storage(ctx: PluginContext) {
     catalog: ctx.storage["catalog_items"] as StorageCollection<CatalogStorageRecord>,
     prices: ctx.storage["catalog_prices"] as StorageCollection<CatalogPriceRecord>,
     availability: ctx.storage["catalog_manual_availability"] as StorageCollection<CatalogManualAvailabilityRecord>,
-    claims: ctx.storage["managed_sku_claims"] as StorageCollection<ManagedSkuRegistrationClaimRecord>,
     media: ctx.storage["catalog_media"] as CatalogMediaStorage,
   };
 }
@@ -51,7 +49,7 @@ function bool(value: unknown): boolean {
 }
 function message(error: unknown): string {
   return error instanceof CatalogError || error instanceof StorefrontAvailabilityError
-    ? error.message : "Could not complete the request. Reload and try again.";
+    ? error.message : "Could not complete. Reload and retry.";
 }
 function alert(message: string): Block {
   return { type: "banner", title: message, variant: "error" };
@@ -60,7 +58,7 @@ function alert(message: string): Block {
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
     { type: "header", text: "Add product" },
-    { type: "context", text: "Name is the customer-facing product title (the product page heading). New products stay unmanaged. Manage stock is coming soon." },
+    { type: "context", text: "Customer-facing title; unmanaged until Manage stock ships." },
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
@@ -77,7 +75,7 @@ async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> 
     blocks.push({ type: "section", text: product.name + " — " + product.sku,
       accessory: { type: "button", label: "Open " + product.name, action_id: "open", value: product.catalogItemId } });
   }
-  if (!products.length) blocks.push({ type: "empty", title: "No products yet", description: "Add your first product above." });
+  if (!products.length) blocks.push({ type: "empty", title: "No products yet", description: "Add your first product." });
   pagination(blocks, start, products.length, 'list');
   return { blocks };
 }
@@ -87,17 +85,15 @@ type ProductFields = {
   manageStock: boolean | null;
   stockStatus: CatalogProductPriceForm["stockStatus"];
 };
-// Registry/sandbox Block Kit 1.2.0 ToggleElement has no disabled field and never
-// forwards disabled to Kumo Switch. Emitting a live toggle would not fulfill the
-// requested disabled slider. This notice is an honest temporary fallback.
 function manageStockNotice(managed: boolean | null): Block {
+  const base = "Manage stock — Coming soon";
   return {
     type: "context",
     text: managed === true
-      ? "Manage stock — Coming soon. This product stays managed; tracking cannot be changed."
+      ? base + ". This product stays managed; tracking cannot be changed."
       : managed === false
-        ? "Manage stock — Coming soon"
-        : "Manage stock — Coming soon. Manual status is hidden until stored tracking can be proven.",
+        ? base
+        : base + ". Manual status is hidden until stored tracking can be proven.",
   };
 }
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
@@ -150,7 +146,7 @@ function target(value: unknown): Target {
 async function preview(ctx: PluginContext, reference: MediaReference | null, alt: string): Promise<Block> {
   const item = reference && ctx.media ? await ctx.media.get(reference.mediaId).catch(() => null) : null;
   return item ? { type: "image", url: item.url, alt: item.alt || alt }
-    : { type: "context", text: reference ? "Image " + reference.mediaId + " is not available in the Media Library." : "No image" };
+    : { type: "context", text: reference ? "Image " + reference.mediaId + " is unavailable." : "No image" };
 }
 async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: CatalogMediaRecord): Promise<Block[]> {
   const blocks: Block[] = [{ type: "header", text: "Images" }, await preview(ctx, media.image, name), { type: "actions", elements: [
@@ -169,18 +165,18 @@ async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: 
   return blocks;
 }
 async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<BlockResponse> {
-  if (!ctx.media) throw new Error("Media Library access is unavailable. Commerce needs the media:read capability.");
+  if (!ctx.media) throw new Error("Media Library unavailable. Commerce needs media:read.");
   const page = await ctx.media.list({ limit: LIBRARY_PAGE, mimeType: "image/", ...(cursor ? { cursor } : {}) });
   const blocks: Block[] = [
     { type: "header", text: t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image" },
-    navigation(), { type: "context", text: "Images from the Media Library. Upload new images on the Media page." },
+    navigation(), { type: "context", text: "Media Library images." },
     { type: "actions", elements: [{ type: "button", label: "Cancel", action_id: t.t === "placeholder" ? "settings" : "open", value: t.id }] },
   ];
   for (const item of page.items) {
     blocks.push({ type: "image", url: item.url, alt: item.alt || item.filename },
       { type: "actions", elements: [{ type: "button", label: "Use " + item.filename, action_id: "media.use", value: { ...t, m: item.id } }] });
   }
-  if (!page.items.length) blocks.push({ type: "empty", title: "No images yet", description: "Upload images on the Media page first." });
+  if (!page.items.length) blocks.push({ type: "empty", title: "No images yet", description: "Upload images on the Media page." });
   if (page.hasMore && page.cursor) {
     blocks.push({ type: "actions", elements: [{ type: "button", label: "Next", action_id: "media.pick", value: { ...t, c: page.cursor } }] });
   }
@@ -190,7 +186,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const store = storage(ctx);
   const listed = await listCatalogProducts(store);
   const selected = listed.products.find((item) => item.catalogItemId === id);
-  if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product was not found. Return to Products.");
+  if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found. Return to Products.");
   const dormant = await loadCatalogItemManualAvailability(store.availability, id);
   const status = dormant.status === "available-on-backorder" ? "on-backorder" : dormant.status;
   const media = await loadCatalogItemMedia(store.media, id);
@@ -220,7 +216,7 @@ function galleryIndex(value: unknown, mediaId: string, gallery: string[]): numbe
 async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
   const placeholder = (await loadStorefrontPlaceholderImage(placeholderStorage(ctx))).image;
   return [
-    { type: "header", text: "Placeholder image" }, { type: "context", text: "Shown on the shop for products without an image." },
+    { type: "header", text: "Placeholder image" }, { type: "context", text: "Shown for products without an image." },
     await preview(ctx, placeholder, "Placeholder image"),
     { type: "actions", elements: [
       { type: "button", label: placeholder ? "Change placeholder" : "Choose placeholder", action_id: "media.pick", value: { t: "placeholder", id: "" } },
@@ -231,7 +227,7 @@ async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
 function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockResponse {
   return { blocks: [
     { type: "header", text: "Commerce settings" }, navigation(), { type: "header", text: "Catalog" },
-    ...(failure ? [alert(failure), { type: "context" as const, text: "Save was not confirmed. Your choice is retained; review or retry." }] : []),
+    ...(failure ? [alert(failure), { type: "context" as const, text: "Save not confirmed; choice kept." }] : []),
     { type: "form", block_id: "catalog-settings-" + crypto.randomUUID(), fields: [
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
     ], submit: { label: "Save", action_id: "settings.save" } },
@@ -328,7 +324,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const [operation, id, ...args] = JSON.parse(action.slice(8));
         const store = storage(ctx);
         const selected = (await listCatalogProducts(store)).products.find(item => item.catalogItemId === id);
-        if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product was not found. Return to Products.");
+        if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found. Return to Products.");
         if (operation === "add") await addCatalogVariantOption(store, {
           productId: id, optionId: args[0], optionLabel: text(values.optionLabel), values: [
             { valueId: args[1], label: text(values.smallLabel), member: { catalogItemId: id, fulfillment: values.first as never } },
@@ -403,7 +399,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const managed = typeof values.manageStock === "boolean" ? values.manageStock : null;
         return { blocks: [
           { type: "header", text: "Product changes" }, { type: "context", text: "Commerce / Products" }, navigation(),
-          alert(failure), { type: "context", text: "Save was not confirmed. Your entries are retained; review or retry." },
+          alert(failure), { type: "context", text: "Save not confirmed; entries kept." },
           manageStockNotice(managed),
           productForm(input.action_id.slice(5), {
             regular: values.regular,

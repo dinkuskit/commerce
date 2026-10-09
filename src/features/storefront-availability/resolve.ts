@@ -1,11 +1,11 @@
 import {
-  loadCatalogItemManualAvailability,
   loadCatalogItemBackorderPolicy,
+  loadCatalogItemManualAvailability,
   resolveCatalogItemPrice,
   type CatalogItemRecord,
   type CatalogStorageRecord,
 } from "../catalog/kernel/index.js";
-import { normalizeStoredStockManagement } from "../inventory-provider/index.js";
+import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import { StorefrontAvailabilityError } from "./errors.js";
 import {
@@ -52,7 +52,7 @@ function normalizeInput(value: unknown): ResolveManagedStorefrontAvailabilityInp
   ) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "storefront availability accepts only catalogItemId",
+      "storefront availability accepts catalogItemId only",
     );
   }
   return { catalogItemId: input.catalogItemId.trim() };

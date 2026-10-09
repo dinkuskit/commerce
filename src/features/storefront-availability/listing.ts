@@ -72,7 +72,7 @@ export async function setOutOfStockListing(
   ) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "out-of-stock listing accepts only hideOutOfStock",
+      "out-of-stock listing accepts hideOutOfStock only",
     );
   }
   const listing = await loadOutOfStockListing(storage);
