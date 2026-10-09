@@ -112,8 +112,10 @@ function productForm(id: string, values: ProductFields, action = "save:" + id): 
       { type: "text_input", action_id: "sale", label: "Sale", initial_value: values.sale },
       ...(values.manageStock === false ? [{ type: "radio" as const, action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS,
         initial_value: values.stockStatus ?? undefined }] : []),
-      { type: "toggle", action_id: "feed:google-merchant", label: "Google Merchant", initial_value: values.feedChannels?.includes("google-merchant") ?? false },
-      { type: "toggle", action_id: "feed:meta-catalog", label: "Meta catalog", initial_value: values.feedChannels?.includes("meta-catalog") ?? false },
+      ...(values.feedChannels === undefined ? [] : [
+        { type: "toggle" as const, action_id: "feed:google-merchant", label: "Google Merchant", initial_value: values.feedChannels.includes("google-merchant") },
+        { type: "toggle" as const, action_id: "feed:meta-catalog", label: "Meta catalog", initial_value: values.feedChannels.includes("meta-catalog") },
+      ]),
     ], submit: { label: "Save", action_id: action } };
 }
 const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
@@ -202,7 +204,9 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const dormant = await loadCatalogItemManualAvailability(store.availability, id);
   const status = dormant.status === "available-on-backorder" ? "on-backorder" : dormant.status;
   const media = await loadCatalogItemMedia(store.media, id);
-  const feedChannels = await loadProductFeedEligibility(store.feedEligibility, id);
+  const feedChannels = store.feedEligibility
+    ? await loadProductFeedEligibility(store.feedEligibility, id)
+    : undefined;
   const values = form ?? { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
     { type: "header", text: selected.name }, { type: "context", text: "Commerce / Products" }, navigation(),
@@ -326,7 +330,8 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus);
         const saved = await saveCatalogProductPrices(store,
           admitV1CatalogPriceSaveInput(payload, wasManaged));
-        if (Object.hasOwn(values, "feed:google-merchant") || Object.hasOwn(values, "feed:meta-catalog")) {
+        if (store.feedEligibility &&
+            (Object.hasOwn(values, "feed:google-merchant") || Object.hasOwn(values, "feed:meta-catalog"))) {
           await setProductFeedEligibility(store.feedEligibility, store.catalog, {
             catalogItemId: id,
             channels: [
