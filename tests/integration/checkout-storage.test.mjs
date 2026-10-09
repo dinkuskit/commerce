@@ -1,3 +1,4 @@
+import { withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -24,7 +25,7 @@ test('checkout CAS and order receipt survive exact EmDash repository connection 
     initializeCatalogDatabase(path,[]);
     const left=open(path),right=open(path);connections.push(left,right);
     const f=fixture(left.store);
-    const [a,b]=await Promise.all([startCheckout(f.execution,'guest-cart',cart),startCheckout({...f.execution,store:right.store},'guest-cart',cart)]);
+    const [a,b]=await Promise.all([startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart)),startCheckout({...f.execution,store:right.store},'guest-cart',withSyntheticCheckoutContact(cart))]);
     assert.equal(a.attemptId,b.attemptId);assert.equal(f.holds.size,1);assert.equal(f.sessions.size,1);
     f.setPayment('paid');const paid=await reconcileCheckout(f.execution,'guest-cart',a.attemptId);
     await left.db.destroy();connections.splice(connections.indexOf(left),1);

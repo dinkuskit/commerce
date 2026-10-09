@@ -14,6 +14,10 @@ import {
   GUEST_CHECKOUT_STATUS_ROUTE,
   resolveRegistryCheckoutServices,
 } from "./features/checkout/kernel/index.js";
+import {
+  PUBLIC_STORE_POLICIES_ROUTE,
+  readSandboxPublicStorePolicies,
+} from "./features/store-policies/kernel/index.js";
 
 const guestRequest = {
   body: "json" as const,
@@ -49,6 +53,13 @@ const plugin: SandboxedPlugin = {
         }
         return readPublicCatalogItem(ctx, query.get("itemId")!);
       },
+    }),
+    [PUBLIC_STORE_POLICIES_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["GET"],
+      request: { body: "none" },
+      cacheControl: "no-store",
+      handler: async (_route, ctx) => readSandboxPublicStorePolicies(ctx),
     }),
     admin: {
       permission: "content:edit_any",

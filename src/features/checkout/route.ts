@@ -1,4 +1,5 @@
 import { PluginRouteError, type PluginRoute } from "emdash";
+import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
 
 import { COUPONS_COLLECTION, createCheckoutCouponPort, type CouponCollection } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
@@ -43,7 +44,11 @@ function nativeRuntime(
       site: ctx.site,
     },
     NATIVE_GUEST_CHECKOUT_STORAGE,
-    options,
+    {
+      ...options,
+      loadCheckoutContactRequirements: () =>
+        loadCheckoutContactRequirements(ctx.settings),
+    },
     coupons ? createCheckoutCouponPort(coupons) : undefined,
   );
 }

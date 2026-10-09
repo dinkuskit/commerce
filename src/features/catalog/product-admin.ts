@@ -72,6 +72,9 @@ export interface CatalogProductListItem {
   sale: string | null;
   manageStock: boolean;
   stockStatus: ClerkStockStatus | null;
+  gtin?: string;
+  mpn?: string;
+  brand?: string;
   variantProduct?: {
     productId: string;
     revision: number;
@@ -200,6 +203,9 @@ export async function listCatalogProducts(
       manageStock: managed,
       stockStatus:
         availability === null ? null : toClerkStockStatus(availability.status),
+      ...(record.gtin ? { gtin: record.gtin } : {}),
+      ...(record.mpn ? { mpn: record.mpn } : {}),
+      ...(record.brand ? { brand: record.brand } : {}),
     };
     if (record.variantProduct) {
       const members: CatalogProductVariantListItem[] = [];

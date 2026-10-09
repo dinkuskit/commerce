@@ -1,0 +1,9 @@
+# Qualified country dependency propagation
+
+Decision source8ba8853f0ada35ce73218b0c066fdbc5772c1477 receives country compositionc6349b54f9295958fe6ced90f44fc9bd25bc48b6, retaining commonbasec2eaee6ff195586eab35741d08eb6b659c5fcca3. Both parent histories remain in the normal Git merge.
+
+The coordinator approved exact GrillTrack v2 plana81bddd0af9513d3a7eff674546d84b4adce2e9e6a370d9e879130299571b85a and adjudication hash4538e906447a28a57c2115c5da66044971a12b38c19eca3953f76bb9ebca596c. The55shared records retain the current decision branch:54choice texts match, while the country record keeps the explicitly accepted initial US physical-delivery scope. The two additional US coverage/foreign-billing decisions are preserved. The resulting57decision union has55needs_reverification records; no prior review/verification is represented as current composed proof. Ledger/events conflicts were resolved by restoring the exact approved current snapshot, then applying the supported CLI plan; no hand-authored canonical merge.
+
+Validation: CLI validate passes; all country/phone/UScoverage/foreign-billing choices match the pre-merge decision source; runtime, tests, scripts, package and manifest match c6349b54 exactly; repository/feature audits and diff whitespace checks pass. Runtime tests were not repeated for this decision-only delta.
+
+The exact matching country runtime passed361unit,39integration,10mainbrowser and2merchant-settings browser cases; see ../merchant-store-settings-20261008/VARIANT-INTEGRATION.md. This is inherited source-matched evidence, not a second execution. Official bundle validation remains blocked at137927bytes against131072, before installed coupon browser startup. No completefullgate, final composed review, destination/address enforcement, release or main merge is claimed. New exact-source decision review remains required for this checkpoint; the earlier8ba8853review is historical.

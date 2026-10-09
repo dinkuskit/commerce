@@ -1,3 +1,4 @@
+import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -530,7 +531,7 @@ test("wake reconciliation uses durable association, is at-least-once, and retain
       return structuredClone(associations.get(attemptId) ?? null);
     },
   };
-  const attempt = await startCheckout(f.execution, "wake-cart", cart);
+  const attempt = await startCheckout(f.execution, "wake-cart", withSyntheticCheckoutContact(cart));
   const wake = { eventId: "evt-1", attemptId: attempt.attemptId, bindingRef: "stripe-test-binding", deliveryGeneration: 1, wokeAt: 2000 };
   let state = "unknown";
   let acknowledged = [];
@@ -591,7 +592,7 @@ test("authorize_net wake alone never marks paid; amount or currency mismatch sta
       return structuredClone(associations.get(attemptId) ?? null);
     },
   };
-  const attempt = await startCheckout(f.execution, "anet-wake-cart", cart);
+  const attempt = await startCheckout(f.execution, "anet-wake-cart", withSyntheticCheckoutContact(cart));
   const session = structuredClone(attempt.session);
   assert.ok(session);
   const wake = {
@@ -661,7 +662,7 @@ test("paid wake without a matching durable order retains without acknowledgement
     opened.db.close();
     rmSync(dir, { recursive: true, force: true });
   });
-  const attempt = await startCheckout(f.execution, "missing-order-cart", cart);
+  const attempt = await startCheckout(f.execution, "missing-order-cart", withSyntheticCheckoutContact(cart));
   const association = {
     recordKind: "checkout-payment-association",
     attemptId: attempt.attemptId,
@@ -702,7 +703,7 @@ test("failed association claim makes no payment session or inventory hold", asyn
     async claim() { throw new Error("association CAS unavailable"); },
     async get() { return null; },
   };
-  await assert.rejects(() => startCheckout(f.execution, "association-failure-cart", cart), /association CAS unavailable/);
+  await assert.rejects(() => startCheckout(f.execution, "association-failure-cart", withSyntheticCheckoutContact(cart)), /association CAS unavailable/);
   assert.equal(f.sessions.size, 0);
   assert.equal(f.holds.size, 0);
 });
@@ -754,7 +755,7 @@ test("bounded overflow stays unknown in canonical reconciliation without order, 
       return overflow();
     },
   });
-  const attempt = await startCheckout(f.execution, "cart-cap", cart);
+  const attempt = await startCheckout(f.execution, "cart-cap", withSyntheticCheckoutContact(cart));
   assert.equal(attempt.phase, "paying");
   const associations = {
     async get(attemptId) {
@@ -830,7 +831,7 @@ test("native public handlers reopen durable storage and reconcile one order per 
   const started = await invokeGuest(
     plugin.routes[GUEST_CHECKOUT_START_ROUTE],
     opened.storage,
-    { lines: [{ catalogItemId: "hat", quantity: 1 }] },
+    { contact: { email: 'wake-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] },
     { capability: token },
   );
   assert.equal(started.checkout.state, "pending");

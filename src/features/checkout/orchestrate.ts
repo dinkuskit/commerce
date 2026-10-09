@@ -8,6 +8,11 @@ import { composeCheckoutPricing } from "./pricing.js";
 import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
 import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
+import {
+  captureCheckoutContact,
+  CheckoutContactError,
+  type CheckoutContactSnapshot,
+} from "../checkout-contact/index.js";
 
 export class CheckoutError extends Error {}
 function fail(message: string): never { throw new CheckoutError(message); }
@@ -28,7 +33,14 @@ function cartInput(raw: unknown): CartLine[] {
 function current(attempts: CheckoutAttempt[]): CheckoutAttempt {
   return attempts[attempts.length - 1] ?? fail("Checkout not found");
 }
-async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: string): Promise<CheckoutAttempt> {
+async function freeze(
+  cart: CartLine[],
+  e: CheckoutExecution,
+  couponCode?: string,
+  rawContact?: unknown,
+): Promise<CheckoutAttempt> {
+  if (!e.loadCheckoutContactRequirements) throw new CheckoutContactError("REQUIREMENTS_UNAVAILABLE");
+  const contactSnapshot = await captureCheckoutContact(rawContact, e.loadCheckoutContactRequirements);
   const lines: CheckoutLine[] = [];
   const selections: CheckoutVariantSelectionSnapshot[] = [];
   let stock: StockRequest | undefined;
@@ -78,12 +90,19 @@ async function freeze(cart: CartLine[], e: CheckoutExecution, couponCode?: strin
   else if (couponCode !== undefined) fail("Pricing composition is unavailable");
   const minor = lines.reduce((sum, line) => sum + parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity), 0n).toString();
   const total = pricing?.snapshot.finalTotal ?? normalizeMoney({ currency: "USD", minor });
-  return { attemptId, cart, ...(selections.length ? { variantSelections: selections } : {}), payment: createCurrentPaymentRequest({
+  return {
+    attemptId,
+    cart,
+    contactSnapshot,
+    ...(selections.length ? { variantSelections: selections } : {}),
+    payment: createCurrentPaymentRequest({
     attemptId, bindingRef: e.paymentBindingRef, lines, total,
     ...(pricing ? { pricing: pricing.snapshot } : {}),
-  }), ...(stock ? { stock } : {}),
+    }),
+    ...(stock ? { stock } : {}),
     ...(pricing?.couponId ? { coupon: { couponId: pricing.couponId, code: pricing.couponCode!, status: "unreserved" as const } } : {}),
-    phase: "reserving" };
+    phase: "reserving",
+  };
 }
 
 
@@ -93,7 +112,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   if (!cartId.trim()) fail("Invalid cart identity");
   if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
   const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
-    ? (Object.keys(rawCart).sort().join() === "couponCode,lines" || Object.keys(rawCart).sort().join() === "lines")
+    ? (["contact,couponCode,lines", "contact,lines", "couponCode,lines", "lines"].includes(Object.keys(rawCart).sort().join()))
       ? (Object.prototype.hasOwnProperty.call(rawCart, "couponCode")
         ? typeof (rawCart as { couponCode?: unknown }).couponCode === "string"
           ? normalizeCouponCode((rawCart as { couponCode: string }).couponCode) : fail("Invalid cart coupon")
@@ -112,7 +131,14 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
     }
     if (previous && retryAfter !== previous.attemptId) fail("Retry requires the released attempt identity");
     if (!previous && retryAfter !== undefined) fail("Retry checkout not found");
-    const attempt = await freeze(cart, e, requestedCouponCode);
+    const attempt = await freeze(
+      cart,
+      e,
+      requestedCouponCode,
+      rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
+        ? (rawCart as { contact?: unknown }).contact
+        : undefined,
+    );
     if (e.paymentAssociations && !await e.paymentAssociations.claim({
       recordKind: "checkout-payment-association",
       attemptId: attempt.attemptId,
@@ -137,6 +163,21 @@ export async function reconcileCheckout(e: CheckoutExecution, cartId: string, at
 function samePaymentSession(left: PaymentSession, right: PaymentSession): boolean {
   return left.sessionId === right.sessionId && left.redirectUrl === right.redirectUrl &&
     left.createdAt === right.createdAt && left.expiresAt === right.expiresAt;
+}
+
+function freezeContactSnapshot(
+  snapshot: CheckoutContactSnapshot | undefined,
+): CheckoutContactSnapshot | undefined {
+  if (!snapshot) return undefined;
+  return Object.freeze({
+    schema: snapshot.schema,
+    contact: Object.freeze({
+      email: `${snapshot.contact.email}`,
+      ...(snapshot.contact.phone === undefined ? {} : { phone: `${snapshot.contact.phone}` }),
+    }),
+    requirePhoneNumber: snapshot.requirePhoneNumber,
+    revision: snapshot.revision === null ? null : `${snapshot.revision}`,
+  });
 }
 function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void {
   if (value.outcome === "unknown") return;
@@ -249,6 +290,7 @@ function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptI
     lines: attempt.payment.lines, total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
     ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
+    ...(next.contactSnapshot ? { contactSnapshot: next.contactSnapshot } : {}),
   };
 }
 
@@ -262,6 +304,9 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
     if (attempt.phase === "paid") return finishPaidCoupon(e, cartId, attempt);
     if (attempt.phase === "released") return attempt;
     const next = structuredClone(attempt);
+    if (attempt.contactSnapshot) {
+      next.contactSnapshot = freezeContactSnapshot(attempt.contactSnapshot);
+    }
     if (attempt.phase === "reserving") {
       if (attempt.stock) {
         const provider = await e.resolveInventory(attempt.stock.binding);

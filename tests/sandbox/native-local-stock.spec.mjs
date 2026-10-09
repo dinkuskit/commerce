@@ -123,7 +123,7 @@ test.describe("Native local-development Manage stock opt-in", () => {
       const response = page.waitForResponse(
         (r) => r.url().endsWith("/catalog-items/save-prices") && r.request().method() === "POST",
       );
-      await page.locator("form:has(#regular-price) button:has-text('Save')").click();
+      await page.locator("form:has(#regular-price)").getByRole("button", { name: "Save", exact: true }).click();
       const received = await response;
       const body = await received.json();
       expect(received.status()).toBe(200);

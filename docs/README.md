@@ -14,6 +14,8 @@
   contract over EmDash's Media Library.
 - [REVIEW_RAIL.md](REVIEW_RAIL.md) describes the fail-closed ClawSweeper
   command boundary.
+- [CLI-SPEC.md](CLI-SPEC.md) is the draft `dinkus-commerce` command-line
+  client specification.
 
 Documentation must remain generic and public-safe. Private operating rationale,
 tenant specifics, and production configuration belong outside this repository.
