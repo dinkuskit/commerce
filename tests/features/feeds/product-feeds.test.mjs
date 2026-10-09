@@ -81,6 +81,23 @@ test("catalog facts, JSON-LD and feeds share price and availability", () => {
   assert.match(buildMetaCatalogFeed([row]), /in stock/);
 });
 
+test("backorder rows keep backorder availability, matching JSON-LD BackOrder", () => {
+  const row = facts({
+    product: product({ availability: { status: "available-on-backorder", sellable: true, listable: true } }),
+  });
+  const jsonLd = buildProductJsonLd({
+    product: { id: row.product.id, name: row.product.name, sku: row.product.sku, price: row.product.price, availability: row.product.availability },
+    page: { url: row.content.canonicalUrl, name: row.content.title },
+  });
+  assert.equal(jsonLd.offers.availability, "https://schema.org/BackOrder");
+  const google = buildGoogleMerchantFeed([row]);
+  const meta = buildMetaCatalogFeed([row]);
+  assert.match(google, /<g:availability>backorder<\/g:availability>/);
+  assert.equal(google.includes("preorder"), false);
+  assert.match(meta, /"available for order"/);
+  assert.equal(meta.includes("preorder"), false);
+});
+
 test("optional identifiers and images are not invented", () => {
   const row = facts({
     content: { canonicalUrl: "https://shop.example.test/products/hat", title: "Hat" },

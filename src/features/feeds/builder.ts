@@ -29,12 +29,22 @@ function price(product: ProductFeedFacts): string {
   return money ? `${formatMinorUnitsAsDecimal(money)} ${money.currency}` : "";
 }
 
-function availability(product: ProductFeedFacts): string {
-  return product.product.availability.status === "in-stock"
-    ? "in stock"
-    : product.product.availability.status === "available-on-backorder"
-      ? "preorder"
-      : "out of stock";
+// Each channel's value for the same status JSON-LD maps (backorder → BackOrder).
+const AVAILABILITY_VALUES: Record<ProductFeedChannel, { inStock: string; backorder: string; outOfStock: string }> = {
+  "google-merchant": { inStock: "in stock", backorder: "backorder", outOfStock: "out of stock" },
+  "meta-catalog": { inStock: "in stock", backorder: "available for order", outOfStock: "out of stock" },
+};
+
+function availability(product: ProductFeedFacts, channel: ProductFeedChannel): string {
+  const values = AVAILABILITY_VALUES[channel];
+  switch (product.product.availability.status) {
+    case "in-stock":
+      return values.inStock;
+    case "available-on-backorder":
+      return values.backorder;
+    default:
+      return values.outOfStock;
+  }
 }
 
 function eligible(product: ProductFeedFacts, channel: ProductFeedChannel): boolean {
@@ -71,7 +81,7 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
       `<g:link>${escapeXml(product.content.canonicalUrl)}</g:link>`,
       image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : "",
       `<g:price>${escapeXml(price(product))}</g:price>`,
-      `<g:availability>${availability(product)}</g:availability>`,
+      `<g:availability>${availability(product, "google-merchant")}</g:availability>`,
       "<g:condition>new</g:condition>",
       product.product.gtin ? `<g:gtin>${escapeXml(product.product.gtin)}</g:gtin>` : "",
       product.product.mpn ? `<g:mpn>${escapeXml(product.product.mpn)}</g:mpn>` : "",
@@ -92,7 +102,7 @@ export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): str
     product.product.id,
     product.content.title,
     product.content.description ?? "",
-    availability(product),
+    availability(product, "meta-catalog"),
     "new",
     price(product),
     product.content.canonicalUrl,
