@@ -81,12 +81,17 @@ import {
   type GuestCheckoutHostOptions,
 } from "./features/checkout/index.js";
 import { COUPONS_COLLECTION } from "./features/coupons/index.js";
-import { PRODUCT_FEED_ELIGIBILITY_COLLECTION } from "./features/catalog/index.js";
+import {
+  PRODUCT_FEED_ELIGIBILITY_COLLECTION,
+} from "./features/catalog/index.js";
+import {
+  SET_PRODUCT_FEED_ELIGIBILITY_ROUTE,
+  setProductFeedEligibilityRoute,
+} from "./features/feeds/route.js";
 
 export * from "./features/inventory-provider/index.js";
 
 export * from "./features/catalog/index.js";
-export * from "./features/feeds/index.js";
 
 export * from "./features/inventory-setup/index.js";
 
@@ -255,6 +260,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         setCatalogItemManualAvailabilityRoute,
       [SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE]: setCatalogItemRegularPriceRoute,
       [SET_CATALOG_ITEM_SALE_PRICE_ROUTE]: setCatalogItemSalePriceRoute,
+      [SET_PRODUCT_FEED_ELIGIBILITY_ROUTE]: setProductFeedEligibilityRoute,
       [CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE]: clearCatalogItemSalePriceRoute,
       [CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE]:
         clearCatalogItemRegularPriceRoute,

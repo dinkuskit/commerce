@@ -49,6 +49,7 @@ import type {
   CatalogPriceRecord,
   CatalogStorageRecord,
 } from "./types.js";
+import type { ProductFeedEligibilityRecord } from "../feeds/types.js";
 
 export {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -164,6 +165,7 @@ function productSaveStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
     availability: ctx.storage
       .catalogManualAvailability as StorageCollection<CatalogManualAvailabilityRecord>,
     claims: ctx.storage.managedSkuClaims as StorageCollection<ManagedSkuRegistrationClaimRecord>,
+    feedEligibility: ctx.storage.productFeedEligibility as StorageCollection<ProductFeedEligibilityRecord>,
   };
 }
 
