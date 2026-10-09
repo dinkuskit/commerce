@@ -9,7 +9,6 @@ import { generateKeyPair, SignJWT, jwtVerify } from 'jose';
 import { PluginStorageRepository, createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { WorkerdSandboxRunner } from '@emdash-cms/sandbox-workerd/sandbox';
-import { createCouponAdmin } from '../../../dist/features/coupons/index.js';
 import { COMMERCE_REGISTRY_RUNTIME_ID, REGISTRY_CHECKOUT_CONFIG_SCHEMA } from '../../../dist/features/checkout/index.js';
 
 // A fresh key exists only in this isolated test process. No operator key is read.
@@ -29,7 +28,7 @@ const ACCOUNT = 'acct_synthetic';
 export function configuration(shipping = { configurationId: 'shipping-synthetic', revision: 1, mode: 'free' }) {
   return { schema: REGISTRY_CHECKOUT_CONFIG_SCHEMA, enabled: true, commerceOrigin: SITE,
     siteId: SITE_ID, paymentsOrigin: TRANSPORT_ORIGIN, bindingRef: BINDING,
-    providerId: 'stripe', stripeAccountId: ACCOUNT, pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+    providerId: 'stripe', mode: 'test', stripeAccountId: ACCOUNT, pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
     issuer: ISSUER, audience: AUDIENCE, shipping };
 }
 export async function credential(changes = {}) {
@@ -124,7 +123,6 @@ export async function runtimeFixture({
       const attempt = record.attempts.find(value => value.attemptId === event.attemptId);
       assert.equal(attempt.phase, 'paid');
       assert.ok(Boolean(attempt.order));
-      if (attempt.coupon) assert.equal(attempt.coupon.status, 'consumed');
       assert.deepEqual(event, pending[0]);
       counts.acknowledgments++;
       pending = [];
@@ -150,15 +148,7 @@ export async function runtimeFixture({
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },
   });
-  async function coupon(amount = '100') {
-    const now = Date.now();
-    return createCouponAdmin(collections.coupons).create({ code: 'SAVE10', globalCap: 8, rule: {
-      ruleId: 'synthetic-rule', version: 1, discount: { kind: 'fixed', amount: { currency: 'USD', minor: amount } },
-      appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
-      minimumEligibleMerchandise: { currency: 'USD', minor: '0' },
-      startsAt: new Date(now - 86400000).toISOString(), endsAt: new Date(now + 86400000).toISOString(), timeZone: 'UTC' } });
-  }
-  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests, coupon,
+  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests,
     setPaid() { paid = true; },
     setWakes(values) { pending = structuredClone(values); },
     setTransportOverride(fn) { override = fn; },

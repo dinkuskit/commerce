@@ -28,6 +28,9 @@ const requiredFiles = [
   "src/features/checkout/index.ts",
   "src/features/checkout/kernel/index.ts",
   "src/features/coupons/index.ts",
+  "src/features/store-policies/index.ts",
+  "src/features/structured-data/index.ts",
+  "docs/implementation/product-jsonld-policies.md",
   "docs/implementation/guest-checkout-public.md",
   "docs/implementation/checkout-payment-window.md",
   "src/features/storefront-availability/policy.ts",
@@ -75,12 +78,16 @@ export async function auditFeatures(repositoryRoot = root) {
     "`dinkus.inventory-setup`",
     "`dinkus.storefront-availability`",
     "`dinkus.checkout`",
+    "`dinkus.store-policies`",
+    "`dinkus.structured-data`",
     "`src/features/catalog/`",
     "`src/features/inventory-provider/`",
     "`src/features/inventory-setup/`",
     "`src/features/storefront-availability/`",
     "`src/features/checkout/`",
     "`src/features/coupons/`",
+    "`src/features/store-policies/`",
+    "`src/features/structured-data/`",
     "`bin/verify-commerce quick`",
     "`bin/verify-commerce full`",
     "`proof/catalog-first-managed-sku/PROOF.md`",
@@ -128,6 +135,22 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/coupons must resolve to the coupons public entry",
     );
   }
+  if (
+    manifest.exports?.["./features/store-policies"]?.default !==
+    "./dist/features/store-policies/index.js"
+  ) {
+    findings.push(
+      "package export ./features/store-policies must resolve to the store-policies public entry",
+    );
+  }
+  if (
+    manifest.exports?.["./features/structured-data"]?.default !==
+    "./dist/features/structured-data/index.js"
+  ) {
+    findings.push(
+      "package export ./features/structured-data must resolve to the structured-data public entry",
+    );
+  }
   if (manifest.devDependencies?.emdash !== "1.2.0") {
     findings.push("catalog pilot must remain pinned to exact emdash 1.2.0");
   }
@@ -146,6 +169,9 @@ export async function auditFeatures(repositoryRoot = root) {
         "storefront-availability",
         "checkout",
         "coupons",
+        "store-policies",
+        "structured-data",
+        "fixed-bundles",
       ].find(
         (feature) =>
           importPath.includes(`/features/${feature}/`) || importPath.includes(`/${feature}/`),

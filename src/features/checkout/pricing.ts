@@ -1,4 +1,4 @@
-import { createCouponAdmin, evaluateCoupon, normalizeCouponCode } from "../coupons/index.js";
+import { normalizeCouponCode } from "../coupons/index.js";
 import type { CouponQuote, CouponQuoteSnapshot } from "../coupons/index.js";
 import { normalizeMoney, parseMinorUnits, type Money } from "../catalog/kernel/index.js";
 import type {
@@ -93,11 +93,7 @@ export async function composeCheckoutPricing(
   let normalizedCode: string | undefined;
   if (couponCode !== undefined) {
     normalizedCode = normalizeCouponCode(couponCode);
-    const admin = createCouponAdmin(pricing.coupons);
-    const coupon = await admin.findByCode(normalizedCode);
-    if (!coupon) fail("Coupon unavailable");
-    couponId = coupon.couponId;
-    quote = await evaluateCoupon(coupon, {
+    const quoted = await pricing.coupons?.quote(normalizedCode, {
       catalog: execution.catalog.catalog,
       prices: execution.catalog.prices,
     }, {
@@ -105,6 +101,9 @@ export async function composeCheckoutPricing(
       lines: cart.map((line) => ({ productId: line.catalogItemId, quantity: line.quantity })),
       now: new Date((execution.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
     });
+    if (!quoted) fail("Coupon unavailable");
+    couponId = quoted.couponId;
+    quote = quoted.quote;
     if (quote.lines.length !== lines.length || quote.lines.some((line, index) =>
       line.productId !== lines[index].catalogItemId ||
       line.quantity !== lines[index].quantity ||
