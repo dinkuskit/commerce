@@ -98,6 +98,22 @@ test("backorder rows keep backorder availability, matching JSON-LD BackOrder", (
   assert.equal(meta.includes("preorder"), false);
 });
 
+test("secondary images are kept as additional image links in both feeds", () => {
+  const urls = Array.from({ length: 23 }, (_, index) => `https://cdn.example.test/hat-${index}.jpg`);
+  const row = facts({ content: { ...facts().content, imageUrls: urls } });
+  const google = buildGoogleMerchantFeed([row]);
+  assert.match(google, /<g:image_link>https:\/\/cdn\.example\.test\/hat-0\.jpg<\/g:image_link>/);
+  const googleExtra = [...google.matchAll(/<g:additional_image_link>([^<]+)<\/g:additional_image_link>/g)].map((match) => match[1]);
+  assert.deepEqual(googleExtra, urls.slice(1, 11));
+  const meta = buildMetaCatalogFeed([row]);
+  const [header] = meta.split("\n");
+  assert.match(header, /"image_link","additional_image_link"/);
+  assert.equal(meta.includes(`"${urls.slice(1, 21).join(",")}"`), true);
+  assert.equal(meta.includes("hat-21.jpg"), false);
+  const single = buildGoogleMerchantFeed([facts()]);
+  assert.equal(single.includes("g:additional_image_link"), false);
+});
+
 test("optional identifiers and images are not invented", () => {
   const row = facts({
     content: { canonicalUrl: "https://shop.example.test/products/hat", title: "Hat" },

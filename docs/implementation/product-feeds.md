@@ -20,7 +20,9 @@ GTIN nor a brand plus MPN, it carries `g:identifier_exists` `no`, the channel's
 explicit no-identifier signal, instead of an invented identifier;
 `buildMetaCatalogFeed` emits deterministic CSV. Availability follows the
 JSON-LD mapping per channel: a backorder product is Google `backorder` and Meta
-`available for order` (never `preorder`, which means not yet released). `pageProductFeedRows` provides
+`available for order` (never `preorder`, which means not yet released). The
+first image URL is the main image; the rest are sent as additional image links
+(up to 10 for Google, 20 for Meta, the channels' limits). `pageProductFeedRows` provides
 a bounded cursor contract for hosts that page their catalog reads. These
 builders are host-side exports and are intentionally not imported by
 `src/plugin.ts`, keeping them outside the Registry backend size cap.

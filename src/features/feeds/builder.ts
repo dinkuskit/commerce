@@ -8,6 +8,10 @@ import {
 import { formatMinorUnitsAsDecimal } from "../structured-data/index.js";
 
 const DEFAULT_PAGE_SIZE = 100;
+// Channel caps on secondary images: Google takes 10 additional_image_link
+// elements, Meta 20 comma-separated URLs in one additional_image_link column.
+const GOOGLE_ADDITIONAL_IMAGES = 10;
+const META_ADDITIONAL_IMAGES = 20;
 const MAX_PAGE_SIZE = 500;
 
 function escapeXml(value: string): string {
@@ -80,6 +84,8 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
       product.content.description ? `<g:description>${escapeXml(product.content.description)}</g:description>` : "",
       `<g:link>${escapeXml(product.content.canonicalUrl)}</g:link>`,
       image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : "",
+      ...(product.content.imageUrls ?? []).slice(1, 1 + GOOGLE_ADDITIONAL_IMAGES)
+        .map((url) => `<g:additional_image_link>${escapeXml(url)}</g:additional_image_link>`),
       `<g:price>${escapeXml(price(product))}</g:price>`,
       `<g:availability>${availability(product, "google-merchant")}</g:availability>`,
       "<g:condition>new</g:condition>",
@@ -96,7 +102,7 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
 }
 
 export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): string {
-  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "brand", "gtin", "mpn", "shipping"];
+  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "additional_image_link", "brand", "gtin", "mpn", "shipping"];
   const rows = products.filter((product) => eligible(product, "meta-catalog")).map((product) => [
     product.product.id,
     product.product.id,
@@ -107,6 +113,7 @@ export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): str
     price(product),
     product.content.canonicalUrl,
     product.content.imageUrls?.[0] ?? "",
+    (product.content.imageUrls ?? []).slice(1, 1 + META_ADDITIONAL_IMAGES).join(","),
     product.product.brand ?? "",
     product.product.gtin ?? "",
     product.product.mpn ?? "",
