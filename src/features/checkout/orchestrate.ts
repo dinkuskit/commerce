@@ -4,7 +4,7 @@ import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index
 import { resolveStorefrontAvailability } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import { composeCheckoutPricing } from "./pricing.js";
-import { createCouponAttemptOwner, CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
+import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
 import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
 import {
@@ -196,14 +196,18 @@ function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void 
   if (value.outcome === "paid" && !value.paymentId) fail("Missing payment identity");
 }
 
+function couponOwner(e: CheckoutExecution) {
+  if (!e.pricing?.coupons) throw new Error("Coupon owner unavailable");
+  return e.pricing.coupons.owner();
+}
+
 async function reconcileCoupon(
   e: CheckoutExecution,
   attempt: CheckoutAttempt,
   result: "paid" | "released",
 ): Promise<void> {
   if (!attempt.coupon) return;
-  if (!e.pricing) throw new Error("Coupon owner unavailable");
-  const owner = createCouponAttemptOwner(e.pricing.coupons);
+  const owner = couponOwner(e);
   if (result === "paid") {
     if (attempt.payment.total.currency === "USD" && attempt.payment.total.minor === "0") {
       const quote = attempt.payment.pricing?.coupon?.quote;
@@ -315,7 +319,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       } else next.phase = "paying";
       if (next.phase === "paying" && next.coupon?.status === "unreserved") {
         try {
-          const owner = createCouponAttemptOwner(e.pricing!.coupons);
+          const owner = couponOwner(e);
           const reservation = await owner.reserve({
             couponId: next.coupon.couponId,
             attemptId: next.attemptId,
@@ -375,7 +379,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         else {
           if (attempt.coupon) {
             try {
-              const owner = createCouponAttemptOwner(e.pricing!.coupons);
+              const owner = couponOwner(e);
               await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);
             } catch {
               return attempt;

@@ -1,5 +1,7 @@
 # Contact69 on released variant and country decisions
 
+> Superseded for bundle size, packaging and the installation gate by [CURRENT-HEAD.md](CURRENT-HEAD.md): after #75 the backend is 113,755 bytes, under the 131,072-byte cap.
+
 Email remains required for every newly frozen checkout, including account-free guests. Phone is visible/optional by default and required only by the authoritative merchant flag. Both real native and sandbox runtime bindings use original settings access. Validated contact and nullable settings revision remain frozen on the original attempt and paid order; payment payloads and public projections exclude contact.
 
 ## Exact composition and history

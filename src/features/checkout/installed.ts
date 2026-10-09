@@ -162,7 +162,7 @@ export function createInstalledCheckoutHandlers(
   }
 
   return {
-    prepare: (route, ctx) => guest(route, ctx, prepareGuestCheckout),
+    prepare: (route, ctx) => guest(route, ctx, runtime => prepareGuestCheckout(runtime, route.input)),
     start: (route, ctx) => guest(route, ctx, runtime => startGuestCheckout(runtime, route.input, route.request.headers)),
     status: (route, ctx) => guest(route, ctx, runtime => statusGuestCheckout(runtime, route.input, route.request.headers)),
     reconcileWakes,

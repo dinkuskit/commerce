@@ -1,6 +1,7 @@
 import { PluginRouteError, type PluginRoute } from "emdash";
 import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
 
+import { COUPONS_COLLECTION, createCheckoutCouponPort, type CouponCollection } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
 import { prepareGuestCheckout, startGuestCheckout, statusGuestCheckout } from "./guest.js";
 import { admitBoundGuestCheckoutRuntime, NATIVE_GUEST_CHECKOUT_STORAGE } from "./runtime.js";
@@ -30,9 +31,11 @@ function nativeRuntime(
   ctx: Parameters<PluginRoute["handler"]>[0],
   options: GuestCheckoutHostOptions,
 ) {
+  const storage = ctx.storage as Record<string, unknown>;
+  const coupons = storage[COUPONS_COLLECTION] as CouponCollection | undefined;
   return admitBoundGuestCheckoutRuntime(
     {
-      storage: ctx.storage as Record<string, unknown>,
+      storage,
       request: ctx.request,
       site: ctx.site,
     },
@@ -42,6 +45,7 @@ function nativeRuntime(
       loadCheckoutContactRequirements: () =>
         loadCheckoutContactRequirements(ctx.settings),
     },
+    coupons ? createCheckoutCouponPort(coupons) : undefined,
   );
 }
 
@@ -77,7 +81,7 @@ export function createGuestCheckoutPrepareRoute(
       if (ctx.request.method.toUpperCase() !== "POST") {
         throw new PluginRouteError("METHOD_NOT_ALLOWED", "guest checkout prepare requires POST", 405);
       }
-      return runNative(ctx, options, (runtime) => prepareGuestCheckout(runtime));
+      return runNative(ctx, options, (runtime) => prepareGuestCheckout(runtime, ctx.input));
     },
   };
 }

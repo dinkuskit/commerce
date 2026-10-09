@@ -1,5 +1,7 @@
 # Contact69 approved main contract propagation
 
+> Superseded for bundle size, packaging and the installation gate by [CURRENT-HEAD.md](CURRENT-HEAD.md): after #75 the backend is 113,755 bytes, under the 131,072-byte cap.
+
 Frozen contact checkpoint840652c4d1b22628776496768211de4009a759db retains current39107444 and released country70ca38c1c8c4f136f25469ded0c200f74773802668 as parents. After its complete functional proof, a normal no-commit merge consumes released70d15a7b5e5f8c1466fa3bfa1c6d4709a097da7cde, which contains country684c10da1505b1c89f4c7400683aefe3e6c7394bd5 and human-approved main89bb9f696fb2ad5ad9103da4e0cf04bd56d9d461.
 
 The delta is precisely five Node contract files (.npmrc, AGENTS.md, package.json, scripts/repo-contract.mjs, tests/repo-contract.test.mjs) and two inherited proof notes. Incoming canonical ledger/events/retained lineage are byte-identical to ca38. Normal merge preserves this branch's complete CLI87ce contact join and packaging pause unchanged. No fresh reconcile/adjudication, hand-written canonical state or address/product decision.

@@ -80,6 +80,7 @@ export {
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
   SET_CATALOG_ITEM_SKU_ROUTE,
+  SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   ADD_CATALOG_VARIANT_OPTION_ROUTE,
   UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
   BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
@@ -193,3 +194,14 @@ export type {
   PublicCatalogImage,
 } from "../media-projection.js";
 export { SAVE_CATALOG_ITEM_MEDIA_ROUTE } from "../route-ids.js";
+export {
+  normalizeGtin,
+  normalizeIdentifierPatch,
+  projectIdentifiers,
+} from "../identifiers.js";
+export type { CatalogProductIdentifiers } from "../identifiers.js";
+export { setCatalogItemIdentifiers } from "../set-identifiers.js";
+export type {
+  SetCatalogItemIdentifiersInput,
+  SetCatalogItemIdentifiersResult,
+} from "../set-identifiers.js";

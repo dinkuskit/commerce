@@ -160,7 +160,7 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
     }
 
     const guessed = await request.post(status, {
-      data: { cartId: "guessed", attemptId: "guessed", paid: true },
+      data: {},
       headers: { ...writeHeaders(origin), "x-commerce-guest-capability": "guessed.token" },
     });
     if (native) {

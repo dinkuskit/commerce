@@ -2,7 +2,7 @@ import type { StorageCollection } from "emdash";
 import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
-import type { CouponCollection, CouponQuoteSnapshot } from "../coupons/index.js";
+import type { CheckoutCouponPort, CouponQuoteSnapshot } from "../coupons/index.js";
 import type {
   CheckoutContactRequirementsLoader,
   CheckoutContactSnapshot,
@@ -215,7 +215,8 @@ export interface TrustedShippingConfiguration {
 }
 
 export interface TrustedCheckoutPricing {
-  coupons: CouponCollection;
+  /** Bound by the entry from its own coupon storage; absent means coupon codes are unavailable. */
+  coupons?: CheckoutCouponPort;
   resolveShippingConfiguration: () => Promise<TrustedShippingConfiguration | null>;
   paymentPricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
 }

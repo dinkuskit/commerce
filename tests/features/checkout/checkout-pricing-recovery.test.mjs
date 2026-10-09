@@ -2,6 +2,7 @@ import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startCheckout, reconcileCheckout, reconcilePaymentWakes, projectGuestCheckout, createTrustedTestPaymentPort, bindGuestCheckoutRuntime, NATIVE_GUEST_CHECKOUT_STORAGE } from '../../../dist/features/checkout/index.js';
+import { createCheckoutCouponPort, validateCouponQuoteSnapshot } from '../../../dist/features/coupons/index.js';
 import { pricingFixture } from './pricing-fixture.mjs';
 
 test('nullish and primitive core cart inputs reject before storage or payment effects', async t => {
@@ -327,6 +328,7 @@ test('adapter requires exact schema support before credentials and sends the can
   const config = {
     paymentsOrigin: 'https://payments.example', commerceOrigin: 'https://store.example', siteId: 'synthetic-site',
     bindingRef: a.payment.bindingRef, providerId: 'stripe', stripeAccountId: 'synthetic-account',
+    validateCouponQuoteSnapshot,
     credentialResolver: async () => { credentials++; return 'synthetic-test-token'; },
     fetch: async (url, init) => {
       calls.push({ url, body: init.body });
@@ -347,6 +349,13 @@ test('adapter requires exact schema support before credentials and sends the can
   assert.equal(JSON.parse(calls[1].body).total.minor, '200');
   await assert.rejects(current.ensureSession({ ...a.payment, pricing: { ...a.payment.pricing, schema: 'unknown-version' } }), /Unsupported/);
   assert.equal(credentials, 2);
+  // An adapter without coupon support treats a coupon-bearing request as malformed.
+  const { validateCouponQuoteSnapshot: _omitted, ...withoutCoupons } = config;
+  const uncouponed = createTrustedTestPaymentPort({ ...withoutCoupons, pricingSchema: a.payment.pricing.schema });
+  await assert.rejects(uncouponed.ensureSession(a.payment), /Malformed payment pricing/);
+  await assert.rejects(uncouponed.lookup(a.payment), /Malformed payment pricing/);
+  assert.equal(credentials, 2);
+  assert.equal(calls.length, 2);
 });
 
 test('adapter rejects divergent pricing arithmetic before credentials or transport on create and lookup', async t => {
@@ -356,7 +365,7 @@ test('adapter rejects divergent pricing arithmetic before credentials or transpo
   const port = createTrustedTestPaymentPort({
     paymentsOrigin: 'https://payments.example', commerceOrigin: 'https://store.example', siteId: 'synthetic-site',
     bindingRef: a.payment.bindingRef, providerId: 'stripe', stripeAccountId: 'synthetic-account',
-    pricingSchema: a.payment.pricing.schema,
+    pricingSchema: a.payment.pricing.schema, validateCouponQuoteSnapshot,
     credentialResolver: async () => { credentials++; return 'synthetic-test-token'; },
     fetch: async () => { calls++; return new Response(JSON.stringify({ outcome: 'unknown' })); },
   });
@@ -419,14 +428,31 @@ test('shipping validation and absent coupon never create attempts or calls', asy
   assert.equal(f.sessions.size, 0);
 });
 
-test('owner coupon binding never falls back to a host-supplied foreign collection', async t => {
+test('pricing without bound coupon support rejects every coupon code before attempts or calls', async t => {
   const f = await pricingFixture(t);
-  const runtime = bindGuestCheckoutRuntime({ coupons: f.coupons }, NATIVE_GUEST_CHECKOUT_STORAGE, {
+  delete f.execution.pricing.coupons;
+  await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Coupon unavailable/);
+  assert.equal(await f.execution.store.read('cart'), null);
+  assert.equal(f.sessions.size, 0);
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).pending, 0);
+  const plain = await startCheckout(f.execution, 'cart', withSyntheticCheckoutContact({ lines: f.input.lines }));
+  assert.equal(plain.payment.pricing.couponDiscount.minor, '0');
+  assert.equal(plain.payment.pricing.coupon, undefined);
+  assert.equal(plain.coupon, undefined);
+  assert.equal(f.sessions.size, 1);
+});
+
+test('coupon support is entry-bound and never falls back to host-supplied coupons', async t => {
+  const f = await pricingFixture(t);
+  const port = createCheckoutCouponPort(f.coupons);
+  const runtime = bindGuestCheckoutRuntime({}, NATIVE_GUEST_CHECKOUT_STORAGE, {
     host: { pricing: { ...f.execution.pricing, coupons: { foreign: true } } },
+    coupons: port,
   });
-  assert.equal(runtime.pricing.coupons, f.coupons);
-  const missing = bindGuestCheckoutRuntime({}, NATIVE_GUEST_CHECKOUT_STORAGE, {
-    host: { pricing: { ...f.execution.pricing, coupons: f.coupons } },
+  assert.equal(runtime.pricing.coupons, port);
+  // Coupon storage alone is not coupon support; only the entry binds it.
+  const missing = bindGuestCheckoutRuntime({ coupons: f.coupons }, NATIVE_GUEST_CHECKOUT_STORAGE, {
+    host: { pricing: f.execution.pricing },
   });
   assert.equal(missing.pricing.coupons, undefined);
 });

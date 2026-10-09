@@ -16,7 +16,6 @@ import {
   StorefrontAvailabilityError, type StorefrontOutOfStockListingRecord, type StorefrontPlaceholderImageStorage,
 } from "../features/storefront-availability/kernel/index.js";
 import { ordersInteraction, ordersBlocks } from "./orders-blocks.js";
-import { couponInteraction, couponBlocks } from "./coupons-blocks.js";
 import { merchantStoreSettingsBlocks, merchantStoreSettingsInteraction } from "../features/store-settings/kernel/index.js";
 
 const PAGE_SIZE = 25;
@@ -252,7 +251,6 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     catch { return merchant; }
   }
   if (ordersInteraction(route.input)) return ordersBlocks(route, ctx);
-  if (couponInteraction(route.input)) return couponBlocks(route, ctx);
   let input: Record<string, unknown> = {};
   let values: Record<string, unknown> = {};
   try {

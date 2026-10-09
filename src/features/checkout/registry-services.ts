@@ -21,6 +21,7 @@ export interface RegistryCheckoutConfig {
   paymentsOrigin: string;
   bindingRef: string;
   providerId: "stripe";
+  mode?: "test";
   stripeAccountId: string;
   pricingSchema: typeof CHECKOUT_PRICING_SCHEMA;
   issuer: string;
@@ -56,10 +57,17 @@ function configFrom(value: unknown, site: string): RegistryCheckoutConfig | null
   if (!object(value)) unavailable();
   // The explicit disabled snapshot carries no service authority.
   if (keys(value, "enabled,schema") && value.schema === REGISTRY_CHECKOUT_CONFIG_SCHEMA && value.enabled === false) return null;
-  if (!keys(value, "audience,bindingRef,commerceOrigin,enabled,issuer,paymentsOrigin,pricingSchema,providerId,schema,shipping,siteId,stripeAccountId") ||
+  const enabledKeys =
+    "audience,bindingRef,commerceOrigin,enabled,issuer,paymentsOrigin,pricingSchema,providerId,schema,shipping,siteId,stripeAccountId";
+  const enabledKeysWithMode =
+    "audience,bindingRef,commerceOrigin,enabled,issuer,mode,paymentsOrigin,pricingSchema,providerId,schema,shipping,siteId,stripeAccountId";
+  const hasMode = keys(value, enabledKeysWithMode);
+  if ((!hasMode && !keys(value, enabledKeys)) ||
       value.schema !== REGISTRY_CHECKOUT_CONFIG_SCHEMA || value.enabled !== true ||
       value.commerceOrigin !== site || !text(value.siteId) || !https(value.paymentsOrigin) ||
-      !text(value.bindingRef) || value.providerId !== "stripe" || !text(value.stripeAccountId) ||
+      !text(value.bindingRef) || value.providerId !== "stripe" ||
+      (hasMode && value.mode !== "test") ||
+      !text(value.stripeAccountId) ||
       value.pricingSchema !== CHECKOUT_PRICING_SCHEMA ||
       !https(value.issuer, false) || !text(value.audience) || !object(value.shipping)) unavailable();
   const shipping = value.shipping;

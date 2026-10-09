@@ -11,7 +11,7 @@ import type {
   StorefrontAvailabilitySettingsStorage,
   StorefrontOutOfStockListingStorage,
 } from "../storefront-availability/kernel/index.js";
-import type { CouponCollection } from "../coupons/index.js";
+import type { CheckoutCouponPort } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
 import { admitGuestCheckoutWrite } from "./origin-admission.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
@@ -35,7 +35,6 @@ export interface GuestCheckoutStorageNames {
   settings: string;
   listing?: string;
   paymentAssociations?: string;
-  coupons?: string;
 }
 
 export const NATIVE_GUEST_CHECKOUT_STORAGE = {
@@ -49,7 +48,6 @@ export const NATIVE_GUEST_CHECKOUT_STORAGE = {
   settings: "storefrontAvailabilitySettings",
   listing: "storefrontOutOfStockListing",
   paymentAssociations: "checkoutPaymentAssociations",
-  coupons: "coupons",
 } as const satisfies GuestCheckoutStorageNames;
 
 export const SANDBOX_GUEST_CHECKOUT_STORAGE = {
@@ -63,7 +61,6 @@ export const SANDBOX_GUEST_CHECKOUT_STORAGE = {
   settings: "storefront_availability_settings",
   listing: "storefront_out_of_stock_listing",
   paymentAssociations: "checkout_payment_associations",
-  coupons: "coupons",
 } as const satisfies GuestCheckoutStorageNames;
 
 export function bindGuestCheckoutRuntime(
@@ -76,6 +73,8 @@ export function bindGuestCheckoutRuntime(
     topLevelSiteUrl?: string;
     checkoutSiteUrl?: string;
     host?: GuestCheckoutHostOptions;
+    /** Entry-bound coupon support; the host cannot supply it. */
+    coupons?: CheckoutCouponPort;
   } = {},
 ): GuestCheckoutRuntime {
   const constructorSiteUrl = options.constructorSiteUrl ?? options.host?.siteUrl;
@@ -113,7 +112,7 @@ export function bindGuestCheckoutRuntime(
     host: options.host ?? {},
     ...(options.host?.pricing ? { pricing: {
       ...options.host.pricing,
-      coupons: (names.coupons ? storage[names.coupons] : undefined) as CouponCollection,
+      coupons: options.coupons,
     } } : {}),
     ...(names.paymentAssociations && storage[names.paymentAssociations]
       ? { paymentAssociations: createCheckoutPaymentAssociationPort(
@@ -131,6 +130,7 @@ export function admitBoundGuestCheckoutRuntime(
   },
   names: GuestCheckoutStorageNames,
   host: GuestCheckoutHostOptions = {},
+  coupons?: CheckoutCouponPort,
 ): GuestCheckoutRuntime {
   const constructorSiteUrl = host.siteUrl;
   const runtimeSiteUrl = ctx.site?.url;
@@ -155,5 +155,6 @@ export function admitBoundGuestCheckoutRuntime(
     topLevelSiteUrl,
     checkoutSiteUrl,
     host,
+    coupons,
   });
 }

@@ -81,6 +81,48 @@ test("default createPlugin mounts checkout storage and public guest routes witho
   assert.equal(typeof createGuestCheckoutStartRoute, "function");
 });
 
+test("guest routes reject malformed bodies before capability or checkout storage access", async (t) => {
+  const f = setup(t);
+  const beforeCapabilities = await countCollection(f.storage, "checkoutGuestCapabilities");
+  const beforeCarts = await countCollection(f.storage, "checkoutCarts");
+  const cases = [
+    [GUEST_CHECKOUT_PREPARE_ROUTE, { unexpected: true }],
+    [GUEST_CHECKOUT_START_ROUTE, null],
+    [GUEST_CHECKOUT_START_ROUTE, { lines: [{ catalogItemId: "hat", quantity: 1, extra: true }] }],
+    [GUEST_CHECKOUT_START_ROUTE, { lines: [{ catalogItemId: "hat", quantity: 1_000_001 }] }],
+    [GUEST_CHECKOUT_START_ROUTE, { lines: [{ catalogItemId: "x".repeat(257), quantity: 1 }] }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, "not-an-object"],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { attemptId: "x".repeat(257) }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { paid: true }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { wake: false }],
+    [GUEST_CHECKOUT_STATUS_ROUTE, { wake: true, paid: true }],
+  ];
+  for (const [route, input] of cases) {
+    await assert.rejects(
+      () => invokeGuest(f.plugin.routes[route], f.storage, input),
+      (error) => error instanceof PluginRouteError && error.code === "INVALID_CART",
+    );
+  }
+  assert.equal(await countCollection(f.storage, "checkoutGuestCapabilities"), beforeCapabilities);
+  assert.equal(await countCollection(f.storage, "checkoutCarts"), beforeCarts);
+});
+
+test("tampered client price is rejected before Commerce freezes a payment amount", async (t) => {
+  const f = setup(t);
+  await seedGuestCatalog(f.storage);
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage);
+  await assert.rejects(
+    () => invokeGuest(
+      f.plugin.routes[GUEST_CHECKOUT_START_ROUTE],
+      f.storage,
+      { lines: [{ catalogItemId: "hat", quantity: 1, unitPrice: { currency: "USD", minor: "1" } }] },
+      { capability: capabilityOf(prepared) },
+    ),
+    (error) => error instanceof PluginRouteError && error.code === "INVALID_CART",
+  );
+  assert.equal(await countCollection(f.storage, "checkoutCarts"), 0);
+});
+
 test("mint without trusted tenant scope is denied and writes no capability", async (t) => {
   const f = setup(t, { inject: false });
   await seedGuestCatalog(f.storage);
@@ -351,14 +393,14 @@ test("unmanaged start uses a retained capability, ignores guessed IDs, and never
   assert.equal(started.checkout.order, null);
   assert.equal(started.checkout.unavailable, null);
   await assert.rejects(
-    () => invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, { cartId: started.capabilityId }),
+    () => invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}),
     (error) => error instanceof PluginRouteError && error.code === "CAPABILITY_DENIED",
   );
   await assert.rejects(
     () => invokeGuest(
       f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE],
       f.storage,
-      { attemptId: started.checkout.attemptId, paid: true, paymentId: "forged" },
+      {},
       { capability: `${started.capabilityId}.guessed` },
     ),
     (error) => error instanceof PluginRouteError && error.code === "CAPABILITY_DENIED",
@@ -366,7 +408,7 @@ test("unmanaged start uses a retained capability, ignores guessed IDs, and never
   const status = await invokeGuest(
     f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE],
     f.storage,
-    { paid: true, paymentState: "paid", redirectUrl: "https://evil.example", webhook: { paid: true } },
+    {},
     { capability: token },
   );
   assert.equal(status.checkout.state, "pending");
@@ -449,15 +491,15 @@ test("forged success, unknown provider, and out-of-order wakes never replace a d
   const unknown = await invokeGuest(
     f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE],
     f.storage,
-    { wake: true, paid: true, paymentId: "forged" },
+    { wake: true },
     { capability: token },
   );
   assert.equal(unknown.checkout.state, "pending");
   assert.equal(unknown.checkout.order, null);
   f.synth.setPayment("paid");
   const [left, right] = await Promise.all([
-    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, { wake: true }, { capability: token }),
-    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, { wake: true }, { capability: token }),
+    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability: token }),
+    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability: token }),
   ]);
   assert.equal(left.checkout.state, "paid");
   assert.deepEqual(left.checkout.order, right.checkout.order);
@@ -467,7 +509,7 @@ test("forged success, unknown provider, and out-of-order wakes never replace a d
   const after = await invokeGuest(
     f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE],
     f.storage,
-    { wake: true },
+    {},
     { capability: token },
   );
   assert.equal(after.checkout.state, "paid");
@@ -489,7 +531,7 @@ test("authoritative terminal release then retry reprices on the same capability"
   const released = await invokeGuest(
     f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE],
     f.storage,
-    { wake: true },
+    {},
     { capability: token },
   );
   assert.equal(released.checkout.state, "released-retry");
