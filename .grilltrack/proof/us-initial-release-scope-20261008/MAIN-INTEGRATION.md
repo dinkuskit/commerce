@@ -1,5 +1,7 @@
 # Propagate approved main contracts into initial US policy
 
+> Superseded for bundle size and the installation gate by [CURRENT-HEAD.md](CURRENT-HEAD.md): after #75 the backend is 110,484 bytes, under the 131,072-byte cap.
+
 Inputs: US policy checkpoint `ca38c1c8c4f136f25469ded0c200f74773802668` and updated country checkpoint `4c10da1505b1c89f4c7400683aefe3e6c7394bd5`, which contains approved main `89bb9f696fb2ad5ad9103da4e0cf04bd56d9d461`. Clean ordinary merge preview; common ancestor c6349b54f9295958fe6ced90f44fc9bd25bc48b6.
 
 The imported changes are the five Node22/repository-contract files and the country integration proof. Canonical GrillTrack ledger/events, retained lineage and every US policy decision remain byte-identical to ca38c1c. No reconciliation or decision changes were needed. All runtime, tests, scripts, manifest, lockfile and root npm policy match updated country checkpoint4c10da1 exactly.
