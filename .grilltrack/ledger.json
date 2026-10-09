@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-09T01:30:05+00:00",
-    "domain": "Merchant country and checkout contact settings",
-    "started_at": "2026-10-09T01:30:05+00:00",
+    "confirmed_at": "2026-10-09T12:36:27+00:00",
+    "domain": "Commerce Registry network access to hosted Payments",
+    "started_at": "2026-10-09T12:36:27+00:00",
     "status": "confirmed",
-    "summary": "A merchant configures store country and optional extra selling/shipping countries in Commerce settings, plus an off-by-default Require phone number toggle. Checkout does not yet enforce country eligibility. Absent country setup is not a checkout gate."
+    "summary": "The project owner approved on 2026-10-09 (12:35 UTC, project thread for the commerce merge order) that Commerce's Registry build may call exactly payments.dinkuskit.com and no other host, so a Registry store can reach the hosted Payments service."
   },
   "decisions": [
     {
@@ -8724,6 +8724,188 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T01:30:05+00:00",
       "verification_ref": "file:.grilltrack/proof/merchant-store-settings-20261008/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+      "candidate_refs": [],
+      "choice": "Physical delivery only to United States all 50 states plus District of Columbia, including Alaska and Hawaii. Territories and military addresses deferred. Reject unsupported delivery regions before payable physical checkout, independently of billing-country origin. Tax rules remain deferred.",
+      "context_ref": ".grilltrack/proof/us-initial-release-scope-20261008/PROOF.md",
+      "created_at": "2026-10-09T01:49:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "merchant-country-settings-001"
+      ],
+      "domain": "initial-release-physical-delivery",
+      "history": [
+        {
+          "at": "2026-10-09T01:49:24+00:00",
+          "choice": "Physical delivery only to United States all 50 states plus District of Columbia, including Alaska and Hawaii. Territories and military addresses deferred. Reject unsupported delivery regions before payable physical checkout, independently of billing-country origin. Tax rules remain deferred.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "initial-physical-delivery-coverage-001",
+      "implementation_ref": null,
+      "question": "Which physical delivery destinations are permitted at initial release?",
+      "rationale": "Direct owner accepted 50 states plus DC and the stated deferral of territories/military.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T01:49:24+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:c2eaee6ff195586eab35741d08eb6b659c5fcca3",
+      "candidate_refs": [],
+      "choice": "Yes. Commerce initial-release shipping policy allows non-US billing with supported US physical delivery, including Canadian billing with New York delivery, subject to actual provider and legal eligibility. Do not require US billing solely because shipping is US-only. Preserve billing-first and separately captured immutable billing/shipping records. This does not bypass provider country/sanctions controls, admit every digital market, or enable international physical delivery.",
+      "context_ref": ".grilltrack/proof/us-initial-release-scope-20261008/PROOF.md",
+      "created_at": "2026-10-09T01:49:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "initial-physical-delivery-coverage-001"
+      ],
+      "domain": "initial-release-physical-delivery",
+      "history": [
+        {
+          "at": "2026-10-09T01:49:24+00:00",
+          "choice": "Yes. Commerce initial-release shipping policy allows non-US billing with supported US physical delivery, including Canadian billing with New York delivery, subject to actual provider and legal eligibility. Do not require US billing solely because shipping is US-only. Preserve billing-first and separately captured immutable billing/shipping records. This does not bypass provider country/sanctions controls, admit every digital market, or enable international physical delivery.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "initial-foreign-billing-us-delivery-001",
+      "implementation_ref": null,
+      "question": "May a customer use non-US billing for physical delivery to an allowed US destination?",
+      "rationale": "Direct owner explicitly accepted Canadian billing and New York delivery.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T01:49:24+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:631d3b9fac6e55f1af4d8ff100ee48d487d83efa",
+      "candidate_refs": [],
+      "choice": "Email required for every new checkout including guests with no account required. Phone visible and optional when Require phone number is off (default), required when on. Authoritative current settings resolved before attempt CAS/provider contact; freeze validated contact and exact nullable settings revision/flag on Commerce attempt and order. Later edits preserve original contact and paid money. No verification, sends, marketing, address or shipping consent; public status excludes contact.",
+      "context_ref": "file:docs/implementation/checkout-contact-v1.md",
+      "created_at": "2026-10-09T02:36:07+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Required checkout contact capture",
+      "history": [
+        {
+          "at": "2026-10-09T02:36:07+00:00",
+          "choice": "Email required for every new checkout including guests with no account required. Phone visible and optional when Require phone number is off (default), required when on. Authoritative current settings resolved before attempt CAS/provider contact; freeze validated contact and exact nullable settings revision/flag on Commerce attempt and order. Later edits preserve original contact and paid money. No verification, sends, marketing, address or shipping consent; public status excludes contact.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T02:36:07+00:00",
+          "choice": "Email required for every new checkout including guests with no account required. Phone visible and optional when Require phone number is off (default), required when on. Authoritative current settings resolved before attempt CAS/provider contact; freeze validated contact and exact nullable settings revision/flag on Commerce attempt and order. Later edits preserve original contact and paid money. No verification, sends, marketing, address or shipping consent; public status excludes contact.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-contact-email-phone-20261008",
+      "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
+      "question": "What contact does every new checkout capture and freeze?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T02:36:07+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Declare network:request with exactly payments.dinkuskit.com as the only allowed host; no wildcard. coupons.dinkuskit.com is deferred to M4 and needs its own decision.",
+      "context_ref": null,
+      "created_at": "2026-10-09T12:36:28+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Commerce Registry network access to hosted Payments",
+      "history": [
+        {
+          "at": "2026-10-09T12:36:28+00:00",
+          "choice": "Proposal: declare network:request with exactly payments.dinkuskit.com as the allowed host; defer coupons.dinkuskit.com to M4.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-allowed-hosts-payments-dinkuskit-com",
+      "implementation_ref": null,
+      "question": "Should Commerce request outbound network access to payments.dinkuskit.com?",
+      "rationale": "A Registry sandbox install needs the exact Payments host for hosted checkout while keeping the allow-list narrow and public-safe. Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T12:36:28+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -8760,5 +8942,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T01:30:05+00:00"
+  "updated_at": "2026-10-09T12:36:28+00:00"
 }

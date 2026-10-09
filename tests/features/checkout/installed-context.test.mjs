@@ -85,6 +85,7 @@ function context(storageValue = storage()) {
   return {
     plugin: { id: COMMERCE_REGISTRY_RUNTIME_ID, version: "0.0.0" },
     storage: storageValue,
+    settings: { async getVersioned() { return null; } },
     site: { url: site, name: "Synthetic test site", locale: "en" },
   };
 }
@@ -167,7 +168,7 @@ test("guest and wake handlers share the durable association and produce one orde
   assert.equal(prepared.ok, true, JSON.stringify(prepared));
   const capability = prepared.capability.capability;
   const started = await handlers.start({
-    input: { lines: [{ catalogItemId: "hat", quantity: 1 }] },
+    input: { contact: { email: 'installed-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] },
     request: request({}, capability), requestMeta: {},
   }, ctx);
   assert.equal(started.ok, true, JSON.stringify(started));
@@ -209,7 +210,7 @@ test("compiled default sandbox entry preserves prepare and unavailable Payments 
   const prepared = await sandboxPlugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE].handler({ input: {}, request: request({}) }, ctx);
   assert.equal(prepared.ok, true);
   const started = await sandboxPlugin.routes[GUEST_CHECKOUT_START_ROUTE].handler({
-    input: { lines: [{ catalogItemId: "hat", quantity: 1 }] },
+    input: { contact: { email: 'installed-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] },
     request: request({}, prepared.capability.capability),
   }, ctx);
   assert.equal(started.ok, false);
@@ -295,7 +296,7 @@ for (const mode of ["unknown", "oversize"]) {
     const prepared = await handlers.prepare({ input: {}, request: request({}) }, ctx);
     assert.equal(prepared.ok, true);
     const capability = prepared.capability.capability;
-    const started = await handlers.start({ input: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, request: request({}, capability) }, ctx);
+    const started = await handlers.start({ input: { contact: { email: 'installed-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] }, request: request({}, capability) }, ctx);
     assert.equal(started.ok, true, JSON.stringify(started));
     wake.attemptId = started.checkout.attemptId;
     const storedBefore = ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot()[0][1].attempts[0];
@@ -323,8 +324,26 @@ test("capability from one owner namespace does not authorize another context's c
   const synth = syntheticCheckoutHost({ managed: false });
   const handlers = createInstalledCheckoutHandlers(() => ({ host: synth.host }));
   const prepared = await handlers.prepare({ input: {}, request: request({}) }, one);
-  const denied = await handlers.start({ input: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, request: request({}, prepared.capability.capability) }, two);
+  const denied = await handlers.start({ input: { contact: { email: 'installed-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] }, request: request({}, prepared.capability.capability) }, two);
   assert.equal(denied.ok, false);
   assert.equal(synth.counts().paymentCreates, 0);
   assert.deepEqual(two.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot(), []);
+});
+
+test('installed handlers override supplied contact policy with original context settings and deny required-phone capture before provider', async () => {
+  const ctx=context();
+  ctx.settings={async getVersioned(){return {revision:'merchant-require-phone',value:{recordKind:'merchant-store-settings',storeCountry:null,sellingCountries:[],shippingCountries:[],requirePhoneNumber:true}};}};
+  const synth=syntheticCheckoutHost({managed:false,host:{loadCheckoutContactRequirements:async()=>({requirePhoneNumber:false,revision:'forged-host'})}});
+  const handlers=createInstalledCheckoutHandlers(async()=>({host:synth.host}));
+  const prepared=await handlers.prepare({input:{},request:request({})},ctx);
+  assert.equal(prepared.ok,true);
+  assert.deepEqual(prepared.contactRequirements,{requirePhoneNumber:true});
+  assert.equal('contactRequirements' in prepared.checkout,false);
+  const capability=prepared.capability.capability;
+  const input={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'installed@example.test'}};
+  const denied=await handlers.start({input,request:request(input,capability)},ctx);
+  assert.equal(denied.ok,false);
+  assert.equal(denied.error.code,'INVALID_CART');
+  assert.equal(synth.counts().paymentCreates,0);
+  assert.deepEqual(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot(),[]);
 });
