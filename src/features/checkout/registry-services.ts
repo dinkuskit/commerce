@@ -13,11 +13,14 @@ import {
   type RegistryCheckoutConfig,
 } from "./registry-provider-admission.js";
 import { admitCredential } from "./registry-credential.js";
+import { createHostedCouponPort } from "./registry-coupons.js";
+import { validateCouponQuoteSnapshot } from "../coupons/index.js";
 
 export { REGISTRY_CHECKOUT_CONFIG_SCHEMA };
 export type { RegistryCheckoutConfig };
 export const REGISTRY_CHECKOUT_SETTINGS_KEY = "installedCheckout";
 export const REGISTRY_CHECKOUT_CREDENTIAL_KEY = "installedCheckoutCredential";
+export const REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY = "installedCheckoutCouponsCredential";
 
 function unavailable(): never { throw new GuestCheckoutError("UNAVAILABLE"); }
 function object(value: unknown): value is Record<string, unknown> {
@@ -85,13 +88,23 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
   // A snapshot is invocation-local; recheck its expiry before every authenticated call.
   const credential = async () => admitCredential(token, config);
   const fetch = ctx.http.fetch.bind(ctx.http);
+  const coupons = config.coupons;
   const host = createTrustedTestPaymentsCheckoutHost({
     ...trustedPaymentsHostConfig(config, site.origin),
     credentialResolver: credential, fetch,
+    ...(coupons ? { validateCouponQuoteSnapshot } : {}),
   });
+  const settings = ctx.settings;
   return {
     host: { ...host, pricing: { paymentPricingSchema: CHECKOUT_PRICING_SCHEMA,
       resolveShippingConfiguration: async () => structuredClone(config.shipping) } },
     wakes: wakePort(config, fetch, credential),
+    // The coupon pass is read only when a checkout uses a coupon, so a
+    // missing or stale one never blocks checkout without a coupon.
+    ...(coupons ? { coupons: createHostedCouponPort({
+      origin: coupons.origin, siteId: config.siteId, fetch,
+      credential: async () => admitCredential(await settings.get(REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY), config,
+        "coupons:checkout", coupons.audience),
+    }) } : {}),
   };
 }

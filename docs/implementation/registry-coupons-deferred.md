@@ -1,5 +1,10 @@
 # Coupons deferred from the Registry artifact
 
+Update, 2026-10-09: Registry checkout applies coupons again through the hosted
+DinkusKit coupon service when the owner configures it; see
+[registry-hosted-coupons](registry-hosted-coupons.md). The artifact still
+carries no coupon storage, admin page, evaluator or redemption code.
+
 On 2026-10-08 the project owner (GitHub `saariuslystoned`) chose to ship the
 first Registry release of Commerce without coupons. Coupons return later as
 their own unit rather than inside the Commerce backend.

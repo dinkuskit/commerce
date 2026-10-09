@@ -1,5 +1,18 @@
 import { openStore, fixture, cart } from './fixture.mjs';
 import { createCheckoutCouponPort, createCouponAdmin, createCouponAttemptOwner } from '../../../dist/features/coupons/index.js';
+import { createHostedCouponPort } from '../../../dist/features/checkout/index.js';
+import { COUPON_SERVICE_ORIGIN, COUPON_SERVICE_PASS, couponServiceFake } from './coupon-service-fake.mjs';
+
+/** COMMERCE_HOSTED_COUPONS=1 runs the same cases through the hosted coupon port. */
+const hosted = process.env.COMMERCE_HOSTED_COUPONS === '1';
+
+function checkoutCoupons(collection, execution) {
+  if (!hosted) return { port: createCheckoutCouponPort(collection) };
+  // The service keeps its own clock; here it follows the fixture's.
+  const service = couponServiceFake(collection, { now: () => new Date(execution.now() * 1000).toISOString() });
+  return { service, port: createHostedCouponPort({ origin: COUPON_SERVICE_ORIGIN, siteId: 'site', fetch: service.fetch,
+    credential: async () => COUPON_SERVICE_PASS }) };
+}
 
 export function couponCollection() {
   const records = new Map();
@@ -31,8 +44,9 @@ export async function pricingFixture(t, { cap = 1, discount = { kind: 'fixed', a
     rule: { ruleId: 'totals-rule', version: 1, discount, appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
       minimumEligibleMerchandise: { currency: 'USD', minor: '0' }, startsAt: '2026-01-01T00:00:00Z', endsAt: '2027-01-01T00:00:00Z', timeZone: 'UTC' },
   });
-  f.execution.pricing = { coupons: createCheckoutCouponPort(coupons), paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1', resolveShippingConfiguration: async () => ({
+  const bound = checkoutCoupons(coupons, f.execution);
+  f.execution.pricing = { coupons: bound.port, paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1', resolveShippingConfiguration: async () => ({
     configurationId: 'shipping-rule', revision: 1, mode: shipping === '0' ? 'free' : 'flat', amount: { currency: 'USD', minor: shipping },
   }) };
-  return { ...f, coupons, coupon, admin, owner: createCouponAttemptOwner(coupons), input: { contact: { email: 'pricing-fixture@example.test' }, lines: cart, couponCode: 'SAVE' } };
+  return { ...f, coupons, coupon, admin, couponService: bound.service, owner: createCouponAttemptOwner(coupons), input: { contact: { email: 'pricing-fixture@example.test' }, lines: cart, couponCode: 'SAVE' } };
 }

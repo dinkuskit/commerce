@@ -27,14 +27,18 @@ Commerce's Registry build comes from `emdash-plugin.jsonc` and `src/plugin.ts`
 (see Sandbox distribution below). The package root and `./admin` export are the
 native entry. Native-only gaps:
 
-- Coupons: native installs keep coupon storage and coupon codes at checkout.
-  The default `./admin` pages mount only `/products` and `/store`; the
-  `CouponsPage` named export is there for a host to mount at `/coupons`
-  itself. The Registry build leaves coupons out to stay under
-  the Registry's per-file size limit
+- Coupons: native installs keep coupon storage, the coupon admin and coupon
+  codes at checkout. The default `./admin` pages mount only `/products` and
+  `/store`; the `CouponsPage` named export is there for a host to mount at
+  `/coupons` itself. The Registry build leaves coupon storage and admin out to
+  stay under the Registry's per-file size limit
   ([registry-coupons-deferred](docs/implementation/registry-coupons-deferred.md)).
-  This closes when coupons return through a hosted coupon service; the native
-  coupon path is then removed.
+  Registry checkout applies coupons through the hosted DinkusKit coupon service
+  when the owner configures it
+  ([registry-hosted-coupons](docs/implementation/registry-hosted-coupons.md)).
+  This closes when coupons can also be created for a Registry store, through the
+  Coupons admin plugin or CLI in `dinkuskit/coupons`; the native coupon path is
+  then removed.
 - Host-wired checkout: Template Store wires checkout through the native entry's
   host options. Registry installs use the installed checkout services instead,
   and Template Store has to move to them to follow this rule.

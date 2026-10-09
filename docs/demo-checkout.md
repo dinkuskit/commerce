@@ -55,10 +55,13 @@ redirect values from the guest request.
 
 The installed Commerce runtime also needs the host's scoped `network:request`
 grant for the exact bare `paymentsOrigin`. The shipped Commerce manifest
-declares that capability with exactly one allowed host,
+declares that capability with exactly one Payments host,
 `payments.dinkuskit.com`, so `paymentsOrigin` must be
-`https://payments.dinkuskit.com`. Activating the grant or deploying it is still
-a host approval step, not a repository-side default.
+`https://payments.dinkuskit.com`. It also declares `coupons.dinkuskit.com`, used
+only when `installedCheckout` carries a `coupons` service
+([registry-hosted-coupons](implementation/registry-hosted-coupons.md)).
+Activating a grant or deploying it is still a host approval step, not a
+repository-side default.
 
 ## Guest flow
 

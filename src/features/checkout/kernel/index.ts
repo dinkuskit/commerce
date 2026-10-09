@@ -152,11 +152,14 @@ export type {
 } from "../test-payments.js";
 export {
   REGISTRY_CHECKOUT_CONFIG_SCHEMA,
+  REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY,
   REGISTRY_CHECKOUT_CREDENTIAL_KEY,
   REGISTRY_CHECKOUT_SETTINGS_KEY,
   resolveRegistryCheckoutServices,
 } from "../registry-services.js";
 export type { RegistryCheckoutConfig } from "../registry-services.js";
+export { createHostedCouponPort } from "../registry-coupons.js";
+export type { HostedCouponServiceConfig } from "../registry-coupons.js";
 export {
   admitRegistryCheckoutConfig,
   trustedPaymentsHostConfig,

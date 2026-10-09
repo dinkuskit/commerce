@@ -77,3 +77,16 @@ test("optional mode test is admitted for both providers", () => {
   assert.equal(admitRegistryCheckoutConfig(legacyStripe({ mode: "test" }), SITE).mode, "test");
   assert.equal(admitRegistryCheckoutConfig(authorizeNet({ mode: "test" }), SITE).mode, "test");
 });
+
+test("an optional hosted coupon service needs exactly an https origin and an audience", () => {
+  const coupons = { origin: "https://coupons.example.test", audience: "coupons-aud" };
+  assert.deepEqual(admitRegistryCheckoutConfig(legacyStripe({ coupons }), SITE).coupons, coupons);
+  assert.deepEqual(admitRegistryCheckoutConfig(authorizeNet({ mode: "test", coupons }), SITE).coupons, coupons);
+  assert.equal(admitRegistryCheckoutConfig(legacyStripe(), SITE).coupons, undefined);
+  rejects(legacyStripe({ coupons: null }));
+  rejects(legacyStripe({ coupons: { origin: coupons.origin } }));
+  rejects(legacyStripe({ coupons: { ...coupons, issuer: "https://identity.example.test" } }));
+  rejects(legacyStripe({ coupons: { ...coupons, origin: "http://coupons.example.test" } }));
+  rejects(legacyStripe({ coupons: { ...coupons, origin: "https://coupons.example.test/v1" } }));
+  rejects(legacyStripe({ coupons: { ...coupons, audience: "" } }));
+});
