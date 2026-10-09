@@ -71,3 +71,13 @@ does not prove sale, fulfillment, or provider success.
 Authenticated admins with `plugins:manage` open Commerce Orders (`/orders`) in the installed sandbox admin. Inspect opens the exact canonical order ID; Back to orders returns to the paginated list. The page scans `checkout_carts` paid attempts, shows recorded receipt/attempt/provider IDs, original item prices and available pricing breakdown, distinguishes provider-paid from zero-payable, and always reports fulfillment as Not recorded. Empty storage and unavailable/ambiguous records are distinct. No payment or fulfillment mutations are exposed.
 
 Driver: `tests/integration/orders-inspection.test.mjs` exercises the real EmDash SQLite repository, canonical checkout writes, storage/UI pagination, duplicate and malformed records, and read-only inspection. `tests/sandbox/orders-blocks.spec.mjs`, via `npm run test:sandbox:orders`, exercises the installed Registry-format artifact, list/detail/back, keyboard, mobile, empty and unavailable states with synthetic completed orders. `tests/orders-blocks.test.mjs` owns forged-caller authorization denial. Run `bin/verify-commerce full`. Local installed proof is not Registry publication or live Stripe acceptance.
+
+## Command-line client boundary
+
+The `dinkus-commerce` CLI ([docs/CLI-SPEC.md](docs/CLI-SPEC.md)) owns
+`cli/`, `bin/dinkus-commerce.mjs`, and `tests/cli/`. It is not a feature and is
+not part of the package build: it reaches Commerce only over the mounted
+EmDash plugin HTTP routes, imports nothing from `src/` or `dist/`, and nothing
+in `src/` imports it, so it adds no bytes to `dist/sandbox/plugin.mjs`.
+`tests/cli/dinkus-commerce.test.mjs` enforces that boundary and checks the
+CLI's route ids against the package's exported route constants.

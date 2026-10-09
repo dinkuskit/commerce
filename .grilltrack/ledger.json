@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-08T20:18:58+00:00",
-    "domain": "Registry artifact size and coupon deferral",
-    "started_at": "2026-10-08T20:18:57+00:00",
+    "confirmed_at": "2026-10-08T22:34:25+00:00",
+    "domain": "dinkus-commerce CLI over mounted plugin HTTP routes",
+    "started_at": "2026-10-08T22:34:25+00:00",
     "status": "confirmed",
-    "summary": "The project owner (GitHub saariuslystoned) chose on 2026-10-08 to ship the first Registry release without coupons and bring coupons back later as their own unit. Native coupon storage, admin and checkout stay; no publication, deployment or merge is authorized by this choice."
+    "summary": "The project owner tasked landing commerce PR #74: a dinkus-commerce package bin over mounted plugin HTTP routes. Public catalog needs no token; products list needs EMDASH_TOKEN on native. Zero Registry backend bytes. Spec is the command contract for this scaffold slice."
   },
   "decisions": [
     {
@@ -8278,6 +8278,75 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T00:58:25+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Yes. Scaffold the CLI as a separate process and package bin. It reaches Commerce only over mounted EmDash plugin HTTP routes, imports nothing from src or dist, and adds no bytes to the Registry backend. Public catalog list/show need no credential. products list needs EMDASH_TOKEN on the native install. The command contract for this slice is docs/CLI-SPEC.md. Write commands stay planned.",
+      "context_ref": null,
+      "created_at": "2026-10-08T22:34:26+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "dinkus-commerce CLI over mounted plugin HTTP routes",
+      "history": [
+        {
+          "at": "2026-10-08T22:34:26+00:00",
+          "choice": "Yes. Scaffold the CLI as a separate process and package bin. It reaches Commerce only over mounted EmDash plugin HTTP routes, imports nothing from src or dist, and adds no bytes to the Registry backend. Public catalog list/show need no credential. products list needs EMDASH_TOKEN on the native install. The command contract for this slice is docs/CLI-SPEC.md. Write commands stay planned.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T22:34:26+00:00",
+          "choice": "Yes. Scaffold the CLI as a separate process and package bin. It reaches Commerce only over mounted EmDash plugin HTTP routes, imports nothing from src or dist, and adds no bytes to the Registry backend. Public catalog list/show need no credential. products list needs EMDASH_TOKEN on the native install. The command contract for this slice is docs/CLI-SPEC.md. Write commands stay planned.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-08T22:34:26+00:00",
+          "choice": "Yes. Scaffold the CLI as a separate process and package bin. It reaches Commerce only over mounted EmDash plugin HTTP routes, imports nothing from src or dist, and adds no bytes to the Registry backend. Public catalog list/show need no credential. products list needs EMDASH_TOKEN on the native install. The command contract for this slice is docs/CLI-SPEC.md. Write commands stay planned.",
+          "from": "implemented",
+          "implementation_ref": "file:bin/dinkus-commerce.mjs file:cli/ file:package.json file:docs/CLI-SPEC.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-cli-scaffold-001",
+      "implementation_ref": "file:bin/dinkus-commerce.mjs file:cli/ file:package.json file:docs/CLI-SPEC.md",
+      "question": "Should Commerce expose dinkus-commerce as a package bin before a later write-command grill?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-08T22:34:26+00:00",
+      "verification_ref": "file:tests/cli/dinkus-commerce.test.mjs"
     }
   ],
   "last_activation": {
