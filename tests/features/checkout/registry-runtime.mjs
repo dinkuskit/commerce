@@ -25,6 +25,10 @@ const AUDIENCE = 'synthetic-payments';
 const SITE_ID = 'synthetic-site';
 const BINDING = 'synthetic-binding';
 const ACCOUNT = 'acct_synthetic';
+// A second public IP literal stands in for the hosted coupon service; it is intercepted too.
+export const COUPONS_ORIGIN = 'https://8.8.4.4';
+const COUPONS_AUDIENCE = 'synthetic-coupons';
+export const COUPONS = { origin: COUPONS_ORIGIN, audience: COUPONS_AUDIENCE };
 export function configuration(shipping = { configurationId: 'shipping-synthetic', revision: 1, mode: 'free' }) {
   return { schema: REGISTRY_CHECKOUT_CONFIG_SCHEMA, enabled: true, commerceOrigin: SITE,
     siteId: SITE_ID, paymentsOrigin: TRANSPORT_ORIGIN, bindingRef: BINDING,
@@ -47,6 +51,18 @@ export async function credential(changes = {}) {
     .setProtectedHeader({ alg: 'RS256' }).sign(pair.privateKey);
 }
 
+/** A coupons:checkout pass for the coupon service, from the same issuer as the Payments pass. */
+export function couponCredential(changes = {}) {
+  return credential({ aud: COUPONS_AUDIENCE, scope: 'coupons:checkout', ...changes });
+}
+export async function verifyCouponPass(header) {
+  const bearer = header?.replace(/^Bearer /, '');
+  if (!bearer) return false;
+  const { payload } = await jwtVerify(bearer, pair.publicKey,
+    { issuer: ISSUER, audience: COUPONS_AUDIENCE, algorithms: ['RS256'], maxTokenAge: '1h', requiredClaims: ['sub', 'iat', 'exp'] });
+  return payload.site_id === SITE_ID && payload.scope.split(' ').includes('coupons:checkout');
+}
+
 export async function runtimeFixture({
   grants = true,
   config = configuration(),
@@ -55,6 +71,8 @@ export async function runtimeFixture({
   databasePath = ':memory:',
   seed = true,
   transportFetch,
+  couponPass = null,
+  couponService,
 } = {}) {
   const sqlite = new BetterSqlite3(databasePath);
   // Minimal tables match the pinned SDK's options and plugin-storage schemas.
@@ -63,7 +81,7 @@ export async function runtimeFixture({
     CREATE TABLE IF NOT EXISTS _plugin_storage (plugin_id TEXT NOT NULL, collection TEXT NOT NULL, id TEXT NOT NULL,
       data TEXT NOT NULL, revision TEXT NOT NULL DEFAULT '0', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
       PRIMARY KEY(plugin_id,collection,id));`);
-  const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0 };
+  const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0, coupons: 0 };
   const owner = COMMERCE_REGISTRY_RUNTIME_ID;
   const db = new Kysely({ dialect: new SqliteDialect({ database: sqlite }), log(event) {
     if (event.level !== 'query') return;
@@ -75,7 +93,7 @@ export async function runtimeFixture({
   const manifest = structuredClone(artifact);
   manifest.id = owner;
   // Explicit SYNTHETIC fixture variant only. Never mutate the shipped manifest or publish this variant.
-  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8']; }
+  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4']; }
   const collections = {};
   for (const [name, spec] of Object.entries(manifest.storage)) {
     collections[name] = new PluginStorageRepository(db, owner, name,
@@ -91,6 +109,7 @@ export async function runtimeFixture({
   const settings = createSettingsAccess(new OptionsRepository(db), owner, manifest.admin.settingsSchema);
   if (config !== null) await settings.set('installedCheckout', JSON.stringify(config));
   if (token !== null) await settings.set('installedCheckoutCredential', token ?? await credential());
+  if (couponPass !== null) await settings.set('installedCheckoutCouponsCredential', couponPass);
   if (seed) await collections.catalog_items.put('hat', {
     recordKind: 'catalog-item', itemId: 'hat', commandId: 'synthetic-create-hat', sku: 'HAT', skuKey: 'HAT',
     creationIntent: { manageStock: managed }, kind: 'simple-product', name: 'Hat', state: 'draft',
@@ -110,6 +129,11 @@ export async function runtimeFixture({
   let paid = false, pending = [], override;
   const json = value => Response.json(value);
   async function transport(url, init) {
+    if (couponService && new URL(url).origin === COUPONS_ORIGIN) {
+      counts.coupons++;
+      assert.equal(init.redirect, 'manual');
+      return couponService(url, init);
+    }
     counts.transport++;
     assert.equal(new URL(url).origin, TRANSPORT_ORIGIN);
     assert.equal(init.redirect, 'manual'); // EmDash enforces redirect policy itself.

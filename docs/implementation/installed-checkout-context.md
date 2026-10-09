@@ -96,6 +96,8 @@ seeking approval. Do not use a wildcard or unrestricted network capability.
 This was later applied with the single approved host: the manifest now
 declares `network:request` and `allowedHosts: ["payments.dinkuskit.com"]`
 (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09).
+`coupons.dinkuskit.com` was added beside it for the hosted coupon service
+(GrillTrack `commerce-allowed-hosts-coupons-dinkuskit-com`).
 A new capability/site consent, secret/credential grant, Registry publication,
 or deployment is WAITING_FOR_HUMAN. An already approved consumer may be reused
 only after its exact scoped contract is verified. Scheduling remains with the

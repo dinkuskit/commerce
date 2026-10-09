@@ -18,6 +18,7 @@ import {
 } from "./runtime.js";
 import type { GuestCheckoutHostOptions, GuestCheckoutResult } from "./types.js";
 import type { CommercePaymentWakePort, WakeReconciliationResult } from "./wake.js";
+import type { CheckoutCouponPort } from "../coupons/index.js";
 
 export const COMMERCE_CHECKOUT_WAKES_TASK = "commerce-checkout-wakes";
 export const INSTALLED_COMMERCE_PLUGIN_ID = "dinkus-commerce";
@@ -35,6 +36,8 @@ type InstalledContext = Pick<PluginContext, "plugin" | "storage" | "site" | "set
 export interface InstalledCheckoutServices {
   host: GuestCheckoutHostOptions;
   wakes?: CommercePaymentWakePort;
+  /** Bound by the entry's own resolver; the host options cannot carry it. */
+  coupons?: CheckoutCouponPort;
 }
 
 export type InstalledCheckoutServiceResolver = (
@@ -118,6 +121,7 @@ function runtimeFor(ctx: PluginContext, services: InstalledCheckoutServices) {
   return bindGuestCheckoutRuntime(storage, SANDBOX_GUEST_CHECKOUT_STORAGE, {
     runtimeSiteUrl: origin,
     host,
+    coupons: services.coupons,
   });
 }
 

@@ -20,6 +20,8 @@ export interface RegistryCheckoutConfig {
   issuer: string;
   audience: string;
   shipping: TrustedShippingConfiguration;
+  /** The hosted coupon service. Without it, coupon codes are unavailable. */
+  coupons?: { origin: string; audience: string };
 }
 
 const BASE =
@@ -57,9 +59,10 @@ function admitShipping(shipping: Record<string, unknown>): void {
   }
 }
 
-function keySet(providerId: RegistryCheckoutProviderId, mode: boolean, merchant: boolean): string {
+function keySet(providerId: RegistryCheckoutProviderId, mode: boolean, merchant: boolean, coupons: boolean): string {
   const parts = BASE.split(",");
   if (mode) parts.push("mode");
+  if (coupons) parts.push("coupons");
   if (providerId === "stripe") parts.push("stripeAccountId");
   if (providerId === "authorize_net" && merchant) parts.push("authorizeNetMerchantId");
   return parts.sort().join(",");
@@ -77,14 +80,17 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
   }
   const hasMode = value.mode !== undefined;
   const hasMerchant = value.authorizeNetMerchantId !== undefined;
+  const coupons = value.coupons;
   const providerId = value.providerId;
   if (providerId !== "stripe" && providerId !== "authorize_net") fail();
-  if (!keys(value, keySet(providerId, hasMode, hasMerchant)) ||
+  if (!keys(value, keySet(providerId, hasMode, hasMerchant, coupons !== undefined)) ||
       value.schema !== REGISTRY_CHECKOUT_CONFIG_SCHEMA || value.enabled !== true ||
       value.commerceOrigin !== site || !text(value.siteId) || !https(value.paymentsOrigin) ||
       !text(value.bindingRef) || value.pricingSchema !== CHECKOUT_PRICING_SCHEMA ||
       !https(value.issuer, false) || !text(value.audience) || !obj(value.shipping)) fail();
   if (hasMode && value.mode !== "test") fail();
+  if (coupons !== undefined &&
+      (!obj(coupons) || !keys(coupons, "audience,origin") || !https(coupons.origin) || !text(coupons.audience))) fail();
   if (providerId === "stripe") {
     if (!text(value.stripeAccountId) || hasMerchant) fail();
   } else if (value.stripeAccountId !== undefined || hasMerchant && !text(value.authorizeNetMerchantId)) {

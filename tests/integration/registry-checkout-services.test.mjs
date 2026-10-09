@@ -7,11 +7,18 @@ import { resolveStorefrontAvailability } from '../../dist/features/storefront-av
 import {
   authorizeNetConfiguration,
   configuration,
+  COUPONS,
+  COUPONS_ORIGIN,
+  couponCredential,
   credential,
   legacyStripeConfiguration,
   runtimeFixture,
   SITE,
+  verifyCouponPass,
 } from '../features/checkout/registry-runtime.mjs';
+import { couponCollection } from '../features/checkout/pricing-fixture.mjs';
+import { couponServiceFake } from '../features/checkout/coupon-service-fake.mjs';
+import { createCouponAdmin, createCouponAttemptOwner } from '../../dist/features/coupons/index.js';
 import {
   COMMERCE_CHECKOUT_WAKES_TASK,
   COMMERCE_REGISTRY_RUNTIME_ID,
@@ -32,7 +39,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request']);
-  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com']);
+  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
@@ -76,7 +83,7 @@ test('EmDash 1.2 SDK storage preserves checkout records across runtime restart w
   assert.equal(persistedAttempt.order.total.minor, replay.checkout.order.total.minor);
 });
 
-test('compiled Registry runtime declares no coupons and rejects coupon codes before attempts or Payments', async t => {
+test('compiled Registry runtime ships no coupon storage or evaluator, and without a coupon service rejects coupon codes before attempts or Payments', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
   assert.equal(Object.hasOwn(state.artifact.storage, 'coupons'), false);
@@ -102,6 +109,66 @@ test('compiled Registry runtime declares no coupons and rejects coupon codes bef
   assert.equal(state.requests[0].pricing.couponDiscount.minor, '0');
   assert.equal(Object.hasOwn(state.requests[0].pricing, 'coupon'), false);
   assert.equal(state.counts.scheduler, 0);
+});
+
+async function hostedCoupons() {
+  const coupons = couponCollection();
+  const coupon = await createCouponAdmin(coupons).create({
+    code: 'SAVE10', globalCap: 5,
+    rule: { ruleId: 'synthetic-rule', version: 1, discount: { kind: 'fixed', amount: { currency: 'USD', minor: '100' } },
+      appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
+      minimumEligibleMerchandise: { currency: 'USD', minor: '0' },
+      startsAt: '2026-01-01T00:00:00Z', endsAt: '2100-01-01T00:00:00Z', timeZone: 'UTC' },
+  });
+  const service = couponServiceFake(coupons, { siteId: 'synthetic-site', origin: COUPONS_ORIGIN, authorize: verifyCouponPass });
+  return { service, coupon, owner: createCouponAttemptOwner(coupons) };
+}
+
+test('compiled Registry runtime applies a hosted coupon with its own pass and settles it once paid', async t => {
+  const hosted = await hostedCoupons();
+  const state = await runtimeFixture({ config: { ...configuration(), coupons: COUPONS },
+    couponPass: await couponCredential(), couponService: hosted.service.fetch });
+  t.after(() => state.close());
+  const { token, result } = await start(state, { ...basket, couponCode: 'save10' });
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.checkout.total.minor, '150');
+  assert.deepEqual(hosted.service.calls.map(call => call.path).slice(0, 2), ['/quotes', '/redemptions']);
+  assert.deepEqual(hosted.service.calls[0].body.lines,
+    [{ productId: 'hat', quantity: 1, regular: { currency: 'USD', minor: '250' } }]);
+  assert.equal(state.requests.length, 1);
+  assert.equal(state.requests[0].pricing.couponDiscount.minor, '100');
+  assert.equal(state.requests[0].pricing.coupon.code, 'SAVE10');
+  assert.equal((await hosted.owner.getCounts(hosted.coupon.couponId)).pending, 1);
+  state.setPaid();
+  const paid = await state.invoke(STATUS, {}, token);
+  assert.equal(paid.checkout.state, 'paid');
+  assert.equal(paid.checkout.order.total.minor, '150');
+  assert.equal(hosted.service.calls.at(-1).body.reconciliation.kind, 'verified-success');
+  assert.equal((await hosted.owner.getCounts(hosted.coupon.couponId)).consumed, 1);
+  assert.equal((await state.cartRecords())[0].attempts[0].coupon.status, 'consumed');
+});
+
+test('without a coupon pass, coupon codes are unavailable and checkout without one still works', async () => {
+  const hosted = await hostedCoupons();
+  for (const couponPass of [null, await credential(), await couponCredential({ site_id: 'another-site' })]) {
+    const state = await runtimeFixture({ config: { ...configuration(), coupons: COUPONS },
+      couponPass, couponService: hosted.service.fetch });
+    try {
+      const prepared = await state.invoke(PREPARE);
+      const capability = prepared.capability.capability;
+      const rejected = await state.invoke(START, { ...basket, couponCode: 'SAVE10' }, capability);
+      assert.equal(rejected.error.code, 'UNAVAILABLE');
+      assert.deepEqual(await state.cartRecords(), []);
+      assert.equal(state.counts.coupons, 0);
+      assert.equal(state.requests.length, 0);
+      const plain = await state.invoke(START, basket, capability);
+      assert.equal(plain.ok, true);
+      assert.equal(state.requests.length, 1);
+    } finally {
+      await state.close();
+    }
+  }
+  assert.equal(hosted.service.calls.length, 0);
 });
 
 const zeroPrice = { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat', regular: { currency: 'USD', minor: '0' } };

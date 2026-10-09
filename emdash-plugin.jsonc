@@ -18,7 +18,8 @@
     "network:request"
   ],
   "allowedHosts": [
-    "payments.dinkuskit.com"
+    "payments.dinkuskit.com",
+    "coupons.dinkuskit.com"
   ],
   "storage": {
     "catalog_items": {
@@ -107,6 +108,11 @@
         "type": "secret",
         "label": "Installed checkout credential",
         "description": "Separately provisioned issuer credential snapshot."
+      },
+      "installedCheckoutCouponsCredential": {
+        "type": "secret",
+        "label": "Installed checkout coupons credential",
+        "description": "Separately provisioned coupon service credential snapshot; used only for checkouts with a coupon."
       }
     },
     "pages": [

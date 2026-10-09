@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-09T13:55:44+00:00",
-    "domain": "Commerce #60 product feeds and per-product channel eligibility",
-    "started_at": "2026-10-09T13:55:43+00:00",
+    "confirmed_at": "2026-10-09T17:11:40+00:00",
+    "domain": "Registry checkout coupons through the hosted coupon service",
+    "started_at": "2026-10-09T16:54:57+00:00",
     "status": "confirmed",
-    "summary": "The project owner approved all six product-feed decisions for issue #60 as written on 2026-10-09 (12:35 UTC, project thread for the commerce merge order): per-product opt-in to google-merchant and meta-catalog, off by default, built from the same authoritative facts as the product JSON-LD, served by the host from a paged builder outside the Registry backend."
+    "summary": "The project owner approved on 2026-10-09 (17:10 UTC, project thread \"Coupons Registry plugin\") that Commerce's Registry build may call coupons.dinkuskit.com beside payments.dinkuskit.com, using its own coupons:checkout pass, so Registry checkout applies coupons through the hosted DinkusKit coupon service as described in docs/implementation/registry-hosted-coupons.md."
   },
   "decisions": [
     {
@@ -8236,6 +8236,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T17:11:41+00:00",
+          "choice": "Remove coupons from the Registry artifact: no coupons storage, no /coupons admin page and no coupon admin, evaluator or redemption code in the installed backend. Checkout reaches coupons only through an entry-bound CheckoutCouponPort that the native entry binds from its own storage and the sandbox entry leaves unbound, so coupon codes there fail closed as unavailable before attempt writes or Payments calls. The sandbox build runs the official bundlePlugin size validation on every build. Coupon admin source and the audited auth transform stay in the repository, unmounted from the sandbox admin.",
+          "from": "verified",
+          "implementation_ref": "src/features/coupons/checkout.ts scripts/check-registry-bundle.mjs docs/implementation/registry-coupons-deferred.md",
+          "note": "Registry checkout now binds the coupon port to the hosted coupon service instead of leaving it unbound; the artifact still carries no coupons storage, admin page, evaluator or redemption code.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/registry-coupons-deferred-20261008-PROOF.md"
         }
       ],
       "id": "registry-coupons-deferred-20261008",
@@ -8248,9 +8262,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-08T20:27:24+00:00",
+      "status": "superseded",
+      "superseded_by": "registry-checkout-hosted-coupons-001",
+      "updated_at": "2026-10-09T17:11:41+00:00",
       "verification_ref": ".grilltrack/proof/registry-coupons-deferred-20261008-PROOF.md"
     },
     {
@@ -9339,6 +9353,161 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T13:55:45+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Add coupons.dinkuskit.com as the second exact allowed host beside payments.dinkuskit.com under the existing network:request capability; no wildcard and no other host. Declaring it does not activate it on any site.",
+      "context_ref": null,
+      "created_at": "2026-10-09T16:54:58+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Registry checkout coupons through the hosted coupon service",
+      "history": [
+        {
+          "at": "2026-10-09T17:11:40+00:00",
+          "choice": "Add coupons.dinkuskit.com as the second exact allowed host beside payments.dinkuskit.com under the existing network:request capability; no wildcard and no other host. Declaring it does not activate it on any site.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T17:11:41+00:00",
+          "choice": "Add coupons.dinkuskit.com as the second exact allowed host beside payments.dinkuskit.com under the existing network:request capability; no wildcard and no other host. Declaring it does not activate it on any site.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T17:11:41+00:00",
+          "choice": "Add coupons.dinkuskit.com as the second exact allowed host beside payments.dinkuskit.com under the existing network:request capability; no wildcard and no other host. Declaring it does not activate it on any site.",
+          "from": "implemented",
+          "implementation_ref": "file:emdash-plugin.jsonc",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-allowed-hosts-coupons-dinkuskit-com",
+      "implementation_ref": "file:emdash-plugin.jsonc",
+      "question": "Should Commerce request outbound network access to coupons.dinkuskit.com?",
+      "rationale": "Registry checkout reaches the hosted DinkusKit coupon service at that host (dinkuskit/coupons decision coupon-service-http-contract, HTTP contract v1). commerce-allowed-hosts-payments-dinkuskit-com deferred this host to its own decision. Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 17:10 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T17:11:41+00:00",
+      "verification_ref": "file:tests/integration/registry-checkout-services.test.mjs file:tests/features/checkout/installed-context.test.mjs"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "The Registry entry binds checkout's coupon port to the hosted DinkusKit coupon service (dinkuskit/coupons HTTP contract v1) when the owner's installedCheckout configuration carries coupons {origin, audience}. Calls use a separate installedCheckoutCouponsCredential secret: a coupons:checkout pass for the site from the same issuer as the Payments pass, read only when a checkout uses a coupon. Commerce prices each line from its own catalog and sends regular and sale prices; the service evaluates the coupon with its own clock and holds, releases and settles capped uses; Commerce still owns the frozen pricing snapshot, totals and orders. A hold carries the quote exactly as the service issued it. Refusals that end a hold (capacity, invalid input, conflicting or terminal attempt, or a quote the service no longer keeps) release the attempt before any payment; transport failures, 5xx, auth and configuration errors keep the attempt and retry with the same attempt identity; a coupon that cannot be quoted makes the start unavailable and never falls back to full price. Without coupon configuration or a valid pass, coupon codes stay unavailable before attempt writes or Payments calls, and checkout without a coupon is unaffected. The Registry artifact still has no coupons storage, admin page, evaluator or redemption code.",
+      "context_ref": "docs/implementation/registry-hosted-coupons.md",
+      "created_at": "2026-10-09T16:54:58+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "registry-coupons-deferred-20261008",
+        "commerce-allowed-hosts-coupons-dinkuskit-com"
+      ],
+      "domain": "Registry checkout coupons through the hosted coupon service",
+      "history": [
+        {
+          "at": "2026-10-09T17:11:41+00:00",
+          "choice": "The Registry entry binds checkout's coupon port to the hosted DinkusKit coupon service (dinkuskit/coupons HTTP contract v1) when the owner's installedCheckout configuration carries coupons {origin, audience}. Calls use a separate installedCheckoutCouponsCredential secret: a coupons:checkout pass for the site from the same issuer as the Payments pass, read only when a checkout uses a coupon. Commerce prices each line from its own catalog and sends regular and sale prices; the service evaluates the coupon with its own clock and holds, releases and settles capped uses; Commerce still owns the frozen pricing snapshot, totals and orders. A hold carries the quote exactly as the service issued it. Refusals that end a hold (capacity, invalid input, conflicting or terminal attempt, or a quote the service no longer keeps) release the attempt before any payment; transport failures, 5xx, auth and configuration errors keep the attempt and retry with the same attempt identity; a coupon that cannot be quoted makes the start unavailable and never falls back to full price. Without coupon configuration or a valid pass, coupon codes stay unavailable before attempt writes or Payments calls, and checkout without a coupon is unaffected. The Registry artifact still has no coupons storage, admin page, evaluator or redemption code.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T17:11:41+00:00",
+          "choice": "The Registry entry binds checkout's coupon port to the hosted DinkusKit coupon service (dinkuskit/coupons HTTP contract v1) when the owner's installedCheckout configuration carries coupons {origin, audience}. Calls use a separate installedCheckoutCouponsCredential secret: a coupons:checkout pass for the site from the same issuer as the Payments pass, read only when a checkout uses a coupon. Commerce prices each line from its own catalog and sends regular and sale prices; the service evaluates the coupon with its own clock and holds, releases and settles capped uses; Commerce still owns the frozen pricing snapshot, totals and orders. A hold carries the quote exactly as the service issued it. Refusals that end a hold (capacity, invalid input, conflicting or terminal attempt, or a quote the service no longer keeps) release the attempt before any payment; transport failures, 5xx, auth and configuration errors keep the attempt and retry with the same attempt identity; a coupon that cannot be quoted makes the start unavailable and never falls back to full price. Without coupon configuration or a valid pass, coupon codes stay unavailable before attempt writes or Payments calls, and checkout without a coupon is unaffected. The Registry artifact still has no coupons storage, admin page, evaluator or redemption code.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency registry-coupons-deferred-20261008 changed: Registry checkout now binds the coupon port to the hosted coupon service instead of leaving it unbound; the artifact still carries no coupons storage, admin page, evaluator or redemption code.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T17:11:41+00:00",
+          "choice": "The Registry entry binds checkout's coupon port to the hosted DinkusKit coupon service (dinkuskit/coupons HTTP contract v1) when the owner's installedCheckout configuration carries coupons {origin, audience}. Calls use a separate installedCheckoutCouponsCredential secret: a coupons:checkout pass for the site from the same issuer as the Payments pass, read only when a checkout uses a coupon. Commerce prices each line from its own catalog and sends regular and sale prices; the service evaluates the coupon with its own clock and holds, releases and settles capped uses; Commerce still owns the frozen pricing snapshot, totals and orders. A hold carries the quote exactly as the service issued it. Refusals that end a hold (capacity, invalid input, conflicting or terminal attempt, or a quote the service no longer keeps) release the attempt before any payment; transport failures, 5xx, auth and configuration errors keep the attempt and retry with the same attempt identity; a coupon that cannot be quoted makes the start unavailable and never falls back to full price. Without coupon configuration or a valid pass, coupon codes stay unavailable before attempt writes or Payments calls, and checkout without a coupon is unaffected. The Registry artifact still has no coupons storage, admin page, evaluator or redemption code.",
+          "from": "needs_reverification",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T17:11:41+00:00",
+          "choice": "The Registry entry binds checkout's coupon port to the hosted DinkusKit coupon service (dinkuskit/coupons HTTP contract v1) when the owner's installedCheckout configuration carries coupons {origin, audience}. Calls use a separate installedCheckoutCouponsCredential secret: a coupons:checkout pass for the site from the same issuer as the Payments pass, read only when a checkout uses a coupon. Commerce prices each line from its own catalog and sends regular and sale prices; the service evaluates the coupon with its own clock and holds, releases and settles capped uses; Commerce still owns the frozen pricing snapshot, totals and orders. A hold carries the quote exactly as the service issued it. Refusals that end a hold (capacity, invalid input, conflicting or terminal attempt, or a quote the service no longer keeps) release the attempt before any payment; transport failures, 5xx, auth and configuration errors keep the attempt and retry with the same attempt identity; a coupon that cannot be quoted makes the start unavailable and never falls back to full price. Without coupon configuration or a valid pass, coupon codes stay unavailable before attempt writes or Payments calls, and checkout without a coupon is unaffected. The Registry artifact still has no coupons storage, admin page, evaluator or redemption code.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/registry-coupons.ts file:src/features/checkout/registry-services.ts file:src/features/checkout/registry-provider-admission.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "registry-checkout-hosted-coupons-001",
+      "implementation_ref": "file:src/features/checkout/registry-coupons.ts file:src/features/checkout/registry-services.ts file:src/features/checkout/registry-provider-admission.ts",
+      "question": "How does Registry checkout apply coupons now that the hosted coupon service exists?",
+      "rationale": "Coupons left the Registry artifact for size on 2026-10-08 and return through the hosted service the project owner chose (dinkuskit/coupons decisions hosted-coupon-service and coupon-service-http-contract). A separate pass keeps each service's audience distinct. Issue 34's invariant holds: no payment session starts for a discounted total without a held coupon, and a coupon failure never becomes a full-price charge. Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 17:10 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T17:11:41+00:00",
+      "verification_ref": "file:tests/features/checkout/registry-coupons.test.mjs file:tests/features/checkout/checkout-pricing-hosted.test.mjs file:tests/integration/registry-checkout-services.test.mjs file:tests/features/checkout/registry-provider-admission.test.mjs"
     }
   ],
   "last_activation": {
@@ -9375,5 +9544,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T13:55:45+00:00"
+  "updated_at": "2026-10-09T17:11:41+00:00"
 }

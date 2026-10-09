@@ -14,7 +14,13 @@ function jwtPart(encoded: string): unknown {
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, c => c.charCodeAt(0))));
 }
 
-export function admitCredential(token: unknown, config: RegistryCheckoutConfig): string {
+/** Admits a pass for Payments, or with a scope and audience, for the coupon service. */
+export function admitCredential(
+  token: unknown,
+  config: RegistryCheckoutConfig,
+  scope = "payments:checkout",
+  audience = config.audience,
+): string {
   if (!text(token, 16384)) unavailable();
   try {
     const parts = token.split(".");
@@ -22,9 +28,9 @@ export function admitCredential(token: unknown, config: RegistryCheckoutConfig):
     const header = jwtPart(parts[0]), payload = jwtPart(parts[1]);
     if (!object(header) || !["RS256", "ES256"].includes(header.alg as string) || !object(payload) ||
         payload.iss !== config.issuer ||
-        !(payload.aud === config.audience || Array.isArray(payload.aud) && payload.aud.includes(config.audience)) ||
+        !(payload.aud === audience || Array.isArray(payload.aud) && payload.aud.includes(audience)) ||
         !text(payload.sub) || payload.site_id !== config.siteId || typeof payload.scope !== "string" ||
-        !payload.scope.split(" ").includes("payments:checkout") ||
+        !payload.scope.split(" ").includes(scope) ||
         !Number.isSafeInteger(payload.iat) || !Number.isSafeInteger(payload.exp)) unavailable();
     const now = Math.floor(Date.now() / 1000), issued = payload.iat as number, expires = payload.exp as number;
     if (issued < 0 || issued > now || expires <= now || expires <= issued || now - issued > 3600 ||

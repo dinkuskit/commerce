@@ -32,9 +32,10 @@ credential or function resolvers. A dedicated native host module may export
 named `createPlugin(serializableOptions)`, resolve the approved functions
 lazily, and call Commerce's existing `createPlugin` with this host object.
 There is no second Commerce plugin, order writer, or browser credential path.
-The packaged sandbox declares `network:request` with exactly one allowed host,
-`payments.dinkuskit.com` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09). No other host or wildcard is granted; checkout
-stays fail-closed when the host does not activate that grant.
+The packaged sandbox declares `network:request` with exactly one Payments host,
+`payments.dinkuskit.com` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09), and the coupon service host
+`coupons.dinkuskit.com` (GrillTrack `commerce-allowed-hosts-coupons-dinkuskit-com`). No other host or wildcard is granted; checkout
+stays fail-closed when the host does not activate the Payments grant.
 
 Before external payment work, native and sandbox checkout runtime assembly
 claims `checkoutPaymentAssociations` / `checkout_payment_associations` with
