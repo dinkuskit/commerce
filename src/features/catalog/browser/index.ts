@@ -8,7 +8,7 @@ export {
   SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
 } from "../route-ids.js";
-export { SET_PRODUCT_FEED_ELIGIBILITY_ROUTE } from "../../feeds/route.js";
+export { SET_PRODUCT_FEED_ELIGIBILITY_ROUTE } from "../../feeds/route-ids.js";
 export { COMMERCE_PLUGIN_ID } from "../types.js";
 export type {
   CatalogProductListItem,

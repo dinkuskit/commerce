@@ -6,7 +6,8 @@ import {
 } from "./types.js";
 import type { CatalogStorageRecord } from "../catalog/index.js";
 
-export const SET_PRODUCT_FEED_ELIGIBILITY_ROUTE = "catalog-items/set-feed-eligibility";
+export { SET_PRODUCT_FEED_ELIGIBILITY_ROUTE } from "./route-ids.js";
+import { SET_PRODUCT_FEED_ELIGIBILITY_ROUTE } from "./route-ids.js";
 
 export const setProductFeedEligibilityRoute: PluginRoute = {
   permission: "content:edit_any",
