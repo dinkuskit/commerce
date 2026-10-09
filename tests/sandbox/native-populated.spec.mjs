@@ -132,9 +132,10 @@ test.describe("Native populated-browser continuity fixture", () => {
     // 3. Authenticate clerk session and navigate to restored Products admin
     await page.goto("/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/products");
 
-    // Dismiss setup dialog if present
+    // Dismiss setup dialog if present; an already-initialized native fixture has no dialog.
     const getStartedButton = page.getByRole("button", { name: "Get Started" });
-    await getStartedButton.click({ timeout: 60000 });
+    await getStartedButton.or(page.locator("h1")).first().waitFor({ state: "visible", timeout: 60000 });
+    if (await getStartedButton.isVisible()) await getStartedButton.click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
 
     // Verify header and product list
