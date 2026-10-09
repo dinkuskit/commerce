@@ -4,7 +4,7 @@ import {
   PRODUCT_FEED_CHANNELS,
   type ProductFeedEligibilityRecord,
 } from "./types.js";
-import type { CatalogStorageRecord } from "../catalog/types.js";
+import type { CatalogStorageRecord } from "../catalog/index.js";
 
 export const SET_PRODUCT_FEED_ELIGIBILITY_ROUTE = "catalog-items/set-feed-eligibility";
 

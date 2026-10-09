@@ -11,7 +11,6 @@ export {
 export {
   PRODUCT_FEED_CHANNELS,
 } from "./types.js";
-export { PRODUCT_FEED_ELIGIBILITY_COLLECTION } from "../catalog/types.js";
 export {
   SET_PRODUCT_FEED_ELIGIBILITY_ROUTE,
   setProductFeedEligibilityRoute,

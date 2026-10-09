@@ -1,4 +1,4 @@
-import type { PublicCatalogProduct } from "../catalog/public.js";
+import type { PublicCatalogProduct } from "../catalog/index.js";
 
 export const PRODUCT_FEED_CHANNELS = ["google-merchant", "meta-catalog"] as const;
 export type ProductFeedChannel = (typeof PRODUCT_FEED_CHANNELS)[number];

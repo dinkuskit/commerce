@@ -5,7 +5,7 @@ import {
   type ProductFeedPage,
   type ProductFeedChannel,
 } from "./types.js";
-import { formatMinorUnitsAsDecimal } from "../structured-data/price.js";
+import { formatMinorUnitsAsDecimal } from "../structured-data/index.js";
 
 const DEFAULT_PAGE_SIZE = 100;
 const MAX_PAGE_SIZE = 500;
