@@ -4,9 +4,9 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-09T12:53:30+00:00",
+    "confirmed_at": "2026-10-09T13:55:44+00:00",
     "domain": "Commerce #60 product feeds and per-product channel eligibility",
-    "started_at": "2026-10-09T12:53:30+00:00",
+    "started_at": "2026-10-09T13:55:43+00:00",
     "status": "confirmed",
     "summary": "The project owner approved all six product-feed decisions for issue #60 as written on 2026-10-09 (12:35 UTC, project thread for the commerce merge order): per-product opt-in to google-merchant and meta-catalog, off by default, built from the same authoritative facts as the product JSON-LD, served by the host from a paged builder outside the Registry backend."
   },
@@ -9004,17 +9004,101 @@
     },
     {
       "baseline_ref": null,
+      "candidate_refs": [
+        "file:src/admin/orders-pack.ts"
+      ],
+      "choice": "Checkout accepts both Inventory reserve results: the old string \"reserved\" (no ids stored) and the object { outcome: \"reserved\", ticketIds } with exactly one unique, trimmed id per stock line (three hats on one line stay one ticket); any other shape fails as an invalid reservation outcome. The ids are frozen on the attempt and copied onto the paid order; Inventory stores no Commerce order number. On an order with ticket ids, the Orders admin Pack action builds stock.pack for one ticket or stock.pack_all for every ticket, with command id commerce.pack:<sha256 of type and tickets> so retries replay, and sends it to Inventory POST /v1/stock/pack through a host-wired pack port (account bearer; Inventory derives site and pool). Only a 200 answer echoing that command id with packed/packed_all reports Packed in Inventory. Any other answer, transport failure, missing credential, or no wired port (the installed Registry admin today) fails closed as Not packed. Commerce never writes packed state, buys no label, and does not mark delivery. The owner chose to merge #78 whole rather than split persistence from Pack.",
+      "context_ref": "https://github.com/dinkuskit/commerce/pull/78",
+      "created_at": "2026-10-09T12:41:51+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Inventory ticket ids and order Pack",
+      "history": [
+        {
+          "at": "2026-10-09T13:11:06+00:00",
+          "choice": "Checkout accepts both Inventory reserve results: the old string \"reserved\" (no ids stored) and the object { outcome: \"reserved\", ticketIds } with exactly one unique, trimmed id per stock line (three hats on one line stay one ticket); any other shape fails as an invalid reservation outcome. The ids are frozen on the attempt and copied onto the paid order; Inventory stores no Commerce order number. On an order with ticket ids, the Orders admin Pack action builds stock.pack for one ticket or stock.pack_all for every ticket, with command id commerce.pack:<sha256 of type and tickets> so retries replay, and sends it to Inventory POST /v1/stock/pack through a host-wired pack port (account bearer; Inventory derives site and pool). Only a 200 answer echoing that command id with packed/packed_all reports Packed in Inventory. Any other answer, transport failure, missing credential, or no wired port (the installed Registry admin today) fails closed as Not packed. Commerce never writes packed state, buys no label, and does not mark delivery. The owner chose to merge #78 whole rather than split persistence from Pack.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-inventory-ticket-ids-pack-001",
+      "implementation_ref": null,
+      "question": "How does Commerce keep Inventory's reserve ticket ids and pack an order through Inventory?",
+      "rationale": "Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 13:10 UTC, who also accepted landing this Commerce change before Inventory PR #50 reaches Inventory main. Proven end to end against Inventory #50's pack route (.grilltrack/proof/inventory-ticket-ids-pack-20261009/CURRENT-HEAD.md).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:11:06+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Declare network:request with exactly payments.dinkuskit.com as the only allowed host; no wildcard. coupons.dinkuskit.com is deferred to M4 and needs its own decision.",
+      "context_ref": null,
+      "created_at": "2026-10-09T13:39:43+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Commerce Registry network access to hosted Payments",
+      "history": [
+        {
+          "at": "2026-10-09T13:39:43+00:00",
+          "choice": "Declare network:request with exactly payments.dinkuskit.com as the only allowed host; no wildcard. coupons.dinkuskit.com is deferred to M4 and needs its own decision.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-allowed-hosts-payments-dinkuskit-com",
+      "implementation_ref": null,
+      "question": "Should Commerce request outbound network access to payments.dinkuskit.com?",
+      "rationale": "A Registry sandbox install needs the exact Payments host for hosted checkout while keeping the allow-list narrow and public-safe. Locked by the project owner (GitHub saariuslystoned) on 2026-10-09 12:35 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T13:39:43+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
       "candidate_refs": [],
       "choice": "Commerce owns a persisted per-product set drawn only from the closed versioned initial enum google-merchant and meta-catalog; agent-catalog and agent-checkout are reserved and cannot be selected. Adding a later channel is a new enum value and serializer, not a model rewrite.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
-      "created_at": "2026-10-09T12:53:30+00:00",
+      "created_at": "2026-10-09T13:55:44+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Commerce #60 product feeds and per-product channel eligibility",
       "history": [
         {
-          "at": "2026-10-09T12:53:30+00:00",
+          "at": "2026-10-09T13:55:44+00:00",
           "choice": "Commerce owns a persisted per-product set drawn only from the closed versioned initial enum google-merchant and meta-catalog; agent-catalog and agent-checkout are reserved and cannot be selected. Adding a later channel is a new enum value and serializer, not a model rewrite.",
           "from": "proposed",
           "implementation_ref": null,
@@ -9040,7 +9124,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-09T12:53:30+00:00",
+      "updated_at": "2026-10-09T13:55:44+00:00",
       "verification_ref": null
     },
     {
@@ -9048,7 +9132,7 @@
       "candidate_refs": [],
       "choice": "Default to no eligible channels. A merchant must explicitly opt a product into each channel; disabling a channel removes it from the next generated feed.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
-      "created_at": "2026-10-09T12:53:30+00:00",
+      "created_at": "2026-10-09T13:55:44+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -9057,7 +9141,7 @@
       "domain": "Commerce #60 product feeds and per-product channel eligibility",
       "history": [
         {
-          "at": "2026-10-09T12:53:31+00:00",
+          "at": "2026-10-09T13:55:44+00:00",
           "choice": "Default to no eligible channels. A merchant must explicitly opt a product into each channel; disabling a channel removes it from the next generated feed.",
           "from": "proposed",
           "implementation_ref": null,
@@ -9083,7 +9167,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-09T12:53:31+00:00",
+      "updated_at": "2026-10-09T13:55:44+00:00",
       "verification_ref": null
     },
     {
@@ -9091,14 +9175,14 @@
       "candidate_refs": [],
       "choice": "The host supplies a bounded storefront projection per Commerce itemId: published canonical URL, title, description, and public image URLs. Commerce supplies authoritative facts; a product is feed-eligible only when the host reports a published product page, the Commerce projection is listable, and a customer price exists. Missing optional content is omitted rather than invented.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
-      "created_at": "2026-10-09T12:53:30+00:00",
+      "created_at": "2026-10-09T13:55:44+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Commerce #60 product feeds and per-product channel eligibility",
       "history": [
         {
-          "at": "2026-10-09T12:53:31+00:00",
+          "at": "2026-10-09T13:55:44+00:00",
           "choice": "The host supplies a bounded storefront projection per Commerce itemId: published canonical URL, title, description, and public image URLs. Commerce supplies authoritative facts; a product is feed-eligible only when the host reports a published product page, the Commerce projection is listable, and a customer price exists. Missing optional content is omitted rather than invented.",
           "from": "proposed",
           "implementation_ref": null,
@@ -9124,7 +9208,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-09T12:53:31+00:00",
+      "updated_at": "2026-10-09T13:55:44+00:00",
       "verification_ref": null
     },
     {
@@ -9132,7 +9216,7 @@
       "candidate_refs": [],
       "choice": "Emit Google Merchant Center as deterministic RSS 2.0 XML with g: fields and Meta catalog as deterministic CSV. Both use immutable Commerce itemId as the stable product id/retailer_id; SKU remains a merchant-facing attribute, and slug changes affect only link.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/60#issuecomment-6059017680",
-      "created_at": "2026-10-09T12:53:30+00:00",
+      "created_at": "2026-10-09T13:55:44+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -9141,7 +9225,7 @@
       "domain": "Commerce #60 product feeds and per-product channel eligibility",
       "history": [
         {
-          "at": "2026-10-09T12:53:31+00:00",
+          "at": "2026-10-09T13:55:45+00:00",
           "choice": "Emit Google Merchant Center as deterministic RSS 2.0 XML with g: fields and Meta catalog as deterministic CSV. Both use immutable Commerce itemId as the stable product id/retailer_id; SKU remains a merchant-facing attribute, and slug changes affect only link.",
           "from": "proposed",
           "implementation_ref": null,
@@ -9167,7 +9251,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-09T12:53:31+00:00",
+      "updated_at": "2026-10-09T13:55:45+00:00",
       "verification_ref": null
     },
     {
@@ -9175,7 +9259,7 @@
       "candidate_refs": [],
       "choice": "Feed rows read the same authoritative catalog/public projection used by Commerce Product/Offer JSON-LD: itemId identity, SKU, customer price (sale when present, otherwise regular), currency, availability, listability, GTIN/brand/shipping only when explicitly supplied, and host canonical link/content. Products with no price, not listable, unavailable publication, or missing required channel fields are omitted or marked according to that channel specification; no values are invented.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
-      "created_at": "2026-10-09T12:53:30+00:00",
+      "created_at": "2026-10-09T13:55:44+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -9184,7 +9268,7 @@
       "domain": "Commerce #60 product feeds and per-product channel eligibility",
       "history": [
         {
-          "at": "2026-10-09T12:53:31+00:00",
+          "at": "2026-10-09T13:55:45+00:00",
           "choice": "Feed rows read the same authoritative catalog/public projection used by Commerce Product/Offer JSON-LD: itemId identity, SKU, customer price (sale when present, otherwise regular), currency, availability, listability, GTIN/brand/shipping only when explicitly supplied, and host canonical link/content. Products with no price, not listable, unavailable publication, or missing required channel fields are omitted or marked according to that channel specification; no values are invented.",
           "from": "proposed",
           "implementation_ref": null,
@@ -9210,7 +9294,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-09T12:53:31+00:00",
+      "updated_at": "2026-10-09T13:55:45+00:00",
       "verification_ref": null
     },
     {
@@ -9218,7 +9302,7 @@
       "candidate_refs": [],
       "choice": "Expose a pure, deterministic, paged feed builder outside the size-capped sandbox backend. The host invokes it with a storefront content resolver and serves channel-specific public routes (for example /feeds/google-merchant.xml and /feeds/meta-catalog.csv), using the builder's bounded cursor/page contract; only public product data is emitted and the host owns caching, authentication policy, and HTTP delivery.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/60",
-      "created_at": "2026-10-09T12:53:30+00:00",
+      "created_at": "2026-10-09T13:55:44+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -9227,7 +9311,7 @@
       "domain": "Commerce #60 product feeds and per-product channel eligibility",
       "history": [
         {
-          "at": "2026-10-09T12:53:31+00:00",
+          "at": "2026-10-09T13:55:45+00:00",
           "choice": "Expose a pure, deterministic, paged feed builder outside the size-capped sandbox backend. The host invokes it with a storefront content resolver and serves channel-specific public routes (for example /feeds/google-merchant.xml and /feeds/meta-catalog.csv), using the builder's bounded cursor/page contract; only public product data is emitted and the host owns caching, authentication policy, and HTTP delivery.",
           "from": "proposed",
           "implementation_ref": null,
@@ -9253,7 +9337,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-09T12:53:31+00:00",
+      "updated_at": "2026-10-09T13:55:45+00:00",
       "verification_ref": null
     }
   ],
@@ -9291,5 +9375,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T12:53:31+00:00"
+  "updated_at": "2026-10-09T13:55:45+00:00"
 }
