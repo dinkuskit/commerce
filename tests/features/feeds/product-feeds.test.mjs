@@ -89,6 +89,8 @@ test("optional identifiers and images are not invented", () => {
   const meta = buildMetaCatalogFeed([row]);
   assert.equal(google.includes("g:image_link"), false);
   assert.equal(google.includes("g:gtin"), false);
+  assert.match(google, /<g:condition>new<\/g:condition>/);
+  assert.match(google, /<g:identifier_exists>no<\/g:identifier_exists>/);
   assert.equal(meta.includes("https://cdn.example.test"), false);
   assert.equal(meta.includes('"" ,""'), false);
 });
@@ -99,6 +101,12 @@ test("identifiers come from the catalog public product, including MPN", () => {
   assert.match(google, /<g:gtin>00012345678905<\/g:gtin>/);
   assert.match(google, /<g:mpn>HAT-MPN-7<\/g:mpn>/);
   assert.match(google, /<g:brand>Acme Wool<\/g:brand>/);
+  assert.match(google, /<g:condition>new<\/g:condition>/);
+  assert.equal(google.includes("g:identifier_exists"), false);
+  const brandAndMpn = buildGoogleMerchantFeed([facts({ product: product({ mpn: "HAT-MPN-7", brand: "Acme Wool" }) })]);
+  assert.equal(brandAndMpn.includes("g:identifier_exists"), false);
+  const brandOnly = buildGoogleMerchantFeed([facts({ product: product({ brand: "Acme Wool" }) })]);
+  assert.match(brandOnly, /<g:identifier_exists>no<\/g:identifier_exists>/);
   const [header, line] = buildMetaCatalogFeed([row]).trim().split("\n");
   const columns = header.split(",").map((cell) => cell.replaceAll('"', ""));
   const cells = line.split(",").map((cell) => cell.replaceAll('"', ""));

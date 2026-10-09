@@ -13,7 +13,11 @@ customer price and availability. The feed builders omit products without
 eligibility, listability, a price, a published URL, or a title. Optional GTIN, MPN,
 brand, shipping, description, and image values are emitted only when supplied.
 
-`buildGoogleMerchantFeed` emits deterministic RSS 2.0 with Google `g:` fields;
+`buildGoogleMerchantFeed` emits deterministic RSS 2.0 with Google `g:` fields.
+Every item carries `g:condition` `new` (Commerce has no used or refurbished
+condition, and the Meta CSV already sends `new`). When an item has neither a
+GTIN nor a brand plus MPN, it carries `g:identifier_exists` `no`, the channel's
+explicit no-identifier signal, instead of an invented identifier;
 `buildMetaCatalogFeed` emits deterministic CSV. `pageProductFeedRows` provides
 a bounded cursor contract for hosts that page their catalog reads. These
 builders are host-side exports and are intentionally not imported by

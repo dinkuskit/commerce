@@ -72,9 +72,12 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
       image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : "",
       `<g:price>${escapeXml(price(product))}</g:price>`,
       `<g:availability>${availability(product)}</g:availability>`,
+      "<g:condition>new</g:condition>",
       product.product.gtin ? `<g:gtin>${escapeXml(product.product.gtin)}</g:gtin>` : "",
       product.product.mpn ? `<g:mpn>${escapeXml(product.product.mpn)}</g:mpn>` : "",
       product.product.brand ? `<g:brand>${escapeXml(product.product.brand)}</g:brand>` : "",
+      // Google's no-identifier signal: neither a GTIN nor brand plus MPN is on file.
+      product.product.gtin || (product.product.brand && product.product.mpn) ? "" : "<g:identifier_exists>no</g:identifier_exists>",
       product.shipping ? `<g:shipping>${escapeXml(product.shipping)}</g:shipping>` : "",
       "</item>",
     ].filter(Boolean).join("");
