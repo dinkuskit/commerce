@@ -1,6 +1,22 @@
 # Current-head proof: ticket ids and Pack against Inventory #50
 
-Decision: `commerce-inventory-ticket-ids-pack-001` (proposed, not locked).
+Decision: `commerce-inventory-ticket-ids-pack-001` (locked and confirmed on the
+owner's approval, 2026-10-09).
+
+## Latest Commerce head
+
+Branch head `5528d39` (main `289d504` with #72 and #77 merged in, plus the
+decision lock). Source changes since `ec58dfd` are main's only; the Pack and
+ticket-id code proven below is unchanged.
+
+- `bin/verify-commerce full`: unit 429/429, integration 43/43, `test:sandbox`
+  10 passed, `test:sandbox:native-local-stock` 1 passed, `test:sandbox:orders`
+  1 passed. `verify-commerce: full passed`.
+- `npm run build:sandbox`: `registry_bundle=pass backend_bytes=111048
+  headroom_bytes=20024` under the 131,072-byte cap.
+
+The sections below record the earlier head `ec58dfd` and are superseded where
+their numbers differ.
 
 Commerce source proven: branch `openclaw/commerce-accept-ticket-ids` at
 `ec58dfd9b9cb460c1fd5f90075d83b07dd3e71ce` (PR #78 head `a979d51` with `main`
@@ -83,7 +99,7 @@ transport passed `redirect: "error"`, which Workers' fetch rejects. Commit
 `ec58dfd` switches to `redirect: "manual"`; any non-200, including a 3xx,
 is still Not packed.
 
-## Commerce checks on this head
+## Commerce checks on head ec58dfd (superseded by the latest head above)
 
 - `bin/verify-commerce full`: quick (typecheck, 422/422 unit,
   `public_repository_contract=clean`, `feature_contract=clean`),
