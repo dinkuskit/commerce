@@ -16,6 +16,7 @@ import {
   StorefrontAvailabilityError, type StorefrontOutOfStockListingRecord, type StorefrontPlaceholderImageStorage,
 } from "../features/storefront-availability/kernel/index.js";
 import { ordersInteraction, ordersBlocks } from "./orders-blocks.js";
+import { merchantStoreSettingsBlocks, merchantStoreSettingsInteraction } from "../features/store-settings/kernel/index.js";
 
 const PAGE_SIZE = 25;
 const LIBRARY_PAGE = 12;
@@ -236,14 +237,19 @@ function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockRespo
     ], submit: { label: "Save", action_id: "settings.save" } },
   ] };
 }
-async function settings(ctx: PluginContext, toast?: string): Promise<BlockResponse> {
+async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse): Promise<BlockResponse> {
   const listing = await loadOutOfStockListing(ctx.storage["storefront_out_of_stock_listing"] as StorageCollection<StorefrontOutOfStockListingRecord>);
   const response = settingsResponse(listing.hideOutOfStock);
-  return { blocks: [...response.blocks, ...await placeholderBlocks(ctx)], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
+  return { blocks: [...response.blocks, ...await placeholderBlocks(ctx), ...(merchant ?? await merchantStoreSettingsBlocks({ ...route, input: { type: "page_load", page: "/settings" } }, ctx)).blocks], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 
 /** Private Block Kit transport. The host authenticates and authorizes this route. */
 export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
+  if (merchantStoreSettingsInteraction(route.input)) {
+    const merchant = await merchantStoreSettingsBlocks(route, ctx);
+    try { return await settings(ctx, route, undefined, merchant); }
+    catch { return merchant; }
+  }
   if (ordersInteraction(route.input)) return ordersBlocks(route, ctx);
   let input: Record<string, unknown> = {};
   let values: Record<string, unknown> = {};
@@ -251,13 +257,13 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     input = object(route.input);
     if (input.type === "page_load") {
       if (input.page === "/products") return await products(ctx);
-      if (input.page === "/settings") return await settings(ctx);
+      if (input.page === "/settings") return await settings(ctx, route);
       throw new Error("Unknown page");
     }
     const action = text(input.action_id);
     if (input.type === "block_action") {
       if (action === "open") return await product(ctx, text(input.value));
-      if (action === "settings") return await settings(ctx);
+      if (action === "settings") return await settings(ctx, route);
       if (action === "list") {
         const offset = input.value ?? 0;
         if (typeof offset !== "number" || !Number.isSafeInteger(offset) || offset < 0 || offset > 10000) throw new Error("Invalid page");
@@ -273,7 +279,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const mediaId = action === "media.use" ? text(v.m) : null;
         if (t.t === "placeholder") {
           await setStorefrontPlaceholderImage(placeholderStorage(ctx), { image: mediaId });
-          return await settings(ctx, mediaId ? "Placeholder saved" : "Placeholder removed");
+          return await settings(ctx, route, mediaId ? "Placeholder saved" : "Placeholder removed");
         }
         if (t.t === "image") {
           await saveCatalogItemMedia(storage(ctx), { catalogItemId: t.id, image: mediaId });
@@ -355,7 +361,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
       if (action === "settings.save") {
         await setOutOfStockListing(ctx.storage["storefront_out_of_stock_listing"] as StorageCollection<StorefrontOutOfStockListingRecord>,
           { hideOutOfStock: bool(values.hideOutOfStock) });
-        return await settings(ctx, "Settings saved");
+        return await settings(ctx, route, "Settings saved");
       }
     }
     throw new Error("Unknown interaction");
@@ -365,7 +371,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     if (input.type === "block_action" && /^media\.(use|clear|remove|up)$/.test(String(input.action_id))) {
       const v = input.value as { t?: unknown; id?: unknown } | null;
       try {
-        const back = v?.t === "placeholder" ? await settings(ctx) : typeof v?.id === "string" && v.id ? await product(ctx, v.id) : null;
+        const back = v?.t === "placeholder" ? await settings(ctx, route) : typeof v?.id === "string" && v.id ? await product(ctx, v.id) : null;
         if (back) return { blocks: [alert(failure), ...back.blocks], toast: { type: "error", message: failure } };
       } catch { /* fall through to the generic alert */ }
     }
