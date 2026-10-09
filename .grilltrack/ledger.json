@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-09T02:36:07+00:00",
-    "domain": "Required checkout contact capture",
-    "started_at": "2026-10-09T02:36:07+00:00",
+    "confirmed_at": "2026-10-09T03:03:40+00:00",
+    "domain": "Installed Registry checkout payment-provider admission",
+    "started_at": "2026-10-09T03:03:40+00:00",
     "status": "confirmed",
-    "summary": "Every new checkout, including account-free guests, captures a required email. Phone is shown and optional by default and required only when the merchant's Require phone number setting is on. The validated contact and the settings revision are frozen on the Commerce attempt and order, kept out of Payments requests and public status."
+    "summary": "Authorize.net is admitted as a sandbox-only installed checkout provider under four terms the owner locked in https://github.com/dinkuskit/commerce/pull/71#issuecomment-6067094917: keep registry-checkout/v1 with legacy configs loading unchanged; authorizeNetMerchantId is its own field and stripeAccountId stays Stripe-only; sandbox only; paid only after an authoritative lookup whose amount and currency match."
   },
   "decisions": [
     {
@@ -2288,7 +2288,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock — Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+      "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
       "context_ref": null,
       "created_at": "2026-09-30T20:59:46+00:00",
       "deferred_reason": null,
@@ -2298,7 +2298,7 @@
       "history": [
         {
           "at": "2026-09-30T20:59:46+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock — Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -2312,7 +2312,7 @@
         },
         {
           "at": "2026-09-30T20:59:47+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock — Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
           "from": "locked",
           "implementation_ref": null,
           "note": "bounded implementation recorded",
@@ -2326,7 +2326,7 @@
         },
         {
           "at": "2026-09-30T20:59:47+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock — Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
           "from": "implemented",
           "implementation_ref": "file:src/features/catalog/local-stock-development.ts file:src/features/catalog/v1-stock-admission.ts file:src/index.ts file:src/admin/products-page.ts file:src/admin/index.ts file:src/features/catalog/route.ts file:docs/implementation/v1-inventory-unavailable.md file:proof/v1-inventory-unavailable-20260930/PROOF.md",
           "note": "verification recorded in cumulative context",
@@ -2354,7 +2354,7 @@
         },
         {
           "at": "2026-10-06T20:35:44+00:00",
-          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock — Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
+          "choice": "No. Inventory progresses concurrently. Commerce v1 presents Manage stock \u2014 Coming soon as disabled/unavailable, blocks enable actions, creates unmanaged products by default, and works without a production Inventory dependency. Preserve existing managed records, claims, bindings, stock truth, provider kernels, and fail-closed sellability; do not silently downgrade legacy products. Owner clarification: retain the original slider in its original product-form position, gray it out and place Coming soon beside it. Keep it disabled by default. An explicit local-development setting may enable the real slider for synthetic testing; server admission must enforce the same local-only setting and refuse production/browser-supplied overrides. New products still default unmanaged and legacy managed state remains preserved. Registry disabled rendering requires actual host support, not an unsupported property or a live control disguised as disabled.",
           "from": "needs_reverification",
           "implementation_ref": "file:src/features/catalog/local-stock-development.ts file:src/features/catalog/v1-stock-admission.ts file:src/index.ts file:src/admin/products-page.ts file:src/admin/index.ts file:src/features/catalog/route.ts file:docs/implementation/v1-inventory-unavailable.md file:proof/v1-inventory-unavailable-20260930/PROOF.md",
           "note": "verification recorded in cumulative context",
@@ -8325,7 +8325,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) InStock for both in-stock and low-stock; (B) InStock for in-stock and LimitedAvailability for low-stock. Tradeoffs: (A) matches simple WooCommerce defaults and avoids a second Google Merchant state, but understates scarcity for agentic shoppers; (B) follows schema.org OfferItemCondition/ItemAvailability vocabulary and Google Merchant LimitedAvailability, preserving the Commerce distinction already projected as low-stock. Recommendation: B — map in-stock→https://schema.org/InStock and low-stock→https://schema.org/LimitedAvailability.",
+      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) InStock for both in-stock and low-stock; (B) InStock for in-stock and LimitedAvailability for low-stock. Tradeoffs: (A) matches simple WooCommerce defaults and avoids a second Google Merchant state, but understates scarcity for agentic shoppers; (B) follows schema.org OfferItemCondition/ItemAvailability vocabulary and Google Merchant LimitedAvailability, preserving the Commerce distinction already projected as low-stock. Recommendation: B \u2014 map in-stock\u2192https://schema.org/InStock and low-stock\u2192https://schema.org/LimitedAvailability.",
       "context_ref": "issue:https://github.com/dinkuskit/commerce/issues/59",
       "created_at": "2026-10-09T00:11:09+00:00",
       "deferred_reason": null,
@@ -8335,7 +8335,7 @@
       "history": [
         {
           "at": "2026-10-09T00:11:10+00:00",
-          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) InStock for both in-stock and low-stock; (B) InStock for in-stock and LimitedAvailability for low-stock. Tradeoffs: (A) matches simple WooCommerce defaults and avoids a second Google Merchant state, but understates scarcity for agentic shoppers; (B) follows schema.org OfferItemCondition/ItemAvailability vocabulary and Google Merchant LimitedAvailability, preserving the Commerce distinction already projected as low-stock. Recommendation: B — map in-stock→https://schema.org/InStock and low-stock→https://schema.org/LimitedAvailability.",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) InStock for both in-stock and low-stock; (B) InStock for in-stock and LimitedAvailability for low-stock. Tradeoffs: (A) matches simple WooCommerce defaults and avoids a second Google Merchant state, but understates scarcity for agentic shoppers; (B) follows schema.org OfferItemCondition/ItemAvailability vocabulary and Google Merchant LimitedAvailability, preserving the Commerce distinction already projected as low-stock. Recommendation: B \u2014 map in-stock\u2192https://schema.org/InStock and low-stock\u2192https://schema.org/LimitedAvailability.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -8366,7 +8366,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Omit the Offer entirely; (B) Emit Offer with availability OutOfStock. Tradeoffs: (A) never claims a buyable offer when Inventory truth is unproven, but Product rich results without Offer are weaker and policy links on the Offer are lost; (B) keeps Product+Offer for rich results and agentic readers while never claiming InStock/sellable, matching the public projection (listable:true, sellable:false). Recommendation: B — emit Offer with https://schema.org/OutOfStock when status is availability-unavailable.",
+      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Omit the Offer entirely; (B) Emit Offer with availability OutOfStock. Tradeoffs: (A) never claims a buyable offer when Inventory truth is unproven, but Product rich results without Offer are weaker and policy links on the Offer are lost; (B) keeps Product+Offer for rich results and agentic readers while never claiming InStock/sellable, matching the public projection (listable:true, sellable:false). Recommendation: B \u2014 emit Offer with https://schema.org/OutOfStock when status is availability-unavailable.",
       "context_ref": "issue:https://github.com/dinkuskit/commerce/issues/59",
       "created_at": "2026-10-09T00:11:09+00:00",
       "deferred_reason": null,
@@ -8378,7 +8378,7 @@
       "history": [
         {
           "at": "2026-10-09T00:11:10+00:00",
-          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Omit the Offer entirely; (B) Emit Offer with availability OutOfStock. Tradeoffs: (A) never claims a buyable offer when Inventory truth is unproven, but Product rich results without Offer are weaker and policy links on the Offer are lost; (B) keeps Product+Offer for rich results and agentic readers while never claiming InStock/sellable, matching the public projection (listable:true, sellable:false). Recommendation: B — emit Offer with https://schema.org/OutOfStock when status is availability-unavailable.",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Omit the Offer entirely; (B) Emit Offer with availability OutOfStock. Tradeoffs: (A) never claims a buyable offer when Inventory truth is unproven, but Product rich results without Offer are weaker and policy links on the Offer are lost; (B) keeps Product+Offer for rich results and agentic readers while never claiming InStock/sellable, matching the public projection (listable:true, sellable:false). Recommendation: B \u2014 emit Offer with https://schema.org/OutOfStock when status is availability-unavailable.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -8409,7 +8409,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) GTIN only (validated GTIN-8/12/13/14 with check digit); (B) GTIN plus optional MPN and brand. Tradeoffs: (A) smallest admin/surface and matches the issue minimum; (B) aligns with Google Merchant / WooCommerce structured-data norms and agentic commerce identity without requiring any field. Absent means omitted; never invent. Recommendation: B — optional gtin, mpn, and brand on the catalog item, keyed and looked up by itemId; SKU remains the editable merchant attribute already projected.",
+      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) GTIN only (validated GTIN-8/12/13/14 with check digit); (B) GTIN plus optional MPN and brand. Tradeoffs: (A) smallest admin/surface and matches the issue minimum; (B) aligns with Google Merchant / WooCommerce structured-data norms and agentic commerce identity without requiring any field. Absent means omitted; never invent. Recommendation: B \u2014 optional gtin, mpn, and brand on the catalog item, keyed and looked up by itemId; SKU remains the editable merchant attribute already projected.",
       "context_ref": "issue:https://github.com/dinkuskit/commerce/issues/59",
       "created_at": "2026-10-09T00:11:09+00:00",
       "deferred_reason": null,
@@ -8419,7 +8419,7 @@
       "history": [
         {
           "at": "2026-10-09T00:11:10+00:00",
-          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) GTIN only (validated GTIN-8/12/13/14 with check digit); (B) GTIN plus optional MPN and brand. Tradeoffs: (A) smallest admin/surface and matches the issue minimum; (B) aligns with Google Merchant / WooCommerce structured-data norms and agentic commerce identity without requiring any field. Absent means omitted; never invent. Recommendation: B — optional gtin, mpn, and brand on the catalog item, keyed and looked up by itemId; SKU remains the editable merchant attribute already projected.",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) GTIN only (validated GTIN-8/12/13/14 with check digit); (B) GTIN plus optional MPN and brand. Tradeoffs: (A) smallest admin/surface and matches the issue minimum; (B) aligns with Google Merchant / WooCommerce structured-data norms and agentic commerce identity without requiring any field. Absent means omitted; never invent. Recommendation: B \u2014 optional gtin, mpn, and brand on the catalog item, keyed and looked up by itemId; SKU remains the editable merchant attribute already projected.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -8450,7 +8450,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Extend installed checkout settings only; (B) Dedicated store-level versioned collections store_shipping_policy and store_return_policy (snake_case sandbox / camelCase native), with public read composing the same revision for policy pages and JSON-LD. Shipping record holds charge fields in TrustedShippingConfiguration shape plus optional display facts (destination countries, handling/transit day bounds, policy page URL) only when merchant-set. Return record holds MerchantReturnPolicy-mapped fields plus policy page URL, omitting unset fields. Tradeoffs: (A) reuses checkout config but cannot hold return policy or display facts and couples structured data to Payments install; (B) single source for page+JSON-LD revisions, leaves checkout installedShipping as-is for this slice (note overlap with draft #68/#70 country/delivery settings — no invented US-wide defaults here). Recommendation: B.",
+      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Extend installed checkout settings only; (B) Dedicated store-level versioned collections store_shipping_policy and store_return_policy (snake_case sandbox / camelCase native), with public read composing the same revision for policy pages and JSON-LD. Shipping record holds charge fields in TrustedShippingConfiguration shape plus optional display facts (destination countries, handling/transit day bounds, policy page URL) only when merchant-set. Return record holds MerchantReturnPolicy-mapped fields plus policy page URL, omitting unset fields. Tradeoffs: (A) reuses checkout config but cannot hold return policy or display facts and couples structured data to Payments install; (B) single source for page+JSON-LD revisions, leaves checkout installedShipping as-is for this slice (note overlap with draft #68/#70 country/delivery settings \u2014 no invented US-wide defaults here). Recommendation: B.",
       "context_ref": "issue:https://github.com/dinkuskit/commerce/issues/59",
       "created_at": "2026-10-09T00:11:09+00:00",
       "deferred_reason": null,
@@ -8460,7 +8460,7 @@
       "history": [
         {
           "at": "2026-10-09T00:11:10+00:00",
-          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Extend installed checkout settings only; (B) Dedicated store-level versioned collections store_shipping_policy and store_return_policy (snake_case sandbox / camelCase native), with public read composing the same revision for policy pages and JSON-LD. Shipping record holds charge fields in TrustedShippingConfiguration shape plus optional display facts (destination countries, handling/transit day bounds, policy page URL) only when merchant-set. Return record holds MerchantReturnPolicy-mapped fields plus policy page URL, omitting unset fields. Tradeoffs: (A) reuses checkout config but cannot hold return policy or display facts and couples structured data to Payments install; (B) single source for page+JSON-LD revisions, leaves checkout installedShipping as-is for this slice (note overlap with draft #68/#70 country/delivery settings — no invented US-wide defaults here). Recommendation: B.",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Extend installed checkout settings only; (B) Dedicated store-level versioned collections store_shipping_policy and store_return_policy (snake_case sandbox / camelCase native), with public read composing the same revision for policy pages and JSON-LD. Shipping record holds charge fields in TrustedShippingConfiguration shape plus optional display facts (destination countries, handling/transit day bounds, policy page URL) only when merchant-set. Return record holds MerchantReturnPolicy-mapped fields plus policy page URL, omitting unset fields. Tradeoffs: (A) reuses checkout config but cannot hold return policy or display facts and couples structured data to Payments install; (B) single source for page+JSON-LD revisions, leaves checkout installedShipping as-is for this slice (note overlap with draft #68/#70 country/delivery settings \u2014 no invented US-wide defaults here). Recommendation: B.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -8491,7 +8491,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Sandbox backend / plugin.ts graph; (B) Host-side package export @dinkuskit/commerce/features/structured-data with pure buildProductJsonLd({ product, page, policies }) returning a schema.org Product graph (no network, no storage). Tradeoffs: (A) colocates with public catalog but main is already ~130243/131072 backend bytes after #67 — builder logic would risk the Registry cap; (B) matches media-projection host helpers, keeps Template Store as the page assembler, and leaves only thin policy public-read + identifier projection in the sandbox. Recommendation: B.",
+      "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Sandbox backend / plugin.ts graph; (B) Host-side package export @dinkuskit/commerce/features/structured-data with pure buildProductJsonLd({ product, page, policies }) returning a schema.org Product graph (no network, no storage). Tradeoffs: (A) colocates with public catalog but main is already ~130243/131072 backend bytes after #67 \u2014 builder logic would risk the Registry cap; (B) matches media-projection host helpers, keeps Template Store as the page assembler, and leaves only thin policy public-read + identifier projection in the sandbox. Recommendation: B.",
       "context_ref": "issue:https://github.com/dinkuskit/commerce/issues/59",
       "created_at": "2026-10-09T00:11:10+00:00",
       "deferred_reason": null,
@@ -8503,7 +8503,7 @@
       "history": [
         {
           "at": "2026-10-09T00:11:10+00:00",
-          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Sandbox backend / plugin.ts graph; (B) Host-side package export @dinkuskit/commerce/features/structured-data with pure buildProductJsonLd({ product, page, policies }) returning a schema.org Product graph (no network, no storage). Tradeoffs: (A) colocates with public catalog but main is already ~130243/131072 backend bytes after #67 — builder logic would risk the Registry cap; (B) matches media-projection host helpers, keeps Template Store as the page assembler, and leaves only thin policy public-read + identifier projection in the sandbox. Recommendation: B.",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Sandbox backend / plugin.ts graph; (B) Host-side package export @dinkuskit/commerce/features/structured-data with pure buildProductJsonLd({ product, page, policies }) returning a schema.org Product graph (no network, no storage). Tradeoffs: (A) colocates with public catalog but main is already ~130243/131072 backend bytes after #67 \u2014 builder logic would risk the Registry cap; (B) matches media-projection host helpers, keeps Template Store as the page assembler, and leaves only thin policy public-read + identifier projection in the sandbox. Recommendation: B.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -8871,14 +8871,14 @@
       "candidate_refs": [],
       "choice": "Admit providerId authorize_net alongside stripe in installed Registry checkout configuration for sandbox/test bindings only. Keep schema dinkuskit.commerce.registry-checkout/v1; do not make mode or any new field required on existing enabled v1 snapshots, so legacy stripe configs without new keys keep working. When mode is present it must be test until Ryan explicitly approves live. Paid Commerce status comes only from the authoritative Payments lookup (Authorize.net getTransactionDetails via Payments) against the frozen checkout total and variant selection; webhook, browser return, Accept Hosted token, or timer alone never marks paid. Follow-up implementation must not grow the Registry backend past the 131072-byte per-file limit: put provider admission and binding checks in a new small checkout module with thin wiring, and pair any net growth with behavior-preserving headroom factoring. No live credentials, deployment, or runtime change in this proposal.",
       "context_ref": "file:docs/implementation/authorize-net-checkout-provider.md",
-      "created_at": "2026-10-08T20:29:54+00:00",
+      "created_at": "2026-10-09T03:03:40+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Installed Registry checkout payment-provider admission",
       "history": [
         {
-          "at": "2026-10-08T20:59:24+00:00",
+          "at": "2026-10-09T03:03:40+00:00",
           "choice": "Admit providerId authorize_net alongside stripe in installed Registry checkout configuration for sandbox/test bindings only. Keep schema dinkuskit.commerce.registry-checkout/v1; do not make mode or any new field required on existing enabled v1 snapshots, so legacy stripe configs without new keys keep working. When mode is present it must be test until Ryan explicitly approves live. Paid Commerce status comes only from the authoritative Payments lookup (Authorize.net getTransactionDetails via Payments) against the frozen checkout total and variant selection; webhook, browser return, Accept Hosted token, or timer alone never marks paid. Follow-up implementation must not grow the Registry backend past the 131072-byte per-file limit: put provider admission and binding checks in a new small checkout module with thin wiring, and pair any net growth with behavior-preserving headroom factoring. No live credentials, deployment, or runtime change in this proposal.",
           "from": "proposed",
           "implementation_ref": null,
@@ -8904,23 +8904,23 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T20:59:24+00:00",
+      "updated_at": "2026-10-09T03:03:40+00:00",
       "verification_ref": null
     },
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only — no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total — a signed webhook alone never marks paid. These are notes on the still-proposed checkout-authorize-net-provider-20261008; nothing is locked.",
+      "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only \u2014 no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total \u2014 a signed webhook alone never marks paid. These are notes on the still-proposed checkout-authorize-net-provider-20261008; nothing is locked.",
       "context_ref": "file:docs/implementation/authorize-net-checkout-provider.md",
-      "created_at": "2026-10-08T20:29:54+00:00",
+      "created_at": "2026-10-09T03:03:40+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Installed Registry checkout payment-provider admission",
       "history": [
         {
-          "at": "2026-10-08T20:59:43+00:00",
-          "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only — no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total — a signed webhook alone never marks paid. These are notes on the still-proposed checkout-authorize-net-provider-20261008; nothing is locked.",
+          "at": "2026-10-09T03:03:40+00:00",
+          "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only \u2014 no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total \u2014 a signed webhook alone never marks paid. These are notes on the still-proposed checkout-authorize-net-provider-20261008; nothing is locked.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -8945,15 +8945,15 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-08T20:59:43+00:00",
+      "updated_at": "2026-10-09T03:03:40+00:00",
       "verification_ref": null
     },
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "Ryan answered on #72: (1) keep the Commerce settings name authorizeNetMerchantId; (2) do not match Authorize.net against the stripeAccountId binding wire field — Commerce must read a dedicated Payments binding field also named authorizeNetMerchantId, with no stripeAccountId fallback, and #72 depends on payments #22 adding that field; (3) split more of the Registry backend into cohesive modules for about 6500 bytes of headroom under the 131072-byte limit while preserving behavior. Still proposed notes only; nothing locked.",
+      "choice": "Ryan answered on #72: (1) keep the Commerce settings name authorizeNetMerchantId; (2) do not match Authorize.net against the stripeAccountId binding wire field \u2014 Commerce must read a dedicated Payments binding field also named authorizeNetMerchantId, with no stripeAccountId fallback, and #72 depends on payments #22 adding that field; (3) split more of the Registry backend into cohesive modules for about 6500 bytes of headroom under the 131072-byte limit while preserving behavior. Still proposed notes only; nothing locked.",
       "context_ref": "file:docs/implementation/authorize-net-checkout-provider.md",
-      "created_at": "2026-10-08T20:29:54+00:00",
+      "created_at": "2026-10-09T03:03:40+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
@@ -8971,7 +8971,7 @@
       "review_source_identity": null,
       "status": "proposed",
       "superseded_by": null,
-      "updated_at": "2026-10-08T20:29:54+00:00",
+      "updated_at": "2026-10-09T03:03:40+00:00",
       "verification_ref": null
     }
   ],
@@ -9009,5 +9009,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T02:36:07+00:00"
+  "updated_at": "2026-10-09T03:03:40+00:00"
 }
