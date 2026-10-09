@@ -1,3 +1,4 @@
+import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -134,7 +135,7 @@ test('new checkout constructs only the bounded window and clones that exact requ
     request.attemptId = 'mutated';
     return outcome;
   };
-  const a = await startCheckout(f.execution, 'guest-cart', cart);
+  const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   assert.deepEqual(a.payment.paymentWindow, { minSeconds: CURRENT_PAYMENT_WINDOW_MIN_SECONDS, maxSeconds: CURRENT_PAYMENT_WINDOW_MAX_SECONDS });
   assert.equal('paymentWindowSeconds' in a.payment, false);
   const persisted = (await f.execution.store.read('guest-cart')).record.attempts[0].payment;
@@ -143,7 +144,7 @@ test('new checkout constructs only the bounded window and clones that exact requ
   assert.deepEqual(received[0].paymentWindow, { minSeconds: 1800, maxSeconds: 1860 });
   assert.notEqual(seen[0], persisted);
   assert.deepEqual(seen[0].paymentWindow, { minSeconds: 1, maxSeconds: 2 });
-  const retry = await startCheckout(f.execution, 'guest-cart', cart);
+  const retry = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   assert.deepEqual(retry.payment, persisted);
   assert.deepEqual(received[1], persisted);
   assert.equal(retry.payment.attemptId, a.attemptId);
@@ -153,7 +154,7 @@ test('orchestration accepts provider endpoints 1800/1860 and interior 1859', asy
   for (const duration of [1800, 1859, 1860]) {
     const f = setup(t);
     f.setSessionDuration(duration);
-    const a = await startCheckout(f.execution, 'guest-cart', cart);
+    const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
     assert.equal(a.phase, 'paying');
     assert.equal(a.session.expiresAt - a.session.createdAt, duration);
     assert.equal(f.counts().releaseCalls, 0);
@@ -162,7 +163,7 @@ test('orchestration accepts provider endpoints 1800/1860 and interior 1859', asy
 
 test('orchestration rejects 1799/1861, non-integers and omitted or unsafe timestamps', async t => {
   const f = setup(t);
-  const a = await startCheckout(f.execution, 'guest-cart', cart);
+  const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   const lookup = f.execution.payments.lookup;
   const cases = [
     session => ({ ...session, expiresAt: session.createdAt + 1799 }),
@@ -189,7 +190,7 @@ test('orchestration rejects 1799/1861, non-integers and omitted or unsafe timest
 test('later outcomes reject altered immutable session fields while the hold stays', async t => {
   const f = setup(t);
   f.setSessionDuration(1859);
-  const a = await startCheckout(f.execution, 'guest-cart', cart);
+  const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   const original = a.session;
   const lookup = f.execution.payments.lookup;
   for (const mutate of [
@@ -213,9 +214,9 @@ test('later outcomes reject altered immutable session fields while the hold stay
 
 test('frozen old paymentWindowSeconds:1800 remains exact across retry and restart', async t => {
   const f = setup(t);
-  const a = await startCheckout(f.execution, 'guest-cart', cart);
+  const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   const legacyPayment = await persistLegacyPaying(f);
-  const retry = await startCheckout(f.execution, 'guest-cart', cart);
+  const retry = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   assert.equal(retry.attemptId, a.attemptId);
   const afterRetry = (await f.execution.store.read('guest-cart')).record.attempts[0].payment;
   assert.deepEqual(afterRetry, legacyPayment);
@@ -223,7 +224,7 @@ test('frozen old paymentWindowSeconds:1800 remains exact across retry and restar
   assert.equal('paymentWindow' in afterRetry, false);
   const restarted = openStore(f.path);
   t.after(() => restarted.db.close());
-  const afterRestart = await startCheckout({ ...f.execution, store: restarted.store }, 'guest-cart', cart);
+  const afterRestart = await startCheckout({ ...f.execution, store: restarted.store }, 'guest-cart', withSyntheticCheckoutContact(cart));
   assert.equal(afterRestart.attemptId, a.attemptId);
   const persisted = (await restarted.store.read('guest-cart')).record.attempts[0].payment;
   assert.deepEqual(persisted, legacyPayment);
@@ -232,7 +233,7 @@ test('frozen old paymentWindowSeconds:1800 remains exact across retry and restar
 
 test('legacy exact-1800 rejects a 1859 window that the current policy would accept', async t => {
   const f = setup(t);
-  const a = await startCheckout(f.execution, 'guest-cart', cart);
+  const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   await persistLegacyPaying(f);
   const lookup = f.execution.payments.lookup;
   f.execution.payments.lookup = async request => {
@@ -248,10 +249,10 @@ test('legacy exact-1800 rejects a 1859 window that the current policy would acce
 
 test('unknown outcome and elapsed local timer cannot release or create a replacement session', async t => {
   const f = setup(t);
-  const a = await startCheckout(f.execution, 'guest-cart', cart);
+  const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   const original = structuredClone(f.sessions.get(a.attemptId));
   f.setNow(a.session.expiresAt + 120);
-  const elapsed = await startCheckout(f.execution, 'guest-cart', cart);
+  const elapsed = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   assert.equal(elapsed.phase, 'paying');
   assert.equal(elapsed.session, undefined);
   assert.equal(f.sessions.size, 1);
@@ -262,5 +263,5 @@ test('unknown outcome and elapsed local timer cannot release or create a replace
   assert.equal(f.sessions.size, 1);
   assert.equal(f.counts().releaseCalls, 0);
   assert.equal(f.holds.get(a.attemptId).state, 'reserved');
-  await assert.rejects(startCheckout(f.execution, 'guest-cart', [{ catalogItemId: 'one', quantity: 1 }]), /frozen/);
+  await assert.rejects(startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact([{ catalogItemId: 'one', quantity: 1 }])), /frozen/);
 });

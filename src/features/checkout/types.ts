@@ -3,6 +3,10 @@ import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
 import type { CheckoutCouponPort, CouponQuoteSnapshot } from "../coupons/index.js";
+import type {
+  CheckoutContactRequirementsLoader,
+  CheckoutContactSnapshot,
+} from "../checkout-contact/types.js";
 
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
 export interface CartLine { catalogItemId: string; quantity: number }
@@ -148,6 +152,7 @@ interface CommerceOrderBase {
   total: Money;
   pricing?: CheckoutPricingSnapshot;
   variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
+  contactSnapshot?: CheckoutContactSnapshot;
 }
 export type CommerceOrder =
   | (CommerceOrderBase & { paymentId: string })
@@ -161,6 +166,7 @@ export interface CheckoutAttempt {
   session?: PaymentSession;
   order?: CommerceOrder;
   variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
+  contactSnapshot?: CheckoutContactSnapshot;
   /** Durable canonical reason for releasing; host support or elapsed time is never a reason. */
   paymentReleaseReason?: "never-started" | "not-created" | "expired-unpaid";
   coupon?: {
@@ -197,6 +203,7 @@ export interface CheckoutExecution {
   paymentAssociations?: CheckoutPaymentAssociationPort;
   createAttemptId?: () => string;
   now?: () => number;
+  loadCheckoutContactRequirements?: CheckoutContactRequirementsLoader;
   pricing?: TrustedCheckoutPricing;
 }
 
@@ -321,6 +328,7 @@ export interface GuestCheckoutHostOptions {
   createCapabilityId?: () => string;
   createAttemptId?: () => string;
   now?: () => number;
+  loadCheckoutContactRequirements?: CheckoutContactRequirementsLoader;
   /** Coupon storage is bound from this installation, never supplied by the host. */
   pricing?: Omit<TrustedCheckoutPricing, "coupons">;
 }
@@ -348,6 +356,7 @@ export type GuestCheckoutResult =
       ok: true;
       capabilityId: string;
       capability?: GuestCapabilityPresentation;
+      contactRequirements?: { requirePhoneNumber: boolean };
       checkout: GuestCheckoutProjection;
     }
   | {

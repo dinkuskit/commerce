@@ -5,7 +5,7 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { PluginStorageRepository } from 'emdash';
 import { ordersBlocks } from '../../dist/admin/orders-blocks.js';
 import { createCheckoutStore, startCheckout } from '../../dist/features/checkout/index.js';
-import { fixture, cart } from '../features/checkout/fixture.mjs';
+import { fixture, cart, withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
 
 // The real repository owns cursor encoding and row envelopes; projection-only
 // tests cannot detect a controller reading the wrong namespace or losing pages.
@@ -24,10 +24,10 @@ test('Orders reads canonical completed checkout records across SQLite pages with
     assert.match(JSON.stringify(await load()), /No orders recorded yet/);
     const f = fixture(createCheckoutStore(collection), false);
     f.setPayment('paid');
-    const paid = await startCheckout(f.execution, 'paid-cart', cart);
+    const paid = await startCheckout(f.execution, 'paid-cart', withSyntheticCheckoutContact(cart));
     assert.equal(paid.phase, 'paid');
     for (const price of f.execution.catalog.prices.records.values()) { price.regular.minor='0'; delete price.sale; }
-    const free = await startCheckout(f.execution, 'free-cart', cart);
+    const free = await startCheckout(f.execution, 'free-cart', withSyntheticCheckoutContact(cart));
     assert.equal(free.phase, 'paid');
     assert.equal(free.order.total.minor, '0');
     // Empty aggregates exceed one storage page; all must be traversed.

@@ -47,6 +47,7 @@ function context({ media = true, pageSize = 12 } = {}) {
   const listCalls = [];
   const ctx = {
     plugin: { id: "dinkus-commerce" },
+    settings: { getVersioned: async () => null },
     storage,
     ...(media ? { media: {
       async get(id) { return library[id] ?? null; },

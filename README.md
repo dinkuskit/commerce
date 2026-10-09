@@ -200,6 +200,21 @@ SQLite site with a real workerd runner, not an in-process fallback.
 See [sandbox admin implementation](docs/implementation/sandbox-admin.md) for
 the build, local installation and proof steps.
 
+## Command-line client
+
+`bin/dinkus-commerce.mjs` is an unpublished scaffold of the `dinkus-commerce`
+CLI. It reads the public catalog (`catalog list`, `catalog show`) and, on a
+native install with `EMDASH_TOKEN`, the admin product list (`products list`)
+over the same EmDash plugin routes. Price, SKU, order and settings commands
+are listed as planned until Commerce has the routes they need. The CLI lives in
+`cli/`, outside `src/`, and adds nothing to `dist/sandbox/plugin.mjs`.
+
+```bash
+bin/dinkus-commerce.mjs --url https://shop.example catalog list --json
+```
+
+The draft contract is [docs/CLI-SPEC.md](docs/CLI-SPEC.md).
+
 ## Direction
 
 - Commerce owns sellable product and variant identity, price, sellability,
