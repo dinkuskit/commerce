@@ -3,12 +3,11 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": true,
-    "confirmed_at": "2026-10-09T02:36:07+00:00",
-    "domain": "Required checkout contact capture",
-    "started_at": "2026-10-09T02:36:07+00:00",
-    "status": "confirmed",
-    "summary": "Every new checkout, including account-free guests, captures a required email. Phone is shown and optional by default and required only when the merchant's Require phone number setting is on. The validated contact and the settings revision are frozen on the Commerce attempt and order, kept out of Payments requests and public status."
+    "confirmed": false,
+    "domain": "Installed Registry checkout payment-provider admission",
+    "started_at": "2026-10-09T12:20:29+00:00",
+    "status": "grilling",
+    "summary": "Reopen checkout-authorize-net-provider-ryan-notes-20261008: Choice text still described the provider decision as proposed and said nothing is locked, contradicting the lock in https://github.com/dinkuskit/commerce/pull/71#issuecomment-6067094917. Reopened only to correct that wording; terms unchanged."
   },
   "decisions": [
     {
@@ -8865,10 +8864,146 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T02:36:07+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Admit providerId authorize_net alongside stripe in installed Registry checkout configuration for sandbox/test bindings only. Keep schema dinkuskit.commerce.registry-checkout/v1; do not make mode or any new field required on existing enabled v1 snapshots, so legacy stripe configs without new keys keep working. When mode is present it must be test until Ryan explicitly approves live. Paid Commerce status comes only from the authoritative Payments lookup (Authorize.net getTransactionDetails via Payments) against the frozen checkout total and variant selection; webhook, browser return, Accept Hosted token, or timer alone never marks paid. Follow-up implementation must not grow the Registry backend past the 131072-byte per-file limit: put provider admission and binding checks in a new small checkout module with thin wiring, and pair any net growth with behavior-preserving headroom factoring. No live credentials, deployment, or runtime change in this proposal.",
+      "context_ref": "file:docs/implementation/authorize-net-checkout-provider.md",
+      "created_at": "2026-10-09T03:03:40+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Installed Registry checkout payment-provider admission",
+      "history": [
+        {
+          "at": "2026-10-09T03:03:40+00:00",
+          "choice": "Admit providerId authorize_net alongside stripe in installed Registry checkout configuration for sandbox/test bindings only. Keep schema dinkuskit.commerce.registry-checkout/v1; do not make mode or any new field required on existing enabled v1 snapshots, so legacy stripe configs without new keys keep working. When mode is present it must be test until Ryan explicitly approves live. Paid Commerce status comes only from the authoritative Payments lookup (Authorize.net getTransactionDetails via Payments) against the frozen checkout total and variant selection; webhook, browser return, Accept Hosted token, or timer alone never marks paid. Follow-up implementation must not grow the Registry backend past the 131072-byte per-file limit: put provider admission and binding checks in a new small checkout module with thin wiring, and pair any net growth with behavior-preserving headroom factoring. No live credentials, deployment, or runtime change in this proposal.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-authorize-net-provider-20261008",
+      "implementation_ref": null,
+      "question": "May installed Commerce checkout admit authorize_net as a payment providerId alongside stripe, and under what compatibility, mode, paid-authority, and backend-size rules?",
+      "rationale": "locked by Ryan, 2026-10-08 3:07 PM ET, confirmed 3:20 PM ET. Cite https://github.com/dinkuskit/commerce/pull/71#issuecomment-6067094917. Lock covers decision only; does not approve merge of #71 or #72.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T03:03:40+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only \u2014 no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total \u2014 a signed webhook alone never marks paid. These are notes on checkout-authorize-net-provider-20261008, which Ryan locked together with this entry in https://github.com/dinkuskit/commerce/pull/71#issuecomment-6067094917.",
+      "context_ref": "file:docs/implementation/authorize-net-checkout-provider.md",
+      "created_at": "2026-10-09T03:03:40+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Installed Registry checkout payment-provider admission",
+      "history": [
+        {
+          "at": "2026-10-09T03:03:40+00:00",
+          "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only \u2014 no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total \u2014 a signed webhook alone never marks paid. These are notes on the still-proposed checkout-authorize-net-provider-20261008; nothing is locked.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T12:20:29+00:00",
+          "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only \u2014 no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total \u2014 a signed webhook alone never marks paid. These are notes on the still-proposed checkout-authorize-net-provider-20261008; nothing is locked.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Choice text still described the provider decision as proposed and said nothing is locked, contradicting the lock in https://github.com/dinkuskit/commerce/pull/71#issuecomment-6067094917. Reopened only to correct that wording; terms unchanged.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-09T12:20:29+00:00",
+          "choice": "Ryan answered Go with your picks on #71: (1) keep dinkuskit.commerce.registry-checkout/v1 and leave legacy enabled configs without new fields loading unchanged, with a test for an old saved config; (2) add a separate optional Authorize.net merchant field authorizeNetMerchantId and do not reuse or overload stripeAccountId; (3) sandbox only \u2014 no live Authorize.net endpoints, credentials, or live-mode toggles until Ryan explicitly approves live; (4) start implementation now against payments PR #22, with paid status only from authoritative transaction lookup plus amount and currency match against the frozen checkout total \u2014 a signed webhook alone never marks paid. These are notes on the still-proposed checkout-authorize-net-provider-20261008; nothing is locked.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-authorize-net-provider-ryan-notes-20261008",
+      "implementation_ref": null,
+      "question": "What did Ryan answer on commerce PR #71 about schema, merchant field, mode, and implementation timing?",
+      "rationale": "locked by Ryan, 2026-10-08 3:07 PM ET, confirmed 3:20 PM ET. Cite https://github.com/dinkuskit/commerce/pull/71#issuecomment-6067094917. Lock covers the notes entry named in Ryan's maintainer lock; does not approve merge of #71 or #72.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T12:20:29+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Ryan answered on #72: (1) keep the Commerce settings name authorizeNetMerchantId; (2) do not match Authorize.net against the stripeAccountId binding wire field \u2014 Commerce must read a dedicated Payments binding field also named authorizeNetMerchantId, with no stripeAccountId fallback, and #72 depends on payments #22 adding that field; (3) split more of the Registry backend into cohesive modules for about 6500 bytes of headroom under the 131072-byte limit while preserving behavior. Still proposed notes only; nothing locked.",
+      "context_ref": "file:docs/implementation/authorize-net-checkout-provider.md",
+      "created_at": "2026-10-09T03:03:40+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Installed Registry checkout payment-provider admission",
+      "history": [],
+      "id": "checkout-authorize-net-provider-ryan-notes-20261008b",
+      "implementation_ref": null,
+      "question": "What did Ryan answer on commerce PR #72 about merchant field name, Payments binding field, and backend headroom?",
+      "rationale": "Recorded from Ryan answers on commerce #72 for binding-field and headroom follow-up without locking.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-10-09T03:03:40+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
-    "at": "2026-10-08T15:41:14+00:00",
+    "at": "2026-10-09T12:20:29+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -8901,5 +9036,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T02:36:07+00:00"
+  "updated_at": "2026-10-09T12:20:29+00:00"
 }
