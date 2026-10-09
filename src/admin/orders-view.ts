@@ -50,6 +50,8 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
     blocks.push(detailFields('Order', order.orderId, 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
       'Provider payment', order.paymentId ?? notRecorded, 'Fulfillment', notRecorded), { type: 'header', text: 'Items' });
+    // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
+    if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + encodeURIComponent(order.orderId)));
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
       'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
     if (order.pricing) {

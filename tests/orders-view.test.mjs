@@ -28,3 +28,14 @@ test('invalid money fails closed and large valid money keeps every cent', () => 
  const bad = { ...paid, total: { currency: 'USD', minor: '-1' } };
  assert.match(JSON.stringify(ordersView({ status: 'available', orders: [bad] })), /could not be displayed safely/);
 });
+test('Pack is offered only for orders with Inventory ticket ids', () => {
+ const ticketed = { ...paid, ticketIds: ['hat-ticket'] };
+ const detail = ordersView({ status: 'available', orders: [ticketed] }, ticketed.orderId);
+ assert.equal(validateBlocks(detail.blocks).valid, true);
+ const pack = detail.blocks.find(block => block.type === 'actions' && block.elements[0].label === 'Pack');
+ assert.equal(pack.elements[0].action_id, 'orders.pack:' + encodeURIComponent(ticketed.orderId));
+ assert.match(JSON.stringify(detail), /Not recorded/);
+ assert.equal(JSON.stringify(detail).includes('hat-ticket'), false);
+ const plain = ordersView(input, paid.orderId);
+ assert.equal(plain.blocks.some(block => block.type === 'actions' && block.elements[0].label === 'Pack'), false);
+});
