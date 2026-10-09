@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { Kysely, SqliteDialect } from 'kysely';
 import { PluginStorageRepository } from 'emdash';
 import { createCheckoutStore, startCheckout } from '../../dist/features/checkout/index.js';
-import { fixture, cart } from '../features/checkout/fixture.mjs';
+import { fixture, cart, withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
 
 // Read-only Orders acceptance on the installed Registry-format artifact. It
 // uses canonical checkout writes and synthetic payment outcomes, never a
@@ -36,10 +36,10 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await capture('orders-empty');
     const f = fixture(createCheckoutStore(orders), false);
     f.setPayment('paid');
-    const paid = await startCheckout(f.execution, 'orders-paid', cart);
+    const paid = await startCheckout(f.execution, 'orders-paid', withSyntheticCheckoutContact(cart));
     expect(paid.phase).toBe('paid');
     for (const price of f.execution.catalog.prices.records.values()) { price.regular.minor = '0'; delete price.sale; }
-    const free = await startCheckout(f.execution, 'orders-free', cart);
+    const free = await startCheckout(f.execution, 'orders-free', withSyntheticCheckoutContact(cart));
     expect(free.phase).toBe('paid');
     const snapshot = () => database.prepare("SELECT data FROM _plugin_storage WHERE plugin_id=? AND collection='checkout_carts' ORDER BY id").all(pluginId);
     const original = snapshot();

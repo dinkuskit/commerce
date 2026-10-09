@@ -23,6 +23,12 @@ const collection = records => ({
   async get(id) { return structuredClone(this.records.get(id) ?? null); },
   async query() { return { items: [...this.records].map(([id,data]) => ({id,data:structuredClone(data)})), hasMore:false }; },
 });
+/** Explicit synthetic shopper input for existing non-contact checkout scenarios. */
+export function withSyntheticCheckoutContact(input) {
+  if (Array.isArray(input)) return { lines: input, contact: { email: 'checkout-fixture@example.test' } };
+  if (input && typeof input === 'object') return { ...input, contact: { email: 'checkout-fixture@example.test' } };
+  return input;
+}
 export const cart = [{catalogItemId:'one',quantity:2},{catalogItemId:'two',quantity:1}];
 export function fixture(store, managed = true) {
   const items = ['one','two'].map(id => ({recordKind:'catalog-item',itemId:id,name:id,stockManagement:managed ? {mode:'managed',status:'active',inventorySkuId:'sku-'+id} : {mode:'unmanaged'}}));
@@ -56,7 +62,7 @@ export function fixture(store, managed = true) {
     if (paymentResult === 'not-created') return {outcome:'not-created',attemptId:request.attemptId};
     return {outcome:paymentResult === 'ambiguous' ? 'open' : paymentResult,attemptId:request.attemptId,total:entry.request.total,session:entry.session,...(paymentResult === 'paid' ? {paymentId:'payment-'+request.attemptId} : {})};
   }
-  const execution = { store,catalog,availability:{resolveProvider: async () => ({async readSkuStock(input) {
+  const execution = { store,catalog,loadCheckoutContactRequirements:async () => ({requirePhoneNumber:false,revision:null}),availability:{resolveProvider: async () => ({async readSkuStock(input) {
     const stock = Object.fromEntries(['onHand','reserved','outgoingTransferCommitted','available','expected','inTransit'].map(key => [key,{value:key === 'available' || key === 'onHand' ? '10' : '0',unit:'each'}]));
     return {schema:'dinkuskit.inventory.sku-stock-read-result/v1',outcome:'found',...input,stock,locations:[{locationId:input.scope.locationId,name:'Test location',stock}]};
   }})},resolveInventory:async () => inventory,payments:{ensureSession:r => lookup(r,true),lookup:r => lookup(r,false)},paymentBindingRef: 'stripe-test-binding',now:() => now };
