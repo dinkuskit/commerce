@@ -193,7 +193,7 @@ async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<
   }
   return { blocks };
 }
-async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm, toast?: string): Promise<BlockResponse> {
+async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm & { feedChannels?: readonly ProductFeedChannel[] }, toast?: string): Promise<BlockResponse> {
   const store = storage(ctx);
   const listed = await listCatalogProducts(store);
   const selected = listed.products.find((item) => item.catalogItemId === id);
@@ -204,7 +204,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const feedChannels = store.feedEligibility
     ? await loadProductFeedEligibility(store.feedEligibility, id)
     : undefined;
-  const values = form ?? { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
+  const values = form ? { ...form, feedChannels: form.feedChannels ?? feedChannels } : { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
     { type: "header", text: selected.name }, { type: "context", text: "Commerce / Products" }, navigation(),
     { type: "context", text: "SKU: " + selected.sku },
@@ -332,17 +332,16 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
         if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus);
         const saved = await saveCatalogProductPrices(store,
           admitV1CatalogPriceSaveInput(payload, wasManaged));
-        if (store.feedEligibility &&
-            (Object.hasOwn(values, "feed:google-merchant") || Object.hasOwn(values, "feed:meta-catalog"))) {
-          await setProductFeedEligibility(store.feedEligibility, store.catalog, {
-            catalogItemId: id,
-            channels: [
-              ...(values["feed:google-merchant"] === true ? ["google-merchant" as const] : []),
-              ...(values["feed:meta-catalog"] === true ? ["meta-catalog" as const] : []),
-            ],
-          });
+        const feedSubmitted = Object.hasOwn(values, "feed:google-merchant") || Object.hasOwn(values, "feed:meta-catalog");
+        const channels = [
+          ...(values["feed:google-merchant"] === true ? ["google-merchant" as const] : []),
+          ...(values["feed:meta-catalog"] === true ? ["meta-catalog" as const] : []),
+        ];
+        // A refused price save writes nothing, feed choices included; the form keeps the clerk's entries.
+        if (saved.saved && store.feedEligibility && feedSubmitted) {
+          await setProductFeedEligibility(store.feedEligibility, store.catalog, { catalogItemId: id, channels });
         }
-        return { ...await product(ctx, id, saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
+        return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, feedChannels: channels } : saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }
       if (action.startsWith("variant:")) {
         const [operation, id, ...args] = JSON.parse(action.slice(8));
@@ -430,6 +429,10 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
             sale: values.sale,
             manageStock: managed,
             stockStatus: managed === false ? status : null,
+            ...(typeof values["feed:google-merchant"] === "boolean" || typeof values["feed:meta-catalog"] === "boolean" ? { feedChannels: [
+              ...(values["feed:google-merchant"] === true ? ["google-merchant" as const] : []),
+              ...(values["feed:meta-catalog"] === true ? ["meta-catalog" as const] : []),
+            ] } : {}),
           }),
         ], toast: { type: "error", message: failure } };
       }

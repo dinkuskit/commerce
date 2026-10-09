@@ -93,6 +93,23 @@ test("optional identifiers and images are not invented", () => {
   assert.equal(meta.includes('"" ,""'), false);
 });
 
+test("identifiers come from the catalog public product, including MPN", () => {
+  const row = facts({ product: product({ gtin: "00012345678905", mpn: "HAT-MPN-7", brand: "Acme Wool" }) });
+  const google = buildGoogleMerchantFeed([row]);
+  assert.match(google, /<g:gtin>00012345678905<\/g:gtin>/);
+  assert.match(google, /<g:mpn>HAT-MPN-7<\/g:mpn>/);
+  assert.match(google, /<g:brand>Acme Wool<\/g:brand>/);
+  const [header, line] = buildMetaCatalogFeed([row]).trim().split("\n");
+  const columns = header.split(",").map((cell) => cell.replaceAll('"', ""));
+  const cells = line.split(",").map((cell) => cell.replaceAll('"', ""));
+  assert.equal(cells[columns.indexOf("gtin")], "00012345678905");
+  assert.equal(cells[columns.indexOf("mpn")], "HAT-MPN-7");
+  assert.equal(cells[columns.indexOf("brand")], "Acme Wool");
+  const hostOnly = facts({ gtin: "99999999999999", brand: "Host Brand" });
+  assert.equal(buildGoogleMerchantFeed([hostOnly]).includes("99999999999999"), false);
+  assert.equal(buildMetaCatalogFeed([hostOnly]).includes("Host Brand"), false);
+});
+
 test("feed paging is bounded and deterministic", () => {
   const rows = [facts({ product: product({ id: "one" }) }), facts({ product: product({ id: "two" }) })];
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1 }), { rows: [rows[0]], nextCursor: 1 });

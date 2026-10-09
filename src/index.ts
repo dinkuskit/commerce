@@ -93,6 +93,8 @@ export * from "./features/inventory-provider/index.js";
 
 export * from "./features/catalog/index.js";
 
+export * from "./features/feeds/index.js";
+
 export * from "./features/inventory-setup/index.js";
 
 export * from "./features/storefront-availability/index.js";

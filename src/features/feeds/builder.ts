@@ -72,8 +72,9 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
       image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : "",
       `<g:price>${escapeXml(price(product))}</g:price>`,
       `<g:availability>${availability(product)}</g:availability>`,
-      product.gtin ? `<g:gtin>${escapeXml(product.gtin)}</g:gtin>` : "",
-      product.brand ? `<g:brand>${escapeXml(product.brand)}</g:brand>` : "",
+      product.product.gtin ? `<g:gtin>${escapeXml(product.product.gtin)}</g:gtin>` : "",
+      product.product.mpn ? `<g:mpn>${escapeXml(product.product.mpn)}</g:mpn>` : "",
+      product.product.brand ? `<g:brand>${escapeXml(product.product.brand)}</g:brand>` : "",
       product.shipping ? `<g:shipping>${escapeXml(product.shipping)}</g:shipping>` : "",
       "</item>",
     ].filter(Boolean).join("");
@@ -82,7 +83,7 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
 }
 
 export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): string {
-  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "brand", "gtin", "shipping"];
+  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "brand", "gtin", "mpn", "shipping"];
   const rows = products.filter((product) => eligible(product, "meta-catalog")).map((product) => [
     product.product.id,
     product.product.id,
@@ -93,8 +94,9 @@ export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): str
     price(product),
     product.content.canonicalUrl,
     product.content.imageUrls?.[0] ?? "",
-    product.brand ?? "",
-    product.gtin ?? "",
+    product.product.brand ?? "",
+    product.product.gtin ?? "",
+    product.product.mpn ?? "",
     product.shipping ?? "",
   ].map(csv).join(","));
   return [columns.map(csv).join(","), ...rows].join("\n") + "\n";

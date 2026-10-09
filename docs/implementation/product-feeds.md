@@ -10,7 +10,7 @@ The host supplies published storefront facts for each item: canonical
 `/products/{slug}` URL, title, description, and public image URLs. Commerce
 supplies the `catalog/public` product projection, including authoritative
 customer price and availability. The feed builders omit products without
-eligibility, listability, a price, a published URL, or a title. Optional GTIN,
+eligibility, listability, a price, a published URL, or a title. Optional GTIN, MPN,
 brand, shipping, description, and image values are emitted only when supplied.
 
 `buildGoogleMerchantFeed` emits deterministic RSS 2.0 with Google `g:` fields;

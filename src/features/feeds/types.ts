@@ -36,8 +36,6 @@ export interface ProductFeedFacts {
   product: PublicCatalogProduct;
   content: ProductFeedContent;
   eligibility: readonly ProductFeedChannel[];
-  gtin?: string;
-  brand?: string;
   shipping?: string;
 }
 
