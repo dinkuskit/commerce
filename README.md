@@ -27,8 +27,10 @@ Commerce's Registry build comes from `emdash-plugin.jsonc` and `src/plugin.ts`
 (see Sandbox distribution below). The package root and `./admin` export are the
 native entry. Native-only gaps:
 
-- Coupons: native installs keep coupon storage, the Coupons admin page and
-  coupon codes at checkout. The Registry build leaves them out to stay under
+- Coupons: native installs keep coupon storage and coupon codes at checkout.
+  The default `./admin` pages mount only `/products` and `/store`; the
+  `CouponsPage` named export is there for a host to mount at `/coupons`
+  itself. The Registry build leaves coupons out to stay under
   the Registry's per-file size limit
   ([registry-coupons-deferred](docs/implementation/registry-coupons-deferred.md)).
   This closes when coupons return through a hosted coupon service; the native
