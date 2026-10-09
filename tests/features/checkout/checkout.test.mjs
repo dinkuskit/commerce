@@ -27,7 +27,7 @@ test('reserved ticket ids persist on the order and a string reserved result stil
     assert.equal(request.requirements.find(line => line.skuId === 'sku-one').quantity, 3);
     return { outcome: 'reserved', ticketIds: ['hat-ticket', 'shirt-ticket'] };
   };
-  const started = await startCheckout(named.execution, 'guest-cart', [...cart, { catalogItemId: 'one', quantity: 1 }]);
+  const started = await startCheckout(named.execution, 'guest-cart', withSyntheticCheckoutContact([...cart, { catalogItemId: 'one', quantity: 1 }]));
   assert.deepEqual(started.ticketIds, ['hat-ticket', 'shirt-ticket']);
   named.setPayment('paid');
   const paid = await reconcileCheckout(named.execution, 'guest-cart', started.attemptId);
@@ -35,13 +35,13 @@ test('reserved ticket ids persist on the order and a string reserved result stil
   assert.equal(Object.hasOwn(paid.order, 'orderNumber'), false);
   const legacy = setup(t);
   legacy.setPayment('paid');
-  const old = await startCheckout(legacy.execution, 'legacy-cart', cart);
+  const old = await startCheckout(legacy.execution, 'legacy-cart', withSyntheticCheckoutContact(cart));
   const done = await reconcileCheckout(legacy.execution, 'legacy-cart', old.attemptId);
   assert.equal(done.phase, 'paid');
   assert.equal(done.order.ticketIds, undefined);
   const split = setup(t);
   split.inventory.reserve = async () => ({ outcome: 'reserved', ticketIds: ['a', 'b', 'c'] });
-  await assert.rejects(startCheckout(split.execution, 'split-cart', cart), /Invalid reservation outcome/);
+  await assert.rejects(startCheckout(split.execution, 'split-cart', withSyntheticCheckoutContact(cart)), /Invalid reservation outcome/);
   assert.equal(split.sessions.size, 0);
 });
 
