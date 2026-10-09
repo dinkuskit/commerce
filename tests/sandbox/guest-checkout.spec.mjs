@@ -134,7 +134,7 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
     expect(capabilityCount(database, native)).toBe(1);
     expect(cartCount(database, native)).toBe(0);
     const missing = await request.post(start, {
-      data: { lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
+      data: { contact: { email: 'guest@example.test' }, lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
       headers: {
         ...writeHeaders(origin),
         "x-commerce-guest-capability": payload.capability.capability,

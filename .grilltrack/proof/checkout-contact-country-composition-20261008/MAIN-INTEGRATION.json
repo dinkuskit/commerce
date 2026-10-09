@@ -1,0 +1,23 @@
+{
+  "frozenContactCommit": "840652c4d1b22628776496768211de4009a759db",
+  "incoming": "d15a7b5e5f8c1466fa3bfa1c6d4709a097da7cde",
+  "method": "ordinary two-parent merge, no CLI state change",
+  "applicationAndCanonicalByteIdentical": true,
+  "deltaChecks": {
+    "repoContract": 4,
+    "typecheck": "passed",
+    "audit": "clean",
+    "node22OfflineDryRun": 0,
+    "node24OfflineDryRun": "EBADENGINE"
+  },
+  "backendBytes": 141201,
+  "backendSHA256": "77801da24220a1cce80cd584c2ea773e77d52cf3c2b2cb9ad89f510b0993004b",
+  "localLogHashes": {
+    "main-contract-tests.log": "31509a4fe46d0459af2d0a6a1ac2d16852ffe2bcb8e6233c78d1eee867141ca8",
+    "main-typecheck.log": "df58c149da18094da25399a561e92d89faafa85987e3717a0aff56f4bc27bbfe",
+    "main-audit.log": "1581421e495616437fcb7175e04ee9c9e886ecf4803da41a6f74994859c960d0",
+    "main-build.log": "d342ba434077a6ee31573b87e7da42f7a9dffee1c5d77b4a80fc4c7dc687412a",
+    "main-join-validation.txt": "009d962905920ad0e3ff46c6987fad36418982deb81796fd1f58e326d167c268",
+    "npm-engine-guard.json": "10d9690097222c501332889b9358a0e5b9ebae5735a244d25cadcf8efe688a84"
+  }
+}
