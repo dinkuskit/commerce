@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
-import type { InventoryProviderBinding } from "../inventory-provider/index.js";
+import type { InventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
 import type { CheckoutCouponPort, CouponQuoteSnapshot } from "../coupons/index.js";
 import type {

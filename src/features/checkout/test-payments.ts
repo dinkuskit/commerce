@@ -17,13 +17,16 @@ export type ScopedPaymentFetch = (
   init: RequestInit,
 ) => Promise<Response>;
 
+export type TrustedTestPaymentsProviderId = "stripe" | "authorize_net";
+
 export interface TrustedTestPaymentsConfig {
   paymentsOrigin: string;
   siteId: string;
   commerceOrigin: string;
   bindingRef: string;
-  providerId: "stripe";
-  stripeAccountId: string;
+  providerId: TrustedTestPaymentsProviderId;
+  stripeAccountId?: string;
+  authorizeNetMerchantId?: string;
   credentialResolver: () => Promise<string>;
   fetch: ScopedPaymentFetch;
   pricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
@@ -37,7 +40,8 @@ export interface TrustedTestPaymentsConfig {
 interface PaymentBinding {
   bindingRef: string;
   providerId: string;
-  stripeAccountId: string;
+  stripeAccountId?: string;
+  authorizeNetMerchantId?: string;
   mode: string;
   ready?: boolean;
 }
@@ -89,11 +93,21 @@ function assertTestBinding(value: unknown, expected: TrustedTestPaymentsConfig):
   }
   const binding = value as Partial<PaymentBinding>;
   if (binding.bindingRef !== expected.bindingRef ||
-      binding.providerId !== "stripe" ||
-      expected.providerId !== "stripe" ||
-      binding.stripeAccountId !== expected.stripeAccountId ||
+      binding.providerId !== expected.providerId ||
       binding.mode !== "test") {
     throw new Error("Payments binding mismatch");
+  }
+  if (expected.providerId === "stripe") {
+    if (binding.authorizeNetMerchantId !== undefined ||
+        binding.stripeAccountId !== expected.stripeAccountId) {
+      throw new Error("Payments binding mismatch");
+    }
+  } else {
+    if (binding.stripeAccountId !== undefined) throw new Error("Payments binding mismatch");
+    if (expected.authorizeNetMerchantId !== undefined &&
+        binding.authorizeNetMerchantId !== expected.authorizeNetMerchantId) {
+      throw new Error("Payments binding mismatch");
+    }
   }
   return binding as PaymentBinding;
 }
@@ -185,15 +199,37 @@ function exactRequest(
 function normalizedConfig(
   input: TrustedTestPaymentsConfig,
 ): Readonly<TrustedTestPaymentsConfig> {
-  if (input.providerId !== "stripe") invalid("providerId must be stripe");
-  if (input.pricingSchema !== undefined && input.pricingSchema !== CHECKOUT_PRICING_SCHEMA) invalid("unsupported pricing schema");
+  if (input.providerId !== "stripe" && input.providerId !== "authorize_net") {
+    invalid("providerId must be stripe or authorize_net");
+  }
+  if (input.pricingSchema !== undefined && input.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
+    invalid("unsupported pricing schema");
+  }
+  if (input.providerId === "stripe") {
+    if (input.authorizeNetMerchantId !== undefined) invalid("stripe must not set authorizeNetMerchantId");
+    return Object.freeze({
+      paymentsOrigin: origin(input.paymentsOrigin, "paymentsOrigin"),
+      commerceOrigin: commerceOrigin(input.commerceOrigin),
+      siteId: nonEmpty(input.siteId, "siteId"),
+      bindingRef: nonEmpty(input.bindingRef, "bindingRef"),
+      providerId: "stripe" as const,
+      stripeAccountId: nonEmpty(input.stripeAccountId ?? "", "stripeAccountId"),
+      credentialResolver: input.credentialResolver,
+      fetch: input.fetch,
+      pricingSchema: input.pricingSchema,
+      validateCouponQuoteSnapshot: input.validateCouponQuoteSnapshot,
+    });
+  }
+  if (input.stripeAccountId !== undefined) invalid("authorize_net must not set stripeAccountId");
   return Object.freeze({
     paymentsOrigin: origin(input.paymentsOrigin, "paymentsOrigin"),
     commerceOrigin: commerceOrigin(input.commerceOrigin),
     siteId: nonEmpty(input.siteId, "siteId"),
     bindingRef: nonEmpty(input.bindingRef, "bindingRef"),
-    providerId: "stripe",
-    stripeAccountId: nonEmpty(input.stripeAccountId, "stripeAccountId"),
+    providerId: "authorize_net" as const,
+    ...(input.authorizeNetMerchantId !== undefined
+      ? { authorizeNetMerchantId: nonEmpty(input.authorizeNetMerchantId, "authorizeNetMerchantId") }
+      : {}),
     credentialResolver: input.credentialResolver,
     fetch: input.fetch,
     pricingSchema: input.pricingSchema,

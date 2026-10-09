@@ -11,6 +11,7 @@ import {
 } from "./price.js";
 import { bulkSaveCatalogProductPrices, listCatalogProducts, saveCatalogProductPrices } from "./product-admin.js";
 import {
+  isLocalStockManagementEnabled,
   manageStockControlFromAdmission,
   readLocalStockAdmission,
   type LocalStockHostOptions,
@@ -42,13 +43,20 @@ import {
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
 } from "./route-ids.js";
-import type { ManagedSkuRegistrationClaimRecord } from "../inventory-provider/index.js";
+import {
+  releaseManagedSkuRegistrationClaims,
+  type ManagedSkuRegistrationClaimRecord,
+} from "../inventory-provider/index.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogManualAvailabilityRecord,
   CatalogPriceRecord,
   CatalogStorageRecord,
 } from "./types.js";
+
+function routeFail(code: string, message: string, status: number): never {
+  throw new PluginRouteError(code, message, status);
+}
 
 export {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -71,17 +79,16 @@ export function createCatalogItemRouteWithLocalStock(
     permission: "content:create",
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
-        throw new PluginRouteError(
-          "METHOD_NOT_ALLOWED",
-          "catalog item creation requires POST",
-          405,
-        );
+        routeFail("METHOD_NOT_ALLOWED", "catalog item creation requires POST", 405);
       }
 
       try {
         return await createCatalogItem(
           ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
-          admitV1CatalogCreateInput(ctx.input, readLocalStockAdmission(options, ctx)),
+          admitV1CatalogCreateInput(
+            ctx.input,
+            isLocalStockManagementEnabled(readLocalStockAdmission(options, ctx)),
+          ),
         );
       } catch (error) {
         if (error instanceof CatalogError) {
@@ -99,11 +106,7 @@ export const setCatalogItemBackordersRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "backorder setting requires POST",
-        405,
-      );
+      routeFail("METHOD_NOT_ALLOWED", "backorder setting requires POST", 405);
     }
     try {
       return await setCatalogItemBackorders(
@@ -127,11 +130,7 @@ export const setCatalogItemManualAvailabilityRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError(
-        "METHOD_NOT_ALLOWED",
-        "manual availability setting requires POST",
-        405,
-      );
+      routeFail("METHOD_NOT_ALLOWED", "manual availability setting requires POST", 405);
     }
     try {
       return await setCatalogItemManualAvailability(
@@ -159,11 +158,14 @@ function priceStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
 }
 
 function productSaveStorage(ctx: Parameters<PluginRoute["handler"]>[0]) {
+  const claims = ctx.storage.managedSkuClaims as StorageCollection<ManagedSkuRegistrationClaimRecord>;
   return {
     ...priceStorage(ctx),
     availability: ctx.storage
       .catalogManualAvailability as StorageCollection<CatalogManualAvailabilityRecord>,
-    claims: ctx.storage.managedSkuClaims as StorageCollection<ManagedSkuRegistrationClaimRecord>,
+    releaseRegistrationClaims: async (catalogItemId: string) => {
+      await releaseManagedSkuRegistrationClaims(claims, { catalogItemId });
+    },
   };
 }
 
@@ -214,11 +216,7 @@ export function createListCatalogProductsRouteWithLocalStock(
     handler: async (ctx) => {
       const method = ctx.request.method.toUpperCase();
       if (method !== "GET" && method !== "POST") {
-        throw new PluginRouteError(
-          "METHOD_NOT_ALLOWED",
-          "product list requires GET or POST",
-          405,
-        );
+        routeFail("METHOD_NOT_ALLOWED", "product list requires GET or POST", 405);
       }
       try {
         const listed = await listCatalogProducts(productSaveStorage(ctx));
@@ -248,11 +246,7 @@ export function createSaveCatalogProductPricesRouteWithLocalStock(
     permission: "content:edit_any",
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
-        throw new PluginRouteError(
-          "METHOD_NOT_ALLOWED",
-          "price save requires POST",
-          405,
-        );
+        routeFail("METHOD_NOT_ALLOWED", "price save requires POST", 405);
       }
       try {
         const input =
@@ -271,7 +265,7 @@ export function createSaveCatalogProductPricesRouteWithLocalStock(
           admitV1CatalogPriceSaveInput(
             ctx.input,
             isManagedCatalogRecord(current),
-            readLocalStockAdmission(options, ctx),
+            isLocalStockManagementEnabled(readLocalStockAdmission(options, ctx)),
           ),
         );
       } catch (error) {
@@ -291,7 +285,7 @@ export const bulkSaveCatalogProductPricesRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError("METHOD_NOT_ALLOWED", "bulk price save requires POST", 405);
+      routeFail("METHOD_NOT_ALLOWED", "bulk price save requires POST", 405);
     }
     try {
       const input = ctx.input && typeof ctx.input === "object" && !Array.isArray(ctx.input)
@@ -311,7 +305,7 @@ export const saveCatalogItemMediaRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError("METHOD_NOT_ALLOWED", "media save requires POST", 405);
+      routeFail("METHOD_NOT_ALLOWED", "media save requires POST", 405);
     }
     try {
       return await saveCatalogItemMedia(
@@ -334,7 +328,7 @@ export const setCatalogItemSkuRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError("METHOD_NOT_ALLOWED", "SKU setting requires POST", 405);
+      routeFail("METHOD_NOT_ALLOWED", "SKU setting requires POST", 405);
     }
     try {
       return await setCatalogItemSku(
@@ -374,7 +368,7 @@ export const addCatalogVariantOptionRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError("METHOD_NOT_ALLOWED", "variant option requires POST", 405);
+      routeFail("METHOD_NOT_ALLOWED", "variant option requires POST", 405);
     }
     try {
       return await addCatalogVariantOption({
@@ -393,7 +387,7 @@ export const updateCatalogVariantLabelsRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError("METHOD_NOT_ALLOWED", "variant label update requires POST", 405);
+      routeFail("METHOD_NOT_ALLOWED", "variant label update requires POST", 405);
     }
     try {
       return await updateCatalogVariantLabels({

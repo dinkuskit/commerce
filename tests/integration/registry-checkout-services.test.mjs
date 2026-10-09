@@ -4,7 +4,14 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { resolveCatalogItemPrice } from '../../dist/features/catalog/index.js';
 import { resolveStorefrontAvailability } from '../../dist/features/storefront-availability/index.js';
-import { configuration, credential, runtimeFixture, SITE } from '../features/checkout/registry-runtime.mjs';
+import {
+  authorizeNetConfiguration,
+  configuration,
+  credential,
+  legacyStripeConfiguration,
+  runtimeFixture,
+  SITE,
+} from '../features/checkout/registry-runtime.mjs';
 import {
   COMMERCE_CHECKOUT_WAKES_TASK,
   COMMERCE_REGISTRY_RUNTIME_ID,
@@ -257,6 +264,9 @@ test('malformed or copied configuration is rejected before encrypted credential/
     { ...configuration(), paymentsOrigin: 'http://8.8.8.8' },
     { ...configuration(), providerId: 'unsupported' },
     { ...configuration(), mode: 'live' },
+    { ...authorizeNetConfiguration(), mode: 'live' },
+    { ...authorizeNetConfiguration(), stripeAccountId: 'acct_overloaded' },
+    { ...configuration(), authorizeNetMerchantId: 'anet' },
     { ...configuration(), pricingSchema: 'unsupported' },
     { ...configuration(), shipping: { configurationId: 'ship', revision: 1, mode: 'flat', amount: { currency: 'USD', minor: '-1' } } },
     { ...configuration(), shipping: { configurationId: 'ship', revision: 1, mode: 'free', amount: { currency: 'USD', minor: '1' } } },
@@ -269,6 +279,30 @@ test('malformed or copied configuration is rejected before encrypted credential/
   assert.equal(state.counts.credentials, 0);
   assert.equal(state.counts.transport, 0);
   assert.deepEqual(await state.cartRecords(), []);
+});
+
+
+test('legacy enabled v1 stripe config without new fields still starts checkout', async t => {
+  const legacy = legacyStripeConfiguration();
+  assert.equal(Object.hasOwn(legacy, 'mode'), false);
+  assert.equal(Object.hasOwn(legacy, 'authorizeNetMerchantId'), false);
+  const state = await runtimeFixture({ config: legacy });
+  t.after(() => state.close());
+  const { result } = await start(state);
+  assert.equal(result.ok, true);
+  assert.equal(result.checkout.state, 'pending');
+  assert.equal(state.requests.length, 1);
+});
+
+test('authorize_net installed config admits beside stripe and creates a sandbox session', async t => {
+  const state = await runtimeFixture({
+    config: authorizeNetConfiguration({ authorizeNetMerchantId: 'anet_merchant', mode: 'test' }),
+  });
+  t.after(() => state.close());
+  const { result } = await start(state);
+  assert.equal(result.ok, true);
+  assert.equal(result.checkout.state, 'pending');
+  assert.equal(state.requests.length, 1);
 });
 
 test('expired/wrong-scope/wrong-site credentials fail before synthetic Payments transport', async t => {

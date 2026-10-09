@@ -30,6 +30,17 @@ recomputed price.
 4. An order is marked paid only by an authoritative transaction lookup whose
    amount and currency match. A signed webhook alone never marks paid.
 
+## Compiled backend size
+
+Measured on the compiled `dist/sandbox/plugin.mjs` (not source):
+
+- Main after #75 (coupons deferred from Registry): **102045** bytes
+- This branch (authorize_net + retained kernel factoring on post-#75 main):
+  re-measure on each push; must stay under **131072**
+- Splitting source only helps when unused code actually leaves this compiled
+  bundle (Ryan #68). Follow #75’s coupon-port layout; keep only factoring that
+  still drops compiled bytes.
+
 ## Product rules
 
 1. `providerId` may be `stripe` or `authorize_net`.
