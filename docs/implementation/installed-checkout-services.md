@@ -11,7 +11,9 @@ the owners. No stock or money ledger is added.
 
 ## Unconfigured and ungranted behavior
 
-The shipped manifest keeps `capabilities: []` and `allowedHosts: []`.
+The shipped manifest declares `network:request` with exactly
+`allowedHosts: ["payments.dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09); no wildcard and no other
+host. The behavior below applies whenever that grant is not active.
 Absent or explicitly disabled configuration preserves prepare/capability
 minting and makes start return `PAYMENTS_UNAVAILABLE`, without reading a
 credential, requesting Payments, creating an attempt/order, or scheduling.
@@ -23,8 +25,9 @@ outbound transport. Therefore HTTP presence cannot establish permission. With
 valid configured credentials but missing grants, checkout retains its canonical
 unconfirmed attempt without a paid order, and wakes cannot acknowledge it.
 The resolver does not probe grants, bypass host/SSRF policy, or infer provider
-not-created from transport failure. The current empty-grants artifact cannot
-complete an external checkout. No grant or activation is part of this change.
+not-created from transport failure. Without an active grant the artifact
+cannot complete an external checkout. Declaring the host does not activate it
+on any site; activation stays a host and owner step.
 
 ## Versioned owner configuration
 
@@ -114,7 +117,7 @@ Inventory's current checkout kernel has no Worker reserve/release HTTP boundary;
 ordinary admin stock mutation is not a substitute. Unmanaged checkout can be
 proved independently. Zero-payable canonical orders use the same owner aggregate without Payments
 transport; see [zero-payable orders](checkout-zero-payable-orders.md).
-Configuration/credential admission remains required, including with empty grants.
+Configuration/credential admission remains required, including without an active grant.
 
 ## Runtime fixtures and next gate
 
@@ -126,7 +129,8 @@ real atomic SDK SQL. The fixture gives a clearly synthetic manifest variant
 `network:request` plus one public IP host solely to avoid DNS. Its host HTTP
 callback intercepts **every** request and verifies an ephemeral synthetic
 signed JWT; no network service/provider is contacted. The shipped manifest
-is asserted empty and is never replaced by that test variant.
+is asserted to declare exactly `network:request` with `payments.dinkuskit.com`
+and is never replaced by that test variant.
 
 These tests prove local runtime service assembly, canonical free/flat coupon
 pricing and paid replay, denied grants, configuration/token failures, managed
@@ -135,9 +139,11 @@ installation/publication, production scheduler, real identity renewal or Stripe
 TEST purchase proof. The existing Template owner consumes immutable package
 artifacts and performs its own installed-host proof.
 
-A future reviewable declaration candidate is `network:request` and exact
-separately approved HTTPS Payments hosts. Identity renewal may need its own
+The declaration is now `network:request` with the exact approved HTTPS
+Payments host `payments.dinkuskit.com` (GrillTrack
+`commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on
+2026-10-09). Identity renewal may need its own
 explicit issuer host/flow. No wildcard/unrestricted grant, private operational
 hostname, deployed configuration or permission activation is provided here.
-That candidate requires owner approval plus actual installed Registry and
-identity/provider proof before external checkout is claimed ready.
+External checkout is not claimed ready until actual installed Registry and
+identity/provider proof exists.

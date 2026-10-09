@@ -14,9 +14,12 @@
   },
   "repo": "https://github.com/dinkuskit/commerce",
   "capabilities": [
-    "media:read"
+    "media:read",
+    "network:request"
   ],
-  "allowedHosts": [],
+  "allowedHosts": [
+    "payments.dinkuskit.com"
+  ],
   "storage": {
     "catalog_items": {
       "indexes": [],

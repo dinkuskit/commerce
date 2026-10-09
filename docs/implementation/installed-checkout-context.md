@@ -93,7 +93,9 @@ If this resolver uses `ctx.http.fetch`, the exact minimal manifest proposal is:
 
 Replace the placeholder with the single exact approved broker hostname before
 seeking approval. Do not use a wildcard or unrestricted network capability.
-This proposal was **not applied**: current manifest grants remain empty.
+This was later applied with the single approved host: the manifest now
+declares `network:request` and `allowedHosts: ["payments.dinkuskit.com"]`
+(GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09).
 A new capability/site consent, secret/credential grant, Registry publication,
 or deployment is WAITING_FOR_HUMAN. An already approved consumer may be reused
 only after its exact scoped contract is verified. Scheduling remains with the
