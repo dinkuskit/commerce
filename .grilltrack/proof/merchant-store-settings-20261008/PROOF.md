@@ -1,5 +1,7 @@
 # Merchant store settings checkpoint
 
+> Superseded for bundle size and the distribution gate by [CURRENT-HEAD.md](CURRENT-HEAD.md): after #75 the backend is 110,484 bytes, under the 131,072-byte cap.
+
 Base: e6a77860bb9c90a1eff3be00ee8a14254960fb6d.
 
 Confirmed decisions: merchant-country-settings-001 and merchant-phone-requirement-001.
