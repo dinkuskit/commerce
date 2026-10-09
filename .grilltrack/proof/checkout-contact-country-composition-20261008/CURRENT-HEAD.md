@@ -24,6 +24,8 @@ Source: branch `codex/commerce-checkout-contact-20261008` with the #70 head
 - `tests/features/checkout/checkout-pricing-recovery.test.mjs`: main's new
   "pricing without bound coupon support" test now sends synthetic contact,
   since every new checkout requires email.
+- `tests/sandbox/orders-blocks.spec.mjs`: main's installed Orders proof now
+  seeds its two canonical checkouts with synthetic contact for the same reason.
 - GrillTrack: main's ledger kept as is; `checkout-contact-email-phone-20261008`
   replayed through the CLI (proposed, locked, implemented with its
   implementation ref). `./scripts/grilltrack validate`: valid.
@@ -36,5 +38,7 @@ Source: branch `codex/commerce-checkout-contact-20261008` with the #70 head
 - `npm run test:integration`: 41 pass, 0 fail, 0 skipped.
 - `playwright.config.mjs`: 10 of 10 pass (sandbox, native, native-variant).
 - `tests/merchant-settings.playwright.config.mjs`: 2 of 2 pass.
+- `npm run test:sandbox:orders`: 1 of 1 pass.
+- `npm run test:sandbox:native-local-stock`: 1 of 1 pass.
 
 Browser runs used local Chromium. Local proof only. Not Registry publication.
