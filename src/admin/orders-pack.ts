@@ -58,8 +58,9 @@ export function createInventoryPackTransport(config: InventoryPackTransportConfi
         const origin = new URL(config.inventoryOrigin).origin;
         const token = await config.credential();
         if (typeof token !== 'string' || !token) return 'not_packed';
+        // Workers reject redirect "error"; "manual" plus the exact-200 check below never follows one.
         const response = await config.fetch(origin + '/v1/stock/pack', {
-          method: 'POST', cache: 'no-store', redirect: 'error',
+          method: 'POST', cache: 'no-store', redirect: 'manual',
           headers: { accept: 'application/json', 'content-type': 'application/json', authorization: 'Bearer ' + token },
           body: JSON.stringify(body),
         });

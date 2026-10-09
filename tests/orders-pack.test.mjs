@@ -38,7 +38,7 @@ test('Inventory pack transport posts the exact body and reports packed only on a
  assert.equal(await ok.port.pack(body), 'packed');
  assert.equal(ok.calls[0].url, 'https://inventory.invalid/v1/stock/pack');
  assert.equal(ok.calls[0].init.method, 'POST');
- assert.equal(ok.calls[0].init.redirect, 'error');
+ assert.equal(ok.calls[0].init.redirect, 'manual');
  assert.equal(ok.calls[0].init.headers.authorization, 'Bearer synthetic-account-token');
  assert.deepEqual(JSON.parse(ok.calls[0].init.body), body);
  const all = await orderPackBody(['hat-ticket', 'shirt-ticket']);
@@ -49,6 +49,7 @@ test('Inventory pack transport fails closed on every other answer', async () => 
  const body = await orderPackBody(['hat-ticket']);
  const answers = [
   () => new Response('Not Found', { status: 404 }),
+  () => new Response(null, { status: 302, headers: { location: 'https://elsewhere.invalid/' } }),
   () => Response.json({ error: 'inventory_not_ready' }, { status: 409 }),
   () => Response.json({ outcome: 'rejected', code: 'reservation_not_found' }, { status: 409 }),
   () => Response.json({ error: 'unauthorized' }, { status: 401 }),
