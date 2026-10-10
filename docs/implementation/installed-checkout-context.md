@@ -6,8 +6,8 @@ implemented; the installation, host consent, and real-provider boundaries below
 remain prerequisites for actual activation.
 
 The compiled `@dinkuskit/commerce/features/checkout` subpath exposes
-`createInstalledCheckoutHandlers(resolveServices?)`,
-`createInstalledCheckoutWakeHook(resolveServices?)`, and
+`createInstalledCheckoutHandlers(resolveServices?, paidOrders?)`,
+`createInstalledCheckoutWakeHook(resolveServices?, paidOrders?)`, and
 `COMMERCE_CHECKOUT_WAKES_TASK` (`commerce-checkout-wakes`).
 
 Guest methods use the supported sandbox handler shape:

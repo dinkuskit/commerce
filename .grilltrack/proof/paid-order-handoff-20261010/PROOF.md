@@ -20,7 +20,7 @@ the new Orders copy, its page changes, the Catalog quote and the admin split
 
 `bin/verify-commerce full` with Node 22.23.2:
 
-- typecheck clean; `npm run test:unit` 477 of 477 pass
+- typecheck clean; `npm run test:unit` 478 of 478 pass
 - `npm run audit:repo`: `public_repository_contract=clean`, `feature_contract=clean`
 - `npm run test:integration` 46 of 46 pass
 - `npm run test:sandbox` 10 of 10 pass (fresh install clerk flow, media,
@@ -33,6 +33,8 @@ the new Orders copy, its page changes, the Catalog quote and the admin split
 Handoff-specific tests: `tests/features/checkout/paid-order-handoff.test.mjs`
 (record built from the frozen order, failed hand-off retried on the next
 check without changing the shopper outcome, unpaid attempts hand nothing),
+`tests/features/checkout/installed-context.test.mjs` (a paid wake run through
+the exported `createInstalledCheckoutWakeHook` hands its order to Orders),
 `tests/features/orders/page.test.mjs` (first copy kept, repeats and
 conflicts, malformed records refused), `tests/integration/orders-inspection.test.mjs`
 (real SQLite: live hand-off, bring-in, conflict report, paging),

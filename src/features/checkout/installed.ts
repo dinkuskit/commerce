@@ -182,6 +182,7 @@ export function createInstalledCheckoutHandlers(
 
 export function createInstalledCheckoutWakeHook(
   resolveServices?: InstalledCheckoutServiceResolver,
+  paidOrders?: InstalledPaidOrders,
 ): CronHandler {
-  return createInstalledCheckoutHandlers(resolveServices).cron;
+  return createInstalledCheckoutHandlers(resolveServices, paidOrders).cron;
 }

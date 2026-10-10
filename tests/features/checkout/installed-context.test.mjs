@@ -17,6 +17,7 @@ const {
   GUEST_CHECKOUT_START_ROUTE,
   SANDBOX_GUEST_CHECKOUT_STORAGE,
   createInstalledCheckoutHandlers,
+  createInstalledCheckoutWakeHook,
   createTrustedTestPaymentsCheckoutHost,
 } = await import(checkoutUrl.href);
 const sandboxUrl = packageRoot
@@ -186,6 +187,33 @@ test("guest and wake handlers share the durable association and produce one orde
   await handlers.cron({ name: COMMERCE_CHECKOUT_WAKES_TASK, scheduledAt: new Date().toISOString() }, ctx);
   assert.deepEqual(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot(), before);
   assert.equal(wakes.length, 0);
+});
+
+test("the exported wake hook hands a paid wake's order to Orders", async () => {
+  const synth = syntheticCheckoutHost({ managed: false });
+  const wakes = [];
+  const services = async () => ({ host: synth.host, wakes: {
+    async list() { return wakes; },
+    async acknowledge(wake) { wakes.splice(wakes.indexOf(wake), 1); return true; },
+  } });
+  const received = [];
+  const ctx = context();
+  const handlers = createInstalledCheckoutHandlers(services);
+  const prepared = await handlers.prepare({ input: {}, request: request({}), requestMeta: {} }, ctx);
+  const capability = prepared.capability.capability;
+  const started = await handlers.start({
+    input: { contact: { email: 'installed-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] },
+    request: request({}, capability), requestMeta: {},
+  }, ctx);
+  assert.equal(started.ok, true, JSON.stringify(started));
+  synth.setPayment("paid");
+  wakes.push({ eventId: "wake-orders", attemptId: started.checkout.attemptId, bindingRef: "stripe-test-binding", deliveryGeneration: 1, wokeAt: 1000 });
+  const hook = createInstalledCheckoutWakeHook(services, () => ({ async receive(order) { received.push(order); return "stored"; } }));
+  await hook({ name: COMMERCE_CHECKOUT_WAKES_TASK, scheduledAt: new Date().toISOString() }, ctx);
+  assert.equal(wakes.length, 0);
+  assert.equal(received.length, 1);
+  assert.equal(received[0].schema, "dinkuskit.commerce.paid-order/v1");
+  assert.equal(received[0].attemptId, started.checkout.attemptId);
 });
 
 // These contexts and HTTP outcomes are synthetic behavior proof, not Registry installation.
