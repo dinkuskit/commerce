@@ -10,17 +10,19 @@ Decision: `commerce-paid-order-handoff-001` (locked on the owner's approval,
 | main 240acd5 | 117,068 | 14,004 |
 | after Orders copy, Catalog quote, admin split (8823272) | 120,170 | 10,902 |
 | this branch after trims | 116,709 | 14,363 |
+| main 4791503 (after #85) | 117,441 | 13,631 |
+| this branch with main 4791503 merged in | 117,084 | 13,988 |
 
 Measured with `npm run build` (`scripts/check-registry-bundle.mjs` prints
 `registry_bundle=pass backend_bytes=...`). The trims (about 6.4 KB) pay for
 the new Orders copy, its page changes, the Catalog quote and the admin split
 (about 3.1 KB), leaving the file 359 bytes smaller than main.
 
-## Checks run on this head
+## Checks run on this head (main 4791503 merged in)
 
 `bin/verify-commerce full` with Node 22.23.2:
 
-- typecheck clean; `npm run test:unit` 478 of 478 pass
+- typecheck clean; `npm run test:unit` 480 of 480 pass
 - `npm run audit:repo`: `public_repository_contract=clean`, `feature_contract=clean`
 - `npm run test:integration` 46 of 46 pass
 - `npm run test:sandbox` 10 of 10 pass (fresh install clerk flow, media,
