@@ -7,12 +7,28 @@ import type {
   CheckoutPricingLine,
   CheckoutPricingSnapshot,
   CheckoutExecution,
+  CouponUnavailable,
   TrustedShippingConfiguration,
 } from "./types.js";
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+const REASONS: readonly string[] = ["not-found", "not-started", "expired", "minimum-not-met", "no-qualifying-items"];
+
+/** Thrown before anything is frozen; the guest error map reads `coupon`. */
+export class CouponUnavailableError extends Error {
+  constructor(readonly coupon: CouponUnavailable) {
+    super(`Coupon unavailable: ${coupon.reason}`);
+  }
+}
+
+function couponUnavailable(reason: CouponUnavailable["reason"], minimum?: Money): never {
+  let shown: Money | undefined;
+  try { shown = minimum && normalizeMoney(minimum); } catch { /* a malformed minimum is left out */ }
+  throw new CouponUnavailableError({ reason, ...(shown?.currency === "USD" ? { minimum: shown } : {}) });
 }
 
 function usd(minor: bigint): Money {
@@ -107,9 +123,19 @@ export async function composeCheckoutPricing(
       // An unknown, expired or unreachable coupon never prices the cart; the
       // shopper removes it to accept the full price (issue 34).
       if (error instanceof Error && /Product un/.test(error.message)) throw error;
-      fail("Coupon unavailable");
+      // The coupon owner answers INVALID_INPUT in process and NOT_APPLICABLE
+      // over HTTP when a coupon does not apply, with a reason when it has one.
+      const { code, notApplicable } = (error ?? {}) as {
+        code?: unknown; notApplicable?: { reason?: unknown; minimum?: Money };
+      };
+      if (code !== "INVALID_INPUT" && code !== "NOT_APPLICABLE") couponUnavailable("try-later");
+      const reason = notApplicable?.reason;
+      if (typeof reason !== "string" || !REASONS.includes(reason)) couponUnavailable("not-applicable");
+      couponUnavailable(reason as CouponUnavailable["reason"],
+        reason === "minimum-not-met" ? notApplicable!.minimum : undefined);
     }
-    if (!quoted) fail("Coupon unavailable");
+    if (pricing.coupons && !quoted) couponUnavailable("not-found");
+    if (!quoted) couponUnavailable("try-later");
     couponId = quoted.couponId;
     quote = quoted.quote;
     if (quote.lines.length !== lines.length || quote.lines.some((line, index) =>
@@ -122,7 +148,7 @@ export async function composeCheckoutPricing(
     // freezes, wherever it was evaluated.
     try {
       validateCouponQuoteSnapshot(quoteSnapshot(quote, quote.payableMerchandiseTotal), "coupon quote");
-    } catch { fail("Coupon unavailable"); }
+    } catch { couponUnavailable("try-later"); }
   }
   const pricingLines = lines.map((line, index) => couponLine(quote, line, index));
   const merchandiseSubtotal = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n));

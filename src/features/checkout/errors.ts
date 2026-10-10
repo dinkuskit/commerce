@@ -1,4 +1,4 @@
-import type { GuestCheckoutErrorCode } from "./types.js";
+import type { CouponUnavailable, GuestCheckoutErrorCode } from "./types.js";
 
 const STATUS_BY_CODE: Record<GuestCheckoutErrorCode, number> = {
   CAPABILITY_DENIED: 403,
@@ -33,6 +33,8 @@ const MESSAGE_BY_CODE: Record<GuestCheckoutErrorCode, string> = {
 export class GuestCheckoutError extends Error {
   readonly code: GuestCheckoutErrorCode;
   readonly status: number;
+  /** Set only with COUPON_UNAVAILABLE. */
+  coupon?: CouponUnavailable;
 
   constructor(code: GuestCheckoutErrorCode, message = MESSAGE_BY_CODE[code], options?: ErrorOptions) {
     super(message, options);

@@ -39,13 +39,15 @@ function stateOf(attempt: CheckoutAttempt): GuestCheckoutState {
 
 function unavailableOf(
   attempt: CheckoutAttempt,
-): { code: GuestCheckoutErrorCode; message: string } | null {
+): GuestCheckoutProjection["unavailable"] {
   if (attempt.phase === "paid" && attempt.order) return null;
   if (attempt.phase === "released" && !attempt.coupon?.refused) return null;
   if (attempt.phase === "paying" && attempt.session) return null;
-  const code: GuestCheckoutErrorCode = attempt.coupon?.refused
-    ? "COUPON_UNAVAILABLE"
-    : attempt.phase === "reserving" && attempt.stock
+  const refused = attempt.coupon?.refused;
+  if (refused) {
+    return { code: "COUPON_UNAVAILABLE", message: guestCheckoutErrorMessage("COUPON_UNAVAILABLE"), reason: refused };
+  }
+  const code: GuestCheckoutErrorCode = attempt.phase === "reserving" && attempt.stock
     ? "INVENTORY_UNAVAILABLE"
     : attempt.phase === "paying"
       ? "PAYMENTS_UNAVAILABLE"

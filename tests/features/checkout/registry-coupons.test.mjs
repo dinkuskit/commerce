@@ -54,10 +54,22 @@ test('a coupon service failure at quote never continues at full price', async t 
   ]) {
     const f = await hosted(t);
     f.intercept(failure);
-    await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Coupon unavailable/);
+    await assert.rejects(startCheckout(f.execution, 'cart', f.input), /^Error: Coupon unavailable: try-later$/);
     assert.equal(await f.execution.store.read('cart'), null);
     assert.equal(f.sessions.size, 0);
   }
+});
+
+test('a coupon that cannot be used says why, from what Commerce knows', async t => {
+  const f = await hosted(t);
+  await assert.rejects(startCheckout(f.execution, 'cart', { ...f.input, couponCode: 'NOPE' }),
+    /^Error: Coupon unavailable: not-found$/);
+  f.setNow(1800000000);
+  await assert.rejects(startCheckout(f.execution, 'cart', f.input), /^Error: Coupon unavailable: expired$/);
+  f.intercept(async () => answer(503, 'NOT_CONFIGURED'));
+  await assert.rejects(startCheckout(f.execution, 'cart', f.input), /^Error: Coupon unavailable: try-later$/);
+  assert.equal(await f.execution.store.read('cart'), null);
+  assert.equal(f.sessions.size, 0);
 });
 
 test('a failed or lost hold starts no payment, and the retry keeps the attempt and the amount', async t => {
@@ -119,7 +131,7 @@ test('a quote whose arithmetic disagrees with Commerce prices never freezes a to
       tamper(body.quote);
       return Response.json(body);
     });
-    await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Coupon unavailable/);
+    await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Coupon unavailable: try-later/);
     assert.equal(await f.execution.store.read('cart'), null);
     assert.deepEqual(f.service.calls.map(call => call.path), ['/quotes']);
     assert.equal(f.sessions.size, 0);
@@ -131,14 +143,15 @@ test('a refused coupon says so, and only removing it checks out at full price', 
   await startCheckout(f.execution, 'first', f.input);
   const refused = await startCheckout(f.execution, 'second', f.input);
   assert.equal(refused.phase, 'released');
-  assert.equal(refused.coupon.refused, true);
+  assert.equal(refused.coupon.refused, 'used-up');
   const shown = projectGuestCheckout(refused, 0);
   assert.equal(shown.state, 'released-retry');
-  assert.equal(shown.unavailable.code, 'COUPON_UNAVAILABLE');
+  assert.deepEqual(shown.unavailable, { code: 'COUPON_UNAVAILABLE', reason: 'used-up',
+    message: "Coupon can't be used; remove it to check out at full price" });
   // Asking again with the same coupon is refused again, never charged at full price.
   const again = await startCheckout(f.execution, 'second', f.input, refused.attemptId);
   assert.equal(again.phase, 'released');
-  assert.equal(projectGuestCheckout(again, 0).unavailable.code, 'COUPON_UNAVAILABLE');
+  assert.equal(projectGuestCheckout(again, 0).unavailable.reason, 'used-up');
   assert.equal(f.sessions.size, 1);
   // Removing the coupon is the shopper accepting the full price.
   const { couponCode: _dropped, ...withoutCoupon } = f.input;

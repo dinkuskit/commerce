@@ -99,6 +99,7 @@ test('compiled Registry runtime ships no coupon storage or evaluator, and withou
     const rejected = await state.invoke(START, { ...basket, couponCode }, token);
     assert.equal(rejected.ok, false);
     assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
+    assert.equal(rejected.error.reason, 'try-later');
   }
   assert.deepEqual(await state.cartRecords(), []);
   assert.equal(state.requests.length, 0);
@@ -158,6 +159,7 @@ test('without a coupon pass, coupon codes are unavailable and checkout without o
       const capability = prepared.capability.capability;
       const rejected = await state.invoke(START, { ...basket, couponCode: 'SAVE10' }, capability);
       assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
+      assert.equal(rejected.error.reason, 'try-later');
       assert.deepEqual(await state.cartRecords(), []);
       assert.equal(state.counts.coupons, 0);
       assert.equal(state.requests.length, 0);

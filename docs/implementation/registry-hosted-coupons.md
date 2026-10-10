@@ -68,10 +68,14 @@ reader as Payments responses.
 
 Checkout keeps the accepted total (issue 34):
 
-- A quote that fails (network error, timeout, 5xx, refused) makes start
-  return `COUPON_UNAVAILABLE`. No attempt is written and no payment starts, so
-  checkout never continues at full price on its own; the shopper removes the
-  coupon to accept the full price.
+- A quote that fails makes start return `COUPON_UNAVAILABLE` with a reason
+  ([guest contract](guest-checkout-public.md#coupons-that-cant-be-used)):
+  `NOT_FOUND` is `not-found`; `NOT_APPLICABLE` passes on the service's
+  `reason` (and `minimum`) when it is one Commerce knows, else
+  `not-applicable`; network errors, timeouts, 5xx and other refusals are
+  `try-later`. No attempt is written and no payment starts, so checkout never
+  continues at full price on its own; the shopper removes the coupon to accept
+  the full price.
 - A quote whose arithmetic disagrees with Commerce's own prices (a line total
   that is not price times quantity, a discount above its line, totals that do
   not add up) is refused the same way before anything is frozen. Commerce
@@ -84,8 +88,10 @@ Checkout keeps the accepted total (issue 34):
 - A hold the service refuses for good (`CAPACITY_EXHAUSTED`, `INVALID_INPUT`,
   `CONFLICTING_ATTEMPT`, `TERMINAL_CONFLICT`) releases the attempt before any
   payment, exactly as the in-process owner's refusals do. The attempt records
-  `coupon.refused`, and the guest projection shows `COUPON_UNAVAILABLE` on it
-  so a storefront never keeps showing the coupon as applied.
+  `coupon.refused` (`used-up` for capacity, `not-applicable` for a rule that
+  stopped applying between quote and hold, else `try-later`), and the guest
+  projection shows `COUPON_UNAVAILABLE` with that reason so a storefront never
+  keeps showing the coupon as applied.
 - The service keeps issued quotes for 24 hours. A hold first attempted after
   that is refused (`QUOTE_NOT_ISSUED`); no use is held for that attempt and none
   can be, so the attempt is released without payment.
@@ -109,3 +115,4 @@ Checkout keeps the accepted total (issue 34):
   14,004 under the limit; the coupon port and quote validation add 4,662.
   Checking the service's quote arithmetic and reporting `COUPON_UNAVAILABLE`
   add 373 more (117,441 bytes, 13,631 under the limit).
+  Specific coupon reasons add 737 more (118,178 bytes, 12,894 under the limit).

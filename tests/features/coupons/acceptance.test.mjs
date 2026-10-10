@@ -1105,17 +1105,19 @@ test("6 Evaluator half-up total two 1-cent at 25% = 1 cent; deterministic larges
       discount: { kind: "percentage", basisPoints: 1000 },
     }),
   });
-  const quoteSaleFalse = await evaluateCoupon(
-    couponSaleFalse,
-    { catalog: fix.catalog, prices: fix.prices },
-    {
-      quoteId: "q-sale-false",
-      now: "2026-10-01T12:00:00Z",
-      lines: [{ productId: "sale-item", quantity: 1 }],
-    },
+  // A cart with no qualifying line is refused rather than quoted at zero.
+  await assert.rejects(
+    evaluateCoupon(
+      couponSaleFalse,
+      { catalog: fix.catalog, prices: fix.prices },
+      {
+        quoteId: "q-sale-false",
+        now: "2026-10-01T12:00:00Z",
+        lines: [{ productId: "sale-item", quantity: 1 }],
+      },
+    ),
+    (error) => error.code === "INVALID_INPUT" && error.notApplicable?.reason === "no-qualifying-items",
   );
-  assert.equal(quoteSaleFalse.lines[0].eligible, false);
-  assert.equal(quoteSaleFalse.discount.minor, "0");
 
   // 4. Minimum fails despite unrelated lines
   const couponMin = await fix.admin1.create({
