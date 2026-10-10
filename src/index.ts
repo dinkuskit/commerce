@@ -1,4 +1,4 @@
-import { definePlugin, type PluginDescriptor, type ResolvedPlugin } from "emdash";
+import { definePlugin, type PluginDescriptor, type PluginRoute, type ResolvedPlugin } from "emdash";
 
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
@@ -86,8 +86,12 @@ import {
 } from "./features/catalog/index.js";
 import {
   SET_PRODUCT_FEED_ELIGIBILITY_ROUTE,
+  loadProductFeedEligibility,
   setProductFeedEligibilityRoute,
-} from "./features/feeds/route.js";
+  type ProductFeedEligibilityStorage,
+} from "./features/feeds/index.js";
+import type { CatalogProductListItem } from "./features/catalog/index.js";
+import { ORDERS_COLLECTION, createPaidOrderReceiver, type OrdersCollection } from "./features/orders/index.js";
 
 export * from "./features/inventory-provider/index.js";
 
@@ -164,6 +168,27 @@ export interface CommercePluginOptions extends CommerceLocalDevelopmentOptions {
   checkout?: GuestCheckoutHostOptions;
 }
 
+// Checkout hands each paid order to Orders, which keeps its own copy.
+const paidOrders = (storage: Record<string, unknown>) =>
+  createPaidOrderReceiver(storage[ORDERS_COLLECTION] as OrdersCollection);
+
+/** Products list for the native admin, with each product's feed choices from Feeds. */
+function withFeedChannels(route: PluginRoute): PluginRoute {
+  return {
+    ...route,
+    handler: async (ctx) => {
+      const listed = await route.handler(ctx) as { products: CatalogProductListItem[] };
+      const eligibility = ctx.storage[PRODUCT_FEED_ELIGIBILITY_COLLECTION] as ProductFeedEligibilityStorage | undefined;
+      if (!eligibility) return listed;
+      const products = [];
+      for (const product of listed.products) {
+        products.push({ ...product, feedChannels: await loadProductFeedEligibility(eligibility, product.catalogItemId) });
+      }
+      return { ...listed, products };
+    },
+  };
+}
+
 export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugin {
   const localStock = {
     enableLocalStockManagement: options.enableLocalStockManagement === true,
@@ -238,6 +263,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [ORDERS_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
       [CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION]: {
         indexes: [],
         uniqueIndexes: [],
@@ -271,7 +300,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE]: clearCatalogItemSalePriceRoute,
       [CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE]:
         clearCatalogItemRegularPriceRoute,
-      [LIST_CATALOG_PRODUCTS_ROUTE]: createListCatalogProductsRouteWithLocalStock(localStock),
+      [LIST_CATALOG_PRODUCTS_ROUTE]: withFeedChannels(createListCatalogProductsRouteWithLocalStock(localStock)),
       [SAVE_CATALOG_PRODUCT_PRICES_ROUTE]:
         createSaveCatalogProductPricesRouteWithLocalStock(localStock),
       [SAVE_CATALOG_ITEM_MEDIA_ROUTE]: saveCatalogItemMediaRoute,
@@ -290,8 +319,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SET_STORE_SHIPPING_POLICY_ROUTE]: setStoreShippingPolicyRoute,
       [SET_STORE_RETURN_POLICY_ROUTE]: setStoreReturnPolicyRoute,
       [GUEST_CHECKOUT_PREPARE_ROUTE]: createGuestCheckoutPrepareRoute(checkoutHost),
-      [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(checkoutHost),
-      [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(checkoutHost),
+      [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(checkoutHost, paidOrders),
+      [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(checkoutHost, paidOrders),
     },
   });
 }
@@ -299,5 +328,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
 export default createPlugin;
 
 export * from "./features/checkout/index.js";
+
+export * from "./features/orders/index.js";
 
 export * from "./features/fixed-bundles/index.js";

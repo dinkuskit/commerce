@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ordersView } from '../dist/admin/orders-view.js';
+import { ordersView } from '../../../dist/features/orders/index.js';
 import { validateBlocks } from '@emdash-cms/blocks/server';
-import { paid, zero } from '../tools/orders-preview/fixtures.mjs';
+import { paid, zero } from '../../../tools/orders-preview/fixtures.mjs';
 const input = { status: 'available', orders: [paid, zero] };
 const fields = view => Object.fromEntries(view.blocks.filter(b => b.type === 'fields').flatMap(b => b.fields).map(f => [f.label, f.value]));
 test('inspection preserves canonical IDs, recorded amounts and independent fulfillment', () => {

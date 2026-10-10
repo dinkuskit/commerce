@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, posix, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -62,6 +62,69 @@ async function walk(directory) {
     else files.push(absolute);
   }
   return files;
+}
+
+/**
+ * A feature reaches another feature only through that feature's index.ts
+ * (its public or kernel entry). Shared contracts in src/handoffs/ and helpers
+ * in src/shared/ are open to every feature.
+ */
+export function frontDoorFindings(path, source, sourceFeature, features) {
+  const findings = [];
+  for (const match of source.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)) {
+    const importPath = match[1];
+    if (!importPath.startsWith(".")) continue;
+    const resolved = posix.normalize(posix.join(posix.dirname(path), importPath));
+    const importedFeature = resolved.match(/^src\/features\/([^/]+)\//)?.[1];
+    if (!importedFeature || importedFeature === sourceFeature || !features.includes(importedFeature)) continue;
+    if (!resolved.endsWith("/index.js")) {
+      findings.push(`${path} bypasses the ${importedFeature} public entry: ${importPath}`);
+    }
+  }
+  return findings;
+}
+
+/**
+ * Registry storage collections and the feature that owns each. Only the owner,
+ * the composition roots and the admin shell may name one. Anything else is a
+ * feature reading another feature's private storage, which a split into
+ * separate plugins cannot carry.
+ */
+export const STORAGE_OWNERS = {
+  catalog_items: "catalog", catalog_prices: "catalog", catalog_backorder_policies: "catalog",
+  catalog_manual_availability: "catalog", catalog_media: "catalog",
+  product_feed_eligibility: "feeds",
+  managed_sku_claims: "inventory-provider",
+  store_inventory_configurations: "inventory-setup",
+  storefront_availability_settings: "storefront-availability",
+  storefront_out_of_stock_listing: "storefront-availability",
+  storefront_placeholder_image: "storefront-availability",
+  checkout_carts: "checkout", checkout_guest_capabilities: "checkout", checkout_payment_associations: "checkout",
+  store_shipping_policy: "store-policies", store_return_policy: "store-policies",
+  orders: "orders",
+};
+const STORAGE_COMPOSITION = ["src/plugin.ts", "src/index.ts"];
+/**
+ * Known crossings, kept until each is replaced by a written handoff (see
+ * docs/contracts/commerce-handoffs.md). This list may only shrink.
+ */
+export const KNOWN_STORAGE_CROSSINGS = {
+  // Checkout binds the Catalog-side storage that answers its Catalog quote.
+  "src/features/checkout/runtime.ts": [
+    "catalog_items", "catalog_prices", "catalog_backorder_policies", "catalog_manual_availability",
+    "store_inventory_configurations", "storefront_availability_settings", "storefront_out_of_stock_listing",
+  ],
+};
+export function storageFindings(path, source, sourceFeature) {
+  if (STORAGE_COMPOSITION.includes(path) || path.startsWith("src/admin/")) return [];
+  const findings = [];
+  for (const match of source.matchAll(/["']([a-z_]+)["']/g)) {
+    const owner = STORAGE_OWNERS[match[1]];
+    if (!owner || owner === sourceFeature) continue;
+    if (KNOWN_STORAGE_CROSSINGS[path]?.includes(match[1])) continue;
+    findings.push(`${path} names ${owner} storage ${match[1]}; go through a handoff instead`);
+  }
+  return findings;
 }
 
 export async function auditFeatures(repositoryRoot = root) {
@@ -155,35 +218,15 @@ export async function auditFeatures(repositoryRoot = root) {
     findings.push("catalog pilot must remain pinned to exact emdash 1.2.0");
   }
 
+  // Every folder under src/features is a feature, so a new one is covered the day it lands.
+  const features = (await readdir(join(repositoryRoot, "src/features"), { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory()).map((entry) => entry.name);
   const sourceFiles = allFiles.filter((path) => path.startsWith("src/") && path.endsWith(".ts"));
   for (const path of sourceFiles) {
     const source = await readFile(join(repositoryRoot, path), "utf8");
     const sourceFeature = path.match(/^src\/features\/([^/]+)\//)?.[1];
-    const imports = source.matchAll(/from\s+["']([^"']+)["']/g);
-    for (const match of imports) {
-      const importPath = match[1];
-      const importedFeature = [
-        "catalog",
-        "inventory-provider",
-        "inventory-setup",
-        "storefront-availability",
-        "checkout",
-        "coupons",
-        "store-policies",
-        "structured-data",
-        "fixed-bundles",
-      ].find(
-        (feature) =>
-          importPath.includes(`/features/${feature}/`) || importPath.includes(`/${feature}/`),
-      );
-      if (
-        importedFeature &&
-        importedFeature !== sourceFeature &&
-        !importPath.endsWith("/index.js")
-      ) {
-        findings.push(`${path} bypasses the ${importedFeature} public entry: ${importPath}`);
-      }
-    }
+    for (const finding of frontDoorFindings(path, source, sourceFeature, features)) findings.push(finding);
+    for (const finding of storageFindings(path, source, sourceFeature)) findings.push(finding);
   }
 
   return findings;

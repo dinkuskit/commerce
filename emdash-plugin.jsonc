@@ -88,6 +88,10 @@
       "indexes": [],
       "uniqueIndexes": []
     },
+    "orders": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
     "store_shipping_policy": {
       "indexes": [],
       "uniqueIndexes": []

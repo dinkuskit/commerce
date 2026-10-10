@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ordersBlocks } from '../dist/admin/orders-blocks.js';
+import { ordersBlocks } from '../../../dist/features/orders/index.js';
 const input = { type:'page_load', page:'/orders' };
 const route = { user:{role:50}, ui:{surface:'admin-page'}, input };
 // These guard the new controller's trusted boundary; projection tests cannot exercise it.
@@ -12,9 +12,9 @@ test('Orders denies forged caller privileges before reading storage', async () =
  }
 });
 test('Orders distinguishes empty storage from unavailable storage', async()=>{
- const empty=await ordersBlocks(route,{storage:{checkout_carts:{query:async()=>({items:[],hasMore:false})}}});
+ const empty=await ordersBlocks(route,{storage:{orders:{query:async()=>({items:[],hasMore:false})}}});
  assert.ok(JSON.stringify(empty).includes('No orders recorded yet.'));
- const unavailable=await ordersBlocks(route,{storage:{checkout_carts:{query:async()=>{throw Error('offline');}}}});
+ const unavailable=await ordersBlocks(route,{storage:{orders:{query:async()=>{throw Error('offline');}}}});
  assert.ok(JSON.stringify(unavailable).includes('Orders unavailable'));
 });
 function packFixture(ticketIds) {
@@ -24,8 +24,9 @@ function packFixture(ticketIds) {
   total: { currency: 'USD', minor: '300' }, ticketIds,
  };
  const state = { writes: 0 };
- const storage = { checkout_carts: {
-  query: async () => ({ items: [{ id: 'cart', data: { attempts: [{ attemptId: 'hat', phase: 'paid', order }] } }], hasMore: false }),
+ const storage = { orders: {
+  query: async () => ({ items: [{ id: order.orderId, data: { paidOrder: { schema: 'dinkuskit.commerce.paid-order/v1', ...order } } }], hasMore: false }),
+  get() { throw new Error('must not read for a write'); },
   put() { state.writes += 1; throw new Error('must not write'); },
   compareAndSet() { state.writes += 1; throw new Error('must not write'); },
  }};
@@ -64,4 +65,23 @@ test('Pack on an order without ticket ids is unavailable, not a fabricated comma
  const text = JSON.stringify(await ordersBlocks(f.pack, { storage: f.storage }, { pack: { pack: async () => { called += 1; return 'packed'; } } }));
  assert.match(text, /Orders unavailable/);
  assert.equal(called, 0);
+});
+
+test('the Checkout to Orders handoff keeps the first copy and reports repeats and conflicts', async () => {
+ const { createPaidOrderReceiver } = await import('../../../dist/features/orders/index.js');
+ const records = new Map();
+ const collection = { get: async id => records.get(id) ?? null,
+  compareAndSet: async (id, version, value) => { if (version !== null || records.has(id)) return { applied: false }; records.set(id, structuredClone(value)); return { applied: true }; } };
+ const receiver = createPaidOrderReceiver(collection);
+ const order = { schema: 'dinkuskit.commerce.paid-order/v1', orderId: 'order:a', receiptId: 'receipt:a', attemptId: 'a',
+  lines: [{ catalogItemId: 'hat', quantity: 1, name: 'Hat', unitPrice: { currency: 'USD', minor: '100' } }], total: { currency: 'USD', minor: '100' } };
+ assert.equal(await receiver.receive(order), 'stored');
+ // Same contents with keys in another order is the same order.
+ const reordered = { total: order.total, lines: order.lines, attemptId: 'a', receiptId: 'receipt:a', orderId: 'order:a', schema: order.schema };
+ assert.equal(await receiver.receive(reordered), 'duplicate');
+ assert.equal(await receiver.receive({ ...order, total: { currency: 'USD', minor: '1' } }), 'conflict');
+ assert.equal(records.get('order:a').paidOrder.total.minor, '100');
+ for (const bad of [{ ...order, schema: 'other' }, { ...order, orderId: '' }, { ...order, lines: null }, null])
+  await assert.rejects(receiver.receive(bad));
+ assert.equal(records.size, 1);
 });

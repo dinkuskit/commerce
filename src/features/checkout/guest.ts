@@ -136,6 +136,7 @@ export function executionOf(runtime: GuestCheckoutRuntime) {
     now: runtime.host.now,
     loadCheckoutContactRequirements: runtime.host.loadCheckoutContactRequirements,
     pricing: runtime.pricing,
+    paidOrders: runtime.paidOrders,
   };
 }
 

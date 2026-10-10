@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BlockRenderer } from '@emdash-cms/blocks';
-import { ordersView } from '../../src/admin/orders-view.ts';
+import { ordersView } from '../../src/features/orders/admin/view.ts';
 import { paid, zero } from './fixtures.mjs';
 import './style.css';
 function App() {
