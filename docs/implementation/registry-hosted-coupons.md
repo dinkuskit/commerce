@@ -1,5 +1,16 @@
 # Coupons at Registry checkout through the hosted coupon service
 
+**Unhooked for v1** (GrillTrack `registry-coupons-unhooked-v1`, 2026-10-10):
+to leave room under the 128 KiB backend limit, the Registry build no longer
+wires the hosted coupon port. A coupon code is refused as `COUPON_UNAVAILABLE`
+with reason `try-later` before any call, even when the checkout settings name
+the coupon service, and no `coupons:checkout` pass is traded. Settings that
+name `coupons` stay valid, `coupons.dinkuskit.com` stays declared so coupons
+can return without stores approving a new host, and the port, its tests and
+checkout's coupon pricing stay in the source. Hooking the port back in
+`resolveRegistryCheckoutServices` restores everything below; until then it
+describes the port, not the shipped build.
+
 Coupons left the Registry artifact on 2026-10-08 to keep the backend under
 EmDash's 128 KiB per-file limit
 ([registry-coupons-deferred](registry-coupons-deferred.md)). They come back
@@ -110,9 +121,11 @@ Checkout keeps the accepted total (issue 34):
 - `tests/features/checkout/checkout-pricing-hosted.test.mjs` runs every case
   in `checkout-pricing-recovery.test.mjs` again through the hosted port.
 - `tests/integration/registry-checkout-services.test.mjs` runs the compiled
-  Registry backend in workerd with a coupon service configured: a coupon
-  checkout holds, pays and settles with its own pass, and a missing or wrong
-  pass leaves coupon codes unavailable while checkout without one still works.
+  Registry backend in workerd with a coupon service configured. Since the
+  port was unhooked for v1 it shows the shipped backend carries no coupon
+  port or pass, a coupon code is refused before any call with a valid, wrong
+  or missing coupon pass, and checkout without one still works, trading only
+  for Payments.
 - `npm run build:sandbox` measured the Registry backend at 117,068 bytes,
   14,004 under the limit; the coupon port and quote validation add 4,662.
   Checking the service's quote arithmetic and reporting `COUPON_UNAVAILABLE`

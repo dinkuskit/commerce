@@ -66,8 +66,9 @@ The installed Commerce runtime also needs the host's scoped `network:request`
 grant for the exact bare `paymentsOrigin`. The shipped Commerce manifest
 declares that capability with exactly one Payments host,
 `payments.dinkuskit.com`, so `paymentsOrigin` must be
-`https://payments.dinkuskit.com`. It also declares `coupons.dinkuskit.com`, used
-only when `installedCheckout` carries a `coupons` service
+`https://payments.dinkuskit.com`. It also declares `coupons.dinkuskit.com` for the
+hosted coupon service, which the Registry build leaves unhooked in v1, so coupon
+codes are refused
 ([registry-hosted-coupons](implementation/registry-hosted-coupons.md)).
 Activating a grant or deploying it is still a host approval step, not a
 repository-side default.

@@ -33,8 +33,9 @@ native entry. Native-only gaps:
   `/coupons` itself. The Registry build leaves coupon storage and admin out to
   stay under the Registry's per-file size limit
   ([registry-coupons-deferred](docs/implementation/registry-coupons-deferred.md)).
-  Registry checkout applies coupons through the hosted DinkusKit coupon service
-  when the owner configures it
+  Registry checkout refuses coupon codes in v1: its port to the hosted
+  DinkusKit coupon service is unhooked to leave room under that limit, and comes
+  back when there is room
   ([registry-hosted-coupons](docs/implementation/registry-hosted-coupons.md)).
   This closes when coupons can also be created for a Registry store, through the
   Coupons admin plugin or CLI in `dinkuskit/coupons`; the native coupon path is

@@ -25,7 +25,7 @@ import {
 } from '../features/checkout/registry-runtime.mjs';
 import { couponCollection } from '../features/checkout/pricing-fixture.mjs';
 import { couponServiceFake } from '../features/checkout/coupon-service-fake.mjs';
-import { createCouponAdmin, createCouponAttemptOwner } from '../../dist/features/coupons/index.js';
+import { createCouponAdmin } from '../../dist/features/coupons/index.js';
 import {
   COMMERCE_CHECKOUT_WAKES_TASK,
   COMMERCE_REGISTRY_RUNTIME_ID,
@@ -121,7 +121,7 @@ test('compiled Registry runtime ships no coupon storage or evaluator, and withou
 
 async function hostedCoupons() {
   const coupons = couponCollection();
-  const coupon = await createCouponAdmin(coupons).create({
+  await createCouponAdmin(coupons).create({
     code: 'SAVE10', globalCap: 5,
     rule: { ruleId: 'synthetic-rule', version: 1, discount: { kind: 'fixed', amount: { currency: 'USD', minor: '100' } },
       appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
@@ -129,50 +129,33 @@ async function hostedCoupons() {
       startsAt: '2026-01-01T00:00:00Z', endsAt: '2100-01-01T00:00:00Z', timeZone: 'UTC' },
   });
   const service = couponServiceFake(coupons, { siteId: 'synthetic-site', origin: COUPONS_ORIGIN, authorize: verifyCouponPass });
-  return { service, coupon, owner: createCouponAttemptOwner(coupons) };
+  return { service };
 }
 
-test('compiled Registry runtime applies a hosted coupon with its own pass and settles it once paid', async t => {
+test('coupons are unhooked from the Registry build: a coupon code is refused before any call, even with the coupon service in the settings', async () => {
   const hosted = await hostedCoupons();
-  const state = await runtimeFixture({ config: { ...configuration(), coupons: COUPONS },
-    couponPass: await couponCredential(), couponService: hosted.service.fetch });
-  t.after(() => state.close());
-  const { token, result } = await start(state, { ...basket, couponCode: 'save10' });
-  assert.equal(result.ok, true, JSON.stringify(result));
-  assert.equal(result.checkout.total.minor, '150');
-  assert.deepEqual(hosted.service.calls.map(call => call.path).slice(0, 2), ['/quotes', '/redemptions']);
-  assert.deepEqual(hosted.service.calls[0].body.lines,
-    [{ productId: 'hat', quantity: 1, regular: { currency: 'USD', minor: '250' } }]);
-  assert.equal(state.requests.length, 1);
-  assert.equal(state.requests[0].pricing.couponDiscount.minor, '100');
-  assert.equal(state.requests[0].pricing.coupon.code, 'SAVE10');
-  assert.equal((await hosted.owner.getCounts(hosted.coupon.couponId)).pending, 1);
-  state.setPaid();
-  const paid = await state.invoke(STATUS, {}, token);
-  assert.equal(paid.checkout.state, 'paid');
-  assert.equal(paid.checkout.order.total.minor, '150');
-  assert.equal(hosted.service.calls.at(-1).body.reconciliation.kind, 'verified-success');
-  assert.equal((await hosted.owner.getCounts(hosted.coupon.couponId)).consumed, 1);
-  assert.equal((await state.cartRecords())[0].attempts[0].coupon.status, 'consumed');
-});
-
-test('without a coupon pass, coupon codes are unavailable and checkout without one still works', async () => {
-  const hosted = await hostedCoupons();
-  for (const couponPass of [null, await credential(), await couponCredential({ site_id: 'another-site' })]) {
+  // The hosted coupon port and its pass are absent from the shipped backend, not merely unused.
+  const backend = await readFile(new URL('../../dist/sandbox/plugin.mjs', import.meta.url), 'utf8');
+  for (const marker of ['/quotes', '/redemptions', 'coupons:checkout']) assert.equal(backend.includes(marker), false, marker);
+  for (const couponPass of [await couponCredential(), null, await credential(), await couponCredential({ site_id: 'another-site' })]) {
     const state = await runtimeFixture({ config: { ...configuration(), coupons: COUPONS },
       couponPass, couponService: hosted.service.fetch });
     try {
       const prepared = await state.invoke(PREPARE);
       const capability = prepared.capability.capability;
-      const rejected = await state.invoke(START, { ...basket, couponCode: 'SAVE10' }, capability);
-      assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
-      assert.equal(rejected.error.reason, 'try-later');
+      for (const couponCode of ['SAVE10', 'save10']) {
+        const rejected = await state.invoke(START, { ...basket, couponCode }, capability);
+        assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
+        assert.equal(rejected.error.reason, 'try-later');
+      }
       assert.deepEqual(await state.cartRecords(), []);
       assert.equal(state.counts.coupons, 0);
       assert.equal(state.requests.length, 0);
+      // The same capability still checks out without a coupon, trading only for Payments.
       const plain = await state.invoke(START, basket, capability);
       assert.equal(plain.ok, true);
       assert.equal(state.requests.length, 1);
+      assert.deepEqual(state.trades.map(trade => trade.body.scope), ['payments:checkout']);
     } finally {
       await state.close();
     }

@@ -14,8 +14,6 @@ import {
   type RegistryCheckoutConfig,
 } from "./registry-provider-admission.js";
 import { admitCredential, tradeStoreKey } from "./registry-credential.js";
-import { createHostedCouponPort } from "./registry-coupons.js";
-import { validateCouponQuoteSnapshot } from "../coupons/index.js";
 import type { ShipConnection } from "../orders/index.js";
 
 export { REGISTRY_CHECKOUT_CONFIG_SCHEMA };
@@ -98,21 +96,17 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
   const { config, origin } = found;
   const pass = await storePasses(ctx, config), credential = pass();
   const fetch = ctx.http!.fetch.bind(ctx.http);
-  const coupons = config.coupons;
   const host = createTrustedTestPaymentsCheckoutHost({
     ...trustedPaymentsHostConfig(config, origin),
     credentialResolver: credential, fetch,
-    ...(coupons ? { validateCouponQuoteSnapshot } : {}),
   });
+  // Coupons are unhooked from the Registry build for v1 to save room (GrillTrack
+  // registry-coupons-unhooked-v1): settings may still name the coupon service,
+  // but a coupon code is refused before any call.
   return {
     host: { ...host, pricing: { paymentPricingSchema: CHECKOUT_PRICING_SCHEMA,
       resolveShippingConfiguration: async () => structuredClone(config.shipping) } },
     wakes: wakePort(config, fetch, credential),
-    // The coupon pass is traded only when a checkout uses a coupon, so a
-    // refused one never blocks checkout without a coupon.
-    ...(coupons ? { coupons: createHostedCouponPort({
-      origin: coupons.origin, siteId: config.siteId, fetch, credential: pass("coupons:checkout", coupons.audience),
-    }) } : {}),
   };
 }
 

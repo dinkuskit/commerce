@@ -14,7 +14,7 @@ the owners. No stock or money ledger is added.
 The shipped manifest declares `network:request` with exactly
 `allowedHosts: ["payments.dinkuskit.com", "coupons.dinkuskit.com", "ship.dinkuskit.com", "dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09, `commerce-allowed-hosts-coupons-dinkuskit-com`, `commerce-allowed-hosts-ship-dinkuskit-com` and `commerce-allowed-hosts-dinkuskit-com`); no wildcard and no other
 host. The coupon host serves only coupon checkouts
-([registry-hosted-coupons](registry-hosted-coupons.md)), the Ship host only
+([registry-hosted-coupons](registry-hosted-coupons.md); unhooked in v1), the Ship host only
 Orders ([registry-ship-sync](registry-ship-sync.md)), and `dinkuskit.com` only
 the store-key trade ([store key and passes](#store-key-and-passes)). The behavior below
 applies whenever the Payments grant is not active.
@@ -90,7 +90,9 @@ to `https://dinkuskit.com`), with `Authorization: Bearer <store key>`, no
 cookies, `redirect: "error"` and exactly `{ "site_id", "scope", "audience" }`.
 The pairs are `payments:checkout` with the configured `audience`,
 `coupons:checkout` with `coupons.audience`, and `ship:orders` with
-`ship.audience`. An invocation trades only when it first needs a service, at
+`ship.audience`; while coupons are unhooked for v1
+([registry-hosted-coupons](registry-hosted-coupons.md)), the Registry build
+never trades `coupons:checkout`. An invocation trades only when it first needs a service, at
 most once per scope; prepare never trades. The answer is read through the same
 128 KiB bounded JSON reader as Payments' answers, and only `access_token` is
 used.
@@ -175,8 +177,9 @@ contacted. The shipped manifest is asserted to declare exactly
 `ship.dinkuskit.com` and `dinkuskit.com` and is never replaced by that test
 variant.
 
-These tests prove local runtime service assembly, canonical free/flat coupon
-pricing and paid replay, denied grants, configuration/token failures, refused
+These tests prove local runtime service assembly, canonical free/flat shipping
+pricing and paid replay, coupon codes refused while coupons are unhooked,
+denied grants, configuration/token failures, refused
 and replaced store keys, one trade per service per invocation, managed
 unavailability and exact cron wake ACK ordering. They are not official Registry
 installation/publication, production scheduler, a real DinkusKit.com trade or
