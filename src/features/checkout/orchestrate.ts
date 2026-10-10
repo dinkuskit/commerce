@@ -45,7 +45,6 @@ async function freeze(
   rawContact?: unknown,
 ): Promise<CheckoutAttempt> {
   if (!e.loadCheckoutContactRequirements) throw new CheckoutContactError("REQUIREMENTS_UNAVAILABLE");
-  const contactSnapshot = await captureCheckoutContact(rawContact, e.loadCheckoutContactRequirements);
   const lines: CheckoutLine[] = [];
   const selections: CheckoutVariantSelectionSnapshot[] = [];
   let stock: StockRequest | undefined;
@@ -57,6 +56,8 @@ async function freeze(
   }
   const quote = await quoteCatalogBasket(e.catalog, cart.map(line => line.catalogItemId), e.availability);
   if (!quote.ok) fail(QUOTE_FAILURES[quote.reason]);
+  const contactSnapshot = await captureCheckoutContact(rawContact, e.loadCheckoutContactRequirements,
+    quote.lines.some(line => line.fulfillment === "physical"));
   for (const [index, quoted] of quote.lines.entries()) {
     const line = cart[index];
     const { variant } = quoted;
@@ -162,6 +163,7 @@ function freezeContactSnapshot(
     contact: Object.freeze({
       email: `${snapshot.contact.email}`,
       ...(snapshot.contact.phone === undefined ? {} : { phone: `${snapshot.contact.phone}` }),
+      ...(snapshot.contact.delivery ? { delivery: Object.freeze({ ...snapshot.contact.delivery }) } : {}),
     }),
     requirePhoneNumber: snapshot.requirePhoneNumber,
     revision: snapshot.revision === null ? null : `${snapshot.revision}`,

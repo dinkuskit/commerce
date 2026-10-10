@@ -73,6 +73,8 @@ export async function seedGuestCatalog(storage, { managed = false, itemId = "hat
     commandId: `catalog:create:${itemId}`,
     creationIntent: { manageStock: managed },
     kind: "simple-product",
+    // Digital, so contact-only scenarios need no delivery address.
+    fulfillment: "digital",
     name: itemId,
     sku: itemId.toUpperCase(),
     skuKey: itemId.toUpperCase(),

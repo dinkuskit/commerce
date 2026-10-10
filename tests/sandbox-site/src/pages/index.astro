@@ -122,6 +122,14 @@ for (const product of products) {
     <h2>Guest checkout proof</h2>
     <label>Email <input type="email" name="checkout-email" autocomplete="email" maxlength="254" required /></label>
     <label>Phone <span data-phone-requirement>(optional)</span> <input type="tel" name="checkout-phone" autocomplete="tel" maxlength="64" /></label>
+    <fieldset data-delivery>
+      <legend>Delivery address</legend>
+      <label>Recipient <input name="delivery-name" autocomplete="shipping name" maxlength="200" /></label>
+      <label>Address line 1 <input name="delivery-line1" autocomplete="shipping address-line1" maxlength="200" /></label>
+      <label>City <input name="delivery-city" autocomplete="shipping address-level2" maxlength="200" /></label>
+      <label>Postal code <input name="delivery-postalCode" autocomplete="shipping postal-code" maxlength="200" /></label>
+      <label>Country <input name="delivery-country" autocomplete="shipping country" maxlength="2" /></label>
+    </fieldset>
     <button type="button" data-action="prepare">Prepare checkout</button>
     <button type="button" data-action="start" disabled>Start checkout</button>
     <button type="button" data-action="status" disabled>Refresh payment status</button>
@@ -141,8 +149,13 @@ for (const product of products) {
     let attemptId;
     const emailInput = checkout.querySelector('[name="checkout-email"]');
     const phoneInput = checkout.querySelector('[name="checkout-phone"]');
+    const delivery = () => {
+      const fields = ["name", "line1", "city", "postalCode", "country"];
+      const value = Object.fromEntries(fields.map((field) => [field, checkout.querySelector(`[name="delivery-${field}"]`).value]));
+      return value.line1.trim() ? { delivery: value } : {};
+    };
     const selectedLine = () => ({
-      contact: { email: emailInput.value, phone: phoneInput.value },
+      contact: { email: emailInput.value, phone: phoneInput.value, ...delivery() },
       lines: [{
         catalogItemId: document.querySelector('input[name^="variant-"]:checked')?.value ?? "",
         quantity: 1,

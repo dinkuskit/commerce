@@ -3,6 +3,9 @@ export type CheckoutContactErrorCode =
   | "EMAIL_REQUIRED"
   | "EMAIL_INVALID"
   | "PHONE_REQUIRED"
+  | "DELIVERY_REQUIRED"
+  | "DELIVERY_INVALID"
+  | "DELIVERY_COUNTRY_UNAVAILABLE"
   | "REQUIREMENTS_UNAVAILABLE";
 
 const MESSAGE_BY_CODE: Record<CheckoutContactErrorCode, string> = {
@@ -10,6 +13,9 @@ const MESSAGE_BY_CODE: Record<CheckoutContactErrorCode, string> = {
   EMAIL_REQUIRED: "Checkout email is required",
   EMAIL_INVALID: "Checkout email is invalid",
   PHONE_REQUIRED: "Checkout phone number is required",
+  DELIVERY_REQUIRED: "Delivery address is required",
+  DELIVERY_INVALID: "Delivery address is invalid",
+  DELIVERY_COUNTRY_UNAVAILABLE: "The store does not ship to this country",
   REQUIREMENTS_UNAVAILABLE: "Checkout contact requirements are unavailable",
 };
 
