@@ -20,7 +20,8 @@
   "allowedHosts": [
     "payments.dinkuskit.com",
     "coupons.dinkuskit.com",
-    "ship.dinkuskit.com"
+    "ship.dinkuskit.com",
+    "dinkuskit.com"
   ],
   "storage": {
     "catalog_items": {
@@ -110,23 +111,13 @@
     "settingsSchema": {
       "installedCheckout": {
         "type": "string",
-        "label": "Installed checkout configuration",
-        "description": "Versioned owner configuration; absent or disabled keeps checkout unavailable."
+        "label": "Checkout settings",
+        "description": "Paste from the Set up Commerce box on DinkusKit.com. Empty or switched off keeps checkout unavailable."
       },
-      "installedCheckoutCredential": {
+      "storeKey": {
         "type": "secret",
-        "label": "Installed checkout credential",
-        "description": "Separately provisioned issuer credential snapshot."
-      },
-      "installedCheckoutCouponsCredential": {
-        "type": "secret",
-        "label": "Installed checkout coupons credential",
-        "description": "Separately provisioned coupon service credential snapshot; used only for checkouts with a coupon."
-      },
-      "installedShipCredential": {
-        "type": "secret",
-        "label": "Installed Ship credential",
-        "description": "Separately provisioned Ship service credential snapshot; used only when Orders talks to Ship."
+        "label": "Store key",
+        "description": "Paste from the Set up Commerce box on DinkusKit.com. Commerce trades it there for short passes to Payments, Coupons and Ship; Replace key on DinkusKit.com stops this one."
       }
     },
     "pages": [

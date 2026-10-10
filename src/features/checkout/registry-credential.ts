@@ -1,5 +1,6 @@
 import { isRecord as object } from "../../shared/record.js";
 import { registryUnavailable as unavailable, registryText as text } from "./registry-guards.js";
+import { readBoundedPaymentsJson } from "./test-payments.js";
 import type { RegistryCheckoutConfig } from "./registry-provider-admission.js";
 
 
@@ -33,3 +34,23 @@ export function admitCredential(
   } catch { return unavailable(); }
 }
 
+
+/**
+ * Trades the store key at the issuer (POST /api/store-passes on its origin) for a fresh pass
+ * for one service, admitted like any pass. Any refusal leaves the call it was for unmade.
+ */
+export async function tradeStoreKey(
+  key: string,
+  config: RegistryCheckoutConfig,
+  fetch: (url: string, init: RequestInit) => Promise<Response>,
+  scope: string,
+  audience: string,
+): Promise<string> {
+  const response = await fetch(new URL("/api/store-passes", config.issuer).href, {
+    method: "POST", cache: "no-store", redirect: "error",
+    headers: { accept: "application/json", authorization: "Bearer " + key, "content-type": "application/json" },
+    body: JSON.stringify({ site_id: config.siteId, scope, audience }),
+  });
+  const body = response.ok ? await readBoundedPaymentsJson(response) : unavailable();
+  return admitCredential(object(body) ? body.access_token : null, config, scope, audience);
+}

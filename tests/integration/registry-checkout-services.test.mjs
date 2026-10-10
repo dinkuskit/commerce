@@ -13,11 +13,13 @@ import {
   COUPONS_ORIGIN,
   couponCredential,
   credential,
+  ISSUER_ORIGIN,
   legacyStripeConfiguration,
   runtimeFixture,
   SHIP,
   shipCredential,
   SITE,
+  STORE_KEY,
   verifyCouponPass,
   verifyShipPass,
 } from '../features/checkout/registry-runtime.mjs';
@@ -44,7 +46,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request']);
-  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com']);
+  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
@@ -468,21 +470,21 @@ test('authorize_net installed config admits beside stripe and creates a sandbox 
   assert.equal(state.requests.length, 1);
 });
 
-test('expired/wrong-scope/wrong-site credentials fail before synthetic Payments transport', async t => {
+test('expired/wrong-scope/wrong-site passes from the trade fail before synthetic Payments transport', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
   const now = Math.floor(Date.now() / 1000);
-  for (const changes of [{ exp: now - 1 }, { iat: now - 3601 }, { scope: 'payments:admin' },
+  for (const changes of [{ exp: now - 1 }, { iat: now - 3601 }, { iat: now + 100 }, { scope: 'payments:admin' },
     { site_id: 'other-site' }, { aud: 'other-audience' }, { iss: 'https://other.example.test' }, { nbf: now + 100 }]) {
-    await state.settings.set('installedCheckoutCredential', await credential(changes));
-    assert.equal((await state.invoke(PREPARE)).error.code, 'UNAVAILABLE');
+    state.setPass('payments:checkout', await credential(changes));
+    // The shopper can try again; nothing reached Payments.
+    assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
   }
   assert.equal(state.counts.transport, 0);
   assert.equal(state.counts.scheduler, 0);
-  assert.deepEqual(await state.cartRecords(), []);
   // Legitimate standard scope and audience array are accepted; no obsolete array claim.
-  await state.settings.set('installedCheckoutCredential', await credential({ aud: ['synthetic-payments', 'other'] }));
-  assert.equal((await state.invoke(PREPARE)).ok, true);
+  state.setPass('payments:checkout', await credential({ aud: ['synthetic-payments', 'other'] }));
+  assert.equal((await start(state)).result.checkout.state, 'pending');
 });
 
 test('default module rejects foreign origin before settings/credentials and preserves managed binding', async t => {
@@ -638,7 +640,7 @@ test('the compiled runtime sends paid orders to Ship, and a label bought in Ship
     assert.equal(ship.state.calls, 0);
     // Orders and Ship need only Ship's pass: the Payments pass has expired from here on.
     const now = Math.floor(Date.now() / 1000);
-    await state.settings.set('installedCheckoutCredential', await credential({ iat: now - 7200, exp: now - 3600 }));
+    state.setPass('payments:checkout', await credential({ iat: now - 7200, exp: now - 3600 }));
     await shipAdmin(state, { type: 'page_load', page: '/orders' });
     assert.equal(ship.state.sent.length, 1);
     const [sent] = ship.state.sent;
@@ -682,4 +684,89 @@ test('without a Ship service or a usable Ship pass, Orders calls nothing and kee
       assert.equal((await state.collections.orders.query()).items[0].data.shipVersion, undefined);
     } finally { await state.close(); }
   }
+});
+
+test('Commerce trades its store key at the issuer once per call, only for the service the call needs', async () => {
+  const ship = shipStandIn();
+  const state = await runtimeFixture({ config: { ...configuration(), ship: SHIP }, shipPass: await shipCredential(), shipService: ship.service });
+  try {
+    const trade = scope => ({ method: 'POST', path: '/api/store-passes', authorization: 'Bearer ' + STORE_KEY, cookie: null,
+      contentType: 'application/json', body: { site_id: 'synthetic-site', scope,
+        audience: scope === 'ship:orders' ? 'synthetic-ship' : 'synthetic-payments' } });
+    // Preparing a checkout needs no service, so nothing is traded.
+    const prepared = await state.invoke(PREPARE);
+    assert.equal(state.counts.trades, 0);
+    // Starting one asks Payments twice (binding, then session) on one traded pass.
+    const token = prepared.capability.capability;
+    await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
+    const hat = await state.collections.catalog_items.get('hat');
+    await state.collections.catalog_items.put('hat', { ...hat, fulfillment: 'physical', weightOz: 4.5 });
+    assert.equal((await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery },
+      lines: [{ catalogItemId: 'hat', quantity: 1 }] }, token)).checkout.state, 'pending');
+    assert.ok(state.counts.transport >= 2);
+    assert.deepEqual(state.trades, [trade('payments:checkout')]);
+    state.setPaid();
+    assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
+    assert.deepEqual(state.trades.slice(1), [trade('payments:checkout')]);
+    // Opening Orders lists labels and sends the order to Ship on one traded Ship pass.
+    ship.state.labels = [];
+    await shipAdmin(state, { type: 'page_load', page: '/orders' });
+    assert.ok(ship.state.calls >= 2);
+    assert.deepEqual(state.trades.slice(2), [trade('ship:orders')]);
+    // The background check trades at most once for Payments and once for Ship.
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual(state.trades.slice(3), [trade('payments:checkout'), trade('ship:orders')]);
+  } finally { await state.close(); }
+});
+
+test('a refused trade makes no call: refused or replaced key, service off or cut off, limits, outages, redirects and bad answers', async () => {
+  let answer = () => undefined;
+  const state = await runtimeFixture({ passService: (url, init, body) => answer(body) });
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const refusals = [
+      () => Response.json({ error: 'invalid_store_key' }, { status: 401 }),
+      () => Response.json({ error: 'site_mismatch' }, { status: 403 }),
+      () => Response.json({ error: 'service_not_enabled' }, { status: 403 }),
+      () => Response.json({ error: 'service_cut_off' }, { status: 403 }),
+      () => Response.json({ error: 'store_suspended' }, { status: 403 }),
+      () => Response.json({ error: 'rate_limited' }, { status: 429, headers: { 'retry-after': '1' } }),
+      () => Response.json({ error: 'signing_unavailable' }, { status: 503 }),
+      () => new Response(null, { status: 302, headers: { location: ISSUER_ORIGIN + '/elsewhere' } }),
+      () => Response.json({ token_type: 'Bearer', expires_in: 300 }),
+      () => new Response('{"access_token":', { headers: { 'content-type': 'application/json' } }),
+      async () => Response.json({ access_token: await couponCredential() }),
+      async () => Response.json({ access_token: await credential({ iat: now + 60, exp: now + 360 }) }),
+    ];
+    for (const refusal of refusals) {
+      answer = refusal;
+      const trades = state.counts.trades;
+      assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
+      // One trade, no retry, and nothing reached Payments.
+      assert.equal(state.counts.trades, trades + 1);
+    }
+    assert.equal(state.counts.transport, 0);
+    answer = async body => Response.json({ access_token: await credential(), token_type: 'Bearer', expires_in: 300, site_id: body.site_id });
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+    assert.ok(state.counts.transport >= 2);
+  } finally { await state.close(); }
+});
+
+test('Replace key on DinkusKit.com stops the old key at once, and without a key checkout stays unavailable', async () => {
+  const state = await runtimeFixture();
+  try {
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+    const before = state.counts.transport;
+    state.acceptStoreKey('the replacement synthetic key');
+    assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
+    assert.equal(state.counts.transport, before);
+    await state.settings.set('storeKey', 'the replacement synthetic key');
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+  } finally { await state.close(); }
+  const unset = await runtimeFixture({ storeKey: null });
+  try {
+    assert.equal((await unset.invoke(PREPARE)).error.code, 'UNAVAILABLE');
+    await unset.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual([unset.counts.trades, unset.counts.transport], [0, 0]);
+  } finally { await unset.close(); }
 });

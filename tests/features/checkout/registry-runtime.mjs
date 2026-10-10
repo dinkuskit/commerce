@@ -20,7 +20,12 @@ export const SITE = 'https://shop.example.test';
 // Public IP literal avoids DNS; the approved test-only HTTP callback intercepts every request.
 // No connection is made to this address. Production grants remain empty.
 export const TRANSPORT_ORIGIN = 'https://8.8.8.8';
-const ISSUER = 'https://identity.example.test';
+// A fourth public IP literal stands in for DinkusKit.com, which trades the store key for passes;
+// it is intercepted too. The issuer's origin is where Commerce trades the key.
+export const ISSUER_ORIGIN = 'https://9.9.9.9';
+const ISSUER = ISSUER_ORIGIN + '/account';
+/** The store key the stand-in issuer accepts until a test replaces it. Not a real key format. */
+export const STORE_KEY = 'synthetic store key';
 const AUDIENCE = 'synthetic-payments';
 const SITE_ID = 'synthetic-site';
 const BINDING = 'synthetic-binding';
@@ -88,6 +93,9 @@ export async function runtimeFixture({
   couponService,
   shipPass = null,
   shipService,
+  // The store key in Commerce's settings (null leaves it unset) and an optional stand-in issuer.
+  storeKey = STORE_KEY,
+  passService,
   // What the synthetic Payments says its binding is.
   bindingMode = 'test',
 } = {}) {
@@ -102,19 +110,19 @@ export async function runtimeFixture({
       schedule TEXT NOT NULL, is_oneshot INTEGER NOT NULL DEFAULT 0, data TEXT, next_run_at TEXT NOT NULL, last_run_at TEXT,
       status TEXT NOT NULL DEFAULT 'idle', locked_at TEXT, enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT,
       UNIQUE(plugin_id, task_name));`);
-  const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0, coupons: 0, ship: 0 };
+  const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0, coupons: 0, ship: 0, trades: 0 };
   const owner = COMMERCE_REGISTRY_RUNTIME_ID;
   const db = new Kysely({ dialect: new SqliteDialect({ database: sqlite }), log(event) {
     if (event.level !== 'query') return;
     const query = event.query;
     if (/^select /i.test(query.sql) && query.sql.includes('"options"') &&
-      query.parameters.includes(`plugin:${owner}:settings:installedCheckoutCredential`)) counts.credentials++;
+      query.parameters.includes(`plugin:${owner}:settings:storeKey`)) counts.credentials++;
     if (query.sql.includes('_emdash_cron_tasks')) counts.scheduler++;
   } });
   const manifest = structuredClone(artifact);
   manifest.id = owner;
   // Explicit SYNTHETIC fixture variant only. Never mutate the shipped manifest or publish this variant.
-  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4', '1.1.1.1']; }
+  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '9.9.9.9']; }
   const collections = {};
   for (const [name, spec] of Object.entries(manifest.storage)) {
     collections[name] = new PluginStorageRepository(db, owner, name,
@@ -129,9 +137,7 @@ export async function runtimeFixture({
   }
   const settings = createSettingsAccess(new OptionsRepository(db), owner, manifest.admin.settingsSchema);
   if (config !== null) await settings.set('installedCheckout', JSON.stringify(config));
-  if (token !== null) await settings.set('installedCheckoutCredential', token ?? await credential());
-  if (couponPass !== null) await settings.set('installedCheckoutCouponsCredential', couponPass);
-  if (shipPass !== null) await settings.set('installedShipCredential', shipPass);
+  if (storeKey !== null) await settings.set('storeKey', storeKey);
   if (seed) await collections.catalog_items.put('hat', {
     recordKind: 'catalog-item', itemId: 'hat', commandId: 'synthetic-create-hat', sku: 'HAT', skuKey: 'HAT', fulfillment: 'digital',
     creationIntent: { manageStock: managed }, kind: 'simple-product', name: 'Hat', state: 'draft',
@@ -147,10 +153,28 @@ export async function runtimeFixture({
     binding: { providerRef: 'inventory-synthetic', poolId: 'pool-synthetic', defaultFulfillmentLocationId: 'location-synthetic' },
     configuredAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   });
-  const requests = [], sessions = new Map();
-  let paid = false, pending = [], override;
+  const requests = [], sessions = new Map(), trades = [];
+  let paid = false, pending = [], override, acceptedKey = storeKey;
+  // What the stand-in issuer hands out per scope; null refuses it as not turned on. An unset
+  // Payments pass is minted fresh for each trade.
+  const issued = { 'payments:checkout': token, 'coupons:checkout': couponPass, 'ship:orders': shipPass };
   const json = value => Response.json(value);
+  async function issuer(url, init) {
+    counts.trades++;
+    assert.equal(init.redirect, 'manual'); // EmDash enforces Commerce's redirect policy itself.
+    const headers = new Headers(init.headers);
+    const body = JSON.parse(new TextDecoder().decode(init.body));
+    trades.push({ method: init.method, path: new URL(url).pathname, authorization: headers.get('authorization'),
+      cookie: headers.get('cookie'), contentType: headers.get('content-type'), body });
+    if (passService) return passService(url, init, body);
+    if (headers.get('authorization') !== 'Bearer ' + acceptedKey) return Response.json({ error: 'invalid_store_key' }, { status: 401 });
+    if (body.site_id !== SITE_ID) return Response.json({ error: 'site_mismatch' }, { status: 403 });
+    const pass = issued[body.scope] === undefined && body.scope === 'payments:checkout' ? await credential() : issued[body.scope];
+    return pass ? json({ access_token: pass, token_type: 'Bearer', expires_in: 300 })
+      : Response.json({ error: 'service_not_enabled' }, { status: 403 });
+  }
   async function transport(url, init) {
+    if (new URL(url).origin === ISSUER_ORIGIN) return issuer(url, init);
     if (new URL(url).origin === SHIP_ORIGIN) {
       counts.ship++;
       assert.equal(init.redirect, 'manual');
@@ -213,7 +237,11 @@ export async function runtimeFixture({
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },
   });
-  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests,
+  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests, trades,
+    /** Replace key on DinkusKit.com: from now on only this key gets passes. */
+    acceptStoreKey(key) { acceptedKey = key; },
+    /** What the stand-in issuer hands out for a scope from now on; null refuses it. */
+    setPass(scope, pass) { issued[scope] = pass; },
     setPaid() { paid = true; },
     setBindingMode(mode) { bindingMode = mode; },
     setWakes(values) { pending = structuredClone(values); },
