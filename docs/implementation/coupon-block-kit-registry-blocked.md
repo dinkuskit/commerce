@@ -1,10 +1,12 @@
 # Coupon Registry Block Kit contract and admission boundary
 
 Commerce exposes a host-rendered coupon page through its existing sandbox
-admin route. Products and Settings retain `content:edit_any`; every coupon page
-and action checks the host-attested caller with the genuine public EmDash
-`hasPermission` and `toRoleLevel` helpers for `plugins:manage`, before opening
-coupon storage. Input-body user, role, UI and permission fields confer no
+admin route. Products and Settings retain the `content:edit_any` level (editor
+and above). Settings compares EmDash's own `toRoleLevel` result with
+`Role.EDITOR`, the level `hasPermission` requires for `content:edit_any`, so
+the permission table is not bundled; a test checks both agree for every role
+value. Every coupon page and action checks the host-attested caller's role
+before opening coupon storage. Input-body user, role, UI and permission fields confer no
 privilege. The manifest declares normalized-code uniqueness and the coupon page.
 
 The page uses the existing coupon controller, evaluator, aggregate and usage
@@ -21,7 +23,7 @@ RBAC entry still has a large authentication closure in the pinned 1.2.0 package.
 Commerce now prebundles browser dependencies before the official plugin builder,
 using a narrowly scoped TypeScript AST transform on exact, hash-guarded auth
 modules. Unexpected package bytes, closure files, source or initializer bytes
-fail the build. There is no private auth entry, copied permission implementation,
+fail the build. There is no private auth entry, copied permission table,
 blanket side-effect setting or gzip cap workaround.
 
 Three unused schema initializers (`httpUrl`, `oauthProviderSchema`,
