@@ -5,6 +5,7 @@ import {
   CatalogError, createCatalogItem, catalogProductCreateInput, listCatalogProducts,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogCreateInput, admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
+  normalizeWeightOz, setCatalogItemWeight,
   addCatalogVariantOption, bulkSaveCatalogProductPrices, updateCatalogVariantLabels,
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage,
@@ -89,6 +90,16 @@ function productForm(id: string, values: ProductFields, action = "save:" + id): 
     ], submit: { label: "Save", action_id: action } };
 }
 const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
+/** Shipping weight for each physical item, in ounces; Ship's label form starts from it. Digital items have none. */
+function weightForm(selected: CatalogProductListItem): Block[] {
+  const items = selected.variantProduct?.options.length
+    ? selected.variantProduct.members.map(m => [m, "Weight (oz): " + m.selections.map(s => s.valueLabel).join(" / ")] as const)
+    : [[selected, "Weight (oz)"] as const];
+  const fields = items.filter(([item]) => item.fulfillment === "physical").map(([item, label]) =>
+    ({ type: "text_input" as const, action_id: "w:" + item.catalogItemId, label, initial_value: item.weightOz === undefined ? "" : String(item.weightOz) }));
+  return fields.length ? [header("Shipping weight"), { type: "form", block_id: "weight-" + crypto.randomUUID(), fields,
+    submit: { label: "Save weight", action_id: "weight:" + selected.catalogItemId } }] : [];
+}
 function variantEditor(id: string, variant: CatalogProductListItem["variantProduct"]): Block[] {
   if (!variant?.options.length) return [{
     type: "form", block_id: "variant-add-" + id, fields: [
@@ -151,6 +162,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     manageStockNotice(values.manageStock),
     ...(!selected.variantProduct?.options.length ? [productForm(id, { ...values, stockStatus: values.stockStatus ?? status })] : []),
     ...variantEditor(id, selected.variantProduct),
+    ...weightForm(selected),
     ...await mediaBlocks(ctx, id, selected.name, media),
   ], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
@@ -245,6 +257,21 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
         }
         return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, feedChannels: channels } : saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }
+      if (action.startsWith("weight:")) {
+        const id = action.slice(7);
+        const store = storage(ctx);
+        const selected = (await listCatalogProducts(store)).products.find(item => item.catalogItemId === id);
+        if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found. Return to Products.");
+        const typed = Object.entries(values).filter(([key]) => key.startsWith("w:")).map(([key, value]) => [key.slice(2), value] as const);
+        const own = [selected, ...selected.variantProduct?.members ?? []];
+        // Every weight is checked before any is saved, so a refused form changes nothing.
+        for (const [itemId, value] of typed) {
+          if (!own.some(item => item.catalogItemId === itemId && item.fulfillment === "physical")) throw new Error("Unknown product");
+          normalizeWeightOz(value);
+        }
+        for (const [itemId, value] of typed) await setCatalogItemWeight(store.catalog, itemId, value);
+        return product(ctx, id, undefined, "Weight saved");
+      }
       if (action.startsWith("variant:")) {
         const [operation, id, ...args] = JSON.parse(action.slice(8));
         const store = storage(ctx);
@@ -301,6 +328,15 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
           block.submit.action_id = input.action_id;
           for (const field of block.fields) if (Object.hasOwn(values, field.action_id)) Object.assign(field, { initial_value: values[field.action_id] });
         }
+        return refused(failure, [alert(failure), ...back.blocks]);
+      } catch { /* storage recovery falls through to the render-only alert */ }
+    }
+    // A refused weight keeps what the owner typed.
+    if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.startsWith("weight:")) {
+      try {
+        const back = await product(ctx, input.action_id.slice(7));
+        for (const block of back.blocks) if (block.type === "form" && block.submit.action_id === input.action_id)
+          for (const field of block.fields) if (typeof values[field.action_id] === "string") Object.assign(field, { initial_value: values[field.action_id] });
         return refused(failure, [alert(failure), ...back.blocks]);
       } catch { /* storage recovery falls through to the render-only alert */ }
     }

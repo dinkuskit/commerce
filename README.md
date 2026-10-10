@@ -119,7 +119,9 @@ The sandboxed EmDash Block Kit Products page lists those catalog products by nam
 lets a clerk add one with a name and SKU. Name is the customer-facing title
 (the product page H1 contract); this plugin does not render a storefront page.
 Opening a product shows Regular, Sale, the Manage stock slider, and In stock /
-Out of stock / On backorder when the product is unmanaged. Native admin keeps
+Out of stock / On backorder when the product is unmanaged. On Registry
+installs it also shows an optional Shipping weight in ounces for each physical
+product or physical choice, which Ship will read for labels. Native admin keeps
 that slider in place after Regular/Sale. By default it is gray, disabled, and
 labeled Coming soon on the same row; keyboard and pointer cannot change it.
 Those three stock statuses stay hidden on managed products. New products stay
