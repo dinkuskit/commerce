@@ -1,0 +1,8 @@
+# Order status: Processing and Completed (commerce-order-status-001)
+
+Measured on branch `claude/project-thread-xphlol` from main `fca6684`, Node 22.23.2.
+
+- `bin/verify-commerce full`: passed. Typecheck and repo audits clean; unit 503 pass, integration 46 pass, sandbox browser 10 pass, native local-stock 1 pass, Orders browser 1 pass.
+- Registry bundle: `backend_bytes=125585 headroom_bytes=5487` (main was 123,535; this change adds 2,050 bytes).
+- New unit tests: `tests/features/orders/status.test.mjs` (completing records the time and an optional trimmed carrier and tracking number and raises the version; blank values are left out; over-long, multi-line or non-text values, a stale version and an already Completed order change nothing; moving back to Processing clears the completion and raises the version; a Completed order's address cannot be corrected until it is moved back; a malformed stored completion fails the list closed; the page flow from Complete order to Move back to Processing, including the confirm on Move back and refusals of stale forms; status changes arrive only as their expected interaction type; a digital-only order can be completed by hand).
+- Installed browser proof (`tests/sandbox/orders-blocks.spec.mjs`): the detail shows `Status: Processing`; after the address correction, Complete order with carrier USPS and a synthetic tracking number shows "Order completed", `Status: Completed`, the tracking number and `Version: 3`, and no Correct address button; Move back to Processing asks for confirmation, then shows "Moved back to Processing", `Status: Processing`, `Version: 4` and Correct address again; Orders storage holds the completion and then none.

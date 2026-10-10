@@ -35,16 +35,30 @@ function shipTo(record: OrderRecord): string {
 function label(record: OrderRecord): string {
   return record.number === undefined ? record.paidOrder.orderId : '#' + record.number;
 }
+/** Processing until the order ships; Completed means shipped, never delivered. */
+function status(record: OrderRecord): string {
+  return record.completed ? 'Completed' : 'Processing';
+}
+/** An owner form for one order, bound to the version it was opened at so a stale save changes nothing. */
+function orderForm(record: OrderRecord, title: string, failure: string | undefined, refused: string, fields: [string, string, string?][], submit: string, verb: string): BlockResponse {
+  const id = encodeURIComponent(record.paidOrder.orderId);
+  return { blocks: [header(), action('Back to order', 'orders.open:' + id), { type: 'header', text: title + ' ' + label(record) },
+    ...(failure ? [unavailable(refused, failure)] : []),
+    { type: 'form', block_id: 'order-' + verb + '-' + crypto.randomUUID(), fields: fields.map(([action_id, label, initial_value]) =>
+      ({ type: 'text_input', action_id, label, initial_value })),
+    submit: { label: submit, action_id: 'orders.' + verb + ':' + (record.revision ?? 1) + ':' + id } } as Block] };
+}
 const ADDRESS_LABELS = { name: 'Name', line1: 'Address line 1', line2: 'Address line 2', city: 'City', region: 'State or region', postalCode: 'ZIP or postal code', country: 'Country code' };
-/** The owner's address correction form, filled with the current address and bound to the order's version. */
+/** The owner's address correction form, filled with the current address. */
 export function addressForm(record: OrderRecord, failure?: string, typed?: Record<string, unknown>): BlockResponse {
   const a = (typed ?? deliveryOf(record)) as Record<string, string>;
-  const id = encodeURIComponent(record.paidOrder.orderId);
-  return { blocks: [header(), action('Back to order', 'orders.open:' + id), { type: 'header', text: 'Correct the address for ' + label(record) },
-    ...(failure ? [unavailable('Address not saved', failure)] : []),
-    { type: 'form', block_id: 'order-address-' + crypto.randomUUID(), fields: Object.entries(ADDRESS_LABELS).map(([action_id, label]) =>
-      ({ type: 'text_input', action_id, label, initial_value: String(a[action_id] ?? '') })),
-    submit: { label: 'Save address', action_id: 'orders.save:' + (record.revision ?? 1) + ':' + id } } as Block] };
+  return orderForm(record, 'Correct the address for', failure, 'Address not saved',
+    Object.entries(ADDRESS_LABELS).map(([key, name]) => [key, name, String(a[key] ?? '')]), 'Save address', 'save');
+}
+/** Completing by hand: carrier and tracking number are optional. */
+export function completeForm(record: OrderRecord, failure?: string, typed?: Record<string, unknown>): BlockResponse {
+  return orderForm(record, 'Complete', failure, 'Order not completed', [['carrier', 'Carrier (optional)', String(typed?.carrier ?? '')],
+    ['tracking', 'Tracking number (optional)', String(typed?.tracking ?? '')]], 'Complete order', 'complete');
 }
 function detailFields(...pairs: string[]): Block {
   return { type: 'section', text: pairs.map((value, i) => i % 2 ? value : value + ':').join('\n') };
@@ -60,7 +74,7 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
     if (selectedOrderId === undefined) {
       if (!input.orders.length) blocks.push({ type: 'section', text: 'No orders recorded yet.' });
       for (const record of input.orders) blocks.push(
-        fields('Order', label(record), 'Total', amount(record.paidOrder.total), 'Payment', payment(record.paidOrder), 'Fulfillment', notRecorded),
+        fields('Order', label(record), 'Total', amount(record.paidOrder.total), 'Payment', payment(record.paidOrder), 'Status', status(record)),
         action('Inspect ' + label(record), 'orders.open:' + encodeURIComponent(record.paidOrder.orderId)),
         { type: 'divider' },
       );
@@ -68,15 +82,22 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
     }
     const matches = input.orders.filter(record => record.paidOrder.orderId === selectedOrderId);
     if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
-    const record = matches[0], order = record.paidOrder;
+    const record = matches[0], order = record.paidOrder, done = record.completed;
+    const id = encodeURIComponent(order.orderId), version = (record.revision ?? 1) + ':' + id;
     blocks.push(detailFields('Order', label(record), 'Order ID', order.orderId, 'Version', String(record.revision ?? 1), 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
-      'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Fulfillment', notRecorded,
+      'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Status', status(record),
+      ...(done ? ['Completed at', done.at, 'Carrier', done.carrier ?? notRecorded, 'Tracking number', done.tracking ?? notRecorded] : []),
       'Ship to', shipTo(record)));
-    if (deliveryOf(record)) blocks.push(action('Correct address', 'orders.address:' + encodeURIComponent(order.orderId)));
+    // A Completed order's address is locked; moving it back to Processing unlocks it.
+    blocks.push({ type: 'actions', elements: done
+      ? [{ type: 'button', label: 'Move back to Processing', action_id: 'orders.reopen:' + version,
+        confirm: { title: 'Move back to Processing?', text: 'Its carrier, tracking number and completion time are cleared.', confirm: 'Move back', deny: 'Cancel' } }]
+      : [{ type: 'button', label: 'Complete order', action_id: 'orders.finish:' + id },
+        ...(deliveryOf(record) ? [{ type: 'button' as const, label: 'Correct address', action_id: 'orders.address:' + id }] : [])] });
     blocks.push({ type: 'header', text: 'Items' });
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
-    if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + encodeURIComponent(order.orderId)));
+    if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + id));
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
       'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
     if (order.pricing) {

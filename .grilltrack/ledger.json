@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-10T16:51:02+00:00",
-    "domain": "Native public catalog routes (PR 91)",
-    "started_at": "2026-10-10T16:51:02+00:00",
+    "confirmed_at": "2026-10-10T17:16:04+00:00",
+    "domain": "Commerce order status (Processing and Completed)",
+    "started_at": "2026-10-10T17:16:04+00:00",
     "status": "confirmed",
-    "summary": "Ronald agreed at 16:48 UTC 2026-10-10 that native installs mount catalog/public and catalog/public/item exactly as the Registry build does."
+    "summary": "Ronald answered 6 (agreed), 9 (address editable in Processing, not in Completed), 13 (test orders completable by hand) and said at 16:40 UTC that cancelling a label must not move an order back; the owner does it by hand. Recorded in /mnt/project-files/ship-handoff/order-and-shipping-decisions.md."
   },
   "decisions": [
     {
@@ -9945,6 +9945,77 @@
       "superseded_by": null,
       "updated_at": "2026-10-10T16:58:16+00:00",
       "verification_ref": "bin/verify-commerce full passed on PR 91 after merging main 14eed88 (unit 495, integration 46, browser 12); Registry backend unchanged by this PR at 123,535 bytes"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "An order is Processing from the moment Orders keeps it until it ships, then Completed. Completed means a label was bought (handed to the carrier) or the owner pressed Complete order on the order's Orders detail page; it never means delivered. Completing by hand takes an optional carrier and an optional tracking number (plain text, at most 64 characters each) and records when it happened. The owner can move a Completed order back to Processing by hand after confirming; that clears the carrier, tracking number and completion time. Cancelling a Ship label never moves an order back on its own; the owner does it. Each status change is an owner change and raises the order's version. The delivery address can be corrected only while the order is Processing; a Completed order's address is locked. The Orders list and detail show the status. Any order, including a test order, can be completed by hand. Product weight, marking test orders TEST, a Ship label completing an order, agents marking orders shipped, and the shipped email are separate decisions.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanDi9YHvj4p2KCoTobq99duw",
+      "created_at": "2026-10-10T17:16:05+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-order-identity-001"
+      ],
+      "domain": "Commerce order status (Processing and Completed)",
+      "history": [
+        {
+          "at": "2026-10-10T17:16:05+00:00",
+          "choice": "An order is Processing from the moment Orders keeps it until it ships, then Completed. Completed means a label was bought (handed to the carrier) or the owner pressed Complete order on the order's Orders detail page; it never means delivered. Completing by hand takes an optional carrier and an optional tracking number (plain text, at most 64 characters each) and records when it happened. The owner can move a Completed order back to Processing by hand after confirming; that clears the carrier, tracking number and completion time. Cancelling a Ship label never moves an order back on its own; the owner does it. Each status change is an owner change and raises the order's version. The delivery address can be corrected only while the order is Processing; a Completed order's address is locked. The Orders list and detail show the status. Any order, including a test order, can be completed by hand. Product weight, marking test orders TEST, a Ship label completing an order, agents marking orders shipped, and the shipped email are separate decisions.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T17:27:46+00:00",
+          "choice": "An order is Processing from the moment Orders keeps it until it ships, then Completed. Completed means a label was bought (handed to the carrier) or the owner pressed Complete order on the order's Orders detail page; it never means delivered. Completing by hand takes an optional carrier and an optional tracking number (plain text, at most 64 characters each) and records when it happened. The owner can move a Completed order back to Processing by hand after confirming; that clears the carrier, tracking number and completion time. Cancelling a Ship label never moves an order back on its own; the owner does it. Each status change is an owner change and raises the order's version. The delivery address can be corrected only while the order is Processing; a Completed order's address is locked. The Orders list and detail show the status. Any order, including a test order, can be completed by hand. Product weight, marking test orders TEST, a Ship label completing an order, agents marking orders shipped, and the shipped email are separate decisions.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T17:27:46+00:00",
+          "choice": "An order is Processing from the moment Orders keeps it until it ships, then Completed. Completed means a label was bought (handed to the carrier) or the owner pressed Complete order on the order's Orders detail page; it never means delivered. Completing by hand takes an optional carrier and an optional tracking number (plain text, at most 64 characters each) and records when it happened. The owner can move a Completed order back to Processing by hand after confirming; that clears the carrier, tracking number and completion time. Cancelling a Ship label never moves an order back on its own; the owner does it. Each status change is an owner change and raises the order's version. The delivery address can be corrected only while the order is Processing; a Completed order's address is locked. The Orders list and detail show the status. Any order, including a test order, can be completed by hand. Product weight, marking test orders TEST, a Ship label completing an order, agents marking orders shipped, and the shipped email are separate decisions.",
+          "from": "implemented",
+          "implementation_ref": "src/features/orders/store.ts (completeOrder, reopenOrder, Completed locks correctDelivery); src/features/orders/admin/page.ts and view.ts (Status, Complete order, Move back to Processing)",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-order-status-001",
+      "implementation_ref": "src/features/orders/store.ts (completeOrder, reopenOrder, Completed locks correctDelivery); src/features/orders/admin/page.ts and view.ts (Status, Complete order, Move back to Processing)",
+      "question": "What order statuses does Commerce show, and how does the owner move an order between them?",
+      "rationale": "user accepted the scoped decision",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T17:27:46+00:00",
+      "verification_ref": ".grilltrack/proof/order-status-20261010/PROOF.md"
     }
   ],
   "last_activation": {
@@ -9981,5 +10052,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T16:58:16+00:00"
+  "updated_at": "2026-10-10T17:27:46+00:00"
 }
