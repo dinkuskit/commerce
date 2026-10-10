@@ -39,6 +39,12 @@ import {
   bulkSaveCatalogProductPricesRoute,
 } from "./features/catalog/index.js";
 import {
+  PUBLIC_CATALOG_ROUTE,
+  PUBLIC_CATALOG_ITEM_ROUTE,
+  readPublicCatalog,
+  readPublicCatalogItem,
+} from "./features/catalog/storefront/index.js";
+import {
   SET_STORE_RETURN_POLICY_ROUTE,
   SET_STORE_SHIPPING_POLICY_ROUTE,
   STORE_RETURN_POLICY_COLLECTION,
@@ -189,6 +195,58 @@ function withFeedChannels(route: PluginRoute): PluginRoute {
   };
 }
 
+function nativePublicContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
+  return {
+    ...ctx,
+    storage: {
+      ...ctx.storage,
+      catalog_items: ctx.storage.catalogItems ?? ctx.storage.catalog_items,
+      catalog_prices: ctx.storage.catalogPrices ?? ctx.storage.catalog_prices,
+      catalog_manual_availability:
+        ctx.storage.catalogManualAvailability ?? ctx.storage.catalog_manual_availability,
+      catalog_backorder_policies:
+        ctx.storage.catalogBackorderPolicies ?? ctx.storage.catalog_backorder_policies,
+      store_inventory_configurations:
+        ctx.storage.storeInventoryConfigurations ?? ctx.storage.store_inventory_configurations,
+      storefront_availability_settings:
+        ctx.storage.storefrontAvailabilitySettings ?? ctx.storage.storefront_availability_settings,
+      storefront_out_of_stock_listing:
+        ctx.storage.storefrontOutOfStockListing ?? ctx.storage.storefront_out_of_stock_listing,
+      catalog_media: ctx.storage.catalogMedia ?? ctx.storage.catalog_media,
+      storefront_placeholder_image:
+        ctx.storage.storefrontPlaceholderImage ?? ctx.storage.storefront_placeholder_image,
+    },
+  };
+}
+
+const publicCatalogRoute = {
+  public: true,
+  methods: ["GET"],
+  request: { body: "none" },
+  cacheControl: "no-store",
+  handler: async (ctx: Parameters<PluginRoute["handler"]>[0]) => {
+    const query = new URL(ctx.request.url).searchParams;
+    if ([...query.keys()].some(key => key !== "cursor") || query.getAll("cursor").length > 1) {
+      throw new Error("Invalid catalog query");
+    }
+    return readPublicCatalog(nativePublicContext(ctx), query.get("cursor") ?? undefined);
+  },
+} satisfies PluginRoute;
+
+const publicCatalogItemRoute = {
+  public: true,
+  methods: ["GET"],
+  request: { body: "none" },
+  cacheControl: "no-store",
+  handler: async (ctx: Parameters<PluginRoute["handler"]>[0]) => {
+    const query = new URL(ctx.request.url).searchParams;
+    if ([...query.keys()].some(key => key !== "itemId") || query.getAll("itemId").length !== 1) {
+      throw new Error("Invalid catalog item query");
+    }
+    return readPublicCatalogItem(nativePublicContext(ctx), query.get("itemId")!);
+  },
+} satisfies PluginRoute;
+
 export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugin {
   const localStock = {
     enableLocalStockManagement: options.enableLocalStockManagement === true,
@@ -293,6 +351,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
     },
     routes: {
+      [PUBLIC_CATALOG_ROUTE]: publicCatalogRoute,
+      [PUBLIC_CATALOG_ITEM_ROUTE]: publicCatalogItemRoute,
       [MERCHANT_STORE_SETTINGS_ROUTE]: createMerchantStoreSettingsRoute(),
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,

@@ -98,11 +98,11 @@ Every route is served at
   site answers `404` and the CLI exits `1` with `route_not_available`, because
   that build only has the Block Kit admin.
 
-Both public routes are mounted only by the Registry (sandboxed) build
-(`src/plugin.ts`); the native build (`src/index.ts`) does not mount them. One
-install therefore serves either the `catalog` commands or `products list`, not
-both. Making both builds serve the same read surface is a Commerce decision,
-not a CLI one.
+Both public routes are mounted by the Registry (sandboxed) build
+(`src/plugin.ts`) and the native build (`src/index.ts`), with the same request
+rules and response (GrillTrack `catalog-native-public-routes-001`). The
+`catalog` commands therefore work on either install; `products list` still
+works only on a native install.
 
 ### Planned commands
 
@@ -385,8 +385,8 @@ change, rebuild, and compare.
 
 | Command | State | Route used |
 | --- | --- | --- |
-| `catalog list` | Wired | `GET catalog/public[?cursor=]` (Registry build) |
-| `catalog show` | Wired | `GET catalog/public/item?itemId=` (Registry build) |
+| `catalog list` | Wired | `GET catalog/public[?cursor=]` (both builds) |
+| `catalog show` | Wired | `GET catalog/public/item?itemId=` (both builds) |
 | `products list` | Wired | `GET catalog-items/list` with `EMDASH_TOKEN` (native build) |
 | `products set-price`, `set-sale-price`, `set-sku` | Planned | No preview/confirm route |
 | `orders list`, `orders show` | Planned | No JSON orders route |

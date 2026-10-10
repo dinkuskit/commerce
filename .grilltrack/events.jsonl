@@ -277,3 +277,9 @@
 {"action": "shared_understanding_confirmed", "at": "2026-10-10T16:43:27+00:00", "data": {"summary": "Ronald agreed answers 1 to 5 (order id, short number, one store ID, owner address correction with a version, whole-order shipping) in the project thread at 16:19 UTC; Commerce builds number, version and address correction now."}, "event_id": "2fdfb4d9-e9aa-4c15-adc0-7a11990ee1f7"}
 {"action": "decision_implemented", "at": "2026-10-10T16:43:27+00:00", "data": {"decision_id": "commerce-order-identity-001"}, "event_id": "bc058bb3-3bfe-4812-8b59-3e07cef16659"}
 {"action": "decision_verified", "at": "2026-10-10T16:43:27+00:00", "data": {"decision_id": "commerce-order-identity-001"}, "event_id": "b428b937-f71c-441c-b5b4-cdb3ec95733a"}
+{"action": "focus_started", "at": "2026-10-10T16:51:02+00:00", "data": {"cadence": "sequential", "domain": "Native public catalog routes (PR 91)"}, "event_id": "78ea89df-7860-4e76-b840-a522efe8a149"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-10T16:51:02+00:00", "data": {"summary": "Ronald agreed at 16:48 UTC 2026-10-10 that native installs mount catalog/public and catalog/public/item exactly as the Registry build does."}, "event_id": "53c9635d-b9ae-40fe-baa8-b96ba97e9e68"}
+{"action": "decision_proposed", "at": "2026-10-10T16:51:02+00:00", "data": {"decision_id": "catalog-native-public-routes-001"}, "event_id": "d3dacd13-d4c0-4601-80b8-ba1d4a9df2fd"}
+{"action": "decision_locked", "at": "2026-10-10T16:51:02+00:00", "data": {"decision_id": "catalog-native-public-routes-001"}, "event_id": "72f484e2-0167-4c01-a9e4-455251a8bc88"}
+{"action": "decision_implemented", "at": "2026-10-10T16:51:02+00:00", "data": {"decision_id": "catalog-native-public-routes-001"}, "event_id": "c17f3fec-d752-45d6-95c2-faf6a029e0dc"}
+{"action": "decision_verified", "at": "2026-10-10T16:58:16+00:00", "data": {"decision_id": "catalog-native-public-routes-001"}, "event_id": "26d3c46e-f92c-47d9-92c9-4a70bce09099"}

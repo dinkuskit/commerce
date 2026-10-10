@@ -63,8 +63,12 @@ checkout available.
 The compiled package exports `readPublicCatalog(ctx, cursor?)` and
 `PUBLIC_CATALOG_ROUTE` from `@dinkuskit/commerce/features/catalog`. Call the reader
 only with the original runtime-owned context; it is not an installation verifier.
-The sandbox handler is the supported public consumer boundary. This slice adds
-no native storage alias or cross-plugin context construction.
+The sandbox handler is the supported public consumer boundary. The native
+build mounts the same two routes (GrillTrack
+`catalog-native-public-routes-001`) with the same query rules, response and
+`no-store` caching. Its handler maps the native camelCase storage names onto
+the collection names the shared reader expects, and builds no cross-plugin
+context.
 
 Products retain the current price/listing rules, including the existing draft
 state behavior. Publication and slugs are a later slice. Managed products have
