@@ -20,6 +20,10 @@ the new Orders copy, its page changes, the Catalog quote and the admin split
 
 ## Checks run on this head (main 4791503 merged in)
 
+Main 5f15d6c (#87) is merged in afterwards; it changes only
+`scripts/agent-skills` (the agent skill pin), which no build or test reads,
+so the results below still describe this head.
+
 `bin/verify-commerce full` with Node 22.23.2:
 
 - typecheck clean; `npm run test:unit` 480 of 480 pass
