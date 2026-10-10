@@ -13,17 +13,14 @@ import {
   trustedPaymentsHostConfig,
   type RegistryCheckoutConfig,
 } from "./registry-provider-admission.js";
-import { admitCredential } from "./registry-credential.js";
-import { createHostedCouponPort } from "./registry-coupons.js";
-import { validateCouponQuoteSnapshot } from "../coupons/index.js";
+import { admitCredential, tradeStoreKey } from "./registry-credential.js";
 import type { ShipConnection } from "../orders/index.js";
 
 export { REGISTRY_CHECKOUT_CONFIG_SCHEMA };
 export type { RegistryCheckoutConfig };
 export const REGISTRY_CHECKOUT_SETTINGS_KEY = "installedCheckout";
-export const REGISTRY_CHECKOUT_CREDENTIAL_KEY = "installedCheckoutCredential";
-export const REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY = "installedCheckoutCouponsCredential";
-export const REGISTRY_SHIP_CREDENTIAL_KEY = "installedShipCredential";
+/** The store key from DinkusKit.com, traded for each service's pass; one key covers them all. */
+export const REGISTRY_STORE_KEY = "storeKey";
 
 
 
@@ -81,41 +78,45 @@ async function registryConfig(ctx: PluginContext) {
   return { config, origin: site.origin };
 }
 
+/**
+ * Passes for one invocation. Without a store key nothing is configured; with one, each service's
+ * pass is traded the first time a call needs it, then rechecked, expiry included, before every call.
+ */
+async function storePasses(ctx: PluginContext, config: RegistryCheckoutConfig) {
+  const saved = await ctx.settings!.get(REGISTRY_STORE_KEY), fetch = ctx.http!.fetch.bind(ctx.http);
+  // A key pasted with spaces or a line break around it still counts.
+  const key = typeof saved == "string" ? saved.trim() : saved, traded: Record<string, Promise<string>> = {};
+  if (!text(key, 512)) unavailable();
+  return (scope = "payments:checkout", audience = config.audience) => async () => admitCredential(
+    await (traded[scope] ??= tradeStoreKey(key, config, fetch, scope, audience)), config, scope, audience);
+}
+
 export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promise<InstalledCheckoutServices> {
   const found = await registryConfig(ctx);
   if (!found) return { host: {} };
   const { config, origin } = found;
-  const settings = ctx.settings!;
-  const token = admitCredential(await settings.get(REGISTRY_CHECKOUT_CREDENTIAL_KEY), config);
-  // A snapshot is invocation-local; recheck its expiry before every authenticated call.
-  const credential = async () => admitCredential(token, config);
+  const pass = await storePasses(ctx, config), credential = pass();
   const fetch = ctx.http!.fetch.bind(ctx.http);
-  const coupons = config.coupons;
   const host = createTrustedTestPaymentsCheckoutHost({
     ...trustedPaymentsHostConfig(config, origin),
     credentialResolver: credential, fetch,
-    ...(coupons ? { validateCouponQuoteSnapshot } : {}),
   });
+  // Coupons are unhooked from the Registry build for v1 to save room (GrillTrack
+  // registry-coupons-unhooked-v1): settings may still name the coupon service,
+  // but a coupon code is refused before any call.
   return {
     host: { ...host, pricing: { paymentPricingSchema: CHECKOUT_PRICING_SCHEMA,
       resolveShippingConfiguration: async () => structuredClone(config.shipping) } },
     wakes: wakePort(config, fetch, credential),
-    // The coupon pass is read only when a checkout uses a coupon, so a
-    // missing or stale one never blocks checkout without a coupon.
-    ...(coupons ? { coupons: createHostedCouponPort({
-      origin: coupons.origin, siteId: config.siteId, fetch,
-      credential: async () => admitCredential(await settings.get(REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY), config,
-        "coupons:checkout", coupons.audience),
-    }) } : {}),
   };
 }
 
 /**
- * Ship's hosted service for Orders when the store's configuration names one. It has its
- * own ship:orders pass, read only when Orders talks to Ship; no Payments pass is needed.
+ * Ship's hosted service for Orders when the store's configuration names one. Its ship:orders
+ * pass is traded once per sync, only when Orders talks to Ship; no Payments pass is needed.
  */
 export async function resolveRegistryShip(ctx: PluginContext): Promise<ShipConnection | undefined> {
   const config = (await registryConfig(ctx))?.config, ship = config?.ship;
   return ship && { origin: ship.origin, fetch: ctx.http!.fetch.bind(ctx.http), read: readBoundedPaymentsJson,
-    credential: async () => admitCredential(await ctx.settings!.get(REGISTRY_SHIP_CREDENTIAL_KEY), config!, "ship:orders", ship.audience) };
+    credential: (await storePasses(ctx, config!))("ship:orders", ship.audience) };
 }

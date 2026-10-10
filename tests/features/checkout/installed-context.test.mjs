@@ -107,7 +107,7 @@ test("compiled installed export and sandbox metadata expose fixed public seam", 
   assert.equal(typeof createInstalledCheckoutHandlers, "function");
   assert.equal(sandboxManifest.id, "dinkus-commerce");
   assert.deepEqual(sandboxManifest.capabilities, ["media:read", "network:request"]);
-  assert.deepEqual(sandboxManifest.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com']);
+  assert.deepEqual(sandboxManifest.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   assert.equal(typeof sandboxPlugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE].handler, "function");
 });
 

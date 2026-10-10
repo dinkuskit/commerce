@@ -42,10 +42,13 @@ Every paid order records that mode; Orders marks anything not `live` as
 TEST. The demo store stays `test`; switching a real store to `live` is the
 project owner's call (GrillTrack `commerce-payment-mode-001`).
 
-The host must also provision `installedCheckoutCredential` as an encrypted
-secret setting containing a short-lived signed server-to-server token. It must
-be issued for the same `siteId`, `issuer`, `audience`, and
-`payments:checkout` scope. Commerce reads it only server-side.
+The owner must also paste the store key from the Set up Commerce box on
+DinkusKit.com into the encrypted secret setting `storeKey`. Commerce reads it
+only server-side and sends it nowhere but `https://dinkuskit.com/api/store-passes`,
+which trades it for a short `payments:checkout` pass for the same `siteId`,
+`issuer` and `audience` before each Payments call
+([store key and passes](implementation/installed-checkout-services.md#store-key-and-passes)).
+The key is never a Stripe credential and never reaches the browser.
 
 Payments, not Commerce or Template Store, owns the Stripe credentials:
 
@@ -63,8 +66,9 @@ The installed Commerce runtime also needs the host's scoped `network:request`
 grant for the exact bare `paymentsOrigin`. The shipped Commerce manifest
 declares that capability with exactly one Payments host,
 `payments.dinkuskit.com`, so `paymentsOrigin` must be
-`https://payments.dinkuskit.com`. It also declares `coupons.dinkuskit.com`, used
-only when `installedCheckout` carries a `coupons` service
+`https://payments.dinkuskit.com`. It also declares `coupons.dinkuskit.com` for the
+hosted coupon service, which the Registry build leaves unhooked in v1, so coupon
+codes are refused
 ([registry-hosted-coupons](implementation/registry-hosted-coupons.md)).
 Activating a grant or deploying it is still a host approval step, not a
 repository-side default.

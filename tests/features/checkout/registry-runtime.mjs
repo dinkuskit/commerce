@@ -20,7 +20,22 @@ export const SITE = 'https://shop.example.test';
 // Public IP literal avoids DNS; the approved test-only HTTP callback intercepts every request.
 // No connection is made to this address. Production grants remain empty.
 export const TRANSPORT_ORIGIN = 'https://8.8.8.8';
-const ISSUER = 'https://identity.example.test';
+// DinkusKit.com trades the store key for passes. Commerce only ever sends the key to this fixed
+// address, so the stand-in answers at the real host and issuer; its requests are intercepted too.
+export const ISSUER_ORIGIN = 'https://dinkuskit.com';
+export const TRADE_URL = ISSUER_ORIGIN + '/api/store-passes';
+const ISSUER = ISSUER_ORIGIN + '/account';
+// EmDash checks a named host by asking Cloudflare's DNS over HTTPS before each request. Answer
+// that lookup here with a public address, for dinkuskit.com only, so no lookup leaves the process.
+const passThrough = globalThis.fetch;
+globalThis.fetch = (input, init) => {
+  const url = new URL(input instanceof Request ? input.url : String(input));
+  if (url.origin + url.pathname !== 'https://cloudflare-dns.com/dns-query') return passThrough(input, init);
+  const found = url.searchParams.get('name') === 'dinkuskit.com' && url.searchParams.get('type') === 'A';
+  return Promise.resolve(Response.json({ Status: 0, Answer: found ? [{ type: 1, data: '9.9.9.9' }] : [] }));
+};
+/** The store key the stand-in issuer accepts until a test replaces it. Not a real key format. */
+export const STORE_KEY = 'synthetic store key';
 const AUDIENCE = 'synthetic-payments';
 const SITE_ID = 'synthetic-site';
 const BINDING = 'synthetic-binding';
@@ -88,6 +103,11 @@ export async function runtimeFixture({
   couponService,
   shipPass = null,
   shipService,
+  // The store key in Commerce's settings (null leaves it unset) and an optional stand-in issuer.
+  storeKey = STORE_KEY,
+  // Passes an upgraded store still has in the three settings Commerce used before the store key.
+  legacyPasses = null,
+  passService,
   // What the synthetic Payments says its binding is.
   bindingMode = 'test',
 } = {}) {
@@ -102,19 +122,19 @@ export async function runtimeFixture({
       schedule TEXT NOT NULL, is_oneshot INTEGER NOT NULL DEFAULT 0, data TEXT, next_run_at TEXT NOT NULL, last_run_at TEXT,
       status TEXT NOT NULL DEFAULT 'idle', locked_at TEXT, enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT,
       UNIQUE(plugin_id, task_name));`);
-  const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0, coupons: 0, ship: 0 };
+  const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0, coupons: 0, ship: 0, trades: 0 };
   const owner = COMMERCE_REGISTRY_RUNTIME_ID;
   const db = new Kysely({ dialect: new SqliteDialect({ database: sqlite }), log(event) {
     if (event.level !== 'query') return;
     const query = event.query;
     if (/^select /i.test(query.sql) && query.sql.includes('"options"') &&
-      query.parameters.includes(`plugin:${owner}:settings:installedCheckoutCredential`)) counts.credentials++;
+      query.parameters.includes(`plugin:${owner}:settings:storeKey`)) counts.credentials++;
     if (query.sql.includes('_emdash_cron_tasks')) counts.scheduler++;
   } });
   const manifest = structuredClone(artifact);
   manifest.id = owner;
   // Explicit SYNTHETIC fixture variant only. Never mutate the shipped manifest or publish this variant.
-  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4', '1.1.1.1']; }
+  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4', '1.1.1.1', 'dinkuskit.com']; }
   const collections = {};
   for (const [name, spec] of Object.entries(manifest.storage)) {
     collections[name] = new PluginStorageRepository(db, owner, name,
@@ -129,9 +149,13 @@ export async function runtimeFixture({
   }
   const settings = createSettingsAccess(new OptionsRepository(db), owner, manifest.admin.settingsSchema);
   if (config !== null) await settings.set('installedCheckout', JSON.stringify(config));
-  if (token !== null) await settings.set('installedCheckoutCredential', token ?? await credential());
-  if (couponPass !== null) await settings.set('installedCheckoutCouponsCredential', couponPass);
-  if (shipPass !== null) await settings.set('installedShipCredential', shipPass);
+  if (storeKey !== null) await settings.set('storeKey', storeKey);
+  // Saved as the version before the store key saved them: three secret settings it no longer has.
+  if (legacyPasses) {
+    const legacy = createSettingsAccess(new OptionsRepository(db), owner, { ...manifest.admin.settingsSchema,
+      ...Object.fromEntries(Object.keys(legacyPasses).map(key => [key, { type: 'secret', label: key }])) });
+    for (const [key, pass] of Object.entries(legacyPasses)) await legacy.set(key, pass);
+  }
   if (seed) await collections.catalog_items.put('hat', {
     recordKind: 'catalog-item', itemId: 'hat', commandId: 'synthetic-create-hat', sku: 'HAT', skuKey: 'HAT', fulfillment: 'digital',
     creationIntent: { manageStock: managed }, kind: 'simple-product', name: 'Hat', state: 'draft',
@@ -147,10 +171,31 @@ export async function runtimeFixture({
     binding: { providerRef: 'inventory-synthetic', poolId: 'pool-synthetic', defaultFulfillmentLocationId: 'location-synthetic' },
     configuredAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   });
-  const requests = [], sessions = new Map();
-  let paid = false, pending = [], override;
+  // outbound: every request Commerce sends, with its headers and body as text.
+  const requests = [], sessions = new Map(), trades = [], outbound = [];
+  let paid = false, pending = [], override, acceptedKey = storeKey;
+  // What the stand-in issuer hands out per scope; null refuses it as not turned on. An unset
+  // Payments pass is minted fresh for each trade.
+  const issued = { 'payments:checkout': token, 'coupons:checkout': couponPass, 'ship:orders': shipPass };
   const json = value => Response.json(value);
+  async function issuer(url, init) {
+    counts.trades++;
+    assert.equal(init.redirect, 'manual'); // EmDash enforces Commerce's redirect policy itself.
+    const headers = new Headers(init.headers);
+    const body = JSON.parse(new TextDecoder().decode(init.body));
+    trades.push({ method: init.method, url, authorization: headers.get('authorization'),
+      cookie: headers.get('cookie'), contentType: headers.get('content-type'), body });
+    if (passService) return passService(url, init, body);
+    if (headers.get('authorization') !== 'Bearer ' + acceptedKey) return Response.json({ error: 'invalid_store_key' }, { status: 401 });
+    if (body.site_id !== SITE_ID) return Response.json({ error: 'site_mismatch' }, { status: 403 });
+    const pass = issued[body.scope] === undefined && body.scope === 'payments:checkout' ? await credential() : issued[body.scope];
+    return pass ? json({ access_token: pass, token_type: 'Bearer', expires_in: 300 })
+      : Response.json({ error: 'service_not_enabled' }, { status: 403 });
+  }
   async function transport(url, init) {
+    outbound.push({ url, text: JSON.stringify([...new Headers(init.headers)]) +
+      (typeof init.body === 'string' ? init.body : new TextDecoder().decode(init.body)) });
+    if (new URL(url).origin === ISSUER_ORIGIN) return issuer(url, init);
     if (new URL(url).origin === SHIP_ORIGIN) {
       counts.ship++;
       assert.equal(init.redirect, 'manual');
@@ -213,7 +258,11 @@ export async function runtimeFixture({
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },
   });
-  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests,
+  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests, trades, outbound,
+    /** Replace key on DinkusKit.com: from now on only this key gets passes. */
+    acceptStoreKey(key) { acceptedKey = key; },
+    /** What the stand-in issuer hands out for a scope from now on; null refuses it. */
+    setPass(scope, pass) { issued[scope] = pass; },
     setPaid() { paid = true; },
     setBindingMode(mode) { bindingMode = mode; },
     setWakes(values) { pending = structuredClone(values); },

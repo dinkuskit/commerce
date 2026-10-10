@@ -154,10 +154,8 @@ export type {
 } from "../test-payments.js";
 export {
   REGISTRY_CHECKOUT_CONFIG_SCHEMA,
-  REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY,
-  REGISTRY_CHECKOUT_CREDENTIAL_KEY,
   REGISTRY_CHECKOUT_SETTINGS_KEY,
-  REGISTRY_SHIP_CREDENTIAL_KEY,
+  REGISTRY_STORE_KEY,
   resolveRegistryCheckoutServices,
   resolveRegistryShip,
 } from "../registry-services.js";

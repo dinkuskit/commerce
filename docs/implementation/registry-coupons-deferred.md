@@ -1,5 +1,10 @@
 # Coupons deferred from the Registry artifact
 
+Update, 2026-10-10: the hosted coupon port is unhooked again for v1 to leave
+room under the size limit, so Registry checkout refuses coupon codes (GrillTrack
+`registry-coupons-unhooked-v1`; see
+[registry-hosted-coupons](registry-hosted-coupons.md)).
+
 Update, 2026-10-09: Registry checkout applies coupons again through the hosted
 DinkusKit coupon service when the owner configures it; see
 [registry-hosted-coupons](registry-hosted-coupons.md). The artifact still

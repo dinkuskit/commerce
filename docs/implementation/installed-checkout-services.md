@@ -5,27 +5,29 @@ from the runtime-supplied `PluginContext`. It uses owner-scoped settings,
 declared storage, trusted site URL and scoped HTTP. Functions stay inside the
 package; they do not cross descriptor JSON or invoke another plugin. The
 resolver neither replaces the context nor caches services or credentials
-across installations. Existing canonical catalog/prices, availability,
+across installations or invocations. Existing canonical catalog/prices, availability,
 coupon aggregates, carts, associations and paid order/receipt writers remain
 the owners. No stock or money ledger is added.
 
 ## Unconfigured and ungranted behavior
 
 The shipped manifest declares `network:request` with exactly
-`allowedHosts: ["payments.dinkuskit.com", "coupons.dinkuskit.com", "ship.dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09, `commerce-allowed-hosts-coupons-dinkuskit-com` and `commerce-allowed-hosts-ship-dinkuskit-com`); no wildcard and no other
+`allowedHosts: ["payments.dinkuskit.com", "coupons.dinkuskit.com", "ship.dinkuskit.com", "dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09, `commerce-allowed-hosts-coupons-dinkuskit-com`, `commerce-allowed-hosts-ship-dinkuskit-com` and `commerce-allowed-hosts-dinkuskit-com`); no wildcard and no other
 host. The coupon host serves only coupon checkouts
-([registry-hosted-coupons](registry-hosted-coupons.md)), and the Ship host only
-Orders ([registry-ship-sync](registry-ship-sync.md)). The behavior below
+([registry-hosted-coupons](registry-hosted-coupons.md); unhooked in v1), the Ship host only
+Orders ([registry-ship-sync](registry-ship-sync.md)), and `dinkuskit.com` only
+the store-key trade ([store key and passes](#store-key-and-passes)). The behavior below
 applies whenever the Payments grant is not active.
 Absent or explicitly disabled configuration preserves prepare/capability
-minting and makes start return `PAYMENTS_UNAVAILABLE`, without reading a
-credential, requesting Payments, creating an attempt/order, or scheduling.
-Malformed or conflicting configuration returns `UNAVAILABLE` before credentials.
+minting and makes start return `PAYMENTS_UNAVAILABLE`, without reading the
+store key, trading it, requesting Payments, creating an attempt/order, or
+scheduling. Malformed or conflicting configuration returns `UNAVAILABLE` before
+the store key is read.
 
 In-process hosts omit `ctx.http` without a network capability. Workerd exposes
 an HTTP proxy even with empty grants; its bridge denies the request before
 outbound transport. Therefore HTTP presence cannot establish permission. With
-valid configured credentials but missing grants, checkout retains its canonical
+a valid configuration and store key but missing grants, checkout retains its canonical
 unconfirmed attempt without a paid order, and wakes cannot acknowledge it.
 The resolver does not probe grants, bypass host/SSRF policy, or infer provider
 not-created from transport failure. Without an active grant the artifact
@@ -74,28 +76,65 @@ The configuration is scoped by the runtime plugin ID. Native and Registry
 IDs have different settings namespaces; no automatic migration or foreign
 coupon collection is accepted.
 
-## Credential provider boundary
+## Store key and passes
 
-`installedCheckoutCredential` is a declared `secret` string setting. EmDash
-owns encryption and redaction through its host encryption-key configuration.
-It must be provisioned by an approved identity integration; this is not a
-request for a merchant to manually enter a permanent token. No real value,
-issuer grant, host key or refresh endpoint is supplied by this source slice.
+`storeKey` is Commerce's only secret setting: one key per store, pasted from
+the Set up Commerce box on DinkusKit.com (GrillTrack `commerce-store-key-001`).
+EmDash owns its encryption and redaction. Commerce ignores spaces or line
+breaks pasted around the key, treats it as opaque text of at most 512
+characters and sends it nowhere but the trade below.
 
-The local token reader requires the configured issuer/audience, nonempty
-subject, matching signed-claim site, standard space-delimited
-`scope: "payments:checkout"`, and valid integral `iat`/`exp`/optional `nbf`.
+Each Payments, Coupons or Ship call trades the key for a short pass scoped to
+that one service: `POST https://dinkuskit.com/api/store-passes`, an address
+fixed in Commerce that no setting changes, with `Authorization: Bearer <store
+key>`, no cookies, `redirect: "error"` and exactly `{ "site_id", "scope",
+"audience" }`. Payments, Coupons and Ship are allowed hosts too, so pasted
+settings that name one of them as the `issuer` still send the key only to
+DinkusKit.com; its passes then fail admission and no call is made.
+The pairs are `payments:checkout` with the configured `audience`,
+`coupons:checkout` with `coupons.audience`, and `ship:orders` with
+`ship.audience`; while coupons are unhooked for v1
+([registry-hosted-coupons](registry-hosted-coupons.md)), the Registry build
+never trades `coupons:checkout`. An invocation trades only when it first needs a service, at
+most once per scope; prepare never trades. The answer is read through the same
+128 KiB bounded JSON reader as Payments' answers, and only `access_token` is
+used.
+
+Any answer other than 200, and any pass that fails admission, means no pass,
+so that call is not made: start returns `checkout.state: "recoverable-failure"`
+without reaching Payments, a coupon is refused as unavailable to try later, and
+Orders leaves Ship for its next sync. Commerce does not retry in a loop and does
+not show DinkusKit.com's error codes (`invalid_store_key`, `site_mismatch`,
+`service_not_enabled`, `service_cut_off`, `store_suspended`, `rate_limited`,
+`merchant_unavailable`, `signing_unavailable`); they are for its logs and the
+owner. A configured checkout without a store key is `UNAVAILABLE` before any
+trade.
+
+Stores that saved passes in `installedCheckoutCredential`,
+`installedCheckoutCouponsCredential` or `installedShipCredential` before the
+store key keep those saved values, but Commerce no longer reads or sends them:
+checkout stays `UNAVAILABLE`, and Orders and the background check call nothing,
+until the owner pastes a store key.
+
+Each store turns on any of Payments, Coupons and Ship on DinkusKit.com.
+Payments counts as on while its Connect grant is active, Coupons and Ship are
+switches there, and DinkusKit.com mints passes only for services that are on.
+Commerce calls only the services its pasted checkout settings name, so a switch
+change comes with new settings to paste. Replace key on DinkusKit.com stops the
+old key at once: its next trade answers 401, and pasting the new key is the
+only step in Commerce.
+
+The local token reader requires the configured issuer, the audience asked for,
+a nonempty subject, the matching signed-claim site, the scope asked for in the
+standard space-delimited `scope`, and valid integral `iat`/`exp`/optional `nbf`.
 Only RS256/ES256 token shapes are admitted; expired, future-issued, older-than-
 one-hour or mismatched claims fail before transport. Audience arrays are
 supported. This parsing filters inputs; it does **not** verify a signature or
-attest an issuer/site grant. The paired Payments service remains the authority
+attest an issuer/site grant. Each paired service remains the authority
 for signature, issuer, audience, scope and site ownership.
 
-One credential snapshot is read per configured invocation and its freshness
-is rechecked before every authenticated call. No token enters browser
-projections, manifests, ordinary KV, logs or proof. Missing/invalid credentials
-fail closed. Acquisition/renewal and unattended operation across expiration
-remain external integration prerequisites; no alternate issuer is invented.
+Each traded pass is rechecked before every authenticated call. No key or pass
+enters browser projections, manifests, ordinary KV, logs or proof.
 
 ## Payments and wake transport
 
@@ -129,7 +168,7 @@ Inventory's current checkout kernel has no Worker reserve/release HTTP boundary;
 ordinary admin stock mutation is not a substitute. Unmanaged checkout can be
 proved independently. Zero-payable canonical orders use the same owner aggregate without Payments
 transport; see [zero-payable orders](checkout-zero-payable-orders.md).
-Configuration/credential admission remains required, including without an active grant.
+Configuration and store-key admission remain required, including without an active grant.
 
 ## Runtime fixtures and next gate
 
@@ -138,25 +177,27 @@ compiled default backend through the pinned `WorkerdSandboxRunner`, original
 bridge context, SDK encrypted settings and SQLite repositories. Its isolated
 schema mirrors the relevant SDK tables and manifest uniqueness; CAS uses
 real atomic SDK SQL. The fixture gives a clearly synthetic manifest variant
-`network:request` plus one public IP host solely to avoid DNS. Its host HTTP
-callback intercepts **every** request and verifies an ephemeral synthetic
-signed JWT; no network service/provider is contacted. The shipped manifest
-is asserted to declare exactly `network:request` with `payments.dinkuskit.com`,
-`coupons.dinkuskit.com` and `ship.dinkuskit.com` and is never replaced by that
-test variant.
+`network:request` plus public IP hosts solely to avoid DNS. Its host HTTP
+callback intercepts **every** request: a stand-in for DinkusKit.com's trade
+checks the synthetic store key and hands out ephemeral synthetic signed JWTs,
+and the service stand-ins verify them; no network service/provider is
+contacted. The shipped manifest is asserted to declare exactly
+`network:request` with `payments.dinkuskit.com`, `coupons.dinkuskit.com`,
+`ship.dinkuskit.com` and `dinkuskit.com` and is never replaced by that test
+variant.
 
-These tests prove local runtime service assembly, canonical free/flat coupon
-pricing and paid replay, denied grants, configuration/token failures, managed
+These tests prove local runtime service assembly, canonical free/flat shipping
+pricing and paid replay, coupon codes refused while coupons are unhooked,
+denied grants, configuration/token failures, refused
+and replaced store keys, one trade per service per invocation, managed
 unavailability and exact cron wake ACK ordering. They are not official Registry
-installation/publication, production scheduler, real identity renewal or Stripe
-TEST purchase proof. The existing Template owner consumes immutable package
+installation/publication, production scheduler, a real DinkusKit.com trade or
+Stripe TEST purchase proof. The existing Template owner consumes immutable package
 artifacts and performs its own installed-host proof.
 
-The declaration is now `network:request` with the exact approved HTTPS
-Payments host `payments.dinkuskit.com` (GrillTrack
-`commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on
-2026-10-09). Identity renewal may need its own
-explicit issuer host/flow. No wildcard/unrestricted grant, private operational
+The declaration is `network:request` with the four exact approved HTTPS hosts
+above; `dinkuskit.com` serves only the store-key trade (GrillTrack
+`commerce-allowed-hosts-dinkuskit-com`). No wildcard/unrestricted grant, private operational
 hostname, deployed configuration or permission activation is provided here.
 External checkout is not claimed ready until actual installed Registry and
 identity/provider proof exists.

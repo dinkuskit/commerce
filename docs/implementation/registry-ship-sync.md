@@ -17,17 +17,18 @@ with exactly two fields, like `coupons`:
 { "ship": { "origin": "https://ship.dinkuskit.com", "audience": "<Ship service audience>" } }
 ```
 
-`origin` is a bare HTTPS origin. Ship is called with a separate secret,
-`installedShipCredential`: a `ship:orders` pass for the store from the same
-issuer as the Payments pass (same `iss` and `site_id`, at most an hour old,
-audience equal to `ship.audience`). The store gets it the way it gets its
-Payments pass, from Connect on DinkusKit.com. Ship knows the store from the
-pass's `site_id`. Orders needs only this pass to talk to Ship, not a current
-Payments pass. Without `ship`, or without a usable Ship pass, Orders calls
-nothing and works as before.
+`origin` is a bare HTTPS origin. Ship is called with its own pass: once per
+sync, Commerce trades the store key at DinkusKit.com for a `ship:orders` pass
+with audience `ship.audience`
+([store key and passes](installed-checkout-services.md#store-key-and-passes)),
+from the same issuer as the Payments pass (same `iss` and `site_id`, at most an
+hour old). Ship knows the store from the pass's `site_id`. Orders trades only
+for this pass to talk to Ship, never for a Payments pass. Without `ship`, or
+when the trade is refused (Ship turned off or cut off on DinkusKit.com
+included), Orders calls nothing and works as before.
 
 The manifest declares `network:request` with exactly `payments.dinkuskit.com`,
-`coupons.dinkuskit.com` and `ship.dinkuskit.com`. Declaring a host does not
+`coupons.dinkuskit.com`, `ship.dinkuskit.com` and `dinkuskit.com`. Declaring a host does not
 activate it on any site.
 
 ## When Orders talks to Ship
@@ -91,10 +92,11 @@ completed long ago, a few per sync.
 - `tests/integration/registry-checkout-services.test.mjs` (the last two
   tests, kept in this file so workerd starts one runtime at a time): the
   compiled Registry backend in workerd sends a paid physical order to a Ship
-  stand-in with its own pass when Orders opens (with the Payments pass already
-  expired), completes it from a label on the background check, tells Ship
-  about an agent's change right away, and refuses a label list over 128 KB
-  without acknowledging or changing anything; without `ship` or with the
-  Payments pass in its place, nothing calls Ship.
+  stand-in with its own traded pass when Orders opens (with the Payments pass
+  already expired), completes it from a label on the background check, tells
+  Ship about an agent's change right away, and refuses a label list over
+  128 KB without acknowledging or changing anything; without `ship`, with Ship
+  turned off, or with a Payments pass handed out in its place, nothing calls
+  Ship.
 - Registry backend: 127,780 → 129,752 bytes (+1,972), leaving 1,320 under
   131,072.
