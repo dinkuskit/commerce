@@ -86,13 +86,14 @@ function contactRequirements(
   return runtime.host.loadCheckoutContactRequirements().then((value) => {
     if (
       !isRecord(value) ||
-      sortedKeys(value) !== "requirePhoneNumber,revision" ||
+      sortedKeys(value) !== "requirePhoneNumber,revision,shippingCountries" ||
       typeof value.requirePhoneNumber !== "boolean" ||
+      !Array.isArray(value.shippingCountries) ||
       (value.revision !== null && typeof value.revision !== "string")
     ) {
       throw new CheckoutContactError("REQUIREMENTS_UNAVAILABLE");
     }
-    return { requirePhoneNumber: value.requirePhoneNumber, revision: value.revision };
+    return { requirePhoneNumber: value.requirePhoneNumber, shippingCountries: [...value.shippingCountries], revision: value.revision };
   }).catch((error) => {
     if (error instanceof CheckoutContactError) throw error;
     throw new CheckoutContactError("REQUIREMENTS_UNAVAILABLE");
@@ -103,6 +104,8 @@ function mapCheckoutError(error: unknown): never {
   if (error instanceof GuestCheckoutError) throw error;
   if (error instanceof CheckoutContactError) {
     if (error.code === "REQUIREMENTS_UNAVAILABLE") fail("UNAVAILABLE");
+    // Delivery problems say what to fix; other contact problems stay generic.
+    if (error.code.startsWith("DELIVERY_")) throw new GuestCheckoutError("INVALID_CART", error.message);
     fail("INVALID_CART");
   }
   const message = error instanceof Error ? error.message : "";

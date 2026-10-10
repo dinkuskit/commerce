@@ -23,7 +23,7 @@ function fixture() {
 
 test("phone settings are independent and first country save defaults omitted lists", async () => {
   const f = fixture();
-  assert.deepEqual(await loadCheckoutContactRequirements(f.settings), { requirePhoneNumber: false, revision: null });
+  assert.deepEqual(await loadCheckoutContactRequirements(f.settings), { requirePhoneNumber: false, shippingCountries: [], revision: null });
   const phone = await saveMerchantStoreSettings(f.settings, { expectedRevision: null, requirePhoneNumber: true });
   assert.equal(phone.settings.storeCountry, null);
   const first = await saveMerchantStoreSettings(f.settings, {

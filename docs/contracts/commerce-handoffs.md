@@ -66,8 +66,10 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   the payment (absent on orders paid before this field existed), the frozen
   lines (catalog item id, quantity, name, unit price), the order total, the
   frozen pricing snapshot when present, option choices, Inventory ticket ids
-  when reserve returned them, and the frozen shopper contact. The delivery
-  address (commerce#33) is a later optional addition.
+  when reserve returned them, and the frozen shopper contact. For a basket
+  with a physical item the contact carries the delivery address
+  (`contactSnapshot.contact.delivery`, commerce#33); digital-only orders and
+  orders paid before addresses were collected have none.
 - **Receiving:** Orders keeps it under the order id as its own copy
   (`orders` collection, record `{ paidOrder }`). A repeat with the same
   contents is a no-op (`duplicate`); different contents are refused and the
@@ -95,7 +97,7 @@ label.
   order number is sent. Only Inventory's confirmation of that exact command
   counts as packed; Orders records nothing itself.
 - **Ship** (not built): a label request carries the order id, the frozen lines
-  and the delivery address once commerce#33 adds it to the paid order. Ship
+  and the delivery address from the paid-order copy. Ship
   is its own plugin and service, so this message is the same in every
   packaging.
 - **Under a split:** unchanged. Inventory and Ship are already outside

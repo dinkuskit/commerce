@@ -64,9 +64,10 @@ export async function saveMerchantStoreSettings(
 
 export async function loadCheckoutContactRequirements(
   settings: Pick<PluginContext["settings"], "getVersioned">,
-): Promise<{ requirePhoneNumber: boolean; revision: string | null }> {
+): Promise<{ requirePhoneNumber: boolean; shippingCountries: readonly string[]; revision: string | null }> {
   const current = await loadMerchantStoreSettings(settings);
-  return { requirePhoneNumber: current.settings.requirePhoneNumber, revision: current.revision };
+  return { requirePhoneNumber: current.settings.requirePhoneNumber,
+    shippingCountries: current.settings.shippingCountries, revision: current.revision };
 }
 
 export type { MerchantStoreSettings };

@@ -50,7 +50,7 @@ test("does not create or accept an account field for guest contact", () => {
 test("accepts optional phone when the merchant requirement is off and omits empty phone", async () => {
   const optional = await captureCheckoutContact(
     { email: "guest@example.test", phone: "  (555) 010-1234 " },
-    async () => ({ requirePhoneNumber: false, revision: "rev-7" }),
+    async () => ({ requirePhoneNumber: false, shippingCountries: [], revision: "rev-7" }),
   );
   assert.deepEqual(optional.contact, {
     email: "guest@example.test",
@@ -59,7 +59,7 @@ test("accepts optional phone when the merchant requirement is off and omits empt
   assert.deepEqual(
     (await captureCheckoutContact(
       { email: "guest@example.test", phone: "   " },
-      async () => ({ requirePhoneNumber: false, revision: null }),
+      async () => ({ requirePhoneNumber: false, shippingCountries: [], revision: null }),
     )).contact,
     { email: "guest@example.test" },
   );
@@ -69,14 +69,14 @@ test("requires a nonempty phone when the merchant requirement is on", async () =
   await rejectsWithCode(
     captureCheckoutContact(
       { email: "guest@example.test", phone: "" },
-      async () => ({ requirePhoneNumber: true, revision: "r1" }),
+      async () => ({ requirePhoneNumber: true, shippingCountries: [], revision: "r1" }),
     ),
     "PHONE_REQUIRED",
   );
   await rejectsWithCode(
     captureCheckoutContact(
       { email: "guest@example.test" },
-      async () => ({ requirePhoneNumber: true, revision: "r1" }),
+      async () => ({ requirePhoneNumber: true, shippingCountries: [], revision: "r1" }),
     ),
     "PHONE_REQUIRED",
   );
@@ -87,7 +87,7 @@ test("rejects phone controls, overlong phone, and all client requirement overrid
     await rejectsWithCode(
       captureCheckoutContact(
         { email: "guest@example.test", phone },
-        async () => ({ requirePhoneNumber: false, revision: null }),
+        async () => ({ requirePhoneNumber: false, shippingCountries: [], revision: null }),
       ),
       "INVALID_INPUT",
     );
@@ -126,7 +126,7 @@ test("fails closed for loader failure and malformed requirements", async () => {
 
 test("captures exact requirement flag and revision in a frozen detached snapshot", async () => {
   const input = { email: "guest@example.test", phone: "555 0101" };
-  const requirements = { requirePhoneNumber: true, revision: "" };
+  const requirements = { requirePhoneNumber: true, shippingCountries: [], revision: "" };
   const snapshot = await captureCheckoutContact(input, async () => requirements);
 
   assert.deepEqual(snapshot, {

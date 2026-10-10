@@ -8,6 +8,7 @@ import {
   type CheckoutContactRequirements,
   type CheckoutContactRequirementsLoader,
   type CheckoutContactSnapshot,
+  type CheckoutDeliveryAddress,
   type NormalizedCheckoutContact,
 } from "./types.js";
 
@@ -27,7 +28,27 @@ function invalid(code: CheckoutContactErrorCode): never {
 
 
 function hasOnlyContactKeys(value: Record<string, unknown>): boolean {
-  return Object.keys(value).every((key) => key === "email" || key === "phone");
+  return Object.keys(value).every((key) => key === "email" || key === "phone" || key === "delivery");
+}
+
+const ADDRESS_FIELD_MAX_LENGTH = 200;
+const ADDRESS_FIELDS = ["name", "line1", "line2", "city", "region", "postalCode", "country"];
+const OPTIONAL_ADDRESS_FIELDS = new Set(["line2", "region"]);
+
+function normalizeDelivery(value: unknown): CheckoutDeliveryAddress {
+  if (!isObject(value) || !Object.keys(value).every((key) => ADDRESS_FIELDS.includes(key))) invalid("DELIVERY_INVALID");
+  const address: Record<string, string> = {};
+  for (const field of ADDRESS_FIELDS) {
+    const raw = value[field];
+    if (raw === undefined && OPTIONAL_ADDRESS_FIELDS.has(field)) continue;
+    if (typeof raw !== "string" || CONTROL_CHARACTER.test(raw) || raw.length > ADDRESS_FIELD_MAX_LENGTH) invalid("DELIVERY_INVALID");
+    const text = raw.trim();
+    if (text) address[field] = `${text}`;
+    else if (!OPTIONAL_ADDRESS_FIELDS.has(field)) invalid("DELIVERY_REQUIRED");
+  }
+  address.country = address.country.toUpperCase();
+  if (!/^[A-Z]{2}$/.test(address.country)) invalid("DELIVERY_INVALID");
+  return address as unknown as CheckoutDeliveryAddress;
 }
 
 function normalizeEmail(value: unknown): string {
@@ -67,13 +88,15 @@ export function normalizeCheckoutContactInput(raw: unknown): NormalizedCheckoutC
 
   const email = normalizeEmail(raw.email);
   const phone = Object.hasOwn(raw, "phone") ? normalizePhone(raw.phone) : undefined;
-  return phone === undefined ? { email } : { email, phone };
+  const delivery = Object.hasOwn(raw, "delivery") ? normalizeDelivery(raw.delivery) : undefined;
+  return { email, ...(phone === undefined ? {} : { phone }), ...(delivery ? { delivery } : {}) };
 }
 
 function validateRequirements(value: unknown): CheckoutContactRequirements {
   if (!isObject(value)) invalid("REQUIREMENTS_UNAVAILABLE");
   const keys = sortedKeys(value);
-  if (keys !== "requirePhoneNumber,revision" || typeof value.requirePhoneNumber !== "boolean") {
+  if (keys !== "requirePhoneNumber,revision,shippingCountries" || typeof value.requirePhoneNumber !== "boolean" ||
+      !Array.isArray(value.shippingCountries) || !value.shippingCountries.every((c) => typeof c === "string")) {
     invalid("REQUIREMENTS_UNAVAILABLE");
   }
   if (value.revision !== null && typeof value.revision !== "string") {
@@ -81,13 +104,20 @@ function validateRequirements(value: unknown): CheckoutContactRequirements {
   }
   return {
     requirePhoneNumber: value.requirePhoneNumber,
+    shippingCountries: [...value.shippingCountries],
     revision: value.revision,
   };
 }
 
+/**
+ * Freezes the shopper's contact. `needsDelivery` is true when the basket holds a
+ * physical item: the address is then required and must go to a shipping country.
+ * A digital-only basket keeps no address even when one was sent.
+ */
 export async function captureCheckoutContact(
   raw: unknown,
   loadRequirements: CheckoutContactRequirementsLoader,
+  needsDelivery = false,
 ): Promise<CheckoutContactSnapshot> {
   const contact = normalizeCheckoutContactInput(raw);
   let requirements: CheckoutContactRequirements;
@@ -103,11 +133,16 @@ export async function captureCheckoutContact(
   if (requirements.requirePhoneNumber && contact.phone === undefined) {
     invalid("PHONE_REQUIRED");
   }
+  if (needsDelivery) {
+    if (!contact.delivery) invalid("DELIVERY_REQUIRED");
+    if (!requirements.shippingCountries.includes(contact.delivery.country)) invalid("DELIVERY_COUNTRY_UNAVAILABLE");
+  }
 
-  const detachedContact: NormalizedCheckoutContact =
-    contact.phone === undefined
-      ? { email: `${contact.email}` }
-      : { email: `${contact.email}`, phone: `${contact.phone}` };
+  const detachedContact: NormalizedCheckoutContact = {
+    email: `${contact.email}`,
+    ...(contact.phone === undefined ? {} : { phone: `${contact.phone}` }),
+    ...(needsDelivery ? { delivery: Object.freeze({ ...contact.delivery! }) } : {}),
+  };
   return Object.freeze({
     schema: CHECKOUT_CONTACT_SNAPSHOT_SCHEMA,
     contact: Object.freeze(detachedContact),

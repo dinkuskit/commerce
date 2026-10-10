@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { resolveCatalogItemPrice } from '../../dist/features/catalog/index.js';
 import { resolveStorefrontAvailability } from '../../dist/features/storefront-availability/index.js';
+import { saveMerchantStoreSettings } from '../../dist/features/store-settings/index.js';
+import { syntheticDelivery } from '../features/checkout/fixture.mjs';
 import {
   authorizeNetConfiguration,
   configuration,
@@ -254,7 +256,9 @@ test('public installed catalog reads an admin-created product and canonical orde
   assert.equal((await admin({ type: 'form_submit', action_id: 'save:' + id, values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' } })).toast.type, 'success');
   const catalog = await state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
   assert.deepEqual(catalog, { products: [{ id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [] }] });
-  const input = { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
+  // An admin-created product has no fulfillment mark, so it counts as physical and needs a US address.
+  await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
+  const input = { contact: { email: 'shopper@example.test', delivery: syntheticDelivery }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
   const { token, result } = await start(state, input);
   assert.equal(result.ok, true);
   assert.equal(state.requests[0].total.minor, '600');

@@ -111,7 +111,7 @@ export async function runtimeFixture({
   if (token !== null) await settings.set('installedCheckoutCredential', token ?? await credential());
   if (couponPass !== null) await settings.set('installedCheckoutCouponsCredential', couponPass);
   if (seed) await collections.catalog_items.put('hat', {
-    recordKind: 'catalog-item', itemId: 'hat', commandId: 'synthetic-create-hat', sku: 'HAT', skuKey: 'HAT',
+    recordKind: 'catalog-item', itemId: 'hat', commandId: 'synthetic-create-hat', sku: 'HAT', skuKey: 'HAT', fulfillment: 'digital',
     creationIntent: { manageStock: managed }, kind: 'simple-product', name: 'Hat', state: 'draft',
     stockManagement: managed ? { mode: 'managed', status: 'active', inventorySkuId: 'sku-synthetic' } : { mode: 'unmanaged' },
     createdAt: new Date().toISOString(),

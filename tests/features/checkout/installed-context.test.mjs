@@ -58,7 +58,7 @@ function collection(records = []) {
 
 function storage() {
   const catalogItems = collection([["hat", {
-    recordKind: "catalog-item", itemId: "hat", name: "Hat", sku: "HAT", skuKey: "HAT",
+    recordKind: "catalog-item", itemId: "hat", name: "Hat", sku: "HAT", skuKey: "HAT", fulfillment: "digital",
     stockManagement: { mode: "unmanaged" }, state: "draft",
   }]]);
   const catalogPrices = collection([["hat", {
@@ -361,7 +361,7 @@ test("capability from one owner namespace does not authorize another context's c
 test('installed handlers override supplied contact policy with original context settings and deny required-phone capture before provider', async () => {
   const ctx=context();
   ctx.settings={async getVersioned(){return {revision:'merchant-require-phone',value:{recordKind:'merchant-store-settings',storeCountry:null,sellingCountries:[],shippingCountries:[],requirePhoneNumber:true}};}};
-  const synth=syntheticCheckoutHost({managed:false,host:{loadCheckoutContactRequirements:async()=>({requirePhoneNumber:false,revision:'forged-host'})}});
+  const synth=syntheticCheckoutHost({managed:false,host:{loadCheckoutContactRequirements:async()=>({requirePhoneNumber:false, shippingCountries: ['US'],revision:'forged-host'})}});
   const handlers=createInstalledCheckoutHandlers(async()=>({host:synth.host}));
   const prepared=await handlers.prepare({input:{},request:request({})},ctx);
   assert.equal(prepared.ok,true);
