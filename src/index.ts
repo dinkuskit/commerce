@@ -193,6 +193,24 @@ function withFeedChannels(route: PluginRoute): PluginRoute {
   };
 }
 
+function nativePublicContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
+  return {
+    ...ctx,
+    storage: {
+      ...ctx.storage,
+      catalog_items: ctx.storage.catalogItems,
+      catalog_prices: ctx.storage.catalogPrices,
+      catalog_manual_availability: ctx.storage.catalogManualAvailability,
+      catalog_backorder_policies: ctx.storage.catalogBackorderPolicies,
+      store_inventory_configurations: ctx.storage.storeInventoryConfigurations,
+      storefront_availability_settings: ctx.storage.storefrontAvailabilitySettings,
+      storefront_out_of_stock_listing: ctx.storage.storefrontOutOfStockListing,
+      catalog_media: ctx.storage.catalogMedia,
+      storefront_placeholder_image: ctx.storage.storefrontPlaceholderImage,
+    },
+  };
+}
+
 const publicCatalogRoute = {
   public: true,
   methods: ["GET"],
@@ -203,7 +221,7 @@ const publicCatalogRoute = {
     if ([...query.keys()].some(key => key !== "cursor") || query.getAll("cursor").length > 1) {
       throw new Error("Invalid catalog query");
     }
-    return readPublicCatalog(ctx, query.get("cursor") ?? undefined);
+    return readPublicCatalog(nativePublicContext(ctx), query.get("cursor") ?? undefined);
   },
 } satisfies PluginRoute;
 
@@ -217,7 +235,7 @@ const publicCatalogItemRoute = {
     if ([...query.keys()].some(key => key !== "itemId") || query.getAll("itemId").length !== 1) {
       throw new Error("Invalid catalog item query");
     }
-    return readPublicCatalogItem(ctx, query.get("itemId")!);
+    return readPublicCatalogItem(nativePublicContext(ctx), query.get("itemId")!);
   },
 } satisfies PluginRoute;
 
