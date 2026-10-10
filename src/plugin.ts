@@ -14,7 +14,7 @@ import {
   GUEST_CHECKOUT_STATUS_ROUTE,
   resolveRegistryCheckoutServices,
 } from "./features/checkout/kernel/index.js";
-import { ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, createPaidOrderReceiver, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
 import {
   PUBLIC_STORE_POLICIES_ROUTE,
   readSandboxPublicStorePolicies,
@@ -68,6 +68,12 @@ const plugin: SandboxedPlugin = {
       permission: "content:edit_any",
       methods: ["POST"],
       handler: commerceAdmin,
+    },
+    // Agents and the CLI read and complete orders here with an EmDash API token.
+    [ORDERS_API_ROUTE]: {
+      permission: "plugins:manage",
+      methods: ["POST"],
+      handler: ordersApi,
     },
     [GUEST_CHECKOUT_PREPARE_ROUTE]: guestRoute(installedCheckout.prepare),
     [GUEST_CHECKOUT_START_ROUTE]: guestRoute(installedCheckout.start),

@@ -391,6 +391,30 @@ test('a checkout keeps the mode it started in when the store and Payments switch
   }
 });
 
+test('agents read and complete orders through the private orders route of the compiled runtime', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const route = state.manifest.routes.find(entry => entry.name === 'orders');
+  assert.deepEqual(route, { name: 'orders', methods: ['POST'], permission: 'plugins:manage' });
+  const { token } = await start(state);
+  state.setPaid();
+  assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
+  const orders = (input, user = { id: 'agent', role: 50 }) => state.plugin.invokeRoute('orders', input,
+    { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/orders`, method: 'POST', ...(user ? { user } : {}) });
+  const listed = await orders({ action: 'list', status: 'processing' });
+  assert.equal(listed.total, 1);
+  const [order] = listed.orders;
+  assert.deepEqual([order.number, order.version, order.status, order.test, order.email], [1001, 1, 'processing', true, 'shopper@example.test']);
+  const done = await orders({ action: 'complete', orderId: order.orderId, version: 1, carrier: 'USPS', tracking: 'SYNTHETIC-1' });
+  assert.equal(done.result, 'saved');
+  assert.deepEqual(done.order.completed.tracking, 'SYNTHETIC-1');
+  assert.equal((await orders({ action: 'show', orderId: order.orderId })).order.status, 'completed');
+  assert.equal((await orders({ action: 'list', status: 'processing' })).total, 0);
+  // Without an administrator the route refuses, whatever the request says.
+  await assert.rejects(orders({ action: 'list' }, null));
+  await assert.rejects(orders({ action: 'list' }, { id: 'editor', role: 40 }));
+});
+
 test('malformed or copied configuration is rejected before encrypted credential/transport', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());

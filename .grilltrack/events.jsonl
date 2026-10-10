@@ -304,3 +304,5 @@
 {"action": "decision_reviewed", "at": "2026-10-10T20:15:38+00:00", "data": {"classifications": ["required_fix"], "decision_id": "commerce-payment-mode-001", "ref": ".grilltrack/proof/payment-mode-20261010/REVIEW.md", "result": "findings", "reviewed_at": "2026-10-10T20:15:38+00:00", "source_identity": "git:a61b56f9aa211783989d85b3d8aa6aaf4e858be2"}, "event_id": "23218d57-bb64-430b-a539-208d6d0a7898"}
 {"action": "decision_implemented", "at": "2026-10-10T20:15:44+00:00", "data": {"decision_id": "commerce-payment-mode-001"}, "event_id": "4e275d67-0b63-4c76-b526-a349e0ef9138"}
 {"action": "decision_verified", "at": "2026-10-10T20:15:44+00:00", "data": {"decision_id": "commerce-payment-mode-001"}, "event_id": "2c689756-324e-4bd3-a838-72ff2074d7ed"}
+{"action": "focus_started", "at": "2026-10-10T20:17:37+00:00", "data": {"cadence": "sequential", "domain": "Commerce agent order access"}, "event_id": "1892892f-1114-45f7-a187-3ed668cb323f"}
+{"action": "decision_proposed", "at": "2026-10-10T20:17:37+00:00", "data": {"decision_id": "commerce-orders-api-001"}, "event_id": "6e2ee4ba-ca23-4ce5-9bb5-c00afde15922"}

@@ -13,6 +13,7 @@ export {
 } from "./store.js";
 export type { OrderCompletion, OrderNumbers, OrderRecord, OrdersCollection } from "./store.js";
 export { ordersBlocks, ordersInteraction } from "./admin/page.js";
+export { ORDERS_API_ROUTE, ordersApi } from "./api.js";
 export type { OrdersServices } from "./admin/page.js";
 export { addressForm, completeForm, ordersView } from "./admin/view.js";
 export type { OrdersInspection } from "./admin/view.js";
