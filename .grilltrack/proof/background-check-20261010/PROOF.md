@@ -1,6 +1,6 @@
 # Commerce runs its background check every 5 minutes (commerce-background-check-001)
 
-Locked on Ronald's "okay agreed;" (21:31:23 UTC 2026-10-10, Buildout thread), after he asked for the better long-term approach: the timer now as the safety net, a push from Payments later only if 5 minutes feels slow. Built in 2c33e02 on top of f31fd79 (commerce#96), 8086caf (agent order access) and 6a3e1b2 (Ship); Node 22.23.2.
+Locked on Ronald's "okay agreed;" (21:31:23 UTC 2026-10-10, Buildout thread), after he asked for the better long-term approach: the timer now as the safety net, a push from Payments later only if 5 minutes feels slow. Built in a0d3a36 on top of commerce#96 (f31fd79, merged into main as 8cbe7bf with the same tree), 2a39cf3 (agent order access) and c799b0f (Ship); Node 22.23.2.
 
 - `bin/verify-commerce full` on that stack: passed. Typecheck and repo audits clean; unit 526 pass, integration 52 pass, sandbox browser 10 pass, native local-stock 1 pass, Orders browser 1 pass.
 - Registry bundle: 129,752 bytes before, 129,836 with the `plugin:activate` hook (+84), leaving 1,236 under 131,072. The built manifest declares hooks `plugin:activate` and `cron`.

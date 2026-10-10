@@ -1,6 +1,6 @@
 # Agents read orders and mark them shipped (commerce-orders-api-001)
 
-Locked on Ronald's "6. yes" (21:09:50 UTC 2026-10-10, Buildout thread). Built in 8086caf on top of f31fd79 (commerce#96); measured with the Ship work (6a3e1b2) on top, Node 22.23.2.
+Locked on Ronald's "6. yes" (21:09:50 UTC 2026-10-10, Buildout thread). Built in 2a39cf3 on top of commerce#96 (f31fd79, merged into main as 8cbe7bf with the same tree); measured with the Ship work (c799b0f) on top, Node 22.23.2.
 
 - `bin/verify-commerce full` on that stack: passed. Typecheck and repo audits clean; unit 526 pass, integration 51 pass, sandbox browser 10 pass, native local-stock 1 pass, Orders browser 1 pass (same run as `.grilltrack/proof/ship-sync-20261010/PROOF.md`).
 - Registry bundle: 126,370 bytes before, 127,780 with the orders route (+1,410); 129,752 with Ship.

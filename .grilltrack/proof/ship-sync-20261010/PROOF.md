@@ -1,6 +1,6 @@
 # Orders sends orders to Ship (commerce-ship-sync-001, commerce-allowed-hosts-ship-dinkuskit-com)
 
-Measured from f31fd79 (commerce#96) plus 8086caf (agent order access, `commerce-orders-api-001`, still proposed), Node 22.23.2.
+Measured from commerce#96 (f31fd79, merged into main as 8cbe7bf with the same tree) plus 2a39cf3 (agent order access, `commerce-orders-api-001`, then still proposed), Node 22.23.2.
 
 - `bin/verify-commerce full`: passed. Typecheck and repo audits clean; unit 526 pass, integration 51 pass, sandbox browser 10 pass, native local-stock 1 pass, Orders browser 1 pass.
 - Registry bundle: `backend_bytes=129752 headroom_bytes=1320` (127,780 with agent order access; sending orders to Ship adds 1,972).
@@ -13,4 +13,4 @@ Measured from f31fd79 (commerce#96) plus 8086caf (agent order access, `commerce-
 - Installed workerd runtime (`tests/integration/registry-checkout-services.test.mjs`, last two tests): the compiled Registry backend sends a paid physical order to a Ship stand-in that verifies the store's `ship:orders` pass, only when Orders opens (Checkout never calls Ship), and keeps working with Ship after the Payments pass has expired; the background check (`commerce-checkout-wakes` cron) completes the order from a bought label with USPS and the tracking number, acknowledges it and sends the Completed version; the Orders page shows the tracking number; an agent's list calls nothing and an agent's Move back reaches Ship right away; a label list over 128 KB is refused by the same bounded reader as Payments' answers, with nothing acknowledged or completed. Without `ship`, without a Ship pass, or with the Payments pass in its place, nothing calls Ship and Orders keeps working.
 - The two workerd tests first lived in their own file and timed out starting workerd beside the other workerd file in a full run; they now run in the same file, one runtime at a time, and two further full integration runs passed 51 of 51.
 
-Not covered: Ship's hosted service does not exist yet (handoff `/mnt/project-files/ship-handoff/ship-push-handoff.md` in the project), DinkusKit.com issues no `ship:orders` pass yet, and nothing switches on the background check or renews a store's passes on a real install.
+Not covered: Ship's hosted service does not exist yet (handoff `/mnt/project-files/ship-handoff/ship-push-handoff.md` in the project), DinkusKit.com issues no `ship:orders` pass yet, and nothing renews a store's passes on a real install. (When this was measured nothing switched on the background check either; `commerce-background-check-001`, a0d3a36, now does.)
