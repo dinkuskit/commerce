@@ -10,12 +10,12 @@ Decision: `commerce-delivery-address-001` (locked on the owner's approval,
 | | `dist/sandbox/plugin.mjs` bytes | headroom to 131,072 |
 | --- | --- | --- |
 | main f550d41 (with #84) | 117,720 | 13,352 |
-| with delivery address | 119,436 | 11,636 |
+| with delivery address | 119,448 | 11,624 |
 
 ## Checks run on this change
 
 `bin/verify-commerce full` with Node 22.23.2 passed on main f550d41 plus this change: typecheck clean, unit
-484 of 484, `audit:repo` clean, integration 46 of 46, sandbox 10 of 10,
+485 of 485, `audit:repo` clean, integration 46 of 46, sandbox 10 of 10,
 native local stock 1 of 1, Orders 1 of 1.
 
 Address-specific tests:
