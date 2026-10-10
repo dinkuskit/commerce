@@ -1,5 +1,7 @@
 import type { StorageCollection } from "emdash";
 import { scanAll } from "../../shared/scan.js";
+import { isRecord } from "../../shared/record.js";
+import { normalizeMoney } from "../catalog/kernel/index.js";
 import { PAID_ORDER_SCHEMA, type PaidOrder, type PaidOrderReceiver } from "../../handoffs/paid-order.js";
 
 export const ORDERS_COLLECTION = "orders";
@@ -12,9 +14,30 @@ export type OrdersCollection = Pick<StorageCollection<OrderRecord>, "get" | "com
 function text(value: unknown): value is string {
   return typeof value === "string" && value !== "" && value.length <= 1024;
 }
+function money(value: unknown): boolean {
+  try { normalizeMoney(value); return true; } catch { return false; }
+}
+function optional(value: unknown, check: (v: unknown) => boolean): boolean {
+  return value === undefined || check(value);
+}
+const textList = (v: unknown) => Array.isArray(v) && v.every(text);
+function line(v: unknown): boolean {
+  return isRecord(v) && text(v.catalogItemId) && text(v.name) && Number.isSafeInteger(v.quantity) &&
+    (v.quantity as number) > 0 && money(v.unitPrice);
+}
+function pricing(v: unknown): boolean {
+  return isRecord(v) && money(v.merchandiseSubtotal) && money(v.couponDiscount) && money(v.netMerchandise) &&
+    money(v.finalTotal) && isRecord(v.shipping) && money(v.shipping.charge) &&
+    optional(v.coupon, c => isRecord(c) && text(c.code));
+}
+/** Everything Orders shows or packs from must be well formed before a copy is kept for good. */
 function admit(order: PaidOrder): PaidOrder {
-  if (!order || order.schema !== PAID_ORDER_SCHEMA || !text(order.orderId) || !text(order.receiptId) || !text(order.attemptId) ||
-      !Array.isArray(order.lines) || !order.total || typeof order.total.minor !== "string") throw new Error("Invalid paid order");
+  const o = order as unknown;
+  if (!isRecord(o) || o.schema !== PAID_ORDER_SCHEMA || !text(o.orderId) || !text(o.receiptId) || !text(o.attemptId) ||
+      !Array.isArray(o.lines) || !o.lines.length || !o.lines.every(line) || !money(o.total) ||
+      !optional(o.paymentId, text) || !optional(o.paidAt, text) || !optional(o.ticketIds, textList) ||
+      !optional(o.pricing, pricing) || !optional(o.variantSelections, v => Array.isArray(v) && v.every(isRecord)) ||
+      !optional(o.contactSnapshot, isRecord)) throw new Error("Invalid paid order");
   return order;
 }
 // Key order can differ between a live hand-off and a stored copy read back.

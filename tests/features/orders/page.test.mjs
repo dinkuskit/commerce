@@ -81,7 +81,17 @@ test('the Checkout to Orders handoff keeps the first copy and reports repeats an
  assert.equal(await receiver.receive(reordered), 'duplicate');
  assert.equal(await receiver.receive({ ...order, total: { currency: 'USD', minor: '1' } }), 'conflict');
  assert.equal(records.get('order:a').paidOrder.total.minor, '100');
- for (const bad of [{ ...order, schema: 'other' }, { ...order, orderId: '' }, { ...order, lines: null }, null])
-  await assert.rejects(receiver.receive(bad));
+ const usd = minor => ({ currency: 'USD', minor });
+ const pricing = { merchandiseSubtotal: usd('100'), couponDiscount: usd('0'), netMerchandise: usd('100'),
+  shipping: { charge: usd('0') }, finalTotal: usd('100') };
+ const fresh = { ...order, orderId: 'order:b', pricing, ticketIds: ['t1'], paymentId: 'p1', paidAt: '2026-10-10T00:00:00.000Z' };
+ for (const bad of [{ ...order, schema: 'other' }, { ...order, orderId: '' }, { ...order, lines: null }, null,
+  { ...fresh, lines: [] }, { ...fresh, total: { minor: '100' } }, { ...fresh, total: usd('1.00') },
+  { ...fresh, lines: [{ ...order.lines[0], quantity: 0 }] }, { ...fresh, lines: [{ ...order.lines[0], unitPrice: { currency: 'EUR', minor: '1' } }] },
+  { ...fresh, lines: [{ ...order.lines[0], name: 7 }] }, { ...fresh, pricing: { ...pricing, shipping: {} } },
+  { ...fresh, pricing: { ...pricing, coupon: { code: '' } } }, { ...fresh, ticketIds: [''] }, { ...fresh, paidAt: 5 },
+  { ...fresh, contactSnapshot: 'x' }])
+  await assert.rejects(receiver.receive(bad), /Invalid paid order/);
  assert.equal(records.size, 1);
+ assert.equal(await receiver.receive(fresh), 'stored');
 });
