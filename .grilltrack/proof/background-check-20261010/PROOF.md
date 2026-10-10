@@ -1,0 +1,10 @@
+# Commerce runs its background check every 5 minutes (commerce-background-check-001)
+
+Locked on Ronald's "okay agreed;" (21:31:23 UTC 2026-10-10, Buildout thread), after he asked for the better long-term approach: the timer now as the safety net, a push from Payments later only if 5 minutes feels slow. Built in 2c33e02 on top of f31fd79 (commerce#96), 8086caf (agent order access) and 6a3e1b2 (Ship); Node 22.23.2.
+
+- `bin/verify-commerce full` on that stack: passed. Typecheck and repo audits clean; unit 526 pass, integration 52 pass, sandbox browser 10 pass, native local-stock 1 pass, Orders browser 1 pass.
+- Registry bundle: 129,752 bytes before, 129,836 with the `plugin:activate` hook (+84), leaving 1,236 under 131,072. The built manifest declares hooks `plugin:activate` and `cron`.
+- Installed workerd runtime (`tests/integration/registry-checkout-services.test.mjs`, "switching Commerce on registers its 5-minute background check with the site scheduler"): the compiled Registry backend, run through EmDash's own sandbox bridge, writes nothing to `_emdash_cron_tasks` until EmDash switches it on; `plugin:activate` registers exactly one task, `commerce-checkout-wakes` with `*/5 * * * *`, enabled; switching on again, as after re-enabling, still leaves one task; starting a checkout schedules nothing. The earlier tests in the same file show the `commerce-checkout-wakes` cron settling a paid order and syncing Ship.
+- Upstream behavior relied on (EmDash 1.2 as pinned): `ctx.cron.schedule` upserts one row per plugin and task name; the sandbox bridge's `cron/schedule` needs no capability; Registry installs run the install and activate hooks; on Cloudflare, only the Worker's `scheduled()` handler, driven by a Cron Trigger, runs due tasks.
+
+Not covered: a real Cloudflare `scheduled()` run (Template Store's `wrangler.jsonc` has no Cron Trigger yet, and no Worker Loader binding or sandbox runner for Registry plugins; handoff `/mnt/project-files/template-store-timer/handoff.md` in the project), and a real Registry install switching Commerce on.

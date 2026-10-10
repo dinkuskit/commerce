@@ -10457,10 +10457,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T21:42:30+00:00",
+          "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T21:42:30+00:00",
+          "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
+          "from": "implemented",
+          "implementation_ref": "src/plugin.ts (plugin:activate); docs/implementation/installed-checkout-context.md#background-check",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "commerce-background-check-001",
-      "implementation_ref": null,
+      "implementation_ref": "src/plugin.ts (plugin:activate); docs/implementation/installed-checkout-context.md#background-check",
       "question": "How does Commerce's background check run on a real store?",
       "rationale": "Ronald's 'okay agreed;' at 21:31:23 UTC 2026-10-10 (Buildout thread), read back to him as 7 yes.",
       "repair_required": false,
@@ -10469,10 +10497,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T21:32:45+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-10T21:42:30+00:00",
+      "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md"
     }
   ],
   "last_activation": {
@@ -10509,5 +10537,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T21:32:45+00:00"
+  "updated_at": "2026-10-10T21:42:30+00:00"
 }
