@@ -354,3 +354,10 @@
 {"action": "decision_locked", "at": "2026-10-10T23:10:55+00:00", "data": {"decision_id": "commerce-store-key-001"}, "event_id": "b9f892c3-d327-4f88-9007-e660f09c43b2"}
 {"action": "decision_proposed", "at": "2026-10-10T23:11:03+00:00", "data": {"decision_id": "commerce-store-key-release-gate-001"}, "event_id": "0ac55258-480a-439d-9f38-9409af87d4e0"}
 {"action": "decision_locked", "at": "2026-10-10T23:11:04+00:00", "data": {"decision_id": "commerce-store-key-release-gate-001"}, "event_id": "71d98a9e-167f-4c25-8312-7730284c91d3"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-10T23:17:28+00:00", "data": {"summary": "Ronald's 23:06:07 UTC card answer ('Merge when it passes', on a card stating the fix) covers the re-locked commerce-store-key-001: the store key goes only to https://dinkuskit.com/api/store-passes, never to an issuer origin named in the settings."}, "event_id": "a6feb5d8-eff9-425d-b44d-ac2ceb44eb2f"}
+{"action": "decision_implemented", "at": "2026-10-10T23:17:29+00:00", "data": {"decision_id": "commerce-store-key-001"}, "event_id": "bd97f3b6-96e5-4b34-8d93-5d28a42c427e"}
+{"action": "decision_verified", "at": "2026-10-10T23:17:29+00:00", "data": {"decision_id": "commerce-store-key-001"}, "event_id": "08b2f450-cfc6-4587-b060-2920f3db189a"}
+{"action": "decision_implemented", "at": "2026-10-10T23:17:29+00:00", "data": {"decision_id": "commerce-checkout-settings-paste-001"}, "event_id": "2c07877d-a295-4a24-a732-c5701ccb157a"}
+{"action": "decision_verified", "at": "2026-10-10T23:17:29+00:00", "data": {"decision_id": "commerce-checkout-settings-paste-001"}, "event_id": "fba9f827-4d41-443f-b7a6-3efeb4a8eb0a"}
+{"action": "decision_implemented", "at": "2026-10-10T23:17:29+00:00", "data": {"decision_id": "registry-coupons-unhooked-v1"}, "event_id": "7954fe3e-71df-41ae-9714-7e2981b9338b"}
+{"action": "decision_verified", "at": "2026-10-10T23:17:29+00:00", "data": {"decision_id": "registry-coupons-unhooked-v1"}, "event_id": "44506cd8-9e5f-4ad1-809e-33d584812512"}

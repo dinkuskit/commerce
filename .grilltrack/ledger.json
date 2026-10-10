@@ -3,11 +3,12 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": false,
+    "confirmed": true,
+    "confirmed_at": "2026-10-10T23:17:28+00:00",
     "domain": "Commerce store key",
     "started_at": "2026-10-10T23:10:55+00:00",
-    "status": "grilling",
-    "summary": "Reopen commerce-store-key-001: ClawSweeper review of commerce#98 (22:56 UTC): trading at the origin of the configured issuer could send the store key to Payments, Coupons or Ship if the pasted settings named one of them as the issuer. The trade now goes only to the fixed https://dinkuskit.com/api/store-passes."
+    "status": "confirmed",
+    "summary": "Ronald's 23:06:07 UTC card answer ('Merge when it passes', on a card stating the fix) covers the re-locked commerce-store-key-001: the store key goes only to https://dinkuskit.com/api/store-passes, never to an issuer origin named in the settings."
   },
   "decisions": [
     {
@@ -10699,10 +10700,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T23:17:29+00:00",
+          "choice": "Each store pastes one store key from the Set up Commerce box on DinkusKit.com into Commerce's only secret setting, storeKey, which replaces installedCheckoutCredential, installedCheckoutCouponsCredential and installedShipCredential. Before a Payments, Coupons or Ship call, Commerce trades the key at POST https://dinkuskit.com/api/store-passes, a fixed address no setting changes (never the origin of an issuer named in the settings), for a fresh 5-minute pass for that one service (payments:checkout with the checkout audience, coupons:checkout with coupons.audience, ship:orders with ship.audience), at most once per service per invocation, and admits the pass like any pass. One replaceable key covers all three, and each store turns on any of them on DinkusKit.com: Payments counts as on while its Connect grant is active, Coupons and Ship are switches, and DinkusKit.com mints passes only for services that are on. Commerce calls only the services its pasted settings name. Any answer other than a 200 with an admissible pass means that call is not made; Replace key on DinkusKit.com stops the old key at once. This replaces where commerce-ship-sync-001 and registry-checkout-hosted-coupons-001 get their passes; what they send is unchanged.",
+          "from": "locked",
+          "implementation_ref": "src/features/checkout/registry-credential.ts (tradeStoreKey); src/features/checkout/registry-services.ts (storePasses); emdash-plugin.jsonc (storeKey); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T23:17:29+00:00",
+          "choice": "Each store pastes one store key from the Set up Commerce box on DinkusKit.com into Commerce's only secret setting, storeKey, which replaces installedCheckoutCredential, installedCheckoutCouponsCredential and installedShipCredential. Before a Payments, Coupons or Ship call, Commerce trades the key at POST https://dinkuskit.com/api/store-passes, a fixed address no setting changes (never the origin of an issuer named in the settings), for a fresh 5-minute pass for that one service (payments:checkout with the checkout audience, coupons:checkout with coupons.audience, ship:orders with ship.audience), at most once per service per invocation, and admits the pass like any pass. One replaceable key covers all three, and each store turns on any of them on DinkusKit.com: Payments counts as on while its Connect grant is active, Coupons and Ship are switches, and DinkusKit.com mints passes only for services that are on. Commerce calls only the services its pasted settings name. Any answer other than a 200 with an admissible pass means that call is not made; Replace key on DinkusKit.com stops the old key at once. This replaces where commerce-ship-sync-001 and registry-checkout-hosted-coupons-001 get their passes; what they send is unchanged.",
+          "from": "implemented",
+          "implementation_ref": "src/features/checkout/registry-credential.ts (tradeStoreKey, fixed https://dinkuskit.com/api/store-passes); src/features/checkout/registry-services.ts (storePasses); emdash-plugin.jsonc (storeKey); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
         }
       ],
       "id": "commerce-store-key-001",
-      "implementation_ref": "src/features/checkout/registry-credential.ts (tradeStoreKey); src/features/checkout/registry-services.ts (storePasses); emdash-plugin.jsonc (storeKey); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+      "implementation_ref": "src/features/checkout/registry-credential.ts (tradeStoreKey, fixed https://dinkuskit.com/api/store-passes); src/features/checkout/registry-services.ts (storePasses); emdash-plugin.jsonc (storeKey); docs/implementation/installed-checkout-services.md#store-key-and-passes",
       "question": "Where do Commerce's passes to Payments, Coupons and Ship come from on a real store?",
       "rationale": "The agreed contract already names POST https://dinkuskit.com/api/store-passes; fixing the address in Commerce keeps a wrong or stale paste from handing the key to another allowed host. Ronald chose 'Merge when it passes' at 23:06:07 UTC on a card stating this fix.",
       "repair_required": false,
@@ -10711,9 +10740,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T23:10:55+00:00",
+      "updated_at": "2026-10-10T23:17:29+00:00",
       "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
     },
     {
@@ -10798,6 +10827,34 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T23:17:29+00:00",
+          "choice": "DinkusKit.com's Set up Commerce box gives each store the exact installedCheckout JSON to paste beside the store key: the store ID from Connect, issuer https://dinkuskit.com/account, the Payments origin, audience, binding and account from Payments' status, mode (test unless the owner says live), shipping, and coupons and ship only while those services are on, with new settings to paste whenever a switch changes. Commerce keeps reading installedCheckout exactly as today and refuses settings made for another site. A setup page inside Commerce that fetches these itself is after v1.",
+          "from": "needs_reverification",
+          "implementation_ref": "emdash-plugin.jsonc (installedCheckout description); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T23:17:29+00:00",
+          "choice": "DinkusKit.com's Set up Commerce box gives each store the exact installedCheckout JSON to paste beside the store key: the store ID from Connect, issuer https://dinkuskit.com/account, the Payments origin, audience, binding and account from Payments' status, mode (test unless the owner says live), shipping, and coupons and ship only while those services are on, with new settings to paste whenever a switch changes. Commerce keeps reading installedCheckout exactly as today and refuses settings made for another site. A setup page inside Commerce that fetches these itself is after v1.",
+          "from": "implemented",
+          "implementation_ref": "emdash-plugin.jsonc (installedCheckout description); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
         }
       ],
       "id": "commerce-checkout-settings-paste-001",
@@ -10810,9 +10867,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T23:10:55+00:00",
+      "updated_at": "2026-10-10T23:17:29+00:00",
       "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
     },
     {
@@ -10898,6 +10955,34 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T23:17:29+00:00",
+          "choice": "No. To keep room under the 128 KiB backend limit, the v1 Registry build does not wire the hosted coupon port: a coupon code is refused as COUPON_UNAVAILABLE (try-later) before any call, even when the checkout settings name the coupon service, and no coupons:checkout pass is traded. Settings that name coupons stay valid, coupons.dinkuskit.com stays declared so coupons can return without stores approving a new host, and the port, its tests and checkout's coupon pricing stay in the source. Inventory-managed stock stays in unless a v1 piece does not fit. Template Store's checkout shows a greyed 'Coupons coming soon' box (the owner's other agents).",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/checkout/registry-services.ts (resolveRegistryCheckoutServices); docs/implementation/registry-hosted-coupons.md",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T23:17:29+00:00",
+          "choice": "No. To keep room under the 128 KiB backend limit, the v1 Registry build does not wire the hosted coupon port: a coupon code is refused as COUPON_UNAVAILABLE (try-later) before any call, even when the checkout settings name the coupon service, and no coupons:checkout pass is traded. Settings that name coupons stay valid, coupons.dinkuskit.com stays declared so coupons can return without stores approving a new host, and the port, its tests and checkout's coupon pricing stay in the source. Inventory-managed stock stays in unless a v1 piece does not fit. Template Store's checkout shows a greyed 'Coupons coming soon' box (the owner's other agents).",
+          "from": "implemented",
+          "implementation_ref": "src/features/checkout/registry-services.ts (resolveRegistryCheckoutServices); docs/implementation/registry-hosted-coupons.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
         }
       ],
       "id": "registry-coupons-unhooked-v1",
@@ -10910,9 +10995,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T23:10:55+00:00",
+      "updated_at": "2026-10-10T23:17:29+00:00",
       "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
     },
     {
@@ -10993,5 +11078,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T23:11:04+00:00"
+  "updated_at": "2026-10-10T23:17:29+00:00"
 }
