@@ -317,3 +317,7 @@
 {"action": "decision_implemented", "at": "2026-10-10T20:48:19+00:00", "data": {"decision_id": "commerce-ship-sync-001"}, "event_id": "2cd08ebe-e09f-4bfe-80e7-f350c8e602a0"}
 {"action": "decision_verified", "at": "2026-10-10T20:48:19+00:00", "data": {"decision_id": "commerce-ship-sync-001"}, "event_id": "a45d631f-627e-4eca-ba4a-4a49a4be9149"}
 {"action": "focus_started", "at": "2026-10-10T20:48:24+00:00", "data": {"cadence": "sequential", "domain": "Commerce agent order access"}, "event_id": "060d45bc-f039-4f50-b02a-5a16831b8a86"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-10T21:28:41+00:00", "data": {"summary": "Ronald answered '6. yes' at 21:09:50 UTC 2026-10-10 in the Buildout thread: agents get the private orders route, used with an EmDash API token, to list orders, read one, and complete one or move it back to Processing, following the Orders page's rules."}, "event_id": "83114f1b-bd51-4cdb-8658-1115d3e58764"}
+{"action": "decision_locked", "at": "2026-10-10T21:28:41+00:00", "data": {"decision_id": "commerce-orders-api-001"}, "event_id": "c1626d5e-51d7-4774-a48e-81247a13d87e"}
+{"action": "decision_implemented", "at": "2026-10-10T21:28:41+00:00", "data": {"decision_id": "commerce-orders-api-001"}, "event_id": "8710a49c-e127-4794-b2f8-0904f217a5c8"}
+{"action": "decision_verified", "at": "2026-10-10T21:28:57+00:00", "data": {"decision_id": "commerce-orders-api-001"}, "event_id": "7f75f541-c9f8-4b2c-b33f-90a07422f0ec"}

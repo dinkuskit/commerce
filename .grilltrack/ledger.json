@@ -3,11 +3,12 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": false,
+    "confirmed": true,
+    "confirmed_at": "2026-10-10T21:28:41+00:00",
     "domain": "Commerce agent order access",
     "started_at": "2026-10-10T20:48:24+00:00",
-    "status": "grilling",
-    "summary": "Question 6 asked at 19:50 UTC 2026-10-10 and asked again after the Ship work: agents get store routes with an EmDash API token to list orders, read one, and complete or move one back, with the Orders page's rules. Awaiting Ronald's answer."
+    "status": "confirmed",
+    "summary": "Ronald answered '6. yes' at 21:09:50 UTC 2026-10-10 in the Buildout thread: agents get the private orders route, used with an EmDash API token, to list orders, read one, and complete one or move it back to Processing, following the Orders page's rules."
   },
   "decisions": [
     {
@@ -10224,21 +10225,64 @@
         "commerce-order-status-001"
       ],
       "domain": "Commerce agent order access",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-10T21:28:41+00:00",
+          "choice": "The Registry build mounts one private route, orders, that takes one JSON POST per action: list (optional status processing or completed and an offset; 50 orders a page by order number, with total and the next offset), show (by order id), complete (order id, version, optional carrier and tracking) and reopen (order id, version). EmDash requires plugins:manage and, for API tokens, the admin scope; the handler also requires an administrator, like the Orders page. Changes use the Orders page's owner-change rules at the named version and answer saved, outdated, invalid or not_found with the order as it now stands. Unknown actions or fields are refused. Each order is shown with its id, number, version, status, test mark, paid time, total, lines, option choices, where it ships to (the corrected address when there is one), the shopper's email and phone, and its completion. The dinkus-commerce CLI wires orders list, show, complete and reopen on it; complete and reopen show a preview first and send only with the version confirmed. Commerce sends no email. The native build does not mount it.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T21:28:41+00:00",
+          "choice": "The Registry build mounts one private route, orders, that takes one JSON POST per action: list (optional status processing or completed and an offset; 50 orders a page by order number, with total and the next offset), show (by order id), complete (order id, version, optional carrier and tracking) and reopen (order id, version). EmDash requires plugins:manage and, for API tokens, the admin scope; the handler also requires an administrator, like the Orders page. Changes use the Orders page's owner-change rules at the named version and answer saved, outdated, invalid or not_found with the order as it now stands. Unknown actions or fields are refused. Each order is shown with its id, number, version, status, test mark, paid time, total, lines, option choices, where it ships to (the corrected address when there is one), the shopper's email and phone, and its completion. The dinkus-commerce CLI wires orders list, show, complete and reopen on it; complete and reopen show a preview first and send only with the version confirmed. Commerce sends no email. The native build does not mount it.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T21:28:57+00:00",
+          "choice": "The Registry build mounts one private route, orders, that takes one JSON POST per action: list (optional status processing or completed and an offset; 50 orders a page by order number, with total and the next offset), show (by order id), complete (order id, version, optional carrier and tracking) and reopen (order id, version). EmDash requires plugins:manage and, for API tokens, the admin scope; the handler also requires an administrator, like the Orders page. Changes use the Orders page's owner-change rules at the named version and answer saved, outdated, invalid or not_found with the order as it now stands. Unknown actions or fields are refused. Each order is shown with its id, number, version, status, test mark, paid time, total, lines, option choices, where it ships to (the corrected address when there is one), the shopper's email and phone, and its completion. The dinkus-commerce CLI wires orders list, show, complete and reopen on it; complete and reopen show a preview first and send only with the version confirmed. Commerce sends no email. The native build does not mount it.",
+          "from": "implemented",
+          "implementation_ref": "src/features/orders/api.ts (ordersApi); src/plugin.ts (private orders route, Registry build only); cli/spec.mjs and cli/client.mjs (dinkus-commerce orders list, show, complete, reopen); docs/CLI-SPEC.md; docs/implementation/orders-inspection.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
       "id": "commerce-orders-api-001",
-      "implementation_ref": null,
+      "implementation_ref": "src/features/orders/api.ts (ordersApi); src/plugin.ts (private orders route, Registry build only); cli/spec.mjs and cli/client.mjs (dinkus-commerce orders list, show, complete, reopen); docs/CLI-SPEC.md; docs/implementation/orders-inspection.md",
       "question": "How do agents read orders and mark them shipped?",
-      "rationale": "v1 lets agents read orders and mark them shipped at launch; one route keeps the Registry bundle small.",
+      "rationale": "Ronald's '6. yes' at 21:09:50 UTC 2026-10-10 (Buildout thread), after the question was asked at 19:50 and again at 20:59 UTC; V1 scope already accepts that agents can read orders and mark them shipped at launch.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T20:17:37+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-10T21:28:57+00:00",
+      "verification_ref": ".grilltrack/proof/orders-api-20261010/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -10421,5 +10465,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T20:48:24+00:00"
+  "updated_at": "2026-10-10T21:28:57+00:00"
 }
