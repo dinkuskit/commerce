@@ -11281,6 +11281,20 @@
           "review_source_identity": null,
           "to": "implemented",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T23:53:38+00:00",
+          "choice": "When the store's checkout settings name ship and a store key is saved, the Orders page of each Processing order with a delivery address shows a \"Create shipping label\" link, first among the order's actions. It opens Ship's own label page for that order: <ship origin from the settings>/stores/<siteId from the settings>/orders/<order id>, each part URL-encoded, the address Ship's thread gave for its label page. The link carries no pass; Ship asks the owner to sign in with DinkusKit.com (Ship's ship-owner-signin-001). Opening an order makes no call to Ship or DinkusKit.com and stores nothing. The order list, Completed orders and orders without an address show no link.",
+          "from": "implemented",
+          "implementation_ref": "src/features/orders/ship.ts (shipLabelPage); src/features/orders/admin/view.ts (ordersView labelPage link); src/features/orders/admin/page.ts (OrdersServices.labelPage); src/admin/index.ts and src/features/checkout/registry-services.ts (ship site id); docs/implementation/registry-ship-sync.md#create-shipping-label; docs/contracts/commerce-handoffs.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "commerce-ship-label-link-001",
@@ -11293,10 +11307,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T23:47:52+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-10T23:53:38+00:00",
+      "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md"
     }
   ],
   "last_activation": {
@@ -11333,5 +11347,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T23:47:52+00:00"
+  "updated_at": "2026-10-10T23:53:38+00:00"
 }

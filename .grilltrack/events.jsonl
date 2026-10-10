@@ -376,3 +376,4 @@
 {"action": "decision_proposed", "at": "2026-10-10T23:47:52+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "51aedf49-0398-49df-9051-12f4ace25677"}
 {"action": "decision_locked", "at": "2026-10-10T23:47:52+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "8072a394-b14d-43db-a9ff-22aba4456dbb"}
 {"action": "decision_implemented", "at": "2026-10-10T23:47:52+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "ce487c9c-2543-4435-b658-143a15eadecc"}
+{"action": "decision_verified", "at": "2026-10-10T23:53:38+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "7b11fb93-b4f2-421a-b404-677dba26159d"}
