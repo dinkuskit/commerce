@@ -294,6 +294,7 @@ function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: Che
   next.order = {
     orderId: "order:" + attemptId, receiptId: "receipt:" + attemptId, attemptId,
     ...(paymentId === undefined ? {} : { paymentId }),
+    ...(e.paymentMode ? { mode: e.paymentMode } : {}),
     paidAt: new Date((e.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
     lines: attempt.payment.lines, total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),

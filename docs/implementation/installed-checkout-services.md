@@ -98,9 +98,13 @@ remain external integration prerequisites; no alternate issuer is invented.
 
 ## Payments and wake transport
 
-The resolver binds scoped `ctx.http.fetch` to the existing trusted TEST payment
+The resolver binds scoped `ctx.http.fetch` to the existing trusted payment
 port, preserving binding checks, original immutable requests, explicit pricing
-schema, response bounds and unknown-outcome recovery. Historical payment
+schema, response bounds and unknown-outcome recovery. The configuration's
+optional `mode` (`test` when absent, or `live`) must match the mode Payments
+reports for the binding before every session or lookup, and each paid order,
+including a zero-payable one, records that mode (GrillTrack
+`commerce-payment-mode-001`). Historical payment
 requests are not repriced or migrated by resolver assembly.
 
 The wake port uses `GET /v1/checkout/wakes?bindingRef=...&limit=100` and

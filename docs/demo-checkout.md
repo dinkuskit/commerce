@@ -33,8 +33,12 @@ angle-bracket placeholders with values issued for this site:
 ```
 
 Predecessor v1 enabled snapshots that omit `mode` remain valid under this
-schema. Payments still has to prove the remote binding is TEST before a
-session or lookup is created. Stored `mode`, when present, must be `test`.
+schema and mean `test`. Stored `mode` is `test` or `live`, and Payments has to
+report its binding in that same mode before any session or lookup is created,
+so a store takes real money only when both say `live`. Every paid order
+records the mode; Orders marks anything not `live` as TEST. The demo store
+stays `test`; switching a real store to `live` is the project owner's call
+(GrillTrack `commerce-payment-mode-001`).
 
 The host must also provision `installedCheckoutCredential` as an encrypted
 secret setting containing a short-lived signed server-to-server token. It must

@@ -73,6 +73,8 @@ export async function runtimeFixture({
   transportFetch,
   couponPass = null,
   couponService,
+  // What the synthetic Payments says its binding is.
+  bindingMode = 'test',
 } = {}) {
   const sqlite = new BetterSqlite3(databasePath);
   // Minimal tables match the pinned SDK's options and plugin-storage schemas.
@@ -150,8 +152,8 @@ export async function runtimeFixture({
     if (path.endsWith('-binding')) {
       const providerId = config?.providerId === 'authorize_net' ? 'authorize_net' : 'stripe';
       return json(providerId === 'authorize_net'
-        ? { bindingRef: BINDING, providerId, authorizeNetMerchantId: config?.authorizeNetMerchantId ?? 'anet_merchant', mode: 'test', ready: true }
-        : { bindingRef: BINDING, providerId, stripeAccountId: ACCOUNT, mode: 'test', ready: true });
+        ? { bindingRef: BINDING, providerId, authorizeNetMerchantId: config?.authorizeNetMerchantId ?? 'anet_merchant', mode: bindingMode, ready: true }
+        : { bindingRef: BINDING, providerId, stripeAccountId: ACCOUNT, mode: bindingMode, ready: true });
     }
     if (path === '/v1/checkout/wakes') return json(pending);
     if (path === '/v1/checkout/wakes/ack') {

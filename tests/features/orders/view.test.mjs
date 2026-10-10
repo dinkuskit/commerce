@@ -40,3 +40,14 @@ test('Pack is offered only for orders with Inventory ticket ids', () => {
  const plain = ordersView(input, paid.orderId);
  assert.equal(plain.blocks.some(block => block.type === 'actions' && block.elements[0].label === 'Pack'), false);
 });
+test('only live orders drop the TEST mark, in the list and the detail', () => {
+ const numbered = (order, number) => ({ paidOrder: order, number });
+ const orders = [numbered({ ...paid, mode: 'live' }, 1001), numbered({ ...paid, orderId: 'order:test', mode: 'test' }, 1002), numbered({ ...zero }, 1003)];
+ const list = ordersView({ status: 'available', orders });
+ assert.equal(validateBlocks(list.blocks).valid, true);
+ const labels = list.blocks.filter(b => b.type === 'fields').map(b => b.fields[0].value);
+ assert.deepEqual(labels, ['#1001', '#1002 (TEST)', '#1003 (TEST)']);
+ assert.deepEqual(list.blocks.filter(b => b.type === 'actions').map(b => b.elements[0].label), ['Inspect #1001', 'Inspect #1002 (TEST)', 'Inspect #1003 (TEST)']);
+ assert.match(JSON.stringify(ordersView({ status: 'available', orders }, 'order:test')), /Order:\\n#1002 \(TEST\)/);
+ assert.doesNotMatch(JSON.stringify(ordersView({ status: 'available', orders }, paid.orderId)), /TEST/);
+});

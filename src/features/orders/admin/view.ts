@@ -31,9 +31,9 @@ function shipTo(record: OrderRecord): string {
   const a = deliveryOf(record);
   return a ? [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ') + (record.delivery ? ' (corrected)' : '') : 'No address';
 }
-/** People read the short number; orders kept before numbering show their ID until the page numbers them. */
+/** People read the short number; orders kept before numbering show their ID until the page numbers them. Only live orders are real. */
 function label(record: OrderRecord): string {
-  return record.number === undefined ? record.paidOrder.orderId : '#' + record.number;
+  return (record.number === undefined ? record.paidOrder.orderId : '#' + record.number) + (record.paidOrder.mode === 'live' ? '' : ' (TEST)');
 }
 /** Processing until the order ships; Completed means shipped, never delivered. */
 function status(record: OrderRecord): string {

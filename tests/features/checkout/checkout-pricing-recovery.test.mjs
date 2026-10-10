@@ -90,9 +90,12 @@ test('canonical zero prices complete without coupon or payment identity', async 
   }
   let payments = 0;
   f.execution.resolvePayments = async () => { payments++; return null; };
+  // A live store's free order is a real order too; the mode comes from the store, not from Payments.
+  f.execution.paymentMode = 'live';
   const completed = await startCheckout(f.execution, 'cart', withSyntheticCheckoutContact({ lines: f.input.lines }));
   assert.equal(completed.phase, 'paid');
   assert.equal(completed.order.total.minor, '0');
+  assert.equal(completed.order.mode, 'live');
   assert.equal(Object.hasOwn(completed.order, 'paymentId'), false);
   assert.equal(completed.session, undefined);
   assert.equal(completed.coupon, undefined);

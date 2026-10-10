@@ -69,7 +69,11 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   when reserve returned them, and the frozen shopper contact. For a basket
   with a physical item the contact carries the delivery address
   (`contactSnapshot.contact.delivery`, commerce#33); digital-only orders and
-  orders paid before addresses were collected have none.
+  orders paid before addresses were collected have none. `mode` (GrillTrack
+  `commerce-payment-mode-001`) is `live` only when the store's checkout
+  setting and Payments' binding were both live; `test`, or no `mode` on
+  orders paid before it was recorded, is a test order: no money moved, Orders
+  shows it as TEST and Ship must not buy postage for it.
 - **Receiving:** Orders first checks the whole record; a contact snapshot
   must be exactly what Checkout freezes, judged by Checkout-contact's own
   rules (`isCheckoutContactSnapshot`), so nothing Checkout would refuse is
@@ -118,8 +122,8 @@ label.
   counts as packed; Orders records nothing itself.
 - **Ship** (not built): a label request carries the order id, short number,
   revision, the frozen lines with each product's current shipping weight in
-  ounces (`weightOz`, when set) and the current delivery address (the owner's
-  correction, else the paid-order copy's). Ship labels only the latest
+  ounces (`weightOz`, when set), the current delivery address (the owner's
+  correction, else the paid-order copy's) and whether it is a test order. Ship labels only the latest
   revision. Ship
   is its own plugin and service, so this message is the same in every
   packaging.

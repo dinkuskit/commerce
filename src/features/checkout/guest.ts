@@ -139,6 +139,7 @@ export function executionOf(runtime: GuestCheckoutRuntime) {
     resolveInventory: runtime.host.resolveInventory ?? (async () => null),
     paymentAssociations: runtime.paymentAssociations,
     paymentBindingRef: runtime.host.paymentBindingRef!.trim(),
+    paymentMode: runtime.host.paymentMode,
     resolvePayments: runtime.host.resolvePayments!,
     createAttemptId: runtime.host.createAttemptId,
     now: runtime.host.now,

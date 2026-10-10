@@ -179,7 +179,7 @@ unavailable. Synthetic fixture injection proves transport. Actual Stripe is
 not run. See
 [docs/implementation/guest-checkout-public.md](docs/implementation/guest-checkout-public.md).
 
-Commerce Orders provides authenticated order inspection in the sandbox admin. It reads Orders' own copies of paid orders, retains recorded prices and receipt identities, and distinguishes provider-paid from zero-payable orders. Each order has a short number, a version, and a status: Processing until it ships, then Completed (shipped, never delivered). The owner can correct the delivery address while an order is Processing, complete it by hand with an optional carrier and tracking number, and move it back to Processing; each change raises the version. It exposes no payment mutation and sends no email. See [installed Orders inspection](docs/implementation/orders-inspection.md) for bounds and local-proof limits.
+Commerce Orders provides authenticated order inspection in the sandbox admin. It reads Orders' own copies of paid orders, retains recorded prices and receipt identities, and distinguishes provider-paid from zero-payable orders. Orders not taken in live mode are marked TEST. Each order has a short number, a version, and a status: Processing until it ships, then Completed (shipped, never delivered). The owner can correct the delivery address while an order is Processing, complete it by hand with an optional carrier and tracking number, and move it back to Processing; each change raises the version. It exposes no payment mutation and sends no email. See [installed Orders inspection](docs/implementation/orders-inspection.md) for bounds and local-proof limits.
 
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 

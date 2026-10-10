@@ -58,7 +58,7 @@ function admit(order: PaidOrder, kept = false): PaidOrder {
   const o = order as unknown;
   if (!isRecord(o) || o.schema !== PAID_ORDER_SCHEMA || !text(o.orderId) || !text(o.receiptId) || !text(o.attemptId) ||
       !Array.isArray(o.lines) || !o.lines.length || !o.lines.every(line) || !money(o.total) ||
-      !optional(o.paymentId, text) || !optional(o.paidAt, text) || !optional(o.ticketIds, textList) ||
+      !optional(o.paymentId, text) || !optional(o.paidAt, text) || !optional(o.mode, m => m === "test" || m === "live") || !optional(o.ticketIds, textList) ||
       !optional(o.pricing, pricing) || !optional(o.variantSelections, v => Array.isArray(v) && v.every(isRecord)) ||
       !optional(o.contactSnapshot, kept ? isRecord : isCheckoutContactSnapshot)) throw new Error("Invalid paid order");
   return order;

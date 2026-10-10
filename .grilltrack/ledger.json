@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-10T18:29:27+00:00",
-    "domain": "Commerce product weight",
-    "started_at": "2026-10-10T18:29:27+00:00",
+    "confirmed_at": "2026-10-10T19:42:56+00:00",
+    "domain": "Commerce payment mode",
+    "started_at": "2026-10-10T19:42:56+00:00",
     "status": "confirmed",
-    "summary": "Ronald answered 10 (yes, Commerce products get a weight field) and 11 (label weight defaults to the products' weight plus the chosen box's weight and stays editable). Recorded in /mnt/project-files/ship-handoff/order-and-shipping-decisions.md. Ounces was stated to him in the thread at 18:12 UTC as the default because v1 is US-only."
+    "summary": "Ronald answered 1 yes at 19:32 UTC 2026-10-10: build real payments plus TEST marking first. Payments' setup decides test or live; Commerce records what it was told; a real store goes live only on his separate go."
   },
   "decisions": [
     {
@@ -10087,6 +10087,77 @@
       "superseded_by": null,
       "updated_at": "2026-10-10T18:36:51+00:00",
       "verification_ref": ".grilltrack/proof/product-weight-20261010/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "The Registry checkout setting's optional mode is test (also when absent, so older settings keep meaning test) or live. Before every Payments session or lookup, Payments must report its binding in that same mode, so a store takes real money only when the store's setting and Payments both say live; either side alone changes nothing. Every paid order, including one with nothing to pay, records mode on Checkout's copy and the paid-order handoff. Orders shows every order that is not live as TEST in the list and the detail, and Ship must not buy postage for a test order. The shopper's checkout view does not carry the mode. Supersedes the sandbox-only term of checkout-authorize-net-provider-20261008 for Commerce. Switching a real store to live is the project owner's separate go; the demo store stays test.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanDi9YHvj4p2KCoTobq99duw",
+      "created_at": "2026-10-10T19:42:56+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-authorize-net-provider-20261008"
+      ],
+      "domain": "Commerce payment mode",
+      "history": [
+        {
+          "at": "2026-10-10T19:42:56+00:00",
+          "choice": "The Registry checkout setting's optional mode is test (also when absent, so older settings keep meaning test) or live. Before every Payments session or lookup, Payments must report its binding in that same mode, so a store takes real money only when the store's setting and Payments both say live; either side alone changes nothing. Every paid order, including one with nothing to pay, records mode on Checkout's copy and the paid-order handoff. Orders shows every order that is not live as TEST in the list and the detail, and Ship must not buy postage for a test order. The shopper's checkout view does not carry the mode. Supersedes the sandbox-only term of checkout-authorize-net-provider-20261008 for Commerce. Switching a real store to live is the project owner's separate go; the demo store stays test.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T19:49:33+00:00",
+          "choice": "The Registry checkout setting's optional mode is test (also when absent, so older settings keep meaning test) or live. Before every Payments session or lookup, Payments must report its binding in that same mode, so a store takes real money only when the store's setting and Payments both say live; either side alone changes nothing. Every paid order, including one with nothing to pay, records mode on Checkout's copy and the paid-order handoff. Orders shows every order that is not live as TEST in the list and the detail, and Ship must not buy postage for a test order. The shopper's checkout view does not carry the mode. Supersedes the sandbox-only term of checkout-authorize-net-provider-20261008 for Commerce. Switching a real store to live is the project owner's separate go; the demo store stays test.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T19:49:33+00:00",
+          "choice": "The Registry checkout setting's optional mode is test (also when absent, so older settings keep meaning test) or live. Before every Payments session or lookup, Payments must report its binding in that same mode, so a store takes real money only when the store's setting and Payments both say live; either side alone changes nothing. Every paid order, including one with nothing to pay, records mode on Checkout's copy and the paid-order handoff. Orders shows every order that is not live as TEST in the list and the detail, and Ship must not buy postage for a test order. The shopper's checkout view does not carry the mode. Supersedes the sandbox-only term of checkout-authorize-net-provider-20261008 for Commerce. Switching a real store to live is the project owner's separate go; the demo store stays test.",
+          "from": "implemented",
+          "implementation_ref": "src/features/checkout/registry-provider-admission.ts (mode test|live); src/features/checkout/test-payments.ts (binding mode must match); src/features/checkout/orchestrate.ts (order mode); src/handoffs/paid-order.ts (mode); src/features/orders/admin/view.ts (TEST mark)",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-payment-mode-001",
+      "implementation_ref": "src/features/checkout/registry-provider-admission.ts (mode test|live); src/features/checkout/test-payments.ts (binding mode must match); src/features/checkout/orchestrate.ts (order mode); src/handoffs/paid-order.ts (mode); src/features/orders/admin/view.ts (TEST mark)",
+      "question": "How does Commerce take real payments and mark test orders?",
+      "rationale": "user accepted the scoped decision",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T19:49:33+00:00",
+      "verification_ref": ".grilltrack/proof/payment-mode-20261010/PROOF.md"
     }
   ],
   "last_activation": {
@@ -10123,5 +10194,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T18:36:51+00:00"
+  "updated_at": "2026-10-10T19:49:33+00:00"
 }

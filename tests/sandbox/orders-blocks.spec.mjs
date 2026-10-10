@@ -69,8 +69,9 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await page.reload();
     // Orders numbers each copy it keeps; people see the short number, the order id stays on the detail.
     const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
-    await expect(page.getByRole('button', { name: /^Inspect #100[12]$/ }).first()).toBeVisible({ timeout: 60000 });
-    const inspect = async order => 'Inspect #' + (await kept.get(order.orderId)).number;
+    // These synthetic orders were not taken in live mode, so they are marked TEST.
+    await expect(page.getByRole('button', { name: /^Inspect #100[12] \(TEST\)$/ }).first()).toBeVisible({ timeout: 60000 });
+    const inspect = async order => 'Inspect #' + (await kept.get(order.orderId)).number + ' (TEST)';
     expect([(await kept.get(paid.order.orderId)).number, (await kept.get(free.order.orderId)).number].sort()).toEqual([1001, 1002]);
     await capture('orders-list-desktop');
     const open = page.getByRole('button', { name: await inspect(paid.order), exact: true });
