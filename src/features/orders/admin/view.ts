@@ -1,11 +1,12 @@
 import { fields } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
+import { deliveryOf, type OrderRecord } from '../store.js';
 import type { Money } from '../../catalog/kernel/index.js';
 import { normalizeMoney } from '../../catalog/kernel/index.js';
 
 /** Read-only projection. The authenticated controller owns loading and authorization. */
-export type OrdersInspection = { status: 'available'; orders: readonly PaidOrder[] } | { status: 'unavailable' };
+export type OrdersInspection = { status: 'available'; orders: readonly OrderRecord[] } | { status: 'unavailable' };
 function amount(value: Money): string {
   const minor = BigInt(normalizeMoney(value).minor);
   return 'USD ' + (minor / 100n) + '.' + String(minor % 100n).padStart(2, '0');
@@ -26,9 +27,24 @@ function header(): Block {
 }
 // Digital-only orders and orders paid before addresses were collected have none;
 // copies kept before Orders checked the contact snapshot may lack its contact.
-function shipTo(order: PaidOrder): string {
-  const a = order.contactSnapshot?.contact?.delivery;
-  return a ? [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ') : 'No address';
+function shipTo(record: OrderRecord): string {
+  const a = deliveryOf(record);
+  return a ? [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ') + (record.delivery ? ' (corrected)' : '') : 'No address';
+}
+/** People read the short number; orders kept before numbering show their ID until the page numbers them. */
+function label(record: OrderRecord): string {
+  return record.number === undefined ? record.paidOrder.orderId : '#' + record.number;
+}
+const ADDRESS_LABELS = { name: 'Name', line1: 'Address line 1', line2: 'Address line 2', city: 'City', region: 'State or region', postalCode: 'ZIP or postal code', country: 'Country code' };
+/** The owner's address correction form, filled with the current address and bound to the order's version. */
+export function addressForm(record: OrderRecord, failure?: string, typed?: Record<string, unknown>): BlockResponse {
+  const a = (typed ?? deliveryOf(record)) as Record<string, string>;
+  const id = encodeURIComponent(record.paidOrder.orderId);
+  return { blocks: [header(), action('Back to order', 'orders.open:' + id), { type: 'header', text: 'Correct the address for ' + label(record) },
+    ...(failure ? [unavailable('Address not saved', failure)] : []),
+    { type: 'form', block_id: 'order-address-' + crypto.randomUUID(), fields: Object.entries(ADDRESS_LABELS).map(([action_id, label]) =>
+      ({ type: 'text_input', action_id, label, initial_value: String(a[action_id] ?? '') })),
+    submit: { label: 'Save address', action_id: 'orders.save:' + (record.revision ?? 1) + ':' + id } } as Block] };
 }
 function detailFields(...pairs: string[]): Block {
   return { type: 'section', text: pairs.map((value, i) => i % 2 ? value : value + ':').join('\n') };
@@ -43,20 +59,22 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
   try {
     if (selectedOrderId === undefined) {
       if (!input.orders.length) blocks.push({ type: 'section', text: 'No orders recorded yet.' });
-      for (const order of input.orders) blocks.push(
-        fields('Order', order.orderId, 'Total', amount(order.total), 'Payment', payment(order), 'Fulfillment', notRecorded),
-        action('Inspect ' + order.orderId, 'orders.open:' + encodeURIComponent(order.orderId)),
+      for (const record of input.orders) blocks.push(
+        fields('Order', label(record), 'Total', amount(record.paidOrder.total), 'Payment', payment(record.paidOrder), 'Fulfillment', notRecorded),
+        action('Inspect ' + label(record), 'orders.open:' + encodeURIComponent(record.paidOrder.orderId)),
         { type: 'divider' },
       );
       return { blocks };
     }
-    const matches = input.orders.filter(order => order.orderId === selectedOrderId);
+    const matches = input.orders.filter(record => record.paidOrder.orderId === selectedOrderId);
     if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
-    const order = matches[0];
-    blocks.push(detailFields('Order', order.orderId, 'Receipt', order.receiptId,
+    const record = matches[0], order = record.paidOrder;
+    blocks.push(detailFields('Order', label(record), 'Order ID', order.orderId, 'Version', String(record.revision ?? 1), 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
       'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Fulfillment', notRecorded,
-      'Ship to', shipTo(order)), { type: 'header', text: 'Items' });
+      'Ship to', shipTo(record)));
+    if (deliveryOf(record)) blocks.push(action('Correct address', 'orders.address:' + encodeURIComponent(order.orderId)));
+    blocks.push({ type: 'header', text: 'Items' });
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
     if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + encodeURIComponent(order.orderId)));
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,

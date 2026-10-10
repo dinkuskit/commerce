@@ -78,6 +78,15 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   contents is a no-op (`duplicate`); different contents are refused and the
   first copy is kept (`conflict`). Later order facts (packed, shipped,
   refunded, notes) belong to Orders beside the copy, never back in Checkout.
+- **Order identity** (GrillTrack `commerce-order-identity-001`): the order id
+  is permanent. Beside the copy Orders keeps a short `number` for people
+  (from 1001, taken from the `order_numbers` counter when the copy is first
+  kept; never reused, may skip; older copies are numbered oldest paid first
+  when the Orders page opens) and a `revision` that starts at 1 and goes up on
+  every owner change. An owner's corrected `delivery` address also sits beside
+  the copy, checked like a checkout address against the store's shipping
+  countries; the frozen contact snapshot never changes. Handoffs use the
+  corrected address when there is one and name the revision they used.
 - **Delivery:** Checkout hands the record over when it records the payment and
   again on every later check of that paid checkout (status checks and payment
   wakes), so a failed hand-off is retried and never changes the shopper's
@@ -99,8 +108,10 @@ label.
   is a digest of the command so a retry replays Inventory's stored answer. No
   order number is sent. Only Inventory's confirmation of that exact command
   counts as packed; Orders records nothing itself.
-- **Ship** (not built): a label request carries the order id, the frozen lines
-  and the delivery address from the paid-order copy. Ship
+- **Ship** (not built): a label request carries the order id, short number,
+  revision, the frozen lines and the current delivery address (the owner's
+  correction, else the paid-order copy's). Ship labels only the latest
+  revision. Ship
   is its own plugin and service, so this message is the same in every
   packaging.
 - **Under a split:** unchanged. Inventory and Ship are already outside

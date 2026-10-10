@@ -103,7 +103,7 @@ export const STORAGE_OWNERS = {
   storefront_placeholder_image: "storefront-availability",
   checkout_carts: "checkout", checkout_guest_capabilities: "checkout", checkout_payment_associations: "checkout",
   store_shipping_policy: "store-policies", store_return_policy: "store-policies",
-  orders: "orders",
+  orders: "orders", order_numbers: "orders",
 };
 const STORAGE_COMPOSITION = ["src/plugin.ts", "src/index.ts"];
 /**

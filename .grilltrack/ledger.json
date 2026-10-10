@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-10T12:55:32+00:00",
-    "domain": "Guest checkout coupon failures (issue 34)",
-    "started_at": "2026-10-10T12:55:32+00:00",
+    "confirmed_at": "2026-10-10T16:43:27+00:00",
+    "domain": "Commerce order identity for Ship",
+    "started_at": "2026-10-10T16:24:02+00:00",
     "status": "confirmed",
-    "summary": "The project owner chose on 2026-10-10 (03:34 UTC 'Full detail', 03:55 UTC 'Refuse it') specific coupon reasons for guest checkout, including refusing a coupon no cart item qualifies for instead of applying it at zero. This replaces the single COUPON_UNAVAILABLE code he approved at 03:21 UTC."
+    "summary": "Ronald agreed answers 1 to 5 (order id, short number, one store ID, owner address correction with a version, whole-order shipping) in the project thread at 16:19 UTC; Commerce builds number, version and address correction now."
   },
   "decisions": [
     {
@@ -9804,6 +9804,78 @@
       "superseded_by": null,
       "updated_at": "2026-10-10T12:55:33+00:00",
       "verification_ref": "file:tests/features/checkout/checkout-pricing-recovery.test.mjs file:tests/features/checkout/checkout-pricing-hosted.test.mjs file:tests/features/checkout/registry-coupons.test.mjs file:tests/features/coupons/acceptance.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Each kept order keeps Checkout's order id as its permanent id; it never changes. Orders also gives each order a short number for people, counting up from 1001 in the order Orders first keeps them. A number is never reused and may skip when two orders arrive at the same moment; orders kept before numbering get theirs, oldest paid first, the next time the Orders page opens. Each kept order has a version that starts at 1 and goes up by one on every owner change; any later handoff (Ship, emails) names the version it used, and Ship labels only the latest. The owner can correct the delivery address of an order that has one, on its Orders detail page. The correction is checked like a checkout address (required fields, a country the store ships to), sits beside Checkout's frozen copy, which never changes, raises the version, and is the address Orders shows and hands on from then on. An order ships whole; there are no partial shipments. The store ID is the canonical store ID the DinkusKit sign-in service already gives Payments; Commerce gets it when it connects to the Ship service, a later change, so this change stores none. Fulfillment status, marking shipped, tracking, test-order handling and shipped emails are separate decisions.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanDi9YHvj4p2KCoTobq99duw",
+      "created_at": "2026-10-10T16:24:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-paid-order-handoff-001",
+        "commerce-delivery-address-001"
+      ],
+      "domain": "Commerce order identity for Ship",
+      "history": [
+        {
+          "at": "2026-10-10T16:24:02+00:00",
+          "choice": "Each kept order keeps Checkout's order id as its permanent id; it never changes. Orders also gives each order a short number for people, counting up from 1001 in the order Orders first keeps them. A number is never reused and may skip when two orders arrive at the same moment; orders kept before numbering get theirs, oldest paid first, the next time the Orders page opens. Each kept order has a version that starts at 1 and goes up by one on every owner change; any later handoff (Ship, emails) names the version it used, and Ship labels only the latest. The owner can correct the delivery address of an order that has one, on its Orders detail page. The correction is checked like a checkout address (required fields, a country the store ships to), sits beside Checkout's frozen copy, which never changes, raises the version, and is the address Orders shows and hands on from then on. An order ships whole; there are no partial shipments. The store ID is the canonical store ID the DinkusKit sign-in service already gives Payments; Commerce gets it when it connects to the Ship service, a later change, so this change stores none. Fulfillment status, marking shipped, tracking, test-order handling and shipped emails are separate decisions.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T16:43:27+00:00",
+          "choice": "Each kept order keeps Checkout's order id as its permanent id; it never changes. Orders also gives each order a short number for people, counting up from 1001 in the order Orders first keeps them. A number is never reused and may skip when two orders arrive at the same moment; orders kept before numbering get theirs, oldest paid first, the next time the Orders page opens. Each kept order has a version that starts at 1 and goes up by one on every owner change; any later handoff (Ship, emails) names the version it used, and Ship labels only the latest. The owner can correct the delivery address of an order that has one, on its Orders detail page. The correction is checked like a checkout address (required fields, a country the store ships to), sits beside Checkout's frozen copy, which never changes, raises the version, and is the address Orders shows and hands on from then on. An order ships whole; there are no partial shipments. The store ID is the canonical store ID the DinkusKit sign-in service already gives Payments; Commerce gets it when it connects to the Ship service, a later change, so this change stores none. Fulfillment status, marking shipped, tracking, test-order handling and shipped emails are separate decisions.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T16:43:27+00:00",
+          "choice": "Each kept order keeps Checkout's order id as its permanent id; it never changes. Orders also gives each order a short number for people, counting up from 1001 in the order Orders first keeps them. A number is never reused and may skip when two orders arrive at the same moment; orders kept before numbering get theirs, oldest paid first, the next time the Orders page opens. Each kept order has a version that starts at 1 and goes up by one on every owner change; any later handoff (Ship, emails) names the version it used, and Ship labels only the latest. The owner can correct the delivery address of an order that has one, on its Orders detail page. The correction is checked like a checkout address (required fields, a country the store ships to), sits beside Checkout's frozen copy, which never changes, raises the version, and is the address Orders shows and hands on from then on. An order ships whole; there are no partial shipments. The store ID is the canonical store ID the DinkusKit sign-in service already gives Payments; Commerce gets it when it connects to the Ship service, a later change, so this change stores none. Fulfillment status, marking shipped, tracking, test-order handling and shipped emails are separate decisions.",
+          "from": "implemented",
+          "implementation_ref": "branch claude/project-thread-xphlol: src/features/orders/store.ts, admin/page.ts, admin/view.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-order-identity-001",
+      "implementation_ref": "branch claude/project-thread-xphlol: src/features/orders/store.ts, admin/page.ts, admin/view.ts",
+      "question": "How does Commerce identify an order for Ship and let the owner correct it after payment?",
+      "rationale": "Ronald accepted recommendations 1 to 5 in the project thread at 2026-10-10 16:19 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T16:43:27+00:00",
+      "verification_ref": "bin/verify-commerce full passed (unit 495, integration 46, browser 12 incl. orders address correction); backend 123,535 bytes"
     }
   ],
   "last_activation": {
@@ -9840,5 +9912,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T12:55:33+00:00"
+  "updated_at": "2026-10-10T16:43:27+00:00"
 }

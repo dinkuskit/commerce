@@ -3,7 +3,7 @@ import Database from 'better-sqlite3';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Kysely, SqliteDialect } from 'kysely';
-import { PluginStorageRepository } from 'emdash';
+import { OptionsRepository, PluginStorageRepository } from 'emdash';
 import { createCheckoutStore, startCheckout } from '../../dist/features/checkout/index.js';
 import { fixture, cart, withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
 
@@ -67,18 +67,37 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     expect(snapshot()).toEqual(original);
     const matrix = [{ actor: 'Orders anonymous and forged editor', result: 'list/detail denied; canonical storage unchanged' }];
     await page.reload();
-    await expect(page.getByRole('button', { name: 'Inspect ' + paid.order.orderId, exact: true })).toBeVisible({ timeout: 60000 });
+    // Orders numbers each copy it keeps; people see the short number, the order id stays on the detail.
+    const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
+    await expect(page.getByRole('button', { name: /^Inspect #100[12]$/ }).first()).toBeVisible({ timeout: 60000 });
+    const inspect = async order => 'Inspect #' + (await kept.get(order.orderId)).number;
+    expect([(await kept.get(paid.order.orderId)).number, (await kept.get(free.order.orderId)).number].sort()).toEqual([1001, 1002]);
     await capture('orders-list-desktop');
-    const open = page.getByRole('button', { name: 'Inspect ' + paid.order.orderId, exact: true });
+    const open = page.getByRole('button', { name: await inspect(paid.order), exact: true });
     await open.focus(); await page.keyboard.press('Enter');
     await expect(page.getByText('Receipt: ' + paid.order.receiptId)).toBeVisible();
     await expect(page.getByText('Checkout attempt: ' + paid.order.attemptId)).toBeVisible();
     await expect(page.getByText('Payment: Provider-paid')).toBeVisible();
     await expect(page.getByText('USD 2.50', { exact: true })).toBeVisible();
     await expect(page.getByText('Fulfillment: Not recorded')).toBeVisible();
+    await expect(page.getByText('Order ID: ' + paid.order.orderId)).toBeVisible();
+    await expect(page.getByText('Version: 1')).toBeVisible();
     await capture('orders-provider-detail');
+    // The owner corrects the address; Checkout's frozen copy stays and the version goes up.
+    // A corrected address must go to one of the store's shipping countries.
+    await new OptionsRepository(db).compareAndSet('plugin:' + pluginId + ':settings:merchantStoreSettings', null, { recordKind: 'merchant-store-settings',
+      storeCountry: 'US', sellingCountries: ['US'], shippingCountries: ['US'], requirePhoneNumber: false });
+    await interact('Correct address');
+    await page.getByLabel('Address line 1').fill('2 Corrected Road');
+    await capture('orders-address-form');
+    await interact('Save address');
+    await expect(page.getByText('Address saved', { exact: true })).toBeVisible();
+    await expect(page.getByText(/2 Corrected Road.*\(corrected\)/)).toBeVisible();
+    await expect(page.getByText('Version: 2')).toBeVisible();
+    await capture('orders-address-corrected');
+    expect((await kept.get(paid.order.orderId)).delivery.line1).toBe('2 Corrected Road');
     await interact('Back to orders');
-    await interact('Inspect ' + free.order.orderId);
+    await interact(await inspect(free.order));
     await expect(page.getByText('Payment: Zero payable — no payment required')).toBeVisible();
     await expect(page.getByText('USD 0.00', { exact: true }).last()).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
@@ -86,7 +105,6 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await interact('Back to orders');
     expect(snapshot()).toEqual(original);
     // The page read Orders' own copies, brought in from Checkout the first time it found none.
-    const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
     expect((await kept.get(paid.order.orderId)).paidOrder).toEqual({ schema: 'dinkuskit.commerce.paid-order/v1', ...paid.order });
     // A malformed Checkout aggregate fails Bring in missing orders closed.
     await orders.compareAndSet('orders-invalid', null, { attempts: null });
@@ -102,7 +120,7 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await page.reload();
     await interact('Bring in missing orders');
     await expect(page.getByText('No missing orders', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Inspect ' + paid.order.orderId, exact: true })).toBeVisible({ timeout: 60000 });
+    await expect(page.getByRole('button', { name: await inspect(paid.order), exact: true })).toBeVisible({ timeout: 60000 });
     await page.setViewportSize({ width: 1440, height: 1000 });
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'orders-canonical.json'), JSON.stringify({ paid: paid.order, free: free.order }, null, 2));
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'http-matrix.json'), JSON.stringify(matrix, null, 2));

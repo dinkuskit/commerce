@@ -92,6 +92,10 @@
       "indexes": [],
       "uniqueIndexes": []
     },
+    "order_numbers": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
     "store_shipping_policy": {
       "indexes": [],
       "uniqueIndexes": []
