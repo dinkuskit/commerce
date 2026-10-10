@@ -69,15 +69,23 @@ reader as Payments responses.
 Checkout keeps the accepted total (issue 34):
 
 - A quote that fails (network error, timeout, 5xx, refused) makes start
-  unavailable. No attempt is written and no payment starts, so checkout never
-  continues at full price on its own.
+  return `COUPON_UNAVAILABLE`. No attempt is written and no payment starts, so
+  checkout never continues at full price on its own; the shopper removes the
+  coupon to accept the full price.
+- A quote whose arithmetic disagrees with Commerce's own prices (a line total
+  that is not price times quantity, a discount above its line, totals that do
+  not add up) is refused the same way before anything is frozen. Commerce
+  checks the service's quote with the same validator the Payments request
+  uses.
 - A hold that fails or whose answer is lost keeps the attempt in `reserving`
   without a payment session. The next start or status call retries with the
   same attempt identity and the same amount; the service answers retries of an
   existing attempt from its frozen quote.
 - A hold the service refuses for good (`CAPACITY_EXHAUSTED`, `INVALID_INPUT`,
   `CONFLICTING_ATTEMPT`, `TERMINAL_CONFLICT`) releases the attempt before any
-  payment, exactly as the in-process owner's refusals do.
+  payment, exactly as the in-process owner's refusals do. The attempt records
+  `coupon.refused`, and the guest projection shows `COUPON_UNAVAILABLE` on it
+  so a storefront never keeps showing the coupon as applied.
 - The service keeps issued quotes for 24 hours. A hold first attempted after
   that is refused (`QUOTE_NOT_ISSUED`); no use is held for that attempt and none
   can be, so the attempt is released without payment.
@@ -99,3 +107,5 @@ Checkout keeps the accepted total (issue 34):
   pass leaves coupon codes unavailable while checkout without one still works.
 - `npm run build:sandbox` measured the Registry backend at 117,068 bytes,
   14,004 under the limit; the coupon port and quote validation add 4,662.
+  Checking the service's quote arithmetic and reporting `COUPON_UNAVAILABLE`
+  add 373 more (117,441 bytes, 13,631 under the limit).

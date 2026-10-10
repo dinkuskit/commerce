@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createHostedCouponPort, reconcileCheckout, startCheckout } from '../../../dist/features/checkout/index.js';
+import { createHostedCouponPort, projectGuestCheckout, reconcileCheckout, startCheckout } from '../../../dist/features/checkout/index.js';
 import { CouponRedemptionError } from '../../../dist/features/coupons/index.js';
 import { pricingFixture } from './pricing-fixture.mjs';
 import { COUPON_SERVICE_ORIGIN, COUPON_SERVICE_PASS, couponServiceFake } from './coupon-service-fake.mjs';
@@ -54,7 +54,7 @@ test('a coupon service failure at quote never continues at full price', async t 
   ]) {
     const f = await hosted(t);
     f.intercept(failure);
-    await assert.rejects(startCheckout(f.execution, 'cart', f.input));
+    await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Coupon unavailable/);
     assert.equal(await f.execution.store.read('cart'), null);
     assert.equal(f.sessions.size, 0);
   }
@@ -103,6 +103,49 @@ test('a refused or expired hold releases the attempt before any payment', async 
   assert.deepEqual(expired.service.calls.map(call => call.path),
     ['/quotes', '/redemptions', `/redemptions/${released.attemptId}/release-unstarted`]);
   assert.equal((await expired.coupons.get(expired.coupon.couponId)).attempts.length, 0);
+});
+
+test('a quote whose arithmetic disagrees with Commerce prices never freezes a total', async t => {
+  for (const tamper of [
+    quote => { quote.lines[0].lineSubtotal.minor = '400'; },
+    quote => { quote.lines[0].discount.minor = '1200'; quote.discount.minor = '1200'; },
+    quote => { quote.payableMerchandiseTotal.minor = '100'; },
+  ]) {
+    const f = await hosted(t);
+    f.intercept(async (url, init) => {
+      const response = await f.service.fetch(url, init);
+      if (path(url) !== '/quotes') return response;
+      const body = await response.json();
+      tamper(body.quote);
+      return Response.json(body);
+    });
+    await assert.rejects(startCheckout(f.execution, 'cart', f.input), /Coupon unavailable/);
+    assert.equal(await f.execution.store.read('cart'), null);
+    assert.deepEqual(f.service.calls.map(call => call.path), ['/quotes']);
+    assert.equal(f.sessions.size, 0);
+  }
+});
+
+test('a refused coupon says so, and only removing it checks out at full price', async t => {
+  const f = await hosted(t);
+  await startCheckout(f.execution, 'first', f.input);
+  const refused = await startCheckout(f.execution, 'second', f.input);
+  assert.equal(refused.phase, 'released');
+  assert.equal(refused.coupon.refused, true);
+  const shown = projectGuestCheckout(refused, 0);
+  assert.equal(shown.state, 'released-retry');
+  assert.equal(shown.unavailable.code, 'COUPON_UNAVAILABLE');
+  // Asking again with the same coupon is refused again, never charged at full price.
+  const again = await startCheckout(f.execution, 'second', f.input, refused.attemptId);
+  assert.equal(again.phase, 'released');
+  assert.equal(projectGuestCheckout(again, 0).unavailable.code, 'COUPON_UNAVAILABLE');
+  assert.equal(f.sessions.size, 1);
+  // Removing the coupon is the shopper accepting the full price.
+  const { couponCode: _dropped, ...withoutCoupon } = f.input;
+  const full = await startCheckout(f.execution, 'second', withoutCoupon, again.attemptId);
+  assert.equal(full.phase, 'paying');
+  assert.equal(f.sessions.get(full.attemptId).request.total.minor, '1000');
+  assert.equal(projectGuestCheckout(full, 0).unavailable, null);
 });
 
 test('the hosted port answers like the in-process owner', async t => {

@@ -246,3 +246,9 @@
 {"action": "decision_implemented", "at": "2026-10-09T17:11:41+00:00", "data": {"decision_id": "registry-checkout-hosted-coupons-001"}, "event_id": "2314d1e5-a1c8-4add-8e6d-bf59cd4219d1"}
 {"action": "decision_verified", "at": "2026-10-09T17:11:41+00:00", "data": {"decision_id": "commerce-allowed-hosts-coupons-dinkuskit-com"}, "event_id": "6c95b73d-a568-4214-96d7-61797e62c1f1"}
 {"action": "decision_verified", "at": "2026-10-09T17:11:41+00:00", "data": {"decision_id": "registry-checkout-hosted-coupons-001"}, "event_id": "8031692d-e7be-4fcc-99e8-78a39d1d1516"}
+{"action": "focus_started", "at": "2026-10-10T03:17:06+00:00", "data": {"cadence": "sequential", "domain": "Guest checkout coupon failures (issue 34)"}, "event_id": "2e07e844-687c-403e-99f6-27adb6b018f8"}
+{"action": "decision_proposed", "at": "2026-10-10T03:17:06+00:00", "data": {"decision_id": "guest-checkout-coupon-unavailable-034"}, "event_id": "b4ef4626-e05b-40e6-b9f1-10138815c933"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-10T03:21:37+00:00", "data": {"summary": "The project owner approved on 2026-10-10 (03:21 UTC, project thread for commerce issues 34 and 32) the COUPON_UNAVAILABLE answer for guest checkout and the check of coupon quote arithmetic against Commerce's prices before freezing."}, "event_id": "0f0764ae-502a-49ef-8cdb-689dfa624ea5"}
+{"action": "decision_locked", "at": "2026-10-10T03:21:37+00:00", "data": {"decision_id": "guest-checkout-coupon-unavailable-034"}, "event_id": "74ec8c99-695d-4688-b4f5-1b12ecd0e19d"}
+{"action": "decision_implemented", "at": "2026-10-10T03:21:38+00:00", "data": {"decision_id": "guest-checkout-coupon-unavailable-034"}, "event_id": "2e0bdc93-2ea3-466d-a470-09bd442cbf92"}
+{"action": "decision_verified", "at": "2026-10-10T03:21:38+00:00", "data": {"decision_id": "guest-checkout-coupon-unavailable-034"}, "event_id": "8e34d16b-4da9-4832-a7a6-a05cdc903d8a"}

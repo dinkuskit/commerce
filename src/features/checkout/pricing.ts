@@ -1,4 +1,4 @@
-import { normalizeCouponCode } from "../coupons/index.js";
+import { normalizeCouponCode, validateCouponQuoteSnapshot } from "../coupons/index.js";
 import type { CouponQuote, CouponQuoteSnapshot } from "../coupons/index.js";
 import { normalizeMoney, parseMinorUnits, type Money } from "../catalog/kernel/index.js";
 import type {
@@ -93,14 +93,22 @@ export async function composeCheckoutPricing(
   let normalizedCode: string | undefined;
   if (couponCode !== undefined) {
     normalizedCode = normalizeCouponCode(couponCode);
-    const quoted = await pricing.coupons?.quote(normalizedCode, {
-      catalog: execution.catalog.catalog,
-      prices: execution.catalog.prices,
-    }, {
-      quoteId: `${attemptId}:coupon`,
-      lines: cart.map((line) => ({ productId: line.catalogItemId, quantity: line.quantity })),
-      now: new Date((execution.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
-    });
+    let quoted;
+    try {
+      quoted = await pricing.coupons?.quote(normalizedCode, {
+        catalog: execution.catalog.catalog,
+        prices: execution.catalog.prices,
+      }, {
+        quoteId: `${attemptId}:coupon`,
+        lines: cart.map((line) => ({ productId: line.catalogItemId, quantity: line.quantity })),
+        now: new Date((execution.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
+      });
+    } catch (error) {
+      // An unknown, expired or unreachable coupon never prices the cart; the
+      // shopper removes it to accept the full price (issue 34).
+      if (error instanceof Error && /Product un/.test(error.message)) throw error;
+      fail("Coupon unavailable");
+    }
     if (!quoted) fail("Coupon unavailable");
     couponId = quoted.couponId;
     quote = quoted.quote;
@@ -110,6 +118,11 @@ export async function composeCheckoutPricing(
       !sameMoney(line.unitPrice, lines[index].unitPrice))) {
       fail("Catalog changed during pricing");
     }
+    // A quote whose arithmetic disagrees with Commerce's own prices never
+    // freezes, wherever it was evaluated.
+    try {
+      validateCouponQuoteSnapshot(quoteSnapshot(quote, quote.payableMerchandiseTotal), "coupon quote");
+    } catch { fail("Coupon unavailable"); }
   }
   const pricingLines = lines.map((line, index) => couponLine(quote, line, index));
   const merchandiseSubtotal = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n));

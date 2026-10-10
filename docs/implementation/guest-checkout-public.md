@@ -187,6 +187,15 @@ Projection schema `dinkuskit.commerce.guest-checkout-projection/v1`:
 | `retryAfter` | Released attempt id required to start the next attempt |
 | `unavailable` | Guest-safe code/message for genuine unavailable attempt state; never raw provider errors |
 
+A `released-retry` attempt whose coupon hold was refused carries
+`unavailable: { code: "COUPON_UNAVAILABLE" }`; its `pricing` is the released
+attempt's history, not a discount that still applies. `COUPON_UNAVAILABLE`
+(HTTP 409) also answers a start whose coupon is unknown, no longer applies,
+cannot be reached or comes back with arithmetic that disagrees with Commerce's
+prices. Checkout never continues at full price on its own: the storefront drops
+the coupon and the shopper starts again without it, which is their explicit
+acceptance of the full price.
+
 `order` never includes `paymentId`, provider secrets, or other shopper data.
 Unexpected provider or storage failures return guest-safe `UNAVAILABLE` and
 never raw provider, storage, or secret strings. A pre-retained capability
@@ -194,7 +203,7 @@ keeps a durable recoverable attempt; terminal failures are not swallowed
 into fake paid.
 
 Error codes: `CAPABILITY_DENIED`, `CHECKOUT_FROZEN`, `CHECKOUT_NOT_FOUND`,
-`CONTENTION`, `INVALID_CART`, `INVENTORY_UNAVAILABLE`, `ORIGIN_DENIED`,
+`CONTENTION`, `COUPON_UNAVAILABLE`, `INVALID_CART`, `INVENTORY_UNAVAILABLE`, `ORIGIN_DENIED`,
 `PAYMENTS_UNAVAILABLE`, `PRODUCT_UNAVAILABLE`, `RETRY_REQUIRED`,
 `UNAVAILABLE`.
 
@@ -229,4 +238,6 @@ Synthetic Payments ports exist only in trusted test injection. They prove
 transport, capability, and projection. They are not Stripe. Actual Stripe
 is separately not run. Real provider `createdAt`/`expiresAt` remain an adapter
 obligation. Contact, delivery, shipping, tax, countries, carriers, phone,
-and receipt delivery remain unresolved follow-up work (issues 33/34).
+and receipt delivery remain unresolved follow-up work (issue 33). Coupon
+failure handling (issue 34) is in
+[registry-hosted-coupons.md](registry-hosted-coupons.md).
