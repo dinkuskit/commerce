@@ -161,6 +161,16 @@ test('a refused coupon says so, and only removing it checks out at full price', 
   assert.equal(projectGuestCheckout(full, 0).unavailable, null);
 });
 
+test('an attempt refused before reasons existed answers the fallback reason', async t => {
+  const f = await hosted(t);
+  await startCheckout(f.execution, 'first', f.input);
+  const refused = await startCheckout(f.execution, 'second', f.input);
+  // Attempts saved by the release that added COUPON_UNAVAILABLE stored `refused: true`.
+  const legacy = { ...refused, coupon: { ...refused.coupon, refused: true } };
+  assert.deepEqual(projectGuestCheckout(legacy, 0).unavailable, { code: 'COUPON_UNAVAILABLE', reason: 'not-applicable',
+    message: "Coupon can't be used; remove it to check out at full price" });
+});
+
 test('the hosted port answers like the in-process owner', async t => {
   const f = await hosted(t);
   const port = f.execution.pricing.coupons;

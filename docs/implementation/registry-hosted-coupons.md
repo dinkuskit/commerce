@@ -115,4 +115,4 @@ Checkout keeps the accepted total (issue 34):
   14,004 under the limit; the coupon port and quote validation add 4,662.
   Checking the service's quote arithmetic and reporting `COUPON_UNAVAILABLE`
   add 373 more (117,441 bytes, 13,631 under the limit).
-  Specific coupon reasons add 737 more (118,178 bytes, 12,894 under the limit).
+  Specific coupon reasons add 836 more (118,277 bytes, 12,795 under the limit).
