@@ -27,3 +27,23 @@ test('a feature naming another feature\'s storage is refused', () => {
 test('the repository itself passes the feature contract', async () => {
   assert.deepEqual(await auditFeatures(), []);
 });
+
+test('the coupon core never loads Checkout, so the hosted coupon service can vendor it', async () => {
+  // dinkuskit/coupons bundles every file this reaches; Checkout pulls in its
+  // settings and EmDash's sign-in package, which grew that Worker eightfold.
+  const { readFile } = await import('node:fs/promises');
+  const { posix } = await import('node:path');
+  const reached = new Set();
+  const queue = ['src/features/coupons/index.ts'];
+  while (queue.length) {
+    const path = queue.pop();
+    if (reached.has(path)) continue;
+    reached.add(path);
+    const source = await readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+    for (const [, from] of source.matchAll(/^(?:import|export)\s+(?!type\b)[^;]*?from\s+["'](\.[^"']+)["']/gm)) {
+      queue.push(posix.normalize(posix.join(posix.dirname(path), from)).replace(/\.js$/, '.ts'));
+    }
+  }
+  assert.ok(reached.has('src/features/catalog/kernel/index.ts'));
+  assert.deepEqual([...reached].filter(path => /^src\/features\/(checkout|store-settings|checkout-contact)\//.test(path)), []);
+});

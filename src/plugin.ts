@@ -5,7 +5,7 @@ import {
   PUBLIC_CATALOG_ITEM_ROUTE,
   readPublicCatalog,
   readPublicCatalogItem,
-} from "./features/catalog/kernel/index.js";
+} from "./features/catalog/storefront/index.js";
 import {
   createInstalledCheckoutHandlers,
   GUEST_CHECKOUT_DECLARED_HEADERS,
