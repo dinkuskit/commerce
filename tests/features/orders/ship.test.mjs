@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, completeOrder, correctDelivery, createPaidOrderReceiver, reopenOrder, syncShip } from '../../../dist/features/orders/index.js';
+import { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, completeOrder, correctDelivery, createPaidOrderReceiver, reopenOrder, shipLabelPage, syncShip } from '../../../dist/features/orders/index.js';
 
 // In-memory storage with revisions, enough for compare-and-set.
 function collection() {
@@ -164,4 +164,10 @@ test('a backlog goes to Ship a few orders per sync', async () => {
   await syncShip(kept, connection, item);
   assert.equal(state.sent.length, SHIP_ORDERS_PER_SYNC + 3);
   assert.equal(new Set(state.sent.map(sent => sent.orderId)).size, SHIP_ORDERS_PER_SYNC + 3);
+});
+
+test('Ship\'s label page for an order is on Ship\'s origin under the store\'s id, both encoded', () => {
+  assert.equal(shipLabelPage({ origin: 'https://ship.example.test/', site: 'synthetic-site' }, 'order:01/a b'),
+    'https://ship.example.test/stores/synthetic-site/orders/order%3A01%2Fa%20b');
+  assert.equal(shipLabelPage({ origin: 'https://ship.example.test', site: 'site/1' }, 'o1'), 'https://ship.example.test/stores/site%2F1/orders/o1');
 });

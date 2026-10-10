@@ -10,6 +10,8 @@ export const SHIP_ORDERS_PER_SYNC = 10;
 export interface ShipConnection {
   /** Bare https origin, such as https://ship.dinkuskit.com. */
   origin: string;
+  /** The store's id at Ship, the same as in its passes. */
+  site: string;
   fetch: (url: string, init: RequestInit) => Promise<Response>;
   /** Reads a JSON answer, refusing one too large to be Ship's. */
   read: (response: Response) => Promise<unknown>;
@@ -22,6 +24,11 @@ export type ShipItemLookup = (catalogItemId: string) => Promise<{ physical: bool
 
 function unavailable(): never {
   throw new Error("Ship unavailable");
+}
+
+/** Ship's label page for one order. The owner signs in there with DinkusKit.com; the link carries no pass. */
+export function shipLabelPage(ship: Pick<ShipConnection, "origin" | "site">, orderId: string): string {
+  return new URL(ship.origin).origin + "/stores/" + encodeURIComponent(ship.site) + "/orders/" + encodeURIComponent(orderId);
 }
 
 /**

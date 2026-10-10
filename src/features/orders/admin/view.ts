@@ -65,8 +65,8 @@ function detailFields(...pairs: string[]): Block {
 }
 const notRecorded = 'Not recorded';
 const back = action('Back to orders', 'orders.list');
-/** Selection is the exact canonical order ID, never a row offset or payment ID. */
-export function ordersView(input: OrdersInspection, selectedOrderId?: string): BlockResponse {
+/** Selection is the exact canonical order ID, never a row offset or payment ID. `labelPage` is Ship's page for the selected order. */
+export function ordersView(input: OrdersInspection, selectedOrderId?: string, labelPage?: string): BlockResponse {
   const blocks: Block[] = [header()];
   if (selectedOrderId !== undefined) blocks.push(back);
   if (input.status === 'unavailable') return { blocks: [...blocks, unavailable('Orders unavailable', 'Order records could not be loaded. Try again.')] };
@@ -90,10 +90,12 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
       ...(done ? ['Completed at', done.at, 'Carrier', done.carrier ?? notRecorded, 'Tracking number', done.tracking ?? notRecorded] : []),
       'Ship to', shipTo(record)));
     // A Completed order's address is locked; moving it back to Processing unlocks it.
+    // A Processing order with an address links to Ship's label page when the store has Ship.
     blocks.push({ type: 'actions', elements: done
       ? [{ type: 'button', label: 'Move back to Processing', action_id: 'orders.reopen:' + version,
         confirm: { title: 'Move back to Processing?', text: 'Its carrier, tracking number and completion time are cleared.', confirm: 'Move back', deny: 'Cancel' } }]
-      : [{ type: 'button', label: 'Complete order', action_id: 'orders.finish:' + id },
+      : [...(labelPage && deliveryOf(record) ? [{ type: 'link' as const, label: 'Create shipping label', target: { kind: 'external' as const, url: labelPage }, appearance: 'primary' as const }] : []),
+        { type: 'button', label: 'Complete order', action_id: 'orders.finish:' + id },
         ...(deliveryOf(record) ? [{ type: 'button' as const, label: 'Correct address', action_id: 'orders.address:' + id }] : [])] });
     blocks.push({ type: 'header', text: 'Items' });
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.

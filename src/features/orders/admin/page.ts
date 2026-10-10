@@ -15,6 +15,8 @@ export interface OrdersServices {
   shippingCountries?: () => Promise<readonly string[]>;
   /** Brings Orders and Ship up to date; absent when the store has no Ship service. */
   ship?: () => Promise<void>;
+  /** Ship's label page for one order; undefined when the store has no Ship service. */
+  labelPage?: (orderId: string) => Promise<string | undefined>;
 }
 
 export function ordersInteraction(input: unknown): boolean {
@@ -104,7 +106,7 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
       if (form && record && !record.completed && (form === completeForm || (services.shippingCountries && deliveryOf(record)))) return form(record, saved && (form === addressForm
         ? 'Fill in every required field and use a country this store ships to.'
         : 'Carrier and tracking number must each be 64 characters or fewer.'), typed);
-      const view = ordersView({ status: 'available', orders }, selected);
+      const view = ordersView({ status: 'available', orders }, selected, await services.labelPage?.(selected).catch(() => undefined));
       const [done, doneText, refused, refusedText] = OUTCOMES[kind] ?? [];
       if (saved) view.blocks.splice(2, 0, saved === 'saved'
         ? { type: 'banner', variant: 'default', title: done, description: doneText }

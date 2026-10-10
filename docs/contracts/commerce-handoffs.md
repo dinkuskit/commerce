@@ -138,8 +138,11 @@ order so it can be labeled.
   them on its background check and when the Orders page opens, acknowledges
   each one, and completes the order with Ship's carrier and tracking number
   when it is still Processing at that version. Cancelling a label never moves
-  an order back. Ship emails the shopper when an order becomes Completed;
-  Commerce sends no email. Ship is its own plugin and service, so this message
-  is the same in every packaging.
+  an order back. Each Processing order with an address links to Ship's label
+  page for it, `<ship origin>/stores/<siteId>/orders/<orderId>` (each part
+  URL-encoded), where the owner signs in with DinkusKit.com; the link carries
+  no pass (GrillTrack `commerce-ship-label-link-001`). Ship emails the
+  shopper when an order becomes Completed; Commerce sends no email. Ship is
+  its own plugin and service, so this message is the same in every packaging.
 - **Under a split:** unchanged. Inventory and Ship are already outside
   Commerce, so this handoff is HTTP to a hosted service in every direction.

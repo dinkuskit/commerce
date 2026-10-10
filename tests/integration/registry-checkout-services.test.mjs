@@ -636,6 +636,12 @@ test('the compiled runtime sends paid orders to Ship, and a label bought in Ship
       lines: [{ catalogItemId: 'hat', name: 'Hat', quantity: 2, unitPrice: { currency: 'USD', minor: '250' }, weightOz: 4.5 }] });
     await shipAdmin(state, { type: 'page_load', page: '/orders' });
     assert.equal(ship.state.sent.length, 1);
+    // While it is Processing, the order's page links to Ship's label page for it; opening it calls nothing.
+    const open = async () => JSON.stringify(await shipAdmin(state, { type: 'block_action', action_id: 'orders.open:' + encodeURIComponent(orderId) }));
+    const calls = ship.state.calls, trades = state.counts.trades;
+    assert.ok((await open()).includes(JSON.stringify({ type: 'link', label: 'Create shipping label',
+      target: { kind: 'external', url: SHIP.origin + '/stores/synthetic-site/orders/' + encodeURIComponent(orderId) }, appearance: 'primary' })));
+    assert.deepEqual([ship.state.calls, state.counts.trades], [calls, trades]);
     // Ship bought a label: the background check completes the order with USPS and the tracking number, then tells Ship.
     ship.state.labels = [{ eventId: 'lbl_synthetic_1', orderId, version: 1, carrier: 'USPS', tracking: '9400 SYNTHETIC' }];
     await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
@@ -643,11 +649,13 @@ test('the compiled runtime sends paid orders to Ship, and a label bought in Ship
     const kept = await state.collections.orders.get(orderId);
     assert.deepEqual([kept.revision, kept.completed.carrier, kept.completed.tracking, kept.shipVersion], [2, 'USPS', '9400 SYNTHETIC', 2]);
     assert.deepEqual(ship.state.sent.map(order => [order.version, order.status]), [[1, 'processing'], [2, 'completed']]);
-    assert.match(JSON.stringify(await shipAdmin(state, { type: 'block_action', action_id: 'orders.open:' + encodeURIComponent(orderId) })), /9400 SYNTHETIC/);
+    const completed = await open();
+    assert.match(completed, /9400 SYNTHETIC/);
+    assert.doesNotMatch(completed, /Create shipping label/);
     // An agent's change reaches Ship right away; reading orders does not call Ship.
-    const calls = ship.state.calls;
+    const before = ship.state.calls;
     assert.equal((await shipAgent(state, { action: 'list' })).total, 1);
-    assert.equal(ship.state.calls, calls);
+    assert.equal(ship.state.calls, before);
     assert.equal((await shipAgent(state, { action: 'reopen', orderId, version: 2 })).result, 'saved');
     assert.deepEqual([ship.state.sent.at(-1).version, ship.state.sent.at(-1).status, ship.state.sent.at(-1).completed], [3, 'processing', null]);
     // A label list too large to be Ship's is refused before it is used: nothing is acknowledged or completed.
@@ -665,6 +673,10 @@ test('without a Ship service or a usable Ship pass, Orders calls nothing and kee
       await physicalShipOrder(state);
       const page = JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' }));
       assert.match(page, /#1001 \(TEST\)/);
+      // The label link needs Ship in the settings and a store key; whether Ship takes the key shows only on Ship's page.
+      const [{ id }] = (await state.collections.orders.query()).items;
+      const detail = JSON.stringify(await shipAdmin(state, { type: 'block_action', action_id: 'orders.open:' + encodeURIComponent(id) }));
+      assert.equal(detail.includes('Create shipping label'), options.config !== undefined);
       await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
       assert.deepEqual([ship.state.calls, state.counts.ship], [0, 0]);
       assert.equal((await state.collections.orders.query()).items[0].data.shipVersion, undefined);
