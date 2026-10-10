@@ -6,6 +6,7 @@ import {
   type CouponAdminPort,
   type CouponCollection,
   type CouponDiscount,
+  type CouponNotApplicableReason,
   type CouponRecord,
   type CouponRule,
 } from "./types.js";
@@ -19,6 +20,8 @@ export class CouponAdminError extends Error {
       | "REVISION_CONFLICT"
       | "STORAGE_UNAVAILABLE",
     message: string,
+    /** Set when a coupon does not apply to a cart; the minimum comes with minimum-not-met. */
+    readonly notApplicable?: { reason: CouponNotApplicableReason; minimum?: Money },
   ) {
     super(message);
     this.name = "CouponAdminError";

@@ -41,6 +41,24 @@ below the rule threshold:
   subtotal that reduces overall payable merchandise total to zero (100% or
   fixed full subtotal) remains valid and reconciles through the free-order seam.
 
+## Why a coupon does not apply
+
+Every evaluator refusal for a coupon that does not apply is a
+`CouponAdminError` with code `INVALID_INPUT` and a `notApplicable` field the
+checkout reports to the shopper as a reason
+([guest contract](guest-checkout-public.md#coupons-that-cant-be-used)):
+
+| `notApplicable.reason` | When |
+| --- | --- |
+| `not-found` | The coupon is turned off (an unknown code never reaches the evaluator) |
+| `not-started` | `now` is before `startsAt` |
+| `expired` | `now` is at or after `endsAt` |
+| `no-qualifying-items` | No cart line qualifies (product selection, sale items). Such a cart is refused rather than quoted at a zero discount |
+| `minimum-not-met` | Qualifying merchandise is below the minimum; `notApplicable.minimum` carries it |
+
+Messages are unchanged. The hosted coupon service passes `reason` and
+`minimum` on in its `NOT_APPLICABLE` answer.
+
 ## Trusted free-order seam
 
 Only a durable Commerce owner may supply a whitelisted completed-order proof:

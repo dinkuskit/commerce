@@ -9,6 +9,7 @@ export {
   type CouponRedemptionState,
   type ReserveCouponRedemptionInput,
   type CouponFreeOrderProof,
+  type CouponNotApplicableReason,
 } from "./types.js";
 export {
   CouponAdminError,

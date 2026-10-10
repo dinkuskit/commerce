@@ -3,6 +3,7 @@ import {
   GUEST_CHECKOUT_PROJECTION_SCHEMA,
   type CheckoutAttempt,
   type CheckoutPricingSnapshot,
+  type CouponUnavailableReason,
   type GuestCheckoutErrorCode,
   type GuestCheckoutLine,
   type GuestCheckoutProjection,
@@ -37,15 +38,25 @@ function stateOf(attempt: CheckoutAttempt): GuestCheckoutState {
   return "pending";
 }
 
+const COUPON_REASONS: readonly string[] = [
+  "not-found", "not-started", "expired", "minimum-not-met", "no-qualifying-items", "not-applicable", "used-up", "try-later",
+];
+
 function unavailableOf(
   attempt: CheckoutAttempt,
-): { code: GuestCheckoutErrorCode; message: string } | null {
+): GuestCheckoutProjection["unavailable"] {
   if (attempt.phase === "paid" && attempt.order) return null;
   if (attempt.phase === "released" && !attempt.coupon?.refused) return null;
   if (attempt.phase === "paying" && attempt.session) return null;
-  const code: GuestCheckoutErrorCode = attempt.coupon?.refused
-    ? "COUPON_UNAVAILABLE"
-    : attempt.phase === "reserving" && attempt.stock
+  const refused: unknown = attempt.coupon?.refused;
+  if (refused) {
+    // Attempts saved before reasons existed hold `refused: true`; they answer the fallback reason.
+    const reason = typeof refused === "string" && COUPON_REASONS.includes(refused)
+      ? refused as CouponUnavailableReason
+      : "not-applicable";
+    return { code: "COUPON_UNAVAILABLE", message: guestCheckoutErrorMessage("COUPON_UNAVAILABLE"), reason };
+  }
+  const code: GuestCheckoutErrorCode = attempt.phase === "reserving" && attempt.stock
     ? "INVENTORY_UNAVAILABLE"
     : attempt.phase === "paying"
       ? "PAYMENTS_UNAVAILABLE"

@@ -187,14 +187,33 @@ Projection schema `dinkuskit.commerce.guest-checkout-projection/v1`:
 | `retryAfter` | Released attempt id required to start the next attempt |
 | `unavailable` | Guest-safe code/message for genuine unavailable attempt state; never raw provider errors |
 
-A `released-retry` attempt whose coupon hold was refused carries
-`unavailable: { code: "COUPON_UNAVAILABLE" }`; its `pricing` is the released
-attempt's history, not a discount that still applies. `COUPON_UNAVAILABLE`
-(HTTP 409) also answers a start whose coupon is unknown, no longer applies,
-cannot be reached or comes back with arithmetic that disagrees with Commerce's
-prices. Checkout never continues at full price on its own: the storefront drops
-the coupon and the shopper starts again without it, which is their explicit
-acceptance of the full price.
+### Coupons that can't be used
+
+`COUPON_UNAVAILABLE` (HTTP 409) answers a start whose coupon can't be used. It
+carries a `reason`, and `minimum` with `minimum-not-met`. Commerce sends the
+reason; the storefront writes the shopper's words (and can translate them).
+
+| `reason` | Meaning | Example wording for a storefront |
+| --- | --- | --- |
+| `not-found` | No such code, or the merchant turned it off | "That code isn't valid." |
+| `not-started` | The coupon's start date has not come | "That coupon isn't active yet." |
+| `expired` | The coupon's end date has passed | "That coupon has expired." |
+| `minimum-not-met` | Qualifying items total less than `minimum` (USD minor units) | "Spend $50.00 on qualifying items to use this coupon." |
+| `no-qualifying-items` | No item in the cart qualifies (product list, sale items) | "That coupon doesn't apply to the items in your cart." |
+| `used-up` | Its use limit was reached when checkout tried to hold a use | "That coupon has been fully used." |
+| `try-later` | The coupon service can't be reached, isn't set up, or answered inconsistently | "We can't check coupons right now. Try again, or remove it." |
+| `not-applicable` | Fallback when the coupon owner gives no finer reason | "That coupon can't be used for this order." |
+
+On sandbox routes the reason is in the result's `error` (`{ ok: false, error:
+{ code, message, reason, minimum? } }`); native routes put it in the host
+error's `details`. A `released-retry` attempt whose coupon hold was refused
+carries the same fields in `unavailable`; its `pricing` is the released
+attempt's history, not a discount that still applies.
+
+Checkout never continues at full price on its own: the storefront drops the
+coupon and the shopper starts again without it, which is their explicit
+acceptance of the full price. Raw coupon service messages never reach the
+shopper.
 
 `order` never includes `paymentId`, provider secrets, or other shopper data.
 Unexpected provider or storage failures return guest-safe `UNAVAILABLE` and

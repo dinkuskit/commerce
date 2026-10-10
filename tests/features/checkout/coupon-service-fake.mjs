@@ -24,7 +24,7 @@ function canonical(value) {
 }
 
 class Refusal extends Error {
-  constructor(status, code) { super(code); this.status = status; this.code = code; }
+  constructor(status, code, detail) { super(code); this.status = status; this.code = code; this.detail = detail; }
 }
 
 function pricedStorage(lines) {
@@ -66,7 +66,7 @@ export function couponServiceFake(collection, {
           quoteId, lines: lines.map(({ productId, quantity }) => ({ productId, quantity })), now: now(),
         });
       } catch (error) {
-        if (error instanceof CouponAdminError && error.code === 'INVALID_INPUT') throw new Refusal(422, 'NOT_APPLICABLE');
+        if (error instanceof CouponAdminError && error.code === 'INVALID_INPUT') throw new Refusal(422, 'NOT_APPLICABLE', error.notApplicable);
         throw error;
       }
       if (!result) throw new Refusal(404, 'NOT_FOUND');
@@ -107,7 +107,7 @@ export function couponServiceFake(collection, {
     } catch (error) {
       const status = error instanceof Refusal ? error.status : error instanceof CouponRedemptionError ? STATUS[error.code] ?? 500 : 500;
       const code = error instanceof Refusal || error instanceof CouponRedemptionError ? error.code : 'INTERNAL';
-      return Response.json({ error: { code, message: error.message } }, { status });
+      return Response.json({ error: { code, message: error.message, ...error.detail } }, { status });
     }
   }
 

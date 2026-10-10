@@ -61,7 +61,9 @@ function nativeRuntime(
 
 function throwIfDenied(result: GuestCheckoutResult): GuestCheckoutResult {
   if (result.ok) return result;
-  throw new PluginRouteError(result.error.code, result.error.message, new GuestCheckoutError(result.error.code).status);
+  const { code, message, reason, minimum } = result.error;
+  throw new PluginRouteError(code, message, new GuestCheckoutError(code).status,
+    reason ? { reason, ...(minimum ? { minimum } : {}) } : undefined);
 }
 
 async function runNative(

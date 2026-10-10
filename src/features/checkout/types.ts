@@ -3,7 +3,7 @@ import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
 import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
-import type { CheckoutCouponPort, CouponQuoteSnapshot } from "../coupons/index.js";
+import type { CheckoutCouponPort, CouponNotApplicableReason, CouponQuoteSnapshot } from "../coupons/index.js";
 import type {
   CheckoutContactRequirementsLoader,
   CheckoutContactSnapshot,
@@ -190,8 +190,8 @@ export interface CheckoutAttempt {
     couponId: string;
     code: string;
     status: "unreserved" | "pending" | "released" | "consumed";
-    /** The coupon owner refused the hold before payment; the attempt released without a charge. */
-    refused?: true;
+    /** Why the coupon owner refused the hold before payment; the attempt released without a charge. */
+    refused?: CouponUnavailableReason;
   };
 }
 /** One durable aggregate per trusted cart. Preserve past attempts and paid receipts. */
@@ -262,6 +262,15 @@ export type GuestCheckoutState =
   | "recoverable-failure"
   | "released-retry";
 
+/**
+ * Why a coupon can't be used. The storefront writes the shopper's words.
+ * not-applicable is the fallback when the coupon owner gives no finer reason.
+ */
+export type CouponUnavailableReason = CouponNotApplicableReason | "not-applicable" | "used-up" | "try-later";
+
+/** A coupon that can't be used, as the guest sees it; minimum comes with minimum-not-met. */
+export interface CouponUnavailable { reason: CouponUnavailableReason; minimum?: Money }
+
 export type GuestCheckoutErrorCode =
   | "CAPABILITY_DENIED"
   | "CHECKOUT_FROZEN"
@@ -312,7 +321,7 @@ export interface GuestCheckoutProjection {
   redirectUrl: string | null;
   order: GuestCheckoutOrderSummary | null;
   retryAfter: string | null;
-  unavailable: { code: GuestCheckoutErrorCode; message: string } | null;
+  unavailable: ({ code: GuestCheckoutErrorCode; message: string } & Partial<CouponUnavailable>) | null;
 }
 
 export interface GuestCapabilityPresentation {
@@ -385,5 +394,5 @@ export type GuestCheckoutResult =
     }
   | {
       ok: false;
-      error: { code: GuestCheckoutErrorCode; message: string };
+      error: { code: GuestCheckoutErrorCode; message: string } & Partial<CouponUnavailable>;
     };

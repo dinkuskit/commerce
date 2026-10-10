@@ -428,6 +428,33 @@ test('shipping validation and absent coupon never create attempts or calls', asy
   assert.equal(f.sessions.size, 0);
 });
 
+test('a coupon that does not apply says why, before attempts or calls', async t => {
+  const f = await pricingFixture(t);
+  const base = { ruleId: 'reasons-rule', version: 1, discount: { kind: 'fixed', amount: { currency: 'USD', minor: '100' } },
+    appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
+    minimumEligibleMerchandise: { currency: 'USD', minor: '0' }, startsAt: '2026-01-01T00:00:00Z', endsAt: '2027-01-01T00:00:00Z', timeZone: 'UTC' };
+  const create = (code, rule) => f.admin.create({ code, globalCap: 5, rule: { ...base, ...rule } });
+  await create('LATER', { startsAt: '2026-12-01T00:00:00Z' });
+  await create('OVER', { endsAt: '2026-02-01T00:00:00Z' });
+  await create('BIGSPEND', { minimumEligibleMerchandise: { currency: 'USD', minor: '999999' } });
+  await create('OTHERS', { appliesTo: 'selected-products', selectedProductIds: ['not-in-cart'] });
+  const off = await create('OFF', {});
+  await f.admin.edit(off.couponId, off.revision, { disabled: true });
+  for (const [couponCode, expected] of [
+    ['NOPE', { reason: 'not-found' }],
+    ['OFF', { reason: 'not-found' }],
+    ['LATER', { reason: 'not-started' }],
+    ['OVER', { reason: 'expired' }],
+    ['BIGSPEND', { reason: 'minimum-not-met', minimum: { currency: 'USD', minor: '999999' } }],
+    ['OTHERS', { reason: 'no-qualifying-items' }],
+  ]) {
+    await assert.rejects(startCheckout(f.execution, 'cart', { ...f.input, couponCode }),
+      error => assert.deepEqual(error.coupon, expected) ?? true, couponCode);
+  }
+  assert.equal(await f.execution.store.read('cart'), null);
+  assert.equal(f.sessions.size, 0);
+});
+
 test('pricing without bound coupon support rejects every coupon code before attempts or calls', async t => {
   const f = await pricingFixture(t);
   delete f.execution.pricing.coupons;

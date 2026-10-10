@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-10T09:28:51+00:00",
-    "domain": "Checkout asks for a delivery address when the basket has a physical item",
-    "started_at": "2026-10-10T09:28:51+00:00",
+    "confirmed_at": "2026-10-10T12:55:32+00:00",
+    "domain": "Guest checkout coupon failures (issue 34)",
+    "started_at": "2026-10-10T12:55:32+00:00",
     "status": "confirmed",
-    "summary": "The owner approved the delivery-address rule on 2026-10-10 (03:56 UTC, decision card in the Commerce restructuring project thread): any basket with a physical item, unmarked items counting as physical, asks for a delivery address in one of the store's shipping countries; no setting, no billing address; the address rides in the contact snapshot and the paid order."
+    "summary": "The project owner chose on 2026-10-10 (03:34 UTC 'Full detail', 03:55 UTC 'Refuse it') specific coupon reasons for guest checkout, including refusing a coupon no cart item qualifies for instead of applying it at zero. This replaces the single COUPON_UNAVAILABLE code he approved at 03:21 UTC."
   },
   "decisions": [
     {
@@ -9563,6 +9563,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T12:55:33+00:00",
+          "choice": "Guest checkout adds one error code, COUPON_UNAVAILABLE (HTTP 409). Start returns it when the coupon code is unknown, no longer applies, the coupon service cannot be reached or is not configured, or the service's quote has arithmetic that disagrees with Commerce's own prices (checked with validateCouponQuoteSnapshot before anything is frozen). When the coupon owner refuses the hold before payment, the attempt records coupon.refused and its released-retry projection carries unavailable COUPON_UNAVAILABLE, so a storefront never keeps showing the coupon as applied. Checkout never continues at full price on its own: the storefront drops the coupon and the shopper starts again without it, which is their explicit acceptance of the full price. All other codes and behaviour are unchanged.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/checkout/pricing.ts file:src/features/checkout/project.ts file:src/features/checkout/orchestrate.ts file:src/features/checkout/guest.ts file:src/features/checkout/errors.ts",
+          "note": "The owner chose full detail (specific reasons) and refusing coupons no cart item qualifies for on 2026-10-10.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": "file:tests/features/checkout/registry-coupons.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
         }
       ],
       "id": "guest-checkout-coupon-unavailable-034",
@@ -9575,9 +9589,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-10T03:21:38+00:00",
+      "status": "superseded",
+      "superseded_by": "guest-checkout-coupon-reasons-035",
+      "updated_at": "2026-10-10T12:55:33+00:00",
       "verification_ref": "file:tests/features/checkout/registry-coupons.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
     },
     {
@@ -9719,6 +9733,77 @@
       "superseded_by": null,
       "updated_at": "2026-10-10T09:35:16+00:00",
       "verification_ref": "file:.grilltrack/proof/delivery-address-20261010/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "COUPON_UNAVAILABLE carries a reason (and, for minimum-not-met, the minimum as USD minor units) that the storefront words for the shopper: not-found (unknown or turned-off code), not-started, expired, minimum-not-met, no-qualifying-items (no cart line qualifies, so the coupon is refused instead of applying at zero), used-up (capacity refused at hold), try-later (service unreachable, unconfigured, or a quote whose arithmetic disagrees with Commerce's prices), and not-applicable only as the fallback when the coupon owner gives no finer reason. The reason comes from Commerce's coupon evaluator (CouponAdminError.notApplicable) in process and from the coupon service's NOT_APPLICABLE body (reason, minimum) over HTTP; Commerce checks both before using them. Refused holds record the reason on the attempt and the released projection reports it. Raw service messages never reach shoppers, and no reason ever continues checkout at full price on its own.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/34",
+      "created_at": "2026-10-10T12:55:32+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "registry-checkout-hosted-coupons-001"
+      ],
+      "domain": "Guest checkout coupon failures (issue 34)",
+      "history": [
+        {
+          "at": "2026-10-10T12:55:33+00:00",
+          "choice": "COUPON_UNAVAILABLE carries a reason (and, for minimum-not-met, the minimum as USD minor units) that the storefront words for the shopper: not-found (unknown or turned-off code), not-started, expired, minimum-not-met, no-qualifying-items (no cart line qualifies, so the coupon is refused instead of applying at zero), used-up (capacity refused at hold), try-later (service unreachable, unconfigured, or a quote whose arithmetic disagrees with Commerce's prices), and not-applicable only as the fallback when the coupon owner gives no finer reason. The reason comes from Commerce's coupon evaluator (CouponAdminError.notApplicable) in process and from the coupon service's NOT_APPLICABLE body (reason, minimum) over HTTP; Commerce checks both before using them. Refused holds record the reason on the attempt and the released projection reports it. Raw service messages never reach shoppers, and no reason ever continues checkout at full price on its own.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T12:55:33+00:00",
+          "choice": "COUPON_UNAVAILABLE carries a reason (and, for minimum-not-met, the minimum as USD minor units) that the storefront words for the shopper: not-found (unknown or turned-off code), not-started, expired, minimum-not-met, no-qualifying-items (no cart line qualifies, so the coupon is refused instead of applying at zero), used-up (capacity refused at hold), try-later (service unreachable, unconfigured, or a quote whose arithmetic disagrees with Commerce's prices), and not-applicable only as the fallback when the coupon owner gives no finer reason. The reason comes from Commerce's coupon evaluator (CouponAdminError.notApplicable) in process and from the coupon service's NOT_APPLICABLE body (reason, minimum) over HTTP; Commerce checks both before using them. Refused holds record the reason on the attempt and the released projection reports it. Raw service messages never reach shoppers, and no reason ever continues checkout at full price on its own.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T12:55:33+00:00",
+          "choice": "COUPON_UNAVAILABLE carries a reason (and, for minimum-not-met, the minimum as USD minor units) that the storefront words for the shopper: not-found (unknown or turned-off code), not-started, expired, minimum-not-met, no-qualifying-items (no cart line qualifies, so the coupon is refused instead of applying at zero), used-up (capacity refused at hold), try-later (service unreachable, unconfigured, or a quote whose arithmetic disagrees with Commerce's prices), and not-applicable only as the fallback when the coupon owner gives no finer reason. The reason comes from Commerce's coupon evaluator (CouponAdminError.notApplicable) in process and from the coupon service's NOT_APPLICABLE body (reason, minimum) over HTTP; Commerce checks both before using them. Refused holds record the reason on the attempt and the released projection reports it. Raw service messages never reach shoppers, and no reason ever continues checkout at full price on its own.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/checkout/pricing.ts file:src/features/checkout/registry-coupons.ts file:src/features/checkout/guest.ts file:src/features/checkout/project.ts file:src/features/checkout/orchestrate.ts file:src/features/checkout/route.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "guest-checkout-coupon-reasons-035",
+      "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/checkout/pricing.ts file:src/features/checkout/registry-coupons.ts file:src/features/checkout/guest.ts file:src/features/checkout/project.ts file:src/features/checkout/orchestrate.ts file:src/features/checkout/route.ts",
+      "question": "How specific is guest checkout about why a coupon can't be used?",
+      "rationale": "The owner chose full detail on 2026-10-10 after a comparison with WooCommerce (17 coupon error codes with a merchant wording filter), Shopify (CartWarningCode discount reasons since Storefront API 2025-07) and BigCommerce (one coupon error object); see /mnt/project-files/guest-checkout-coupons/coupon-failure-reasons.md in the project. Codes, not wording, keep translation and merchant wording in the storefront. Supersedes guest-checkout-coupon-unavailable-034, which had one undifferentiated code.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T12:55:33+00:00",
+      "verification_ref": "file:tests/features/checkout/checkout-pricing-recovery.test.mjs file:tests/features/checkout/checkout-pricing-hosted.test.mjs file:tests/features/checkout/registry-coupons.test.mjs file:tests/features/coupons/acceptance.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
     }
   ],
   "last_activation": {
@@ -9755,5 +9840,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T09:35:16+00:00"
+  "updated_at": "2026-10-10T12:55:33+00:00"
 }

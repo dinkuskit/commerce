@@ -1,6 +1,7 @@
 import { isRecord, sortedKeys } from "../../shared/record.js";
 import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
 import { startCheckout, reconcileCheckout } from "./orchestrate.js";
+import { CouponUnavailableError } from "./pricing.js";
 import { authorizeGuestCapability, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
@@ -108,10 +109,14 @@ function mapCheckoutError(error: unknown): never {
     if (error.code.startsWith("DELIVERY_")) throw new GuestCheckoutError("INVALID_CART", error.message);
     fail("INVALID_CART");
   }
+  if (error instanceof CouponUnavailableError) {
+    const mapped = new GuestCheckoutError("COUPON_UNAVAILABLE");
+    mapped.coupon = error.coupon;
+    throw mapped;
+  }
   const message = error instanceof Error ? error.message : "";
   if (/Invalid cart|Invalid quantity|Zero-total/i.test(message)) fail("INVALID_CART");
   if (/frozen/i.test(message)) fail("CHECKOUT_FROZEN");
-  if (/Coupon unavailable/.test(message)) fail("COUPON_UNAVAILABLE");
   if (/Retry requires/i.test(message)) fail("RETRY_REQUIRED");
   if (/Retry checkout not found|Checkout not found/i.test(message)) fail("CHECKOUT_NOT_FOUND");
   if (/Product unavailable|Product unpriced/i.test(message)) fail("PRODUCT_UNAVAILABLE");
@@ -172,14 +177,16 @@ function currentAttempt(attempts: CheckoutAttempt[]): CheckoutAttempt | undefine
   return attempts[attempts.length - 1];
 }
 
-// mapCheckoutError rethrows a GuestCheckoutError unchanged and maps anything else.
+function guestSafeError(error: GuestCheckoutError): GuestCheckoutResult {
+  return { ok: false, error: { code: error.code, message: error.message, ...structuredClone(error.coupon) } };
+}
+
 function guestSafeResult(error: unknown): GuestCheckoutResult {
+  if (error instanceof GuestCheckoutError) return guestSafeError(error);
   try {
     mapCheckoutError(error);
   } catch (mapped) {
-    if (mapped instanceof GuestCheckoutError) {
-      return { ok: false, error: { code: mapped.code, message: mapped.message } };
-    }
+    if (mapped instanceof GuestCheckoutError) return guestSafeError(mapped);
   }
   return guestCheckoutFailure("UNAVAILABLE");
 }

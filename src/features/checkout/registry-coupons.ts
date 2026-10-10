@@ -22,7 +22,7 @@ export interface HostedCouponServiceConfig {
 const FINAL: readonly string[] = ["CAPACITY_EXHAUSTED", "INVALID_INPUT", "CONFLICTING_ATTEMPT", "TERMINAL_CONFLICT"];
 
 class CouponServiceError extends Error {
-  constructor(readonly code: string) {
+  constructor(readonly code: string, readonly notApplicable?: Record<string, unknown>) {
     super(`Coupon service answered ${code || "without a code"}`);
   }
 }
@@ -48,7 +48,9 @@ export function createHostedCouponPort(config: HostedCouponServiceConfig): Check
     try { value = await readBoundedPaymentsJson(response); } catch { /* reported below */ }
     if (response.ok && object(value)) return value;
     const error = object(value) && object(value.error) ? value.error : {};
-    throw new CouponServiceError(response.ok || typeof error.code !== "string" ? "" : error.code);
+    // NOT_APPLICABLE may say why; checkout checks the reason and minimum it uses.
+    throw new CouponServiceError(response.ok || typeof error.code !== "string" ? "" : error.code,
+      { reason: error.reason, minimum: error.minimum });
   }
 
   async function attempt(path: string, body: unknown, unissued?: CouponAttempt): Promise<CouponAttempt> {
