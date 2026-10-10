@@ -373,3 +373,6 @@
 {"action": "decision_verified", "at": "2026-10-10T23:34:23+00:00", "data": {"decision_id": "commerce-checkout-settings-paste-001"}, "event_id": "a5aaf88b-47ef-4054-a887-f24b80dfe9fc"}
 {"action": "decision_verified", "at": "2026-10-10T23:34:23+00:00", "data": {"decision_id": "registry-coupons-unhooked-v1"}, "event_id": "6ad15b0c-4c86-488e-9737-422394f54db1"}
 {"action": "decision_implemented", "at": "2026-10-10T23:34:24+00:00", "data": {"decision_id": "commerce-store-key-release-gate-001"}, "event_id": "7abbd1fc-970c-4327-95cb-3d69a40410cd"}
+{"action": "decision_proposed", "at": "2026-10-10T23:47:52+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "51aedf49-0398-49df-9051-12f4ace25677"}
+{"action": "decision_locked", "at": "2026-10-10T23:47:52+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "8072a394-b14d-43db-a9ff-22aba4456dbb"}
+{"action": "decision_implemented", "at": "2026-10-10T23:47:52+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "ce487c9c-2543-4435-b658-143a15eadecc"}
