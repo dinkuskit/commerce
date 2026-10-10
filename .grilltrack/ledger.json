@@ -3,11 +3,12 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": false,
+    "confirmed": true,
+    "confirmed_at": "2026-10-10T03:21:37+00:00",
     "domain": "Guest checkout coupon failures (issue 34)",
     "started_at": "2026-10-10T03:17:06+00:00",
-    "status": "grilling",
-    "summary": "Close issue 34's remaining gaps: a coupon quote whose arithmetic disagrees with Commerce's prices must never freeze, and a coupon that fails or is refused must tell the storefront so instead of leaving it shown as applied. Issue 32's acceptance list is already covered by existing tests."
+    "status": "confirmed",
+    "summary": "The project owner approved on 2026-10-10 (03:21 UTC, project thread for commerce issues 34 and 32) the COUPON_UNAVAILABLE answer for guest checkout and the check of coupon quote arithmetic against Commerce's prices before freezing."
   },
   "decisions": [
     {
@@ -9520,21 +9521,64 @@
         "registry-checkout-hosted-coupons-001"
       ],
       "domain": "Guest checkout coupon failures (issue 34)",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-10T03:21:37+00:00",
+          "choice": "Guest checkout adds one error code, COUPON_UNAVAILABLE (HTTP 409). Start returns it when the coupon code is unknown, no longer applies, the coupon service cannot be reached or is not configured, or the service's quote has arithmetic that disagrees with Commerce's own prices (checked with validateCouponQuoteSnapshot before anything is frozen). When the coupon owner refuses the hold before payment, the attempt records coupon.refused and its released-retry projection carries unavailable COUPON_UNAVAILABLE, so a storefront never keeps showing the coupon as applied. Checkout never continues at full price on its own: the storefront drops the coupon and the shopper starts again without it, which is their explicit acceptance of the full price. All other codes and behaviour are unchanged.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T03:21:38+00:00",
+          "choice": "Guest checkout adds one error code, COUPON_UNAVAILABLE (HTTP 409). Start returns it when the coupon code is unknown, no longer applies, the coupon service cannot be reached or is not configured, or the service's quote has arithmetic that disagrees with Commerce's own prices (checked with validateCouponQuoteSnapshot before anything is frozen). When the coupon owner refuses the hold before payment, the attempt records coupon.refused and its released-retry projection carries unavailable COUPON_UNAVAILABLE, so a storefront never keeps showing the coupon as applied. Checkout never continues at full price on its own: the storefront drops the coupon and the shopper starts again without it, which is their explicit acceptance of the full price. All other codes and behaviour are unchanged.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T03:21:38+00:00",
+          "choice": "Guest checkout adds one error code, COUPON_UNAVAILABLE (HTTP 409). Start returns it when the coupon code is unknown, no longer applies, the coupon service cannot be reached or is not configured, or the service's quote has arithmetic that disagrees with Commerce's own prices (checked with validateCouponQuoteSnapshot before anything is frozen). When the coupon owner refuses the hold before payment, the attempt records coupon.refused and its released-retry projection carries unavailable COUPON_UNAVAILABLE, so a storefront never keeps showing the coupon as applied. Checkout never continues at full price on its own: the storefront drops the coupon and the shopper starts again without it, which is their explicit acceptance of the full price. All other codes and behaviour are unchanged.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout/pricing.ts file:src/features/checkout/project.ts file:src/features/checkout/orchestrate.ts file:src/features/checkout/guest.ts file:src/features/checkout/errors.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
       "id": "guest-checkout-coupon-unavailable-034",
-      "implementation_ref": null,
+      "implementation_ref": "file:src/features/checkout/pricing.ts file:src/features/checkout/project.ts file:src/features/checkout/orchestrate.ts file:src/features/checkout/guest.ts file:src/features/checkout/errors.ts",
       "question": "What does guest checkout tell the shopper when their coupon can't be used?",
-      "rationale": "Issue 34 requires that a stale, cancelled, expired or removed promotion cannot leave a stale applied UI and that a revised price needs explicit shopper acceptance. Before this, coupon failures surfaced as the generic UNAVAILABLE and a refused hold released with no reason, so a storefront could not tell the coupon was the problem. A service quote with wrong line totals could also freeze a wrong total until the Payments adapter rejected it.",
+      "rationale": "Issue 34 requires that a stale, cancelled, expired or removed promotion cannot leave a stale applied UI and that a revised price needs explicit shopper acceptance. Before this, coupon failures surfaced as the generic UNAVAILABLE and a refused hold released with no reason, so a storefront could not tell the coupon was the problem. A service quote with wrong line totals could also freeze a wrong total until the Payments adapter rejected it. Locked by the project owner (GitHub saariuslystoned) on 2026-10-10 03:21 UTC.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T03:17:06+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-10T03:21:38+00:00",
+      "verification_ref": "file:tests/features/checkout/registry-coupons.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
     }
   ],
   "last_activation": {
@@ -9571,5 +9615,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T03:17:06+00:00"
+  "updated_at": "2026-10-10T03:21:38+00:00"
 }
