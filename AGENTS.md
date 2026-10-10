@@ -10,9 +10,13 @@ for EmDash sites. Assume every committed byte is immediately public.
 3. `.grilltrack/ledger.json`, maintained only through the GrillTrack CLI.
 4. Current source, tests, and committed proof.
 
-Use Node 22.23.2 per `.nvmrc`; in cloud agents put nvm's Node ahead of
-`/exec-daemon` on `PATH` with `export PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH"`
-and verify `node -v`.
+Use Node 22.23.2 per `.nvmrc` and verify `node -v`. In Cursor cloud agents put
+nvm's Node ahead of `/exec-daemon` on `PATH` with
+`export PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH"`. In Claude Code
+cloud sessions the environment supplies that Node, and
+`.claude/hooks/session-start.sh` installs dependencies from the lockfile, the
+pinned agent skills below and the Playwright browser, then reports anything
+missing; read that report before running project scripts.
 
 ## Running GrillTrack
 
