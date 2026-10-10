@@ -100,10 +100,13 @@ test('the Checkout to Orders handoff keeps the first copy and reports repeats an
   { ...fresh, contactSnapshot: { ...snap, contact: { ...snap.contact, delivery: { ...snap.contact.delivery, note: 'x' } } } },
   ...[{ country: 'USA' }, { country: 'us' }, { city: 'X\u0007' }, { line1: 'x'.repeat(201) }, { name: ' A' }]
    .map(d => ({ ...fresh, contactSnapshot: { ...snap, contact: { ...snap.contact, delivery: { ...snap.contact.delivery, ...d } } } })),
-  { ...fresh, contactSnapshot: { ...snap, contact: { email: 'not-an-email' } } }])
+  { ...fresh, contactSnapshot: { ...snap, contact: { email: 'not-an-email' } } },
+  ...['LIVE', 'production', '', null, true].map(mode => ({ ...fresh, mode }))])
   await assert.rejects(receiver.receive(bad), /Invalid paid order/);
  assert.equal(records.size, 1);
  assert.equal(await receiver.receive(fresh), 'stored');
+ assert.equal(await receiver.receive({ ...fresh, orderId: 'order:live', mode: 'live' }), 'stored');
+ assert.equal(await receiver.receive({ ...fresh, orderId: 'order:test', mode: 'test' }), 'stored');
 });
 
 test('copies kept before the contact check still list, showing No address', async () => {

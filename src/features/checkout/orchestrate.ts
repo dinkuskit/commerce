@@ -83,6 +83,7 @@ async function freeze(
     attemptId,
     cart,
     contactSnapshot,
+    ...(e.paymentMode ? { paymentMode: e.paymentMode } : {}),
     ...(selections.length ? { variantSelections: selections } : {}),
     payment: createCurrentPaymentRequest({
     attemptId, bindingRef: e.paymentBindingRef, lines, total,
@@ -294,6 +295,7 @@ function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: Che
   next.order = {
     orderId: "order:" + attemptId, receiptId: "receipt:" + attemptId, attemptId,
     ...(paymentId === undefined ? {} : { paymentId }),
+    ...(attempt.paymentMode ? { mode: attempt.paymentMode } : {}),
     paidAt: new Date((e.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
     lines: attempt.payment.lines, total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
@@ -380,6 +382,8 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       } else {
         // Current host support is not an authoritative provider creation fence.
         if (attempt.payment.pricing && e.pricing?.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
+        // Started in the other mode: wait until the store is back in it, so a test payment never becomes a live order or the reverse.
+        if ((attempt.paymentMode ?? "test") !== (e.paymentMode ?? "test")) return attempt;
         let outcome: PaymentOutcome;
         try {
           const payments = await e.resolvePayments(attempt.payment.bindingRef);

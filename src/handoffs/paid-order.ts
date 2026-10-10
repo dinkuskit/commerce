@@ -37,6 +37,11 @@ export interface PaidOrder {
   /** Inventory ticket ids from reserve, when the provider returned them. */
   ticketIds?: readonly string[];
   contactSnapshot?: CheckoutContactSnapshot;
+  /**
+   * "live" only when the store and Payments were both set to live payments.
+   * "test" or absent is a test order: no money moved and no postage is bought.
+   */
+  mode?: "test" | "live";
 }
 
 /**

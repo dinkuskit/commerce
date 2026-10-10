@@ -328,6 +328,69 @@ test('predecessor v1 enabled config without mode still uses TEST Payments bindin
   assert.equal(state.requests[0].total.minor, '250');
 });
 
+test('a store set to live records live orders only while Payments says its binding is live', async () => {
+  // One workerd runtime at a time.
+  const paidOrder = async options => {
+    const state = await runtimeFixture(options);
+    try {
+      const { token, result } = await start(state);
+      assert.equal(result.ok, true);
+      state.setPaid();
+      const paid = await state.invoke(STATUS, {}, token);
+      assert.equal(paid.checkout.state, 'paid');
+      // Checkout's own copy and the copy Orders keeps agree; the shopper's view does not carry it.
+      const kept = (await state.collections.orders.query()).items.map(item => item.data.paidOrder);
+      assert.equal(kept.length, 1);
+      assert.equal(kept[0].mode, (await state.cartRecords())[0].attempts[0].order.mode);
+      assert.equal(Object.hasOwn(paid.checkout.order, 'mode'), false);
+      return kept[0];
+    } finally { await state.close(); }
+  };
+  assert.equal((await paidOrder({ config: { ...configuration(), mode: 'live' }, bindingMode: 'live' })).mode, 'live');
+  assert.equal((await paidOrder({})).mode, 'test');
+  assert.equal((await paidOrder({ config: legacyStripeConfiguration() })).mode, 'test');
+  // Either side alone set to live takes no payment.
+  for (const [config, bindingMode] of [[{ ...configuration(), mode: 'live' }, 'test'], [configuration(), 'live'], [legacyStripeConfiguration(), 'live']]) {
+    const state = await runtimeFixture({ config, bindingMode });
+    try {
+      await start(state);
+      assert.equal(state.requests.length, 0);
+      assert.deepEqual((await state.collections.orders.query()).items, []);
+    } finally { await state.close(); }
+  }
+});
+
+test('a checkout keeps the mode it started in when the store and Payments switch before the payment is looked up', async () => {
+  for (const [from, to] of [['test', 'live'], ['live', 'test']]) {
+    const state = await runtimeFixture({ config: { ...configuration(), mode: from }, bindingMode: from });
+    try {
+      const { token, result } = await start(state);
+      assert.equal(result.ok, true);
+      assert.equal((await state.cartRecords())[0].attempts[0].paymentMode, from);
+      const lookups = () => state.requests.length + state.counts.transport;
+      // Both sides switch while the payment is open, and Payments now reports it paid.
+      const switchTo = async mode => {
+        await state.settings.set('installedCheckout', JSON.stringify({ ...configuration(), mode }));
+        state.setBindingMode(mode);
+      };
+      await switchTo(to);
+      state.setPaid();
+      const before = lookups();
+      const waiting = await state.invoke(STATUS, {}, token);
+      assert.notEqual(waiting.checkout.state, 'paid');
+      assert.equal(lookups(), before);
+      assert.deepEqual((await state.collections.orders.query()).items, []);
+      assert.equal((await state.cartRecords())[0].attempts[0].phase, 'paying');
+      // Switched back, the same payment finishes as an order in the mode it started in.
+      await switchTo(from);
+      const paid = await state.invoke(STATUS, {}, token);
+      assert.equal(paid.checkout.state, 'paid');
+      const kept = (await state.collections.orders.query()).items.map(item => item.data.paidOrder);
+      assert.deepEqual(kept.map(order => order.mode), [from]);
+    } finally { await state.close(); }
+  }
+});
+
 test('malformed or copied configuration is rejected before encrypted credential/transport', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
@@ -336,8 +399,8 @@ test('malformed or copied configuration is rejected before encrypted credential/
     { ...configuration(), schema: 'unsupported' },
     { ...configuration(), paymentsOrigin: 'http://8.8.8.8' },
     { ...configuration(), providerId: 'unsupported' },
-    { ...configuration(), mode: 'live' },
-    { ...authorizeNetConfiguration(), mode: 'live' },
+    { ...configuration(), mode: 'LIVE' },
+    { ...authorizeNetConfiguration(), mode: 'production' },
     { ...authorizeNetConfiguration(), stripeAccountId: 'acct_overloaded' },
     { ...configuration(), authorizeNetMerchantId: 'anet' },
     { ...configuration(), pricingSchema: 'unsupported' },

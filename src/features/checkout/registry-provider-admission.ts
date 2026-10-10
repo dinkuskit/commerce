@@ -1,7 +1,7 @@
 import { normalizeMoney } from "../catalog/kernel/index.js";
 import { isRecord as obj } from "../../shared/record.js";
 import { registryUnavailable as fail, registryText as text, exactKeys as keys } from "./registry-guards.js";
-import { CHECKOUT_PRICING_SCHEMA, type TrustedShippingConfiguration } from "./types.js";
+import { CHECKOUT_PRICING_SCHEMA, type PaymentMode, type TrustedShippingConfiguration } from "./types.js";
 
 export const REGISTRY_CHECKOUT_CONFIG_SCHEMA = "dinkuskit.commerce.registry-checkout/v1" as const;
 export type RegistryCheckoutProviderId = "stripe" | "authorize_net";
@@ -16,7 +16,8 @@ export interface RegistryCheckoutConfig {
   providerId: RegistryCheckoutProviderId;
   stripeAccountId?: string;
   authorizeNetMerchantId?: string;
-  mode?: "test";
+  /** Must match what Payments says the binding is. Absent means test. */
+  mode?: PaymentMode;
   pricingSchema: typeof CHECKOUT_PRICING_SCHEMA;
   issuer: string;
   audience: string;
@@ -79,7 +80,7 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
       value.commerceOrigin !== site || !text(value.siteId) || !https(value.paymentsOrigin) ||
       !text(value.bindingRef) || value.pricingSchema !== CHECKOUT_PRICING_SCHEMA ||
       !https(value.issuer, false) || !text(value.audience) || !obj(value.shipping)) fail();
-  if (hasMode && value.mode !== "test") fail();
+  if (hasMode && value.mode !== "test" && value.mode !== "live") fail();
   if (coupons !== undefined &&
       (!obj(coupons) || !keys(coupons, "audience,origin") || !https(coupons.origin) || !text(coupons.audience))) fail();
   if (providerId === "stripe") {
@@ -94,7 +95,7 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
 export function trustedPaymentsHostConfig(config: RegistryCheckoutConfig, commerceOrigin: string) {
   return {
     paymentsOrigin: config.paymentsOrigin, siteId: config.siteId, commerceOrigin,
-    bindingRef: config.bindingRef, providerId: config.providerId,
+    bindingRef: config.bindingRef, providerId: config.providerId, mode: config.mode,
     ...(config.providerId === "stripe"
       ? { stripeAccountId: config.stripeAccountId as string }
       : { authorizeNetMerchantId: config.authorizeNetMerchantId }),

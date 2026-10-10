@@ -26,7 +26,9 @@ recomputed price.
    only. `stripeAccountId` stays Stripe-only. The `authorize_net` sentinel and
    any cross-provider field fail closed.
 3. Sandbox only. No live endpoints, live credentials, or live-mode toggle until
-   Ryan approves live.
+   Ryan approves live. (Superseded for Commerce by `commerce-payment-mode-001`:
+   Commerce accepts `mode: "live"` when Payments' binding is also live; a real
+   store still goes live only on Ryan's word.)
 4. An order is marked paid only by an authoritative transaction lookup whose
    amount and currency match. A signed webhook alone never marks paid.
 
@@ -45,7 +47,8 @@ Measured on the compiled `dist/sandbox/plugin.mjs` (not source):
 
 1. `providerId` may be `stripe` or `authorize_net`.
 2. Optional `authorizeNetMerchantId` only with `authorize_net`.
-3. Optional `mode`, when present, must be `test`.
+3. Optional `mode` is `test` (also when absent) or `live`, and must match
+   Payments' binding (`commerce-payment-mode-001`).
 4. Paid requires authoritative Payments lookup matching the frozen attempt
    total and currency; webhook/return/token/timer never write paid.
 5. Backend under 131072 bytes with meaningful headroom via cohesive factoring

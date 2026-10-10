@@ -399,6 +399,40 @@ test("authorize_net TEST adapter admits sandbox bindings and rejects live or str
 });
 
 
+test("a port set to live admits only a live binding, and an unset port only a test one", async () => {
+  const request = {
+    attemptId: "live-1",
+    bindingRef: CONFIG.bindingRef,
+    lines: [{ catalogItemId: "hat", quantity: 1, name: "Hat", unitPrice: { currency: "USD", minor: "250" } }],
+    total: { currency: "USD", minor: "250" },
+    paymentWindow: { minSeconds: 1800, maxSeconds: 1860 },
+    paymentMethods: ["card"],
+  };
+  const port = (mode, bindingMode) => createTrustedTestPaymentPort({
+    ...CONFIG,
+    ...(mode === undefined ? {} : { mode }),
+    credentialResolver: async () => "credential",
+    fetch: async (url) => url.includes("binding")
+      ? response({ bindingRef: CONFIG.bindingRef, providerId: "stripe", stripeAccountId: "acct_test", mode: bindingMode, ready: true })
+      : response({ outcome: "not-created", attemptId: request.attemptId }),
+  });
+  assert.equal((await port("live", "live").ensureSession(request)).outcome, "not-created");
+  assert.equal((await port("test", "test").lookup(request)).outcome, "not-created");
+  assert.equal((await port(undefined, "test").ensureSession(request)).outcome, "not-created");
+  await assert.rejects(() => port("live", "test").ensureSession(request), /binding mismatch/);
+  await assert.rejects(() => port("live", "test").lookup(request), /binding mismatch/);
+  await assert.rejects(() => port(undefined, "live").ensureSession(request), /binding mismatch/);
+  await assert.rejects(() => port("test", "live").lookup(request), /binding mismatch/);
+  for (const mode of ["LIVE", "production", ""]) {
+    assert.throws(() => port(mode, "live"), /mode must be test or live/);
+  }
+  const host = (mode) => createTrustedTestPaymentsCheckoutHost({
+    ...CONFIG, ...(mode ? { mode } : {}), credentialResolver: async () => "credential", fetch: async () => response({}),
+  });
+  assert.equal(host("live").paymentMode, "live");
+  assert.equal(host(undefined).paymentMode, "test");
+});
+
 test("authorize_net binding rejects stripeAccountId wire field with no fallback", async () => {
   const anet = {
     paymentsOrigin: CONFIG.paymentsOrigin,

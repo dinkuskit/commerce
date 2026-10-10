@@ -8,6 +8,7 @@ import type {
   CurrentPaymentRequest,
   GuestCheckoutHostOptions,
   LegacyExact1800PaymentRequest,
+  PaymentMode,
   PaymentOutcome,
   PaymentRequest,
 } from "./types.js";
@@ -28,6 +29,8 @@ export interface TrustedTestPaymentsConfig {
   providerId: TrustedTestPaymentsProviderId;
   stripeAccountId?: string;
   authorizeNetMerchantId?: string;
+  /** Payments must report the same mode. Absent means test. */
+  mode?: PaymentMode;
   credentialResolver: () => Promise<string>;
   fetch: ScopedPaymentFetch;
   pricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
@@ -80,7 +83,7 @@ function assertTestBinding(value: unknown, expected: TrustedTestPaymentsConfig):
   const binding = value as Partial<PaymentBinding>;
   if (binding.bindingRef !== expected.bindingRef ||
       binding.providerId !== expected.providerId ||
-      binding.mode !== "test") {
+      binding.mode !== expected.mode) {
     throw new Error("Payments binding mismatch");
   }
   if (expected.providerId === "stripe") {
@@ -191,6 +194,8 @@ function normalizedConfig(
   if (input.pricingSchema !== undefined && input.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
     invalid("unsupported pricing schema");
   }
+  const mode = input.mode ?? "test";
+  if (mode !== "test" && mode !== "live") invalid("mode must be test or live");
   const stripe = input.providerId === "stripe";
   if (stripe ? input.authorizeNetMerchantId !== undefined : input.stripeAccountId !== undefined) {
     invalid(stripe ? "stripe must not set authorizeNetMerchantId" : "authorize_net must not set stripeAccountId");
@@ -201,6 +206,7 @@ function normalizedConfig(
     siteId: nonEmpty(input.siteId, "siteId"),
     bindingRef: nonEmpty(input.bindingRef, "bindingRef"),
     providerId: input.providerId,
+    mode,
     ...(stripe
       ? { stripeAccountId: nonEmpty(input.stripeAccountId ?? "", "stripeAccountId") }
       : input.authorizeNetMerchantId !== undefined
@@ -337,6 +343,7 @@ export function createTrustedTestPaymentsCheckoutHost(
   return Object.freeze({
     siteUrl: config.commerceOrigin,
     paymentBindingRef: config.bindingRef,
+    paymentMode: config.mode,
     resolvePayments: async (bindingRef: string) =>
       bindingRef === config.bindingRef ? port : null,
   });

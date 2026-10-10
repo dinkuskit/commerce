@@ -64,18 +64,25 @@ test("authorize_net is admitted beside stripe with optional merchant field", () 
   assert.equal(host.stripeAccountId, undefined);
 });
 
-test("unknown providers, live mode, and overloaded stripeAccountId fail closed", () => {
+test("unknown providers, unknown modes, and overloaded stripeAccountId fail closed", () => {
   rejects(legacyStripe({ providerId: "unsupported" }));
-  rejects(legacyStripe({ mode: "live" }));
-  rejects(authorizeNet({ mode: "live" }));
+  for (const mode of ["LIVE", "production", "sandbox", "", null, true]) {
+    rejects(legacyStripe({ mode }));
+    rejects(authorizeNet({ mode }));
+  }
   rejects(authorizeNet({ stripeAccountId: "acct_wrong" }));
   rejects(legacyStripe({ authorizeNetMerchantId: "anet" }));
   rejects(authorizeNet({ mode: "test", stripeAccountId: "acct_x" }));
 });
 
-test("optional mode test is admitted for both providers", () => {
-  assert.equal(admitRegistryCheckoutConfig(legacyStripe({ mode: "test" }), SITE).mode, "test");
-  assert.equal(admitRegistryCheckoutConfig(authorizeNet({ mode: "test" }), SITE).mode, "test");
+test("optional mode test or live is admitted for both providers and reaches the Payments host", () => {
+  for (const mode of ["test", "live"]) {
+    const stripe = admitRegistryCheckoutConfig(legacyStripe({ mode }), SITE);
+    assert.equal(stripe.mode, mode);
+    assert.equal(trustedPaymentsHostConfig(stripe, SITE).mode, mode);
+    assert.equal(admitRegistryCheckoutConfig(authorizeNet({ mode }), SITE).mode, mode);
+  }
+  assert.equal(trustedPaymentsHostConfig(admitRegistryCheckoutConfig(legacyStripe(), SITE), SITE).mode, undefined);
 });
 
 test("an optional hosted coupon service needs exactly an https origin and an audience", () => {

@@ -136,6 +136,8 @@ export interface PaymentSession {
   createdAt: number;
   expiresAt: number;
 }
+/** Test payments move no money. Live comes only from a store and Payments both set to live. */
+export type PaymentMode = "test" | "live";
 export type PaymentOutcome =
   | { outcome: "unknown" }
   | { outcome: "open"; attemptId: string; total: Money; session: PaymentSession }
@@ -168,6 +170,8 @@ interface CommerceOrderBase {
   contactSnapshot?: CheckoutContactSnapshot;
   /** When Checkout recorded the payment. Absent on orders paid before it was recorded. */
   paidAt?: string;
+  /** Only "live" is a real order; test or absent is a test order. */
+  mode?: PaymentMode;
 }
 export type CommerceOrder =
   | (CommerceOrderBase & { paymentId: string })
@@ -184,6 +188,8 @@ export interface CheckoutAttempt {
   ticketIds?: readonly string[];
   variantSelections?: readonly CheckoutVariantSelectionSnapshot[];
   contactSnapshot?: CheckoutContactSnapshot;
+  /** The store's mode when this attempt started. Payments is asked about it only while the store is in that mode, and its order records it. Absent means test. */
+  paymentMode?: PaymentMode;
   /** Durable canonical reason for releasing; host support or elapsed time is never a reason. */
   paymentReleaseReason?: "never-started" | "not-created" | "expired-unpaid";
   coupon?: {
@@ -217,6 +223,8 @@ export interface CheckoutExecution {
   availability: ResolveStorefrontAvailabilityExecution;
   resolveInventory(binding: InventoryProviderBinding): Promise<CheckoutInventoryPort | null>;
   paymentBindingRef: string;
+  /** Frozen on each new attempt. The Payments port refuses a binding in any other mode. Absent means test. */
+  paymentMode?: PaymentMode;
   resolvePayments(bindingRef: string): Promise<CheckoutPaymentPort | null>;
   /** Optional durable index, claimed before any external payment call. */
   paymentAssociations?: CheckoutPaymentAssociationPort;
@@ -350,6 +358,7 @@ export interface GuestCheckoutHostOptions {
   topLevelSiteUrl?: string;
   checkoutSiteUrl?: string;
   paymentBindingRef?: string;
+  paymentMode?: PaymentMode;
   resolvePayments?: CheckoutExecution["resolvePayments"];
   paymentAssociations?: CheckoutPaymentAssociationPort;
   resolveInventory?: CheckoutExecution["resolveInventory"];
