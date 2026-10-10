@@ -117,7 +117,7 @@
       "storeKey": {
         "type": "secret",
         "label": "Store key",
-        "description": "Paste from the Set up Commerce box on DinkusKit.com. Commerce trades it there for short passes to Payments, Coupons and Ship; Replace key on DinkusKit.com stops this one."
+        "description": "Paste from the Set up Commerce box on DinkusKit.com. Commerce trades it there for short passes to Payments and Ship; Replace key on DinkusKit.com stops this one."
       }
     },
     "pages": [
