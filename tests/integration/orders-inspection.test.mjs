@@ -49,7 +49,7 @@ test('Orders keeps its own copies of paid orders and reads only them across SQLi
     assert.ok(buttons(list).some(b=>b.label==='Bring in missing orders'));
     for (const [order, kind] of [[paid.order,'Provider-paid'],[free.order,'Zero payable']]) {
       const detail = JSON.stringify(await load({type:'block_action',action_id:'orders.open:'+encodeURIComponent(order.orderId)}));
-      for (const expected of [order.orderId,order.receiptId,order.attemptId,kind,'Not recorded','Back to orders',order.paidAt]) assert.ok(detail.includes(expected),expected);
+      for (const expected of [order.orderId,order.receiptId,order.attemptId,kind,'Processing','Back to orders',order.paidAt]) assert.ok(detail.includes(expected),expected);
     }
     assert.deepEqual(rows('checkout_carts'),cartsBefore);
     assert.deepEqual(rows('orders'),ordersBefore);
