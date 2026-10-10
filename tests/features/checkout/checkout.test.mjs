@@ -172,6 +172,41 @@ test('payment binding is frozen across configuration changes and missing old ada
   assert.equal(f.counts().releaseCalls,0);
 });
 
+test('an attempt keeps the payment mode it started in, and Payments is asked about it only in that mode',async t => {
+  const counted=f => { let n=0; const resolve=f.execution.resolvePayments; f.execution.resolvePayments=async ref => { n++; return resolve(ref); }; return () => n; };
+  const f=setup(t); f.execution.paymentMode='test';
+  const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
+  assert.equal(a.paymentMode,'test');
+  // The store and Payments switch to live while the test payment is open: no lookup, no order.
+  const asked=counted(f); f.execution.paymentMode='live'; f.setPayment('paid');
+  const waiting=await reconcileCheckout(f.execution,'guest-cart',a.attemptId);
+  assert.equal(waiting.phase,'paying'); assert.equal(waiting.order,undefined);
+  assert.equal((await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart))).phase,'paying');
+  assert.equal(asked(),0); assert.equal((await f.execution.store.read('guest-cart')).record.attempts[0].phase,'paying');
+  // Back in test, it finishes as the test order it always was.
+  f.execution.paymentMode='test';
+  const paid=await reconcileCheckout(f.execution,'guest-cart',a.attemptId);
+  assert.equal(paid.order.mode,'test'); assert.equal(asked(),1);
+  // A live attempt waits while the store is in test, or has no mode, and finishes live.
+  const g=setup(t); g.execution.paymentMode='live';
+  const b=await startCheckout(g.execution,'guest-cart',withSyntheticCheckoutContact(cart));
+  assert.equal(b.paymentMode,'live'); g.setPayment('paid');
+  for (const mode of ['test',undefined]) {
+    g.execution.paymentMode=mode;
+    assert.equal((await reconcileCheckout(g.execution,'guest-cart',b.attemptId)).phase,'paying');
+  }
+  g.execution.paymentMode='live';
+  assert.equal((await reconcileCheckout(g.execution,'guest-cart',b.attemptId)).order.mode,'live');
+  // An attempt saved before modes were kept is a test attempt.
+  const old=setup(t); const c=await startCheckout(old.execution,'guest-cart',withSyntheticCheckoutContact(cart));
+  assert.equal(Object.hasOwn(c,'paymentMode'),false); old.setPayment('paid'); old.execution.paymentMode='live';
+  assert.equal((await reconcileCheckout(old.execution,'guest-cart',c.attemptId)).phase,'paying');
+  old.execution.paymentMode='test';
+  const legacy=await reconcileCheckout(old.execution,'guest-cart',c.attemptId);
+  assert.equal(legacy.phase,'paid'); assert.equal(Object.hasOwn(legacy.order,'mode'),false);
+  assert.equal(f.counts().releaseCalls+g.counts().releaseCalls+old.counts().releaseCalls,0);
+});
+
 test('stale open lookup racing a payment confirmation cannot overwrite the paid receipt',async t => {
   const f=setup(t);const a=await startCheckout(f.execution,'guest-cart',withSyntheticCheckoutContact(cart));
   let resume, captured; const blocked=new Promise(r => captured=r), gate=new Promise(r => resume=r);

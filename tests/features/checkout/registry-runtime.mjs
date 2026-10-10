@@ -190,6 +190,7 @@ export async function runtimeFixture({
   });
   return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests,
     setPaid() { paid = true; },
+    setBindingMode(mode) { bindingMode = mode; },
     setWakes(values) { pending = structuredClone(values); },
     setTransportOverride(fn) { override = fn; },
     async cartRecords() { return (await collections.checkout_carts.query()).items.map(item => item.data); },

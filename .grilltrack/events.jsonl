@@ -301,3 +301,6 @@
 {"action": "decision_locked", "at": "2026-10-10T19:42:56+00:00", "data": {"decision_id": "commerce-payment-mode-001"}, "event_id": "31e60982-d562-4b6d-91aa-9e90c0f05178"}
 {"action": "decision_implemented", "at": "2026-10-10T19:49:33+00:00", "data": {"decision_id": "commerce-payment-mode-001"}, "event_id": "0605f453-ba12-4889-9739-556ac52caaf4"}
 {"action": "decision_verified", "at": "2026-10-10T19:49:33+00:00", "data": {"decision_id": "commerce-payment-mode-001"}, "event_id": "eaf8c89f-cae2-4e6a-af4d-442faf0095e3"}
+{"action": "decision_reviewed", "at": "2026-10-10T20:15:38+00:00", "data": {"classifications": ["required_fix"], "decision_id": "commerce-payment-mode-001", "ref": ".grilltrack/proof/payment-mode-20261010/REVIEW.md", "result": "findings", "reviewed_at": "2026-10-10T20:15:38+00:00", "source_identity": "git:a61b56f9aa211783989d85b3d8aa6aaf4e858be2"}, "event_id": "23218d57-bb64-430b-a539-208d6d0a7898"}
+{"action": "decision_implemented", "at": "2026-10-10T20:15:44+00:00", "data": {"decision_id": "commerce-payment-mode-001"}, "event_id": "4e275d67-0b63-4c76-b526-a349e0ef9138"}
+{"action": "decision_verified", "at": "2026-10-10T20:15:44+00:00", "data": {"decision_id": "commerce-payment-mode-001"}, "event_id": "2c689756-324e-4bd3-a838-72ff2074d7ed"}

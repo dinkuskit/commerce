@@ -10142,21 +10142,75 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T20:15:38+00:00",
+          "choice": "The Registry checkout setting's optional mode is test (also when absent, so older settings keep meaning test) or live. Before every Payments session or lookup, Payments must report its binding in that same mode, so a store takes real money only when the store's setting and Payments both say live; either side alone changes nothing. Every paid order, including one with nothing to pay, records mode on Checkout's copy and the paid-order handoff. Orders shows every order that is not live as TEST in the list and the detail, and Ship must not buy postage for a test order. The shopper's checkout view does not carry the mode. Supersedes the sandbox-only term of checkout-authorize-net-provider-20261008 for Commerce. Switching a real store to live is the project owner's separate go; the demo store stays test.",
+          "from": "verified",
+          "implementation_ref": "src/features/checkout/registry-provider-admission.ts (mode test|live); src/features/checkout/test-payments.ts (binding mode must match); src/features/checkout/orchestrate.ts (order mode); src/handoffs/paid-order.ts (mode); src/features/orders/admin/view.ts (TEST mark)",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/payment-mode-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T20:15:44+00:00",
+          "choice": "The Registry checkout setting's optional mode is test (also when absent, so older settings keep meaning test) or live. Before every Payments session or lookup, Payments must report its binding in that same mode, so a store takes real money only when the store's setting and Payments both say live; either side alone changes nothing. Every paid order, including one with nothing to pay, records mode on Checkout's copy and the paid-order handoff. Orders shows every order that is not live as TEST in the list and the detail, and Ship must not buy postage for a test order. The shopper's checkout view does not carry the mode. Supersedes the sandbox-only term of checkout-authorize-net-provider-20261008 for Commerce. Switching a real store to live is the project owner's separate go; the demo store stays test.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/checkout/registry-provider-admission.ts (mode test|live); src/features/checkout/test-payments.ts (binding mode must match); src/features/checkout/orchestrate.ts (order mode); src/handoffs/paid-order.ts (mode); src/features/orders/admin/view.ts (TEST mark)",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/payment-mode-20261010/REVIEW.md",
+          "review_result": "findings",
+          "review_source_identity": "git:a61b56f9aa211783989d85b3d8aa6aaf4e858be2",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/payment-mode-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-10T20:15:44+00:00",
+          "choice": "The Registry checkout setting's optional mode is test (also when absent, so older settings keep meaning test) or live. Before every Payments session or lookup, Payments must report its binding in that same mode, so a store takes real money only when the store's setting and Payments both say live; either side alone changes nothing. Every paid order, including one with nothing to pay, records mode on Checkout's copy and the paid-order handoff. Orders shows every order that is not live as TEST in the list and the detail, and Ship must not buy postage for a test order. The shopper's checkout view does not carry the mode. Supersedes the sandbox-only term of checkout-authorize-net-provider-20261008 for Commerce. Switching a real store to live is the project owner's separate go; the demo store stays test.",
+          "from": "implemented",
+          "implementation_ref": "src/features/checkout/orchestrate.ts (attempt keeps paymentMode; lookup only in that mode; order records it); src/features/checkout/types.ts (CheckoutAttempt.paymentMode); review repair .grilltrack/proof/payment-mode-20261010/REVIEW.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/payment-mode-20261010/PROOF.md"
         }
       ],
       "id": "commerce-payment-mode-001",
-      "implementation_ref": "src/features/checkout/registry-provider-admission.ts (mode test|live); src/features/checkout/test-payments.ts (binding mode must match); src/features/checkout/orchestrate.ts (order mode); src/handoffs/paid-order.ts (mode); src/features/orders/admin/view.ts (TEST mark)",
+      "implementation_ref": "src/features/checkout/orchestrate.ts (attempt keeps paymentMode; lookup only in that mode; order records it); src/features/checkout/types.ts (CheckoutAttempt.paymentMode); review repair .grilltrack/proof/payment-mode-20261010/REVIEW.md",
       "question": "How does Commerce take real payments and mark test orders?",
       "rationale": "user accepted the scoped decision",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/payment-mode-20261010/REVIEW.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-10T20:15:38+00:00",
+          "source_identity": "git:a61b56f9aa211783989d85b3d8aa6aaf4e858be2"
+        }
+      ],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-10T19:49:33+00:00",
+      "updated_at": "2026-10-10T20:15:44+00:00",
       "verification_ref": ".grilltrack/proof/payment-mode-20261010/PROOF.md"
     }
   ],
@@ -10194,5 +10248,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T19:49:33+00:00"
+  "updated_at": "2026-10-10T20:15:44+00:00"
 }

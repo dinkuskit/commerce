@@ -1,9 +1,11 @@
 # Test and live payments (commerce-payment-mode-001)
 
-Measured on branch `claude/project-thread-xphlol` from main `3373a69`, Node 22.23.2.
+Measured on branch `claude/project-thread-xphlol` from main `3373a69`, Node 22.23.2, after the review repair in [REVIEW.md](REVIEW.md).
 
-- `bin/verify-commerce full`: passed. Typecheck and repo audits clean; unit 512 pass, integration 47 pass, sandbox browser 10 pass, native local-stock 1 pass, Orders browser 1 pass.
-- Registry bundle: `backend_bytes=126284 headroom_bytes=4788` (main was 126,011; this change adds 273 bytes).
+- `bin/verify-commerce full`: passed. Typecheck and repo audits clean; unit 513 pass, integration 48 pass, sandbox browser 10 pass, native local-stock 1 pass, Orders browser 1 pass.
+- Registry bundle: `backend_bytes=126370 headroom_bytes=4702` (main was 126,011; this change adds 359 bytes, 86 of them for keeping the mode on each checkout).
+- Mode kept per checkout (`tests/features/checkout/checkout.test.mjs`): a new attempt records the store's mode; after the store switches to the other mode, status and repeat start leave it paying without resolving Payments and write no order; switched back, it finishes with its own mode. A live attempt waits while the store is test or unset. An attempt saved without a mode waits while the store is live and finishes as a test order.
+- Mode kept per checkout, installed workerd runtime (`tests/integration/registry-checkout-services.test.mjs`): for test to live and live to test, a checkout started in one mode makes no Payments call and keeps no order after the store setting and the Payments binding both switch and Payments reports it paid; after both switch back, the same payment becomes an order with the mode it started in. On a61b56f, without the repair, the test-to-live case reached paid.
 - Setting (`tests/features/checkout/registry-provider-admission.test.mjs`): `mode` test or live is admitted for Stripe and Authorize.net and reaches the Payments host; missing stays missing (test); LIVE, production, sandbox, empty, null and true are refused.
 - Payments port (`tests/features/checkout/test-payments-reconciliation.test.mjs`): a live port admits only a live binding and a test or unset port only a test one, for sessions and lookups; an unknown mode refuses to build the port; the checkout host reports live, or test when unset.
 - Installed workerd runtime (`tests/integration/registry-checkout-services.test.mjs`): a live setting with a live binding records `mode: "live"` on Checkout's order and Orders' copy; a test setting and a setting without mode record `test`; a live setting with a test binding, and a test or missing setting with a live binding, create no Payments session and no order; the shopper's checkout view carries no mode.

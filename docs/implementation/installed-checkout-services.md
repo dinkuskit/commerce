@@ -102,8 +102,11 @@ The resolver binds scoped `ctx.http.fetch` to the existing trusted payment
 port, preserving binding checks, original immutable requests, explicit pricing
 schema, response bounds and unknown-outcome recovery. The configuration's
 optional `mode` (`test` when absent, or `live`) must match the mode Payments
-reports for the binding before every session or lookup, and each paid order,
-including a zero-payable one, records that mode (GrillTrack
+reports for the binding before every session or lookup. Each checkout
+attempt keeps the mode it started in (absent on older attempts, meaning test)
+and is looked up only while the configuration is in that mode, so a test
+payment never becomes a live order or the reverse; each paid order, including
+a zero-payable one, records the attempt's mode (GrillTrack
 `commerce-payment-mode-001`). Historical payment
 requests are not repriced or migrated by resolver assembly.
 

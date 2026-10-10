@@ -360,6 +360,37 @@ test('a store set to live records live orders only while Payments says its bindi
   }
 });
 
+test('a checkout keeps the mode it started in when the store and Payments switch before the payment is looked up', async () => {
+  for (const [from, to] of [['test', 'live'], ['live', 'test']]) {
+    const state = await runtimeFixture({ config: { ...configuration(), mode: from }, bindingMode: from });
+    try {
+      const { token, result } = await start(state);
+      assert.equal(result.ok, true);
+      assert.equal((await state.cartRecords())[0].attempts[0].paymentMode, from);
+      const lookups = () => state.requests.length + state.counts.transport;
+      // Both sides switch while the payment is open, and Payments now reports it paid.
+      const switchTo = async mode => {
+        await state.settings.set('installedCheckout', JSON.stringify({ ...configuration(), mode }));
+        state.setBindingMode(mode);
+      };
+      await switchTo(to);
+      state.setPaid();
+      const before = lookups();
+      const waiting = await state.invoke(STATUS, {}, token);
+      assert.notEqual(waiting.checkout.state, 'paid');
+      assert.equal(lookups(), before);
+      assert.deepEqual((await state.collections.orders.query()).items, []);
+      assert.equal((await state.cartRecords())[0].attempts[0].phase, 'paying');
+      // Switched back, the same payment finishes as an order in the mode it started in.
+      await switchTo(from);
+      const paid = await state.invoke(STATUS, {}, token);
+      assert.equal(paid.checkout.state, 'paid');
+      const kept = (await state.collections.orders.query()).items.map(item => item.data.paidOrder);
+      assert.deepEqual(kept.map(order => order.mode), [from]);
+    } finally { await state.close(); }
+  }
+});
+
 test('malformed or copied configuration is rejected before encrypted credential/transport', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());

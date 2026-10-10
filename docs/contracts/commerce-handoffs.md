@@ -70,8 +70,9 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   with a physical item the contact carries the delivery address
   (`contactSnapshot.contact.delivery`, commerce#33); digital-only orders and
   orders paid before addresses were collected have none. `mode` (GrillTrack
-  `commerce-payment-mode-001`) is `live` only when the store's checkout
-  setting and Payments' binding were both live; `test`, or no `mode` on
+  `commerce-payment-mode-001`) is the mode the checkout started in, and it is
+  `live` only when the store's checkout setting and Payments' binding were
+  both live then and when the payment was looked up; `test`, or no `mode` on
   orders paid before it was recorded, is a test order: no money moved, Orders
   shows it as TEST and Ship must not buy postage for it.
 - **Receiving:** Orders first checks the whole record; a contact snapshot
