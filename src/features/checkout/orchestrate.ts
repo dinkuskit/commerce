@@ -342,11 +342,13 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           });
           if (reservation.state !== "pending") {
             release(next, "never-started");
+            next.coupon.refused = true;
           } else next.coupon.status = "pending";
         } catch (error) {
           if (error instanceof CouponRedemptionError &&
               ["CAPACITY_EXHAUSTED", "INVALID_INPUT", "CONFLICTING_ATTEMPT", "TERMINAL_CONFLICT"].includes(error.code)) {
             release(next, "never-started");
+            next.coupon.refused = true;
           } else {
             return attempt;
           }

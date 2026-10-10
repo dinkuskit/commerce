@@ -41,9 +41,11 @@ function unavailableOf(
   attempt: CheckoutAttempt,
 ): { code: GuestCheckoutErrorCode; message: string } | null {
   if (attempt.phase === "paid" && attempt.order) return null;
-  if (attempt.phase === "released") return null;
+  if (attempt.phase === "released" && !attempt.coupon?.refused) return null;
   if (attempt.phase === "paying" && attempt.session) return null;
-  const code: GuestCheckoutErrorCode = attempt.phase === "reserving" && attempt.stock
+  const code: GuestCheckoutErrorCode = attempt.coupon?.refused
+    ? "COUPON_UNAVAILABLE"
+    : attempt.phase === "reserving" && attempt.stock
     ? "INVENTORY_UNAVAILABLE"
     : attempt.phase === "paying"
       ? "PAYMENTS_UNAVAILABLE"

@@ -108,6 +108,7 @@ function mapCheckoutError(error: unknown): never {
   const message = error instanceof Error ? error.message : "";
   if (/Invalid cart|Invalid quantity|Zero-total/i.test(message)) fail("INVALID_CART");
   if (/frozen/i.test(message)) fail("CHECKOUT_FROZEN");
+  if (/Coupon unavailable/.test(message)) fail("COUPON_UNAVAILABLE");
   if (/Retry requires/i.test(message)) fail("RETRY_REQUIRED");
   if (/Retry checkout not found|Checkout not found/i.test(message)) fail("CHECKOUT_NOT_FOUND");
   if (/Product unavailable|Product unpriced/i.test(message)) fail("PRODUCT_UNAVAILABLE");

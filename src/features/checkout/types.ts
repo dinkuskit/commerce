@@ -190,6 +190,8 @@ export interface CheckoutAttempt {
     couponId: string;
     code: string;
     status: "unreserved" | "pending" | "released" | "consumed";
+    /** The coupon owner refused the hold before payment; the attempt released without a charge. */
+    refused?: true;
   };
 }
 /** One durable aggregate per trusted cart. Preserve past attempts and paid receipts. */
@@ -265,6 +267,7 @@ export type GuestCheckoutErrorCode =
   | "CHECKOUT_FROZEN"
   | "CHECKOUT_NOT_FOUND"
   | "CONTENTION"
+  | "COUPON_UNAVAILABLE"
   | "INVALID_CART"
   | "INVENTORY_UNAVAILABLE"
   | "ORIGIN_DENIED"
