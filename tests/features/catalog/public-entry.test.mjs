@@ -176,7 +176,7 @@ test("installed public catalog projects only priced listable products", async ()
   };
   const catalogItems = {
     async query() { return { items: [{ id: record.itemId, data: record }], hasMore: false }; },
-    async get() { return record; },
+    async get(id) { return id === record.itemId ? record : null; },
   };
   const prices = {
     async get() {
