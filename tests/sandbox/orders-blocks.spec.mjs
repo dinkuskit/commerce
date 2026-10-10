@@ -7,7 +7,7 @@ import { PluginStorageRepository } from 'emdash';
 import { createCheckoutStore, startCheckout } from '../../dist/features/checkout/index.js';
 import { fixture, cart, withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
 
-// Read-only Orders acceptance on the installed Registry-format artifact. It
+// Orders acceptance on the installed Registry-format artifact. It
 // uses canonical checkout writes and synthetic payment outcomes, never a
 // payment provider or a production order.
 test('installed Orders lists and inspects canonical orders and denies non-managers', async ({ page, request, browser }) => {
@@ -85,13 +85,23 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await capture('orders-zero-mobile');
     await interact('Back to orders');
     expect(snapshot()).toEqual(original);
-    // A malformed aggregate is not an empty shop and must fail closed.
+    // The page read Orders' own copies, brought in from Checkout the first time it found none.
+    const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
+    expect((await kept.get(paid.order.orderId)).paidOrder).toEqual({ schema: 'dinkuskit.commerce.paid-order/v1', ...paid.order });
+    // A malformed Checkout aggregate fails Bring in missing orders closed.
     await orders.compareAndSet('orders-invalid', null, { attempts: null });
+    await interact('Bring in missing orders');
+    await expect(page.getByText('Orders unavailable', { exact: true })).toBeVisible({ timeout: 60000 });
+    await orders.delete('orders-invalid');
+    // A malformed kept copy is not an empty shop and must fail closed.
+    await kept.compareAndSet('order:invalid', null, { paidOrder: null });
     await page.reload();
     await expect(page.getByText('Orders unavailable', { exact: true })).toBeVisible({ timeout: 60000 });
     await capture('orders-unavailable');
-    await orders.delete('orders-invalid');
+    await kept.delete('order:invalid');
     await page.reload();
+    await interact('Bring in missing orders');
+    await expect(page.getByText('No missing orders', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Inspect ' + paid.order.orderId, exact: true })).toBeVisible({ timeout: 60000 });
     await page.setViewportSize({ width: 1440, height: 1000 });
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'orders-canonical.json'), JSON.stringify({ paid: paid.order, free: free.order }, null, 2));
