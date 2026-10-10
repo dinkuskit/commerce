@@ -74,9 +74,11 @@ the stored attempt's original binding, and acknowledges only after a durable
 paid order or confirmed terminal released state. Missing, mismatched,
 malformed, unknown, unavailable, storage-error, or pre-ack crash cases remain
 retryable. There is no unauthenticated wake route and no reuse of the guest
-capability as service authentication. A Payments owner drain/list/ack port and
-a host scheduler are still required; this repository does not invent that
-HTTP/RPC or daemon.
+capability as service authentication. The Registry build drains Payments'
+list/ack port from its `commerce-checkout-wakes` task, which it registers to
+run every 5 minutes when EmDash switches it on; the site's EmDash scheduler
+runs it ([background check](installed-checkout-context.md#background-check)).
+This repository runs no daemon of its own.
 
 Native hosts should expose a dedicated named host-module entrypoint
 `createPlugin(serializableOptions)`. The existing `dinkusCommerce` descriptor

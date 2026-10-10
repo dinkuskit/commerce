@@ -92,12 +92,16 @@ export async function runtimeFixture({
   bindingMode = 'test',
 } = {}) {
   const sqlite = new BetterSqlite3(databasePath);
-  // Minimal tables match the pinned SDK's options and plugin-storage schemas.
+  // Minimal tables match the pinned SDK's options, plugin-storage and cron-task schemas (migration 026).
   // Storage operations below use the real repositories/bridge, never emulated CAS.
   sqlite.exec(`CREATE TABLE IF NOT EXISTS options (name TEXT PRIMARY KEY, value TEXT NOT NULL, revision TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS _plugin_storage (plugin_id TEXT NOT NULL, collection TEXT NOT NULL, id TEXT NOT NULL,
       data TEXT NOT NULL, revision TEXT NOT NULL DEFAULT '0', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
-      PRIMARY KEY(plugin_id,collection,id));`);
+      PRIMARY KEY(plugin_id,collection,id));
+    CREATE TABLE IF NOT EXISTS _emdash_cron_tasks (id TEXT PRIMARY KEY, plugin_id TEXT NOT NULL, task_name TEXT NOT NULL,
+      schedule TEXT NOT NULL, is_oneshot INTEGER NOT NULL DEFAULT 0, data TEXT, next_run_at TEXT NOT NULL, last_run_at TEXT,
+      status TEXT NOT NULL DEFAULT 'idle', locked_at TEXT, enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT,
+      UNIQUE(plugin_id, task_name));`);
   const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0, coupons: 0, ship: 0 };
   const owner = COMMERCE_REGISTRY_RUNTIME_ID;
   const db = new Kysely({ dialect: new SqliteDialect({ database: sqlite }), log(event) {
@@ -215,6 +219,8 @@ export async function runtimeFixture({
     setWakes(values) { pending = structuredClone(values); },
     setTransportOverride(fn) { override = fn; },
     async cartRecords() { return (await collections.checkout_carts.query()).items.map(item => item.data); },
+    /** The site scheduler's tasks, as EmDash's cron table holds them. */
+    cronTasks() { return sqlite.prepare('SELECT plugin_id, task_name, schedule, enabled FROM _emdash_cron_tasks').all(); },
     async close() { await runner.terminateAll(); await db.destroy(); },
   };
 }

@@ -34,7 +34,8 @@ activate it on any site.
 
 A sync runs when the Orders page opens, after each change saved on the page
 or through the agents' `orders` route, and on each background check (the
-`commerce-checkout-wakes` cron task, after Payments wakes). Checkout never
+`commerce-checkout-wakes` task every 5 minutes, after Payments wakes;
+[background check](installed-checkout-context.md#background-check)). Checkout never
 calls Ship, and reading orders does not either. A sync that cannot reach Ship
 leaves the page and the order as they are; the next sync carries on.
 

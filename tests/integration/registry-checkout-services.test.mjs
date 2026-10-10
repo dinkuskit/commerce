@@ -559,6 +559,23 @@ test('real workerd cron wake applies canonical paid order before exact ACK and r
   assert.equal(state.counts.scheduler, 0);
 });
 
+test('switching Commerce on registers its 5-minute background check with the site scheduler', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  assert.deepEqual(state.manifest.hooks, ['plugin:activate', 'cron']);
+  assert.deepEqual(state.cronTasks(), []);
+  await state.plugin.invokeHook('plugin:activate', {});
+  const task = [COMMERCE_REGISTRY_RUNTIME_ID, COMMERCE_CHECKOUT_WAKES_TASK, '*/5 * * * *', 1];
+  assert.deepEqual(state.cronTasks().map(row => Object.values(row)), [task]);
+  // Switching on again, as after re-enabling, keeps one task.
+  await state.plugin.invokeHook('plugin:activate', {});
+  assert.deepEqual(state.cronTasks().map(row => Object.values(row)), [task]);
+  // Checkout itself never schedules anything.
+  const scheduled = state.counts.scheduler;
+  await start(state);
+  assert.equal(state.counts.scheduler, scheduled);
+});
+
 test('wake transport rejects oversized/malformed batches with no ACK or canonical order', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());

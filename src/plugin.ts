@@ -33,6 +33,10 @@ function guestRoute(handler: typeof installedCheckout.prepare) {
 }
 const plugin: SandboxedPlugin = {
   hooks: {
+    // Switched on: the site's EmDash scheduler runs the background check every 5 minutes.
+    "plugin:activate": async (_event, ctx) => {
+      await ctx.cron?.schedule(COMMERCE_CHECKOUT_WAKES_TASK, { schedule: "*/5 * * * *" });
+    },
     // The background check settles payments, then brings Orders and Ship up to date.
     cron: async (event, ctx) => {
       await installedCheckout.cron(event, ctx);

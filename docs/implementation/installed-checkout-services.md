@@ -118,8 +118,10 @@ snapshots; binding/event/generation/time fields are validated. ACK sends the
 original complete snapshot and requires a boolean acknowledgment envelope.
 The existing canonical reconciler settles durable order/coupon effects before
 ACK; unknown or malformed results retain recovery state. No public wake route
-or automatic scheduling is added. The existing named cron hook can consume
-wakes, but actual host scheduler setup/dispatch is a separate proof gate.
+is added. The named cron hook consumes wakes every 5 minutes once EmDash has
+switched the plugin on and the site's scheduler runs
+([background check](installed-checkout-context.md#background-check),
+GrillTrack `commerce-background-check-001`).
 
 Managed availability and reservation remain unavailable without the configured
 Inventory provider. Its binding and managed product state are preserved.

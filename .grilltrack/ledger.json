@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-10T21:28:41+00:00",
-    "domain": "Commerce agent order access",
-    "started_at": "2026-10-10T20:48:24+00:00",
+    "confirmed_at": "2026-10-10T21:32:45+00:00",
+    "domain": "Commerce background check",
+    "started_at": "2026-10-10T21:32:45+00:00",
     "status": "confirmed",
-    "summary": "Ronald answered '6. yes' at 21:09:50 UTC 2026-10-10 in the Buildout thread: agents get the private orders route, used with an EmDash API token, to list orders, read one, and complete one or move it back to Processing, following the Orders page's rules."
+    "summary": "Ronald answered 'okay agreed;' at 21:31:23 UTC 2026-10-10 to: the better long-term approach is both, a doorbell later for speed and the 5-minute check now as the safety net. Recorded in the thread as 7 yes."
   },
   "decisions": [
     {
@@ -10429,6 +10429,50 @@
       "superseded_by": null,
       "updated_at": "2026-10-10T20:48:19+00:00",
       "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanDi9YHvj4p2KCoTobq99duw",
+      "created_at": "2026-10-10T21:32:45+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-ship-sync-001",
+        "installed-checkout-service-assembly-001"
+      ],
+      "domain": "Commerce background check",
+      "history": [
+        {
+          "at": "2026-10-10T21:32:45+00:00",
+          "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-background-check-001",
+      "implementation_ref": null,
+      "question": "How does Commerce's background check run on a real store?",
+      "rationale": "Ronald's 'okay agreed;' at 21:31:23 UTC 2026-10-10 (Buildout thread), read back to him as 7 yes.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T21:32:45+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -10465,5 +10509,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T21:28:57+00:00"
+  "updated_at": "2026-10-10T21:32:45+00:00"
 }

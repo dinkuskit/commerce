@@ -104,8 +104,10 @@ then calls `POST /v1/checkout/wakes/ack`. A signed webhook body, Stripe return
 URL, cancel URL, browser query parameter, or elapsed timer never marks an order
 paid. Unknown results remain retained for retry.
 
-The host must invoke the installed `commerce-checkout-wakes` cron hook and
-provide the Payments wake list/ack endpoints. This repository does not claim a
+Installed Commerce registers its `commerce-checkout-wakes` task every
+5 minutes when EmDash switches it on; the host's EmDash scheduler must run it
+(on Cloudflare, a Cron Trigger in `wrangler.jsonc`), and Payments must
+provide the wake list/ack endpoints. This repository does not claim a
 live Payments grant, deployment, scheduler, merchant readiness, or real Stripe
 purchase.
 

@@ -18,7 +18,10 @@ resolver. `reconcileWakes(pluginCtx)` returns either a typed unavailable or
 not-configured result, or the canonical per-wake reconciliation results.
 `cron(event, pluginCtx)` processes only the exact task name. The default
 sandbox entry wires the three POST routes and cron hook, with no Payments
-services configured and no automatically scheduled task.
+services configured. When EmDash switches the plugin on (`plugin:activate`,
+after install and when re-enabled), the Registry build registers the
+`commerce-checkout-wakes` task to run every 5 minutes (GrillTrack
+`commerce-background-check-001`); see [Background check](#background-check).
 
 The adapter requires the fixed declared sandbox collection names from
 `SANDBOX_GUEST_CHECKOUT_STORAGE`; it accepts no storage-name argument or
@@ -100,9 +103,22 @@ declares `network:request` and `allowedHosts: ["payments.dinkuskit.com"]`
 (GrillTrack `commerce-allowed-hosts-coupons-dinkuskit-com`).
 A new capability/site consent, secret/credential grant, Registry publication,
 or deployment is WAITING_FOR_HUMAN. An already approved consumer may be reused
-only after its exact scoped contract is verified. Scheduling remains with the
-site owner; do not introduce a second scheduler. No task is automatically
-created by this adapter.
+only after its exact scoped contract is verified.
+
+## Background check
+
+The Registry build registers one task, `commerce-checkout-wakes`, every
+5 minutes (`*/5 * * * *`, UTC), through `ctx.cron.schedule()` in its
+`plugin:activate` hook, the way EmDash's plugin docs schedule work
+(GrillTrack `commerce-background-check-001`). Registering again replaces the
+same task. Commerce runs no scheduler of its own: the site's EmDash scheduler
+runs due tasks. On Node that is EmDash's in-process timer; on Cloudflare it is
+the Worker's `scheduled()` handler driven by a Cron Trigger in
+`wrangler.jsonc` (EmDash's Cloudflare setup lists `"crons": ["* * * * *"]`),
+so a Cloudflare site without that trigger never runs the check. Each run
+settles payments Commerce missed through Payments' wakes, then syncs Orders
+with Ship ([registry-ship-sync](registry-ship-sync.md)). Checkout itself never
+schedules anything.
 
 Admission proof must bind the immutable Registry artifact/publisher/version to
 its runtime ID, routes, collections and granted host, then show that guest and
