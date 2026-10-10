@@ -3,11 +3,12 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": false,
+    "confirmed": true,
+    "confirmed_at": "2026-10-10T03:02:04+00:00",
     "domain": "Orders keeps its own paid-order copy handed over by Checkout",
     "started_at": "2026-10-10T02:54:44+00:00",
-    "status": "grilling",
-    "summary": "Checkout hands Orders one written-down paid-order record when payment is confirmed; Orders keeps its own copy and its page reads only that copy, so the handoff is the same whether Commerce stays one Registry plugin or later splits."
+    "status": "confirmed",
+    "summary": "The owner approved the paid-order handoff on 2026-10-10 (03:01 UTC, decision card in the Commerce restructuring project thread): Checkout hands Orders one dinkuskit.commerce.paid-order/v1 record when payment is recorded; Orders keeps its own copy and its page reads only that copy."
   },
   "decisions": [
     {
@@ -9518,20 +9519,35 @@
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Orders keeps its own paid-order copy handed over by Checkout",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-10-10T03:02:04+00:00",
+          "choice": "Checkout hands Orders one record, schema dinkuskit.commerce.paid-order/v1, when it records an order as paid. It holds: order id, receipt id, checkout attempt id (the link back to Checkout), provider payment id when the payment went through a provider, the time Checkout recorded the payment (absent on orders paid before this change), the frozen lines (catalog item id, quantity, name, unit price), the order total, the frozen pricing snapshot when present (subtotal, coupon and discount, net items, shipping, final total), variant selection snapshots, Inventory ticket ids when reserve returned them, and the frozen shopper contact snapshot. The delivery address (commerce#33) is a later optional addition. Orders stores it under the order id as its own copy. Checkout never changes it after hand-off: a repeated hand-off with identical contents is a no-op, a different one is refused and the first copy kept. Later order facts (packed, shipped, refunded, notes) belong to Orders beside the copy, never back in Checkout. Checkout hands the record over when payment is recorded and again on every later check of that paid checkout until Orders has it. Orders paid before this change, and any missed hand-off, are copied over automatically the first time the Orders page opens with no copies and on demand with a Bring in missing orders button on the Orders page. The Orders page and Pack read only the Orders copy. In one plugin the hand-off is a function call; under a later split the same record is what gets posted.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "commerce-paid-order-handoff-001",
       "implementation_ref": null,
       "question": "What does the paid-order record that Checkout hands to Orders hold, and how is it delivered and kept?",
-      "rationale": "Plan item 1 (next-work-plan, 2026-10-10): the Orders page reads checkout_carts directly, which a split into separate plugins would break. Comparators: Shopify Admin GraphQL 2026-10 Order is created when checkout completes and keeps checkoutToken back to the checkout plus original totals beside current totals; WooCommerce HPOS stores orders in dedicated order tables (checked 2026-10-10). Bundle cost estimated at 1 to 2 KB.",
+      "rationale": "Owner approved on 2026-10-10 03:01 UTC by choosing Approve on the decision card in project thread \"Commerce restructuring: Orders handoff and trim\".",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-10T02:54:44+00:00",
+      "updated_at": "2026-10-10T03:02:04+00:00",
       "verification_ref": null
     }
   ],
@@ -9569,5 +9585,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T02:54:44+00:00"
+  "updated_at": "2026-10-10T03:02:04+00:00"
 }
