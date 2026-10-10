@@ -26,7 +26,7 @@ backend under workerd reports `try-later`).
 
 ## Verification
 
-Node 22.23.2, `bin/verify-commerce full` on this source: PASS. After merging #87 (agent skill pins
+Node 22.23.3, `bin/verify-commerce full` on this source: PASS. After merging #87 (agent skill pins
 only), `bin/verify-commerce quick` passes again with the same backend bytes and
 SHA-256.
 
@@ -34,6 +34,6 @@ SHA-256.
 - `npm run test:integration`: 45 pass, 0 fail.
 - `npm run test:sandbox`: 10 pass; `:native-local-stock` 1 pass; `:orders` 1 pass.
 
-Registry backend `dist/sandbox/plugin.mjs`: 118,277 bytes, 12,795 under the
-131,072 limit (main 117,441; +836). SHA-256
-`0067000de77291bfe325481e92e1327c6bba0a34c59506ff2c91d0981e2d0494`.
+Registry backend `dist/sandbox/plugin.mjs`: 118,620 bytes, 12,452 under the
+131,072 limit. SHA-256
+`7f611224c5a315f8829a11e8ca3de05bb898b8123b2b920afe44701d234d3467`.
