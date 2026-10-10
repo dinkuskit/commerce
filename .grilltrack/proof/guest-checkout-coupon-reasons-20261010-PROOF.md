@@ -2,7 +2,7 @@
 
 Decision: `guest-checkout-coupon-reasons-035`, chosen by the project owner on
 2026-10-10 ("Full detail" and "Refuse it"); it supersedes
-`guest-checkout-coupon-unavailable-034`. Base: `4791503` (main, after #85).
+`guest-checkout-coupon-unavailable-034`. Base: `5f15d6c` (main, after #85 and #87).
 
 ## Behaviour
 
@@ -26,7 +26,9 @@ backend under workerd reports `try-later`).
 
 ## Verification
 
-Node 22.23.2, `bin/verify-commerce full` on this source: PASS.
+Node 22.23.2, `bin/verify-commerce full` on this source: PASS. After merging #87 (agent skill pins
+only), `bin/verify-commerce quick` passes again with the same backend bytes and
+SHA-256.
 
 - `npm run test:unit`: 476 pass, 0 fail.
 - `npm run test:integration`: 45 pass, 0 fail.
