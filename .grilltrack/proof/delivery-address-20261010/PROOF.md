@@ -10,7 +10,7 @@ Decision: `commerce-delivery-address-001` (locked on the owner's approval,
 | | `dist/sandbox/plugin.mjs` bytes | headroom to 131,072 |
 | --- | --- | --- |
 | main f550d41 (with #84) | 117,720 | 13,352 |
-| with delivery address | 119,160 | 11,912 |
+| with delivery address | 119,402 | 11,670 |
 
 ## Checks run on this change
 
@@ -25,6 +25,9 @@ Address-specific tests:
   shipping country (none set refuses); digital-only baskets keep none;
   unmarked and mixed baskets refused before any attempt or payment; the
   address reaches the paid-order record and the Orders detail ("Ship to").
+- `tests/features/orders/page.test.mjs`: Orders refuses a paid order whose
+  contact snapshot has no contact, no email, or a delivery address missing a
+  required field; a copy kept before that check still shows "No address".
 - `tests/integration/registry-checkout-services.test.mjs`: an admin-created
   (unmarked) product checks out on the installed runtime with a US address.
 - `tests/sandbox/variant-checkout.spec.mjs` (native storefront): a physical

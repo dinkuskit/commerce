@@ -30,6 +30,14 @@ function pricing(v: unknown): boolean {
     money(v.finalTotal) && isRecord(v.shipping) && money(v.shipping.charge) &&
     optional(v.coupon, c => isRecord(c) && text(c.code));
 }
+function address(v: unknown): boolean {
+  return isRecord(v) && text(v.name) && text(v.line1) && optional(v.line2, text) && text(v.city) &&
+    optional(v.region, text) && text(v.postalCode) && text(v.country);
+}
+function contactSnapshot(v: unknown): boolean {
+  return isRecord(v) && isRecord(v.contact) && text(v.contact.email) && optional(v.contact.phone, text) &&
+    optional(v.contact.delivery, address);
+}
 /** Everything Orders shows or packs from must be well formed before a copy is kept for good. */
 function admit(order: PaidOrder): PaidOrder {
   const o = order as unknown;
@@ -37,7 +45,7 @@ function admit(order: PaidOrder): PaidOrder {
       !Array.isArray(o.lines) || !o.lines.length || !o.lines.every(line) || !money(o.total) ||
       !optional(o.paymentId, text) || !optional(o.paidAt, text) || !optional(o.ticketIds, textList) ||
       !optional(o.pricing, pricing) || !optional(o.variantSelections, v => Array.isArray(v) && v.every(isRecord)) ||
-      !optional(o.contactSnapshot, isRecord)) throw new Error("Invalid paid order");
+      !optional(o.contactSnapshot, contactSnapshot)) throw new Error("Invalid paid order");
   return order;
 }
 // Key order can differ between a live hand-off and a stored copy read back.

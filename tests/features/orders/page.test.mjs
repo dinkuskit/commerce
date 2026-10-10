@@ -90,7 +90,8 @@ test('the Checkout to Orders handoff keeps the first copy and reports repeats an
   { ...fresh, lines: [{ ...order.lines[0], quantity: 0 }] }, { ...fresh, lines: [{ ...order.lines[0], unitPrice: { currency: 'EUR', minor: '1' } }] },
   { ...fresh, lines: [{ ...order.lines[0], name: 7 }] }, { ...fresh, pricing: { ...pricing, shipping: {} } },
   { ...fresh, pricing: { ...pricing, coupon: { code: '' } } }, { ...fresh, ticketIds: [''] }, { ...fresh, paidAt: 5 },
-  { ...fresh, contactSnapshot: 'x' }])
+  { ...fresh, contactSnapshot: 'x' }, { ...fresh, contactSnapshot: {} }, { ...fresh, contactSnapshot: { contact: {} } },
+  { ...fresh, contactSnapshot: { contact: { email: 'a@example.test', delivery: { name: 'A', line1: '1 Main St', city: 'X', postalCode: '1' } } } }])
   await assert.rejects(receiver.receive(bad), /Invalid paid order/);
  assert.equal(records.size, 1);
  assert.equal(await receiver.receive(fresh), 'stored');

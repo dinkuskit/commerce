@@ -24,9 +24,10 @@ function unavailable(title: string, description: string): Block {
 function header(): Block {
   return { type: 'header', text: 'Orders' };
 }
-// Digital-only orders and orders paid before addresses were collected have none.
+// Digital-only orders and orders paid before addresses were collected have none;
+// copies kept before Orders checked the contact snapshot may lack its contact.
 function shipTo(order: PaidOrder): string {
-  const a = order.contactSnapshot?.contact.delivery;
+  const a = order.contactSnapshot?.contact?.delivery;
   return a ? [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ') : 'No address';
 }
 function detailFields(...pairs: string[]): Block {

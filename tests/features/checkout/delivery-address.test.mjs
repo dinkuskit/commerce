@@ -69,4 +69,7 @@ test('the address rides the paid order; a digital-only basket carries none', asy
   assert.equal(download.phase, 'paid');
   assert.equal(download.order.contactSnapshot.contact.delivery, undefined);
   assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [paidOrderOf(download.order)] }, download.order.orderId)).includes('No address'));
+  // A copy kept before Orders checked the contact snapshot still renders.
+  const early = { ...paidOrderOf(download.order), contactSnapshot: {} };
+  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [early] }, early.orderId)).includes('No address'));
 });
