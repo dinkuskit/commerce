@@ -1,3 +1,4 @@
+import { isRecord as isObject } from "../../shared/record.js";
 import type { PluginContext } from "emdash";
 import type { CronEvent } from "emdash/plugin";
 import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
@@ -75,9 +76,6 @@ const collectionMethods = {
   paymentAssociations: ["get", "compareAndSet"],
 } as const;
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function installedStorage(ctx: InstalledContext): InstalledStorage {
   if (!isObject(ctx.plugin) ||

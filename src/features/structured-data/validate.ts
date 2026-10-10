@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import type { ProductJsonLd } from "./types.js";
 
 const SCHEMA_TYPES = new Set([
@@ -13,7 +14,7 @@ const SCHEMA_TYPES = new Set([
 ]);
 
 function assertType(node: unknown, expected: string, path: string): asserts node is Record<string, unknown> {
-  if (!node || typeof node !== "object" || Array.isArray(node)) {
+  if (!isRecord(node)) {
     throw new Error(`${path} must be an object`);
   }
   const value = node as Record<string, unknown>;

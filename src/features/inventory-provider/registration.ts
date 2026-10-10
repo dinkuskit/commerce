@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import { normalizeInventoryProviderBinding } from "./binding.js";
 import {
   normalizeManagedSkuRegistrationClaimRecord,
@@ -40,7 +41,7 @@ function claimUnavailable(message: string): never {
 }
 
 function asRecord(value: unknown, field: string): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     invalidRegistration(`${field} must be an object`,
     );
   }

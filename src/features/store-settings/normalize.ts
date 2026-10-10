@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import {
   MAX_COUNTRIES,
   MAX_SETTINGS_BYTES,
@@ -49,7 +50,7 @@ function ensureSize(settings: MerchantStoreSettings): void {
 }
 
 export function normalizeStoredSettings(value: unknown): MerchantStoreSettings {
-  if (!value || typeof value !== "object" || Array.isArray(value)) storageInvalid("stored merchant store settings are invalid");
+  if (!isRecord(value)) storageInvalid("stored merchant store settings are invalid");
   const record = value as Record<string, unknown>;
   if (record.recordKind !== MERCHANT_STORE_SETTINGS_RECORD_KIND) storageInvalid("stored merchant store settings are invalid");
   const expectedKeys = ["recordKind", "storeCountry", "sellingCountries", "shippingCountries", "requirePhoneNumber"];
@@ -81,7 +82,7 @@ export function normalizeSettingsInput(
   raw: MerchantStoreSettingsInput,
   current: MerchantStoreSettings,
 ): MerchantStoreSettings {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) invalid("settings input must be an object");
+  if (!isRecord(raw)) invalid("settings input must be an object");
   const keys = Object.keys(raw as object);
   const allowed = new Set(["storeCountry", "sellingCountries", "shippingCountries", "requirePhoneNumber"]);
   if (keys.some((key) => !allowed.has(key))) invalid("settings input contains an unknown field");

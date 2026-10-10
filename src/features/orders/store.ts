@@ -1,4 +1,5 @@
 import type { StorageCollection } from "emdash";
+import { scanAll } from "../../shared/scan.js";
 import { PAID_ORDER_SCHEMA, type PaidOrder, type PaidOrderReceiver } from "../../handoffs/paid-order.js";
 
 export const ORDERS_COLLECTION = "orders";
@@ -41,19 +42,10 @@ export function createPaidOrderReceiver(collection: Pick<OrdersCollection, "get"
 /** Every kept order in order-id order. Scans at most 100 pages of 100 and fails closed on a malformed copy. */
 export async function listOrders(collection: Pick<OrdersCollection, "query">): Promise<PaidOrder[]> {
   const orders: PaidOrder[] = [];
-  const cursors = new Set<string>();
-  let cursor: string | undefined;
-  for (let page = 0; ; page++) {
-    if (page >= 100) throw new Error("Order scan limit");
-    const result = await collection.query({ limit: 100, cursor });
-    for (const item of result.items) {
-      const order = admit(item.data?.paidOrder);
-      if (order.orderId !== item.id) throw new Error("Invalid order");
-      orders.push(order);
-    }
-    if (!result.hasMore) break;
-    if (!result.cursor || cursors.has(result.cursor)) throw new Error("Invalid cursor");
-    cursor = result.cursor; cursors.add(cursor);
-  }
+  await scanAll(collection, item => {
+    const order = admit(item.data?.paidOrder);
+    if (order.orderId !== item.id) throw new Error("Invalid order");
+    orders.push(order);
+  });
   return orders.sort((a, b) => a.orderId < b.orderId ? -1 : a.orderId > b.orderId ? 1 : 0);
 }

@@ -7,7 +7,7 @@ import {
 } from "../features/storefront-availability/kernel/index.js";
 import { merchantStoreSettingsBlocks } from "../features/store-settings/kernel/index.js";
 import { navigation } from "../shared/admin-blocks.js";
-import { alert, bool, failed, message, object, text } from "./common.js";
+import { alert, bool, button, failed, header, message, note, object, refused, text } from "./common.js";
 import { preview, target } from "./media.js";
 
 function placeholderStorage(ctx: PluginContext) {
@@ -19,18 +19,18 @@ function listingStorage(ctx: PluginContext) {
 async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
   const placeholder = (await loadStorefrontPlaceholderImage(placeholderStorage(ctx))).image;
   return [
-    { type: "header", text: "Placeholder image" }, { type: "context", text: "Shown for products without an image." },
+    header("Placeholder image"), note("Shown for products without an image."),
     await preview(ctx, placeholder, "Placeholder image"),
     { type: "actions", elements: [
-      { type: "button", label: placeholder ? "Change placeholder" : "Choose placeholder", action_id: "media.pick", value: { t: "placeholder", id: "" } },
-      ...(placeholder ? [{ type: "button" as const, label: "Remove placeholder", action_id: "media.clear", value: { t: "placeholder", id: "" } }] : []),
+      button(placeholder ? "Change placeholder" : "Choose placeholder", "media.pick", { t: "placeholder", id: "" }),
+      ...(placeholder ? [button("Remove placeholder", "media.clear", { t: "placeholder", id: "" })] : []),
     ] },
   ];
 }
 function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockResponse {
   return { blocks: [
-    { type: "header", text: "Commerce settings" }, navigation(), { type: "header", text: "Catalog" },
-    ...(failure ? [alert(failure), { type: "context" as const, text: "Save not confirmed; choice kept." }] : []),
+    header("Commerce settings"), navigation(), header("Catalog"),
+    ...(failure ? [alert(failure), note("Save not confirmed; choice kept.")] : []),
     { type: "form", block_id: "catalog-settings-" + crypto.randomUUID(), fields: [
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
     ], submit: { label: "Save", action_id: "settings.save" } },
@@ -75,11 +75,11 @@ export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginCon
     const failure = message(error);
     // A refused placeholder choice returns the clerk to Settings with the reason; stored values are unchanged.
     if (input.type === "block_action" && input.action_id !== "settings") {
-      try { return { blocks: [alert(failure), ...(await settings(ctx, route)).blocks], toast: { type: "error", message: failure } }; }
+      try { return refused(failure, [alert(failure), ...(await settings(ctx, route)).blocks]); }
       catch { /* fall through to the generic alert */ }
     }
     if (input.type === "form_submit" && typeof values.hideOutOfStock === "boolean") {
-      return { ...settingsResponse(values.hideOutOfStock, failure), toast: { type: "error", message: failure } };
+      return refused(failure, settingsResponse(values.hideOutOfStock, failure).blocks);
     }
     return failed(failure);
   }

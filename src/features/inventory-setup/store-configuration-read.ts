@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import { normalizeInventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import { InventorySetupError } from "./errors.js";
 import type {
@@ -26,7 +27,7 @@ function asStoredString(value: unknown, field: string): string {
 function normalizeConfigurationRecord(
   value: unknown,
 ): StoreInventoryConfigurationRecord {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw fail("STORAGE_UNAVAILABLE", INVALID_CONFIG);
   }
   const record = value as Record<string, unknown>;

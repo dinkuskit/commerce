@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import type { StorageCollection } from "emdash";
 import { CatalogError } from "./errors.js";
 import { normalizeIdentifierPatch, type CatalogProductIdentifiers } from "./identifiers.js";
@@ -27,7 +28,7 @@ export async function setCatalogItemIdentifiers(
     Pick<StorageCollection<CatalogStorageRecord>, "compareAndSet" | "getVersioned">,
   rawInput: unknown,
 ): Promise<SetCatalogItemIdentifiersResult> {
-  if (!rawInput || typeof rawInput !== "object" || Array.isArray(rawInput)) {
+  if (!isRecord(rawInput)) {
     throw new CatalogError("INVALID_INPUT", "request body must be an object");
   }
   const input = rawInput as Record<string, unknown>;

@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
 
 /** Optional merchant-supplied product identifiers. Absent means omitted; never invent. */
@@ -58,7 +59,7 @@ export function normalizeIdentifierPatch(raw: unknown): {
   mpn?: string | null;
   brand?: string | null;
 } {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+  if (!isRecord(raw)) {
     throw new CatalogError("INVALID_INPUT", "identifiers input must be an object");
   }
   const input = raw as Record<string, unknown>;

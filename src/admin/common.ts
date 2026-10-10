@@ -25,5 +25,19 @@ export function alert(message: string): Block {
 
 /** Render-only fallback when an area cannot recover its own page. */
 export function failed(failure: string): BlockResponse {
-  return { blocks: [navigation(), alert(failure)], toast: { type: "error", message: failure } };
+  return refused(failure, [navigation(), alert(failure)]);
+}
+// Repeated Block Kit shapes, kept in one place because this admin ships in the backend.
+export function header(text: string): Block {
+  return { type: "header", text };
+}
+export function note(text: string): Block {
+  return { type: "context", text };
+}
+export function button(label: string, action_id: string, value?: unknown) {
+  return { type: "button" as const, label, action_id, ...(value === undefined ? {} : { value }) };
+}
+/** The error page an area returns with its own recovered blocks. */
+export function refused(failure: string, blocks: Block[]): BlockResponse {
+  return { blocks, toast: { type: "error", message: failure } };
 }

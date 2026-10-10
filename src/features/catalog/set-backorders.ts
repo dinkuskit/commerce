@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import { loadCatalogItemBackorderPolicy } from "./backorder-policy.js";
 import { CatalogError } from "./errors.js";
 import type {
@@ -10,7 +11,7 @@ import type {
 export { loadCatalogItemBackorderPolicy } from "./backorder-policy.js";
 
 function normalizeInput(value: unknown): SetCatalogItemBackordersInput {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw new CatalogError("INVALID_INPUT", "backorder setting input must be an object");
   }
   const input = value as Record<string, unknown>;

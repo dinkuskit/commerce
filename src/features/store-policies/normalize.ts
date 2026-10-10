@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import { normalizeMoney, type Money } from "../catalog/kernel/index.js";
 import { StorePoliciesError } from "./errors.js";
 import type {
@@ -26,7 +27,7 @@ const RETURN_FEES = new Set<ReturnFees>([
 ]);
 
 function plain(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw new StorePoliciesError("INVALID_INPUT", "policy input must be an object");
   }
   return value as Record<string, unknown>;

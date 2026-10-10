@@ -1,3 +1,4 @@
+import { isRecord, sortedKeys } from "../../shared/record.js";
 import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
@@ -24,7 +25,7 @@ function cartInput(raw: unknown): CartLine[] {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > 100) fail("Invalid cart");
   const quantities = new Map<string, number>();
   for (const line of raw) {
-    if (!line || typeof line !== "object" || Object.keys(line).sort().join() !== "catalogItemId,quantity" ||
+    if (!line || typeof line !== "object" || sortedKeys(line) !== "catalogItemId,quantity" ||
       typeof line.catalogItemId !== "string" || !line.catalogItemId.trim() ||
       !Number.isSafeInteger(line.quantity) || line.quantity <= 0) fail("Invalid cart line");
     const id = line.catalogItemId.trim();
@@ -99,7 +100,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   if (!cartId.trim()) fail("Invalid cart identity");
   if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
   const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
-    ? (["contact,couponCode,lines", "contact,lines", "couponCode,lines", "lines"].includes(Object.keys(rawCart).sort().join()))
+    ? (["contact,couponCode,lines", "contact,lines", "couponCode,lines", "lines"].includes(sortedKeys(rawCart)))
       ? (Object.prototype.hasOwnProperty.call(rawCart, "couponCode")
         ? typeof (rawCart as { couponCode?: unknown }).couponCode === "string"
           ? normalizeCouponCode((rawCart as { couponCode: string }).couponCode) : fail("Invalid cart coupon")
@@ -274,13 +275,17 @@ function reserveTicketIds(result: unknown, lines: number): readonly string[] | n
   if (result === "unknown") return "unknown";
   if (result === "rejected") return "rejected";
   if (result === "reserved") return null;
-  if (!result || typeof result !== "object" || Array.isArray(result)) fail("Invalid reservation outcome");
+  if (!isRecord(result)) fail("Invalid reservation outcome");
   const value = result as { outcome?: unknown; ticketIds?: unknown };
   if (value.outcome !== "reserved" || !Array.isArray(value.ticketIds)) fail("Invalid reservation outcome");
   const ids = value.ticketIds;
   if (ids.length !== lines || new Set(ids).size !== ids.length) fail("Invalid reservation outcome");
   for (const id of ids) if (typeof id !== "string" || !id.trim() || id !== id.trim()) fail("Invalid reservation outcome");
   return ids;
+}
+function release(next: CheckoutAttempt, reason: NonNullable<CheckoutAttempt["paymentReleaseReason"]>): void {
+  next.phase = "releasing";
+  next.paymentReleaseReason = reason;
 }
 function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: CheckoutAttempt, attemptId: string, paymentId?: string): void {
   next.phase = "paid";
@@ -336,14 +341,12 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
             now: new Date((e.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
           });
           if (reservation.state !== "pending") {
-            next.phase = "releasing";
-            next.paymentReleaseReason = "never-started";
+            release(next, "never-started");
           } else next.coupon.status = "pending";
         } catch (error) {
           if (error instanceof CouponRedemptionError &&
               ["CAPACITY_EXHAUSTED", "INVALID_INPUT", "CONFLICTING_ATTEMPT", "TERMINAL_CONFLICT"].includes(error.code)) {
-            next.phase = "releasing";
-            next.paymentReleaseReason = "never-started";
+            release(next, "never-started");
           } else {
             return attempt;
           }
@@ -381,8 +384,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         validateOutcome(outcome, attempt);
         if (outcome.outcome === "unknown") return attempt;
         if (outcome.outcome === "not-created") {
-          next.phase = "releasing";
-          next.paymentReleaseReason = "not-created";
+          release(next, "not-created");
         }
         else {
           if (attempt.coupon) {
@@ -397,8 +399,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           if (outcome.outcome === "paid") {
             completeOrder(e, next, attempt, attemptId, outcome.paymentId);
           } else if (outcome.outcome === "expired-unpaid") {
-            next.phase = "releasing";
-            next.paymentReleaseReason = "expired-unpaid";
+            release(next, "expired-unpaid");
           }
         }
       }

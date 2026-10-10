@@ -14,7 +14,7 @@ import {
   type ProductFeedChannel, type ProductFeedEligibilityRecord,
 } from "../features/feeds/kernel/index.js";
 import { pageOffset, pagination, navigation } from "../shared/admin-blocks.js";
-import { alert, failed, message, object, text } from "./common.js";
+import { alert, button, failed, header, message, note, object, refused, text } from "./common.js";
 import { library, preview, target } from "./media.js";
 
 const PAGE_SIZE = 25;
@@ -36,8 +36,8 @@ function feedEligibility(ctx: PluginContext) {
 }
 function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): Block[] {
   return [
-    { type: "header", text: "Add product" },
-    { type: "context", text: "Customer-facing title; unmanaged until Manage stock ships." },
+    header("Add product"),
+    note("Customer-facing title; unmanaged until Manage stock ships."),
     { type: "form", block_id: "create-" + commandId, fields: [
       { type: "text_input", action_id: "name", label: "Name", initial_value: name },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: sku },
@@ -48,11 +48,11 @@ function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): 
 async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> {
   const { products } = await listCatalogProducts(storage(ctx));
   const start = pageOffset(offset, products.length);
-  const blocks: Block[] = [{ type: "header", text: "Products" }, { type: "context", text: "Commerce" }, navigation(),
+  const blocks: Block[] = [header("Products"), note("Commerce"), navigation(),
     ...addForm(), { type: "divider" }];
   for (const product of products.slice(start, start + PAGE_SIZE)) {
     blocks.push({ type: "section", text: product.name + " — " + product.sku,
-      accessory: { type: "button", label: "Open " + product.name, action_id: "open", value: product.catalogItemId } });
+      accessory: button("Open " + product.name, "open", product.catalogItemId) });
   }
   if (!products.length) blocks.push({ type: "empty", title: "No products yet", description: "Add your first product." });
   pagination(blocks, start, products.length, 'list');
@@ -102,7 +102,7 @@ function variantEditor(id: string, variant: CatalogProductListItem["variantProdu
   const label = (m: typeof variant.members[number]) => m.selections.map(s => s.valueLabel).join(" / ");
   return [
     ...variant.members.flatMap(m => [
-      { type: "header" as const, text: label(m) }, manageStockNotice(m.manageStock),
+      header(label(m)), manageStockNotice(m.manageStock),
       productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" },
         "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision])),
     ]),
@@ -118,18 +118,18 @@ function variantEditor(id: string, variant: CatalogProductListItem["variantProdu
   ];
 }
 async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: CatalogMediaRecord): Promise<Block[]> {
-  const blocks: Block[] = [{ type: "header", text: "Images" }, await preview(ctx, media.image, name), { type: "actions", elements: [
-    { type: "button", label: media.image ? "Change image" : "Choose image", action_id: "media.pick", value: { t: "image", id } },
-    ...(media.image ? [{ type: "button" as const, label: "Remove image", action_id: "media.clear", value: { t: "image", id } }] : []),
-  ] }, { type: "context", text: "Gallery (" + media.gallery.length + " of " + CATALOG_GALLERY_LIMIT + ")" }];
+  const blocks: Block[] = [header("Images"), await preview(ctx, media.image, name), { type: "actions", elements: [
+    button(media.image ? "Change image" : "Choose image", "media.pick", { t: "image", id }),
+    ...(media.image ? [button("Remove image", "media.clear", { t: "image", id })] : []),
+  ] }, note("Gallery (" + media.gallery.length + " of " + CATALOG_GALLERY_LIMIT + ")")];
   for (const [index, entry] of media.gallery.entries()) {
     blocks.push(await preview(ctx, entry, name + " gallery image " + (index + 1)), { type: "actions", elements: [
-      ...(index ? [{ type: "button" as const, label: "Move image " + (index + 1) + " up", action_id: "media.up", value: { id, index, m: entry.mediaId } }] : []),
-      { type: "button", label: "Remove image " + (index + 1), action_id: "media.remove", value: { id, index, m: entry.mediaId } },
+      ...(index ? [button("Move image " + (index + 1) + " up", "media.up", { id, index, m: entry.mediaId })] : []),
+      button("Remove image " + (index + 1), "media.remove", { id, index, m: entry.mediaId }),
     ] });
   }
   if (media.gallery.length < CATALOG_GALLERY_LIMIT) {
-    blocks.push({ type: "actions", elements: [{ type: "button", label: "Add to gallery", action_id: "media.pick", value: { t: "gallery", id } }] });
+    blocks.push({ type: "actions", elements: [button("Add to gallery", "media.pick", { t: "gallery", id })] });
   }
   return blocks;
 }
@@ -145,8 +145,8 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const feedChannels = feeds ? await loadProductFeedEligibility(feeds, id) : undefined;
   const values = form ? { ...form, feedChannels: form.feedChannels ?? feedChannels } : { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
-    { type: "header", text: selected.name }, { type: "context", text: "Commerce / Products" }, navigation(),
-    { type: "context", text: "SKU: " + selected.sku },
+    header(selected.name), note("Commerce / Products"), navigation(),
+    note("SKU: " + selected.sku),
     ...(form?.message ? [alert(form.message)] : []),
     manageStockNotice(values.manageStock),
     ...(!selected.variantProduct?.options.length ? [productForm(id, { ...values, stockStatus: values.stockStatus ?? status })] : []),
@@ -275,7 +275,7 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
           });
           const result = await bulkSaveCatalogProductPrices(store, rows);
           const back = await product(ctx, id);
-          return { blocks: [{ type: "context", text: result.outcomes.map(r => r.catalogItemId + ": " + (r.applied ? "Saved" : r.message)).join("; ") }, ...back.blocks] };
+          return { blocks: [note(result.outcomes.map(r => r.catalogItemId + ": " + (r.applied ? "Saved" : r.message)).join("; ")), ...back.blocks] };
         } else throw new Error("Unknown variant action");
         return product(ctx, id, undefined, "Changes saved");
       }
@@ -288,7 +288,7 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
       const v = input.value as { t?: unknown; id?: unknown } | null;
       try {
         const back = typeof v?.id === "string" && v.id ? await product(ctx, v.id) : null;
-        if (back) return { blocks: [alert(failure), ...back.blocks], toast: { type: "error", message: failure } };
+        if (back) return refused(failure, [alert(failure), ...back.blocks]);
       } catch { /* fall through to the generic alert */ }
     }
     if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.startsWith("variant:")) {
@@ -301,13 +301,13 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
           block.submit.action_id = input.action_id;
           for (const field of block.fields) if (Object.hasOwn(values, field.action_id)) Object.assign(field, { initial_value: values[field.action_id] });
         }
-        return { blocks: [alert(failure), ...back.blocks], toast: { type: "error", message: failure } };
+        return refused(failure, [alert(failure), ...back.blocks]);
       } catch { /* storage recovery falls through to the render-only alert */ }
     }
     // Preserve clerk input for a refused create; retry uses the same command identity.
     if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.startsWith("create:") &&
         typeof values.name === "string" && values.name.length <= 1024 && typeof values.sku === "string" && values.sku.length <= 1024) {
-      return { blocks: [{ type: "header", text: "Products" }, navigation(), alert(failure),
+      return { blocks: [header("Products"), navigation(), alert(failure),
         ...addForm(input.action_id.slice(7), values.name, values.sku)], toast: { type: "error", message: failure } };
     }
     // Recovery is render-only: even a storage outage must not erase clerk input.
@@ -318,8 +318,8 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
           ? values.stockStatus as ProductFields["stockStatus"] : null;
         const managed = typeof values.manageStock === "boolean" ? values.manageStock : null;
         return { blocks: [
-          { type: "header", text: "Product changes" }, { type: "context", text: "Commerce / Products" }, navigation(),
-          alert(failure), { type: "context", text: "Save not confirmed; entries kept." },
+          header("Product changes"), note("Commerce / Products"), navigation(),
+          alert(failure), note("Save not confirmed; entries kept."),
           manageStockNotice(managed),
           productForm(input.action_id.slice(5), {
             regular: values.regular,

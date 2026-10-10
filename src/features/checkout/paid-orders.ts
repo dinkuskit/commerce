@@ -1,4 +1,5 @@
 import type { StorageCollection } from "emdash";
+import { scanAll } from "../../shared/scan.js";
 import { PAID_ORDER_SCHEMA, type PaidOrder } from "../../handoffs/paid-order.js";
 import type { CheckoutAttempt, CheckoutExecution, CheckoutRecord, CommerceOrder } from "./types.js";
 
@@ -21,23 +22,15 @@ export async function handOffPaidOrder(e: CheckoutExecution, attempt: CheckoutAt
 export async function listPaidOrders(carts: Pick<StorageCollection<CheckoutRecord>, "query">): Promise<PaidOrder[]> {
   const orders: PaidOrder[] = [];
   const ids = new Set<string>();
-  const cursors = new Set<string>();
-  let cursor: string | undefined;
-  for (let page = 0; ; page++) {
-    if (page >= 100) throw new Error("Order scan limit");
-    const result = await carts.query({ limit: 100, cursor });
-    for (const item of result.items) {
-      if (!Array.isArray(item.data.attempts)) throw new Error("Invalid aggregate");
-      for (const attempt of item.data.attempts) {
-        const order = attempt.order;
-        if (!order) continue;
-        if (attempt.phase !== "paid" || order.attemptId !== attempt.attemptId || !order.orderId || !order.receiptId || ids.has(order.orderId)) throw new Error("Invalid order");
-        ids.add(order.orderId);
-        orders.push(paidOrderOf(order));
-      }
+  await scanAll(carts, item => {
+    if (!Array.isArray(item.data.attempts)) throw new Error("Invalid aggregate");
+    for (const attempt of item.data.attempts) {
+      const order = attempt.order;
+      if (!order) continue;
+      if (attempt.phase !== "paid" || order.attemptId !== attempt.attemptId || !order.orderId || !order.receiptId || ids.has(order.orderId)) throw new Error("Invalid order");
+      ids.add(order.orderId);
+      orders.push(paidOrderOf(order));
     }
-    if (!result.hasMore) return orders;
-    if (!result.cursor || cursors.has(result.cursor)) throw new Error("Invalid cursor");
-    cursor = result.cursor; cursors.add(cursor);
-  }
+  });
+  return orders;
 }

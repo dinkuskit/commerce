@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import type { CatalogStorageRecord } from "./types.js";
@@ -8,7 +9,7 @@ export const MANAGE_STOCK_LOCKED_MESSAGE =
   "Manage stock cannot be changed in Commerce v1.";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return null;
   }
   return value as Record<string, unknown>;

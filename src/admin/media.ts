@@ -2,7 +2,7 @@ import type { Block, BlockResponse } from "@emdash-cms/blocks";
 import type { PluginContext } from "emdash/plugin";
 import type { MediaReference } from "../features/catalog/kernel/index.js";
 import { navigation } from "../shared/admin-blocks.js";
-import { object } from "./common.js";
+import { button, header, note, object } from "./common.js";
 
 const LIBRARY_PAGE = 12;
 // Images reference the EmDash Media Library by id. Block Kit 1.2.0 renders no
@@ -18,23 +18,23 @@ export function target(value: unknown): Target {
 export async function preview(ctx: PluginContext, reference: MediaReference | null, alt: string): Promise<Block> {
   const item = reference && ctx.media ? await ctx.media.get(reference.mediaId).catch(() => null) : null;
   return item ? { type: "image", url: item.url, alt: item.alt || alt }
-    : { type: "context", text: reference ? "Image " + reference.mediaId + " is unavailable." : "No image" };
+    : note(reference ? "Image " + reference.mediaId + " is unavailable." : "No image");
 }
 export async function library(ctx: PluginContext, t: Target, cursor?: string): Promise<BlockResponse> {
   if (!ctx.media) throw new Error("Media Library unavailable. Commerce needs media:read.");
   const page = await ctx.media.list({ limit: LIBRARY_PAGE, mimeType: "image/", ...(cursor ? { cursor } : {}) });
   const blocks: Block[] = [
-    { type: "header", text: t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image" },
-    navigation(), { type: "context", text: "Media Library images." },
-    { type: "actions", elements: [{ type: "button", label: "Cancel", action_id: t.t === "placeholder" ? "settings" : "open", value: t.id }] },
+    header(t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image"),
+    navigation(), note("Media Library images."),
+    { type: "actions", elements: [button("Cancel", t.t === "placeholder" ? "settings" : "open", t.id)] },
   ];
   for (const item of page.items) {
     blocks.push({ type: "image", url: item.url, alt: item.alt || item.filename },
-      { type: "actions", elements: [{ type: "button", label: "Use " + item.filename, action_id: "media.use", value: { ...t, m: item.id } }] });
+      { type: "actions", elements: [button("Use " + item.filename, "media.use", { ...t, m: item.id })] });
   }
   if (!page.items.length) blocks.push({ type: "empty", title: "No images yet", description: "Upload images on the Media page." });
   if (page.hasMore && page.cursor) {
-    blocks.push({ type: "actions", elements: [{ type: "button", label: "Next", action_id: "media.pick", value: { ...t, c: page.cursor } }] });
+    blocks.push({ type: "actions", elements: [button("Next", "media.pick", { ...t, c: page.cursor })] });
   }
   return { blocks };
 }

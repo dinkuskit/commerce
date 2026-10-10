@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import type { StorageCollection } from "emdash";
 import { CatalogError } from "./errors.js";
 import { normalizeSku } from "./normalize.js";
@@ -35,7 +36,7 @@ export async function setCatalogItemSku(
   rawInput: unknown,
   options: SetCatalogItemSkuOptions = {},
 ): Promise<SetCatalogItemSkuResult> {
-  if (!rawInput || typeof rawInput !== "object" || Array.isArray(rawInput)) {
+  if (!isRecord(rawInput)) {
     throw new CatalogError("INVALID_INPUT", "request body must be an object");
   }
   const input = rawInput as Partial<SetCatalogItemSkuInput>;
