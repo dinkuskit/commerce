@@ -146,3 +146,22 @@ test('a digital-only order can still be completed by hand', async () => {
   assert.match(JSON.stringify(await ordersBlocks(route({ type: 'form_submit', action_id: 'orders.complete:1:d1', values: {} }), ctx, services)), /Order completed/);
   assert.ok((await listOrders(orders))[0].completed);
 });
+
+test('Ship catches up when Orders opens and after each saved change, and Ship being down never stops the page', async () => {
+  const { orders, ctx } = await kept();
+  const synced = [];
+  const withShip = { ...services, ship: async () => { synced.push((await listOrders(orders))[0].revision); } };
+  await ordersBlocks(route({ type: 'page_load', page: '/orders' }), ctx, withShip);
+  await ordersBlocks(route({ type: 'block_action', action_id: 'orders.open:o1' }), ctx, withShip);
+  await ordersBlocks(route({ type: 'block_action', action_id: 'orders.list' }), ctx, withShip);
+  await ordersBlocks(route({ type: 'form_submit', action_id: 'orders.complete:1:o1', values: { tracking: 'x'.repeat(65) } }), ctx, withShip);
+  assert.deepEqual(synced, [1]);
+  // A saved change reaches Ship after it is saved; a refused or outdated one does not call Ship.
+  await ordersBlocks(route({ type: 'form_submit', action_id: 'orders.complete:1:o1', values: {} }), ctx, withShip);
+  await ordersBlocks(route({ type: 'block_action', action_id: 'orders.reopen:1:o1' }), ctx, withShip);
+  assert.deepEqual(synced, [1, 2]);
+  const down = { ...services, ship: async () => { throw new Error('Ship unavailable'); } };
+  assert.doesNotMatch(JSON.stringify(await ordersBlocks(route({ type: 'page_load', page: '/orders' }), ctx, down)), /Orders unavailable/);
+  assert.match(JSON.stringify(await ordersBlocks(route({ type: 'block_action', action_id: 'orders.reopen:2:o1' }), ctx, down)), /Moved back to Processing/);
+  assert.equal((await listOrders(orders))[0].revision, 3);
+});

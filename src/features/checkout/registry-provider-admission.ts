@@ -24,6 +24,8 @@ export interface RegistryCheckoutConfig {
   shipping: TrustedShippingConfiguration;
   /** The hosted coupon service. Without it, coupon codes are unavailable. */
   coupons?: { origin: string; audience: string };
+  /** Ship's hosted service for Orders. Without it, Orders sends nothing to Ship. */
+  ship?: { origin: string; audience: string };
 }
 
 const BASE =
@@ -51,10 +53,8 @@ function admitShipping(shipping: Record<string, unknown>): void {
   }
 }
 
-function keySet(providerId: RegistryCheckoutProviderId, mode: boolean, merchant: boolean, coupons: boolean): string {
-  const parts = BASE.split(",");
-  if (mode) parts.push("mode");
-  if (coupons) parts.push("coupons");
+function keySet(providerId: RegistryCheckoutProviderId, optional: string[], merchant: boolean): string {
+  const parts = [...BASE.split(","), ...optional];
   if (providerId === "stripe") parts.push("stripeAccountId");
   if (providerId === "authorize_net" && merchant) parts.push("authorizeNetMerchantId");
   return parts.sort().join(",");
@@ -70,19 +70,23 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
   if (keys(value, "enabled,schema") && value.schema === REGISTRY_CHECKOUT_CONFIG_SCHEMA && value.enabled === false) {
     return null;
   }
+  const record = value;
+  // Each hosted service besides Payments is optional: { origin, audience }.
+  const services = ["coupons", "ship"].filter(name => record[name] !== undefined);
   const hasMode = value.mode !== undefined;
   const hasMerchant = value.authorizeNetMerchantId !== undefined;
-  const coupons = value.coupons;
   const providerId = value.providerId;
   if (providerId !== "stripe" && providerId !== "authorize_net") fail();
-  if (!keys(value, keySet(providerId, hasMode, hasMerchant, coupons !== undefined)) ||
+  if (!keys(value, keySet(providerId, hasMode ? ["mode", ...services] : services, hasMerchant)) ||
       value.schema !== REGISTRY_CHECKOUT_CONFIG_SCHEMA || value.enabled !== true ||
       value.commerceOrigin !== site || !text(value.siteId) || !https(value.paymentsOrigin) ||
       !text(value.bindingRef) || value.pricingSchema !== CHECKOUT_PRICING_SCHEMA ||
       !https(value.issuer, false) || !text(value.audience) || !obj(value.shipping)) fail();
   if (hasMode && value.mode !== "test" && value.mode !== "live") fail();
-  if (coupons !== undefined &&
-      (!obj(coupons) || !keys(coupons, "audience,origin") || !https(coupons.origin) || !text(coupons.audience))) fail();
+  for (const name of services) {
+    const service = record[name];
+    if (!obj(service) || !keys(service, "audience,origin") || !https(service.origin) || !text(service.audience)) fail();
+  }
   if (providerId === "stripe") {
     if (!text(value.stripeAccountId) || hasMerchant) fail();
   } else if (value.stripeAccountId !== undefined || hasMerchant && !text(value.authorizeNetMerchantId)) {

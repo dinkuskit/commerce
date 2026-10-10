@@ -13,6 +13,7 @@ import { spec } from "../../cli/spec.mjs";
 import {
   COMMERCE_PLUGIN_ID,
   LIST_CATALOG_PRODUCTS_ROUTE,
+  ORDERS_API_ROUTE,
   PUBLIC_CATALOG_ITEM_ROUTE,
   PUBLIC_CATALOG_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
@@ -54,7 +55,9 @@ function fakeFetch(routes) {
     const parsed = new URL(url);
     calls.push({ url: parsed, init });
     const route = parsed.pathname.replace("/_emdash/api/plugins/dinkus-commerce/", "");
-    const reply = routes[`${route}${parsed.search}`] ?? routes[route] ?? fail(404, "NOT_FOUND", "Plugin route not found");
+    const entry = routes[`${route}${parsed.search}`] ?? routes[route] ?? fail(404, "NOT_FOUND", "Plugin route not found");
+    // A function reply answers from the JSON body (the orders route takes one POST per action).
+    const reply = typeof entry === "function" ? entry(init.body === undefined ? undefined : JSON.parse(init.body)) : entry;
     if (reply instanceof Error) throw reply;
     const text = typeof reply.body === "string" ? reply.body : JSON.stringify(reply.body);
     return new Response(text, { status: reply.status });
@@ -420,8 +423,6 @@ test("the credential never appears in stdout or stderr", async () => {
 
 test("planned commands stay in help and fail closed without contacting the site", async () => {
   const plannedCommands = [
-    ["orders", "list"],
-    ["orders", "show", "order_demo"],
     ["settings", "show"],
     ["products", "set-price", "item_demo", "--amount", "19.99"],
     ["products", "set-sale-price", "item_demo", "--amount", "9.99"],
@@ -437,6 +438,133 @@ test("planned commands stay in help and fail closed without contacting the site"
     const node = argv.slice(0, 2).reduce((tree, name) => tree.commands[name], spec.tree);
     assert.match(node.summary, /\(planned\)$/);
   }
+});
+
+const apiOrder = (number, extra = {}) => ({
+  orderId: `order:${number}`, number, version: 1, status: "processing", test: true, paidAt: "2026-10-10T01:00:00Z",
+  total: { currency: "USD", minor: "1250" }, lines: [{ catalogItemId: "hat", quantity: 2, name: "Hat", unitPrice: { currency: "USD", minor: "625" } }],
+  choices: [], shipTo: { name: "Fixture Shopper", line1: "1 Example Way", city: "Testville", postalCode: "00000", country: "US" },
+  email: "shopper@example.test", phone: null, completed: null, ...extra,
+});
+
+test("orders list sends one private POST per page and --all follows the next page", async () => {
+  const bodies = [];
+  const routes = {
+    orders: (body) => {
+      bodies.push(body);
+      return ok(body.offset ? { orders: [apiOrder(1051)], total: 51 } : { orders: [apiOrder(1001), apiOrder(1002, { test: false })], total: 51, next: 50 });
+    },
+  };
+  const env = { EMDASH_TOKEN: TOKEN };
+  const first = await run(["--url", SITE, "orders", "list", "--status", "processing", "--json"], { routes, env });
+  assert.equal(first.code, 0, first.stderr);
+  assert.deepEqual(bodies.splice(0), [{ action: "list", status: "processing" }]);
+  assert.equal(singleJson(first.stdout).data.cursor, "50");
+  const { init } = first.calls[0];
+  assert.equal(init.method, "POST");
+  assert.equal(init.headers.authorization, `Bearer ${TOKEN}`);
+  assert.equal(init.headers["x-emdash-request"], "1");
+
+  const all = await run(["--url", SITE, "orders", "list", "--all", "--json"], { routes, env });
+  assert.equal(all.code, 0, all.stderr);
+  assert.deepEqual(bodies.splice(0), [{ action: "list" }, { action: "list", offset: 50 }]);
+  const data = singleJson(all.stdout).data;
+  assert.deepEqual(data.orders.map((order) => order.number), [1001, 1002, 1051]);
+  assert.equal(data.total, 51);
+  assert.equal(Object.hasOwn(data, "cursor"), false);
+
+  const human = await run(["--url", SITE, "orders", "list"], { routes, env });
+  assert.match(human.stdout, /#1001 \(TEST\)\s+1\s+Processing\s+12\.50 USD\s+Fixture Shopper, 1 Example Way/);
+  assert.match(human.stdout, /^#1002 /m);
+  assert.match(human.stderr, /More orders: dinkus-commerce orders list --cursor 50/);
+  const next = await run(["--url", SITE, "orders", "list", "--cursor", "50", "--plain"], { routes, env });
+  assert.match(next.stdout, /\trecord=order\torderId=order:1051\tnumber=1051\tversion=1\tstatus=processing\ttest=true\t/);
+
+  for (const argv of [["--status", "shipped"], ["--cursor", "abc"], ["--cursor", "-1"]]) {
+    const refused = await run(["--url", SITE, "orders", "list", ...argv], { routes, env });
+    assert.equal(refused.code, 2, argv.join(" "));
+    assert.equal(refused.calls.length, 0);
+  }
+  const anonymous = await run(["--url", SITE, "orders", "list"], { routes });
+  assert.equal(anonymous.code, 4);
+  assert.equal(anonymous.calls.length, 0);
+});
+
+test("orders show prints one order and exits 1 when no order has that id", async () => {
+  const env = { EMDASH_TOKEN: TOKEN };
+  const routes = { orders: (body) => ok({ order: body.orderId === "order:1001" ? apiOrder(1001) : null }) };
+  const shown = await run(["--url", SITE, "orders", "show", "order:1001"], { routes, env });
+  assert.equal(shown.code, 0, shown.stderr);
+  assert.match(shown.stdout, /^order\s+#1001 \(TEST\)$/m);
+  assert.match(shown.stdout, /^item\s+2 x Hat \(hat\) at 6\.25 USD$/m);
+  const missing = await run(["--url", SITE, "orders", "show", "order:gone", "--json"], { routes, env });
+  assert.equal(missing.code, 1);
+  assert.equal(singleJson(missing.stdout).error.code, "not_found");
+  const broken = await run(["--url", SITE, "orders", "show", "order:1001"], { routes: { orders: ok({ order: { orderId: "order:1001" } }) }, env });
+  assert.equal(broken.code, 5);
+});
+
+test("orders complete and reopen preview first and apply only at the confirmed version", async () => {
+  const env = { EMDASH_TOKEN: TOKEN };
+  const bodies = [];
+  let answer = "saved";
+  const completed = apiOrder(1001, { version: 2, status: "completed", completed: { at: "2026-10-10T18:00:00.000Z", carrier: "USPS", tracking: "9400" } });
+  const routes = {
+    orders: (body) => {
+      bodies.push(body);
+      if (body.action === "show") return ok({ order: body.orderId === "order:1002" ? completed : apiOrder(1001) });
+      return ok(answer === "saved" ? { result: "saved", order: body.action === "complete" ? completed : apiOrder(1002, { version: 3 }) } : { result: answer, order: apiOrder(1001) });
+    },
+  };
+  const preview = await run(["--url", SITE, "orders", "complete", "order:1001", "--carrier", "USPS", "--tracking", "9400", "--dry-run", "--json"], { routes, env });
+  assert.equal(preview.code, 0, preview.stderr);
+  const document = singleJson(preview.stdout);
+  assert.equal(document.outcome, "preview");
+  assert.equal(document.confirmation, "1");
+  assert.deepEqual(document.data, { orderId: "order:1001", number: 1001, version: 1, from: "processing", to: "completed", carrier: "USPS", tracking: "9400" });
+  assert.deepEqual(bodies.splice(0).map((body) => body.action), ["show"]);
+
+  // Without a prompt a change needs --confirm, and nothing is sent.
+  for (const extra of [[], ["--no-input"]]) {
+    const blocked = await run(["--url", SITE, "orders", "complete", "order:1001", ...extra], { routes, env });
+    assert.equal(blocked.code, 4);
+    assert.equal(blocked.calls.length, 0);
+    assert.match(blocked.stderr, /--confirm/);
+  }
+  for (const extra of [["--dry-run", "--confirm", "1"], ["--confirm", "0"], ["--confirm", "v1"]]) {
+    const usage = await run(["--url", SITE, "orders", "complete", "order:1001", ...extra], { routes, env });
+    assert.equal(usage.code, 2, extra.join(" "));
+    assert.equal(usage.calls.length, 0);
+  }
+
+  const applied = await run(["--url", SITE, "orders", "complete", "order:1001", "--carrier", "USPS", "--tracking", "9400", "--confirm", "1"], { routes, env });
+  assert.equal(applied.code, 0, applied.stderr);
+  assert.deepEqual(bodies.splice(0), [{ action: "complete", orderId: "order:1001", version: 1, carrier: "USPS", tracking: "9400" }]);
+  assert.match(applied.stdout, /Order #1001 \(TEST\) is now Completed \(version 2\)\./);
+
+  for (const [result, pattern] of [["outdated", /changed since that version/], ["invalid", /64 characters/], ["not_found", /No order has that id/]]) {
+    answer = result;
+    const refused = await run(["--url", SITE, "orders", "complete", "order:1001", "--confirm", "1", "--json"], { routes, env });
+    assert.equal(refused.code, 1, result);
+    const failure = singleJson(refused.stdout);
+    assert.equal(failure.error.code, result);
+    assert.match(failure.error.message, pattern);
+  }
+  answer = "saved";
+  bodies.splice(0);
+
+  const already = await run(["--url", SITE, "orders", "complete", "order:1002", "--dry-run"], { routes, env });
+  assert.equal(already.code, 1);
+  assert.match(already.stderr, /already Completed/);
+  const reopenPreview = await run(["--url", SITE, "orders", "reopen", "order:1002", "--dry-run", "--json"], { routes, env });
+  assert.equal(singleJson(reopenPreview.stdout).confirmation, "2");
+  const reopened = await run(["--url", SITE, "orders", "reopen", "order:1002", "--confirm", "2"], { routes, env });
+  assert.equal(reopened.code, 0, reopened.stderr);
+  assert.match(reopened.stdout, /is now Processing \(version 3\)/);
+  assert.deepEqual(bodies.splice(0).filter((body) => body.action !== "show"), [{ action: "reopen", orderId: "order:1002", version: 2 }]);
+  // reopen has no carrier or tracking.
+  const unknown = await run(["--url", SITE, "orders", "reopen", "order:1002", "--carrier", "USPS", "--confirm", "2"], { routes, env });
+  assert.equal(unknown.code, 2);
 });
 
 test("--no-input mutations fail closed: nothing is sent with or without --confirm", async () => {
@@ -479,6 +607,7 @@ test("CLI route ids and named routes match the built Commerce package", async ()
     publicCatalog: PUBLIC_CATALOG_ROUTE,
     publicCatalogItem: PUBLIC_CATALOG_ITEM_ROUTE,
     listProducts: LIST_CATALOG_PRODUCTS_ROUTE,
+    orders: ORDERS_API_ROUTE,
   });
   // Planned mutations name the native routes they would wrap.
   const specSource = await readFile(join(root, "cli", "spec.mjs"), "utf8");

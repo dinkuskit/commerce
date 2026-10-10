@@ -71,8 +71,10 @@ dinkus-commerce products set-price <item-id> --amount <decimal>        (planned)
 dinkus-commerce products set-sale-price <item-id> --amount <decimal>   (planned)
 dinkus-commerce products set-sku <item-id> --sku <sku>                 (planned)
 
-dinkus-commerce orders list [--cursor <cursor>]                        (planned)
-dinkus-commerce orders show <order-id>                                 (planned)
+dinkus-commerce orders list [--status <processing|completed>] [--cursor <cursor>] [--all]
+dinkus-commerce orders show <order-id>
+dinkus-commerce orders complete <order-id> [--carrier <text>] [--tracking <text>] (--dry-run | --confirm <version>)
+dinkus-commerce orders reopen <order-id> (--dry-run | --confirm <version>)
 
 dinkus-commerce settings show                                          (planned)
 ```
@@ -104,6 +106,70 @@ rules and response (GrillTrack `catalog-native-public-routes-001`). The
 `catalog` commands therefore work on either install; `products list` still
 works only on a native install.
 
+### Orders commands
+
+Every `orders` command sends one `POST orders` with a JSON body and the
+credential (GrillTrack `commerce-orders-api-001`). The route is private: EmDash
+requires `plugins:manage` (an administrator) and, for API tokens, the `admin`
+scope, and Commerce checks the administrator again, like its Orders page. Only
+the Registry (sandboxed) build mounts it; on a native install the site answers
+`404` and the CLI exits `1` with `route_not_available`.
+
+| Body | Answer |
+| --- | --- |
+| `{ "action": "list", "status"?: "processing" \| "completed", "offset"?: n }` | `{ orders, total, next? }`: up to 50 orders by order number from `offset`; `next` is the next page's offset. |
+| `{ "action": "show", "orderId" }` | `{ order }`, or `{ "order": null }` when no order has that id. |
+| `{ "action": "complete", "orderId", "version", "carrier"?, "tracking"? }` | `{ result, order }` |
+| `{ "action": "reopen", "orderId", "version" }` | `{ result, order }` |
+
+Unknown actions or fields, and malformed values, are refused before anything
+changes (a misspelt `trackingNumber` is an error, not ignored). Each order is:
+
+```json
+{
+  "orderId": "order:demo", "number": 1001, "version": 1,
+  "status": "processing", "test": true, "paidAt": "2026-10-10T01:00:00.000Z",
+  "total": { "currency": "USD", "minor": "1250" },
+  "lines": [{ "catalogItemId": "item_demo", "quantity": 2, "name": "Demo Mug", "unitPrice": { "currency": "USD", "minor": "625" } }],
+  "choices": [],
+  "shipTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
+  "email": "shopper@example.test", "phone": null, "completed": null
+}
+```
+
+`number` is null for an order kept before numbering until the Orders page
+numbers it. `status` is `processing` until the order ships and `completed` once
+it shipped (never "delivered"). `test` is false only for an order taken in live
+mode. `shipTo` is the owner's corrected address when there is one, else the
+checkout address, or null for digital-only orders. `choices` are the frozen
+option choices. `completed` is `{ at, carrier?, tracking? }` once Completed.
+
+`complete` and `reopen` follow the Orders page's rules and apply only at the
+order `version` named, so a change made from a stale read changes nothing.
+`result` is `saved`, `outdated` (the version moved on, or the order is already
+in that status), `invalid` (carrier or tracking over 64 characters or with a
+line break) or `not_found`; `order` is the order as it now stands. Commerce
+sends no email either way. When the store has Ship's hosted service, a saved
+change goes to Ship right away, and Ship emails the shopper when the order
+becomes Completed ([Orders and Ship](implementation/registry-ship-sync.md)).
+
+- `orders list` prints one page and, when more exist, a cursor (the next
+  offset) for `--cursor`; `--all` follows every page. `--status processing`
+  lists what still needs shipping.
+- `orders show <order-id>` prints one order; a missing id exits `1` with
+  `not_found`.
+- `orders complete` and `orders reopen` change an order. The order the route
+  returns is the preview and its `version` is the confirmation value, because
+  Commerce applies the change only at that version. `--dry-run` reads the order,
+  shows the change, and prints `confirmation` (the version); nothing changes. A
+  run with `--confirm <version>` sends the change for that version. Without
+  either, an interactive run shows the preview and asks for the version;
+  `--no-input` or a non-interactive run without `--confirm` exits `4` with
+  `confirmation_required` and sends nothing. A refusal exits `1` with the
+  `result` as `error.code` (`outdated`, `invalid`, `not_found`); completing an
+  order that is already Completed, or reopening one that is Processing, exits
+  `1` with `already_completed` or `already_processing` before anything is sent.
+
 ### Planned commands
 
 Planned commands appear in help with a summary ending in `(planned)`. They
@@ -115,7 +181,6 @@ and a message naming the missing API. They never contact the site.
 | `products set-price` | A preview/confirm route for Regular price. Native `catalog-items/set-regular-price` applies immediately. |
 | `products set-sale-price` | A preview/confirm route for Sale price. Native `catalog-items/set-sale-price` applies immediately. |
 | `products set-sku` | A preview/confirm route for SKU changes. Native `catalog-items/set-sku` applies immediately. |
-| `orders list`, `orders show` | Any JSON orders route. Orders are shown only on the Block Kit admin page through the `admin` route. |
 | `settings show` | A read-only settings route. Native can read `settings/out-of-stock-listing` and `settings/placeholder-image` but not `settings/storefront-availability`; the Registry build has none. |
 
 ### Mutations need Commerce preview/confirm routes first
@@ -134,7 +199,8 @@ intended flow matches Inventory:
 
 There is no generic `--force`. The native `catalog-items/set-*` routes apply
 immediately and return no confirmation binding, so the CLI cannot satisfy this
-flow yet. Commerce needs preview and confirm routes (names to be decided
+flow yet. `orders complete` and `orders reopen` can, because the orders route
+applies a change only at the order version the preview showed. Commerce needs preview and confirm routes (names to be decided
 through GrillTrack) before any mutation is wired. Mounting new JSON admin
 routes in the Registry build would add bytes to `dist/sandbox/plugin.mjs`, so
 that decision must also respect the Registry file-size budget.
@@ -158,12 +224,16 @@ that decision must also respect the Registry file-size budget.
 
 | Flag | Command | Contract |
 | --- | --- | --- |
-| `--cursor <cursor>` | `catalog list`, `orders list` (planned) | Opaque page cursor from a previous page, 1-1024 characters. |
-| `--all` | `catalog list` | Follow every page and return one combined list. |
+| `--cursor <cursor>` | `catalog list`, `orders list` | Page cursor from a previous page. Opaque for `catalog list`, 1-1024 characters; for `orders list` the page offset the CLI printed. |
+| `--all` | `catalog list`, `orders list` | Follow every page and return one combined list. |
+| `--status <processing\|completed>` | `orders list` | Only Processing (not shipped) or Completed (shipped) orders. |
+| `--carrier <text>`, `--tracking <text>` | `orders complete` | Optional carrier and tracking number, at most 64 characters each. |
+| `--dry-run` | `orders complete`, `orders reopen` | Show the change and the version to confirm; send nothing. |
+| `--confirm <version>` | `orders complete`, `orders reopen` | Apply only if the order is still at this version. |
 | `--amount <decimal>` | `products set-price`, `products set-sale-price` (planned) | USD amount such as `19.99`. Required. |
 | `--sku <sku>` | `products set-sku` (planned) | New unique SKU. The permanent item id never changes. Required. |
-| `--dry-run` | planned mutations | Preview only; send nothing. |
-| `--confirm <value>` | planned mutations | Apply only if it matches a fresh preview. |
+| `--dry-run` | planned product mutations | Preview only; send nothing. |
+| `--confirm <value>` | planned product mutations | Apply only if it matches a fresh preview. |
 
 ## Output contract
 
@@ -201,7 +271,13 @@ The envelope always has `schema`, `command`, `outcome`, and `context`. Reads use
 `outcome: "ok"` and `data`. `data` passes the service payload through
 unchanged: `catalog list` adds `pages` with `--all` and omits `cursor` on the
 last page, `catalog show` is one product, and `products list` is the native
-`{ products, manageStockControl }` payload. A failure uses
+`{ products, manageStockControl }` payload. `orders list` is
+`{ orders, total, cursor? }` (`cursor` is the route's `next` as a string),
+`orders show` is one order, and a saved `orders complete` or `orders reopen`
+is the route's `{ result, order }`. A preview uses `outcome: "preview"`, with
+`data: { orderId, number, version, from, to, carrier?, tracking? }` and
+`confirmation` set to the version to pass to `--confirm`. A refused change
+keeps the route's answer in `data` beside `error`. A failure uses
 `outcome: "error"` and `error: { code, message }`, with `context` when the site
 was resolved:
 
@@ -224,6 +300,11 @@ values are escaped as `\t`, `\n`, `\r`, and `\\`. Records per command:
 - `catalog show`: one record of flattened `context.*` and `data.*` fields;
   arrays are JSON.
 - `products list`: `record=product catalogItemId sku name regular sale manageStock stockStatus variants`.
+- `orders list`: `record=order orderId number version status test total.minor total.currency paidAt`,
+  then `record=cursor cursor` when another page exists.
+- `orders show`, `orders complete`, `orders reopen`: one record of flattened
+  `context.*` and `data.*` fields (plus `confirmation` for a preview); arrays
+  are JSON.
 - Any failure: `code message`.
 
 JSON and plain field names are compatibility surfaces within
@@ -320,6 +401,11 @@ EMDASH_URL=https://shop.example dinkus-commerce products list
 # Local development site served over loopback http.
 dinkus-commerce --url http://localhost:4321 catalog list
 
+# Orders that still need shipping, then mark one shipped after checking the preview.
+EMDASH_URL=https://shop.example dinkus-commerce orders list --status processing
+EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --dry-run
+EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --confirm 1
+
 # Planned today: exits 1 with not_implemented and sends nothing.
 dinkus-commerce --url https://shop.example products set-price item_demo --amount 19.99 --dry-run
 ```
@@ -331,7 +417,8 @@ dinkus-commerce --url https://shop.example products set-price item_demo --amount
 - Any byte in the Registry bundle `dist/sandbox/plugin.mjs`.
 - Direct storage or database access, importing Commerce source, or
   reimplementing price, sellability, availability, or checkout rules.
-- Mutations without a Commerce preview/confirm route, and a generic `--force`.
+- Mutations without a Commerce preview/confirm route or a version-bound route
+  (`orders`), and a generic `--force`.
 - Shopper operations: guest checkout `prepare`/`start`/`status`, carts, coupons,
   and payments.
 - Media upload, product creation or deletion, and Inventory stock operations
@@ -375,8 +462,9 @@ change, rebuild, and compare.
   because EmDash, not Commerce, authenticates plugin routes. Public reads never
   send it.
 - `context` is `{ siteUrl, pluginId }`.
-- No mutation is wired, so there is no `commandId`, receipt, unknown outcome,
-  or pending-command store yet. Those arrive with the preview/confirm routes.
+- Only order changes are wired. They are bound to the order version rather than
+  a command id, so a lost answer is resolved by reading the order again: there
+  is no `commandId`, receipt, unknown outcome, or pending-command store yet.
 - The kernel's `httpFailure` reads a top-level string `error`. EmDash returns
   `{ success: false, error: { code, message } }`, so the client unwraps that
   object before mapping the status.
@@ -389,7 +477,8 @@ change, rebuild, and compare.
 | `catalog show` | Wired | `GET catalog/public/item?itemId=` (both builds) |
 | `products list` | Wired | `GET catalog-items/list` with `EMDASH_TOKEN` (native build) |
 | `products set-price`, `set-sale-price`, `set-sku` | Planned | No preview/confirm route |
-| `orders list`, `orders show` | Planned | No JSON orders route |
+| `orders list`, `orders show` | Wired | `POST orders` with `EMDASH_TOKEN` (Registry build) |
+| `orders complete`, `orders reopen` | Wired | `POST orders` with `EMDASH_TOKEN`, bound to the confirmed order version (Registry build) |
 | `settings show` | Planned | No complete read-only settings route |
 
 ## Acceptance checks

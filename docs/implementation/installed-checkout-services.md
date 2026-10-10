@@ -12,9 +12,10 @@ the owners. No stock or money ledger is added.
 ## Unconfigured and ungranted behavior
 
 The shipped manifest declares `network:request` with exactly
-`allowedHosts: ["payments.dinkuskit.com", "coupons.dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09, and `commerce-allowed-hosts-coupons-dinkuskit-com`); no wildcard and no other
+`allowedHosts: ["payments.dinkuskit.com", "coupons.dinkuskit.com", "ship.dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09, `commerce-allowed-hosts-coupons-dinkuskit-com` and `commerce-allowed-hosts-ship-dinkuskit-com`); no wildcard and no other
 host. The coupon host serves only coupon checkouts
-([registry-hosted-coupons](registry-hosted-coupons.md)). The behavior below
+([registry-hosted-coupons](registry-hosted-coupons.md)), and the Ship host only
+Orders ([registry-ship-sync](registry-ship-sync.md)). The behavior below
 applies whenever the Payments grant is not active.
 Absent or explicitly disabled configuration preserves prepare/capability
 minting and makes start return `PAYMENTS_UNAVAILABLE`, without reading a
@@ -117,8 +118,10 @@ snapshots; binding/event/generation/time fields are validated. ACK sends the
 original complete snapshot and requires a boolean acknowledgment envelope.
 The existing canonical reconciler settles durable order/coupon effects before
 ACK; unknown or malformed results retain recovery state. No public wake route
-or automatic scheduling is added. The existing named cron hook can consume
-wakes, but actual host scheduler setup/dispatch is a separate proof gate.
+is added. The named cron hook consumes wakes every 5 minutes once EmDash has
+switched the plugin on and the site's scheduler runs
+([background check](installed-checkout-context.md#background-check),
+GrillTrack `commerce-background-check-001`).
 
 Managed availability and reservation remain unavailable without the configured
 Inventory provider. Its binding and managed product state are preserved.
@@ -138,8 +141,9 @@ real atomic SDK SQL. The fixture gives a clearly synthetic manifest variant
 `network:request` plus one public IP host solely to avoid DNS. Its host HTTP
 callback intercepts **every** request and verifies an ephemeral synthetic
 signed JWT; no network service/provider is contacted. The shipped manifest
-is asserted to declare exactly `network:request` with `payments.dinkuskit.com`
-and `coupons.dinkuskit.com` and is never replaced by that test variant.
+is asserted to declare exactly `network:request` with `payments.dinkuskit.com`,
+`coupons.dinkuskit.com` and `ship.dinkuskit.com` and is never replaced by that
+test variant.
 
 These tests prove local runtime service assembly, canonical free/flat coupon
 pricing and paid replay, denied grants, configuration/token failures, managed

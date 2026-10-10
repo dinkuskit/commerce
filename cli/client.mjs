@@ -8,13 +8,18 @@ export const TOKEN_ENV = "EMDASH_TOKEN";
 export const URL_ENV = "EMDASH_URL";
 export const DEFAULT_PLUGIN_ID = "dinkus-commerce";
 
-// Route ids mirror src/features/catalog (route-ids.ts and public.ts). A unit
-// test compares them with the built package so they cannot drift silently.
+// Route ids mirror src/features/catalog (route-ids.ts and public.ts) and
+// src/features/orders/api.ts. A unit test compares them with the built package
+// so they cannot drift silently.
 export const ROUTES = Object.freeze({
 	publicCatalog: "catalog/public",
 	publicCatalogItem: "catalog/public/item",
 	listProducts: "catalog-items/list",
+	orders: "orders",
 });
+
+// What the orders route answers to complete and reopen.
+const ORDER_RESULTS = new Set(["saved", "outdated", "invalid", "not_found"]);
 
 const PLUGIN_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const MAX_QUERY_VALUE = 1024;
@@ -71,6 +76,20 @@ function routeMissing(route, hint) {
 	return () => new CliError("route_not_available", `This install does not expose ${route}. ${hint}`, { exit: EXIT.failure });
 }
 
+function checkOrder(order, what) {
+	if (
+		!isRecord(order) ||
+		typeof order.orderId !== "string" ||
+		!Number.isSafeInteger(order.version) ||
+		(order.status !== "processing" && order.status !== "completed") ||
+		typeof order.test !== "boolean" ||
+		!Array.isArray(order.lines)
+	) {
+		throw contractError(what, "an order is missing its orderId, version, status, test mark or lines.");
+	}
+	return order;
+}
+
 function checkPublicProduct(product, what) {
 	if (!isRecord(product) || typeof product.id !== "string" || typeof product.name !== "string" || typeof product.sku !== "string") {
 		throw contractError(what, "a product is missing its id, name or sku.");
@@ -109,6 +128,15 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 	// Non-GET admin calls will also need X-EmDash-Request: 1 (EmDash CSRF guard).
 	const adminRequest = (method, path, options = {}) =>
 		adminHttp()(method, path, method === "GET" ? options : { ...options, headers: { "x-emdash-request": "1", ...options.headers } });
+
+	// Every orders action is one private POST; EmDash checks the token before Commerce sees it.
+	async function ordersCall(body, what) {
+		const data = unwrap(await adminRequest("POST", `/${ROUTES.orders}`, { body }), what, {
+			onNotFound: routeMissing(ROUTES.orders, "Check --url and --plugin-id. The Registry (sandboxed) Commerce build serves it; the native build has no Orders."),
+		});
+		if (!isRecord(data)) throw contractError(what, "the response is not an object.");
+		return data;
+	}
 
 	const publicCatalogMissing = routeMissing(
 		ROUTES.publicCatalog,
@@ -149,6 +177,31 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 					throw contractError(what, "a product is missing its catalogItemId or name.");
 				}
 			}
+			return data;
+		},
+
+		async listOrders({ status, offset }) {
+			const what = "Listing orders";
+			const data = await ordersCall({ action: "list", ...(status === undefined ? {} : { status }), ...(offset ? { offset } : {}) }, what);
+			if (!Array.isArray(data.orders) || !Number.isSafeInteger(data.total) || (data.next !== undefined && !Number.isSafeInteger(data.next))) {
+				throw contractError(what, "orders is not a page of orders.");
+			}
+			for (const order of data.orders) checkOrder(order, what);
+			return data;
+		},
+
+		async showOrder(orderId) {
+			const what = "Reading the order";
+			const data = await ordersCall({ action: "show", orderId }, what);
+			if (!Object.hasOwn(data, "order")) throw contractError(what, "order is missing.");
+			return data.order === null ? null : checkOrder(data.order, what);
+		},
+
+		async changeOrder(body) {
+			const what = body.action === "complete" ? "Completing the order" : "Moving the order back to Processing";
+			const data = await ordersCall(body, what);
+			if (!ORDER_RESULTS.has(data.result)) throw contractError(what, "the result is not saved, outdated, invalid or not_found.");
+			if (data.order !== undefined) checkOrder(data.order, what);
 			return data;
 		},
 	};

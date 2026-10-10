@@ -13,6 +13,8 @@ export interface OrdersServices {
   paidOrders?: () => Promise<readonly PaidOrder[]>;
   /** The store's shipping countries, which a corrected address must go to. */
   shippingCountries?: () => Promise<readonly string[]>;
+  /** Brings Orders and Ship up to date; absent when the store has no Ship service. */
+  ship?: () => Promise<void>;
 }
 
 export function ordersInteraction(input: unknown): boolean {
@@ -24,7 +26,7 @@ export function ordersInteraction(input: unknown): boolean {
 // What each owner change reports once saved, or when the order moved on since the owner opened it.
 const OUTCOMES: Record<string, [string, string, string, string]> = {
   save: ['Address saved', 'Orders uses the corrected address from now on.', 'Address not saved', 'Check the address and try again.'],
-  complete: ['Order completed', 'The order shows Completed. No email was sent.', 'Order not completed', 'Check the order and try again.'],
+  complete: ['Order completed', 'The order shows Completed. Ship, when connected, emails the shopper.', 'Order not completed', 'Check the order and try again.'],
   reopen: ['Moved back to Processing', 'You can correct the address or complete the order again.', 'Order not changed', 'Check the order and try again.'],
 };
 
@@ -86,6 +88,8 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
       selected = decodeURIComponent(input.action_id.slice(12));
       if (!selected || selected.length > 1024) throw new Error('Invalid order');
     } else throw new Error('Invalid interaction');
+    // Labels bought in Ship complete their orders, and Ship gets each change, when the page opens and after a saved change.
+    if (input.type === 'page_load' || saved === 'saved') await services.ship?.().catch(() => {});
     let orders = await listOrders(collection);
     // Orders paid before Orders kept its own copies come over the first time the page finds none.
     if (!orders.length && services.paidOrders && !notices.length) {

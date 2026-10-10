@@ -16,12 +16,14 @@ import {
 import { admitCredential } from "./registry-credential.js";
 import { createHostedCouponPort } from "./registry-coupons.js";
 import { validateCouponQuoteSnapshot } from "../coupons/index.js";
+import type { ShipConnection } from "../orders/index.js";
 
 export { REGISTRY_CHECKOUT_CONFIG_SCHEMA };
 export type { RegistryCheckoutConfig };
 export const REGISTRY_CHECKOUT_SETTINGS_KEY = "installedCheckout";
 export const REGISTRY_CHECKOUT_CREDENTIAL_KEY = "installedCheckoutCredential";
 export const REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY = "installedCheckoutCouponsCredential";
+export const REGISTRY_SHIP_CREDENTIAL_KEY = "installedShipCredential";
 
 
 
@@ -64,28 +66,36 @@ function wakePort(
   };
 }
 
-export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promise<InstalledCheckoutServices> {
+/** The store's admitted checkout configuration and origin, or null while checkout is unconfigured. */
+async function registryConfig(ctx: PluginContext) {
   if (!object(ctx.plugin) ||
       (ctx.plugin.id !== INSTALLED_COMMERCE_PLUGIN_ID && ctx.plugin.id !== COMMERCE_REGISTRY_RUNTIME_ID)) unavailable();
   const site = resolveTrustedSiteOrigin({ runtimeSiteUrl: ctx.site?.url });
   if (!site.ok) unavailable();
   // Keep the existing unconfigured prepare/capability behavior; start still has no Payments port.
-  if (!ctx.settings) return { host: {} };
+  if (!ctx.settings) return null;
   const snapshot = await ctx.settings.getVersioned(REGISTRY_CHECKOUT_SETTINGS_KEY);
   const config = admitRegistryCheckoutConfig(snapshot?.value ?? null, site.origin);
-  if (!config || !ctx.http) return { host: {} };
+  if (!config || !ctx.http) return null;
   if (!snapshot || !text(snapshot.revision)) unavailable();
-  const token = admitCredential(await ctx.settings.get(REGISTRY_CHECKOUT_CREDENTIAL_KEY), config);
+  return { config, origin: site.origin };
+}
+
+export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promise<InstalledCheckoutServices> {
+  const found = await registryConfig(ctx);
+  if (!found) return { host: {} };
+  const { config, origin } = found;
+  const settings = ctx.settings!;
+  const token = admitCredential(await settings.get(REGISTRY_CHECKOUT_CREDENTIAL_KEY), config);
   // A snapshot is invocation-local; recheck its expiry before every authenticated call.
   const credential = async () => admitCredential(token, config);
-  const fetch = ctx.http.fetch.bind(ctx.http);
+  const fetch = ctx.http!.fetch.bind(ctx.http);
   const coupons = config.coupons;
   const host = createTrustedTestPaymentsCheckoutHost({
-    ...trustedPaymentsHostConfig(config, site.origin),
+    ...trustedPaymentsHostConfig(config, origin),
     credentialResolver: credential, fetch,
     ...(coupons ? { validateCouponQuoteSnapshot } : {}),
   });
-  const settings = ctx.settings;
   return {
     host: { ...host, pricing: { paymentPricingSchema: CHECKOUT_PRICING_SCHEMA,
       resolveShippingConfiguration: async () => structuredClone(config.shipping) } },
@@ -98,4 +108,14 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
         "coupons:checkout", coupons.audience),
     }) } : {}),
   };
+}
+
+/**
+ * Ship's hosted service for Orders when the store's configuration names one. It has its
+ * own ship:orders pass, read only when Orders talks to Ship; no Payments pass is needed.
+ */
+export async function resolveRegistryShip(ctx: PluginContext): Promise<ShipConnection | undefined> {
+  const config = (await registryConfig(ctx))?.config, ship = config?.ship;
+  return ship && { origin: ship.origin, fetch: ctx.http!.fetch.bind(ctx.http), read: readBoundedPaymentsJson,
+    credential: async () => admitCredential(await ctx.settings!.get(REGISTRY_SHIP_CREDENTIAL_KEY), config!, "ship:orders", ship.audience) };
 }
