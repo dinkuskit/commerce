@@ -246,3 +246,5 @@
 {"action": "decision_implemented", "at": "2026-10-09T17:11:41+00:00", "data": {"decision_id": "registry-checkout-hosted-coupons-001"}, "event_id": "2314d1e5-a1c8-4add-8e6d-bf59cd4219d1"}
 {"action": "decision_verified", "at": "2026-10-09T17:11:41+00:00", "data": {"decision_id": "commerce-allowed-hosts-coupons-dinkuskit-com"}, "event_id": "6c95b73d-a568-4214-96d7-61797e62c1f1"}
 {"action": "decision_verified", "at": "2026-10-09T17:11:41+00:00", "data": {"decision_id": "registry-checkout-hosted-coupons-001"}, "event_id": "8031692d-e7be-4fcc-99e8-78a39d1d1516"}
+{"action": "focus_started", "at": "2026-10-10T02:54:44+00:00", "data": {"cadence": "sequential", "domain": "Orders keeps its own paid-order copy handed over by Checkout"}, "event_id": "b15d97f9-5aae-4793-964c-799cf4634b57"}
+{"action": "decision_proposed", "at": "2026-10-10T02:54:44+00:00", "data": {"decision_id": "commerce-paid-order-handoff-001"}, "event_id": "a5aa0946-9187-4d4f-9da2-d2ef405d1140"}
