@@ -250,3 +250,5 @@
 {"action": "decision_proposed", "at": "2026-10-10T02:54:44+00:00", "data": {"decision_id": "commerce-paid-order-handoff-001"}, "event_id": "a5aa0946-9187-4d4f-9da2-d2ef405d1140"}
 {"action": "decision_locked", "at": "2026-10-10T03:02:04+00:00", "data": {"decision_id": "commerce-paid-order-handoff-001"}, "event_id": "b88b7c38-b84c-4755-a974-0bf677973a62"}
 {"action": "shared_understanding_confirmed", "at": "2026-10-10T03:02:04+00:00", "data": {"summary": "The owner approved the paid-order handoff on 2026-10-10 (03:01 UTC, decision card in the Commerce restructuring project thread): Checkout hands Orders one dinkuskit.commerce.paid-order/v1 record when payment is recorded; Orders keeps its own copy and its page reads only that copy."}, "event_id": "d733ebe7-fef7-4145-b4af-0d9a7cb7b3dd"}
+{"action": "decision_implemented", "at": "2026-10-10T03:19:28+00:00", "data": {"decision_id": "commerce-paid-order-handoff-001"}, "event_id": "87cd0303-7a8e-44ff-bd5b-60748137696b"}
+{"action": "decision_verified", "at": "2026-10-10T03:19:28+00:00", "data": {"decision_id": "commerce-paid-order-handoff-001"}, "event_id": "d34b0d77-f88f-4229-ab0f-ec40a9aea083"}
