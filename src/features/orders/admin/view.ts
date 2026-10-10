@@ -24,6 +24,12 @@ function unavailable(title: string, description: string): Block {
 function header(): Block {
   return { type: 'header', text: 'Orders' };
 }
+// Digital-only orders and orders paid before addresses were collected have none;
+// copies kept before Orders checked the contact snapshot may lack its contact.
+function shipTo(order: PaidOrder): string {
+  const a = order.contactSnapshot?.contact?.delivery;
+  return a ? [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ') : 'No address';
+}
 function detailFields(...pairs: string[]): Block {
   return { type: 'section', text: pairs.map((value, i) => i % 2 ? value : value + ':').join('\n') };
 }
@@ -49,7 +55,8 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
     const order = matches[0];
     blocks.push(detailFields('Order', order.orderId, 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
-      'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Fulfillment', notRecorded), { type: 'header', text: 'Items' });
+      'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Fulfillment', notRecorded,
+      'Ship to', shipTo(order)), { type: 'header', text: 'Items' });
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
     if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + encodeURIComponent(order.orderId)));
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,

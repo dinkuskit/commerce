@@ -1,4 +1,4 @@
-import { openStore, fixture, cart } from './fixture.mjs';
+import { openStore, fixture, cart, syntheticDelivery } from './fixture.mjs';
 import { createCheckoutCouponPort, createCouponAdmin, createCouponAttemptOwner } from '../../../dist/features/coupons/index.js';
 import { createHostedCouponPort } from '../../../dist/features/checkout/index.js';
 import { COUPON_SERVICE_ORIGIN, COUPON_SERVICE_PASS, couponServiceFake } from './coupon-service-fake.mjs';
@@ -48,5 +48,5 @@ export async function pricingFixture(t, { cap = 1, discount = { kind: 'fixed', a
   f.execution.pricing = { coupons: bound.port, paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1', resolveShippingConfiguration: async () => ({
     configurationId: 'shipping-rule', revision: 1, mode: shipping === '0' ? 'free' : 'flat', amount: { currency: 'USD', minor: shipping },
   }) };
-  return { ...f, coupons, coupon, admin, couponService: bound.service, owner: createCouponAttemptOwner(coupons), input: { contact: { email: 'pricing-fixture@example.test' }, lines: cart, couponCode: 'SAVE' } };
+  return { ...f, coupons, coupon, admin, couponService: bound.service, owner: createCouponAttemptOwner(coupons), input: { contact: { email: 'pricing-fixture@example.test', delivery: syntheticDelivery }, lines: cart, couponCode: 'SAVE' } };
 }

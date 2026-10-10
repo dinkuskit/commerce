@@ -36,7 +36,8 @@ export async function quoteCatalogBasket(
     }
     const unitPrice = (await resolveCatalogItemPrice(storage.prices, catalogItemId)).customerPays;
     if (!unitPrice) return { ok: false, reason: "unpriced" };
-    const line: CatalogQuoteLine = { catalogItemId, name: item.name, unitPrice, ...(variant ? { variant } : {}) };
+    const fulfillment = member?.fulfillment ?? item.fulfillment ?? "physical";
+    const line: CatalogQuoteLine = { catalogItemId, name: item.name, unitPrice, fulfillment, ...(variant ? { variant } : {}) };
     const management = normalizeStoredStockManagement(item.stockManagement);
     if (management.mode === "managed") {
       if (management.status !== "active") return { ok: false, reason: "inventory-setup" };

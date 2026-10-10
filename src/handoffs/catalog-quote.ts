@@ -11,6 +11,8 @@ export interface CatalogQuoteLine {
   catalogItemId: string;
   name: string;
   unitPrice: Money;
+  /** How the item reaches the shopper. An item with no mark counts as physical. */
+  fulfillment: CatalogFulfillment;
   /** Present when the item is one choice of a product with options. */
   variant?: {
     productId: string;

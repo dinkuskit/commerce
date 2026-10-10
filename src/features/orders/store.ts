@@ -1,6 +1,7 @@
 import type { StorageCollection } from "emdash";
 import { scanAll } from "../../shared/scan.js";
-import { isRecord } from "../../shared/record.js";
+import { canonical, isRecord } from "../../shared/record.js";
+import { isCheckoutContactSnapshot } from "../checkout-contact/index.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
 import { PAID_ORDER_SCHEMA, type PaidOrder, type PaidOrderReceiver } from "../../handoffs/paid-order.js";
 
@@ -30,21 +31,20 @@ function pricing(v: unknown): boolean {
     money(v.finalTotal) && isRecord(v.shipping) && money(v.shipping.charge) &&
     optional(v.coupon, c => isRecord(c) && text(c.code));
 }
-/** Everything Orders shows or packs from must be well formed before a copy is kept for good. */
-function admit(order: PaidOrder): PaidOrder {
+/**
+ * Everything Orders shows or packs from must be well formed before a copy is kept for good.
+ * A copy already kept before the contact check keeps any object there; the detail shows "No address".
+ */
+function admit(order: PaidOrder, kept = false): PaidOrder {
   const o = order as unknown;
   if (!isRecord(o) || o.schema !== PAID_ORDER_SCHEMA || !text(o.orderId) || !text(o.receiptId) || !text(o.attemptId) ||
       !Array.isArray(o.lines) || !o.lines.length || !o.lines.every(line) || !money(o.total) ||
       !optional(o.paymentId, text) || !optional(o.paidAt, text) || !optional(o.ticketIds, textList) ||
       !optional(o.pricing, pricing) || !optional(o.variantSelections, v => Array.isArray(v) && v.every(isRecord)) ||
-      !optional(o.contactSnapshot, isRecord)) throw new Error("Invalid paid order");
+      !optional(o.contactSnapshot, kept ? isRecord : isCheckoutContactSnapshot)) throw new Error("Invalid paid order");
   return order;
 }
 // Key order can differ between a live hand-off and a stored copy read back.
-function canonical(value: unknown): string {
-  return JSON.stringify(value, (_key, v) => v && typeof v === "object" && !Array.isArray(v)
-    ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a < b ? -1 : 1)) : v);
-}
 function same(kept: OrderRecord | null, order: PaidOrder) {
   return kept && canonical(kept.paidOrder) === canonical(order) ? "duplicate" : "conflict";
 }
@@ -66,7 +66,7 @@ export function createPaidOrderReceiver(collection: Pick<OrdersCollection, "get"
 export async function listOrders(collection: Pick<OrdersCollection, "query">): Promise<PaidOrder[]> {
   const orders: PaidOrder[] = [];
   await scanAll(collection, item => {
-    const order = admit(item.data?.paidOrder);
+    const order = admit(item.data?.paidOrder, true);
     if (order.orderId !== item.id) throw new Error("Invalid order");
     orders.push(order);
   });

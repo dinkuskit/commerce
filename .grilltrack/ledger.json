@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-10T03:59:45+00:00",
-    "domain": "Orders keeps its own paid-order copy handed over by Checkout",
-    "started_at": "2026-10-10T03:59:44+00:00",
+    "confirmed_at": "2026-10-10T09:28:51+00:00",
+    "domain": "Checkout asks for a delivery address when the basket has a physical item",
+    "started_at": "2026-10-10T09:28:51+00:00",
     "status": "confirmed",
-    "summary": "The owner approved the paid-order handoff on 2026-10-10 (03:01 UTC, decision card in the Commerce restructuring project thread): Checkout hands Orders one dinkuskit.commerce.paid-order/v1 record when payment is recorded; Orders keeps its own copy and its page reads only that copy."
+    "summary": "The owner approved the delivery-address rule on 2026-10-10 (03:56 UTC, decision card in the Commerce restructuring project thread): any basket with a physical item, unmarked items counting as physical, asks for a delivery address in one of the store's shipping countries; no setting, no billing address; the address rides in the contact snapshot and the paid order."
   },
   "decisions": [
     {
@@ -9648,6 +9648,77 @@
       "superseded_by": null,
       "updated_at": "2026-10-10T03:59:45+00:00",
       "verification_ref": "file:.grilltrack/proof/paid-order-handoff-20261010/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. No billing address is collected, and the delivery address is never used as one. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/33",
+      "created_at": "2026-10-10T09:28:51+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-paid-order-handoff-001"
+      ],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-10T09:28:51+00:00",
+          "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. No billing address is collected, and the delivery address is never used as one. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T09:35:16+00:00",
+          "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. No billing address is collected, and the delivery address is never used as one. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T09:35:16+00:00",
+          "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. No billing address is collected, and the delivery address is never used as one. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-delivery-address-001",
+      "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
+      "question": "When does checkout ask for a delivery address, what does it hold, and where does it go?",
+      "rationale": "Owner approved on the decision card in the Commerce restructuring project thread, 2026-10-10 03:56 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T09:35:16+00:00",
+      "verification_ref": "file:.grilltrack/proof/delivery-address-20261010/PROOF.md"
     }
   ],
   "last_activation": {
@@ -9684,5 +9755,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T03:59:45+00:00"
+  "updated_at": "2026-10-10T09:35:16+00:00"
 }

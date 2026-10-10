@@ -15,12 +15,14 @@ function contact(email, phone = "555 0101") {
 function checkoutFixture() {
   const opened = openStore(":memory:");
   const f = fixture(opened.store, false);
+  // Digital items: these scenarios are about contact, not delivery.
+  for (const item of f.execution.catalog.catalog.records.values()) item.fulfillment = "digital";
   f.execution.createAttemptId = (() => {
     let next = 0;
     return () => `attempt-${++next}`;
   })();
   f.execution.loadCheckoutContactRequirements = async () => ({
-    requirePhoneNumber: false,
+    requirePhoneNumber: false, shippingCountries: ['US'],
     revision: "contact-rev-1",
   });
   return { opened, f };
@@ -43,7 +45,7 @@ test("captures contact after admission, freezes it through CAS, and copies it to
 
   draft.email = "changed@example.test";
   f.execution.loadCheckoutContactRequirements = async () => ({
-    requirePhoneNumber: true,
+    requirePhoneNumber: true, shippingCountries: ['US'],
     revision: "changed-revision",
   });
   f.execution.catalog.prices.records.set("one", {
@@ -66,7 +68,7 @@ test("authoritative phone flag is reread for new checkout and forged client poli
   t.after(() => opened.db.close());
 
   f.execution.loadCheckoutContactRequirements = async () => ({
-    requirePhoneNumber: true,
+    requirePhoneNumber: true, shippingCountries: ['US'],
     revision: "phone-on",
   });
   await assert.rejects(
@@ -85,7 +87,7 @@ test("authoritative phone flag is reread for new checkout and forged client poli
   );
 
   f.execution.loadCheckoutContactRequirements = async () => ({
-    requirePhoneNumber: false,
+    requirePhoneNumber: false, shippingCountries: ['US'],
     revision: "phone-off",
   });
   const optional = await startCheckout(f.execution, "phone-off-cart", {
@@ -120,7 +122,7 @@ test("missing loader fails before payment and concurrent writers leave one winni
   assert.equal(paymentCalls.length, 0);
 
   f.execution.loadCheckoutContactRequirements = async () => ({
-    requirePhoneNumber: false,
+    requirePhoneNumber: false, shippingCountries: ['US'],
     revision: "race",
   });
   const results = await Promise.all([
@@ -167,7 +169,7 @@ test("new attempt after a released legacy original requires contact authority wi
   await assert.rejects(startCheckout(f.execution, "legacy-cart", [{ catalogItemId: "one", quantity: 1 }], "legacy-attempt"), (error) => error.code === 'REQUIREMENTS_UNAVAILABLE');
   assert.equal(f.sessions.size, 0);
   assert.deepEqual((await opened.store.read('legacy-cart')).record.attempts, [legacy]);
-  f.execution.loadCheckoutContactRequirements = async () => ({ requirePhoneNumber: false, revision: null });
+  f.execution.loadCheckoutContactRequirements = async () => ({ requirePhoneNumber: false, shippingCountries: ['US'], revision: null });
   const retried = await startCheckout(f.execution, 'legacy-cart', { lines: legacy.cart, contact: { email: 'new@example.test' } }, 'legacy-attempt');
   assert.equal(retried.contactSnapshot.contact.email, 'new@example.test');
   assert.deepEqual((await opened.store.read('legacy-cart')).record.attempts[0], legacy);
@@ -190,7 +192,7 @@ async function nativeContactFixture(t) {
   await opened.db.schema.createTable('options').addColumn('name','text',c=>c.primaryKey()).addColumn('value','text',c=>c.notNull()).addColumn('revision','text',c=>c.notNull()).execute();
   const settings = createSettingsAccess(new OptionsRepository(opened.db), 'dinkus-commerce', {});
   await seedGuestCatalog(opened.storage);
-  const synth = syntheticCheckoutHost({ managed: false, host: { loadCheckoutContactRequirements: async () => ({requirePhoneNumber:false, revision:'forged-host'}) } });
+  const synth = syntheticCheckoutHost({ managed: false, host: { loadCheckoutContactRequirements: async () => ({requirePhoneNumber:false, shippingCountries: ['US'], revision:'forged-host'}) } });
   const routes = injectedPluginRoutes(synth.host).routes;
   t.after(async () => { await opened.db.destroy(); rmSync(directory,{recursive:true,force:true}); });
   return { ...opened, settings, synth, routes };
@@ -204,7 +206,7 @@ test('native routes use real plugin settings, hint outside status schema, reread
   assert.equal('revision' in prepared.contactRequirements, false);
   const token = prepared.capability.capability;
   const changed = await saveMerchantStoreSettings(f.settings, {expectedRevision:null,requirePhoneNumber:true});
-  assert.deepEqual(await loadCheckoutContactRequirements(f.settings), {requirePhoneNumber:true,revision:changed.revision});
+  assert.deepEqual(await loadCheckoutContactRequirements(f.settings), {requirePhoneNumber:true,shippingCountries:[],revision:changed.revision});
   const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'shopper@example.test'}};
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, body, {capability:token,settings:f.settings}), e=>e.code==='INVALID_CART');
   assert.equal(f.synth.counts().paymentCreates,0);
