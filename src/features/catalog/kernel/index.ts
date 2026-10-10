@@ -134,13 +134,6 @@ export type {
 } from "../types.js";
 
 export {
-  PUBLIC_CATALOG_ITEM_ROUTE,
-  PUBLIC_CATALOG_ROUTE,
-  readPublicCatalog,
-  readPublicCatalogItem,
-} from "../public.js";
-export type { PublicCatalogProduct, PublicCatalogResponse } from "../public.js";
-export {
   CATALOG_GALLERY_LIMIT,
   CATALOG_MEDIA_COLLECTION,
   loadCatalogItemMedia,
