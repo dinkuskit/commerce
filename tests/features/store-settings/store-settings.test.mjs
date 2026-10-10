@@ -5,6 +5,7 @@ import { Kysely, SqliteDialect } from "kysely";
 import { createSettingsAccess } from "emdash";
 import { OptionsRepository } from "emdash/internal/plugins/host";
 import { validateBlockResponse } from "@emdash-cms/blocks/server";
+import { hasPermission, toRoleLevel } from "@emdash-cms/auth";
 import {
   loadCheckoutContactRequirements,
   loadMerchantStoreSettings,
@@ -143,6 +144,13 @@ test("actual SDK permission rejects absent/invalid/low roles and client privileg
     await assert.rejects(createMerchantStoreSettingsRoute().handler(native), error => error.code === "UNAUTHORIZED");
   }
   for (const role of [40, 50]) assert.equal(merchantStoreSettingsAuthorized({ ...route({}), user: { role } }), true);
+});
+
+test("settings access follows EmDash's own content:edit_any rule for every role", () => {
+  const sdk = (role) => { try { return hasPermission({ role: toRoleLevel(role) }, "content:edit_any"); } catch { return false; } };
+  for (const role of [undefined, null, 0, 10, 20, 30, 39, 40, 41, 50, 60, 100, -40, 40.5, NaN, Infinity, "40", "50", "EDITOR", "editor", true, {}, [40]]) {
+    assert.equal(merchantStoreSettingsAuthorized({ ...route({}), user: { role } }), sdk(role), String(role));
+  }
 });
 
 test("invalid admin entries preserve draft and never write; country lists require merchant country", async t => {
