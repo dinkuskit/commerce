@@ -743,8 +743,10 @@ test('Replace key on DinkusKit.com stops the old key at once, and without a key 
     state.acceptStoreKey('the replacement synthetic key');
     assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
     assert.equal(state.counts.transport, before);
-    await state.settings.set('storeKey', 'the replacement synthetic key');
+    // Pasted with a space and a line break around it, the key still trades as itself.
+    await state.settings.set('storeKey', ' the replacement synthetic key\n');
     assert.equal((await start(state)).result.checkout.state, 'pending');
+    assert.equal(state.trades.at(-1).authorization, 'Bearer the replacement synthetic key');
   } finally { await state.close(); }
   const unset = await runtimeFixture({ storeKey: null });
   try {

@@ -83,8 +83,9 @@ async function registryConfig(ctx: PluginContext) {
  * pass is traded the first time a call needs it, then rechecked, expiry included, before every call.
  */
 async function storePasses(ctx: PluginContext, config: RegistryCheckoutConfig) {
-  const key = await ctx.settings!.get(REGISTRY_STORE_KEY), fetch = ctx.http!.fetch.bind(ctx.http);
-  const traded: Record<string, Promise<string>> = {};
+  const saved = await ctx.settings!.get(REGISTRY_STORE_KEY), fetch = ctx.http!.fetch.bind(ctx.http);
+  // A key pasted with spaces or a line break around it still counts.
+  const key = typeof saved == "string" ? saved.trim() : saved, traded: Record<string, Promise<string>> = {};
   if (!text(key, 512)) unavailable();
   return (scope = "payments:checkout", audience = config.audience) => async () => admitCredential(
     await (traded[scope] ??= tradeStoreKey(key, config, fetch, scope, audience)), config, scope, audience);

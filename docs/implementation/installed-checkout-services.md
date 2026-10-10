@@ -80,8 +80,9 @@ coupon collection is accepted.
 
 `storeKey` is Commerce's only secret setting: one key per store, pasted from
 the Set up Commerce box on DinkusKit.com (GrillTrack `commerce-store-key-001`).
-EmDash owns its encryption and redaction. Commerce treats the key as opaque
-text of at most 512 characters and sends it nowhere but the trade below.
+EmDash owns its encryption and redaction. Commerce ignores spaces or line
+breaks pasted around the key, treats it as opaque text of at most 512
+characters and sends it nowhere but the trade below.
 
 Each Payments, Coupons or Ship call trades the key for a short pass scoped to
 that one service: `POST /api/store-passes` on the origin of the configured
