@@ -173,6 +173,7 @@ test("a clerk can save Regular and Sale and see a refusal leave the price unchan
       sale: "10.00",
       manageStock: false,
       stockStatus: "in-stock",
+      fulfillment: "physical",
     },
   ]);
 

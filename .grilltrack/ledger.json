@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-10T17:16:04+00:00",
-    "domain": "Commerce order status (Processing and Completed)",
-    "started_at": "2026-10-10T17:16:04+00:00",
+    "confirmed_at": "2026-10-10T18:29:27+00:00",
+    "domain": "Commerce product weight",
+    "started_at": "2026-10-10T18:29:27+00:00",
     "status": "confirmed",
-    "summary": "Ronald answered 6 (agreed), 9 (address editable in Processing, not in Completed), 13 (test orders completable by hand) and said at 16:40 UTC that cancelling a label must not move an order back; the owner does it by hand. Recorded in /mnt/project-files/ship-handoff/order-and-shipping-decisions.md."
+    "summary": "Ronald answered 10 (yes, Commerce products get a weight field) and 11 (label weight defaults to the products' weight plus the chosen box's weight and stays editable). Recorded in /mnt/project-files/ship-handoff/order-and-shipping-decisions.md. Ounces was stated to him in the thread at 18:12 UTC as the default because v1 is US-only."
   },
   "decisions": [
     {
@@ -10016,6 +10016,77 @@
       "superseded_by": null,
       "updated_at": "2026-10-10T17:27:46+00:00",
       "verification_ref": ".grilltrack/proof/order-status-20261010/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Each physical product, and each physical choice of a product with choices, has an optional shipping weight in ounces, entered on the product's admin page under Shipping weight. A weight is a number above 0 and up to 2400 with at most 2 decimals; leaving the box blank clears it. It is stored as weightOz on the catalog item. It is not shown to shoppers or put in product feeds, and the paid-order copy is unchanged; Ship reads current product weights when it prepares a label and adds the chosen box's weight, and the owner can still change the label weight there. Ounces because v1 ships only in the US. Digital products have no weight.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanDi9YHvj4p2KCoTobq99duw",
+      "created_at": "2026-10-10T18:29:27+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-order-status-001"
+      ],
+      "domain": "Commerce product weight",
+      "history": [
+        {
+          "at": "2026-10-10T18:29:27+00:00",
+          "choice": "Each physical product, and each physical choice of a product with choices, has an optional shipping weight in ounces, entered on the product's admin page under Shipping weight. A weight is a number above 0 and up to 2400 with at most 2 decimals; leaving the box blank clears it. It is stored as weightOz on the catalog item. It is not shown to shoppers or put in product feeds, and the paid-order copy is unchanged; Ship reads current product weights when it prepares a label and adds the chosen box's weight, and the owner can still change the label weight there. Ounces because v1 ships only in the US. Digital products have no weight.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T18:36:51+00:00",
+          "choice": "Each physical product, and each physical choice of a product with choices, has an optional shipping weight in ounces, entered on the product's admin page under Shipping weight. A weight is a number above 0 and up to 2400 with at most 2 decimals; leaving the box blank clears it. It is stored as weightOz on the catalog item. It is not shown to shoppers or put in product feeds, and the paid-order copy is unchanged; Ship reads current product weights when it prepares a label and adds the chosen box's weight, and the owner can still change the label weight there. Ounces because v1 ships only in the US. Digital products have no weight.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T18:36:51+00:00",
+          "choice": "Each physical product, and each physical choice of a product with choices, has an optional shipping weight in ounces, entered on the product's admin page under Shipping weight. A weight is a number above 0 and up to 2400 with at most 2 decimals; leaving the box blank clears it. It is stored as weightOz on the catalog item. It is not shown to shoppers or put in product feeds, and the paid-order copy is unchanged; Ship reads current product weights when it prepares a label and adds the chosen box's weight, and the owner can still change the label weight there. Ounces because v1 ships only in the US. Digital products have no weight.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/weight.ts (normalizeWeightOz, setCatalogItemWeight); src/admin/products.ts (Shipping weight form); weightOz on CatalogItemRecord",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-product-weight-001",
+      "implementation_ref": "src/features/catalog/weight.ts (normalizeWeightOz, setCatalogItemWeight); src/admin/products.ts (Shipping weight form); weightOz on CatalogItemRecord",
+      "question": "How does Commerce record a product's shipping weight for Ship's labels?",
+      "rationale": "user accepted the scoped decision",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T18:36:51+00:00",
+      "verification_ref": ".grilltrack/proof/product-weight-20261010/PROOF.md"
     }
   ],
   "last_activation": {
@@ -10052,5 +10123,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T17:27:46+00:00"
+  "updated_at": "2026-10-10T18:36:51+00:00"
 }

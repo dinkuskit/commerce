@@ -72,6 +72,8 @@ export interface CatalogProductListItem {
   gtin?: string;
   mpn?: string;
   brand?: string;
+  fulfillment: "physical" | "digital";
+  weightOz?: number;
   variantProduct?: {
     productId: string;
     revision: number;
@@ -89,6 +91,7 @@ export interface CatalogProductVariantListItem {
   stockStatus: ClerkStockStatus | null;
   fulfillment: "physical" | "digital";
   priceRevision: string | null;
+  weightOz?: number;
 }
 
 export interface SaveCatalogProductPricesInput {
@@ -203,6 +206,8 @@ export async function listCatalogProducts(
       ...(record.gtin ? { gtin: record.gtin } : {}),
       ...(record.mpn ? { mpn: record.mpn } : {}),
       ...(record.brand ? { brand: record.brand } : {}),
+      fulfillment: record.fulfillment ?? "physical",
+      ...(record.weightOz ? { weightOz: record.weightOz } : {}),
     };
     if (record.variantProduct) {
       const members: CatalogProductVariantListItem[] = [];
@@ -225,6 +230,7 @@ export async function listCatalogProducts(
           stockStatus: memberAvailability ? toClerkStockStatus(memberAvailability.status) : null,
           fulfillment: member.fulfillment,
           priceRevision: priceState?.revision ?? null,
+          ...(resolved.item.weightOz ? { weightOz: resolved.item.weightOz } : {}),
         });
       }
       product.variantProduct = {

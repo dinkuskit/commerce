@@ -65,6 +65,7 @@ export {
 export { setCatalogItemSku } from "./set-sku.js";
 export type { SetCatalogItemSkuInput, SetCatalogItemSkuResult } from "./set-sku.js";
 export { setCatalogItemIdentifiers } from "./set-identifiers.js";
+export { CATALOG_WEIGHT_MESSAGE, normalizeWeightOz, setCatalogItemWeight } from "./weight.js";
 export type {
   SetCatalogItemIdentifiersInput,
   SetCatalogItemIdentifiersResult,

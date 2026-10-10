@@ -117,7 +117,8 @@ label.
   order number is sent. Only Inventory's confirmation of that exact command
   counts as packed; Orders records nothing itself.
 - **Ship** (not built): a label request carries the order id, short number,
-  revision, the frozen lines and the current delivery address (the owner's
+  revision, the frozen lines with each product's current shipping weight in
+  ounces (`weightOz`, when set) and the current delivery address (the owner's
   correction, else the paid-order copy's). Ship labels only the latest
   revision. Ship
   is its own plugin and service, so this message is the same in every

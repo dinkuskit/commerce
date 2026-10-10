@@ -80,6 +80,23 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
     expect(lastSave.values).not.toHaveProperty("manageStock");
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
+    // Shipping weight in ounces sits on the catalog item; a refused weight keeps the typing and the stored value.
+    const saveWeight = async () => {
+      const response = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
+      await page.getByRole("button", { name: "Save weight", exact: true }).click();
+      return (await (await response).json()).data;
+    };
+    await page.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
+    expect((await saveWeight()).toast.message).toBe("Weight saved");
+    await expect(page.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("12.5");
+    expect(raw("catalog_items")[0].weightOz).toBe(12.5);
+    await page.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("heavy");
+    expect((await saveWeight()).toast.type).toBe("error");
+    await expect(page.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("heavy");
+    expect(raw("catalog_items")[0].weightOz).toBe(12.5);
+    await capture("product-weight-refused");
+    await page.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
+    expect((await saveWeight()).toast.type).toBe("success");
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     expect(await availability()).toMatchObject({ status: "out-of-stock", sellable: false, listable: true });
     await capture("price-stock-saved");

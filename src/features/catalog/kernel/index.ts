@@ -166,6 +166,7 @@ export {
 } from "../identifiers.js";
 export type { CatalogProductIdentifiers } from "../identifiers.js";
 export { setCatalogItemIdentifiers } from "../set-identifiers.js";
+export { CATALOG_WEIGHT_MESSAGE, normalizeWeightOz, setCatalogItemWeight } from "../weight.js";
 export type {
   SetCatalogItemIdentifiersInput,
   SetCatalogItemIdentifiersResult,
