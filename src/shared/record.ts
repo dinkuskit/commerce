@@ -7,3 +7,9 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 export function sortedKeys(value: object): string {
   return Object.keys(value).sort().join();
 }
+
+/** JSON with object keys sorted, so the same contents compare equal whatever their key order. */
+export function canonical(value: unknown): string {
+  return JSON.stringify(value, (_key, v) => isRecord(v)
+    ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a < b ? -1 : 1)) : v);
+}

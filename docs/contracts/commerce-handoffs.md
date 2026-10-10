@@ -70,7 +70,10 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   with a physical item the contact carries the delivery address
   (`contactSnapshot.contact.delivery`, commerce#33); digital-only orders and
   orders paid before addresses were collected have none.
-- **Receiving:** Orders keeps it under the order id as its own copy
+- **Receiving:** Orders first checks the whole record; a contact snapshot
+  must be exactly what Checkout freezes, judged by Checkout-contact's own
+  rules (`isCheckoutContactSnapshot`), so nothing Checkout would refuse is
+  kept. Orders then keeps it under the order id as its own copy
   (`orders` collection, record `{ paidOrder }`). A repeat with the same
   contents is a no-op (`duplicate`); different contents are refused and the
   first copy is kept (`conflict`). Later order facts (packed, shipped,

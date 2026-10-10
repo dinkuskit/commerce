@@ -1,4 +1,4 @@
-import { isRecord as isObject, sortedKeys } from "../../shared/record.js";
+import { canonical, isRecord as isObject, sortedKeys } from "../../shared/record.js";
 import {
   CheckoutContactError,
   type CheckoutContactErrorCode,
@@ -90,6 +90,22 @@ export function normalizeCheckoutContactInput(raw: unknown): NormalizedCheckoutC
   const phone = Object.hasOwn(raw, "phone") ? normalizePhone(raw.phone) : undefined;
   const delivery = Object.hasOwn(raw, "delivery") ? normalizeDelivery(raw.delivery) : undefined;
   return { email, ...(phone === undefined ? {} : { phone }), ...(delivery ? { delivery } : {}) };
+}
+
+/**
+ * True only for a snapshot exactly as checkout freezes it: the v1 fields and a
+ * contact that Checkout's own rules leave unchanged. Receivers that keep a copy
+ * for good use this so they never hold contact data Checkout would refuse.
+ */
+export function isCheckoutContactSnapshot(value: unknown): boolean {
+  if (!isObject(value) || sortedKeys(value) !== "contact,requirePhoneNumber,revision,schema" ||
+      value.schema !== CHECKOUT_CONTACT_SNAPSHOT_SCHEMA || typeof value.requirePhoneNumber !== "boolean" ||
+      (value.revision !== null && typeof value.revision !== "string")) return false;
+  try {
+    return canonical(normalizeCheckoutContactInput(value.contact)) === canonical(value.contact);
+  } catch {
+    return false;
+  }
 }
 
 function validateRequirements(value: unknown): CheckoutContactRequirements {
