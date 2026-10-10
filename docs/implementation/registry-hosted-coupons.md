@@ -24,20 +24,22 @@ with exactly two fields:
 { "coupons": { "origin": "https://coupons.dinkuskit.com", "audience": "<coupon service audience>" } }
 ```
 
-`origin` is a bare HTTPS origin. The service is called with a separate secret,
-`installedCheckoutCouponsCredential`: a `coupons:checkout` pass for the site
+`origin` is a bare HTTPS origin. The service is called with its own pass:
+Commerce trades the store key at DinkusKit.com for a `coupons:checkout` pass
+with audience `coupons.audience`
+([store key and passes](installed-checkout-services.md#store-key-and-passes)),
 from the same issuer as the Payments pass (same `iss` and `site_id`, at most an
-hour old, audience equal to `coupons.audience`). Commerce reads it only when a
-checkout uses a coupon, so a missing or stale coupon pass never blocks
-checkout without a coupon. The Payments pass is never sent to the coupon
-service.
+hour old). Commerce trades for it only when a checkout uses a coupon, so a
+refused or stale coupon pass never blocks checkout without a coupon. The
+Payments pass is never sent to the coupon service.
 
-Without `coupons`, or without a valid coupon pass, a coupon code makes start
-return `UNAVAILABLE` before any attempt write, coupon request or Payments call,
-as before.
+Without `coupons`, or without a valid coupon pass (Coupons turned off or cut
+off on DinkusKit.com included), a coupon code makes start return
+`COUPON_UNAVAILABLE` with reason `try-later` before any attempt write, coupon
+request or Payments call.
 
-The manifest declares `network:request` with exactly
-`payments.dinkuskit.com` and `coupons.dinkuskit.com`. Declaring a host does not
+The manifest declares `network:request` with exactly `payments.dinkuskit.com`,
+`coupons.dinkuskit.com`, `ship.dinkuskit.com` and `dinkuskit.com`. Declaring a host does not
 activate it on any site; activation stays a host and owner step. The native
 entry keeps its own coupon storage and does not declare the coupon host.
 

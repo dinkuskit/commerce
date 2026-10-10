@@ -42,10 +42,13 @@ Every paid order records that mode; Orders marks anything not `live` as
 TEST. The demo store stays `test`; switching a real store to `live` is the
 project owner's call (GrillTrack `commerce-payment-mode-001`).
 
-The host must also provision `installedCheckoutCredential` as an encrypted
-secret setting containing a short-lived signed server-to-server token. It must
-be issued for the same `siteId`, `issuer`, `audience`, and
-`payments:checkout` scope. Commerce reads it only server-side.
+The owner must also paste the store key from the Set up Commerce box on
+DinkusKit.com into the encrypted secret setting `storeKey`. Commerce reads it
+only server-side and trades it at the `issuer`'s origin for a short
+`payments:checkout` pass for the same `siteId`, `issuer` and `audience` before
+each Payments call
+([store key and passes](implementation/installed-checkout-services.md#store-key-and-passes)).
+The key is never a Stripe credential and never reaches the browser.
 
 Payments, not Commerce or Template Store, owns the Stripe credentials:
 
