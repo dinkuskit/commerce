@@ -1,3 +1,4 @@
+import { isRecord as isObject, sortedKeys } from "../../shared/record.js";
 import {
   CheckoutContactError,
   type CheckoutContactErrorCode,
@@ -24,9 +25,6 @@ function invalid(code: CheckoutContactErrorCode): never {
   throw new CheckoutContactError(code);
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function hasOnlyContactKeys(value: Record<string, unknown>): boolean {
   return Object.keys(value).every((key) => key === "email" || key === "phone");
@@ -74,7 +72,7 @@ export function normalizeCheckoutContactInput(raw: unknown): NormalizedCheckoutC
 
 function validateRequirements(value: unknown): CheckoutContactRequirements {
   if (!isObject(value)) invalid("REQUIREMENTS_UNAVAILABLE");
-  const keys = Object.keys(value).sort().join(",");
+  const keys = sortedKeys(value);
   if (keys !== "requirePhoneNumber,revision" || typeof value.requirePhoneNumber !== "boolean") {
     invalid("REQUIREMENTS_UNAVAILABLE");
   }

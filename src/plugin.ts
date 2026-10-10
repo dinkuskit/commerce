@@ -14,6 +14,7 @@ import {
   GUEST_CHECKOUT_STATUS_ROUTE,
   resolveRegistryCheckoutServices,
 } from "./features/checkout/kernel/index.js";
+import { ORDERS_COLLECTION, createPaidOrderReceiver, type OrdersCollection } from "./features/orders/index.js";
 import {
   PUBLIC_STORE_POLICIES_ROUTE,
   readSandboxPublicStorePolicies,
@@ -23,7 +24,9 @@ const guestRequest = {
   body: "json" as const,
   headers: [...GUEST_CHECKOUT_DECLARED_HEADERS],
 };
-const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckoutServices);
+// Checkout hands each paid order to Orders, which keeps its own copy.
+const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckoutServices,
+  ctx => createPaidOrderReceiver(ctx.storage[ORDERS_COLLECTION] as OrdersCollection));
 function guestRoute(handler: typeof installedCheckout.prepare) {
   return pluginRoute({ public: true, methods: ["POST"], request: guestRequest, handler });
 }

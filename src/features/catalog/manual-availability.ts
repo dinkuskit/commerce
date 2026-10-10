@@ -1,5 +1,6 @@
+import { isRecord } from "../../shared/record.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
-import { CatalogError } from "./errors.js";
+import { CatalogError, catalogStorage } from "./errors.js";
 import {
   DEFAULT_CATALOG_MANUAL_AVAILABILITY,
   type CatalogManualAvailabilityRecord,
@@ -16,7 +17,7 @@ const MANUAL_AVAILABILITY_STATUSES = new Set<CatalogManualAvailabilityStatus>([
 ]);
 
 function normalizeInput(value: unknown): SetCatalogItemManualAvailabilityInput {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw new CatalogError(
       "INVALID_INPUT",
       "manual availability input must be an object",
@@ -73,16 +74,7 @@ export async function loadCatalogItemManualAvailability(
   storage: SetCatalogItemManualAvailabilityStorage["availability"],
   catalogItemId: string,
 ): Promise<CatalogManualAvailabilityRecord> {
-  let stored: CatalogManualAvailabilityRecord | null;
-  try {
-    stored = await storage.get(catalogItemId);
-  } catch (error) {
-    throw new CatalogError(
-      "STORAGE_UNAVAILABLE",
-      "manual availability lookup failed",
-      { cause: error },
-    );
-  }
+  const stored: CatalogManualAvailabilityRecord | null = await catalogStorage(() => storage.get(catalogItemId), "manual availability lookup failed");
   return normalizeStoredAvailability(stored, catalogItemId);
 }
 
@@ -91,14 +83,7 @@ export async function setCatalogItemManualAvailability(
   rawInput: unknown,
 ): Promise<SetCatalogItemManualAvailabilityResult> {
   const input = normalizeInput(rawInput);
-  let item;
-  try {
-    item = await storage.catalog.get(input.catalogItemId);
-  } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item lookup failed", {
-      cause: error,
-    });
-  }
+  const item = await catalogStorage(() => storage.catalog.get(input.catalogItemId), "catalog item lookup failed");
   if (item === null || item.recordKind !== "catalog-item") {
     throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
   }
@@ -126,14 +111,6 @@ export async function setCatalogItemManualAvailability(
     ...availability,
     status: input.status,
   };
-  try {
-    await storage.availability.put(updated.recordId, updated);
-  } catch (error) {
-    throw new CatalogError(
-      "STORAGE_UNAVAILABLE",
-      "manual availability update failed",
-      { cause: error },
-    );
-  }
+  await catalogStorage(() => storage.availability.put(updated.recordId, updated), "manual availability update failed");
   return { changed: true, availability: updated };
 }

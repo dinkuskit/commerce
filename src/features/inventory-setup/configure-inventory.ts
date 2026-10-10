@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import type {
   CatalogItemRecord,
   CatalogStorageRecord,
@@ -31,7 +32,7 @@ interface ConfigureInventoryInput {
 }
 
 function normalizeInput(value: unknown): ConfigureInventoryInput {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     setupError("INVALID_INPUT", "Configure Inventory input must be an object");
   }
   const input = value as Record<string, unknown>;

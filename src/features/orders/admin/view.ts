@@ -1,16 +1,16 @@
-import { fields } from './blocks.js';
+import { fields } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
-import type { CommerceOrder } from '../features/checkout/kernel/index.js';
-import type { Money } from '../features/catalog/kernel/index.js';
-import { normalizeMoney } from '../features/catalog/kernel/index.js';
+import type { PaidOrder } from '../../../handoffs/paid-order.js';
+import type { Money } from '../../catalog/kernel/index.js';
+import { normalizeMoney } from '../../catalog/kernel/index.js';
 
 /** Read-only projection. The authenticated controller owns loading and authorization. */
-export type OrdersInspection = { status: 'available'; orders: readonly CommerceOrder[] } | { status: 'unavailable' };
+export type OrdersInspection = { status: 'available'; orders: readonly PaidOrder[] } | { status: 'unavailable' };
 function amount(value: Money): string {
   const minor = BigInt(normalizeMoney(value).minor);
   return 'USD ' + (minor / 100n) + '.' + String(minor % 100n).padStart(2, '0');
 }
-function payment(order: CommerceOrder): string {
+function payment(order: PaidOrder): string {
   if (order.paymentId) return 'Provider-paid';
   return normalizeMoney(order.total).minor === '0' ? 'Zero payable — no payment required' : 'Payment not recorded';
 }
@@ -49,7 +49,7 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string): B
     const order = matches[0];
     blocks.push(detailFields('Order', order.orderId, 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
-      'Provider payment', order.paymentId ?? notRecorded, 'Fulfillment', notRecorded), { type: 'header', text: 'Items' });
+      'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Fulfillment', notRecorded), { type: 'header', text: 'Items' });
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
     if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + encodeURIComponent(order.orderId)));
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,

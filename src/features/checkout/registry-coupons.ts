@@ -1,3 +1,4 @@
+import { isRecord as object } from "../../shared/record.js";
 import { resolveCatalogItemPrice } from "../catalog/kernel/index.js";
 import {
   CouponRedemptionError,
@@ -26,9 +27,6 @@ class CouponServiceError extends Error {
   }
 }
 
-function object(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 /**
  * Checkout's coupon port over the hosted coupon service (dinkuskit/coupons

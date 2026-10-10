@@ -1,4 +1,4 @@
-import { CatalogError } from "./errors.js";
+import { CatalogError, catalogStorage } from "./errors.js";
 import { normalizeCreateCatalogItemInput } from "./normalize.js";
 import {
   assertCatalogStorageConstraints,
@@ -58,14 +58,7 @@ async function findCommand(
   storage: CatalogStorage,
   commandId: string,
 ): Promise<CatalogItemRecord | null> {
-  let result;
-  try {
-    result = await storage.query({ where: { commandId }, limit: 2 });
-  } catch (error) {
-    throw new CatalogError("STORAGE_UNAVAILABLE", "catalog command lookup failed", {
-      cause: error,
-    });
-  }
+  const result = await catalogStorage(() => storage.query({ where: { commandId }, limit: 2 }), "catalog command lookup failed");
 
   const items = result.items
     .map(({ data }) => data)

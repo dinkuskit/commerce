@@ -1,5 +1,6 @@
 import { normalizeMoney } from "../catalog/kernel/index.js";
-import { GuestCheckoutError } from "./errors.js";
+import { isRecord as obj } from "../../shared/record.js";
+import { registryUnavailable as fail, registryText as text, exactKeys as keys } from "./registry-guards.js";
 import { CHECKOUT_PRICING_SCHEMA, type TrustedShippingConfiguration } from "./types.js";
 
 export const REGISTRY_CHECKOUT_CONFIG_SCHEMA = "dinkuskit.commerce.registry-checkout/v1" as const;
@@ -27,16 +28,6 @@ export interface RegistryCheckoutConfig {
 const BASE =
   "audience,bindingRef,commerceOrigin,enabled,issuer,paymentsOrigin,pricingSchema,providerId,schema,shipping,siteId";
 
-function fail(): never { throw new GuestCheckoutError("UNAVAILABLE"); }
-function obj(v: unknown): v is Record<string, unknown> {
-  return Boolean(v) && typeof v === "object" && !Array.isArray(v);
-}
-function text(v: unknown, n = 200): v is string {
-  return typeof v === "string" && v.length > 0 && v.length <= n && v.trim() === v;
-}
-function keys(v: Record<string, unknown>, expected: string): boolean {
-  return Object.keys(v).sort().join(",") === expected;
-}
 function https(v: unknown, bare = true): v is string {
   if (!text(v, 2048)) return false;
   try {

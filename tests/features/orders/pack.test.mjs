@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createInventoryPackTransport, orderPackBody } from '../dist/admin/orders-pack.js';
+import { createInventoryPackTransport, orderPackBody } from '../../../dist/features/orders/index.js';
 
 test('Pack builds one ticket or every ticket, with a stable bounded command id and no order number', async () => {
  const one = await orderPackBody(['hat-ticket']);

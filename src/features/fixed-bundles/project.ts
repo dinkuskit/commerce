@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import type { CatalogStorageRecord } from "../catalog/index.js";
 
 import { FixedBundleError } from "./errors.js";
@@ -35,7 +36,7 @@ function multiplySafe(quantityPerBundle: number, purchasedBundleQuantity: number
 }
 
 function readComponent(value: unknown, index: number): FixedBundleComponent {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw new FixedBundleError(
       "INVALID_DEFINITION",
       `component ${index} must be an object`,
@@ -55,7 +56,7 @@ function readComponent(value: unknown, index: number): FixedBundleComponent {
 }
 
 function readDefinition(value: unknown): FixedBundleDefinition {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw new FixedBundleError("INVALID_DEFINITION", "definition must be an object");
   }
   const input = value as Record<string, unknown>;

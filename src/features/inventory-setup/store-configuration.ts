@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import {
   InventoryProviderBindingError,
   normalizeInventoryProviderBinding,
@@ -38,7 +39,7 @@ function asNonEmptyString(value: unknown, field: string): string {
 }
 
 function normalizeConfigurationInput(value: unknown) {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     throw fail("INVALID_CONFIGURATION", "inventory configuration must be an object");
   }
   const input = value as Record<string, unknown>;

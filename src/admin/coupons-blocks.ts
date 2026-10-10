@@ -1,4 +1,4 @@
-import { adminAuthorized, pageOffset, pagination, navigation, fields } from './blocks.js';
+import { adminAuthorized, pageOffset, pagination, navigation, fields } from '../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PluginContext, SandboxedRouteContext } from 'emdash/plugin';
 import { CouponAdminError, type CouponCollection, type CouponRecord } from '../features/coupons/index.js';

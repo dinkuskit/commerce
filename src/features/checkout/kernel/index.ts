@@ -17,6 +17,7 @@ export type {
   WakeReconciliationResult,
 } from "../wake.js";
 export { startCheckout, reconcileCheckout, CheckoutError } from "../orchestrate.js";
+export { handOffPaidOrder, listPaidOrders, paidOrderOf } from "../paid-orders.js";
 export {
   CheckoutContactError,
   captureCheckoutContact,
@@ -77,6 +78,7 @@ export type {
   InstalledCheckoutServices,
   InstalledCheckoutServiceResolver,
   InstalledGuestCheckoutRequest,
+  InstalledPaidOrders,
   InstalledWakeResult,
 } from "../installed.js";
 export {

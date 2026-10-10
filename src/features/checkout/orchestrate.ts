@@ -1,10 +1,9 @@
-import { loadCatalogItemBackorderPolicy } from "../catalog/kernel/index.js";
-import { normalizeMoney, parseMinorUnits, resolveCatalogItemPrice, resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
-import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
-import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
-import { resolveStorefrontAvailability } from "../storefront-availability/kernel/index.js";
+import { isRecord, sortedKeys } from "../../shared/record.js";
+import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
+import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import { composeCheckoutPricing } from "./pricing.js";
+import { handOffPaidOrder } from "./paid-orders.js";
 import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
 import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
@@ -16,11 +15,17 @@ import {
 
 export class CheckoutError extends Error {}
 function fail(message: string): never { throw new CheckoutError(message); }
+const QUOTE_FAILURES = {
+  unavailable: "Product unavailable",
+  unpriced: "Product unpriced",
+  "inventory-setup": "Inventory setup required",
+  "inventory-unavailable": "Inventory unavailable",
+};
 function cartInput(raw: unknown): CartLine[] {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > 100) fail("Invalid cart");
   const quantities = new Map<string, number>();
   for (const line of raw) {
-    if (!line || typeof line !== "object" || Object.keys(line).sort().join() !== "catalogItemId,quantity" ||
+    if (!line || typeof line !== "object" || sortedKeys(line) !== "catalogItemId,quantity" ||
       typeof line.catalogItemId !== "string" || !line.catalogItemId.trim() ||
       !Number.isSafeInteger(line.quantity) || line.quantity <= 0) fail("Invalid cart line");
     const id = line.catalogItemId.trim();
@@ -50,39 +55,22 @@ async function freeze(
   if (e.pricing && e.pricing.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) {
     fail("Payments pricing schema unsupported");
   }
-  for (const line of cart) {
-    const variant = await resolveCatalogVariantMember(e.catalog.catalog, line.catalogItemId);
-    if (!variant) fail("Product unavailable");
-    const item = variant.item;
-    if (variant.product && variant.member) {
-      selections.push({
-        schema: CHECKOUT_VARIANT_SELECTION_SCHEMA,
-        productId: variant.product.productId,
-        catalogItemId: line.catalogItemId,
-        selections: variantSelections(variant.product, variant.member),
-        fulfillment: variant.member.fulfillment,
-      });
-    }
-    const availability = await resolveStorefrontAvailability(e.catalog, { catalogItemId: line.catalogItemId }, e.availability);
-    if (!availability.sellable) fail("Product unavailable");
-    const price = await resolveCatalogItemPrice(e.catalog.prices, line.catalogItemId);
-    if (!price.customerPays) fail("Product unpriced");
-    lines.push({ ...line, name: item.name, unitPrice: price.customerPays });
-    const management = normalizeStoredStockManagement(item.stockManagement);
-    if (management.mode === "managed") {
-      if (management.status !== "active") fail("Inventory setup required");
-      if (!stock) {
-        const config = await loadStoreInventoryConfiguration(e.catalog.configurations);
-        if (!config) fail("Inventory unavailable");
-        stock = { operationId: attemptId, binding: config.binding, requirements: [] };
-      }
-      const policy = await loadCatalogItemBackorderPolicy(e.catalog.backorderPolicies, item.itemId);
-      const existing = stock.requirements.find(r => r.skuId === management.inventorySkuId);
+  const quote = await quoteCatalogBasket(e.catalog, cart.map(line => line.catalogItemId), e.availability);
+  if (!quote.ok) fail(QUOTE_FAILURES[quote.reason]);
+  for (const [index, quoted] of quote.lines.entries()) {
+    const line = cart[index];
+    const { variant } = quoted;
+    if (variant) selections.push({ schema: CHECKOUT_VARIANT_SELECTION_SCHEMA, productId: variant.productId,
+      catalogItemId: line.catalogItemId, selections: variant.selections, fulfillment: variant.fulfillment });
+    lines.push({ ...line, name: quoted.name, unitPrice: quoted.unitPrice });
+    if (quoted.stock) {
+      stock ??= { operationId: attemptId, binding: quote.inventory!, requirements: [] };
+      const existing = stock.requirements.find(r => r.skuId === quoted.stock!.skuId);
       if (existing) {
         existing.quantity += line.quantity;
-        existing.allowBackorders &&= policy.allowBackorders;
+        existing.allowBackorders &&= quoted.stock.allowBackorders;
         if (!Number.isSafeInteger(existing.quantity)) fail("Invalid quantity");
-      } else stock.requirements.push({ skuId: management.inventorySkuId, quantity: line.quantity, allowBackorders: policy.allowBackorders });
+      } else stock.requirements.push({ skuId: quoted.stock.skuId, quantity: line.quantity, allowBackorders: quoted.stock.allowBackorders });
     }
   }
   let pricing;
@@ -112,7 +100,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   if (!cartId.trim()) fail("Invalid cart identity");
   if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
   const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
-    ? (["contact,couponCode,lines", "contact,lines", "couponCode,lines", "lines"].includes(Object.keys(rawCart).sort().join()))
+    ? (["contact,couponCode,lines", "contact,lines", "couponCode,lines", "lines"].includes(sortedKeys(rawCart)))
       ? (Object.prototype.hasOwnProperty.call(rawCart, "couponCode")
         ? typeof (rawCart as { couponCode?: unknown }).couponCode === "string"
           ? normalizeCouponCode((rawCart as { couponCode: string }).couponCode) : fail("Invalid cart coupon")
@@ -272,7 +260,8 @@ async function persistCouponStatus(
   return null;
 }
 
-async function finishPaidCoupon(e: CheckoutExecution, cartId: string, attempt: CheckoutAttempt): Promise<CheckoutAttempt> {
+async function finishPaid(e: CheckoutExecution, cartId: string, attempt: CheckoutAttempt): Promise<CheckoutAttempt> {
+  await handOffPaidOrder(e, attempt);
   if (attempt.coupon?.status === "pending") {
     try {
       await reconcileCoupon(e, attempt, "paid");
@@ -286,7 +275,7 @@ function reserveTicketIds(result: unknown, lines: number): readonly string[] | n
   if (result === "unknown") return "unknown";
   if (result === "rejected") return "rejected";
   if (result === "reserved") return null;
-  if (!result || typeof result !== "object" || Array.isArray(result)) fail("Invalid reservation outcome");
+  if (!isRecord(result)) fail("Invalid reservation outcome");
   const value = result as { outcome?: unknown; ticketIds?: unknown };
   if (value.outcome !== "reserved" || !Array.isArray(value.ticketIds)) fail("Invalid reservation outcome");
   const ids = value.ticketIds;
@@ -294,11 +283,16 @@ function reserveTicketIds(result: unknown, lines: number): readonly string[] | n
   for (const id of ids) if (typeof id !== "string" || !id.trim() || id !== id.trim()) fail("Invalid reservation outcome");
   return ids;
 }
-function completeOrder(next: CheckoutAttempt, attempt: CheckoutAttempt, attemptId: string, paymentId?: string): void {
+function release(next: CheckoutAttempt, reason: NonNullable<CheckoutAttempt["paymentReleaseReason"]>): void {
+  next.phase = "releasing";
+  next.paymentReleaseReason = reason;
+}
+function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: CheckoutAttempt, attemptId: string, paymentId?: string): void {
   next.phase = "paid";
   next.order = {
     orderId: "order:" + attemptId, receiptId: "receipt:" + attemptId, attemptId,
     ...(paymentId === undefined ? {} : { paymentId }),
+    paidAt: new Date((e.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
     lines: attempt.payment.lines, total: attempt.payment.total,
     ...(attempt.payment.pricing ? { pricing: structuredClone(attempt.payment.pricing) } : {}),
     ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
@@ -314,7 +308,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
     const index = stored.record.attempts.findIndex(a => a.attemptId === attemptId);
     const attempt = stored.record.attempts[index];
     if (!attempt) fail("Checkout not found");
-    if (attempt.phase === "paid") return finishPaidCoupon(e, cartId, attempt);
+    if (attempt.phase === "paid") return finishPaid(e, cartId, attempt);
     if (attempt.phase === "released") return attempt;
     const next = structuredClone(attempt);
     if (attempt.contactSnapshot) {
@@ -347,15 +341,13 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
             now: new Date((e.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
           });
           if (reservation.state !== "pending") {
-            next.phase = "releasing";
-            next.paymentReleaseReason = "never-started";
+            release(next, "never-started");
             next.coupon.refused = true;
           } else next.coupon.status = "pending";
         } catch (error) {
           if (error instanceof CouponRedemptionError &&
               ["CAPACITY_EXHAUSTED", "INVALID_INPUT", "CONFLICTING_ATTEMPT", "TERMINAL_CONFLICT"].includes(error.code)) {
-            next.phase = "releasing";
-            next.paymentReleaseReason = "never-started";
+            release(next, "never-started");
             next.coupon.refused = true;
           } else {
             return attempt;
@@ -381,7 +373,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       next.phase = "released";
     } else {
       if (attempt.payment.total.currency === "USD" && attempt.payment.total.minor === "0") {
-        completeOrder(next, attempt, attemptId);
+        completeOrder(e, next, attempt, attemptId);
       } else {
         // Current host support is not an authoritative provider creation fence.
         if (attempt.payment.pricing && e.pricing?.paymentPricingSchema !== CHECKOUT_PRICING_SCHEMA) return attempt;
@@ -394,8 +386,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         validateOutcome(outcome, attempt);
         if (outcome.outcome === "unknown") return attempt;
         if (outcome.outcome === "not-created") {
-          next.phase = "releasing";
-          next.paymentReleaseReason = "not-created";
+          release(next, "not-created");
         }
         else {
           if (attempt.coupon) {
@@ -408,10 +399,9 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           }
           next.session = outcome.session;
           if (outcome.outcome === "paid") {
-            completeOrder(next, attempt, attemptId, outcome.paymentId);
+            completeOrder(e, next, attempt, attemptId, outcome.paymentId);
           } else if (outcome.outcome === "expired-unpaid") {
-            next.phase = "releasing";
-            next.paymentReleaseReason = "expired-unpaid";
+            release(next, "expired-unpaid");
           }
         }
       }
@@ -424,7 +414,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
         return next;
       }
-      if (next.phase === "paid") return finishPaidCoupon(e, cartId, next);
+      if (next.phase === "paid") return finishPaid(e, cartId, next);
       if (next.phase === "released") return next;
     }
   }
