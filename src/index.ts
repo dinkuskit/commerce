@@ -22,10 +22,6 @@ import {
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
-  PUBLIC_CATALOG_ROUTE,
-  PUBLIC_CATALOG_ITEM_ROUTE,
-  readPublicCatalog,
-  readPublicCatalogItem,
   clearCatalogItemRegularPriceRoute,
   clearCatalogItemSalePriceRoute,
   createCatalogItemRouteWithLocalStock,
@@ -42,6 +38,12 @@ import {
   updateCatalogVariantLabelsRoute,
   bulkSaveCatalogProductPricesRoute,
 } from "./features/catalog/index.js";
+import {
+  PUBLIC_CATALOG_ROUTE,
+  PUBLIC_CATALOG_ITEM_ROUTE,
+  readPublicCatalog,
+  readPublicCatalogItem,
+} from "./features/catalog/storefront/index.js";
 import {
   SET_STORE_RETURN_POLICY_ROUTE,
   SET_STORE_SHIPPING_POLICY_ROUTE,

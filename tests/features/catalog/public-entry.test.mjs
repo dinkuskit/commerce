@@ -3,6 +3,7 @@ import test from "node:test";
 import { PluginRouteError } from "emdash";
 
 import * as catalog from "../../../dist/features/catalog/index.js";
+import * as catalogStorefront from "../../../dist/features/catalog/storefront/index.js";
 import * as commerce from "../../../dist/index.js";
 
 test("the package root and feature entry expose the same catalog contract", () => {
@@ -216,8 +217,8 @@ test("installed public catalog projects only priced listable products", async ()
   });
 
   const native = commerce.createPlugin();
-  const publicRoute = native.routes[catalog.PUBLIC_CATALOG_ROUTE];
-  const itemRoute = native.routes[catalog.PUBLIC_CATALOG_ITEM_ROUTE];
+  const publicRoute = native.routes[catalogStorefront.PUBLIC_CATALOG_ROUTE];
+  const itemRoute = native.routes[catalogStorefront.PUBLIC_CATALOG_ITEM_ROUTE];
   assert.equal(publicRoute.public, true);
   assert.deepEqual(publicRoute.methods, ["GET"]);
   assert.deepEqual(publicRoute.request, { body: "none" });
