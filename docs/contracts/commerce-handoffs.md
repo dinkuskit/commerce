@@ -127,9 +127,10 @@ order so it can be labeled.
   version: the order id, short number, version, status, whether it is a test
   order, the current delivery address (the owner's correction, else the
   paid-order copy's), the shopper's email, the completion once Completed, and
-  the lines that go in the box (catalog item id, name, quantity and each
-  product's current shipping weight in ounces, `weightOz`, when set). Digital
-  items, prices, totals, payment details and phone numbers are never sent.
+  the lines that go in the box (catalog item id, name, quantity, the price
+  the shopper paid for one, `unitPrice`, and each product's current shipping
+  weight in ounces, `weightOz`, when set). Digital items, order totals, the
+  shipping charge, payment details and phone numbers are never sent.
   Each new version goes to Ship: when the order arrives, and after an address
   fix, Complete order or Move back to Processing. Ship labels only the latest
   version and buys no postage for a test order. Ship reports each label it

@@ -68,23 +68,30 @@ Each sync, in order (`src/features/orders/ship.ts`):
   "shipTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
   "email": "shopper@example.test",
   "completed": null,
-  "lines": [{ "catalogItemId": "item_demo", "name": "Demo Mug", "quantity": 2, "weightOz": 12.5 }]
+  "lines": [{ "catalogItemId": "item_demo", "name": "Demo Mug", "quantity": 2, "unitPrice": { "currency": "USD", "minor": "1250" }, "weightOz": 12.5 }]
 }
 ```
 
-`lines` are the items that go in the box: digital items are left out, and
-each line carries the product's current shipping weight in ounces when one is
-set. `completed` is `{ at, carrier?, tracking? }` once the order is Completed.
-`test` is true for every order not taken in live mode; Ship must not buy
-postage for it. No prices, totals, payment ids or phone numbers are sent. On
+`lines` are the items that go in the box: digital items are left out. Each
+line carries `unitPrice`, what the shopper paid for one of that item at
+checkout as `{ "currency": "USD", "minor" }` with `minor` a whole number of
+cents in a string (the paid order's line price, before any order-level
+coupon; Registry stores take no coupons in v1), and the product's current
+shipping weight in ounces when one is set, for insurance,
+packing slips and later customs forms (GrillTrack `commerce-ship-sync-001`,
+Ronald's "yes no no", 23:10 UTC 2026-10-10). `completed` is
+`{ at, carrier?, tracking? }` once the order is Completed. `test` is true for
+every order not taken in live mode; Ship must not buy postage for it. No order
+totals, shipping charges, payment ids or phone numbers are sent. On
 the first sync Ship gets every order with an address, including ones
 completed long ago, a few per sync.
 
 ## Proof
 
 - `tests/features/orders/ship.test.mjs`: what is sent and when (address
-  fixes, Complete and Move back each send the new version; no digital items,
-  prices, payment ids or phone numbers), label outcomes for current, older,
+  fixes, Complete and Move back each send the new version; each line's price
+  paid; no digital items, totals, payment ids or phone numbers), label
+  outcomes for current, older,
   Completed, unusable and unknown orders, lost acknowledgements, Ship being
   down, 422, a missing pass, malformed label lists and the 10-per-sync limit.
 - `tests/features/orders/status.test.mjs`: the Orders page syncs when it opens

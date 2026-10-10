@@ -52,17 +52,20 @@ async function store(...orders) {
   return kept;
 }
 
-test('each order with an address goes to Ship once per version, with weights and without digital items or prices', async () => {
-  const kept = await store(order('o1'), order('o2', [line('hat', 2), line('ebook'), line('scarf'), line('gone')], { mode: 'live' }), order('o3', [line('ebook')], { digital: true }));
+test('each order with an address goes to Ship once per version, with each item\'s price paid and weight, and no digital items, totals, payment or phone', async () => {
+  const priced = (paid, minor) => ({ ...paid, unitPrice: usd(minor) });
+  const kept = await store(order('o1'), order('o2', [priced(line('hat', 2), '1250'), line('ebook'), priced(line('scarf'), '899'), line('gone')], { mode: 'live' }),
+    order('o3', [line('ebook')], { digital: true }));
   const { state, connection } = ship();
   await syncShip(kept, connection, item);
   assert.deepEqual(state.sent.map(sent => sent.orderId), ['o1', 'o2']);
   assert.deepEqual(state.sent[1], { schema: SHIP_ORDER_SCHEMA, orderId: 'o2', number: 1002, version: 1, status: 'processing', test: false,
     shipTo: delivery, email: 'shopper@example.com', completed: null,
-    lines: [{ catalogItemId: 'hat', name: 'HAT', quantity: 2, weightOz: 4.5 }, { catalogItemId: 'scarf', name: 'SCARF', quantity: 1 }, { catalogItemId: 'gone', name: 'GONE', quantity: 1 }] });
+    lines: [{ catalogItemId: 'hat', name: 'HAT', quantity: 2, unitPrice: usd('1250'), weightOz: 4.5 },
+      { catalogItemId: 'scarf', name: 'SCARF', quantity: 1, unitPrice: usd('899') }, { catalogItemId: 'gone', name: 'GONE', quantity: 1, unitPrice: usd('100') }] });
   assert.equal(state.sent[0].test, true);
-  // No money, payment or phone details leave Commerce.
-  assert.doesNotMatch(JSON.stringify(state.sent), /unitPrice|total|pay-|paymentId|phone|5555550100|receipt/);
+  // Beyond each item's price, no money, payment or phone details leave Commerce.
+  assert.doesNotMatch(JSON.stringify(state.sent), /total|pay-|paymentId|phone|5555550100|receipt/);
   for (const call of state.calls) {
     assert.match(call.url, /^https:\/\/ship\.example\.test\/v1\//);
     assert.equal(call.authorization, 'Bearer synthetic-ship-pass');

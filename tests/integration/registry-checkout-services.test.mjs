@@ -632,7 +632,8 @@ test('the compiled runtime sends paid orders to Ship, and a label bought in Ship
     const { orderId, ...rest } = sent;
     assert.match(orderId, /^order:/);
     assert.deepEqual(rest, { schema: 'dinkuskit.commerce.ship-order/v1', number: 1001, version: 1, status: 'processing', test: true,
-      shipTo: syntheticDelivery, email: 'shopper@example.test', completed: null, lines: [{ catalogItemId: 'hat', name: 'Hat', quantity: 2, weightOz: 4.5 }] });
+      shipTo: syntheticDelivery, email: 'shopper@example.test', completed: null,
+      lines: [{ catalogItemId: 'hat', name: 'Hat', quantity: 2, unitPrice: { currency: 'USD', minor: '250' }, weightOz: 4.5 }] });
     await shipAdmin(state, { type: 'page_load', page: '/orders' });
     assert.equal(ship.state.sent.length, 1);
     // Ship bought a label: the background check completes the order with USPS and the tracking number, then tells Ship.

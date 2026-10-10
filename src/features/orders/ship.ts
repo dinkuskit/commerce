@@ -54,10 +54,11 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     if (!facts.shipTo || record.shipVersion === facts.version) continue;
     if (!room--) break;
     const lines = [];
-    for (const { catalogItemId, name, quantity } of record.paidOrder.lines) {
+    for (const { catalogItemId, name, quantity, unitPrice } of record.paidOrder.lines) {
       // Digital items never go in the box; an item since removed from the catalog goes without a weight.
+      // Each line carries what the shopper paid for one of it, for insurance and packing slips.
       const found = await item(catalogItemId);
-      if (found?.physical !== false) lines.push({ catalogItemId, name, quantity, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
+      if (found?.physical !== false) lines.push({ catalogItemId, name, quantity, unitPrice, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
     }
     const response = await call("/v1/orders", { schema: SHIP_ORDER_SCHEMA, ...facts, lines });
     // 422 means Ship can never label this version, so it waits for the order's next change.
