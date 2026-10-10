@@ -198,15 +198,21 @@ function nativePublicContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
     ...ctx,
     storage: {
       ...ctx.storage,
-      catalog_items: ctx.storage.catalogItems,
-      catalog_prices: ctx.storage.catalogPrices,
-      catalog_manual_availability: ctx.storage.catalogManualAvailability,
-      catalog_backorder_policies: ctx.storage.catalogBackorderPolicies,
-      store_inventory_configurations: ctx.storage.storeInventoryConfigurations,
-      storefront_availability_settings: ctx.storage.storefrontAvailabilitySettings,
-      storefront_out_of_stock_listing: ctx.storage.storefrontOutOfStockListing,
-      catalog_media: ctx.storage.catalogMedia,
-      storefront_placeholder_image: ctx.storage.storefrontPlaceholderImage,
+      catalog_items: ctx.storage.catalogItems ?? ctx.storage.catalog_items,
+      catalog_prices: ctx.storage.catalogPrices ?? ctx.storage.catalog_prices,
+      catalog_manual_availability:
+        ctx.storage.catalogManualAvailability ?? ctx.storage.catalog_manual_availability,
+      catalog_backorder_policies:
+        ctx.storage.catalogBackorderPolicies ?? ctx.storage.catalog_backorder_policies,
+      store_inventory_configurations:
+        ctx.storage.storeInventoryConfigurations ?? ctx.storage.store_inventory_configurations,
+      storefront_availability_settings:
+        ctx.storage.storefrontAvailabilitySettings ?? ctx.storage.storefront_availability_settings,
+      storefront_out_of_stock_listing:
+        ctx.storage.storefrontOutOfStockListing ?? ctx.storage.storefront_out_of_stock_listing,
+      catalog_media: ctx.storage.catalogMedia ?? ctx.storage.catalog_media,
+      storefront_placeholder_image:
+        ctx.storage.storefrontPlaceholderImage ?? ctx.storage.storefront_placeholder_image,
     },
   };
 }
