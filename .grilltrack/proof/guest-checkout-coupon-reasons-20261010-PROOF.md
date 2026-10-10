@@ -2,7 +2,7 @@
 
 Decision: `guest-checkout-coupon-reasons-035`, chosen by the project owner on
 2026-10-10 ("Full detail" and "Refuse it"); it supersedes
-`guest-checkout-coupon-unavailable-034`. Base: `f550d41` (main, after #85, #87 and #84).
+`guest-checkout-coupon-unavailable-034`. Base: `00e3544` (main, after #85, #87, #84 and #88).
 
 ## Behaviour
 
@@ -26,13 +26,13 @@ backend under workerd reports `try-later`).
 
 ## Verification
 
-Node 22.23.2, `bin/verify-commerce full` on head after merging main `f550d41`
-(#84, Orders keeps its own paid-order copy): PASS.
+Node 22.23.2, `bin/verify-commerce full` on head after merging main `00e3544`
+(#88, delivery address at checkout): PASS.
 
-- `npm run test:unit`: 484 pass, 0 fail.
+- `npm run test:unit`: 489 pass, 0 fail.
 - `npm run test:integration`: 46 pass, 0 fail.
 - `npm run test:sandbox`: 10 pass; `:native-local-stock` 1 pass; `:orders` 1 pass.
 
-Registry backend `dist/sandbox/plugin.mjs`: 118,620 bytes, 12,452 under the
-131,072 limit (main 117,720; +900). SHA-256
-`7f611224c5a315f8829a11e8ca3de05bb898b8123b2b920afe44701d234d3467`.
+Registry backend `dist/sandbox/plugin.mjs`: 120,348 bytes, 10,724 under the
+131,072 limit (main 119,448; +900). SHA-256
+`c89c485d013121e9ad6fec1d2077198ca4875300da1d24fd91d1713249c196bd`.
