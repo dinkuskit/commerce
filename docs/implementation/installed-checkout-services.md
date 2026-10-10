@@ -85,10 +85,12 @@ breaks pasted around the key, treats it as opaque text of at most 512
 characters and sends it nowhere but the trade below.
 
 Each Payments, Coupons or Ship call trades the key for a short pass scoped to
-that one service: `POST /api/store-passes` on the origin of the configured
-`issuer` (for a real store `https://dinkuskit.com/account`, so the trade goes
-to `https://dinkuskit.com`), with `Authorization: Bearer <store key>`, no
-cookies, `redirect: "error"` and exactly `{ "site_id", "scope", "audience" }`.
+that one service: `POST https://dinkuskit.com/api/store-passes`, an address
+fixed in Commerce that no setting changes, with `Authorization: Bearer <store
+key>`, no cookies, `redirect: "error"` and exactly `{ "site_id", "scope",
+"audience" }`. Payments, Coupons and Ship are allowed hosts too, so pasted
+settings that name one of them as the `issuer` still send the key only to
+DinkusKit.com; its passes then fail admission and no call is made.
 The pairs are `payments:checkout` with the configured `audience`,
 `coupons:checkout` with `coupons.audience`, and `ship:orders` with
 `ship.audience`; while coupons are unhooked for v1
@@ -107,6 +109,12 @@ not show DinkusKit.com's error codes (`invalid_store_key`, `site_mismatch`,
 `merchant_unavailable`, `signing_unavailable`); they are for its logs and the
 owner. A configured checkout without a store key is `UNAVAILABLE` before any
 trade.
+
+Stores that saved passes in `installedCheckoutCredential`,
+`installedCheckoutCouponsCredential` or `installedShipCredential` before the
+store key keep those saved values, but Commerce no longer reads or sends them:
+checkout stays `UNAVAILABLE`, and Orders and the background check call nothing,
+until the owner pastes a store key.
 
 Each store turns on any of Payments, Coupons and Ship on DinkusKit.com.
 Payments counts as on while its Connect grant is active, Coupons and Ship are

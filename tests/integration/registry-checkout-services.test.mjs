@@ -20,6 +20,8 @@ import {
   shipCredential,
   SITE,
   STORE_KEY,
+  TRADE_URL,
+  TRANSPORT_ORIGIN,
   verifyCouponPass,
   verifyShipPass,
 } from '../features/checkout/registry-runtime.mjs';
@@ -669,11 +671,11 @@ test('without a Ship service or a usable Ship pass, Orders calls nothing and kee
   }
 });
 
-test('Commerce trades its store key at the issuer once per call, only for the service the call needs', async () => {
+test('Commerce trades its store key at DinkusKit.com once per call, only for the service the call needs, and sends it nowhere else', async () => {
   const ship = shipStandIn();
   const state = await runtimeFixture({ config: { ...configuration(), ship: SHIP }, shipPass: await shipCredential(), shipService: ship.service });
   try {
-    const trade = scope => ({ method: 'POST', path: '/api/store-passes', authorization: 'Bearer ' + STORE_KEY, cookie: null,
+    const trade = scope => ({ method: 'POST', url: TRADE_URL, authorization: 'Bearer ' + STORE_KEY, cookie: null,
       contentType: 'application/json', body: { site_id: 'synthetic-site', scope,
         audience: scope === 'ship:orders' ? 'synthetic-ship' : 'synthetic-payments' } });
     // Preparing a checkout needs no service, so nothing is traded.
@@ -699,7 +701,30 @@ test('Commerce trades its store key at the issuer once per call, only for the se
     // The background check trades at most once for Payments and once for Ship.
     await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
     assert.deepEqual(state.trades.slice(3), [trade('payments:checkout'), trade('ship:orders')]);
+    // Payments and Ship got passes only: the key itself went in the five trades and nowhere else.
+    assert.deepEqual(state.outbound.filter(request => request.text.includes(STORE_KEY)).map(request => request.url),
+      Array(5).fill(TRADE_URL));
+    assert.ok(state.outbound.length > 5);
   } finally { await state.close(); }
+});
+
+test('the store key goes only to DinkusKit.com even when the checkout settings name Payments, Coupons or Ship as the issuer', async () => {
+  for (const origin of [TRANSPORT_ORIGIN, COUPONS_ORIGIN, SHIP.origin]) {
+    const ship = shipStandIn();
+    const state = await runtimeFixture({ config: { ...configuration(), issuer: origin + '/account', ship: SHIP },
+      shipPass: await shipCredential(), shipService: ship.service });
+    try {
+      // Checkout, Orders and the background check each trade at DinkusKit.com, whose passes do not
+      // name the issuer in these settings, so none is used.
+      assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
+      await shipAdmin(state, { type: 'page_load', page: '/orders' });
+      await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+      assert.deepEqual([...new Set(state.trades.map(trade => trade.body.scope))].sort(), ['payments:checkout', 'ship:orders']);
+      // Nothing went anywhere else: not to the address the settings named, Payments, Coupons or Ship.
+      assert.deepEqual(state.outbound.map(request => request.url), state.trades.map(() => TRADE_URL));
+      assert.deepEqual([state.counts.transport, state.counts.ship, ship.state.calls], [0, 0, 0]);
+    } finally { await state.close(); }
+  }
 });
 
 test('a refused trade makes no call: refused or replaced key, service off or cut off, limits, outages, redirects and bad answers', async () => {
@@ -754,4 +779,27 @@ test('Replace key on DinkusKit.com stops the old key at once, and without a key 
     await unset.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
     assert.deepEqual([unset.counts.trades, unset.counts.transport], [0, 0]);
   } finally { await unset.close(); }
+});
+
+test('a store upgrading from the three pass settings stays unavailable until it pastes a store key, and its old passes are never sent', async () => {
+  const ship = shipStandIn();
+  const old = { sub: 'owner-before-the-store-key' };
+  const legacyPasses = { installedCheckoutCredential: await credential(old),
+    installedCheckoutCouponsCredential: await couponCredential(old), installedShipCredential: await shipCredential(old) };
+  const state = await runtimeFixture({ config: { ...configuration(), ship: SHIP }, storeKey: null, legacyPasses,
+    shipPass: await shipCredential(), shipService: ship.service });
+  try {
+    // The old passes are still saved, but Commerce no longer reads them.
+    assert.equal((await state.invoke(PREPARE)).error.code, 'UNAVAILABLE');
+    assert.match(JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' })), /No orders recorded yet/);
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual([state.counts.trades, state.outbound.length, ship.state.calls], [0, 0, 0]);
+    // Pasting the key DinkusKit.com made for the store is all it takes.
+    await state.settings.set('storeKey', STORE_KEY);
+    state.acceptStoreKey(STORE_KEY);
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+    await shipAdmin(state, { type: 'page_load', page: '/orders' });
+    assert.ok(state.counts.transport >= 2 && ship.state.calls >= 1);
+    for (const pass of Object.values(legacyPasses)) assert.ok(state.outbound.every(request => !request.text.includes(pass)));
+  } finally { await state.close(); }
 });

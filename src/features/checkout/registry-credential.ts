@@ -36,8 +36,9 @@ export function admitCredential(
 
 
 /**
- * Trades the store key at the issuer (POST /api/store-passes on its origin) for a fresh pass
- * for one service, admitted like any pass. Any refusal leaves the call it was for unmade.
+ * Trades the store key at DinkusKit.com for a fresh pass for one service, admitted like any pass.
+ * The key goes only to this fixed address, never to one named in the settings (GrillTrack
+ * commerce-store-key-001). Any refusal leaves the call it was for unmade.
  */
 export async function tradeStoreKey(
   key: string,
@@ -46,7 +47,7 @@ export async function tradeStoreKey(
   scope: string,
   audience: string,
 ): Promise<string> {
-  const response = await fetch(new URL("/api/store-passes", config.issuer).href, {
+  const response = await fetch("https://dinkuskit.com/api/store-passes", {
     method: "POST", cache: "no-store", redirect: "error",
     headers: { accept: "application/json", authorization: "Bearer " + key, "content-type": "application/json" },
     body: JSON.stringify({ site_id: config.siteId, scope, audience }),

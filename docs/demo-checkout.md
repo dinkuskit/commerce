@@ -44,9 +44,9 @@ project owner's call (GrillTrack `commerce-payment-mode-001`).
 
 The owner must also paste the store key from the Set up Commerce box on
 DinkusKit.com into the encrypted secret setting `storeKey`. Commerce reads it
-only server-side and trades it at the `issuer`'s origin for a short
-`payments:checkout` pass for the same `siteId`, `issuer` and `audience` before
-each Payments call
+only server-side and sends it nowhere but `https://dinkuskit.com/api/store-passes`,
+which trades it for a short `payments:checkout` pass for the same `siteId`,
+`issuer` and `audience` before each Payments call
 ([store key and passes](implementation/installed-checkout-services.md#store-key-and-passes)).
 The key is never a Stripe credential and never reaches the browser.
 

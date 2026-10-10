@@ -20,10 +20,20 @@ export const SITE = 'https://shop.example.test';
 // Public IP literal avoids DNS; the approved test-only HTTP callback intercepts every request.
 // No connection is made to this address. Production grants remain empty.
 export const TRANSPORT_ORIGIN = 'https://8.8.8.8';
-// A fourth public IP literal stands in for DinkusKit.com, which trades the store key for passes;
-// it is intercepted too. The issuer's origin is where Commerce trades the key.
-export const ISSUER_ORIGIN = 'https://9.9.9.9';
+// DinkusKit.com trades the store key for passes. Commerce only ever sends the key to this fixed
+// address, so the stand-in answers at the real host and issuer; its requests are intercepted too.
+export const ISSUER_ORIGIN = 'https://dinkuskit.com';
+export const TRADE_URL = ISSUER_ORIGIN + '/api/store-passes';
 const ISSUER = ISSUER_ORIGIN + '/account';
+// EmDash checks a named host by asking Cloudflare's DNS over HTTPS before each request. Answer
+// that lookup here with a public address, for dinkuskit.com only, so no lookup leaves the process.
+const passThrough = globalThis.fetch;
+globalThis.fetch = (input, init) => {
+  const url = new URL(input instanceof Request ? input.url : String(input));
+  if (url.origin + url.pathname !== 'https://cloudflare-dns.com/dns-query') return passThrough(input, init);
+  const found = url.searchParams.get('name') === 'dinkuskit.com' && url.searchParams.get('type') === 'A';
+  return Promise.resolve(Response.json({ Status: 0, Answer: found ? [{ type: 1, data: '9.9.9.9' }] : [] }));
+};
 /** The store key the stand-in issuer accepts until a test replaces it. Not a real key format. */
 export const STORE_KEY = 'synthetic store key';
 const AUDIENCE = 'synthetic-payments';
@@ -95,6 +105,8 @@ export async function runtimeFixture({
   shipService,
   // The store key in Commerce's settings (null leaves it unset) and an optional stand-in issuer.
   storeKey = STORE_KEY,
+  // Passes an upgraded store still has in the three settings Commerce used before the store key.
+  legacyPasses = null,
   passService,
   // What the synthetic Payments says its binding is.
   bindingMode = 'test',
@@ -122,7 +134,7 @@ export async function runtimeFixture({
   const manifest = structuredClone(artifact);
   manifest.id = owner;
   // Explicit SYNTHETIC fixture variant only. Never mutate the shipped manifest or publish this variant.
-  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '9.9.9.9']; }
+  if (grants) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4', '1.1.1.1', 'dinkuskit.com']; }
   const collections = {};
   for (const [name, spec] of Object.entries(manifest.storage)) {
     collections[name] = new PluginStorageRepository(db, owner, name,
@@ -138,6 +150,12 @@ export async function runtimeFixture({
   const settings = createSettingsAccess(new OptionsRepository(db), owner, manifest.admin.settingsSchema);
   if (config !== null) await settings.set('installedCheckout', JSON.stringify(config));
   if (storeKey !== null) await settings.set('storeKey', storeKey);
+  // Saved as the version before the store key saved them: three secret settings it no longer has.
+  if (legacyPasses) {
+    const legacy = createSettingsAccess(new OptionsRepository(db), owner, { ...manifest.admin.settingsSchema,
+      ...Object.fromEntries(Object.keys(legacyPasses).map(key => [key, { type: 'secret', label: key }])) });
+    for (const [key, pass] of Object.entries(legacyPasses)) await legacy.set(key, pass);
+  }
   if (seed) await collections.catalog_items.put('hat', {
     recordKind: 'catalog-item', itemId: 'hat', commandId: 'synthetic-create-hat', sku: 'HAT', skuKey: 'HAT', fulfillment: 'digital',
     creationIntent: { manageStock: managed }, kind: 'simple-product', name: 'Hat', state: 'draft',
@@ -153,7 +171,8 @@ export async function runtimeFixture({
     binding: { providerRef: 'inventory-synthetic', poolId: 'pool-synthetic', defaultFulfillmentLocationId: 'location-synthetic' },
     configuredAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   });
-  const requests = [], sessions = new Map(), trades = [];
+  // outbound: every request Commerce sends, with its headers and body as text.
+  const requests = [], sessions = new Map(), trades = [], outbound = [];
   let paid = false, pending = [], override, acceptedKey = storeKey;
   // What the stand-in issuer hands out per scope; null refuses it as not turned on. An unset
   // Payments pass is minted fresh for each trade.
@@ -164,7 +183,7 @@ export async function runtimeFixture({
     assert.equal(init.redirect, 'manual'); // EmDash enforces Commerce's redirect policy itself.
     const headers = new Headers(init.headers);
     const body = JSON.parse(new TextDecoder().decode(init.body));
-    trades.push({ method: init.method, path: new URL(url).pathname, authorization: headers.get('authorization'),
+    trades.push({ method: init.method, url, authorization: headers.get('authorization'),
       cookie: headers.get('cookie'), contentType: headers.get('content-type'), body });
     if (passService) return passService(url, init, body);
     if (headers.get('authorization') !== 'Bearer ' + acceptedKey) return Response.json({ error: 'invalid_store_key' }, { status: 401 });
@@ -174,6 +193,8 @@ export async function runtimeFixture({
       : Response.json({ error: 'service_not_enabled' }, { status: 403 });
   }
   async function transport(url, init) {
+    outbound.push({ url, text: JSON.stringify([...new Headers(init.headers)]) +
+      (typeof init.body === 'string' ? init.body : new TextDecoder().decode(init.body)) });
     if (new URL(url).origin === ISSUER_ORIGIN) return issuer(url, init);
     if (new URL(url).origin === SHIP_ORIGIN) {
       counts.ship++;
@@ -237,7 +258,7 @@ export async function runtimeFixture({
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },
   });
-  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests, trades,
+  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests, trades, outbound,
     /** Replace key on DinkusKit.com: from now on only this key gets passes. */
     acceptStoreKey(key) { acceptedKey = key; },
     /** What the stand-in issuer hands out for a scope from now on; null refuses it. */
