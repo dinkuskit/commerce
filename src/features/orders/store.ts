@@ -30,13 +30,20 @@ function pricing(v: unknown): boolean {
     money(v.finalTotal) && isRecord(v.shipping) && money(v.shipping.charge) &&
     optional(v.coupon, c => isRecord(c) && text(c.code));
 }
-function address(v: unknown): boolean {
-  return isRecord(v) && text(v.name) && text(v.line1) && optional(v.line2, text) && text(v.city) &&
-    optional(v.region, text) && text(v.postalCode) && text(v.country);
+// Only the listed fields: Orders keeps the copy for good, so nothing extra rides along.
+function only(v: Record<string, unknown>, keys: string): boolean {
+  return Object.keys(v).every(k => keys.split(",").includes(k));
 }
+function address(v: unknown): boolean {
+  return isRecord(v) && only(v, "name,line1,line2,city,region,postalCode,country") && text(v.name) && text(v.line1) &&
+    optional(v.line2, text) && text(v.city) && optional(v.region, text) && text(v.postalCode) && text(v.country);
+}
+/** The checkout-contact/v1 snapshot exactly as Checkout freezes it. */
 function contactSnapshot(v: unknown): boolean {
-  return isRecord(v) && isRecord(v.contact) && text(v.contact.email) && optional(v.contact.phone, text) &&
-    optional(v.contact.delivery, address);
+  return isRecord(v) && only(v, "schema,contact,requirePhoneNumber,revision") &&
+    v.schema === "dinkuskit.commerce.checkout-contact/v1" && typeof v.requirePhoneNumber === "boolean" &&
+    (v.revision === null || text(v.revision)) && isRecord(v.contact) && only(v.contact, "email,phone,delivery") &&
+    text(v.contact.email) && optional(v.contact.phone, text) && optional(v.contact.delivery, address);
 }
 /** Everything Orders shows or packs from must be well formed before a copy is kept for good. */
 function admit(order: PaidOrder): PaidOrder {
