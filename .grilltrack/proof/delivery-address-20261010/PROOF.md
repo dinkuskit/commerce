@@ -10,7 +10,7 @@ Decision: `commerce-delivery-address-001` (locked on the owner's approval,
 | | `dist/sandbox/plugin.mjs` bytes | headroom to 131,072 |
 | --- | --- | --- |
 | main f550d41 (with #84) | 117,720 | 13,352 |
-| with delivery address | 119,375 | 11,697 |
+| with delivery address | 119,436 | 11,636 |
 
 ## Checks run on this change
 
@@ -22,7 +22,8 @@ Address-specific tests:
 
 - `tests/features/checkout/delivery-address.test.mjs`: address input trimmed,
   bounded, unknown fields refused; physical baskets need an address in a
-  shipping country (none set refuses); digital-only baskets keep none;
+  shipping country (none set refuses); digital-only baskets keep none, and an address sent with one is dropped unread
+  even when partial or malformed;
   unmarked and mixed baskets refused before any attempt or payment; the
   address reaches the paid-order record and the Orders detail ("Ship to").
 - `tests/features/orders/page.test.mjs`: Orders keeps a paid order only when

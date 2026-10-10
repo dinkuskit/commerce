@@ -41,6 +41,9 @@ test('a physical basket needs an address in a shipping country; a digital one ke
   assert.ok(Object.isFrozen(physical.contact.delivery));
   const digital = await captureCheckoutContact({ email, delivery: syntheticDelivery }, requirements(), false);
   assert.deepEqual(digital.contact, { email });
+  // A partial or malformed address on a digital-only basket is dropped, not refused.
+  for (const delivery of [{ city: 'X' }, 'x', null, { ...syntheticDelivery, country: 'USA', note: 1 }])
+    assert.deepEqual((await captureCheckoutContact({ email, delivery }, requirements(), false)).contact, { email });
 });
 
 test('unmarked and mixed baskets ask for an address before any attempt or payment', async t => {

@@ -135,6 +135,11 @@ export async function captureCheckoutContact(
   loadRequirements: CheckoutContactRequirementsLoader,
   needsDelivery = false,
 ): Promise<CheckoutContactSnapshot> {
+  // A digital-only basket is never asked for an address, so whatever was sent is dropped unread.
+  if (!needsDelivery && isObject(raw) && Object.hasOwn(raw, "delivery")) {
+    const { delivery: _ignored, ...rest } = raw;
+    raw = rest;
+  }
   const contact = normalizeCheckoutContactInput(raw);
   let requirements: CheckoutContactRequirements;
   try {
