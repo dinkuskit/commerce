@@ -3,6 +3,7 @@ import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.
 
 import { COUPONS_COLLECTION, createCheckoutCouponPort, type CouponCollection } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
+import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
 import { prepareGuestCheckout, startGuestCheckout, statusGuestCheckout } from "./guest.js";
 import { admitBoundGuestCheckoutRuntime, NATIVE_GUEST_CHECKOUT_STORAGE } from "./runtime.js";
 import {
@@ -31,9 +32,13 @@ const GUEST_REQUEST = {
   headers: [...GUEST_CHECKOUT_DECLARED_HEADERS],
 };
 
+/** Binds Orders' receiving side of the paid-order handoff from the native storage. */
+export type NativePaidOrders = (storage: Record<string, unknown>) => PaidOrderReceiver | undefined;
+
 function nativeRuntime(
   ctx: Parameters<PluginRoute["handler"]>[0],
   options: GuestCheckoutHostOptions,
+  paidOrders?: NativePaidOrders,
 ) {
   const storage = ctx.storage as Record<string, unknown>;
   const coupons = storage[COUPONS_COLLECTION] as CouponCollection | undefined;
@@ -50,6 +55,7 @@ function nativeRuntime(
         loadCheckoutContactRequirements(ctx.settings),
     },
     coupons ? createCheckoutCouponPort(coupons) : undefined,
+    paidOrders?.(storage),
   );
 }
 
@@ -64,9 +70,10 @@ async function runNative(
   ctx: Parameters<PluginRoute["handler"]>[0],
   options: GuestCheckoutHostOptions,
   action: (runtime: ReturnType<typeof nativeRuntime>) => Promise<GuestCheckoutResult>,
+  paidOrders?: NativePaidOrders,
 ): Promise<GuestCheckoutResult> {
   try {
-    return throwIfDenied(await action(nativeRuntime(ctx, options)));
+    return throwIfDenied(await action(nativeRuntime(ctx, options, paidOrders)));
   } catch (error) {
     if (error instanceof PluginRouteError) throw error;
     if (error instanceof GuestCheckoutError) {
@@ -94,6 +101,7 @@ export function createGuestCheckoutPrepareRoute(
 
 export function createGuestCheckoutStartRoute(
   options: GuestCheckoutHostOptions = {},
+  paidOrders?: NativePaidOrders,
 ): PluginRoute {
   return {
     public: true,
@@ -105,13 +113,14 @@ export function createGuestCheckoutStartRoute(
       }
       return runNative(ctx, options, (runtime) =>
         startGuestCheckout(runtime, ctx.input, ctx.request.headers),
-      );
+      paidOrders);
     },
   };
 }
 
 export function createGuestCheckoutStatusRoute(
   options: GuestCheckoutHostOptions = {},
+  paidOrders?: NativePaidOrders,
 ): PluginRoute {
   return {
     public: true,
@@ -123,7 +132,7 @@ export function createGuestCheckoutStatusRoute(
       }
       return runNative(ctx, options, (runtime) =>
         statusGuestCheckout(runtime, ctx.input, ctx.request.headers),
-      );
+      paidOrders);
     },
   };
 }

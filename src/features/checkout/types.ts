@@ -1,4 +1,5 @@
 import type { StorageCollection } from "emdash";
+import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
 import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
@@ -6,7 +7,7 @@ import type { CheckoutCouponPort, CouponNotApplicableReason, CouponQuoteSnapshot
 import type {
   CheckoutContactRequirementsLoader,
   CheckoutContactSnapshot,
-} from "../checkout-contact/types.js";
+} from "../checkout-contact/index.js";
 
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
 export interface CartLine { catalogItemId: string; quantity: number }
@@ -165,6 +166,8 @@ interface CommerceOrderBase {
   /** Inventory hold ids from reserve. Absent when the adapter returned a string. */
   ticketIds?: readonly string[];
   contactSnapshot?: CheckoutContactSnapshot;
+  /** When Checkout recorded the payment. Absent on orders paid before it was recorded. */
+  paidAt?: string;
 }
 export type CommerceOrder =
   | (CommerceOrderBase & { paymentId: string })
@@ -221,6 +224,8 @@ export interface CheckoutExecution {
   now?: () => number;
   loadCheckoutContactRequirements?: CheckoutContactRequirementsLoader;
   pricing?: TrustedCheckoutPricing;
+  /** Orders' receiving side of the paid-order handoff, bound by the entry. */
+  paidOrders?: PaidOrderReceiver;
 }
 
 export interface TrustedShippingConfiguration {
@@ -374,6 +379,8 @@ export interface GuestCheckoutRuntime {
   checkoutSiteUrl?: string;
   paymentAssociations?: CheckoutPaymentAssociationPort;
   pricing?: TrustedCheckoutPricing;
+  /** Bound by the entry from Orders; the host cannot supply it. */
+  paidOrders?: PaidOrderReceiver;
   host: GuestCheckoutHostOptions;
 }
 

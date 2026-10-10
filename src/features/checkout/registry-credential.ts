@@ -1,13 +1,7 @@
-import { GuestCheckoutError } from "./errors.js";
+import { isRecord as object } from "../../shared/record.js";
+import { registryUnavailable as unavailable, registryText as text } from "./registry-guards.js";
 import type { RegistryCheckoutConfig } from "./registry-provider-admission.js";
 
-function unavailable(): never { throw new GuestCheckoutError("UNAVAILABLE"); }
-function object(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-function text(value: unknown, limit = 200): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= limit && value.trim() === value;
-}
 
 function jwtPart(encoded: string): unknown {
   const binary = atob(encoded.replaceAll("-", "+").replaceAll("_", "/"));

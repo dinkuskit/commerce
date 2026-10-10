@@ -1,13 +1,10 @@
-import { CatalogError } from "./errors.js";
+import { isRecord } from "../../shared/record.js";
+import { catalogFail } from "./errors.js";
 import { createCatalogItem } from "./create-catalog-item.js";
 import type {
   CatalogFulfillment, CatalogItemRecord, CatalogStorageRecord, CatalogVariantMember,
   CatalogVariantOption, CatalogVariantOptionValue, CatalogVariantProduct, CatalogVariantSelection,
 } from "./types.js";
-
-function catalogFail(code: ConstructorParameters<typeof CatalogError>[0], message: string, options?: ErrorOptions): never {
-  throw new CatalogError(code, message, options);
-}
 
 export type { CatalogVariantMember, CatalogVariantOption, CatalogVariantOptionValue, CatalogVariantProduct } from "./types.js";
 export interface CatalogVariantStorage { catalog: {
@@ -117,7 +114,7 @@ export async function addCatalogVariantOption(
   storage: CatalogVariantStorage, raw: AddCatalogVariantOptionInput,
   options: { createId?: () => string; now?: () => Date; collection?: string; pluginId?: string } = {},
 ): Promise<{ changed: boolean; product: CatalogVariantProduct }> {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) catalogFail("INVALID_INPUT", "variant input must be an object");
+  if (!isRecord(raw)) catalogFail("INVALID_INPUT", "variant input must be an object");
   const productId = id(raw.productId, "productId");
   const parent = await storage.catalog.getVersioned(productId);
   if (!parent || parent.value.recordKind !== "catalog-item" || parent.value.itemId !== productId)
@@ -161,7 +158,7 @@ export async function addCatalogVariantOption(
 }
 
 export async function updateCatalogVariantLabels(storage: CatalogVariantStorage, raw: UpdateCatalogVariantLabelsInput) {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) catalogFail("INVALID_INPUT", "variant input must be an object");
+  if (!isRecord(raw)) catalogFail("INVALID_INPUT", "variant input must be an object");
   const productId = id(raw.productId, "productId");
   if (!Number.isSafeInteger(raw.expectedRevision) || raw.expectedRevision < 0 || !Array.isArray(raw.values) || (raw.members !== undefined && !Array.isArray(raw.members)))
     catalogFail("INVALID_INPUT", "invalid variant label update");

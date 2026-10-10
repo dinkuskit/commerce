@@ -1,14 +1,11 @@
-import { CatalogError } from "./errors.js";
+import { isRecord } from "../../shared/record.js";
+import { catalogFail } from "./errors.js";
 import { createInitialStockManagement } from "../inventory-provider/kernel/index.js";
 import type {
   CatalogFulfillment,
   CreateCatalogItemInput,
   NormalizedCreateCatalogItemInput,
 } from "./types.js";
-
-function catalogFail(code: ConstructorParameters<typeof CatalogError>[0], message: string, options?: ErrorOptions): never {
-  throw new CatalogError(code, message, options);
-}
 
 const COMMAND_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9:_-]{0,127}$/;
 const SKU_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
@@ -41,7 +38,7 @@ export function normalizeSku(value: unknown): string {
 export function normalizeCreateCatalogItemInput(
   input: unknown,
 ): NormalizedCreateCatalogItemInput {
-  if (!input || typeof input !== "object" || Array.isArray(input)) {
+  if (!isRecord(input)) {
     catalogFail("INVALID_INPUT", "request body must be an object");
   }
 

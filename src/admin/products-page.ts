@@ -16,6 +16,9 @@ import {
   type ManageStockControl,
 } from "../features/catalog/browser/index.js";
 
+/** Native list rows carry Feeds' channel choices beside Catalog's fields. */
+type ListedProduct = CatalogProductListItem & { feedChannels?: readonly string[] };
+
 function pluginRoute(route: string): string {
   return `/_emdash/api/plugins/${COMMERCE_PLUGIN_ID}/${route}`;
 }
@@ -36,7 +39,7 @@ function readManageStockEnabled(value: unknown): boolean {
 }
 
 export function ProductsPage() {
-  const [products, setProducts] = useState<CatalogProductListItem[]>([]);
+  const [products, setProducts] = useState<ListedProduct[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
@@ -64,7 +67,7 @@ export function ProductsPage() {
 
   async function loadProducts(selectId?: string): Promise<void> {
     const listed = await postPlugin<{
-      products: CatalogProductListItem[];
+      products: ListedProduct[];
       manageStockControl?: ManageStockControl;
     }>(LIST_CATALOG_PRODUCTS_ROUTE, {}, "Could not load products");
     setProducts(listed.products);
@@ -101,7 +104,7 @@ export function ProductsPage() {
     });
   }, []);
 
-  function chooseProduct(product: CatalogProductListItem): void {
+  function chooseProduct(product: ListedProduct): void {
     setSelectedId(product.catalogItemId);
     setRegular(product.regular ?? "");
     setSale(product.sale ?? "");

@@ -1,12 +1,8 @@
-import { CatalogError } from "./errors.js";
+import { catalogFail, catalogStorage } from "./errors.js";
 import type {
   CatalogBackorderPolicyRecord,
   CatalogBackorderPolicyStorage,
 } from "./types.js";
-
-function catalogFail(code: ConstructorParameters<typeof CatalogError>[0], message: string, options?: ErrorOptions): never {
-  throw new CatalogError(code, message, options);
-}
 
 export async function loadCatalogItemBackorderPolicy(
   storage: CatalogBackorderPolicyStorage,
@@ -16,12 +12,7 @@ export async function loadCatalogItemBackorderPolicy(
     catalogFail("INVALID_INPUT", "catalogItemId must be a non-empty string");
   }
   const id = catalogItemId.trim();
-  let stored: CatalogBackorderPolicyRecord | null;
-  try {
-    stored = await storage.get(id);
-  } catch (error) {
-    catalogFail("STORAGE_UNAVAILABLE", "backorder policy lookup failed", { cause: error });
-  }
+  const stored: CatalogBackorderPolicyRecord | null = await catalogStorage(() => storage.get(id), "backorder policy lookup failed");
   if (stored === null) {
     return { recordKind: "catalog-backorder-policy", recordId: id, catalogItemId: id, allowBackorders: false };
   }

@@ -1,3 +1,4 @@
+import { isRecord } from "../../../shared/record.js";
 import type { Block, BlockResponse } from "@emdash-cms/blocks/server";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 
@@ -10,7 +11,7 @@ const ACTION = "merchant-store-settings.save";
 const BLOCK_PREFIX = "merchant-store-settings:";
 
 function object(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new StoreSettingsError("INVALID_INPUT", "invalid admin interaction");
+  if (!isRecord(value)) throw new StoreSettingsError("INVALID_INPUT", "invalid admin interaction");
   return value as Record<string, unknown>;
 }
 
@@ -41,7 +42,7 @@ function valuesFor(settings: MerchantStoreSettings): Record<string, unknown> {
 }
 
 export function merchantStoreSettingsInteraction(input: unknown): boolean {
-  if (!input || typeof input !== "object" || Array.isArray(input)) return false;
+  if (!isRecord(input)) return false;
   const action = (input as Record<string, unknown>).action_id;
   return action === ACTION || action === "merchant-store-settings";
 }

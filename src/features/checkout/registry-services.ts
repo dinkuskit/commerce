@@ -1,8 +1,9 @@
+import { isRecord as object } from "../../shared/record.js";
 import type { PluginContext } from "emdash";
 import { createTrustedTestPaymentsCheckoutHost, readBoundedPaymentsJson } from "./test-payments.js";
 import type { CommercePaymentWake, CommercePaymentWakePort } from "./wake.js";
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
-import { GuestCheckoutError } from "./errors.js";
+import { registryUnavailable as unavailable, registryText as text, exactKeys as keys } from "./registry-guards.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
 import { INSTALLED_COMMERCE_PLUGIN_ID, COMMERCE_REGISTRY_RUNTIME_ID } from "./installed.js";
 import type { InstalledCheckoutServices } from "./installed.js";
@@ -22,16 +23,6 @@ export const REGISTRY_CHECKOUT_SETTINGS_KEY = "installedCheckout";
 export const REGISTRY_CHECKOUT_CREDENTIAL_KEY = "installedCheckoutCredential";
 export const REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY = "installedCheckoutCouponsCredential";
 
-function unavailable(): never { throw new GuestCheckoutError("UNAVAILABLE"); }
-function object(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-function text(value: unknown, limit = 200): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= limit && value.trim() === value;
-}
-function keys(value: Record<string, unknown>, expected: string): boolean {
-  return Object.keys(value).sort().join(",") === expected;
-}
 
 
 function isWake(value: unknown, bindingRef: string): value is CommercePaymentWake {

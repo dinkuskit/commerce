@@ -9597,6 +9597,75 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
+      "choice": "Checkout hands Orders one record, schema dinkuskit.commerce.paid-order/v1, when it records an order as paid. It holds: order id, receipt id, checkout attempt id (the link back to Checkout), provider payment id when the payment went through a provider, the time Checkout recorded the payment (absent on orders paid before this change), the frozen lines (catalog item id, quantity, name, unit price), the order total, the frozen pricing snapshot when present (subtotal, coupon and discount, net items, shipping, final total), variant selection snapshots, Inventory ticket ids when reserve returned them, and the frozen shopper contact snapshot. The delivery address (commerce#33) is a later optional addition. Orders stores it under the order id as its own copy. Checkout never changes it after hand-off: a repeated hand-off with identical contents is a no-op, a different one is refused and the first copy kept. Later order facts (packed, shipped, refunded, notes) belong to Orders beside the copy, never back in Checkout. Checkout hands the record over when payment is recorded and again on every later check of that paid checkout until Orders has it. Orders paid before this change, and any missed hand-off, are copied over automatically the first time the Orders page opens with no copies and on demand with a Bring in missing orders button on the Orders page. The Orders page and Pack read only the Orders copy. In one plugin the hand-off is a function call; under a later split the same record is what gets posted.",
+      "context_ref": null,
+      "created_at": "2026-10-10T03:59:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Orders keeps its own paid-order copy handed over by Checkout",
+      "history": [
+        {
+          "at": "2026-10-10T03:59:44+00:00",
+          "choice": "Checkout hands Orders one record, schema dinkuskit.commerce.paid-order/v1, when it records an order as paid. It holds: order id, receipt id, checkout attempt id (the link back to Checkout), provider payment id when the payment went through a provider, the time Checkout recorded the payment (absent on orders paid before this change), the frozen lines (catalog item id, quantity, name, unit price), the order total, the frozen pricing snapshot when present (subtotal, coupon and discount, net items, shipping, final total), variant selection snapshots, Inventory ticket ids when reserve returned them, and the frozen shopper contact snapshot. The delivery address (commerce#33) is a later optional addition. Orders stores it under the order id as its own copy. Checkout never changes it after hand-off: a repeated hand-off with identical contents is a no-op, a different one is refused and the first copy kept. Later order facts (packed, shipped, refunded, notes) belong to Orders beside the copy, never back in Checkout. Checkout hands the record over when payment is recorded and again on every later check of that paid checkout until Orders has it. Orders paid before this change, and any missed hand-off, are copied over automatically the first time the Orders page opens with no copies and on demand with a Bring in missing orders button on the Orders page. The Orders page and Pack read only the Orders copy. In one plugin the hand-off is a function call; under a later split the same record is what gets posted.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T03:59:45+00:00",
+          "choice": "Checkout hands Orders one record, schema dinkuskit.commerce.paid-order/v1, when it records an order as paid. It holds: order id, receipt id, checkout attempt id (the link back to Checkout), provider payment id when the payment went through a provider, the time Checkout recorded the payment (absent on orders paid before this change), the frozen lines (catalog item id, quantity, name, unit price), the order total, the frozen pricing snapshot when present (subtotal, coupon and discount, net items, shipping, final total), variant selection snapshots, Inventory ticket ids when reserve returned them, and the frozen shopper contact snapshot. The delivery address (commerce#33) is a later optional addition. Orders stores it under the order id as its own copy. Checkout never changes it after hand-off: a repeated hand-off with identical contents is a no-op, a different one is refused and the first copy kept. Later order facts (packed, shipped, refunded, notes) belong to Orders beside the copy, never back in Checkout. Checkout hands the record over when payment is recorded and again on every later check of that paid checkout until Orders has it. Orders paid before this change, and any missed hand-off, are copied over automatically the first time the Orders page opens with no copies and on demand with a Bring in missing orders button on the Orders page. The Orders page and Pack read only the Orders copy. In one plugin the hand-off is a function call; under a later split the same record is what gets posted.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-10T03:59:45+00:00",
+          "choice": "Checkout hands Orders one record, schema dinkuskit.commerce.paid-order/v1, when it records an order as paid. It holds: order id, receipt id, checkout attempt id (the link back to Checkout), provider payment id when the payment went through a provider, the time Checkout recorded the payment (absent on orders paid before this change), the frozen lines (catalog item id, quantity, name, unit price), the order total, the frozen pricing snapshot when present (subtotal, coupon and discount, net items, shipping, final total), variant selection snapshots, Inventory ticket ids when reserve returned them, and the frozen shopper contact snapshot. The delivery address (commerce#33) is a later optional addition. Orders stores it under the order id as its own copy. Checkout never changes it after hand-off: a repeated hand-off with identical contents is a no-op, a different one is refused and the first copy kept. Later order facts (packed, shipped, refunded, notes) belong to Orders beside the copy, never back in Checkout. Checkout hands the record over when payment is recorded and again on every later check of that paid checkout until Orders has it. Orders paid before this change, and any missed hand-off, are copied over automatically the first time the Orders page opens with no copies and on demand with a Bring in missing orders button on the Orders page. The Orders page and Pack read only the Orders copy. In one plugin the hand-off is a function call; under a later split the same record is what gets posted.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/contracts/commerce-handoffs.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-paid-order-handoff-001",
+      "implementation_ref": "file:docs/contracts/commerce-handoffs.md",
+      "question": "What does the paid-order record that Checkout hands to Orders hold, and how is it delivered and kept?",
+      "rationale": "Owner approved on 2026-10-10 03:01 UTC by choosing Approve on the decision card in project thread \"Commerce restructuring: Orders handoff and trim\".",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T03:59:45+00:00",
+      "verification_ref": "file:.grilltrack/proof/paid-order-handoff-20261010/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
       "choice": "COUPON_UNAVAILABLE carries a reason (and, for minimum-not-met, the minimum as USD minor units) that the storefront words for the shopper: not-found (unknown or turned-off code), not-started, expired, minimum-not-met, no-qualifying-items (no cart line qualifies, so the coupon is refused instead of applying at zero), used-up (capacity refused at hold), try-later (service unreachable, unconfigured, or a quote whose arithmetic disagrees with Commerce's prices), and not-applicable only as the fallback when the coupon owner gives no finer reason. The reason comes from Commerce's coupon evaluator (CouponAdminError.notApplicable) in process and from the coupon service's NOT_APPLICABLE body (reason, minimum) over HTTP; Commerce checks both before using them. Refused holds record the reason on the attempt and the released projection reports it. Raw service messages never reach shoppers, and no reason ever continues checkout at full price on its own.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/34",
       "created_at": "2026-10-10T03:38:27+00:00",
@@ -9700,5 +9769,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-10T03:56:00+00:00"
+  "updated_at": "2026-10-10T03:59:45+00:00"
 }

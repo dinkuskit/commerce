@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import type { PluginContext } from "emdash";
 
 import { DEFAULT_SETTINGS, normalizeSettingsInput, normalizeStoredSettings } from "./normalize.js";
@@ -39,7 +40,7 @@ export async function saveMerchantStoreSettings(
   settings: SettingsAccess,
   raw: SaveMerchantStoreSettingsInput,
 ): Promise<VersionedMerchantStoreSettings> {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+  if (!isRecord(raw)) {
     throw new StoreSettingsError("INVALID_INPUT", "settings input must be an object");
   }
   if (typeof raw.expectedRevision !== "string" && raw.expectedRevision !== null) {
