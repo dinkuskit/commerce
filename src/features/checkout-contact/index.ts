@@ -51,6 +51,9 @@ function normalizeDelivery(value: unknown): CheckoutDeliveryAddress {
   return address as unknown as CheckoutDeliveryAddress;
 }
 
+/** A delivery address checked exactly as checkout checks one; throws CheckoutContactError. */
+export const normalizeCheckoutDelivery = normalizeDelivery;
+
 function normalizeEmail(value: unknown): string {
   if (typeof value !== "string") invalid("EMAIL_REQUIRED");
   if (CONTROL_CHARACTER.test(value)) invalid("EMAIL_INVALID");

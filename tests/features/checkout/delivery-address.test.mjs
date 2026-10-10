@@ -63,7 +63,7 @@ test('the address rides the paid order; a digital-only basket carries none', asy
   assert.equal(paid.phase, 'paid');
   const order = paidOrderOf(paid.order);
   assert.deepEqual(order.contactSnapshot.contact.delivery, syntheticDelivery);
-  const detail = JSON.stringify(ordersView({ status: 'available', orders: [order] }, order.orderId));
+  const detail = JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: order }] }, order.orderId));
   assert.ok(detail.includes('Fixture Shopper, 1 Example Way, Testville, 00000, US'));
 
   const digital = checkout(() => 'digital'); t.after(digital.close);
@@ -71,8 +71,8 @@ test('the address rides the paid order; a digital-only basket carries none', asy
   const download = await startCheckout(digital.f.execution, 'cart', { lines: cart, contact: { email, delivery: syntheticDelivery } });
   assert.equal(download.phase, 'paid');
   assert.equal(download.order.contactSnapshot.contact.delivery, undefined);
-  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [paidOrderOf(download.order)] }, download.order.orderId)).includes('No address'));
+  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: paidOrderOf(download.order) }] }, download.order.orderId)).includes('No address'));
   // A copy kept before Orders checked the contact snapshot still renders.
   const early = { ...paidOrderOf(download.order), contactSnapshot: {} };
-  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [early] }, early.orderId)).includes('No address'));
+  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: early }] }, early.orderId)).includes('No address'));
 });

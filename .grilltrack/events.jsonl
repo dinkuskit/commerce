@@ -271,3 +271,9 @@
 {"action": "decision_superseded", "at": "2026-10-10T12:55:33+00:00", "data": {"affected": [], "decision_id": "guest-checkout-coupon-unavailable-034", "replacement_id": "guest-checkout-coupon-reasons-035"}, "event_id": "73e9b387-1c92-4a3c-8e09-348af2b7573d"}
 {"action": "decision_implemented", "at": "2026-10-10T12:55:33+00:00", "data": {"decision_id": "guest-checkout-coupon-reasons-035"}, "event_id": "af5bd592-ab1b-437c-a219-363ad493bd64"}
 {"action": "decision_verified", "at": "2026-10-10T12:55:33+00:00", "data": {"decision_id": "guest-checkout-coupon-reasons-035"}, "event_id": "89b7bf98-9ba3-487f-8be7-caf3bdca3652"}
+{"action": "focus_started", "at": "2026-10-10T16:24:02+00:00", "data": {"cadence": "sequential", "domain": "Commerce order identity for Ship"}, "event_id": "1a236bb0-ef43-46a1-be8b-f538071c08d6"}
+{"action": "decision_proposed", "at": "2026-10-10T16:24:02+00:00", "data": {"decision_id": "commerce-order-identity-001"}, "event_id": "aa4ce36c-4929-485f-af5a-cf0c888061a9"}
+{"action": "decision_locked", "at": "2026-10-10T16:24:02+00:00", "data": {"decision_id": "commerce-order-identity-001"}, "event_id": "b62cd152-443e-4dd3-90bf-3aaa9d3fff27"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-10T16:43:27+00:00", "data": {"summary": "Ronald agreed answers 1 to 5 (order id, short number, one store ID, owner address correction with a version, whole-order shipping) in the project thread at 16:19 UTC; Commerce builds number, version and address correction now."}, "event_id": "2fdfb4d9-e9aa-4c15-adc0-7a11990ee1f7"}
+{"action": "decision_implemented", "at": "2026-10-10T16:43:27+00:00", "data": {"decision_id": "commerce-order-identity-001"}, "event_id": "bc058bb3-3bfe-4812-8b59-3e07cef16659"}
+{"action": "decision_verified", "at": "2026-10-10T16:43:27+00:00", "data": {"decision_id": "commerce-order-identity-001"}, "event_id": "b428b937-f71c-441c-b5b4-cdb3ec95733a"}
