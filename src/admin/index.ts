@@ -1,7 +1,7 @@
 import type { BlockResponse } from "@emdash-cms/blocks";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
-import { merchantStoreSettingsBlocks, merchantStoreSettingsInteraction } from "../features/store-settings/kernel/index.js";
+import { loadCheckoutContactRequirements, merchantStoreSettingsBlocks, merchantStoreSettingsInteraction } from "../features/store-settings/kernel/index.js";
 import { listPaidOrders, type CheckoutRecord } from "../features/checkout/kernel/index.js";
 import { ordersBlocks, ordersInteraction } from "../features/orders/index.js";
 import { productsAdmin } from "./products.js";
@@ -20,6 +20,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
   }
   if (ordersInteraction(route.input)) return ordersBlocks(route, ctx, {
     paidOrders: () => listPaidOrders(ctx.storage["checkout_carts"] as StorageCollection<CheckoutRecord>),
+    shippingCountries: async () => (await loadCheckoutContactRequirements(ctx.settings)).shippingCountries,
   });
   if (settingsInteraction(route.input)) return settingsAdmin(route, ctx);
   return productsAdmin(route, ctx);

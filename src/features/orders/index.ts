@@ -1,12 +1,18 @@
 export {
+  FIRST_ORDER_NUMBER,
+  ORDER_NUMBERS_COLLECTION,
   ORDERS_COLLECTION,
+  correctDelivery,
   createPaidOrderReceiver,
+  deliveryOf,
   listOrders,
+  numberOrders,
+  takeOrderNumber,
 } from "./store.js";
-export type { OrderRecord, OrdersCollection } from "./store.js";
+export type { OrderNumbers, OrderRecord, OrdersCollection } from "./store.js";
 export { ordersBlocks, ordersInteraction } from "./admin/page.js";
 export type { OrdersServices } from "./admin/page.js";
-export { ordersView } from "./admin/view.js";
+export { addressForm, ordersView } from "./admin/view.js";
 export type { OrdersInspection } from "./admin/view.js";
 export {
   ORDER_PACK_MAX_TICKETS,

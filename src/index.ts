@@ -97,7 +97,7 @@ import {
   type ProductFeedEligibilityStorage,
 } from "./features/feeds/index.js";
 import type { CatalogProductListItem } from "./features/catalog/index.js";
-import { ORDERS_COLLECTION, createPaidOrderReceiver, type OrdersCollection } from "./features/orders/index.js";
+import { ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, createPaidOrderReceiver, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
 
 export * from "./features/inventory-provider/index.js";
 
@@ -176,7 +176,7 @@ export interface CommercePluginOptions extends CommerceLocalDevelopmentOptions {
 
 // Checkout hands each paid order to Orders, which keeps its own copy.
 const paidOrders = (storage: Record<string, unknown>) =>
-  createPaidOrderReceiver(storage[ORDERS_COLLECTION] as OrdersCollection);
+  createPaidOrderReceiver(storage[ORDERS_COLLECTION] as OrdersCollection, storage[ORDER_NUMBERS_COLLECTION] as OrderNumbers);
 
 /** Products list for the native admin, with each product's feed choices from Feeds. */
 function withFeedChannels(route: PluginRoute): PluginRoute {
@@ -322,6 +322,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         uniqueIndexes: [],
       },
       [ORDERS_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
+      [ORDER_NUMBERS_COLLECTION]: {
         indexes: [],
         uniqueIndexes: [],
       },
