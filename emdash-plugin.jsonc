@@ -19,7 +19,8 @@
   ],
   "allowedHosts": [
     "payments.dinkuskit.com",
-    "coupons.dinkuskit.com"
+    "coupons.dinkuskit.com",
+    "ship.dinkuskit.com"
   ],
   "storage": {
     "catalog_items": {
@@ -121,6 +122,11 @@
         "type": "secret",
         "label": "Installed checkout coupons credential",
         "description": "Separately provisioned coupon service credential snapshot; used only for checkouts with a coupon."
+      },
+      "installedShipCredential": {
+        "type": "secret",
+        "label": "Installed Ship credential",
+        "description": "Separately provisioned Ship service credential snapshot; used only when Orders talks to Ship."
       }
     },
     "pages": [

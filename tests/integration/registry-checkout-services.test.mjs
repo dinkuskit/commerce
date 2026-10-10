@@ -15,8 +15,11 @@ import {
   credential,
   legacyStripeConfiguration,
   runtimeFixture,
+  SHIP,
+  shipCredential,
   SITE,
   verifyCouponPass,
+  verifyShipPass,
 } from '../features/checkout/registry-runtime.mjs';
 import { couponCollection } from '../features/checkout/pricing-fixture.mjs';
 import { couponServiceFake } from '../features/checkout/coupon-service-fake.mjs';
@@ -41,7 +44,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request']);
-  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com']);
+  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
@@ -568,4 +571,98 @@ test('wake transport rejects oversized/malformed batches with no ACK or canonica
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
   assert.equal(state.counts.acknowledgments, 0);
   assert.deepEqual(await state.cartRecords(), []);
+});
+
+// Ship's hosted service as Orders sees it: labels to collect, acknowledgements and orders received.
+function shipStandIn() {
+  const state = { labels: [], acks: [], sent: [], calls: 0 };
+  async function service(url, init) {
+    state.calls++;
+    assert.equal(await verifyShipPass(new Headers(init.headers).get('authorization')), true);
+    const path = new URL(url).pathname;
+    if (path === '/v1/labels') return Response.json(state.labels);
+    const body = JSON.parse(new TextDecoder().decode(init.body));
+    if (path === '/v1/labels/ack') {
+      state.acks.push(body.eventId);
+      state.labels = state.labels.filter(label => label.eventId !== body.eventId);
+      return Response.json({ acknowledged: true });
+    }
+    assert.equal(path, '/v1/orders');
+    state.sent.push(body);
+    return Response.json({ received: true });
+  }
+  return { state, service };
+}
+
+async function physicalShipOrder(state) {
+  // A physical hat weighing 4.5 oz, bought for delivery in the US.
+  const hat = await state.collections.catalog_items.get('hat');
+  await state.collections.catalog_items.put('hat', { ...hat, fulfillment: 'physical', weightOz: 4.5 });
+  await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
+  const prepared = await state.invoke(PREPARE);
+  const token = prepared.capability.capability;
+  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery }, lines: [{ catalogItemId: 'hat', quantity: 2 }] }, token);
+  assert.equal(started.ok, true);
+  state.setPaid();
+  assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
+}
+
+const shipAdmin = (state, input) => state.plugin.invokeRoute('admin', input, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/admin`,
+  method: 'POST', user: { id: 'owner', role: 50 }, ui: { surface: 'admin-page' } });
+const shipAgent = (state, input) => state.plugin.invokeRoute('orders', input, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/orders`,
+  method: 'POST', user: { id: 'agent', role: 50 } });
+
+test('the compiled runtime sends paid orders to Ship, and a label bought in Ship completes its order', async () => {
+  const ship = shipStandIn();
+  const state = await runtimeFixture({ config: { ...configuration(), ship: SHIP }, shipPass: await shipCredential(), shipService: ship.service });
+  try {
+    await physicalShipOrder(state);
+    // Checkout itself never calls Ship; opening Orders sends the order.
+    assert.equal(ship.state.calls, 0);
+    // Orders and Ship need only Ship's pass: the Payments pass has expired from here on.
+    const now = Math.floor(Date.now() / 1000);
+    await state.settings.set('installedCheckoutCredential', await credential({ iat: now - 7200, exp: now - 3600 }));
+    await shipAdmin(state, { type: 'page_load', page: '/orders' });
+    assert.equal(ship.state.sent.length, 1);
+    const [sent] = ship.state.sent;
+    const { orderId, ...rest } = sent;
+    assert.match(orderId, /^order:/);
+    assert.deepEqual(rest, { schema: 'dinkuskit.commerce.ship-order/v1', number: 1001, version: 1, status: 'processing', test: true,
+      shipTo: syntheticDelivery, email: 'shopper@example.test', completed: null, lines: [{ catalogItemId: 'hat', name: 'Hat', quantity: 2, weightOz: 4.5 }] });
+    await shipAdmin(state, { type: 'page_load', page: '/orders' });
+    assert.equal(ship.state.sent.length, 1);
+    // Ship bought a label: the background check completes the order with USPS and the tracking number, then tells Ship.
+    ship.state.labels = [{ eventId: 'lbl_synthetic_1', orderId, version: 1, carrier: 'USPS', tracking: '9400 SYNTHETIC' }];
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual(ship.state.acks, ['lbl_synthetic_1']);
+    const kept = await state.collections.orders.get(orderId);
+    assert.deepEqual([kept.revision, kept.completed.carrier, kept.completed.tracking, kept.shipVersion], [2, 'USPS', '9400 SYNTHETIC', 2]);
+    assert.deepEqual(ship.state.sent.map(order => [order.version, order.status]), [[1, 'processing'], [2, 'completed']]);
+    assert.match(JSON.stringify(await shipAdmin(state, { type: 'block_action', action_id: 'orders.open:' + encodeURIComponent(orderId) })), /9400 SYNTHETIC/);
+    // An agent's change reaches Ship right away; reading orders does not call Ship.
+    const calls = ship.state.calls;
+    assert.equal((await shipAgent(state, { action: 'list' })).total, 1);
+    assert.equal(ship.state.calls, calls);
+    assert.equal((await shipAgent(state, { action: 'reopen', orderId, version: 2 })).result, 'saved');
+    assert.deepEqual([ship.state.sent.at(-1).version, ship.state.sent.at(-1).status, ship.state.sent.at(-1).completed], [3, 'processing', null]);
+    // A label list too large to be Ship's is refused before it is used: nothing is acknowledged or completed.
+    ship.state.labels = [{ eventId: 'lbl_synthetic_2', orderId, version: 3, carrier: 'USPS', tracking: '9400 ' + 'x'.repeat(140000) }];
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual([ship.state.acks, (await state.collections.orders.get(orderId)).revision], [['lbl_synthetic_1'], 3]);
+  } finally { await state.close(); }
+});
+
+test('without a Ship service or a usable Ship pass, Orders calls nothing and keeps working', async () => {
+  for (const options of [{}, { config: { ...configuration(), ship: SHIP } }, { config: { ...configuration(), ship: SHIP }, shipPass: await credential() }]) {
+    const ship = shipStandIn();
+    const state = await runtimeFixture({ ...options, shipService: ship.service });
+    try {
+      await physicalShipOrder(state);
+      const page = JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' }));
+      assert.match(page, /#1001 \(TEST\)/);
+      await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+      assert.deepEqual([ship.state.calls, state.counts.ship], [0, 0]);
+      assert.equal((await state.collections.orders.query()).items[0].data.shipVersion, undefined);
+    } finally { await state.close(); }
+  }
 });

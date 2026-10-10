@@ -12,9 +12,10 @@ the owners. No stock or money ledger is added.
 ## Unconfigured and ungranted behavior
 
 The shipped manifest declares `network:request` with exactly
-`allowedHosts: ["payments.dinkuskit.com", "coupons.dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09, and `commerce-allowed-hosts-coupons-dinkuskit-com`); no wildcard and no other
+`allowedHosts: ["payments.dinkuskit.com", "coupons.dinkuskit.com", "ship.dinkuskit.com"]` (GrillTrack `commerce-allowed-hosts-payments-dinkuskit-com`, locked by the project owner on 2026-10-09, `commerce-allowed-hosts-coupons-dinkuskit-com` and `commerce-allowed-hosts-ship-dinkuskit-com`); no wildcard and no other
 host. The coupon host serves only coupon checkouts
-([registry-hosted-coupons](registry-hosted-coupons.md)). The behavior below
+([registry-hosted-coupons](registry-hosted-coupons.md)), and the Ship host only
+Orders ([registry-ship-sync](registry-ship-sync.md)). The behavior below
 applies whenever the Payments grant is not active.
 Absent or explicitly disabled configuration preserves prepare/capability
 minting and makes start return `PAYMENTS_UNAVAILABLE`, without reading a
@@ -138,8 +139,9 @@ real atomic SDK SQL. The fixture gives a clearly synthetic manifest variant
 `network:request` plus one public IP host solely to avoid DNS. Its host HTTP
 callback intercepts **every** request and verifies an ephemeral synthetic
 signed JWT; no network service/provider is contacted. The shipped manifest
-is asserted to declare exactly `network:request` with `payments.dinkuskit.com`
-and `coupons.dinkuskit.com` and is never replaced by that test variant.
+is asserted to declare exactly `network:request` with `payments.dinkuskit.com`,
+`coupons.dinkuskit.com` and `ship.dinkuskit.com` and is never replaced by that
+test variant.
 
 These tests prove local runtime service assembly, canonical free/flat coupon
 pricing and paid replay, denied grants, configuration/token failures, managed

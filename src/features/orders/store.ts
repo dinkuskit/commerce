@@ -20,6 +20,8 @@ export interface OrderRecord {
   delivery?: CheckoutDeliveryAddress;
   /** Present once the order is Completed (shipped, never "delivered"); absent means Processing. */
   completed?: OrderCompletion;
+  /** The version Ship last took, or refused for good. Recording it never raises the version. */
+  shipVersion?: number;
 }
 
 export interface OrderCompletion {
@@ -172,6 +174,17 @@ export function reopenOrder(
 /** Where the order goes now: the owner's correction, else the address typed at checkout. */
 export function deliveryOf(record: OrderRecord): CheckoutDeliveryAddress | undefined {
   return record.delivery ?? record.paidOrder.contactSnapshot?.contact?.delivery;
+}
+
+/** What agents and Ship both see of an order: who it is, its version and status, the test mark, where it goes and who to tell. */
+export function orderFacts(record: OrderRecord) {
+  const order = record.paidOrder;
+  return {
+    orderId: order.orderId, number: record.number ?? null, version: record.revision ?? 1,
+    status: record.completed ? "completed" : "processing", test: order.mode !== "live",
+    shipTo: deliveryOf(record) ?? null, email: order.contactSnapshot?.contact?.email ?? null,
+    completed: record.completed ?? null,
+  };
 }
 
 const count = (v: unknown, min: number) => v === undefined || (Number.isSafeInteger(v) && (v as number) >= min);

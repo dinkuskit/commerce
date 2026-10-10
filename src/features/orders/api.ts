@@ -1,6 +1,6 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import { isRecord } from "../../shared/record.js";
-import { completeOrder, deliveryOf, listOrders, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
+import { completeOrder, listOrders, orderFacts, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
 
 /** Private JSON route for agents and the CLI: the Orders page's reads and owner changes. */
 export const ORDERS_API_ROUTE = "orders";
@@ -8,13 +8,10 @@ const PAGE = 50;
 
 /** One order for agents: the frozen paid order's facts and what Orders keeps beside it. */
 function apiOrder(record: OrderRecord) {
-  const order = record.paidOrder, contact = order.contactSnapshot?.contact;
+  const order = record.paidOrder;
   return {
-    orderId: order.orderId, number: record.number ?? null, version: record.revision ?? 1,
-    status: record.completed ? "completed" : "processing", test: order.mode !== "live",
-    paidAt: order.paidAt ?? null, total: order.total, lines: order.lines, choices: order.variantSelections ?? [],
-    shipTo: deliveryOf(record) ?? null, email: contact?.email ?? null, phone: contact?.phone ?? null,
-    completed: record.completed ?? null,
+    ...orderFacts(record), paidAt: order.paidAt ?? null, total: order.total, lines: order.lines,
+    choices: order.variantSelections ?? [], phone: order.contactSnapshot?.contact?.phone ?? null,
   };
 }
 

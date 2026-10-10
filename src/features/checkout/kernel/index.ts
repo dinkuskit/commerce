@@ -157,7 +157,9 @@ export {
   REGISTRY_CHECKOUT_COUPONS_CREDENTIAL_KEY,
   REGISTRY_CHECKOUT_CREDENTIAL_KEY,
   REGISTRY_CHECKOUT_SETTINGS_KEY,
+  REGISTRY_SHIP_CREDENTIAL_KEY,
   resolveRegistryCheckoutServices,
+  resolveRegistryShip,
 } from "../registry-services.js";
 export type { RegistryCheckoutConfig } from "../registry-services.js";
 export { createHostedCouponPort } from "../registry-coupons.js";

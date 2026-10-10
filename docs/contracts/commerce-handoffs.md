@@ -112,8 +112,8 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
 
 ## 3. Orders to Inventory and Ship: pack and ship this
 
-Orders asks Inventory to pack an order's held stock, and later asks Ship for a
-label.
+Orders asks Inventory to pack an order's held stock, and sends Ship each
+order so it can be labeled.
 
 - **Pack** (in place today, `src/features/orders/pack.ts`): Orders builds
   Inventory's `stock.pack` (one ticket) or `stock.pack_all` (every ticket)
@@ -121,12 +121,24 @@ label.
   is a digest of the command so a retry replays Inventory's stored answer. No
   order number is sent. Only Inventory's confirmation of that exact command
   counts as packed; Orders records nothing itself.
-- **Ship** (not built): a label request carries the order id, short number,
-  revision, the frozen lines with each product's current shipping weight in
-  ounces (`weightOz`, when set), the current delivery address (the owner's
-  correction, else the paid-order copy's) and whether it is a test order. Ship labels only the latest
-  revision. Ship
-  is its own plugin and service, so this message is the same in every
-  packaging.
+- **Ship** (GrillTrack `commerce-ship-sync-001`, `src/features/orders/ship.ts`,
+  [details](../implementation/registry-ship-sync.md)): Orders sends Ship's
+  hosted service one `dinkuskit.commerce.ship-order/v1` record per order
+  version: the order id, short number, version, status, whether it is a test
+  order, the current delivery address (the owner's correction, else the
+  paid-order copy's), the shopper's email, the completion once Completed, and
+  the lines that go in the box (catalog item id, name, quantity and each
+  product's current shipping weight in ounces, `weightOz`, when set). Digital
+  items, prices, totals, payment details and phone numbers are never sent.
+  Each new version goes to Ship: when the order arrives, and after an address
+  fix, Complete order or Move back to Processing. Ship labels only the latest
+  version and buys no postage for a test order. Ship reports each label it
+  bought as `{ eventId, orderId, version, carrier, tracking }`; Orders asks for
+  them on its background check and when the Orders page opens, acknowledges
+  each one, and completes the order with Ship's carrier and tracking number
+  when it is still Processing at that version. Cancelling a label never moves
+  an order back. Ship emails the shopper when an order becomes Completed;
+  Commerce sends no email. Ship is its own plugin and service, so this message
+  is the same in every packaging.
 - **Under a split:** unchanged. Inventory and Ship are already outside
   Commerce, so this handoff is HTTP to a hosted service in every direction.

@@ -85,15 +85,23 @@ test("optional mode test or live is admitted for both providers and reaches the 
   assert.equal(trustedPaymentsHostConfig(admitRegistryCheckoutConfig(legacyStripe(), SITE), SITE).mode, undefined);
 });
 
-test("an optional hosted coupon service needs exactly an https origin and an audience", () => {
+test("an optional hosted coupon or Ship service needs exactly an https origin and an audience", () => {
+  for (const name of ["coupons", "ship"]) {
+    const service = { origin: `https://${name}.example.test`, audience: `${name}-aud` };
+    const config = changes => legacyStripe({ [name]: { ...service, ...changes } });
+    assert.deepEqual(admitRegistryCheckoutConfig(config(), SITE)[name], service);
+    assert.deepEqual(admitRegistryCheckoutConfig(authorizeNet({ mode: "test", [name]: service }), SITE)[name], service);
+    assert.equal(admitRegistryCheckoutConfig(legacyStripe(), SITE)[name], undefined);
+    rejects(legacyStripe({ [name]: null }));
+    rejects(legacyStripe({ [name]: { origin: service.origin } }));
+    rejects(config({ issuer: "https://identity.example.test" }));
+    rejects(config({ origin: `http://${name}.example.test` }));
+    rejects(config({ origin: `https://${name}.example.test/v1` }));
+    rejects(config({ audience: "" }));
+  }
   const coupons = { origin: "https://coupons.example.test", audience: "coupons-aud" };
-  assert.deepEqual(admitRegistryCheckoutConfig(legacyStripe({ coupons }), SITE).coupons, coupons);
-  assert.deepEqual(admitRegistryCheckoutConfig(authorizeNet({ mode: "test", coupons }), SITE).coupons, coupons);
-  assert.equal(admitRegistryCheckoutConfig(legacyStripe(), SITE).coupons, undefined);
-  rejects(legacyStripe({ coupons: null }));
-  rejects(legacyStripe({ coupons: { origin: coupons.origin } }));
-  rejects(legacyStripe({ coupons: { ...coupons, issuer: "https://identity.example.test" } }));
-  rejects(legacyStripe({ coupons: { ...coupons, origin: "http://coupons.example.test" } }));
-  rejects(legacyStripe({ coupons: { ...coupons, origin: "https://coupons.example.test/v1" } }));
-  rejects(legacyStripe({ coupons: { ...coupons, audience: "" } }));
+  const ship = { origin: "https://ship.example.test", audience: "ship-aud" };
+  const both = admitRegistryCheckoutConfig(legacyStripe({ mode: "live", coupons, ship }), SITE);
+  assert.deepEqual([both.mode, both.coupons, both.ship], ["live", coupons, ship]);
+  rejects(legacyStripe({ coupons, ship, shipping2: ship }));
 });

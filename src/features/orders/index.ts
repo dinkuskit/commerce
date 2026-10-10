@@ -8,12 +8,15 @@ export {
   deliveryOf,
   listOrders,
   numberOrders,
+  orderFacts,
   reopenOrder,
   takeOrderNumber,
 } from "./store.js";
 export type { OrderCompletion, OrderNumbers, OrderRecord, OrdersCollection } from "./store.js";
 export { ordersBlocks, ordersInteraction } from "./admin/page.js";
 export { ORDERS_API_ROUTE, ordersApi } from "./api.js";
+export { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, syncShip } from "./ship.js";
+export type { ShipConnection, ShipItemLookup } from "./ship.js";
 export type { OrdersServices } from "./admin/page.js";
 export { addressForm, completeForm, ordersView } from "./admin/view.js";
 export type { OrdersInspection } from "./admin/view.js";

@@ -149,7 +149,9 @@ order `version` named, so a change made from a stale read changes nothing.
 `result` is `saved`, `outdated` (the version moved on, or the order is already
 in that status), `invalid` (carrier or tracking over 64 characters or with a
 line break) or `not_found`; `order` is the order as it now stands. Commerce
-sends no email either way.
+sends no email either way. When the store has Ship's hosted service, a saved
+change goes to Ship right away, and Ship emails the shopper when the order
+becomes Completed ([Orders and Ship](implementation/registry-ship-sync.md)).
 
 - `orders list` prints one page and, when more exist, a cursor (the next
   offset) for `--cursor`; `--all` follows every page. `--status processing`
