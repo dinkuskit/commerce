@@ -3,12 +3,11 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": true,
-    "confirmed_at": "2026-10-09T17:11:40+00:00",
-    "domain": "Registry checkout coupons through the hosted coupon service",
-    "started_at": "2026-10-09T16:54:57+00:00",
-    "status": "confirmed",
-    "summary": "The project owner approved on 2026-10-09 (17:10 UTC, project thread \"Coupons Registry plugin\") that Commerce's Registry build may call coupons.dinkuskit.com beside payments.dinkuskit.com, using its own coupons:checkout pass, so Registry checkout applies coupons through the hosted DinkusKit coupon service as described in docs/implementation/registry-hosted-coupons.md."
+    "confirmed": false,
+    "domain": "Guest checkout coupon failures (issue 34)",
+    "started_at": "2026-10-10T03:17:06+00:00",
+    "status": "grilling",
+    "summary": "Close issue 34's remaining gaps: a coupon quote whose arithmetic disagrees with Commerce's prices must never freeze, and a coupon that fails or is refused must tell the storefront so instead of leaving it shown as applied. Issue 32's acceptance list is already covered by existing tests."
   },
   "decisions": [
     {
@@ -9508,6 +9507,34 @@
       "superseded_by": null,
       "updated_at": "2026-10-09T17:11:41+00:00",
       "verification_ref": "file:tests/features/checkout/registry-coupons.test.mjs file:tests/features/checkout/checkout-pricing-hosted.test.mjs file:tests/integration/registry-checkout-services.test.mjs file:tests/features/checkout/registry-provider-admission.test.mjs"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Guest checkout adds one error code, COUPON_UNAVAILABLE (HTTP 409). Start returns it when the coupon code is unknown, no longer applies, the coupon service cannot be reached or is not configured, or the service's quote has arithmetic that disagrees with Commerce's own prices (checked with validateCouponQuoteSnapshot before anything is frozen). When the coupon owner refuses the hold before payment, the attempt records coupon.refused and its released-retry projection carries unavailable COUPON_UNAVAILABLE, so a storefront never keeps showing the coupon as applied. Checkout never continues at full price on its own: the storefront drops the coupon and the shopper starts again without it, which is their explicit acceptance of the full price. All other codes and behaviour are unchanged.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/34",
+      "created_at": "2026-10-10T03:17:06+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "registry-checkout-hosted-coupons-001"
+      ],
+      "domain": "Guest checkout coupon failures (issue 34)",
+      "history": [],
+      "id": "guest-checkout-coupon-unavailable-034",
+      "implementation_ref": null,
+      "question": "What does guest checkout tell the shopper when their coupon can't be used?",
+      "rationale": "Issue 34 requires that a stale, cancelled, expired or removed promotion cannot leave a stale applied UI and that a revised price needs explicit shopper acceptance. Before this, coupon failures surfaced as the generic UNAVAILABLE and a refused hold released with no reason, so a storefront could not tell the coupon was the problem. A service quote with wrong line totals could also freeze a wrong total until the Payments adapter rejected it.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-10-10T03:17:06+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -9544,5 +9571,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-09T17:11:41+00:00"
+  "updated_at": "2026-10-10T03:17:06+00:00"
 }
