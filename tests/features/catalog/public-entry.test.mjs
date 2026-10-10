@@ -187,7 +187,7 @@ test("installed public catalog projects only priced listable products", async ()
     },
   };
   const empty = { async get() { return null; }, async query() { return { items: [], hasMore: false }; } };
-  const response = await catalog.readPublicCatalog({
+  const installedContext = {
     storage: {
       catalog_items: catalogItems,
       catalog_prices: prices,
@@ -201,7 +201,8 @@ test("installed public catalog projects only priced listable products", async ()
     },
     request: new Request("http://127.0.0.1/catalog/public", { method: "GET" }),
     site: { url: "http://127.0.0.1" },
-  });
+  };
+  const response = await catalog.readPublicCatalog(installedContext);
   assert.deepEqual(response, {
     products: [{
       id: "item-public",
@@ -213,4 +214,35 @@ test("installed public catalog projects only priced listable products", async ()
       gallery: [],
     }],
   });
+
+  const native = commerce.createPlugin();
+  const publicRoute = native.routes[catalog.PUBLIC_CATALOG_ROUTE];
+  const itemRoute = native.routes[catalog.PUBLIC_CATALOG_ITEM_ROUTE];
+  assert.equal(publicRoute.public, true);
+  assert.deepEqual(publicRoute.methods, ["GET"]);
+  assert.deepEqual(publicRoute.request, { body: "none" });
+  assert.equal(publicRoute.cacheControl, "no-store");
+  assert.equal(itemRoute.public, true);
+  assert.deepEqual(itemRoute.methods, ["GET"]);
+  assert.deepEqual(itemRoute.request, { body: "none" });
+  assert.equal(itemRoute.cacheControl, "no-store");
+
+  const nativeCatalog = await publicRoute.handler(installedContext);
+  assert.deepEqual(nativeCatalog, response);
+  const nativeItem = await itemRoute.handler({
+    ...installedContext,
+    request: new Request(
+      "http://127.0.0.1/catalog/public/item?itemId=item-public",
+      { method: "GET" },
+    ),
+  });
+  assert.deepEqual(nativeItem, response.products[0]);
+  const nativeUnknownItem = await itemRoute.handler({
+    ...installedContext,
+    request: new Request(
+      "http://127.0.0.1/catalog/public/item?itemId=missing",
+      { method: "GET" },
+    ),
+  });
+  assert.equal(nativeUnknownItem, null);
 });

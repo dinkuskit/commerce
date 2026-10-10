@@ -22,6 +22,10 @@ import {
   SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
+  PUBLIC_CATALOG_ROUTE,
+  PUBLIC_CATALOG_ITEM_ROUTE,
+  readPublicCatalog,
+  readPublicCatalogItem,
   clearCatalogItemRegularPriceRoute,
   clearCatalogItemSalePriceRoute,
   createCatalogItemRouteWithLocalStock,
@@ -189,6 +193,34 @@ function withFeedChannels(route: PluginRoute): PluginRoute {
   };
 }
 
+const publicCatalogRoute = {
+  public: true,
+  methods: ["GET"],
+  request: { body: "none" },
+  cacheControl: "no-store",
+  handler: async (ctx: Parameters<PluginRoute["handler"]>[0]) => {
+    const query = new URL(ctx.request.url).searchParams;
+    if ([...query.keys()].some(key => key !== "cursor") || query.getAll("cursor").length > 1) {
+      throw new Error("Invalid catalog query");
+    }
+    return readPublicCatalog(ctx, query.get("cursor") ?? undefined);
+  },
+} satisfies PluginRoute;
+
+const publicCatalogItemRoute = {
+  public: true,
+  methods: ["GET"],
+  request: { body: "none" },
+  cacheControl: "no-store",
+  handler: async (ctx: Parameters<PluginRoute["handler"]>[0]) => {
+    const query = new URL(ctx.request.url).searchParams;
+    if ([...query.keys()].some(key => key !== "itemId") || query.getAll("itemId").length !== 1) {
+      throw new Error("Invalid catalog item query");
+    }
+    return readPublicCatalogItem(ctx, query.get("itemId")!);
+  },
+} satisfies PluginRoute;
+
 export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugin {
   const localStock = {
     enableLocalStockManagement: options.enableLocalStockManagement === true,
@@ -289,6 +321,8 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
     },
     routes: {
+      [PUBLIC_CATALOG_ROUTE]: publicCatalogRoute,
+      [PUBLIC_CATALOG_ITEM_ROUTE]: publicCatalogItemRoute,
       [MERCHANT_STORE_SETTINGS_ROUTE]: createMerchantStoreSettingsRoute(),
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
