@@ -87,6 +87,14 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   the copy, checked like a checkout address against the store's shipping
   countries; the frozen contact snapshot never changes. Handoffs use the
   corrected address when there is one and name the revision they used.
+- **Order status** (GrillTrack `commerce-order-status-001`): an order is
+  Processing until it ships, then Completed. Completed means a label was bought
+  or the owner pressed Complete order; it never means delivered. Completing by
+  hand records `completed: { at, carrier?, tracking? }` beside the copy
+  (carrier and tracking optional, at most 64 characters each). The owner can
+  move it back to Processing, which removes `completed`; cancelling a Ship
+  label never does that on its own. Both are owner changes and raise the
+  revision. A Completed order's delivery address is locked.
 - **Delivery:** Checkout hands the record over when it records the payment and
   again on every later check of that paid checkout (status checks and payment
   wakes), so a failed hand-off is retried and never changes the shopper's

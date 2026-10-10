@@ -79,7 +79,7 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await expect(page.getByText('Checkout attempt: ' + paid.order.attemptId)).toBeVisible();
     await expect(page.getByText('Payment: Provider-paid')).toBeVisible();
     await expect(page.getByText('USD 2.50', { exact: true })).toBeVisible();
-    await expect(page.getByText('Fulfillment: Not recorded')).toBeVisible();
+    await expect(page.getByText('Status: Processing')).toBeVisible();
     await expect(page.getByText('Order ID: ' + paid.order.orderId)).toBeVisible();
     await expect(page.getByText('Version: 1')).toBeVisible();
     await capture('orders-provider-detail');
@@ -96,6 +96,29 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await expect(page.getByText('Version: 2')).toBeVisible();
     await capture('orders-address-corrected');
     expect((await kept.get(paid.order.orderId)).delivery.line1).toBe('2 Corrected Road');
+    // Completing by hand: carrier and tracking are optional; Completed locks the address.
+    await interact('Complete order');
+    await page.getByLabel('Carrier (optional)').fill('USPS');
+    await page.getByLabel('Tracking number (optional)').fill('SYNTHETIC-TRACKING-1');
+    await capture('orders-complete-form');
+    await interact('Complete order');
+    await expect(page.getByText('Order completed', { exact: true })).toBeVisible();
+    await expect(page.getByText('Status: Completed')).toBeVisible();
+    await expect(page.getByText('Tracking number: SYNTHETIC-TRACKING-1')).toBeVisible();
+    await expect(page.getByText('Version: 3')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Correct address', exact: true })).toHaveCount(0);
+    await capture('orders-completed');
+    expect((await kept.get(paid.order.orderId)).completed).toMatchObject({ carrier: 'USPS', tracking: 'SYNTHETIC-TRACKING-1' });
+    // Moving back asks first, then clears the completion.
+    await page.getByRole('button', { name: 'Move back to Processing', exact: true }).click();
+    const moved = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === 'POST');
+    await page.getByRole('button', { name: 'Move back', exact: true }).click();
+    expect((await moved).status()).toBe(200);
+    await expect(page.getByText('Moved back to Processing', { exact: true })).toBeVisible();
+    await expect(page.getByText('Status: Processing')).toBeVisible();
+    await expect(page.getByText('Version: 4')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Correct address', exact: true })).toBeVisible();
+    expect((await kept.get(paid.order.orderId)).completed).toBeUndefined();
     await interact('Back to orders');
     await interact(await inspect(free.order));
     await expect(page.getByText('Payment: Zero payable — no payment required')).toBeVisible();

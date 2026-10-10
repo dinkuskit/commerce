@@ -18,6 +18,14 @@ export interface OrderRecord {
   revision?: number;
   /** The owner's corrected delivery address. Checkout's frozen copy never changes. */
   delivery?: CheckoutDeliveryAddress;
+  /** Present once the order is Completed (shipped, never "delivered"); absent means Processing. */
+  completed?: OrderCompletion;
+}
+
+export interface OrderCompletion {
+  at: string;
+  carrier?: string;
+  tracking?: string;
 }
 
 export type OrdersCollection = Pick<StorageCollection<OrderRecord>, "get" | "getVersioned" | "compareAndSet" | "query">;
@@ -99,24 +107,66 @@ export async function numberOrders(collection: Pick<OrdersCollection, "getVersio
   return numbered;
 }
 
+type OwnerChange = "saved" | "outdated" | "invalid";
+
+/** Applies one owner change to the order's current version and raises it; a stale version changes nothing. */
+async function change(
+  collection: Pick<OrdersCollection, "getVersioned" | "compareAndSet">, orderId: string, revision: number,
+  edit: (record: OrderRecord) => OrderRecord | OwnerChange,
+): Promise<OwnerChange> {
+  const current = await collection.getVersioned(orderId);
+  if (!current) throw new Error("Invalid order");
+  if ((current.value.revision ?? 1) !== revision) return "outdated";
+  const next = edit(current.value);
+  if (typeof next === "string") return next;
+  return (await collection.compareAndSet(orderId, current.revision, { ...next, revision: revision + 1 })).applied ? "saved" : "outdated";
+}
+
 /**
  * Records the owner's corrected delivery address and raises the order's version.
  * Refuses an order with no address, an outdated version, and a country the store does not ship to.
  */
-export async function correctDelivery(
+export function correctDelivery(
   collection: Pick<OrdersCollection, "getVersioned" | "compareAndSet">,
   orderId: string, revision: number, raw: unknown, shippingCountries: readonly string[],
-): Promise<"saved" | "outdated" | "invalid"> {
-  const current = await collection.getVersioned(orderId);
-  if (!current) throw new Error("Invalid order");
-  const record = current.value;
-  if (!deliveryOf(record)) return "invalid";
-  if ((record.revision ?? 1) !== revision) return "outdated";
-  let delivery: CheckoutDeliveryAddress;
-  try { delivery = normalizeCheckoutDelivery(raw); } catch { return "invalid"; }
-  if (!shippingCountries.includes(delivery.country)) return "invalid";
-  const write = await collection.compareAndSet(orderId, current.revision, { ...record, delivery, revision: revision + 1 });
-  return write.applied ? "saved" : "outdated";
+): Promise<OwnerChange> {
+  return change(collection, orderId, revision, record => {
+    if (!deliveryOf(record)) return "invalid";
+    // A Completed order's address is locked; completing raised the version, so an open form is out of date.
+    if (record.completed) return "outdated";
+    let delivery: CheckoutDeliveryAddress;
+    try { delivery = normalizeCheckoutDelivery(raw); } catch { return "invalid"; }
+    return shippingCountries.includes(delivery.country) ? { ...record, delivery } : "invalid";
+  });
+}
+
+/** Optional short text such as a carrier: blank is none, null is unusable. */
+function note(value: unknown): string | undefined | null {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return !trimmed ? undefined : trimmed.length <= 64 && !/[\u0000-\u001f\u007f]/.test(trimmed) ? trimmed : null;
+}
+
+/** The owner marks a Processing order Completed by hand; carrier and tracking number are optional. */
+export function completeOrder(
+  collection: Pick<OrdersCollection, "getVersioned" | "compareAndSet">,
+  orderId: string, revision: number, raw: unknown, at: string,
+): Promise<OwnerChange> {
+  return change(collection, orderId, revision, record => {
+    if (record.completed) return "outdated";
+    const values = isRecord(raw) ? raw : {};
+    const carrier = note(values.carrier), tracking = note(values.tracking);
+    if (carrier === null || tracking === null) return "invalid";
+    return { ...record, completed: { at, ...(carrier && { carrier }), ...(tracking && { tracking }) } };
+  });
+}
+
+/** The owner moves a Completed order back to Processing; its carrier, tracking and completion time are cleared. */
+export function reopenOrder(
+  collection: Pick<OrdersCollection, "getVersioned" | "compareAndSet">, orderId: string, revision: number,
+): Promise<OwnerChange> {
+  return change(collection, orderId, revision, ({ completed, ...record }) => completed ? record : "outdated");
 }
 
 /** Where the order goes now: the owner's correction, else the address typed at checkout. */
@@ -125,6 +175,7 @@ export function deliveryOf(record: OrderRecord): CheckoutDeliveryAddress | undef
 }
 
 const count = (v: unknown, min: number) => v === undefined || (Number.isSafeInteger(v) && (v as number) >= min);
+const completion = (v: unknown) => isRecord(v) && text(v.at) && optional(v.carrier, c => note(c) === c) && optional(v.tracking, t => note(t) === t);
 
 /** Every kept order in order-id order. Scans at most 100 pages of 100 and fails closed on a malformed record. */
 export async function listOrders(collection: Pick<OrdersCollection, "query">): Promise<OrderRecord[]> {
@@ -132,7 +183,8 @@ export async function listOrders(collection: Pick<OrdersCollection, "query">): P
   await scanAll(collection, item => {
     const record = item.data;
     const order = admit(record?.paidOrder, true);
-    if (order.orderId !== item.id || !count(record.number, FIRST_ORDER_NUMBER) || !count(record.revision, 1)) throw new Error("Invalid order");
+    if (order.orderId !== item.id || !count(record.number, FIRST_ORDER_NUMBER) || !count(record.revision, 1) ||
+        !optional(record.completed, completion)) throw new Error("Invalid order");
     if (record.delivery !== undefined) normalizeCheckoutDelivery(record.delivery);
     orders.push(record);
   });
