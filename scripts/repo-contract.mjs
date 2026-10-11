@@ -112,8 +112,8 @@ export async function auditRepository(root = repositoryRoot) {
       "private mounted-site pilot must retain the exact EmDash fork compatibility contract",
     );
   }
-  if (JSON.stringify(manifest.files) !== JSON.stringify(["dist", "emdash-plugin.jsonc"])) {
-    findings.push("package files must contain only dist and emdash-plugin.jsonc");
+  if (JSON.stringify(manifest.files) !== JSON.stringify(["dist", "emdash-plugin.jsonc", "cli"])) {
+    findings.push("package files must contain only dist, emdash-plugin.jsonc and cli");
   }
 
   return findings;

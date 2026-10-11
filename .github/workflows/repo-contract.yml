@@ -24,3 +24,18 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: bin/verify-commerce full
+      - name: Preserve allowlisted installed-consumer evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: commerce-consumers-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .tmp/commerce-consumers-runs/*/evidence/registry-settings.png
+            .tmp/commerce-consumers-runs/*/evidence/registry-failure.png
+            .tmp/commerce-consumers-runs/*/evidence/native-settings.png
+            .tmp/commerce-consumers-runs/*/evidence/native-failure.png
+            .tmp/commerce-consumers-runs/*/evidence/outcomes.json
+            .tmp/commerce-consumers-runs/*/evidence/digests.json
+          retention-days: 14
+          include-hidden-files: true
+          if-no-files-found: warn

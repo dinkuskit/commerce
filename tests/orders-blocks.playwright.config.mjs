@@ -10,6 +10,9 @@ import { resolve } from 'node:path';
 process.env.COMMERCE_PROOF_RUN ??= String(Date.now());
 const directory = resolve('.tmp/orders-blocks-proof', process.env.COMMERCE_PROOF_RUN);
 mkdirSync(directory, { recursive: true });
+const evidence = resolve('.tmp/commerce-consumers-runs', 'registry-' + process.env.COMMERCE_PROOF_RUN, 'evidence');
+mkdirSync(evidence, { recursive: true });
+process.env.COMMERCE_CONSUMER_EVIDENCE = evidence;
 const extracted = resolve(directory, 'extracted');
 const receipt = resolve(directory, 'artifact.json');
 if (!existsSync(receipt)) {
@@ -26,6 +29,11 @@ const runtime = resolve(extracted, 'backend.js');
 if (createHash('sha256').update(readFileSync(runtime)).digest('hex') !== JSON.parse(readFileSync(receipt)).runtimeSha256) {
   throw new Error('Frozen Commerce runtime changed');
 }
+const identity = JSON.parse(readFileSync(receipt));
+writeFileSync(resolve(evidence, 'digests.json'), JSON.stringify({ format: 'registry-installed-local',
+  package: manifest.id, version: manifest.version, tarballSha256: identity.tarballSha256,
+  tarballBytes: identity.tarballBytes, runtimeSha256: identity.runtimeSha256,
+  lockfileSha256: createHash('sha256').update(readFileSync(resolve('package-lock.json'))).digest('hex') }, null, 2));
 const port = Number(process.env.COMMERCE_PROOF_PORT ?? 64541);
 const publisher = 'did:plc:ekk4pjmkh3k3ql2kfoex3qt4';
 const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
@@ -41,9 +49,9 @@ process.env.COMMERCE_COUPON_PUBLISHER = publisher;
 process.env.COMMERCE_PROOF_DB = 'file:' + resolve(directory, 'content.db');
 process.env.COMMERCE_PROOF_ARTIFACTS = directory;
 process.env.COMMERCE_PROOF_STORAGE = resolve(directory, 'storage');
-export default defineConfig({ testDir: './sandbox', testMatch: 'orders-blocks.spec.mjs', workers: 1, timeout: 180000,
-  reporter: 'list', outputDir: resolve(directory, 'test-results'),
-  use: { baseURL: 'http://127.0.0.1:' + port, viewport: { width: 1440, height: 1000 } },
+export default defineConfig({ testDir: './sandbox', testMatch: ['orders-blocks.spec.mjs', 'packaged-consumers.spec.mjs'], workers: 1, timeout: 180000,
+  reporter: [['list'], ['./consumer-evidence-reporter.mjs']], outputDir: resolve(directory, 'test-results'),
+  use: { trace: 'off', video: 'off', screenshot: 'off', baseURL: 'http://127.0.0.1:' + port, viewport: { width: 1440, height: 1000 } },
   webServer: { command: '../../node_modules/.bin/astro dev --host 127.0.0.1 --port ' + port, cwd: resolve('tests/installed-coupon-site'),
     url: 'http://127.0.0.1:' + port, reuseExistingServer: false, timeout: 120000,
     env: { ASTRO_DEV_BACKGROUND: '1', COMMERCE_PROOF_DB: process.env.COMMERCE_PROOF_DB, COMMERCE_SANDBOX_ARTIFACT: runtime,
