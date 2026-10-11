@@ -96,8 +96,9 @@ test('each order carries the store\'s name from the Site title, cleaned for Ship
     return state.sent[0];
   };
   assert.equal((await sent('Fixture Hat Shop')).storeName, 'Fixture Hat Shop');
-  // Each run of control characters or line and paragraph separators becomes one space, then the ends are trimmed.
-  assert.equal((await sent(' \t Fixture\u0007Hat\nShop\u2029Co\u0085\u007f  ')).storeName, 'Fixture Hat Shop Co');
+  // Each run of spaces or control characters, line and paragraph separators included, becomes one space,
+  // then the ends are trimmed.
+  assert.equal((await sent(' \t Fixture\u0007 Hat\nShop \u2029 Co\u0085\u007f  ')).storeName, 'Fixture Hat Shop Co');
   // At most 200 UTF-16 units, never ending on half a character or a space.
   assert.equal((await sent('é'.repeat(250))).storeName, 'é'.repeat(200));
   assert.equal((await sent('a'.repeat(199) + '😀b')).storeName, 'a'.repeat(199));
@@ -112,13 +113,14 @@ test('what people typed goes to Ship as one line, and the order keeps what was t
   // paragraph separator (dinkuskit/ship service/src/order.ts), all of which a paste can carry.
   const NOT_ONE_LINE = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/;
   const strings = value => typeof value === 'string' ? [value] : value && typeof value === 'object' ? Object.values(value).flatMap(strings) : [];
-  const typed = { ...delivery, name: 'Fixture\u2028Shopper', line1: '1 Example Way\u2029\u2028Unit 2', line2: '\u0085' };
+  const typed = { ...delivery, name: 'Fixture\u2028Shopper', line1: '1 Example Way \u2029\u2028 Unit 2', line2: '\u0085' };
   const paid = order('o1', [{ ...line('hat'), name: 'Wool\u2028Hat\u0085Blue' }]);
   paid.contactSnapshot.contact.delivery = typed;
   const kept = await store(paid);
   const { state, connection } = ship();
   await syncShip(kept, { ...connection, name: 'Fixture\u2028Hat Shop' }, item);
-  // Each run becomes one space and the ends are trimmed; an address field with nothing left is left out.
+  // Each run, with any spaces beside it, becomes one space and the ends are trimmed; an address field
+  // with nothing left is left out.
   assert.deepEqual(state.sent[0].shipTo, { ...delivery, name: 'Fixture Shopper', line1: '1 Example Way Unit 2' });
   assert.deepEqual([state.sent[0].lines[0].name, state.sent[0].storeName], ['Wool Hat Blue', 'Fixture Hat Shop']);
   // The owner's address fix and a hand-typed carrier and tracking number go the same way.

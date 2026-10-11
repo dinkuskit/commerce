@@ -92,16 +92,17 @@ phone numbers are sent. On the first sync Ship gets every order with an
 address, including ones completed long ago, a few per sync.
 
 Ship refuses an order whose text holds a control character (C1 ones such as
-NEL included) or a Unicode line or paragraph separator (U+2028, U+2029), and
-a paste can carry those into an address, a product name or a tracking number
-past Commerce's own checks, which refuse only C0 controls and DEL. So the
-text people typed goes as one line: in the address, each line's `name`,
-`completed.carrier`, `completed.tracking` and `storeName`, each run of those
-characters becomes one space and the ends are trimmed
-(`commerce-ship-sync-001`). An address field, carrier or tracking number with
-nothing left is left out; a required address field left out gets a 422 from
-Ship, like any address it cannot use. Only what is sent changes: the order
-keeps what was typed, and agents reading orders see it unchanged.
+NEL included) or a Unicode line or paragraph separator (U+2028, U+2029), and a
+paste can carry those into an address, a product name or a tracking number
+past Commerce's own checks, which refuse only C0 controls and DEL. So the text
+people typed goes as one line: in the address, each line's `name`,
+`completed.carrier`, `completed.tracking` and `storeName`, each run of
+whitespace or control characters (those separators included) becomes one space
+and the ends are trimmed (`commerce-ship-sync-001`), leaving no line break and
+no double space. An address field, carrier or tracking number with nothing
+left is left out; a required address field left out gets a 422 from Ship, like
+any address it cannot use. Only what is sent changes: the order keeps what was
+typed, and agents reading orders see it unchanged.
 
 ## Create shipping label
 

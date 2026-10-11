@@ -29,11 +29,12 @@ function unavailable(): never {
 }
 
 /**
- * Ship takes each text field as one line: every run of control characters or Unicode line and
- * paragraph separators becomes one space, and the ends are trimmed. Anything not text is left as it is.
+ * Ship takes each text field as one line: every run of whitespace or control characters, line breaks and
+ * the Unicode line and paragraph separators included, becomes one space, and the ends are trimmed.
+ * Anything not text is left as it is.
  */
 function oneLine<T>(value: T): T {
-  return (typeof value === "string" ? value.replace(/[\p{Cc}\u2028\u2029]+/gu, " ").trim() : value) as T;
+  return (typeof value === "string" ? value.replace(/[\s\p{Cc}]+/gu, " ").trim() : value) as T;
 }
 
 /** Ship's label page for one order. The owner signs in there with DinkusKit.com; the link carries no pass. */
