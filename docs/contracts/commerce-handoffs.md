@@ -126,11 +126,13 @@ order so it can be labeled.
   hosted service one `dinkuskit.commerce.ship-order/v1` record per order
   version: the order id, short number, version, status, whether it is a test
   order, the current delivery address (the owner's correction, else the
-  paid-order copy's), the shopper's email, the completion once Completed, and
-  the lines that go in the box (catalog item id, name, quantity, the price
-  the shopper paid for one, `unitPrice`, and each product's current shipping
-  weight in ounces, `weightOz`, when set). Digital items, order totals, the
-  shipping charge, payment details and phone numbers are never sent.
+  paid-order copy's), the shopper's email, the completion once Completed, the
+  store's name for Ship's emails (`storeName`, EmDash's Site title, left out
+  when empty), and the lines that go in the box (catalog item id, name,
+  quantity, the price the shopper paid for one, `unitPrice`, and each
+  product's current shipping weight in ounces, `weightOz`, when set). Digital
+  items, order totals, the shipping charge, payment details and phone numbers
+  are never sent.
   Each new version goes to Ship: when the order arrives, and after an address
   fix, Complete order or Move back to Processing. Ship labels only the latest
   version and buys no postage for a test order. Ship reports each label it
@@ -142,7 +144,8 @@ order so it can be labeled.
   page for it, `<ship origin>/stores/<siteId>/orders/<orderId>` (each part
   URL-encoded), where the owner signs in with DinkusKit.com; the link carries
   no pass (GrillTrack `commerce-ship-label-link-001`). Ship emails the
-  shopper when an order becomes Completed; Commerce sends no email. Ship is
+  shopper under the store's name when an order becomes Completed; Commerce
+  sends no email. Ship is
   its own plugin and service, so this message is the same in every packaging.
 - **Under a split:** unchanged. Inventory and Ship are already outside
   Commerce, so this handoff is HTTP to a hosted service in every direction.

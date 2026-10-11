@@ -68,6 +68,7 @@ Each sync, in order (`src/features/orders/ship.ts`):
   "shipTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
   "email": "shopper@example.test",
   "completed": null,
+  "storeName": "Demo Store",
   "lines": [{ "catalogItemId": "item_demo", "name": "Demo Mug", "quantity": 2, "unitPrice": { "currency": "USD", "minor": "1250" }, "weightOz": 12.5 }]
 }
 ```
@@ -80,7 +81,12 @@ coupon; Registry stores take no coupons in v1), and the product's current
 shipping weight in ounces when one is set, for insurance,
 packing slips and later customs forms (GrillTrack `commerce-ship-sync-001`,
 Ronald's "yes no no", 23:10 UTC 2026-10-10). `completed` is
-`{ at, carrier?, tracking? }` once the order is Completed. `test` is true for
+`{ at, carrier?, tracking? }` once the order is Completed. `storeName` is the
+store's name for Ship's shipped email: EmDash's Site title (`ctx.site.name`)
+with control characters removed, trimmed, and cut to at most 200 UTF-16 units
+without splitting a character. It is left out when nothing is left, and Ship
+then says "your store" (GrillTrack `commerce-ship-sync-001`, Ronald's "Yes
+yes", 00:11 UTC 2026-10-11). `test` is true for
 every order not taken in live mode; Ship must not buy postage for it. No order
 totals, shipping charges, payment ids or phone numbers are sent. On
 the first sync Ship gets every order with an address, including ones
@@ -108,7 +114,8 @@ shows no link.
 
 - `tests/features/orders/ship.test.mjs`: what is sent and when (address
   fixes, Complete and Move back each send the new version; each line's price
-  paid; no digital items, totals, payment ids or phone numbers), label
+  paid; the store's name, cleaned or left out; no digital items, totals,
+  payment ids or phone numbers), label
   outcomes for current, older,
   Completed, unusable and unknown orders, lost acknowledgements, Ship being
   down, 422, a missing pass, malformed label lists and the 10-per-sync limit.
@@ -116,8 +123,9 @@ shows no link.
   and after saved changes only, and a failing sync never breaks the page.
 - `tests/integration/registry-checkout-services.test.mjs` (the last two
   tests, kept in this file so workerd starts one runtime at a time): the
-  compiled Registry backend in workerd sends a paid physical order to a Ship
-  stand-in with its own traded pass when Orders opens (with the Payments pass
+  compiled Registry backend in workerd sends a paid physical order, with the
+  Site title EmDash hands the plugin as `storeName`, to a Ship stand-in with
+  its own traded pass when Orders opens (with the Payments pass
   already expired), completes it from a label on the background check, tells
   Ship about an agent's change right away, and refuses a label list over
   128 KB without acknowledging or changing anything; without `ship`, with Ship
@@ -128,5 +136,4 @@ shows no link.
 - `tests/features/orders/view.test.mjs`: the link comes first among a
   Processing order's actions, and never on the list, without Ship, without an
   address or on a Completed order.
-- Registry backend: 127,780 → 129,752 bytes (+1,972), leaving 1,320 under
-  131,072.
+- Registry backend when the sync landed: 127,780 → 129,752 bytes (+1,972).
