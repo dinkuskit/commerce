@@ -1,16 +1,17 @@
 import { defineConfig } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-const directory = resolve(".grilltrack/work/country-settings-20261008/browser", process.env.COMMERCE_SETTINGS_PROOF_RUN ?? Date.now().toString());
+process.env.COMMERCE_SETTINGS_PROOF_RUN ??= Date.now().toString();
+const directory = resolve(".tmp/settings-ci", process.env.COMMERCE_SETTINGS_PROOF_RUN);
 mkdirSync(directory, { recursive: true });
 const port = Number(process.env.COMMERCE_SETTINGS_PROOF_PORT ?? 64635);
 process.env.COMMERCE_SETTINGS_ARTIFACTS = directory;
 export default defineConfig({
   testDir: "./sandbox", testMatch: "merchant-settings.spec.mjs", timeout: 180000,
-  workers: 1, reporter: "list", outputDir: directory + "/test-results",
+  workers: 1, reporter: [["list"], ["./settings-evidence-reporter.mjs"]], outputDir: directory + "/test-results",
   projects: [
-    { name: "registry", use: { baseURL: "http://127.0.0.1:" + port, screenshot: "only-on-failure", viewport: { width: 1440, height: 1100 } } },
-    { name: "native", use: { baseURL: "http://127.0.0.1:" + (port + 2), screenshot: "only-on-failure", viewport: { width: 1440, height: 1100 } } },
+    { name: "registry", use: { baseURL: "http://127.0.0.1:" + port, screenshot: "off", trace: "off", video: "off", viewport: { width: 1440, height: 1100 } } },
+    { name: "native", use: { baseURL: "http://127.0.0.1:" + (port + 2), screenshot: "off", trace: "off", video: "off", viewport: { width: 1440, height: 1100 } } },
   ],
   webServer: ["sandbox-site", "native-site"].flatMap((site, index) => process.env.COMMERCE_SETTINGS_PROOF_PROFILE && process.env.COMMERCE_SETTINGS_PROOF_PROFILE !== (index === 0 ? "registry" : "native") ? [] : [{
     command: "../../node_modules/.bin/astro dev --host 127.0.0.1 --port " + (port + index * 2),
