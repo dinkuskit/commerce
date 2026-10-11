@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-11T01:31:12+00:00",
+    "confirmed_at": "2026-10-11T23:14:21+00:00",
     "domain": "Commerce sends orders to Ship",
     "started_at": "2026-10-11T00:55:32+00:00",
     "status": "confirmed",
-    "summary": "Ronald chose 'Swap them' at 01:30:45 UTC 2026-10-11 on the decision card 'Swap hidden line breaks for spaces in orders Commerce sends Ship?' (Buildout thread): the text people typed goes to Ship as one line."
+    "summary": "Maintainer approved PR103 route declarations and exact public-path manifest for landing; no live Access policy change or package publication is authorized."
   },
   "decisions": [
     {
@@ -11759,6 +11759,87 @@
       "superseded_by": null,
       "updated_at": "2026-10-11T01:31:35+00:00",
       "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Every route sets public true or false; admin routes name an EmDash permission; dist/sandbox/route-manifest.json (export @dinkuskit/commerce/route-manifest) lists all routes with artifact sha256 and the six public Registry paths, including policies/public; a unit test fails on any undeclared route.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/79",
+      "created_at": "2026-10-11T19:44:54+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Commerce sends orders to Ship",
+      "history": [
+        {
+          "at": "2026-10-11T23:14:21+00:00",
+          "choice": "Proposed: every route sets public true/false; admin routes name an EmDash permission; dist/sandbox/route-manifest.json (export @dinkuskit/commerce/route-manifest) lists all routes with artifact sha256 and the six public Registry paths, including policies/public; a unit test fails on any undeclared route.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-11T23:14:21+00:00",
+          "choice": "Every route sets public true or false; admin routes name an EmDash permission; dist/sandbox/route-manifest.json (export @dinkuskit/commerce/route-manifest) lists all routes with artifact sha256 and the six public Registry paths, including policies/public; a unit test fails on any undeclared route.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-11T23:18:56+00:00",
+          "choice": "Every route sets public true or false; admin routes name an EmDash permission; dist/sandbox/route-manifest.json (export @dinkuskit/commerce/route-manifest) lists all routes with artifact sha256 and the six public Registry paths, including policies/public; a unit test fails on any undeclared route.",
+          "from": "implemented",
+          "implementation_ref": "git:c3fe11c49994f16b146df4ad04c18238da360bb8; docs/implementation/route-auth-manifest.md; scripts/route-manifest.mjs; tests/route-auth.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-route-auth-manifest-001",
+      "implementation_ref": "git:c3fe11c49994f16b146df4ad04c18238da360bb8; docs/implementation/route-auth-manifest.md; scripts/route-manifest.mjs; tests/route-auth.test.mjs",
+      "question": "Should every Commerce route declare public or admin, with the exact public paths published as a build-time manifest for Cloudflare Access (issue #79)?",
+      "rationale": "Maintainer accepted this scoped contract through the approved PR103 landing plan. Exact shopper paths support Access configuration without a wildcard, and the manifest remains outside the sandbox backend bundle.",
+      "repair_required": false,
+      "review_classifications": [
+        "defer"
+      ],
+      "review_history": [
+        {
+          "classifications": [
+            "defer"
+          ],
+          "ref": ".grilltrack/proof/route-auth-landing-20261011/PROOF.md; parent source review and Antigravity composition review",
+          "result": "findings",
+          "reviewed_at": "2026-10-11T23:19:00+00:00",
+          "source_identity": "git:8a06e9cb8e21216f205166e4af12c4174e1779fb"
+        }
+      ],
+      "review_ref": ".grilltrack/proof/route-auth-landing-20261011/PROOF.md; parent source review and Antigravity composition review",
+      "review_result": "findings",
+      "review_source_identity": "git:8a06e9cb8e21216f205166e4af12c4174e1779fb",
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-11T23:19:00+00:00",
+      "verification_ref": ".grilltrack/proof/route-auth-landing-20261011/PROOF.md"
     }
   ],
   "last_activation": {
@@ -11795,5 +11876,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-11T01:31:35+00:00"
+  "updated_at": "2026-10-11T23:19:00+00:00"
 }

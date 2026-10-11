@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { writeRouteManifest } from './route-manifest.mjs';
 
 // Runs the official Registry packaging validation on the staged sandbox
 // source, so a backend over the per-file limit fails the build instead of a
@@ -24,3 +25,10 @@ console.log([
   `backend_sha256=${createHash('sha256').update(backend).digest('hex')}`,
   `storage=${Object.keys(manifest.storage).sort().join(',')}`,
 ].join(' '));
+
+const { version } = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
+const routeManifest = await writeRouteManifest(resolve('.'), {
+  package: '@dinkuskit/commerce', version, file: 'backend.js',
+  bytes: backend.byteLength, sha256: createHash('sha256').update(backend).digest('hex'),
+});
+console.log(`route_manifest=dist/sandbox/route-manifest.json public_routes=${routeManifest.publicRoutes.length} routes=${routeManifest.routes.length}`);

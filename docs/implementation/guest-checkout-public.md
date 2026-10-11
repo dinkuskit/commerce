@@ -260,3 +260,7 @@ obligation. Contact, delivery, shipping, tax, countries, carriers, phone,
 and receipt delivery remain unresolved follow-up work (issue 33). Coupon
 failure handling (issue 34) is in
 [registry-hosted-coupons.md](registry-hosted-coupons.md).
+
+Every Commerce route declares `public` or `admin`; the exact public paths are
+published in `dist/sandbox/route-manifest.json`. See
+[route-auth-manifest.md](route-auth-manifest.md) (issue #79).

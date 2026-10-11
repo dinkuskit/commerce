@@ -702,9 +702,9 @@ test("the existing authenticated display and managed-backorder actions remain bo
   const backordersRoute = plugin.routes[SET_CATALOG_ITEM_BACKORDERS_ROUTE];
   const policyRoute = plugin.routes[SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE];
 
-  assert.equal(backordersRoute.public, undefined);
+  assert.equal(backordersRoute.public, false);
   assert.equal(backordersRoute.permission, "content:edit_any");
-  assert.equal(policyRoute.public, undefined);
+  assert.equal(policyRoute.public, false);
   assert.equal(policyRoute.permission, "content:edit_any");
   await assert.rejects(
     backordersRoute.handler({

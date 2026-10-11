@@ -88,6 +88,7 @@ function makeRoute(
   expectedMethod = "POST",
 ): PluginRoute {
   return {
+    public: false,
     permission: COUPONS_ADMIN_PERMISSION,
     handler: async (ctx) => {
       method(ctx, expectedMethod);
@@ -134,6 +135,7 @@ export function createCouponAdminRoutes(
 }
 
 export const couponAdminRouteContract = Object.freeze({
+  public: false,
   permission: COUPONS_ADMIN_PERMISSION,
   storage: Object.freeze({
     collection: "coupons",

@@ -14,6 +14,7 @@ function routeError(error: unknown): PluginRouteError {
 
 export function createMerchantStoreSettingsRoute(): PluginRoute {
   return {
+    public: false,
     permission: "content:edit_any",
     methods: ["POST"],
     handler: async (ctx) => {

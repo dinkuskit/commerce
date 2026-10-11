@@ -28,6 +28,7 @@ export {
 } from "./route-ids.js";
 
 export const setStorefrontAvailabilityPolicyRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -71,6 +72,7 @@ function listingError(error: unknown): never {
 }
 
 export const outOfStockListingRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     const method = ctx.request.method.toUpperCase();
@@ -100,6 +102,7 @@ function placeholderStorage(
 }
 
 export const placeholderImageRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     const method = ctx.request.method.toUpperCase();

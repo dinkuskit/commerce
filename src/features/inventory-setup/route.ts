@@ -32,6 +32,7 @@ export function createConfigureInventoryRoute(
   execution: ConfigureInventoryExecution = {},
 ): PluginRoute {
   return {
+    public: false,
     permission: "content:edit_any",
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {

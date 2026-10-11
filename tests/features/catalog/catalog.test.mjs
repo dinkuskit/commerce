@@ -537,7 +537,7 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
     uniqueIndexes: ["commandId", "skuKey"],
   });
   const route = commercePlugin.routes["catalog-items/create"];
-  assert.equal(route.public, undefined);
+  assert.equal(route.public, false);
   assert.equal(route.permission, "content:create");
 });
 

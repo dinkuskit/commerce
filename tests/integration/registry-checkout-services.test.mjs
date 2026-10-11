@@ -385,7 +385,7 @@ test('agents read and complete orders through the private orders route of the co
   const state = await runtimeFixture();
   t.after(() => state.close());
   const route = state.manifest.routes.find(entry => entry.name === 'orders');
-  assert.deepEqual(route, { name: 'orders', methods: ['POST'], permission: 'plugins:manage' });
+  assert.deepEqual(route, { name: 'orders', methods: ['POST'], public: false, permission: 'plugins:manage' });
   const { token } = await start(state);
   state.setPaid();
   assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
