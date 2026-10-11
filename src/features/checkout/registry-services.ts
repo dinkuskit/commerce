@@ -117,6 +117,6 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
  */
 export async function resolveRegistryShip(ctx: PluginContext): Promise<ShipConnection | undefined> {
   const config = (await registryConfig(ctx))?.config, ship = config?.ship;
-  return ship && { origin: ship.origin, site: config!.siteId, fetch: ctx.http!.fetch.bind(ctx.http), read: readBoundedPaymentsJson,
+  return ship && { origin: ship.origin, site: config!.siteId, name: ctx.site?.name, fetch: ctx.http!.fetch.bind(ctx.http), read: readBoundedPaymentsJson,
     credential: (await storePasses(ctx, config!))("ship:orders", ship.audience) };
 }

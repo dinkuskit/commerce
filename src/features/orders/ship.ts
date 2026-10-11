@@ -12,6 +12,8 @@ export interface ShipConnection {
   origin: string;
   /** The store's id at Ship, the same as in its passes. */
   site: string;
+  /** The store's name for Ship's emails: EmDash's Site title, as the host gives it. */
+  name?: string;
   fetch: (url: string, init: RequestInit) => Promise<Response>;
   /** Reads a JSON answer, refusing one too large to be Ship's. */
   read: (response: Response) => Promise<unknown>;
@@ -55,6 +57,9 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     }
     if (!(await call("/v1/labels/ack", { eventId: label.eventId })).ok) unavailable();
   }
+  // Each order carries the store's name for Ship's emails: no control characters, trimmed, at most
+  // 200 UTF-16 units without splitting a character, and left out when nothing is left.
+  const storeName = (ship.name ?? "").replace(/\p{Cc}/gu, "").trim().slice(0, 200).replace(/[\ud800-\udbff]$/, "").trimEnd();
   let room = SHIP_ORDERS_PER_SYNC;
   for (const record of await listOrders(collection)) {
     const facts = orderFacts(record);
@@ -67,7 +72,7 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
       const found = await item(catalogItemId);
       if (found?.physical !== false) lines.push({ catalogItemId, name, quantity, unitPrice, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
     }
-    const response = await call("/v1/orders", { schema: SHIP_ORDER_SCHEMA, ...facts, lines });
+    const response = await call("/v1/orders", { schema: SHIP_ORDER_SCHEMA, ...facts, ...(storeName ? { storeName } : {}), lines });
     // 422 means Ship can never label this version, so it waits for the order's next change.
     if (!response.ok && response.status !== 422) unavailable();
     const current = await collection.getVersioned(facts.orderId);

@@ -87,6 +87,26 @@ test('each order with an address goes to Ship once per version, with each item\'
   assert.equal(state.sent.length, 5);
 });
 
+test('each order carries the store\'s name from the Site title, cleaned for Ship, and none when nothing is left', async () => {
+  const sent = async name => {
+    const { state, connection } = ship();
+    await syncShip(await store(order('o1'), order('o2')), { ...connection, name }, item);
+    assert.equal(state.sent.length, 2);
+    assert.equal(state.sent[0].storeName, state.sent[1].storeName);
+    return state.sent[0];
+  };
+  assert.equal((await sent('Fixture Hat Shop')).storeName, 'Fixture Hat Shop');
+  // Control characters go, then the ends are trimmed.
+  assert.equal((await sent(' \t Fixture\u0007 Hat\nShop\u0085\u007f  ')).storeName, 'Fixture HatShop');
+  // At most 200 UTF-16 units, never ending on half a character or a space.
+  assert.equal((await sent('é'.repeat(250))).storeName, 'é'.repeat(200));
+  assert.equal((await sent('a'.repeat(199) + '😀b')).storeName, 'a'.repeat(199));
+  assert.equal((await sent('a'.repeat(198) + '😀b')).storeName, 'a'.repeat(198) + '😀');
+  assert.equal((await sent('a'.repeat(199) + ' b')).storeName, 'a'.repeat(199));
+  // No Site title, or nothing left after cleaning, sends no store name at all.
+  for (const name of [undefined, '', ' \t ', '\u0000\u001f']) assert.equal('storeName' in await sent(name), false);
+});
+
 test('a label Ship bought completes its order at the labeled version, and every label is acknowledged', async () => {
   const kept = await store(order('o1'), order('o2'), order('o3'), order('o4'));
   assert.equal(await correctDelivery(kept, 'o2', 1, { ...delivery, line1: '2 Corrected Road' }, ['US']), 'saved');
