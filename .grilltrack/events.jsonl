@@ -403,3 +403,7 @@
 {"action": "decision_verified", "at": "2026-10-11T01:31:35+00:00", "data": {"decision_id": "commerce-ship-label-link-001"}, "event_id": "7265605d-13b2-4ee9-be8b-333c9fd79b29"}
 {"action": "decision_implemented", "at": "2026-10-11T01:31:35+00:00", "data": {"decision_id": "commerce-store-key-release-gate-001"}, "event_id": "9e24ec21-7408-4006-9429-5debc20412a5"}
 {"action": "decision_proposed", "at": "2026-10-11T19:44:54+00:00", "data": {"decision_id": "commerce-route-auth-manifest-001"}, "event_id": "b17d9db9-d275-4a6e-b0d9-f2c3c9c76575"}
+{"action": "decision_locked", "at": "2026-10-11T23:14:21+00:00", "data": {"decision_id": "commerce-route-auth-manifest-001"}, "event_id": "7625287f-e54c-4514-bf87-737cfd3b0ecb"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-11T23:14:21+00:00", "data": {"summary": "Maintainer approved PR103 route declarations and exact public-path manifest for landing; no live Access policy change or package publication is authorized."}, "event_id": "626b7d59-6275-4468-9d7e-4bec135c88ab"}
+{"action": "decision_implemented", "at": "2026-10-11T23:14:21+00:00", "data": {"decision_id": "commerce-route-auth-manifest-001"}, "event_id": "b644dd31-f75a-4a2e-b8ef-9fd2ec6eb068"}
+{"action": "decision_verified", "at": "2026-10-11T23:18:56+00:00", "data": {"decision_id": "commerce-route-auth-manifest-001"}, "event_id": "f5fc5aef-f9a0-4ff1-85e2-91d40ce80551"}

@@ -31,7 +31,7 @@ const requiredPublicManifest = {
     type: "git",
     url: "git+https://github.com/dinkuskit/commerce.git",
   },
-  files: ["dist", "emdash-plugin.jsonc"],
+  files: ["dist", "emdash-plugin.jsonc", "cli"],
   peerDependencies: {
     emdash: "1.2.0",
   },
