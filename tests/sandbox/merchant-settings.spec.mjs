@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+test.afterEach(async ({ page }, info) => {
+  if (info.status !== info.expectedStatus) {
+    await page.screenshot({ path: process.env.COMMERCE_SETTINGS_ARTIFACTS + "/" + info.project.name + "-failure.png", animations: "disabled" });
+  }
+});
 const headers = { "X-EmDash-Request": "1" };
 test("merchant settings persist independently and reject stale or unauthorized writes", async ({ page, request, browser }, info) => {
   page.on("pageerror", error => console.log("Browser script error:", error.message.slice(0, 500)));
@@ -69,5 +74,6 @@ test("merchant settings persist independently and reject stale or unauthorized w
   await anonymous.close();
   await page.reload();
   await expect(store).toHaveValue("GB");
+  if (process.env.COMMERCE_SETTINGS_CONTROLLED_FAILURE === "1") expect("synthetic controlled failure").toBe("pass");
   if (native) await expect(page.getByRole("heading", { name: "Out-of-stock products on the shop" })).toBeVisible();
 });

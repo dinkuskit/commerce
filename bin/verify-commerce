@@ -13,15 +13,19 @@ case "$mode" in
     npm run test:unit
     npm run audit:repo
     ;;
-  full)
+  core)
     "$script_dir/verify-commerce" quick
     npm run test:integration
     npm run test:sandbox
     npm run test:sandbox:native-local-stock
     npm run test:sandbox:orders
     ;;
+  full)
+    "$script_dir/verify-commerce" core
+    npm run test:settings
+    ;;
   *)
-    echo "Usage: bin/verify-commerce [quick|full]" >&2
+    echo "Usage: bin/verify-commerce [quick|core|full]" >&2
     exit 64
     ;;
 esac
