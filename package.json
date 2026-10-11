@@ -138,7 +138,8 @@
     "test:sandbox": "playwright test",
     "test:sandbox:native-local-stock": "playwright test --config=playwright.native-local-stock.config.mjs",
     "test:sandbox:orders": "playwright test --config=tests/orders-blocks.playwright.config.mjs",
-    "test:consumer:native": "npm run build && node scripts/check-native-consumer.mjs"
+    "test:consumer:native": "npm run build && node scripts/check-native-consumer.mjs",
+    "test:settings": "npm run build && node scripts/run-settings-ci.mjs"
   },
   "devDependencies": {
     "@astrojs/node": "11.0.2",

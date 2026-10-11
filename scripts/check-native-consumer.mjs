@@ -94,7 +94,10 @@ for (const [subpath, declaration] of Object.entries(pkg.exports)) {
  assert(existsSync(resolve(packageRoot, target)));
  if (declaration.types) assert(existsSync(resolve(packageRoot, declaration.types)));
  entrypoints.push(subpath);
- if (!['./admin', './sandbox', './descriptor'].includes(subpath)) await import(specifier);
+ if (!['./admin', './sandbox', './descriptor'].includes(subpath)) {
+  if (target.endsWith('.json')) await import(specifier, { with: { type: 'json' } });
+  else await import(specifier);
+ }
 }
 for (const path of Object.values(pkg.bin ?? {})) {
  assert(existsSync(resolve(packageRoot, path)));

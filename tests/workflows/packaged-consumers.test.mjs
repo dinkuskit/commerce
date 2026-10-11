@@ -28,10 +28,13 @@ test('installed consumer reporter retains failure status without logs, errors, a
 test('consumer CI keeps failure propagation and uploads only explicit synthetic receipts and screenshots', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/repo-contract.yml', import.meta.url), 'utf8');
   const verifier = readFileSync(new URL('../../bin/verify-commerce', import.meta.url), 'utf8');
-  assert.match(verifier, /npm run test:sandbox:orders[\s\S]*npm run test:consumer:native/);
-  assert.match(workflow, /run: bin\/verify-commerce full/);
+  const core = verifier.match(/core\)([\s\S]*?)\n  full\)/)?.[1];
+  assert.match(core, /npm run test:sandbox:orders[\s\S]*npm run test:consumer:native/);
+  assert.match(verifier, /full\)[\s\S]*"\$script_dir\/verify-commerce" core[\s\S]*npm run test:settings/);
+  assert.match(workflow, /run: bin\/verify-commerce core/);
   assert.doesNotMatch(workflow, /continue-on-error/);
   assert.match(workflow, /if: always\(\)/);
   assert.match(workflow, /retention-days: 14/);
-  assert.doesNotMatch(workflow, /evidence\/\*|trace\.zip|storage-state|\.db/);
+  assert.match(workflow, /include-hidden-files: true/);
+  assert.doesNotMatch(workflow, /\/evidence\/\*|trace\.zip|storage-state|\.db/);
 });

@@ -38,3 +38,13 @@ repository/feature audit, 56 integration tests, 10 general browser cases,
 one native stock case, three extracted Registry cases, and the clean npm
 consumer. Browser stages took 1.8 minutes, 14.1 seconds and 19.2 seconds.
 No dependency versions or lockfile contents changed.
+
+## Composition with settings CI and the route manifest
+
+The native consumer now runs inside `core`, while local `full` also runs the
+separate settings suite. The public-contract job retains consumer evidence;
+the independent merchant-settings job retains its own sanitized evidence.
+The export loader supplies Node JSON import attributes for `.json` targets,
+so a downstream route-manifest export is loaded rather than skipped. The
+route-auth PR's actual JSON export is verified by this installed-consumer check
+when that PR is composed with this one.
