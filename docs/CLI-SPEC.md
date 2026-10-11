@@ -47,8 +47,10 @@ The manifest maps the executable:
 { "bin": { "dinkus-commerce": "./bin/dinkus-commerce.mjs" } }
 ```
 
-The CLI is deliberately not in the package `files` or `exports`. Publishing is
-out of scope until the package itself is published.
+Package `files` now includes the `cli` support dependency closure for the already
+declared `bin/dinkus-commerce.mjs`, while the package remains private and
+unpublished. The CLI has no export-map entry and adds zero Registry/sandbox
+bundle bytes. Publishing is out of scope until the package itself is published.
 
 ## Usage
 
@@ -412,8 +414,10 @@ dinkus-commerce --url https://shop.example products set-price item_demo --amount
 
 ## Non-goals
 
-- Publishing the CLI. The package is private; the CLI is not in `files` or
-  `exports`.
+- Publishing the CLI. The package remains private and unpublished; package
+  `files` includes the `cli` support dependency closure for already declared
+  `bin/dinkus-commerce.mjs`, while the CLI has no export-map entry and adds
+  zero Registry/sandbox bundle bytes.
 - Any byte in the Registry bundle `dist/sandbox/plugin.mjs`.
 - Direct storage or database access, importing Commerce source, or
   reimplementing price, sellability, availability, or checkout rules.
