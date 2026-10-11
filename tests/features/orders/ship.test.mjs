@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, completeOrder, correctDelivery, createPaidOrderReceiver, reopenOrder, syncShip } from '../../../dist/features/orders/index.js';
+import { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, completeOrder, correctDelivery, createPaidOrderReceiver, reopenOrder, shipLabelPage, syncShip } from '../../../dist/features/orders/index.js';
 
 // In-memory storage with revisions, enough for compare-and-set.
 function collection() {
@@ -52,17 +52,20 @@ async function store(...orders) {
   return kept;
 }
 
-test('each order with an address goes to Ship once per version, with weights and without digital items or prices', async () => {
-  const kept = await store(order('o1'), order('o2', [line('hat', 2), line('ebook'), line('scarf'), line('gone')], { mode: 'live' }), order('o3', [line('ebook')], { digital: true }));
+test('each order with an address goes to Ship once per version, with each item\'s price paid and weight, and no digital items, totals, payment or phone', async () => {
+  const priced = (paid, minor) => ({ ...paid, unitPrice: usd(minor) });
+  const kept = await store(order('o1'), order('o2', [priced(line('hat', 2), '1250'), line('ebook'), priced(line('scarf'), '899'), line('gone')], { mode: 'live' }),
+    order('o3', [line('ebook')], { digital: true }));
   const { state, connection } = ship();
   await syncShip(kept, connection, item);
   assert.deepEqual(state.sent.map(sent => sent.orderId), ['o1', 'o2']);
   assert.deepEqual(state.sent[1], { schema: SHIP_ORDER_SCHEMA, orderId: 'o2', number: 1002, version: 1, status: 'processing', test: false,
     shipTo: delivery, email: 'shopper@example.com', completed: null,
-    lines: [{ catalogItemId: 'hat', name: 'HAT', quantity: 2, weightOz: 4.5 }, { catalogItemId: 'scarf', name: 'SCARF', quantity: 1 }, { catalogItemId: 'gone', name: 'GONE', quantity: 1 }] });
+    lines: [{ catalogItemId: 'hat', name: 'HAT', quantity: 2, unitPrice: usd('1250'), weightOz: 4.5 },
+      { catalogItemId: 'scarf', name: 'SCARF', quantity: 1, unitPrice: usd('899') }, { catalogItemId: 'gone', name: 'GONE', quantity: 1, unitPrice: usd('100') }] });
   assert.equal(state.sent[0].test, true);
-  // No money, payment or phone details leave Commerce.
-  assert.doesNotMatch(JSON.stringify(state.sent), /unitPrice|total|pay-|paymentId|phone|5555550100|receipt/);
+  // Beyond each item's price, no money, payment or phone details leave Commerce.
+  assert.doesNotMatch(JSON.stringify(state.sent), /total|pay-|paymentId|phone|5555550100|receipt/);
   for (const call of state.calls) {
     assert.match(call.url, /^https:\/\/ship\.example\.test\/v1\//);
     assert.equal(call.authorization, 'Bearer synthetic-ship-pass');
@@ -161,4 +164,10 @@ test('a backlog goes to Ship a few orders per sync', async () => {
   await syncShip(kept, connection, item);
   assert.equal(state.sent.length, SHIP_ORDERS_PER_SYNC + 3);
   assert.equal(new Set(state.sent.map(sent => sent.orderId)).size, SHIP_ORDERS_PER_SYNC + 3);
+});
+
+test('Ship\'s label page for an order is on Ship\'s origin under the store\'s id, both encoded', () => {
+  assert.equal(shipLabelPage({ origin: 'https://ship.example.test/', site: 'synthetic-site' }, 'order:01/a b'),
+    'https://ship.example.test/stores/synthetic-site/orders/order%3A01%2Fa%20b');
+  assert.equal(shipLabelPage({ origin: 'https://ship.example.test', site: 'site/1' }, 'o1'), 'https://ship.example.test/stores/site%2F1/orders/o1');
 });

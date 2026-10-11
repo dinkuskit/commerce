@@ -10,6 +10,8 @@ export const SHIP_ORDERS_PER_SYNC = 10;
 export interface ShipConnection {
   /** Bare https origin, such as https://ship.dinkuskit.com. */
   origin: string;
+  /** The store's id at Ship, the same as in its passes. */
+  site: string;
   fetch: (url: string, init: RequestInit) => Promise<Response>;
   /** Reads a JSON answer, refusing one too large to be Ship's. */
   read: (response: Response) => Promise<unknown>;
@@ -22,6 +24,11 @@ export type ShipItemLookup = (catalogItemId: string) => Promise<{ physical: bool
 
 function unavailable(): never {
   throw new Error("Ship unavailable");
+}
+
+/** Ship's label page for one order. The owner signs in there with DinkusKit.com; the link carries no pass. */
+export function shipLabelPage(ship: Pick<ShipConnection, "origin" | "site">, orderId: string): string {
+  return new URL(ship.origin).origin + "/stores/" + encodeURIComponent(ship.site) + "/orders/" + encodeURIComponent(orderId);
 }
 
 /**
@@ -54,10 +61,11 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     if (!facts.shipTo || record.shipVersion === facts.version) continue;
     if (!room--) break;
     const lines = [];
-    for (const { catalogItemId, name, quantity } of record.paidOrder.lines) {
+    for (const { catalogItemId, name, quantity, unitPrice } of record.paidOrder.lines) {
       // Digital items never go in the box; an item since removed from the catalog goes without a weight.
+      // Each line carries what the shopper paid for one of it, for insurance and packing slips.
       const found = await item(catalogItemId);
-      if (found?.physical !== false) lines.push({ catalogItemId, name, quantity, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
+      if (found?.physical !== false) lines.push({ catalogItemId, name, quantity, unitPrice, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
     }
     const response = await call("/v1/orders", { schema: SHIP_ORDER_SCHEMA, ...facts, lines });
     // 422 means Ship can never label this version, so it waits for the order's next change.

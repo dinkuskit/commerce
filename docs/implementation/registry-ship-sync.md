@@ -68,23 +68,48 @@ Each sync, in order (`src/features/orders/ship.ts`):
   "shipTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
   "email": "shopper@example.test",
   "completed": null,
-  "lines": [{ "catalogItemId": "item_demo", "name": "Demo Mug", "quantity": 2, "weightOz": 12.5 }]
+  "lines": [{ "catalogItemId": "item_demo", "name": "Demo Mug", "quantity": 2, "unitPrice": { "currency": "USD", "minor": "1250" }, "weightOz": 12.5 }]
 }
 ```
 
-`lines` are the items that go in the box: digital items are left out, and
-each line carries the product's current shipping weight in ounces when one is
-set. `completed` is `{ at, carrier?, tracking? }` once the order is Completed.
-`test` is true for every order not taken in live mode; Ship must not buy
-postage for it. No prices, totals, payment ids or phone numbers are sent. On
+`lines` are the items that go in the box: digital items are left out. Each
+line carries `unitPrice`, what the shopper paid for one of that item at
+checkout as `{ "currency": "USD", "minor" }` with `minor` a whole number of
+cents in a string (the paid order's line price, before any order-level
+coupon; Registry stores take no coupons in v1), and the product's current
+shipping weight in ounces when one is set, for insurance,
+packing slips and later customs forms (GrillTrack `commerce-ship-sync-001`,
+Ronald's "yes no no", 23:10 UTC 2026-10-10). `completed` is
+`{ at, carrier?, tracking? }` once the order is Completed. `test` is true for
+every order not taken in live mode; Ship must not buy postage for it. No order
+totals, shipping charges, payment ids or phone numbers are sent. On
 the first sync Ship gets every order with an address, including ones
 completed long ago, a few per sync.
+
+## Create shipping label
+
+When the configuration names `ship` and a store key is saved, the page of
+each Processing order with a delivery address shows a "Create shipping label"
+link (GrillTrack `commerce-ship-label-link-001`). EmDash plugins cannot call
+each other, so the link opens Ship's own label page for that order:
+
+```text
+<ship origin>/stores/<siteId>/orders/<orderId>
+```
+
+with the store id from the configuration and the order id, each
+URL-encoded (`shipLabelPage` in `src/features/orders/ship.ts`). The link
+carries no pass: Ship asks the owner to sign in with DinkusKit.com. Opening
+the order makes no call and trades nothing, so whether Ship has the order, or
+the store has Ship turned on, shows only on Ship's page. A Completed order
+shows no link.
 
 ## Proof
 
 - `tests/features/orders/ship.test.mjs`: what is sent and when (address
-  fixes, Complete and Move back each send the new version; no digital items,
-  prices, payment ids or phone numbers), label outcomes for current, older,
+  fixes, Complete and Move back each send the new version; each line's price
+  paid; no digital items, totals, payment ids or phone numbers), label
+  outcomes for current, older,
   Completed, unusable and unknown orders, lost acknowledgements, Ship being
   down, 422, a missing pass, malformed label lists and the 10-per-sync limit.
 - `tests/features/orders/status.test.mjs`: the Orders page syncs when it opens
@@ -97,6 +122,11 @@ completed long ago, a few per sync.
   Ship about an agent's change right away, and refuses a label list over
   128 KB without acknowledging or changing anything; without `ship`, with Ship
   turned off, or with a Payments pass handed out in its place, nothing calls
-  Ship.
+  Ship. The Processing order's page links to
+  `<ship origin>/stores/synthetic-site/orders/<order id>` without calling Ship
+  or trading, the Completed one does not, and without `ship` there is no link.
+- `tests/features/orders/view.test.mjs`: the link comes first among a
+  Processing order's actions, and never on the list, without Ship, without an
+  address or on a Completed order.
 - Registry backend: 127,780 → 129,752 bytes (+1,972), leaving 1,320 under
   131,072.

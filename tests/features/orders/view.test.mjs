@@ -51,3 +51,20 @@ test('only live orders drop the TEST mark, in the list and the detail', () => {
  assert.match(JSON.stringify(ordersView({ status: 'available', orders }, 'order:test')), /Order:\\n#1002 \(TEST\)/);
  assert.doesNotMatch(JSON.stringify(ordersView({ status: 'available', orders }, paid.orderId)), /TEST/);
 });
+test('a Processing order with an address links to Ship\'s label page when the store has Ship', () => {
+ const delivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', region: 'NC', postalCode: '28906', country: 'US' };
+ const page = 'https://ship.example.test/stores/site/orders/' + encodeURIComponent(paid.orderId);
+ const shipping = { paidOrder: paid, delivery };
+ const elements = (record, labelPage) => ordersView({ status: 'available', orders: [record] }, paid.orderId, labelPage).blocks
+   .find(b => b.type === 'actions' && b.elements.some(e => e.action_id?.startsWith('orders.finish:') || e.action_id?.startsWith('orders.reopen:'))).elements;
+ const detail = ordersView({ status: 'available', orders: [shipping] }, paid.orderId, page);
+ assert.equal(validateBlocks(detail.blocks).valid, true);
+ assert.deepEqual(elements(shipping, page).map(e => e.label), ['Create shipping label', 'Complete order', 'Correct address']);
+ assert.deepEqual(elements(shipping, page)[0], { type: 'link', label: 'Create shipping label', target: { kind: 'external', url: page }, appearance: 'primary' });
+ // No Ship service, no address to ship to, or a Completed order: no link.
+ assert.deepEqual(elements(shipping).map(e => e.label), ['Complete order', 'Correct address']);
+ assert.deepEqual(elements(kept(paid), page).map(e => e.label), ['Complete order']);
+ assert.deepEqual(elements({ ...shipping, completed: { at: '2026-10-10T20:00:00.000Z' } }, page).map(e => e.label), ['Move back to Processing']);
+ // The list never links.
+ assert.doesNotMatch(JSON.stringify(ordersView({ status: 'available', orders: [shipping] }, undefined, page)), /Create shipping label/);
+});
