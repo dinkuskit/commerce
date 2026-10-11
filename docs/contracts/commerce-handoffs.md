@@ -132,7 +132,12 @@ order so it can be labeled.
   quantity, the price the shopper paid for one, `unitPrice`, and each
   product's current shipping weight in ounces, `weightOz`, when set). Digital
   items, order totals, the shipping charge, payment details and phone numbers
-  are never sent.
+  are never sent. Text people typed (the address, item names, carrier and
+  tracking number, and the store's name) goes as one line, as Ship requires:
+  each run of control characters or Unicode line or paragraph separators
+  becomes one space and the ends are trimmed, and an address field, carrier or
+  tracking number with nothing left is left out. The order keeps what was
+  typed.
   Each new version goes to Ship: when the order arrives, and after an address
   fix, Complete order or Move back to Processing. Ship labels only the latest
   version and buys no postage for a test order. Ship reports each label it

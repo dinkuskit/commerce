@@ -28,6 +28,14 @@ function unavailable(): never {
   throw new Error("Ship unavailable");
 }
 
+/**
+ * Ship takes each text field as one line: every run of control characters or Unicode line and
+ * paragraph separators becomes one space, and the ends are trimmed. Anything not text is left as it is.
+ */
+function oneLine<T>(value: T): T {
+  return (typeof value === "string" ? value.replace(/[\p{Cc}\u2028\u2029]+/gu, " ").trim() : value) as T;
+}
+
 /** Ship's label page for one order. The owner signs in there with DinkusKit.com; the link carries no pass. */
 export function shipLabelPage(ship: Pick<ShipConnection, "origin" | "site">, orderId: string): string {
   return new URL(ship.origin).origin + "/stores/" + encodeURIComponent(ship.site) + "/orders/" + encodeURIComponent(orderId);
@@ -57,9 +65,9 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     }
     if (!(await call("/v1/labels/ack", { eventId: label.eventId })).ok) unavailable();
   }
-  // Each order carries the store's name for Ship's emails: no control characters, trimmed, at most
-  // 200 UTF-16 units without splitting a character, and left out when nothing is left.
-  const storeName = (ship.name ?? "").replace(/\p{Cc}/gu, "").trim().slice(0, 200).replace(/[\ud800-\udbff]$/, "").trimEnd();
+  // Each order carries the store's name for Ship's emails: one line, at most 200 UTF-16 units
+  // without splitting a character, and left out when nothing is left.
+  const storeName = oneLine(ship.name ?? "").slice(0, 200).replace(/[\ud800-\udbff]$/, "").trimEnd();
   let room = SHIP_ORDERS_PER_SYNC;
   for (const record of await listOrders(collection)) {
     const facts = orderFacts(record);
@@ -70,9 +78,17 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
       // Digital items never go in the box; an item since removed from the catalog goes without a weight.
       // Each line carries what the shopper paid for one of it, for insurance and packing slips.
       const found = await item(catalogItemId);
-      if (found?.physical !== false) lines.push({ catalogItemId, name, quantity, unitPrice, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
+      if (found?.physical !== false) lines.push({ catalogItemId, name: oneLine(name), quantity, unitPrice, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
     }
-    const response = await call("/v1/orders", { schema: SHIP_ORDER_SCHEMA, ...facts, ...(storeName ? { storeName } : {}), lines });
+    // What people typed (the address, item names, carrier and tracking number) goes as one line, and an
+    // address field, carrier or tracking number with nothing left is left out. The order keeps what was typed.
+    const { completed } = facts;
+    const response = await call("/v1/orders", {
+      schema: SHIP_ORDER_SCHEMA, ...facts,
+      shipTo: Object.fromEntries(Object.entries(facts.shipTo).map(([field, text]) => [field, oneLine(text) || undefined])),
+      completed: completed && { ...completed, carrier: oneLine(completed.carrier) || undefined, tracking: oneLine(completed.tracking) || undefined },
+      ...(storeName ? { storeName } : {}), lines,
+    });
     // 422 means Ship can never label this version, so it waits for the order's next change.
     if (!response.ok && response.status !== 422) unavailable();
     const current = await collection.getVersioned(facts.orderId);
