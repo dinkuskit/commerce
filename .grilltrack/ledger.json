@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-11T00:26:15+00:00",
+    "confirmed_at": "2026-10-11T01:31:12+00:00",
     "domain": "Commerce sends orders to Ship",
-    "started_at": "2026-10-11T00:18:30+00:00",
+    "started_at": "2026-10-11T00:55:32+00:00",
     "status": "confirmed",
-    "summary": "Reopened commerce-ship-sync-001 on Ronald's 'Yes yes' at 00:11:12 UTC 2026-10-11 (Ship thread, question 2 of 00:08 UTC): each order Commerce sends Ship also carries storeName, EmDash's Site title cleaned of control characters, trimmed and at most 200 UTF-16 units, left out when empty; built and checked on 8776200."
+    "summary": "Ronald chose 'Swap them' at 01:30:45 UTC 2026-10-11 on the decision card 'Swap hidden line breaks for spaces in orders Commerce sends Ship?' (Buildout thread): the text people typed goes to Ship as one line."
   },
   "decisions": [
     {
@@ -10386,7 +10386,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, with control characters removed, trimmed, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
+      "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, made one line as below, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). Text people typed goes as one line, as Ship's text rule requires: in the delivery address, each line's name, the completion's carrier and tracking number and storeName, each run of whitespace or control characters (C0, DEL and C1 controls, line breaks and the Unicode line and paragraph separators U+2028 and U+2029 included) becomes one space and the ends are trimmed, and an address field, carrier or tracking number with nothing left is left out. Only what is sent changes; the order keeps what was typed. No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
       "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanDi9YHvj4p2KCoTobq99duw",
       "created_at": "2026-10-10T20:38:07+00:00",
       "deferred_reason": null,
@@ -10553,12 +10553,68 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T00:55:32+00:00",
+          "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, with control characters removed, trimmed, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
+          "from": "verified",
+          "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
+          "note": "Ship's order intake (dinkuskit/ship PR 23, head 4660579) now refuses any order text holding a control character, C1 ones included, or a Unicode line or paragraph separator, and answers 422, which holds that order version back. Commerce's own checks refuse only C0 controls and DEL, so a pasted address, product name, carrier or tracking number can carry them. Proposed on Ronald's decision card in the Buildout thread: send that text as one line.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:12+00:00",
+          "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, with control characters removed, trimmed, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
+          "from": "reopened",
+          "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, made one line as below, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). Text people typed goes as one line, as Ship's text rule requires: in the delivery address, each line's name, the completion's carrier and tracking number and storeName, each run of whitespace or control characters (C0, DEL and C1 controls, line breaks and the Unicode line and paragraph separators U+2028 and U+2029 included) becomes one space and the ends are trimmed, and an address field, carrier or tracking number with nothing left is left out. Only what is sent changes; the order keeps what was typed. No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
+          "from": "locked",
+          "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, made one line as below, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). Text people typed goes as one line, as Ship's text rule requires: in the delivery address, each line's name, the completion's carrier and tracking number and storeName, each run of whitespace or control characters (C0, DEL and C1 controls, line breaks and the Unicode line and paragraph separators U+2028 and U+2029 included) becomes one space and the ends are trimmed, and an address field, carrier or tracking number with nothing left is left out. Only what is sent changes; the order keeps what was typed. No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
+          "from": "implemented",
+          "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title; typed text sent as one line by oneLine); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         }
       ],
       "id": "commerce-ship-sync-001",
-      "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
+      "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title; typed text sent as one line by oneLine); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
       "question": "How does Commerce send orders to Ship and learn that a label was bought?",
-      "rationale": "Every platform checked (Shopify, WooCommerce through ShipStation, BigCommerce) sends shipping apps the price paid per item; Ship uses it for insurance, packing slips and later customs forms (research: /mnt/project-files/ship-handoff/what-shipping-apps-receive.md). Ronald answered yes to the price and no to totals and phone. Ronald's \"Yes yes\" at 00:11:12 UTC 2026-10-11 (Ship thread, answering its question 2 of 00:08 UTC) adds the store's name: EmDash hands every plugin the Site title as ctx.site.name, WooCommerce's shipped email uses the site title by default, and it stays current when the owner changes the title, so DinkusKit.com keeps no store name and builds no rename box. Ship treats it as optional and says \"your store\" without it.",
+      "rationale": "Every platform checked (Shopify, WooCommerce through ShipStation, BigCommerce) sends shipping apps the price paid per item; Ship uses it for insurance, packing slips and later customs forms (research: /mnt/project-files/ship-handoff/what-shipping-apps-receive.md). Ronald answered yes to the price and no to totals and phone. Ronald's \"Yes yes\" at 00:11:12 UTC 2026-10-11 (Ship thread, answering its question 2 of 00:08 UTC) adds the store's name: EmDash hands every plugin the Site title as ctx.site.name, WooCommerce's shipped email uses the site title by default, and it stays current when the owner changes the title, so DinkusKit.com keeps no store name and builds no rename box. Ship treats it as optional and says \"your store\" without it. Ronald's \"Swap them\" at 01:30:45 UTC 2026-10-11 (decision card in the Buildout thread, the recommended option) makes the text people typed go to Ship as one line: Ship's order intake (dinkuskit/ship PR 23, head 4660579) answers 422 to text holding a control character, C1 ones included, or a Unicode line or paragraph separator, which holds that order version back until it changes, and a product name holding one would hold back every order of that product, while Commerce's own checks refuse only C0 controls and DEL. Cleaning only what is sent covers orders and products already kept, turns no shopper away at checkout and leaves the order as typed; collapsing each whitespace run leaves no double space on labels or in emails.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -10567,8 +10623,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-11T00:26:15+00:00",
-      "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+      "updated_at": "2026-10-11T01:31:35+00:00",
+      "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md; .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -10681,6 +10737,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with item prices in .grilltrack/proof/ship-item-price-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T00:55:32+00:00",
+          "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
+          "from": "verified",
+          "implementation_ref": "src/plugin.ts (plugin:activate); docs/implementation/installed-checkout-context.md#background-check",
+          "note": "dependency commerce-ship-sync-001 changed: Ship's order intake (dinkuskit/ship PR 23, head 4660579) now refuses any order text holding a control character, C1 ones included, or a Unicode line or paragraph separator, and answers 422, which holds that order version back. Commerce's own checks refuse only C0 controls and DEL, so a pasted address, product name, carrier or tracking number can carry them. Proposed on Ronald's decision card in the Buildout thread: send that text as one line.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/plugin.ts (plugin:activate); docs/implementation/installed-checkout-context.md#background-check",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         }
       ],
       "id": "commerce-background-check-001",
@@ -10695,8 +10779,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-11T00:26:15+00:00",
-      "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+      "updated_at": "2026-10-11T01:31:35+00:00",
+      "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -10952,6 +11036,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with item prices in .grilltrack/proof/ship-item-price-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T00:55:32+00:00",
+          "choice": "Each store pastes one store key from the Set up Commerce box on DinkusKit.com into Commerce's only secret setting, storeKey, which replaces installedCheckoutCredential, installedCheckoutCouponsCredential and installedShipCredential. Before a Payments, Coupons or Ship call, Commerce trades the key at POST https://dinkuskit.com/api/store-passes, a fixed address no setting changes (never the origin of an issuer named in the settings), for a fresh 5-minute pass for that one service (payments:checkout with the checkout audience, coupons:checkout with coupons.audience, ship:orders with ship.audience), at most once per service per invocation, and admits the pass like any pass. One replaceable key covers all three, and each store turns on any of them on DinkusKit.com: Payments counts as on while its Connect grant is active, Coupons and Ship are switches, and DinkusKit.com mints passes only for services that are on. Commerce calls only the services its pasted settings name. Any answer other than a 200 with an admissible pass means that call is not made; Replace key on DinkusKit.com stops the old key at once. This replaces where commerce-ship-sync-001 and registry-checkout-hosted-coupons-001 get their passes; what they send is unchanged.",
+          "from": "verified",
+          "implementation_ref": "src/features/checkout/registry-credential.ts (tradeStoreKey, fixed https://dinkuskit.com/api/store-passes); src/features/checkout/registry-services.ts (storePasses); emdash-plugin.jsonc (storeKey); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "dependency commerce-ship-sync-001 changed: Ship's order intake (dinkuskit/ship PR 23, head 4660579) now refuses any order text holding a control character, C1 ones included, or a Unicode line or paragraph separator, and answers 422, which holds that order version back. Commerce's own checks refuse only C0 controls and DEL, so a pasted address, product name, carrier or tracking number can carry them. Proposed on Ronald's decision card in the Buildout thread: send that text as one line.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "Each store pastes one store key from the Set up Commerce box on DinkusKit.com into Commerce's only secret setting, storeKey, which replaces installedCheckoutCredential, installedCheckoutCouponsCredential and installedShipCredential. Before a Payments, Coupons or Ship call, Commerce trades the key at POST https://dinkuskit.com/api/store-passes, a fixed address no setting changes (never the origin of an issuer named in the settings), for a fresh 5-minute pass for that one service (payments:checkout with the checkout audience, coupons:checkout with coupons.audience, ship:orders with ship.audience), at most once per service per invocation, and admits the pass like any pass. One replaceable key covers all three, and each store turns on any of them on DinkusKit.com: Payments counts as on while its Connect grant is active, Coupons and Ship are switches, and DinkusKit.com mints passes only for services that are on. Commerce calls only the services its pasted settings name. Any answer other than a 200 with an admissible pass means that call is not made; Replace key on DinkusKit.com stops the old key at once. This replaces where commerce-ship-sync-001 and registry-checkout-hosted-coupons-001 get their passes; what they send is unchanged.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/checkout/registry-credential.ts (tradeStoreKey, fixed https://dinkuskit.com/api/store-passes); src/features/checkout/registry-services.ts (storePasses); emdash-plugin.jsonc (storeKey); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         }
       ],
       "id": "commerce-store-key-001",
@@ -10966,8 +11078,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-11T00:26:15+00:00",
-      "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+      "updated_at": "2026-10-11T01:31:35+00:00",
+      "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -11135,6 +11247,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with item prices in .grilltrack/proof/ship-item-price-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T00:55:32+00:00",
+          "choice": "DinkusKit.com's Set up Commerce box gives each store the exact installedCheckout JSON to paste beside the store key: the store ID from Connect, issuer https://dinkuskit.com/account, the Payments origin, audience, binding and account from Payments' status, mode (test unless the owner says live), shipping, and coupons and ship only while those services are on, with new settings to paste whenever a switch changes. Commerce keeps reading installedCheckout exactly as today and refuses settings made for another site. A setup page inside Commerce that fetches these itself is after v1.",
+          "from": "verified",
+          "implementation_ref": "emdash-plugin.jsonc (installedCheckout description); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "dependency commerce-ship-sync-001 changed: Ship's order intake (dinkuskit/ship PR 23, head 4660579) now refuses any order text holding a control character, C1 ones included, or a Unicode line or paragraph separator, and answers 422, which holds that order version back. Commerce's own checks refuse only C0 controls and DEL, so a pasted address, product name, carrier or tracking number can carry them. Proposed on Ronald's decision card in the Buildout thread: send that text as one line.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "DinkusKit.com's Set up Commerce box gives each store the exact installedCheckout JSON to paste beside the store key: the store ID from Connect, issuer https://dinkuskit.com/account, the Payments origin, audience, binding and account from Payments' status, mode (test unless the owner says live), shipping, and coupons and ship only while those services are on, with new settings to paste whenever a switch changes. Commerce keeps reading installedCheckout exactly as today and refuses settings made for another site. A setup page inside Commerce that fetches these itself is after v1.",
+          "from": "needs_reverification",
+          "implementation_ref": "emdash-plugin.jsonc (installedCheckout description); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         }
       ],
       "id": "commerce-checkout-settings-paste-001",
@@ -11149,8 +11289,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-11T00:26:15+00:00",
-      "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+      "updated_at": "2026-10-11T01:31:35+00:00",
+      "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -11319,6 +11459,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with item prices in .grilltrack/proof/ship-item-price-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T00:55:32+00:00",
+          "choice": "No. To keep room under the 128 KiB backend limit, the v1 Registry build does not wire the hosted coupon port: a coupon code is refused as COUPON_UNAVAILABLE (try-later) before any call, even when the checkout settings name the coupon service, and no coupons:checkout pass is traded. Settings that name coupons stay valid, coupons.dinkuskit.com stays declared so coupons can return without stores approving a new host, and the port, its tests and checkout's coupon pricing stay in the source. Inventory-managed stock stays in unless a v1 piece does not fit. Template Store's checkout shows a greyed 'Coupons coming soon' box (the owner's other agents).",
+          "from": "verified",
+          "implementation_ref": "src/features/checkout/registry-services.ts (resolveRegistryCheckoutServices); docs/implementation/registry-hosted-coupons.md",
+          "note": "dependency commerce-ship-sync-001 changed: Ship's order intake (dinkuskit/ship PR 23, head 4660579) now refuses any order text holding a control character, C1 ones included, or a Unicode line or paragraph separator, and answers 422, which holds that order version back. Commerce's own checks refuse only C0 controls and DEL, so a pasted address, product name, carrier or tracking number can carry them. Proposed on Ronald's decision card in the Buildout thread: send that text as one line.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "No. To keep room under the 128 KiB backend limit, the v1 Registry build does not wire the hosted coupon port: a coupon code is refused as COUPON_UNAVAILABLE (try-later) before any call, even when the checkout settings name the coupon service, and no coupons:checkout pass is traded. Settings that name coupons stay valid, coupons.dinkuskit.com stays declared so coupons can return without stores approving a new host, and the port, its tests and checkout's coupon pricing stay in the source. Inventory-managed stock stays in unless a v1 piece does not fit. Template Store's checkout shows a greyed 'Coupons coming soon' box (the owner's other agents).",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/checkout/registry-services.ts (resolveRegistryCheckoutServices); docs/implementation/registry-hosted-coupons.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         }
       ],
       "id": "registry-coupons-unhooked-v1",
@@ -11333,8 +11501,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-11T00:26:16+00:00",
-      "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+      "updated_at": "2026-10-11T01:31:35+00:00",
+      "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -11418,6 +11586,34 @@
           "review_source_identity": null,
           "to": "implemented",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-11T00:55:32+00:00",
+          "choice": "Yes. commerce#98 merges once ClawSweeper's gate passes, proven against a stand-in for DinkusKit.com's trade and checked by reading against DinkusKit.com's merged store-pass code (dinkuskit#29). No store takes real orders on Registry checkout until one real pass from the live DinkusKit.com works with this Commerce build; that check comes after DinkusKit.com is deployed with its Set up Commerce box.",
+          "from": "implemented",
+          "implementation_ref": "commerce#98 merged 23:25 UTC 2026-10-10 (main 28cec7b) once ClawSweeper's gate passed. The live check, one real pass from the live DinkusKit.com working with this build before any store takes real orders on Registry checkout, is a launch step not yet run.",
+          "note": "dependency commerce-ship-sync-001 changed: Ship's order intake (dinkuskit/ship PR 23, head 4660579) now refuses any order text holding a control character, C1 ones included, or a Unicode line or paragraph separator, and answers 422, which holds that order version back. Commerce's own checks refuse only C0 controls and DEL, so a pasted address, product name, carrier or tracking number can carry them. Proposed on Ronald's decision card in the Buildout thread: send that text as one line.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "Yes. commerce#98 merges once ClawSweeper's gate passes, proven against a stand-in for DinkusKit.com's trade and checked by reading against DinkusKit.com's merged store-pass code (dinkuskit#29). No store takes real orders on Registry checkout until one real pass from the live DinkusKit.com works with this Commerce build; that check comes after DinkusKit.com is deployed with its Set up Commerce box.",
+          "from": "needs_reverification",
+          "implementation_ref": "commerce#98 merged 23:25 UTC 2026-10-10 (main 28cec7b) once ClawSweeper's gate passed. The live check, one real pass from the live DinkusKit.com working with this build before any store takes real orders on Registry checkout, is a launch step not yet run.",
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
         }
       ],
       "id": "commerce-store-key-release-gate-001",
@@ -11432,7 +11628,7 @@
       "review_source_identity": null,
       "status": "implemented",
       "superseded_by": null,
-      "updated_at": "2026-10-11T00:26:16+00:00",
+      "updated_at": "2026-10-11T01:31:35+00:00",
       "verification_ref": null
     },
     {
@@ -11519,6 +11715,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T00:55:32+00:00",
+          "choice": "When the store's checkout settings name ship and a store key is saved, the Orders page of each Processing order with a delivery address shows a \"Create shipping label\" link, first among the order's actions. It opens Ship's own label page for that order: <ship origin from the settings>/stores/<siteId from the settings>/orders/<order id>, each part URL-encoded, the address Ship's thread gave for its label page. The link carries no pass; Ship asks the owner to sign in with DinkusKit.com (Ship's ship-owner-signin-001). Opening an order makes no call to Ship or DinkusKit.com and stores nothing. The order list, Completed orders and orders without an address show no link.",
+          "from": "verified",
+          "implementation_ref": "src/features/orders/ship.ts (shipLabelPage); src/features/orders/admin/view.ts (ordersView labelPage link); src/features/orders/admin/page.ts (OrdersServices.labelPage); src/admin/index.ts and src/features/checkout/registry-services.ts (ship site id); docs/implementation/registry-ship-sync.md#create-shipping-label; docs/contracts/commerce-handoffs.md",
+          "note": "dependency commerce-ship-sync-001 changed: Ship's order intake (dinkuskit/ship PR 23, head 4660579) now refuses any order text holding a control character, C1 ones included, or a Unicode line or paragraph separator, and answers 422, which holds that order version back. Commerce's own checks refuse only C0 controls and DEL, so a pasted address, product name, carrier or tracking number can carry them. Proposed on Ronald's decision card in the Buildout thread: send that text as one line.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-11T01:31:35+00:00",
+          "choice": "When the store's checkout settings name ship and a store key is saved, the Orders page of each Processing order with a delivery address shows a \"Create shipping label\" link, first among the order's actions. It opens Ship's own label page for that order: <ship origin from the settings>/stores/<siteId from the settings>/orders/<order id>, each part URL-encoded, the address Ship's thread gave for its label page. The link carries no pass; Ship asks the owner to sign in with DinkusKit.com (Ship's ship-owner-signin-001). Opening an order makes no call to Ship or DinkusKit.com and stores nothing. The order list, Completed orders and orders without an address show no link.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/orders/ship.ts (shipLabelPage); src/features/orders/admin/view.ts (ordersView labelPage link); src/features/orders/admin/page.ts (OrdersServices.labelPage); src/admin/index.ts and src/features/checkout/registry-services.ts (ship site id); docs/implementation/registry-ship-sync.md#create-shipping-label; docs/contracts/commerce-handoffs.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         }
       ],
       "id": "commerce-ship-label-link-001",
@@ -11533,12 +11757,12 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-11T00:26:16+00:00",
-      "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+      "updated_at": "2026-10-11T01:31:35+00:00",
+      "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-11T00:18:30+00:00",
+    "at": "2026-10-11T00:55:32+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -11571,5 +11795,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-11T00:26:16+00:00"
+  "updated_at": "2026-10-11T01:31:35+00:00"
 }

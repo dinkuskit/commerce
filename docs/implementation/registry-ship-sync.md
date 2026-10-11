@@ -83,14 +83,26 @@ packing slips and later customs forms (GrillTrack `commerce-ship-sync-001`,
 Ronald's "yes no no", 23:10 UTC 2026-10-10). `completed` is
 `{ at, carrier?, tracking? }` once the order is Completed. `storeName` is the
 store's name for Ship's shipped email: EmDash's Site title (`ctx.site.name`)
-with control characters removed, trimmed, and cut to at most 200 UTF-16 units
-without splitting a character. It is left out when nothing is left, and Ship
-then says "your store" (GrillTrack `commerce-ship-sync-001`, Ronald's "Yes
-yes", 00:11 UTC 2026-10-11). `test` is true for
-every order not taken in live mode; Ship must not buy postage for it. No order
-totals, shipping charges, payment ids or phone numbers are sent. On
-the first sync Ship gets every order with an address, including ones
-completed long ago, a few per sync.
+made one line as below and cut to at most 200 UTF-16 units without splitting
+a character. It is left out when nothing is left, and Ship then says "your
+store" (GrillTrack `commerce-ship-sync-001`, Ronald's "Yes yes", 00:11 UTC
+2026-10-11). `test` is true for every order not taken in live mode; Ship must
+not buy postage for it. No order totals, shipping charges, payment ids or
+phone numbers are sent. On the first sync Ship gets every order with an
+address, including ones completed long ago, a few per sync.
+
+Ship refuses an order whose text holds a control character (C1 ones such as
+NEL included) or a Unicode line or paragraph separator (U+2028, U+2029), and a
+paste can carry those into an address, a product name or a tracking number
+past Commerce's own checks, which refuse only C0 controls and DEL. So the text
+people typed goes as one line: in the address, each line's `name`,
+`completed.carrier`, `completed.tracking` and `storeName`, each run of
+whitespace or control characters (those separators included) becomes one space
+and the ends are trimmed (`commerce-ship-sync-001`), leaving no line break and
+no double space. An address field, carrier or tracking number with nothing
+left is left out; a required address field left out gets a 422 from Ship, like
+any address it cannot use. Only what is sent changes: the order keeps what was
+typed, and agents reading orders see it unchanged.
 
 ## Create shipping label
 
@@ -114,8 +126,9 @@ shows no link.
 
 - `tests/features/orders/ship.test.mjs`: what is sent and when (address
   fixes, Complete and Move back each send the new version; each line's price
-  paid; the store's name, cleaned or left out; no digital items, totals,
-  payment ids or phone numbers), label
+  paid; the store's name, cleaned or left out; typed text sent as one line
+  that Ship's own text rule takes, while the order keeps what was typed; no
+  digital items, totals, payment ids or phone numbers), label
   outcomes for current, older,
   Completed, unusable and unknown orders, lost acknowledgements, Ship being
   down, 422, a missing pass, malformed label lists and the 10-per-sync limit.
