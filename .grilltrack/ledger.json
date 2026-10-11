@@ -11759,6 +11759,32 @@
       "superseded_by": null,
       "updated_at": "2026-10-11T01:31:35+00:00",
       "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Proposed: every route sets public true/false; admin routes name an EmDash permission; dist/sandbox/route-manifest.json (export @dinkuskit/commerce/route-manifest) lists all routes with artifact sha256 and the six public Registry paths, including policies/public; a unit test fails on any undeclared route.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/79",
+      "created_at": "2026-10-11T19:44:54+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Commerce sends orders to Ship",
+      "history": [],
+      "id": "commerce-route-auth-manifest-001",
+      "implementation_ref": null,
+      "question": "Should every Commerce route declare public or admin, with the exact public paths published as a build-time manifest for Cloudflare Access (issue #79)?",
+      "rationale": "Lets stores bypass Access only for exact shopper paths; manifest is generated outside the sandbox bundle to protect the 128 KiB backend limit.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-10-11T19:44:54+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -11795,5 +11821,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-11T01:31:35+00:00"
+  "updated_at": "2026-10-11T19:44:54+00:00"
 }

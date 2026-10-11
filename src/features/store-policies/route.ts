@@ -22,6 +22,7 @@ function mapError(error: unknown): never {
 }
 
 export const setStoreShippingPolicyRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -40,6 +41,7 @@ export const setStoreShippingPolicyRoute: PluginRoute = {
 };
 
 export const setStoreReturnPolicyRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {

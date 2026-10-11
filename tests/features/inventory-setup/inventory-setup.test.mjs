@@ -522,7 +522,7 @@ test("the plugin declares the singleton configuration and one private update rou
     uniqueIndexes: ["configurationKey"],
   });
   const route = plugin.routes[CONFIGURE_INVENTORY_ROUTE];
-  assert.equal(route.public, undefined);
+  assert.equal(route.public, false);
   assert.equal(route.permission, "content:edit_any");
 
   const context = {

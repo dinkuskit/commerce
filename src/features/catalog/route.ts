@@ -76,6 +76,7 @@ export function createCatalogItemRouteWithLocalStock(
   options: LocalStockHostOptions = {},
 ): PluginRoute {
   return {
+    public: false,
     permission: "content:create",
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
@@ -103,6 +104,7 @@ export function createCatalogItemRouteWithLocalStock(
 export const createCatalogItemRoute: PluginRoute = createCatalogItemRouteWithLocalStock();
 
 export const setCatalogItemBackordersRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -127,6 +129,7 @@ export const setCatalogItemBackordersRoute: PluginRoute = {
 };
 
 export const setCatalogItemManualAvailabilityRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -174,6 +177,7 @@ function catalogPriceRoute(
   methodMessage: string,
 ): PluginRoute {
   return {
+    public: false,
     permission: "content:edit_any",
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
@@ -212,6 +216,7 @@ export function createListCatalogProductsRouteWithLocalStock(
   options: LocalStockHostOptions = {},
 ): PluginRoute {
   return {
+    public: false,
     permission: "content:edit_any",
     handler: async (ctx) => {
       const method = ctx.request.method.toUpperCase();
@@ -243,6 +248,7 @@ export function createSaveCatalogProductPricesRouteWithLocalStock(
   options: LocalStockHostOptions = {},
 ): PluginRoute {
   return {
+    public: false,
     permission: "content:edit_any",
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
@@ -282,6 +288,7 @@ export const saveCatalogProductPricesRoute: PluginRoute =
   createSaveCatalogProductPricesRouteWithLocalStock();
 
 export const bulkSaveCatalogProductPricesRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -302,6 +309,7 @@ export const bulkSaveCatalogProductPricesRoute: PluginRoute = {
 };
 
 export const saveCatalogItemMediaRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -325,6 +333,7 @@ export const saveCatalogItemMediaRoute: PluginRoute = {
 };
 
 export const setCatalogItemSkuRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -345,6 +354,7 @@ export const setCatalogItemSkuRoute: PluginRoute = {
 };
 
 export const setCatalogItemIdentifiersRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -365,6 +375,7 @@ export const setCatalogItemIdentifiersRoute: PluginRoute = {
 };
 
 export const addCatalogVariantOptionRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
@@ -384,6 +395,7 @@ export const addCatalogVariantOptionRoute: PluginRoute = {
 };
 
 export const updateCatalogVariantLabelsRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {

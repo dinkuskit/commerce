@@ -10,6 +10,7 @@ export { SET_PRODUCT_FEED_ELIGIBILITY_ROUTE } from "./route-ids.js";
 import { SET_PRODUCT_FEED_ELIGIBILITY_ROUTE } from "./route-ids.js";
 
 export const setProductFeedEligibilityRoute: PluginRoute = {
+  public: false,
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {

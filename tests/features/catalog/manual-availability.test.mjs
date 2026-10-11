@@ -180,7 +180,7 @@ test("the plugin exposes one private permissioned manual-availability action", a
     indexes: [],
     uniqueIndexes: [],
   });
-  assert.equal(route.public, undefined);
+  assert.equal(route.public, false);
   assert.equal(route.permission, "content:edit_any");
   await assert.rejects(
     route.handler({

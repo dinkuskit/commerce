@@ -76,12 +76,14 @@ const plugin: SandboxedPlugin = {
       handler: async (_route, ctx) => readSandboxPublicStorePolicies(ctx),
     }),
     admin: {
+      public: false,
       permission: "content:edit_any",
       methods: ["POST"],
       handler: commerceAdmin,
     },
     // Agents and the CLI read and complete orders here with an EmDash API token.
     [ORDERS_API_ROUTE]: {
+      public: false,
       permission: "plugins:manage",
       methods: ["POST"],
       handler: async (route, ctx) => {

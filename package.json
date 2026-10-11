@@ -51,6 +51,7 @@
     },
     "./sandbox": "./dist/sandbox/plugin.mjs",
     "./descriptor": "./dist/sandbox/index.mjs",
+    "./route-manifest": "./dist/sandbox/route-manifest.json",
     "./features/checkout": {
       "types": "./dist/features/checkout/index.d.ts",
       "default": "./dist/features/checkout/index.js"

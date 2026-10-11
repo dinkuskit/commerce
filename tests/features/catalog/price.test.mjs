@@ -270,7 +270,7 @@ test("price routes are private POST actions that do not rewrite the catalog row"
       plugin.routes[CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE],
     ],
   ]) {
-    assert.equal(route.public, undefined);
+    assert.equal(route.public, false);
     assert.equal(route.permission, "content:edit_any");
     await assert.rejects(
       route.handler({
