@@ -508,7 +508,7 @@ test("only an exact named unique violation is classified as atomic proof", () =>
 test("the EmDash plugin exposes one private, permissioned create route and both unique declarations", () => {
   assert.deepEqual(dinkusCommerce(), {
     id: "dinkus-commerce",
-    version: "0.0.0",
+    version: "0.1.0",
     format: "native",
     entrypoint: "@dinkuskit/commerce",
     adminEntry: "@dinkuskit/commerce/admin",

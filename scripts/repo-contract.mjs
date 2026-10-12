@@ -87,8 +87,8 @@ export async function auditRepository(root = repositoryRoot) {
   if (manifest.name !== "@dinkuskit/commerce") {
     findings.push("package name must be @dinkuskit/commerce");
   }
-  if (manifest.version !== "0.0.0") findings.push("package version must start at 0.0.0");
-  if (manifest.private !== true) findings.push("package must remain private at charter stage");
+  if (manifest.version !== "0.1.0") findings.push("package version must be 0.1.0 for release preparation");
+  if (manifest.private !== undefined) findings.push("package must not be marked private for public release");
   if (manifest.license !== "MIT") findings.push("package license must be MIT");
   if (manifest.repository?.url !== "git+https://github.com/dinkuskit/commerce.git") {
     findings.push("package repository must be dinkuskit/commerce");

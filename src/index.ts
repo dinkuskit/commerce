@@ -116,7 +116,7 @@ export * from "./features/store-policies/index.js";
 
 export * from "./features/structured-data/index.js";
 
-const COMMERCE_PLUGIN_VERSION = "0.0.0";
+const COMMERCE_PLUGIN_VERSION = "0.1.0";
 
 const COMMERCE_ADMIN_ENTRY = "@dinkuskit/commerce/admin";
 const COMMERCE_PRODUCTS_PAGE = {

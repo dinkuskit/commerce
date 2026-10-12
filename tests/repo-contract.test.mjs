@@ -24,8 +24,7 @@ const requiredPublicFiles = [
 
 const requiredPublicManifest = {
   name: "@dinkuskit/commerce",
-  version: "0.0.0",
-  private: true,
+  version: "0.1.0",
   license: "MIT",
   repository: {
     type: "git",

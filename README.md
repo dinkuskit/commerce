@@ -51,8 +51,10 @@ data migration path to the Registry build.
 ## Status
 
 Pilot stage. The package name is reserved in source as
-`@dinkuskit/commerce`, but the manifest remains private at `0.0.0`: there is
-no published package, Registry listing, release, or deployment yet. A local
+`@dinkuskit/commerce`, and package metadata and the plugin manifest are aligned
+for public `0.1.0` release preparation. Actual package publication, Registry
+release, and deployment have not occurred and remain separate human approval
+gates. A local
 Registry-format sandbox artifact is built from `emdash-plugin.jsonc` and
 `src/plugin.ts`; it is not a claim of public Registry installation.
 

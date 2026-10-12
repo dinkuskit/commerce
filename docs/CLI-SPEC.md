@@ -414,7 +414,7 @@ dinkus-commerce --url https://shop.example products set-price item_demo --amount
 
 ## Non-goals
 
-- Publishing the CLI. The package remains private and unpublished; package
+- Publishing the CLI. The package is in public `0.1.0` release preparation and unpublished; package
   `files` includes the `cli` support dependency closure for already declared
   `bin/dinkus-commerce.mjs`, while the CLI has no export-map entry and adds
   zero Registry/sandbox bundle bytes.
