@@ -1,3 +1,5 @@
+// This SDK uses one workerd port; keep the readiness and service cases in one test process.
+import './registry-checkout-readiness-cases.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';

@@ -316,10 +316,20 @@ function createPaymentPort(
     if (create && ready.ready === false) throw new Error("Payments binding unavailable");
     return outcome(await call("POST", create ? "/v1/checkout/session" : "/v1/checkout/lookup", exact));
   }
+  async function verifyBinding(): Promise<PaymentBinding> {
+    const ready = await binding("/v1/checkout-binding");
+    if (ready.ready !== true) throw new Error("Payments binding unavailable");
+    return ready;
+  }
   const ensureSession = (request: PaymentRequest) => requestOutcome(request, true);
   const lookup = (request: PaymentRequest) => requestOutcome(request, false);
 
-  return Object.freeze({ ensureSession, lookup, ...(config.pricingSchema ? { pricingSchema: config.pricingSchema } : {}) });
+  return Object.freeze({
+    ensureSession,
+    lookup,
+    verifyBinding,
+    ...(config.pricingSchema ? { pricingSchema: config.pricingSchema } : {}),
+  });
 }
 
 export function createTrustedTestPaymentPort(

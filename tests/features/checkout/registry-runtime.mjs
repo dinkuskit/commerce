@@ -93,6 +93,7 @@ export async function verifyCouponPass(header) {
 
 export async function runtimeFixture({
   grants = true,
+  owner = COMMERCE_REGISTRY_RUNTIME_ID,
   config = configuration(),
   token,
   managed = false,
@@ -123,7 +124,6 @@ export async function runtimeFixture({
       status TEXT NOT NULL DEFAULT 'idle', locked_at TEXT, enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT,
       UNIQUE(plugin_id, task_name));`);
   const counts = { credentials: 0, transport: 0, scheduler: 0, acknowledgments: 0, coupons: 0, ship: 0, trades: 0 };
-  const owner = COMMERCE_REGISTRY_RUNTIME_ID;
   const db = new Kysely({ dialect: new SqliteDialect({ database: sqlite }), log(event) {
     if (event.level !== 'query') return;
     const query = event.query;
@@ -258,7 +258,12 @@ export async function runtimeFixture({
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },
   });
-  return { manifest, artifact, runner, plugin, invoke, settings, collections, counts, requests, trades, outbound,
+  const invokeReadiness = (options = {}) => plugin.invokeRoute('checkout/guest/readiness', undefined, {
+    url: options.url ?? `${SITE}/_emdash/api/plugins/${owner}/checkout/guest/readiness`,
+    method: 'GET',
+    headers: options.headers !== undefined ? options.headers : { origin: SITE },
+  });
+  return { manifest, artifact, runner, plugin, invoke, invokeReadiness, settings, collections, counts, requests, trades, outbound,
     /** Replace key on DinkusKit.com: from now on only this key gets passes. */
     acceptStoreKey(key) { acceptedKey = key; },
     /** What the stand-in issuer hands out for a scope from now on; null refuses it. */

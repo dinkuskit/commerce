@@ -18,8 +18,9 @@ const SANDBOX_PUBLIC = [
   "checkout/guest/prepare POST",
   "checkout/guest/start POST",
   "checkout/guest/status POST",
+  "checkout/guest/readiness GET",
 ];
-const NATIVE_PUBLIC = SANDBOX_PUBLIC.filter((route) => !route.startsWith("policies/"));
+const NATIVE_PUBLIC = SANDBOX_PUBLIC.filter((route) => !route.startsWith("policies/") && !route.includes("/readiness"));
 
 function publicSet(routes) {
   return Object.entries(routes)
