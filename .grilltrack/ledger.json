@@ -12031,6 +12031,94 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T20:50:24+00:00",
+          "choice": "Expose a thin PUBLIC GET checkout/guest/readiness route returning a versioned closed non-secret schema (dinkuskit.commerce.checkout-readiness/v1) with status 'supported' (mode 'test') or 'unavailable'. Verify actual existing owner-controlled Payments binding (ready===true, exact provider/merchant/site/origin/mode) via scoped service assembly, trading storeKey at dinkuskit.com if necessary as a read-time service effect without mutating orders, capabilities, or settings. Inspect original installed storage identity and validate capability structure without minting or writing records. Reject missing/disabled/malformed config, wrong plugin namespace, bad origin, non-test/wrong mode, missing store key, expired/refused pass, and unconnected/mismatched binding. Start and status retain independent authoritative binding revalidation.",
+          "from": "verified",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T20:50:24+00:00",
+          "choice": "Expose a thin PUBLIC GET checkout/guest/readiness route returning a versioned closed non-secret schema (dinkuskit.commerce.checkout-readiness/v1) with status 'supported' (mode 'test') or 'unavailable'. Verify actual existing owner-controlled Payments binding (ready===true, exact provider/merchant/site/origin/mode) via scoped service assembly, trading storeKey at dinkuskit.com if necessary as a read-time service effect without mutating orders, capabilities, or settings. Inspect original installed storage identity and validate capability structure without minting or writing records. Reject missing/disabled/malformed config, wrong plugin namespace, bad origin, non-test/wrong mode, missing store key, expired/refused pass, and unconnected/mismatched binding. Start and status retain independent authoritative binding revalidation.",
+          "from": "needs_reverification",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:1f5d35377a5b58adbd6d4e85ca71041282c9dc48",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T20:50:24+00:00",
+          "choice": "Expose a thin PUBLIC GET checkout/guest/readiness route returning a versioned closed non-secret schema (dinkuskit.commerce.checkout-readiness/v1) with status 'supported' (mode 'test') or 'unavailable'. Verify actual existing owner-controlled Payments binding (ready===true, exact provider/merchant/site/origin/mode) via scoped service assembly, trading storeKey at dinkuskit.com if necessary as a read-time service effect without mutating orders, capabilities, or settings. Inspect original installed storage identity and validate capability structure without minting or writing records. Reject missing/disabled/malformed config, wrong plugin namespace, bad origin, non-test/wrong mode, missing store key, expired/refused pass, and unconnected/mismatched binding. Start and status retain independent authoritative binding revalidation.",
+          "from": "implemented",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T21:02:05+00:00",
+          "choice": "Expose a thin PUBLIC GET checkout/guest/readiness route returning a versioned closed non-secret schema (dinkuskit.commerce.checkout-readiness/v1) with status 'supported' (mode 'test') or 'unavailable'. Verify actual existing owner-controlled Payments binding (ready===true, exact provider/merchant/site/origin/mode) via scoped service assembly, trading storeKey at dinkuskit.com if necessary as a read-time service effect without mutating orders, capabilities, or settings. Inspect original installed storage identity and validate capability structure without minting or writing records. Reject missing/disabled/malformed config, wrong plugin namespace, bad origin, non-test/wrong mode, missing store key, expired/refused pass, and unconnected/mismatched binding. Start and status retain independent authoritative binding revalidation.",
+          "from": "verified",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T21:02:05+00:00",
+          "choice": "Expose a thin PUBLIC GET checkout/guest/readiness route returning a versioned closed non-secret schema (dinkuskit.commerce.checkout-readiness/v1) with status 'supported' (mode 'test') or 'unavailable'. Verify actual existing owner-controlled Payments binding (ready===true, exact provider/merchant/site/origin/mode) via scoped service assembly, trading storeKey at dinkuskit.com if necessary as a read-time service effect without mutating orders, capabilities, or settings. Inspect original installed storage identity and validate capability structure without minting or writing records. Reject missing/disabled/malformed config, wrong plugin namespace, bad origin, non-test/wrong mode, missing store key, expired/refused pass, and unconnected/mismatched binding. Start and status retain independent authoritative binding revalidation.",
+          "from": "needs_reverification",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:1f5d35377a5b58adbd6d4e85ca71041282c9dc48",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T21:02:05+00:00",
+          "choice": "Expose a thin PUBLIC GET checkout/guest/readiness route returning a versioned closed non-secret schema (dinkuskit.commerce.checkout-readiness/v1) with status 'supported' (mode 'test') or 'unavailable'. Verify actual existing owner-controlled Payments binding (ready===true, exact provider/merchant/site/origin/mode) via scoped service assembly, trading storeKey at dinkuskit.com if necessary as a read-time service effect without mutating orders, capabilities, or settings. Inspect original installed storage identity and validate capability structure without minting or writing records. Reject missing/disabled/malformed config, wrong plugin namespace, bad origin, non-test/wrong mode, missing store key, expired/refused pass, and unconnected/mismatched binding. Start and status retain independent authoritative binding revalidation.",
+          "from": "implemented",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
         }
       ],
       "id": "installed-checkout-readiness-001",
@@ -12075,6 +12163,24 @@
           "result": "findings",
           "reviewed_at": "2026-10-12T20:47:28+00:00",
           "source_identity": "git:8911f2b6d89444eb13d7482d776edaa6de050657"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-12T20:50:24+00:00",
+          "source_identity": "git:1f5d35377a5b58adbd6d4e85ca71041282c9dc48"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-12T21:02:05+00:00",
+          "source_identity": "git:1f5d35377a5b58adbd6d4e85ca71041282c9dc48"
         }
       ],
       "review_ref": null,
@@ -12082,7 +12188,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-12T20:48:09+00:00",
+      "updated_at": "2026-10-12T21:02:05+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
     },
     {
@@ -12139,6 +12245,50 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-12T20:50:24+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 100 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "verified",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T20:50:24+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 100 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "needs_reverification",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "git:1f5d35377a5b58adbd6d4e85ca71041282c9dc48",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-12T20:50:24+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 100 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "implemented",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
         }
       ],
       "id": "installed-checkout-readiness-bounds-001",
@@ -12147,13 +12297,23 @@
       "rationale": "The owner explicitly authorized a new bounded repair of the corroborated P2. Fifteen minutes avoids per-page upstream work without the proposed one-hour UI delay. One hundred daily attempts covers 96 ordinary quarter-hour refreshes with limited configuration-change margin; it is not a per-store entitlement to Stripe allocation.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-12T20:50:24+00:00",
+          "source_identity": "git:1f5d35377a5b58adbd6d4e85ca71041282c9dc48"
+        }
+      ],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-12T20:48:09+00:00",
+      "updated_at": "2026-10-12T20:50:24+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
     }
   ],
@@ -12191,5 +12351,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-12T20:48:09+00:00"
+  "updated_at": "2026-10-12T21:02:05+00:00"
 }

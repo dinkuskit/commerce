@@ -33,9 +33,9 @@ A 30-second cache alone permits 86400 refreshes in 30 days per continuously acti
 Node 22.23.2, EmDash 1.2.0. The integration suite loads the actual compiled Registry entry into workerd with original namespace/storage and explicitly labeled local service fixtures.
 
 - TypeScript and official Registry package build pass.
-- Backend: 130947 bytes; 125 bytes below the 131072 limit.
-- Backend SHA256: `7acc7f3b7edba5fbfde3c1eb21f7c569b863887e0bb92f7d542a721ac769e9bb`.
-- `node --test tests/integration/*.test.mjs tests/route-auth.test.mjs`: 97 passed, 0 failed (91 integration plus 6 exact-route checks).
+- Backend: 130990 bytes; 82 bytes below the 131072 limit.
+- Backend SHA256: `cb61336de27ccf6fd6176a10be717b3f31b68ae7524f0710c82539a3c56c33d9`.
+- `node --test tests/integration/*.test.mjs tests/route-auth.test.mjs`: 98 passed, 0 failed (92 integration plus 6 exact-route checks).
 - Checkout feature tests: 182 passed. Full unit suite: 542 passed from the public-source snapshot. The unchanged public-source audit passed.
 - Two independent database connections using the installed SDK: 64 contenders produced one insert winner and one revision-update winner; stale writes were rejected and store namespaces remained isolated. The SDK performs conditional SQL against plugin/collection/key and exact revision.
 - Compiled cases cover concurrent refresh/query bursts, failure cooldown, expiry, malformed/future metadata, key/config invalidation, rolling-budget exhaustion, superseded CAS completion, settings changing during an in-flight response, restart persistence and store isolation. Genuine start/status still validate fresh and settle one canonical order with the advisory budget exhausted.
@@ -44,6 +44,6 @@ Raw local evidence is under `runs/checkout-readiness-runs/20261012/bounded-refre
 
 ## Review lineage and gates
 
-The earlier unbounded candidate was independently reviewed through P3 by OpenClaw and by native ClawSweeper. Their P2 is a required fix under the new owner authorization, not an accepted production risk. During local review of the repair, unchecked final CAS publication and permissive timestamp validation were corrected and covered by regression tests.
+The earlier unbounded candidate was independently reviewed through P3 by OpenClaw and by native ClawSweeper. Their P2 is a required fix under the new owner authorization, not an accepted production risk. During local review of the repair, unchecked final CAS publication and permissive timestamp validation were corrected and covered by regression tests. A controlled delay in the real SDK storage read then reproduced a stale-clock TTL bug on 1f5d35377a5b58adbd6d4e85ca71041282c9dc48; sampling time after storage and rechecking the claim deadline before upstream I/O and after publication fixes it. The regression failed before the fix and passed afterward. First-cycle OpenClaw review of 1f5d353 found an escaped-JSON configuration example; restoring the original literal JSON and validating it through the compiled Commerce admission function corrected that documentation regression.
 
 The repaired immutable head requires fresh OpenClaw/native review and CI. This proof does not claim those results in advance. No merge, Registry publication, deployment, live service traffic, or hosted merchant checkout is established.

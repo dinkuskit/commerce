@@ -42,21 +42,22 @@ revision belong to this invocation. Every enabled field below is required;
 unknown fields, unsupported schema and invalid shipping fail closed.
 
 ```json
-{\n  \"schema\": \"dinkuskit.commerce.registry-checkout/v1\",
-  \"enabled\": true,
-  \"commerceOrigin\": \"https://shop.example.test\",
-  \"siteId\": \"owner-supplied-site-id\",
-  \"paymentsOrigin\": \"https://payments.example.test\",
-  \"bindingRef\": \"owner-supplied-binding\",
-  \"providerId\": \"stripe\",
-  \"stripeAccountId\": \"owner-supplied-account\",
-  \"pricingSchema\": \"dinkuskit.commerce.checkout-pricing/v1\",
-  \"issuer\": \"https://identity.example.test\",
-  \"audience\": \"owner-supplied-audience\",
-  \"shipping\": {
-    \"configurationId\": \"owner-supplied-shipping\",
-    \"revision\": 1,
-    \"mode\": \"free\"
+{
+  "schema": "dinkuskit.commerce.registry-checkout/v1",
+  "enabled": true,
+  "commerceOrigin": "https://shop.example.test",
+  "siteId": "owner-supplied-site-id",
+  "paymentsOrigin": "https://payments.example.test",
+  "bindingRef": "owner-supplied-binding",
+  "providerId": "stripe",
+  "stripeAccountId": "owner-supplied-account",
+  "pricingSchema": "dinkuskit.commerce.checkout-pricing/v1",
+  "issuer": "https://identity.example.test",
+  "audience": "owner-supplied-audience",
+  "shipping": {
+    "configurationId": "owner-supplied-shipping",
+    "revision": 1,
+    "mode": "free"
   }
 }
 ```

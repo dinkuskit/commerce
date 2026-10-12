@@ -210,8 +210,9 @@ export function createInstalledCheckoutHandlers(
           !config?.revision || !key.revision) return unavailable;
       const generation = (c: { revision: string } | null, k: { revision: string } | null) =>
         JSON.stringify([origin, c?.revision, k?.revision]);
-      const gen = generation(config, key), now = Math.floor(Date.now() / 1000);
+      const gen = generation(config, key);
       const snapshot = await store.getVersioned(READINESS_RECORD_KEY);
+      const now = Math.floor(Date.now() / 1000);
       if (snapshot && !isReadinessState(snapshot.value, now)) return unavailable;
       const old = snapshot?.value;
       if (old?.generation === gen && now < old.expiresAt) return old.status === "supported" ? supported : unavailable;
@@ -222,7 +223,7 @@ export function createInstalledCheckoutHandlers(
       const claim: CachedReadinessState = { version: 1, generation: gen, status: "unavailable",
         expiresAt: now + 900, lastAttemptAt: now, attempts: [...attempts, now] };
       const acquired = await store.compareAndSet(READINESS_RECORD_KEY, snapshot?.revision ?? null, claim);
-      if (!acquired.applied) return unavailable;
+      if (!acquired.applied || Date.now() / 1000 >= now + 30) return unavailable;
       const services = await resolveServices(ctx);
       runtimeFor(ctx, services);
       const host = services.host;
@@ -236,7 +237,7 @@ export function createInstalledCheckoutHandlers(
       const finished = Date.now() / 1000;
       if (current !== gen || finished < now || finished >= now + 30) return unavailable;
       const published = await store.compareAndSet(READINESS_RECORD_KEY, acquired.revision, { ...claim, status: "supported" });
-      return published.applied ? supported : unavailable;
+      return published.applied && Date.now() / 1000 < now + 30 ? supported : unavailable;
     } catch {
       return unavailable;
     }

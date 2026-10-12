@@ -3,6 +3,7 @@ import test from 'node:test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PluginStorageRepository } from 'emdash';
 import {
   CHECKOUT_READINESS_SCHEMA,
   COMMERCE_REGISTRY_RUNTIME_ID,
@@ -681,4 +682,39 @@ test('readiness: budget survives restart and does not affect another installed s
     assert.equal(reopened.counts.trades, 0);
     assert.equal((await readinessRecord(reopened)).attempts.length, 100);
   } finally { await reopened.close(); }
+});
+
+test('readiness: slow storage cannot serve a result past its TTL', { timeout: 10000 }, async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  await state.invokeReadiness();
+  const cached = await readinessRecord(state);
+  const expiresAt = Math.floor(Date.now() / 1000) + 2, at = expiresAt - 900;
+  await seedReadiness(state, { ...cached, expiresAt, lastAttemptAt: at,
+    attempts: Array.from({ length: 100 }, (_, i) => at - i * 60) });
+  const original = PluginStorageRepository.prototype.getVersioned;
+  let release, entered, timeout;
+  const gate = new Promise(resolve => { release = resolve; });
+  const started = new Promise((resolve, reject) => {
+    entered = resolve;
+    timeout = setTimeout(() => reject(new Error('fixture storage interception unavailable')), 5000);
+  });
+  // Delay only the real SDK read; retain the original installed context and stored value.
+  PluginStorageRepository.prototype.getVersioned = async function(id) {
+    if (id === 'readiness') { entered(); await gate; }
+    return original.call(this, id);
+  };
+  try {
+    const pending = state.invokeReadiness();
+    await started;
+    clearTimeout(timeout);
+    await new Promise(resolve => setTimeout(resolve, Math.max(0, expiresAt * 1000 + 50 - Date.now())));
+    release();
+    assert.deepEqual(await pending, UNAVAILABLE);
+    assert.equal(state.counts.trades, 1, 'expired result and exhausted budget make no new upstream call');
+  } finally {
+    clearTimeout(timeout);
+    release();
+    PluginStorageRepository.prototype.getVersioned = original;
+  }
 });
