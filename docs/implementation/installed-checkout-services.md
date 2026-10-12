@@ -170,6 +170,24 @@ proved independently. Zero-payable canonical orders use the same owner aggregate
 transport; see [zero-payable orders](checkout-zero-payable-orders.md).
 Configuration and store-key admission remain required, including without an active grant.
 
+## Checkout readiness
+
+Call through the same installed EmDash dispatcher and Registry plugin identity used for `catalog/public`. A native alias or separately constructed context is not an installation attestation. This is configuration readiness, not approval of a particular cart or a checkout capability.
+
+The Registry-only public endpoint `checkout/guest/readiness` (`GET`) provides a thin, non-secret check of checkout readiness. It returns a versioned closed response:
+
+- Supported: `{ "schema": "dinkuskit.commerce.checkout-readiness/v1", "status": "supported", "mode": "test" }`
+- Unavailable: `{ "schema": "dinkuskit.commerce.checkout-readiness/v1", "status": "unavailable" }`
+
+### Semantics and boundaries
+
+- **Actual binding check**: Readiness verifies actual existing owner-controlled Payments binding (`ready === true`, exact provider/merchant/site/origin/mode) via scoped service assembly.
+- **Read-time service effect**: Trading the store key for a `payments:checkout` pass during readiness inspection is strictly a read-time service effect. It performs no mutation of orders, capabilities, carts, or settings.
+- **Advisory status**: Readiness is strictly advisory. `prepare` only issues a capability and does not attest Payments readiness. `start` validates the binding before session creation; unresolved `status` validates it before authoritative lookup. Replaying a previously settled order needs no new provider call.
+- **Supported mode**: Only `test` mode is supported for positive readiness in this version; non-test or mismatched modes fail closed to `unavailable`.
+- **Closed guest-safe response**: No secrets, tokens, store keys, account identifiers, or binding references are exposed in the readiness response. Any configuration error, storage mismatch, refused store pass, or network failure safely results in `{ "schema": "dinkuskit.commerce.checkout-readiness/v1", "status": "unavailable" }`.
+- **No browser flags or preparation inference**: Readiness does not infer status from schema existence, prepare calls, or browser headers (e.g. `Sec-Fetch-Site`). If an `Origin` header is supplied, it must match the canonical site origin.
+
 ## Runtime fixtures and next gate
 
 `tests/integration/registry-checkout-services.test.mjs` invokes the actual

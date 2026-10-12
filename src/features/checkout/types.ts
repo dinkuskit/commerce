@@ -27,6 +27,19 @@ export interface CheckoutVariantSelectionSnapshot {
   fulfillment: CatalogFulfillment;
 }
 export const CHECKOUT_PRICING_SCHEMA = "dinkuskit.commerce.checkout-pricing/v1" as const;
+export const CHECKOUT_READINESS_SCHEMA = "dinkuskit.commerce.checkout-readiness/v1" as const;
+
+export type CheckoutReadinessResponse =
+  | {
+      schema: typeof CHECKOUT_READINESS_SCHEMA;
+      status: "supported";
+      mode: "test";
+    }
+  | {
+      schema: typeof CHECKOUT_READINESS_SCHEMA;
+      status: "unavailable";
+    };
+
 export interface CheckoutPricingLine {
   catalogItemId: string;
   quantity: number;
@@ -156,6 +169,8 @@ export interface CheckoutPaymentPort {
   ensureSession(request: PaymentRequest): Promise<PaymentOutcome>;
   /** Authoritative lookup. Events are hints only. not-created is a terminal creation fence. */
   lookup(request: PaymentRequest): Promise<PaymentOutcome>;
+  /** Verifies existing owner-controlled Payments binding without starting a checkout session. */
+  verifyBinding?(): Promise<{ ready?: boolean; mode?: string }>;
 }
 interface CommerceOrderBase {
   orderId: string;

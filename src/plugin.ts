@@ -11,6 +11,7 @@ import {
   createInstalledCheckoutHandlers,
   GUEST_CHECKOUT_DECLARED_HEADERS,
   GUEST_CHECKOUT_PREPARE_ROUTE,
+  GUEST_CHECKOUT_READINESS_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
   resolveRegistryCheckoutServices,
@@ -96,6 +97,13 @@ const plugin: SandboxedPlugin = {
     [GUEST_CHECKOUT_PREPARE_ROUTE]: guestRoute(installedCheckout.prepare),
     [GUEST_CHECKOUT_START_ROUTE]: guestRoute(installedCheckout.start),
     [GUEST_CHECKOUT_STATUS_ROUTE]: guestRoute(installedCheckout.status),
+    [GUEST_CHECKOUT_READINESS_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["GET"],
+      request: { body: "none", headers: ["origin"] },
+      cacheControl: "no-store",
+      handler: (route, ctx) => installedCheckout.readiness(route, ctx),
+    }),
   },
 };
 export default plugin;

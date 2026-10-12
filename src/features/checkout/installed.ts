@@ -11,13 +11,18 @@ import {
   startGuestCheckout,
   statusGuestCheckout,
 } from "./guest.js";
-import { admitGuestCheckoutWrite } from "./origin-admission.js";
-import { resolveTrustedSiteOrigin } from "./site-scope.js";
+import { admitGuestCheckoutWrite, headerValue } from "./origin-admission.js";
+import { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "./site-scope.js";
 import {
   SANDBOX_GUEST_CHECKOUT_STORAGE,
   bindGuestCheckoutRuntime,
 } from "./runtime.js";
-import type { GuestCheckoutHostOptions, GuestCheckoutResult } from "./types.js";
+import {
+  CHECKOUT_READINESS_SCHEMA,
+  type CheckoutReadinessResponse,
+  type GuestCheckoutHostOptions,
+  type GuestCheckoutResult,
+} from "./types.js";
 import type { CommercePaymentWakePort, WakeReconciliationResult } from "./wake.js";
 import type { CheckoutCouponPort } from "../coupons/index.js";
 import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
@@ -50,6 +55,7 @@ export interface InstalledCheckoutHandlers {
   prepare(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
   start(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
   status(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
+  readiness(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<CheckoutReadinessResponse>;
   reconcileWakes(ctx: PluginContext): Promise<InstalledWakeResult>;
   cron(event: CronEvent, ctx: PluginContext): Promise<void>;
 }
@@ -156,6 +162,44 @@ export function createInstalledCheckoutHandlers(
     }
   }
 
+  async function readiness(
+    route: InstalledGuestCheckoutRequest,
+    ctx: PluginContext,
+  ): Promise<CheckoutReadinessResponse> {
+    const unavailable: CheckoutReadinessResponse = {
+      schema: CHECKOUT_READINESS_SCHEMA,
+      status: "unavailable",
+    };
+    try {
+      installedStorage(ctx);
+      if (ctx.plugin.id !== COMMERCE_REGISTRY_RUNTIME_ID) return unavailable;
+      const origin = siteOrigin(ctx);
+      if (canonicalizeHttpOrigin(route.request.url) !== origin) return unavailable;
+      const originHdr = headerValue(route.request.headers, "origin");
+      if (originHdr && canonicalizeHttpOrigin(originHdr) !== origin) {
+        return unavailable;
+      }
+      const services = await resolveServices(ctx);
+      runtimeFor(ctx, services);
+      const host = services.host;
+      if ((host.paymentMode ?? "test") !== "test") return unavailable;
+      if (!host.resolvePayments || !host.paymentBindingRef) return unavailable;
+      const port = await host.resolvePayments(host.paymentBindingRef);
+      if (!port?.verifyBinding) return unavailable;
+      const binding = await port.verifyBinding();
+      if (binding.ready !== true || binding.mode !== "test") {
+        return unavailable;
+      }
+      return {
+        schema: CHECKOUT_READINESS_SCHEMA,
+        status: "supported",
+        mode: "test",
+      };
+    } catch {
+      return unavailable;
+    }
+  }
+
   async function reconcileWakes(ctx: PluginContext): Promise<InstalledWakeResult> {
     try {
       installedStorage(ctx);
@@ -173,6 +217,7 @@ export function createInstalledCheckoutHandlers(
     prepare: (route, ctx) => guest(route, ctx, runtime => prepareGuestCheckout(runtime, route.input)),
     start: (route, ctx) => guest(route, ctx, runtime => startGuestCheckout(runtime, route.input, route.request.headers)),
     status: (route, ctx) => guest(route, ctx, runtime => statusGuestCheckout(runtime, route.input, route.request.headers)),
+    readiness,
     reconcileWakes,
     cron: async (event, ctx) => {
       if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await reconcileWakes(ctx);

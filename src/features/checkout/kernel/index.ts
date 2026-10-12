@@ -85,10 +85,12 @@ export {
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
+  GUEST_CHECKOUT_READINESS_ROUTE,
 } from "../route-ids.js";
 export {
   CHECKOUT_FEATURE_ID,
   CHECKOUT_PRICING_SCHEMA,
+  CHECKOUT_READINESS_SCHEMA,
   CHECKOUT_VARIANT_SELECTION_SCHEMA,
   CHECKOUT_GUEST_CAPABILITY_COLLECTION,
   CHECKOUT_GUEST_CAPABILITY_SANDBOX_COLLECTION,
@@ -118,6 +120,7 @@ export type {
   CheckoutReserveResult,
   CheckoutVariantSelectionSnapshot,
   CheckoutPaymentPort,
+  CheckoutReadinessResponse,
   CheckoutRecord,
   CheckoutStore,
   CommerceOrder,
@@ -167,4 +170,3 @@ export {
   trustedPaymentsHostConfig,
 } from "../registry-provider-admission.js";
 export type { RegistryCheckoutProviderId } from "../registry-provider-admission.js";
-

@@ -5,7 +5,7 @@ import {
   GUEST_SEC_FETCH_SITE_HEADER,
 } from "./types.js";
 
-function headerValue(
+export function headerValue(
   headers: Headers | Record<string, string> | undefined,
   name: string,
 ): string | undefined {
