@@ -42,22 +42,21 @@ revision belong to this invocation. Every enabled field below is required;
 unknown fields, unsupported schema and invalid shipping fail closed.
 
 ```json
-{
-  "schema": "dinkuskit.commerce.registry-checkout/v1",
-  "enabled": true,
-  "commerceOrigin": "https://shop.example.test",
-  "siteId": "owner-supplied-site-id",
-  "paymentsOrigin": "https://payments.example.test",
-  "bindingRef": "owner-supplied-binding",
-  "providerId": "stripe",
-  "stripeAccountId": "owner-supplied-account",
-  "pricingSchema": "dinkuskit.commerce.checkout-pricing/v1",
-  "issuer": "https://identity.example.test",
-  "audience": "owner-supplied-audience",
-  "shipping": {
-    "configurationId": "owner-supplied-shipping",
-    "revision": 1,
-    "mode": "free"
+{\n  \"schema\": \"dinkuskit.commerce.registry-checkout/v1\",
+  \"enabled\": true,
+  \"commerceOrigin\": \"https://shop.example.test\",
+  \"siteId\": \"owner-supplied-site-id\",
+  \"paymentsOrigin\": \"https://payments.example.test\",
+  \"bindingRef\": \"owner-supplied-binding\",
+  \"providerId\": \"stripe\",
+  \"stripeAccountId\": \"owner-supplied-account\",
+  \"pricingSchema\": \"dinkuskit.commerce.checkout-pricing/v1\",
+  \"issuer\": \"https://identity.example.test\",
+  \"audience\": \"owner-supplied-audience\",
+  \"shipping\": {
+    \"configurationId\": \"owner-supplied-shipping\",
+    \"revision\": 1,
+    \"mode\": \"free\"
   }
 }
 ```
@@ -174,18 +173,33 @@ Configuration and store-key admission remain required, including without an acti
 
 Call through the same installed EmDash dispatcher and Registry plugin identity used for `catalog/public`. A native alias or separately constructed context is not an installation attestation. This is configuration readiness, not approval of a particular cart or a checkout capability.
 
-The Registry-only public endpoint `checkout/guest/readiness` (`GET`) provides a thin, non-secret check of checkout readiness. It returns a versioned closed response:
+The Registry-only public endpoint `checkout/guest/readiness` (`GET`) provides a bounded, non-secret check of checkout readiness. It returns a versioned closed response:
 
 - Supported: `{ "schema": "dinkuskit.commerce.checkout-readiness/v1", "status": "supported", "mode": "test" }`
 - Unavailable: `{ "schema": "dinkuskit.commerce.checkout-readiness/v1", "status": "unavailable" }`
+
+### Bounded caching and upstream protection
+
+To protect upstream DinkusKit pass minting and Payments verification endpoints from amplification attacks and public crawl traffic, readiness implements a durable bounded refresh policy backed by the dedicated, declared `checkout_readiness` storage collection:
+
+- **15-minute UI-advisory freshness TTL**: A successful `supported` check is cached durably for at most 15 minutes (900 seconds) from the refresh attempt. Subsequent requests within this TTL are served directly from cache without trading keys or calling Payments.
+- **15-minute failure cooldown**: The durable claim initially stores `unavailable`, so failed or abandoned attempts retain a 15-minute (900-second) cooldown when the configuration generation remains unchanged.
+- **Durable rolling rate limit (100 attempts / 24 hours)**: Across any rolling 24-hour window, at most 100 refresh attempts are permitted per installed store. When this budget is exhausted, readiness fails closed immediately to `unavailable` without upstream calls.
+- **60-second global floor**: A strict 60-second floor separates consecutive upstream refresh attempts. Any request arriving sooner than 60 seconds after the last attempt fails closed to `unavailable` if unexpired cached state is not present.
+- **Immediate owner invalidation**: Genuine changes to owner-controlled configuration or store credentials advance the configuration generation, invalidating the cached readiness state immediately. The next refresh may proceed once the 60-second global floor is satisfied, while never resetting or clearing the rolling 24-hour attempt budget.
+- **Short leased CAS claims (30 seconds)**: Concurrent requests acquire a 30-second leased CAS claim in `checkout_readiness` before resolving services or contacting upstream. Contending requests either return current unexpired cached state or fail closed to `unavailable` without redundant upstream load. A supported result can be published only within 30 seconds and by a successful CAS using the original claim revision, with the owner settings generation unchanged. This is a publication deadline; an abandoned claim still retains its 15-minute failure cooldown. A superseded writer cannot adopt a newer revision or return supported after losing its write.
+- **Corrupt state fail-closed**: Unparseable or corrupt storage records fail closed safely to `unavailable` without wiping durable quota tracking or resetting attempt history.
+- **Unsolved Connect platform aggregate allocation**: Rate limits and attempt budgets are enforced strictly per installed store repository. The per-store ceiling is 3000 refresh attempts over 30 days; normal quarter-hour traffic uses at most 96 per day. This is not a reserved share of Stripe’s allocation. Platform-wide aggregate allocation remains outside this repair; its sufficiency for a fleet is not established. See [Stripe limits](https://docs.stripe.com/rate-limits).
+
+DinkusKit source [5c206369](https://github.com/dinkuskit/dinkuskit/blob/5c206369949dcf807607ed274ecb93849b8b65dc/src/account/config.ts) allows 1200 store-pass requests per fixed minute per key, shared across audiences. Payments source [d0e7115c](https://github.com/dinkuskit/payments/blob/d0e7115cd03c22c31e9674b1d8a7bd72eecf5252/src/hosted/connection.ts) checks the provider account during binding lookup. A 30-second cache alone would permit 86400 checks over 30 days, so the separate durable budget matters. The response remains HTTP `no-store`; only Commerce’s bounded internal record is reused. Query variations cannot select a different record.
 
 ### Semantics and boundaries
 
 - **Actual binding check**: Readiness verifies actual existing owner-controlled Payments binding (`ready === true`, exact provider/merchant/site/origin/mode) via scoped service assembly.
 - **Read-time service effect**: Trading the store key for a `payments:checkout` pass during readiness inspection is strictly a read-time service effect. It performs no mutation of orders, capabilities, carts, or settings.
-- **Advisory status**: Readiness is strictly advisory. `prepare` only issues a capability and does not attest Payments readiness. `start` validates the binding before session creation; unresolved `status` validates it before authoritative lookup. Replaying a previously settled order needs no new provider call.
+- **Strictly advisory vs. genuine checkout isolation**: Readiness is strictly advisory. Genuine checkout operations (`checkout/guest/prepare`, `start`, and `status`) retain completely independent service resolution and authoritative validation against Payments. Genuine checkouts **never** consume, read, or depend on the readiness advisory budget or cache. `prepare` issues a capability without attesting Payments readiness; `start` authoritatively validates the binding during session creation; unresolved `status` validates it before authoritative lookup. Replaying a previously settled order needs no new provider call.
 - **Supported mode**: Only `test` mode is supported for positive readiness in this version; non-test or mismatched modes fail closed to `unavailable`.
-- **Closed guest-safe response**: No secrets, tokens, store keys, account identifiers, or binding references are exposed in the readiness response. Any configuration error, storage mismatch, refused store pass, or network failure safely results in `{ "schema": "dinkuskit.commerce.checkout-readiness/v1", "status": "unavailable" }`.
+- **Closed guest-safe response**: No secrets, tokens, store keys, account identifiers, or binding references are exposed in the readiness response or cached in storage. Any configuration error, storage mismatch, refused store pass, or network failure safely results in `{ "schema": "dinkuskit.commerce.checkout-readiness/v1", "status": "unavailable" }`.
 - **No browser flags or preparation inference**: Readiness does not infer status from schema existence, prepare calls, or browser headers (e.g. `Sec-Fetch-Site`). If an `Origin` header is supplied, it must match the canonical site origin.
 
 ## Runtime fixtures and next gate

@@ -1,46 +1,49 @@
-# Registry checkout readiness
+# Registry checkout readiness and bounded refresh
 
-## Contract
+## Contract and authority
 
-The original Commerce Registry context exposes `GET checkout/guest/readiness` with `cacheControl: no-store`. Call it through the same installed dispatcher and runtime namespace as `catalog/public`.
+The original Commerce Registry context exposes `GET checkout/guest/readiness` with HTTP `no-store`. Use the same installed dispatcher and namespace as `catalog/public`. The public response remains:
 
-- Supported: `{"schema":"dinkuskit.commerce.checkout-readiness/v1","status":"supported","mode":"test"}`.
-- Unavailable: `{"schema":"dinkuskit.commerce.checkout-readiness/v1","status":"unavailable"}`.
+- `{"schema":"dinkuskit.commerce.checkout-readiness/v1","status":"supported","mode":"test"}`
+- `{"schema":"dinkuskit.commerce.checkout-readiness/v1","status":"unavailable"}`
 
-The handler validates the original Registry identity, installed storage interfaces, request/site/configuration origin, and the existing owner-controlled Payments binding. Only an affirmative `ready: true` TEST binding qualifies. It uses the existing store-key-to-pass exchange and bounded Payments transport. It returns no account, binding, settings, key, or token details.
+Only an affirmative admitted TEST Payments binding can establish supported readiness. No keys, tokens, raw settings, account IDs or binding details enter the response or cache. Readiness is advisory, not a capability or approval of a basket. Prepare, start, unresolved status and wake reconciliation retain their independent service resolution. A previously settled order can replay without another provider call.
 
-Reading may POST to DinkusKit.com's store-pass endpoint and GET the existing Payments binding. These are credential exchange and binding-read effects; it does not mint checkout capabilities or write carts, orders, or settings. Non-test configuration is rejected before those calls. Readiness is advisory, not a capability or a guarantee for a particular basket. Prepare does not establish Payments readiness. Start and unresolved status retain their own binding validation; a settled order can be replayed without another provider call.
+## Bounded refresh repair
+
+The owner authorized this repair after both exact-head reviewers identified public-read quota amplification in `8911f2b6d89444eb13d7482d776edaa6de050657`. The engineering-selected bounds are recorded in `installed-checkout-readiness-bounds-001`:
+
+- One versioned record at a constant key in the original installation's declared `checkout_readiness` collection.
+- A supported answer expires at most 900 seconds after the refresh attempt. Failed or abandoned attempts retain a 900-second same-generation cooldown.
+- At most 100 attempts in a rolling 86400-second window, with a 60-second minimum interval. The budget is charged through durable CAS before service resolution or upstream I/O.
+- Owner settings/key revisions and trusted site identity form the generation. Generation changes invalidate the answer, but cannot reset the rolling history or minimum interval. Request query/header variation cannot select another budget.
+- The initial claim stores unavailable. Supported publication requires unchanged generation, completion within the 30-second claim lease, and a successful CAS against that exact claim revision. Losers cannot adopt a newer writer's revision.
+- Invalid shapes, timestamps, history or versions fail closed without replacing the record. Freshness is constrained by the attempt time, not an unconstrained stored expiry.
+
+Only coordination metadata is written. No readiness call creates a checkout capability, cart or order, or changes settings. A cached answer does not constrain genuine checkout's validation or budget.
+
+## Evidence and limits
+
+DinkusKit [source 5c206369](https://github.com/dinkuskit/dinkuskit/blob/5c206369949dcf807607ed274ecb93849b8b65dc/src/account/config.ts) sets 1200 pass requests per fixed minute per key. Its [counter](https://github.com/dinkuskit/dinkuskit/blob/5c206369949dcf807607ed274ecb93849b8b65dc/src/account/store-passes.ts) is shared across service audiences. Payments [source d0e7115c](https://github.com/dinkuskit/payments/blob/d0e7115cd03c22c31e9674b1d8a7bd72eecf5252/src/hosted/connection.ts) reaches provider account status during binding lookup. [Stripe's documented limits](https://docs.stripe.com/rate-limits) include a 25 requests/second sandbox default and a shared Connect-platform read allocation.
+
+A 30-second cache alone permits 86400 refreshes in 30 days per continuously active store. This repair caps a store at 100 attempts/day (3000 in 30 days); regular quarter-hour refreshes need at most 96/day. This is per-installation mitigation, not a reserved portion of Stripe's allocation or proof that a platform fleet has sufficient aggregate quota. No tenant override, hosted quota or real provider behavior was probed.
 
 ## Local verification
 
-Node 22.23.2; EmDash 1.2.0; actual compiled Registry entry loaded in workerd with its original runtime namespace and SDK storage. Service responses and credentials are explicitly synthetic fixtures. No hosted merchant, Registry publication, real provider call, or deployment is established.
+Node 22.23.2, EmDash 1.2.0. The integration suite loads the actual compiled Registry entry into workerd with original namespace/storage and explicitly labeled local service fixtures.
 
-- TypeScript check and official Registry build pass.
-- Backend: 129442 bytes; 1630 bytes below the 131072-byte limit.
-- Backend SHA256: `8f3f771cb713044f1d6e638df1363bbe91e8da36ac4d778741ee8cf157752f81`.
-- Final targeted result: 60 passed, 0 failed (22 readiness, 32 existing service/settlement, 6 route tests).
-- A separate compiled runtime call read `catalog/public` and readiness in the same Registry namespace with no checkout/capability records created; it passed without an Origin header as a server-side dispatcher consumer would call it.
-- Sequential targeted command: `node --test --test-concurrency=1 tests/integration/registry-checkout-services.test.mjs tests/route-auth.test.mjs`.
-- Coverage includes affirmative Stripe and Authorize.net TEST readiness, no checkout storage writes, missing/disabled/malformed/wrong-origin setup, wrong namespace and native alias, missing/refused/expired pass, missing/false readiness, mismatched/live binding, start and pending-status revalidation, canonical settlement/replay, and exact public-route inventory.
-- Public repository audit runs against the staged source snapshot, excluding ignored local run output without changing the repository's audit policy.
+- TypeScript and official Registry package build pass.
+- Backend: 130947 bytes; 125 bytes below the 131072 limit.
+- Backend SHA256: `7acc7f3b7edba5fbfde3c1eb21f7c569b863887e0bb92f7d542a721ac769e9bb`.
+- `node --test tests/integration/*.test.mjs tests/route-auth.test.mjs`: 97 passed, 0 failed (91 integration plus 6 exact-route checks).
+- Checkout feature tests: 182 passed. Full unit suite: 542 passed from the public-source snapshot. The unchanged public-source audit passed.
+- Two independent database connections using the installed SDK: 64 contenders produced one insert winner and one revision-update winner; stale writes were rejected and store namespaces remained isolated. The SDK performs conditional SQL against plugin/collection/key and exact revision.
+- Compiled cases cover concurrent refresh/query bursts, failure cooldown, expiry, malformed/future metadata, key/config invalidation, rolling-budget exhaustion, superseded CAS completion, settings changing during an in-flight response, restart persistence and store isolation. Genuine start/status still validate fresh and settle one canonical order with the advisory budget exhausted.
 
-Raw local command evidence is retained under `runs/checkout-readiness-runs/20261012/`; it is intentionally untracked.
+Raw local evidence is under `runs/checkout-readiness-runs/20261012/bounded-refresh/`; generated files are untracked. The public repository audit uses a staged source snapshot so local run files do not weaken the audit policy.
 
-## CI repair
+## Review lineage and gates
 
-The initial CI run passed all 542 unit tests but concurrent workerd test files collided on the SDK's fixed port 18788. The readiness cases now load into the existing Registry service test process. No test is skipped and the project-wide command is unchanged. The full `node --test tests/integration/*.test.mjs` invocation passed all 78 tests after this repair.
+The earlier unbounded candidate was independently reviewed through P3 by OpenClaw and by native ClawSweeper. Their P2 is a required fix under the new owner authorization, not an accepted production risk. During local review of the repair, unchecked final CAS publication and permissive timestamp validation were corrected and covered by regression tests.
 
-## Local review dispositions
-
-- Accepted: remove unrelated audit exemption for `runs`; audit the public source snapshot instead.
-- Accepted: remove unrequested native route and reject native alias in Registry readiness.
-- Accepted: reuse runtime binding validation, reject non-test setup before a service call, and correct prepare/status documentation.
-- Rejected test assumption: deleting a fixture manifest collection does not remove the pinned SDK's dynamic storage proxy. This is not evidence of a supported missing-collection installation. No SDK or storage-policy bypass was added.
-
-Independent exact-head OpenClaw and native ClawSweeper review results are delivery evidence associated with the pull request. They are not implied by these local checks.
-
-## Independent review gate
-
-OpenClaw reviewed source `c3fdf5749993d044829c6571c09565ba95199f74` against base `29de7e591131895452781212db1cc9f9aaad30a7` comprehensively through P3 with exact-tuple qualification. It found a P2 quota-amplification concern: the public endpoint can cause a scoped credential trade and binding read for every request. This is classified as `human_gate`; the owner must select a bounded caching/rate/admission policy before promotion. Existing upstream refusal handling fails closed but does not by itself eliminate quota exhaustion. This record does not claim clean review or permission to merge.
-
-Native ClawSweeper run `38300783839` also completed on that exact head, published canonical review revision 1, and reported no code findings with maintainer approval still required. This does not override the independent OpenClaw P2.
+The repaired immutable head requires fresh OpenClaw/native review and CI. This proof does not claim those results in advance. No merge, Registry publication, deployment, live service traffic, or hosted merchant checkout is established.

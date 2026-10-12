@@ -91,6 +91,10 @@
       "indexes": [],
       "uniqueIndexes": []
     },
+    "checkout_readiness": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
     "orders": {
       "indexes": [],
       "uniqueIndexes": []
