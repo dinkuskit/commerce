@@ -38,6 +38,27 @@ test('top-level strict directives remain first', () => {
   assert.equal(result(shared), result(source));
 });
 
+test('member accesses share through computed access with identical semantics', () => {
+  const source = `(() => {
+    class Counter { #secret = 7; someLongMethodName() { return this.#secret + this.someLongPropertyName; } }
+    const counter = new Counter();
+    counter.someLongPropertyName = 35;
+    const record = {someLongPropertyName: 1, nestedLongName: {someLongPropertyName: 2}};
+    record.someLongPropertyName += 10;
+    record.nestedLongName.someLongPropertyName++;
+    const missing = null;
+    const chain = missing?.someLongPropertyName ?? record?.nestedLongName?.someLongPropertyName;
+    const viaCall = counter.someLongMethodName();
+    const deleted = delete record.nestedLongName.someLongPropertyName;
+    return JSON.stringify([record.someLongPropertyName, chain, viaCall, deleted, 'someLongPropertyName' in record.nestedLongName, Object.keys(record)]);
+  })()`;
+  const shared = shareLiterals(source);
+  assert.notEqual(shared, source);
+  assert.equal(result(shared), result(source));
+  assert.match(shared, /#secret/);
+  assert.doesNotMatch(shared, /\[__commerceLiteral\d+\]\(\) \{ return this\.#secret/);
+});
+
 test('import attributes and legacy assertions retain grammar-only literals', () => {
   for (const keyword of ['with', 'assert']) {
     const declaration = `import value from 'a long module specifier' ${keyword} {type:'json'};`;
