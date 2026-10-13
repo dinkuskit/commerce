@@ -50,13 +50,15 @@ data migration path to the Registry build.
 
 ## Status
 
-Pilot stage. The package name is reserved in source as
-`@dinkuskit/commerce`, and package metadata and the plugin manifest are aligned
-for public `0.1.0` release preparation. Actual package publication, Registry
-release, and deployment have not occurred and remain separate human approval
-gates. A local
-Registry-format sandbox artifact is built from `emdash-plugin.jsonc` and
-`src/plugin.ts`; it is not a claim of public Registry installation.
+Pilot stage. Package metadata and the plugin manifest are aligned for the
+`0.2.0` Registry release, which adds the bounded public checkout-readiness route.
+The Registry already contains immutable `0.1.0`, without that route. The new
+version follows EmDash's minor-version rule for added routes; it does not
+replace the existing release. Publication of `0.2.0`, npm publication and site
+deployment remain separate human approval gates. A local Registry-format
+sandbox artifact is built from `emdash-plugin.jsonc` and `src/plugin.ts`; it is
+not a claim of public Registry installation. See the
+[release record](docs/implementation/releases.md).
 
 Development and the private package's runtime peer are pinned to exact
 `emdash@1.2.0`. The first feature is the `dinkus.catalog` draft-item creation

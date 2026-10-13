@@ -14,7 +14,7 @@ exit codes, config precedence, credential handling). Differences are listed in
 
 Executable: `dinkus-commerce`
 
-Package: `@dinkuskit/commerce` (public `0.1.0` release preparation, unpublished)
+Package: `@dinkuskit/commerce` (`0.2.0` release preparation; npm unpublished)
 
 One-liner: read a DinkusKit Commerce catalog and products on an EmDash site
 through the same plugin routes the storefront and admin use.
@@ -48,7 +48,7 @@ The manifest maps the executable:
 ```
 
 Package `files` now includes the `cli` support dependency closure for the already
-declared `bin/dinkus-commerce.mjs`, while the package is in public `0.1.0` release preparation and
+declared `bin/dinkus-commerce.mjs`, while the package is in public `0.2.0` release preparation and
 unpublished. The CLI has no export-map entry and adds zero Registry/sandbox
 bundle bytes. Publishing the CLI is out of scope until the package itself is published.
 
@@ -414,7 +414,7 @@ dinkus-commerce --url https://shop.example products set-price item_demo --amount
 
 ## Non-goals
 
-- Publishing the CLI. The package is in public `0.1.0` release preparation and unpublished; package
+- Publishing the CLI. The package is in public `0.2.0` release preparation and npm unpublished; package
   `files` includes the `cli` support dependency closure for already declared
   `bin/dinkus-commerce.mjs`, while the CLI has no export-map entry and adds
   zero Registry/sandbox bundle bytes.
