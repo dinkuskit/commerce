@@ -4,7 +4,7 @@ Commerce issue 32 public handoff. Template Store issue 20 consumes this
 artifact and these routes. Template Store renders only these public outputs.
 It does not become a pricing, payment, or order engine.
 
-Package identity: `@dinkuskit/commerce@0.1.0` (public release preparation, unpublished).
+Package identity: `@dinkuskit/commerce@0.2.0` (release preparation; npm unpublished).
 Public entry: `@dinkuskit/commerce/features/checkout`.
 Native plugin: `createPlugin()` / `dinkusCommerce()`.
 Registry/sandbox entry: `@dinkuskit/commerce/sandbox` built from

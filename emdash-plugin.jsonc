@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@emdash-cms/plugin-cli/schemas/emdash-plugin.schema.json",
   "slug": "dinkus-commerce",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "did:plc:ekk4pjmkh3k3ql2kfoex3qt4",
   "name": "Commerce",
   "description": "Manage products, prices and catalog settings in EmDash.",
