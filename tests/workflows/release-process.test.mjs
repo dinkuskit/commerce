@@ -62,6 +62,7 @@ test("release workflow versions, tags, and delegates with pinned actions", async
 	assert.match(source, /pr-title: "ci: release"/);
 	assert.match(source, /script: npx changeset tag/);
 	assert.match(source, /uses: \.\/\.github\/workflows\/emdash-release\.yml/);
+	assert.match(source, /published-packages: \$\{\{ needs\.publish\.outputs\['published-packages'\] \}\}/);
 	assert.match(source, /^permissions: \{\}$/m);
 	assert.match(source, /cancel-in-progress: false/);
 	assert.doesNotMatch(source, /npm publish/);
@@ -78,6 +79,14 @@ test("registry workflow is npm-based, pinned, and refuses prereleases", async ()
 	assert.match(source, /Refuse prerelease versions/);
 	assert.match(source, /id-token: write/);
 	assert.match(source, /attestations: write/);
+	// Release-gate invariant: Registry publishing is reachable only as a
+	// reusable workflow delegated by release.yml after the ci: release
+	// PR merges. A direct dispatch must never feed a hand-picked
+	// package selector into the id-token-backed publish job.
+	assert.doesNotMatch(source, /^ {2}workflow_dispatch:/m);
+	assert.doesNotMatch(source, /inputs\.package/);
+	assert.doesNotMatch(source, /release plan --package/);
+	assert.match(source, /^ {2}workflow_call:/m);
 });
 
 test("changeset check workflow runs the audit script on pull requests", async () => {

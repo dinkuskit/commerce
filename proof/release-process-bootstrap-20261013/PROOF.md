@@ -79,6 +79,20 @@ owner steps.
 - `npm run typecheck` — clean.
 - `git diff --check` — clean.
 
+## Review repair round 1
+
+ClawSweeper reviewed `ad466710` and raised one P1 finding (plus the
+owner-gate items below): the generated Registry workflow kept a manual
+`workflow_dispatch` entrypoint that could feed a hand-picked package
+selector into the OIDC-backed publish job, bypassing the `ci: release`
+merge gate. Adjudication: `required_fix`. The dispatch trigger and its
+manual plan step are removed, leaving `release.yml` delegation as the
+only entrypoint (failed publishes still re-run through the Release
+workflow's publish-only mode), and `tests/workflows/release-process.test.mjs`
+now pins that invariant. The remaining review items (release App
+secrets, dashboard authorization, baseline tag, first-run approval,
+merge) are classified `human_gate` and were not performed.
+
 ## Human gates honored
 
 No merge, tag push, Registry release publish, secret creation, or
