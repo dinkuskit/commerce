@@ -20,6 +20,10 @@ const requiredPublicFiles = [
   "SECURITY.md",
   "VISION.md",
   "bin/verify-commerce",
+  "CHANGELOG.md",
+  "RELEASING.md",
+  ".changeset/config.json",
+  "emdash-plugin.jsonc",
 ];
 
 const requiredPublicManifest = {
@@ -58,7 +62,15 @@ async function withSyntheticPublicRoot(extraFiles, run) {
   const root = await mkdtemp(join(tmpdir(), "commerce-repo-contract-"));
   try {
     for (const path of requiredPublicFiles) {
-      await writeFileAt(root, path, path === ".npmrc" ? "engine-strict=true\n" : "public-audit fixture\n");
+      await writeFileAt(
+        root,
+        path,
+        path === ".npmrc"
+          ? "engine-strict=true\n"
+          : path === "emdash-plugin.jsonc"
+            ? '{"version": "0.2.0"}\n'
+            : "public-audit fixture\n",
+      );
     }
     await writeFileAt(root, "package.json", `${JSON.stringify(requiredPublicManifest, null, 2)}\n`);
     for (const [path, contents] of Object.entries(extraFiles)) {
@@ -111,6 +123,26 @@ test("only the root npm config with the exact engine guard is public", async () 
     async (root) => {
       const findings = await auditRepository(root);
       assert.ok(findings.includes("root .npmrc must contain only engine-strict=true"));
+    },
+  );
+});
+
+test("plugin manifest version drift and crossing the 1.0.0 gate are rejected", async () => {
+  await withSyntheticPublicRoot(
+    { "emdash-plugin.jsonc": '{"version": "0.3.0"}\n' },
+    async (root) => {
+      const findings = await auditRepository(root);
+      assert.ok(findings.includes("emdash-plugin.jsonc version must match package.json version"));
+    },
+  );
+  await withSyntheticPublicRoot(
+    {
+      "package.json": `${JSON.stringify({ ...requiredPublicManifest, version: "1.0.0" }, null, 2)}\n`,
+      "emdash-plugin.jsonc": '{"version": "1.0.0"}\n',
+    },
+    async (root) => {
+      const findings = await auditRepository(root);
+      assert.ok(findings.includes("package version must stay on 0.x until the 1.0.0 gate"));
     },
   );
 });

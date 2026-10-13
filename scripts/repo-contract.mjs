@@ -19,6 +19,10 @@ const requiredRootFiles = [
   "VISION.md",
   "package.json",
   "bin/verify-commerce",
+  "CHANGELOG.md",
+  "RELEASING.md",
+  ".changeset/config.json",
+  "emdash-plugin.jsonc",
 ];
 
 const forbiddenSegments = new Set([
@@ -87,7 +91,19 @@ export async function auditRepository(root = repositoryRoot) {
   if (manifest.name !== "@dinkuskit/commerce") {
     findings.push("package name must be @dinkuskit/commerce");
   }
-  if (manifest.version !== "0.2.0") findings.push("package version must be 0.2.0 for release preparation");
+  // Changesets owns the version from the 0.2.0 baseline on. The 0.x gate
+  // stays until the explicit 1.0 decision; the plugin manifest must agree
+  // with package.json or the plugin CLI refuses to publish.
+  if (!/^0\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version ?? "")) {
+    findings.push("package version must stay on 0.x until the 1.0.0 gate");
+  }
+  if (files.includes("emdash-plugin.jsonc")) {
+    const pluginManifest = await readFile(join(root, "emdash-plugin.jsonc"), "utf8");
+    const pluginVersion = /"version":\s*"([^"]*)"/.exec(pluginManifest)?.[1];
+    if (pluginVersion !== manifest.version) {
+      findings.push("emdash-plugin.jsonc version must match package.json version");
+    }
+  }
   if (manifest.private !== undefined) findings.push("package must not be marked private for public release");
   if (manifest.license !== "MIT") findings.push("package license must be MIT");
   if (manifest.repository?.url !== "git+https://github.com/dinkuskit/commerce.git") {
