@@ -150,6 +150,13 @@ a zero-payable one, records the attempt's mode (GrillTrack
 `commerce-payment-mode-001`). Historical payment
 requests are not repriced or migrated by resolver assembly.
 
+Payments' `GET /v1/checkout-binding` returns a successful binding only after
+checking readiness. Its response has no `ready` property. After HTTP success
+and exact binding/provider/account/mode validation, Commerce normalizes this
+response to its internal `ready: true` result. An explicit non-true `ready`
+value still fails closed. `GET /v1/existing-binding` does not assert current
+readiness and is never used for this normalization.
+
 The wake port uses `GET /v1/checkout/wakes?bindingRef=...&limit=100` and
 `POST /v1/checkout/wakes/ack`. Both reject redirects and use the shared 128 KiB
 streamed-byte response bound. Lists contain at most 100 exact five-field

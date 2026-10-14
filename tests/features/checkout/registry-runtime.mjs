@@ -220,10 +220,11 @@ export async function runtimeFixture({
     const path = new URL(url).pathname;
     if (override) return override(path, init);
     if (path.endsWith('-binding')) {
+      // Payments' binding wire response has no ready property.
       const providerId = config?.providerId === 'authorize_net' ? 'authorize_net' : 'stripe';
       return json(providerId === 'authorize_net'
-        ? { bindingRef: BINDING, providerId, authorizeNetMerchantId: config?.authorizeNetMerchantId ?? 'anet_merchant', mode: bindingMode, ready: true }
-        : { bindingRef: BINDING, providerId, stripeAccountId: ACCOUNT, mode: bindingMode, ready: true });
+        ? { bindingRef: BINDING, providerId, authorizeNetMerchantId: config?.authorizeNetMerchantId ?? 'anet_merchant', mode: bindingMode }
+        : { bindingRef: BINDING, providerId, stripeAccountId: ACCOUNT, mode: bindingMode });
     }
     if (path === '/v1/checkout/wakes') return json(pending);
     if (path === '/v1/checkout/wakes/ack') {

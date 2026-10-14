@@ -136,15 +136,47 @@ test('readiness: mismatched configured origin fails closed', async () => {
   }
 });
 
-test('readiness: absent ready flag is not affirmative merchant readiness', async t => {
+test('readiness: successful Payments wire binding needs no ready property', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
   const config = configuration();
-  state.setTransportOverride(() => Response.json({
-    bindingRef: config.bindingRef, providerId: config.providerId,
-    stripeAccountId: config.stripeAccountId, mode: 'test',
-  }));
-  assert.deepEqual(await state.invokeReadiness(), UNAVAILABLE);
+  state.setTransportOverride((path) => {
+    assert.equal(path, '/v1/checkout-binding');
+    return Response.json({
+      bindingRef: config.bindingRef, providerId: config.providerId,
+      stripeAccountId: config.stripeAccountId, mode: 'test',
+    });
+  });
+  assert.deepEqual(await state.invokeReadiness(), SUPPORTED_TEST);
+  assert.equal(state.counts.trades, 1);
+  assert.equal(state.counts.transport, 1);
+});
+
+test('readiness: failed or mismatched wire bindings remain unavailable', async () => {
+  const valid = {
+    bindingRef: 'synthetic-binding', providerId: 'stripe',
+    stripeAccountId: 'acct_synthetic', mode: 'test',
+  };
+  const cases = [
+    [401, valid], [409, valid], [503, valid], [200, null], [200, {}],
+    [200, { ...valid, bindingRef: 'foreign-binding' }],
+    [200, { ...valid, providerId: 'authorize_net' }],
+    [200, { ...valid, stripeAccountId: 'acct_other' }],
+    [200, { ...valid, mode: 'live' }],
+    [200, { ...valid, ready: false }], [200, { ...valid, ready: 'true' }],
+  ];
+  for (const [status, body] of cases) {
+    const state = await runtimeFixture();
+    try {
+      state.setTransportOverride(path => {
+        assert.equal(path, '/v1/checkout-binding');
+        return Response.json(body, { status });
+      });
+      assert.deepEqual(await state.invokeReadiness(), UNAVAILABLE, JSON.stringify({ status, body }));
+      assert.equal(state.counts.trades, 1);
+      assert.equal(state.counts.transport, 1);
+    } finally { await state.close(); }
+  }
 });
 
 test('readiness: pending status revalidates binding after a supported read', async t => {

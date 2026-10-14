@@ -318,8 +318,10 @@ function createPaymentPort(
   }
   async function verifyBinding(): Promise<PaymentBinding> {
     const ready = await binding("/v1/checkout-binding");
-    if (ready.ready !== true) throw new Error("Payments binding unavailable");
-    return ready;
+    // This endpoint returns 200 only for a ready binding. Its wire response has
+    // no ready field; normalize after HTTP and exact identity/mode admission.
+    if (ready.ready !== undefined && ready.ready !== true) throw new Error("Payments binding unavailable");
+    return { ...ready, ready: true };
   }
   const ensureSession = (request: PaymentRequest) => requestOutcome(request, true);
   const lookup = (request: PaymentRequest) => requestOutcome(request, false);
