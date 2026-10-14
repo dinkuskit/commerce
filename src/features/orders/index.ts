@@ -13,6 +13,8 @@ export {
   takeOrderNumber,
 } from "./store.js";
 export type { OrderCompletion, OrderNumbers, OrderRecord, OrdersCollection } from "./store.js";
+export { validGeneration, cohortMatches } from './cohort.js';
+export type { ShipIsolation } from './cohort.js';
 export { ordersBlocks, ordersInteraction } from "./admin/page.js";
 export { ORDERS_API_ROUTE, ordersApi } from "./api.js";
 export { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, shipLabelPage, syncShip } from "./ship.js";

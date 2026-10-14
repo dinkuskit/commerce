@@ -9,6 +9,16 @@ import {
 
 const SITE = "https://shop.example.test";
 const shipping = { configurationId: "ship", revision: 1, mode: "free" };
+const isolatedShip = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
+
+test('isolated Ship admits only the fixed complete TEST tuple; old shape cannot access sandbox', () => {
+  assert.deepEqual(admitRegistryCheckoutConfig(legacyStripe({ ship: isolatedShip }), SITE).ship, isolatedShip);
+  for (const change of [{ origin: 'https://other.test' }, { audience: 'production' }, { recipient: 'other' }, { generation: '' }, { generation: 'x'.repeat(129) }, { mode: 'live' }]) rejects(legacyStripe({ ship: { ...isolatedShip, ...change } }));
+  for (const key of ['recipient','generation','mode']) { const ship = { ...isolatedShip }; delete ship[key]; rejects(legacyStripe({ ship })); }
+  rejects(legacyStripe({ ship: { origin: isolatedShip.origin, audience: isolatedShip.audience } }));
+  for (const origin of ['https://ship.sm0ky.dev/','https://SHIP.sm0ky.dev','https://ship.sm0ky.dev:443']) rejects(legacyStripe({ship:{origin,audience:'legacy-audience'}}));
+  rejects(legacyStripe({ mode: 'live', ship: isolatedShip }));
+});
 
 function legacyStripe(extra = {}) {
   return {

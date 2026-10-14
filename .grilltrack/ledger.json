@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-12T20:47:28+00:00",
-    "domain": "Bounded Registry readiness refresh",
-    "started_at": "2026-10-12T20:47:28+00:00",
+    "confirmed_at": "2026-10-14T15:06:22+00:00",
+    "domain": "Isolated Ship exact TEST cohort",
+    "started_at": "2026-10-14T15:06:22+00:00",
     "status": "confirmed",
-    "summary": "Implement the owner-authorized durable bounded advisory refresh, with engineering-selected 15-minute TTL and 100/day budget; keep actual checkout validation fresh, no live provider traffic, and verify the original installed CAS/runtime and package cap."
+    "summary": "Implement frozen isolated Ship v1 source only: exact host, tuple claims, role50 immutable admission and same-record disable/event/ack fencing; preserve existing paid orders and production compatibility. Prove negative/race and compiled Registry boundaries; no runtime activation or payment/provider actions."
   },
   "decisions": [
     {
@@ -12315,6 +12315,75 @@
       "superseded_by": null,
       "updated_at": "2026-10-12T20:50:24+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:29f55b0857dc4545de70a02f6b549135951ce4b8",
+      "candidate_refs": [],
+      "choice": "Fixed ship-sandbox recipient/origin and distinct audience; immutable bounded generation and TEST mode; explicit role50 exact-order admission pins recipient/generation with enabled state; disable/completion/ack CAS serialize on the same order. Receiver deployment exact-ID gate stays empty until separately authorized fresh paid proof. Existing orders remain unchanged; pinned orders never reroute or fall back. Production shape remains compatible.",
+      "context_ref": null,
+      "created_at": "2026-10-14T15:06:22+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Isolated Ship exact TEST cohort",
+      "history": [
+        {
+          "at": "2026-10-14T15:06:22+00:00",
+          "choice": "Fixed ship-sandbox recipient/origin and distinct audience; immutable bounded generation and TEST mode; explicit role50 exact-order admission pins recipient/generation with enabled state; disable/completion/ack CAS serialize on the same order. Receiver deployment exact-ID gate stays empty until separately authorized fresh paid proof. Existing orders remain unchanged; pinned orders never reroute or fall back. Production shape remains compatible.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T15:33:03+00:00",
+          "choice": "Fixed ship-sandbox recipient/origin and distinct audience; immutable bounded generation and TEST mode; explicit role50 exact-order admission pins recipient/generation with enabled state; disable/completion/ack CAS serialize on the same order. Receiver deployment exact-ID gate stays empty until separately authorized fresh paid proof. Existing orders remain unchanged; pinned orders never reroute or fall back. Production shape remains compatible.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T15:33:03+00:00",
+          "choice": "Fixed ship-sandbox recipient/origin and distinct audience; immutable bounded generation and TEST mode; explicit role50 exact-order admission pins recipient/generation with enabled state; disable/completion/ack CAS serialize on the same order. Receiver deployment exact-ID gate stays empty until separately authorized fresh paid proof. Existing orders remain unchanged; pinned orders never reroute or fall back. Production shape remains compatible.",
+          "from": "implemented",
+          "implementation_ref": "docs/contracts/isolated-ship.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "isolated-ship-cohort-v1",
+      "implementation_ref": "docs/contracts/isolated-ship.md",
+      "question": "How is one explicitly approved fresh TEST order isolated from existing fulfillment?",
+      "rationale": "",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-14T15:33:03+00:00",
+      "verification_ref": ".grilltrack/proof/isolated-ship-cohort-20261014/PROOF.md"
     }
   ],
   "last_activation": {
@@ -12351,5 +12420,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-12T21:02:05+00:00"
+  "updated_at": "2026-10-14T15:33:03+00:00"
 }

@@ -2,6 +2,7 @@ import { normalizeMoney } from "../catalog/kernel/index.js";
 import { isRecord as obj } from "../../shared/record.js";
 import { registryUnavailable as fail, registryText as text, exactKeys as keys } from "./registry-guards.js";
 import { CHECKOUT_PRICING_SCHEMA, type PaymentMode, type TrustedShippingConfiguration } from "./types.js";
+import { validGeneration, type ShipIsolation } from '../orders/index.js';
 
 export const REGISTRY_CHECKOUT_CONFIG_SCHEMA = "dinkuskit.commerce.registry-checkout/v1" as const;
 export type RegistryCheckoutProviderId = "stripe" | "authorize_net";
@@ -25,7 +26,7 @@ export interface RegistryCheckoutConfig {
   /** The hosted coupon service. Without it, coupon codes are unavailable. */
   coupons?: { origin: string; audience: string };
   /** Ship's hosted service for Orders. Without it, Orders sends nothing to Ship. */
-  ship?: { origin: string; audience: string };
+  ship?: { origin: string; audience: string } & Partial<ShipIsolation>;
 }
 
 const BASE =
@@ -85,6 +86,12 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
   if (hasMode && value.mode !== "test" && value.mode !== "live") fail();
   for (const name of services) {
     const service = record[name];
+    if (name === 'ship' && obj(service) && (https(service.origin) && new URL(service.origin).origin === 'https://ship.sm0ky.dev' || service.audience === 'dinkus-ship-sandbox' || ['recipient','generation','mode'].some(key => key in service))) {
+      if (!keys(service, 'audience,generation,mode,origin,recipient') || service.origin !== 'https://ship.sm0ky.dev' ||
+          service.audience !== 'dinkus-ship-sandbox' || service.recipient !== 'ship-sandbox' || service.mode !== 'test' ||
+          !validGeneration(service.generation) || value.mode === 'live') fail();
+      continue;
+    }
     if (!obj(service) || !keys(service, "audience,origin") || !https(service.origin) || !text(service.audience)) fail();
   }
   if (providerId === "stripe") {
