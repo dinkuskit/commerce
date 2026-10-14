@@ -898,3 +898,16 @@ test('compiled shipped Registry sandbox isolates one admitted TEST order and pre
     assert.deepEqual(await state.collections.orders.getVersioned('fixture-historical'),old);
   } finally { await state.close(); }
 });
+
+
+test('compiled legacy Registry invocation cannot POST fresh unpinned order after connection settings switch',async()=>{
+ let state,posts=0,lists=0;
+ const isolation={origin:'https://ship.sm0ky.dev',audience:'dinkus-ship-sandbox',recipient:'ship-sandbox',generation:'fixture-generation-1',mode:'test'};
+ state=await runtimeFixture({config:{...configuration(),ship:SHIP},shipPass:await shipCredential(),shipService:async(url)=>{
+   if(new URL(url).pathname!=='/v1/labels'){posts++;return Response.json({received:true})}
+   lists++;await state.settings.set('installedCheckout',JSON.stringify({...configuration(),ship:isolation}));
+   await state.collections.orders.put('fixture-unpinned',{paidOrder:{schema:'dinkuskit.commerce.paid-order/v1',orderId:'fixture-unpinned',receiptId:'fixture-receipt',attemptId:'fixture-attempt',mode:'test',lines:[{catalogItemId:'hat',name:'Hat',quantity:1,unitPrice:{currency:'USD',minor:'250'}}],total:{currency:'USD',minor:'250'},contactSnapshot:{schema:'dinkuskit.commerce.checkout-contact/v1',requirePhoneNumber:false,revision:null,contact:{email:'fixture@example.test',delivery:syntheticDelivery}}},number:1002,revision:1});
+   return Response.json([]);
+ }});
+ try{await shipAdmin(state,{type:'page_load',page:'/orders'});assert.equal(lists,1);assert.equal(posts,0);const fresh=await state.collections.orders.get('fixture-unpinned');assert.equal(fresh.shipPin,undefined);assert.equal(fresh.shipVersion,undefined);assert.equal(fresh.revision,1)}finally{await state.close()}
+});

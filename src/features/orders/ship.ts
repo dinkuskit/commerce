@@ -55,15 +55,19 @@ export function shipLabelPage(ship: Pick<ShipConnection, "origin" | "site">, ord
  */
 export async function syncShip(collection: OrdersCollection, ship: ShipConnection, item: ShipItemLookup): Promise<void> {
   const isolated = ship.isolation && { ...ship.isolation, site: ship.site };
-  const active = async () => !isolated || !!await ship.current?.();
+  const active = async () => ship.current ? await ship.current() : !isolated;
   const matches = (value: unknown) => isRecord(value) && value.recipient === isolated?.recipient && value.generation === isolated?.generation && value.mode === 'test';
   if (!await active()) unavailable();
-  const call = async (path: string, body?: unknown) => ship.fetch(new URL(ship.origin).origin + path, {
+  const call = async (path: string, body?: unknown) => {
+    const token = await ship.credential();
+    if (!await active()) unavailable();
+    return ship.fetch(new URL(ship.origin).origin + path, {
     method: body ? "POST" : "GET", cache: "no-store", redirect: "error",
-    headers: { accept: "application/json", authorization: "Bearer " + await ship.credential(), "content-type": "application/json",
+    headers: { accept: "application/json", authorization: "Bearer " + token, "content-type": "application/json",
       ...(isolated ? { 'X-Ship-Recipient': isolated.recipient, 'X-Ship-Generation': isolated.generation, 'X-Ship-Mode': isolated.mode } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
-  });
+    });
+  };
   const listed = await call("/v1/labels");
   const labels = listed.ok ? await ship.read(listed) : unavailable();
   if (!Array.isArray(labels) || labels.length > 100) unavailable();
@@ -83,6 +87,7 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     }
     // An isolated pin is permanent, including after rollback; legacy events cannot complete it.
     if (record?.shipPin) continue;
+    if (!await active()) unavailable();
     // A label for an order Orders does not have, an older version or a Completed order changes nothing.
     if (typeof label.orderId === "string" && await collection.get(label.orderId)) {
       await completeOrder(collection, label.orderId, label.version as number, label, new Date().toISOString(), r => !r.shipPin);
@@ -123,7 +128,8 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     });
     // 422 means Ship can never label this version, so it waits for the order's next change.
     if (!response.ok && response.status !== 422) unavailable();
-    if (isolated && (!matches(await ship.read(response)) || !await active())) unavailable();
+    if (isolated && !matches(await ship.read(response))) unavailable();
+    if (!await active()) unavailable();
     const current = await collection.getVersioned(facts.orderId);
     if (current && (current.value.revision ?? 1) === facts.version && (isolated ? cohortMatches(current.value, isolated) : !current.value.shipPin)) {
       await collection.compareAndSet(facts.orderId, current.revision, { ...current.value, ...(isolated

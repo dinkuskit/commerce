@@ -5,6 +5,7 @@ import {
   REGISTRY_CHECKOUT_CONFIG_SCHEMA,
   admitRegistryCheckoutConfig,
   trustedPaymentsHostConfig,
+  resolveRegistryShip,
 } from "../../../dist/features/checkout/index.js";
 
 const SITE = "https://shop.example.test";
@@ -114,4 +115,11 @@ test("an optional hosted coupon or Ship service needs exactly an https origin an
   const both = admitRegistryCheckoutConfig(legacyStripe({ mode: "live", coupons, ship }), SITE);
   assert.deepEqual([both.mode, both.coupons, both.ship], ["live", coupons, ship]);
   rejects(legacyStripe({ coupons, ship, shipping2: ship }));
+});
+
+
+test('captured legacy Registry connection re-admits identity when settings switch to sandbox',async()=>{
+ let current=legacyStripe({ship:{origin:'https://ship.dinkuskit.com',audience:'dinkus-ship'}}),calls=0;
+ const ctx={plugin:{id:'dinkus-commerce'},site:{url:SITE},settings:{getVersioned:async()=>({revision:'fixture',value:current}),get:async()=> 'synthetic fixture key'},http:{fetch:async()=>{calls++;throw new Error('unexpected network')}}};
+ const old=await resolveRegistryShip(ctx);assert.equal(await old.current(),true);current=legacyStripe({ship:isolatedShip});assert.equal(await old.current(),false);assert.equal(calls,0);
 });

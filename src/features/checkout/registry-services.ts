@@ -118,11 +118,11 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
 export async function resolveRegistryShip(ctx: PluginContext): Promise<ShipConnection | undefined> {
   const config = (await registryConfig(ctx))?.config, ship = config?.ship;
   return ship && { origin: ship.origin, site: config!.siteId, name: ctx.site?.name, fetch: ctx.http!.fetch.bind(ctx.http), read: readBoundedPaymentsJson,
-    ...(ship.recipient ? { isolation: { recipient: ship.recipient, generation: ship.generation!, mode: ship.mode! },
-      current: async () => {
+    ...(ship.recipient ? { isolation: { recipient: ship.recipient, generation: ship.generation!, mode: ship.mode! } } : {}),
+    current: async () => {
         const latest = (await registryConfig(ctx))?.config;
-        return latest?.siteId === config!.siteId && latest.ship?.origin === ship.origin && latest.ship?.audience === ship.audience &&
-          latest.ship?.recipient === ship.recipient && latest.ship?.generation === ship.generation && latest.ship?.mode === 'test';
-      } } : {}),
+        return latest?.siteId === config!.siteId && latest.issuer === config!.issuer && latest.ship?.origin === ship.origin && latest.ship?.audience === ship.audience &&
+          latest.ship?.recipient === ship.recipient && latest.ship?.generation === ship.generation && latest.ship?.mode === ship.mode;
+      },
     credential: (await storePasses(ctx, config!))("ship:orders", ship.audience, ship.generation) };
 }
