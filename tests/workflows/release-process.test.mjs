@@ -87,6 +87,9 @@ test("registry workflow is npm-based, pinned, and refuses prereleases", async ()
 	assert.doesNotMatch(source, /inputs\.package/);
 	assert.doesNotMatch(source, /release plan --package/);
 	assert.match(source, /^ {2}workflow_call:/m);
+	assert.ok(source.indexOf('run: npm run build') < source.indexOf('node scripts/prepare-emdash-release.mjs'));
+	assert.match(source, /node scripts\/prepare-emdash-release\.mjs "\$\{EMDASH_RELEASE_SELECTOR\}"/);
+	assert.doesNotMatch(source, /release prepare[^\n]*--dir \./);
 });
 
 test("changeset check workflow runs the audit script on pull requests", async () => {
