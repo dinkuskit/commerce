@@ -157,6 +157,13 @@ test("publish outcome is gated on registry verification, not the intent", async 
 	assert.equal(continuations.length, 1, "only the publish step may continue on error");
 	assert.match(source, /id: publish\n\s+continue-on-error: true/);
 	assert.match(source, /verify-registry-release\.mjs/);
+	assert.match(source, /id: verify/);
+	// The intent-failure note claims the Registry record verified, so it
+	// may only run when the verifier itself succeeded.
+	assert.match(
+		source,
+		/steps\.publish\.outcome == 'failure' && steps\.verify\.outcome == 'success'/,
+	);
 	assert.ok(
 		source.indexOf("verify-registry-release.mjs") > source.indexOf("id: publish"),
 		"verification runs after the publish step",

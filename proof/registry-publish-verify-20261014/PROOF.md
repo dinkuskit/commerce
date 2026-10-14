@@ -66,3 +66,12 @@ pinned action ref `06f911b`).
 No merge, publish, workflow dispatch, or secret change. The next
 release after this merges is the first live exercise of the gate;
 merging any future `ci: release` PR remains the publish approval.
+
+## Review repair round 1
+
+ClawSweeper reviewed `ece30ec` and raised one P2 finding: the
+intent-outcome note ran on publish failure alone, so it could claim
+a verified publish after the verifier itself failed. Adjudication:
+`required_fix`. The verifier step now has an id and the note
+requires `steps.verify.outcome == 'success'` as well; the workflow test
+pins that invariant.

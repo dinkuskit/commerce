@@ -134,6 +134,7 @@ jobs:
           provenance-file: ${{ steps.attest.outputs.bundle-path }}
 
       - name: "Verify Registry release"
+        id: verify
         shell: bash
         env:
           PUBLISHER_DID: "${{ steps.prepare.outputs.publisher-did }}"
@@ -145,7 +146,7 @@ jobs:
             "${PUBLISHER_DID}" "${EMDASH_RELEASE_SELECTOR}" "${BUNDLE_FILE}"
 
       - name: "Note intent outcome"
-        if: ${{ always() && steps.publish.outcome == 'failure' }}
+        if: ${{ always() && steps.publish.outcome == 'failure' && steps.verify.outcome == 'success' }}
         shell: bash
         run: |
           echo "::warning title=Release intent reported failure::The delegated release intent failed (see Publish plugin step) but the Registry record was verified against the prepared bundle. Known upstream issue: emdash-cms/emdash#4159."
