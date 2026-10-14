@@ -46,6 +46,20 @@ dependency closure or discovering generated test packages in the checkout.
 The helper preserves the official publisher and version outputs and copies
 the resulting archive back to `.emdash-release` for provenance and publication.
 
+## Publish signal (known upstream issue)
+
+The delegated release service currently ends successful publishes in
+`RELEASE_CONFLICT` ([emdash#4159](https://github.com/emdash-cms/emdash/issues/4159)):
+the intent writes the release record, then reconciliation judges that
+same record a conflict. The publish job therefore does not trust the
+intent outcome. After the publish step, `verify-registry-release.mjs`
+reads the publisher PDS record directly and passes the job only when
+that record carries exactly the bundle bytes prepared in the same run
+(version, package checksum, and blob size). A green publish job means
+the Registry holds this run's bytes; a red one means it does not,
+whatever the intent reported. Remove the `continue-on-error` gate swap
+once the upstream issue is fixed.
+
 ## Beta status
 
 The locked beta flow publishes `x.y.z-beta.N` under the separate
@@ -82,3 +96,8 @@ carries a ready-to-run prompt for that setup.
 `check-no-major.mjs`, the changeset check, and `scripts/repo-contract.mjs`
 all hold Commerce on 0.x. Removing those guards is the explicit 1.0.0
 decision (coupons, inventory, commerce, payments, and ship landed).
+
+Both preparation and published-record verification consume the effective
+routed selector. A prerelease is checked against its beta package record,
+never a same-version record under the stable slug. Stable releases retain
+the stable package identity and the same checksum, size, and MIME gate.

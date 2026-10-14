@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-12T20:47:28+00:00",
-    "domain": "Bounded Registry readiness refresh",
-    "started_at": "2026-10-12T20:47:28+00:00",
+    "confirmed_at": "2026-10-14T22:58:03+00:00",
+    "domain": "Registry beta release verification composition",
+    "started_at": "2026-10-14T22:58:02+00:00",
     "status": "confirmed",
-    "summary": "Implement the owner-authorized durable bounded advisory refresh, with engineering-selected 15-minute TTL and 100/day budget; keep actual checkout validation fresh, no live provider traffic, and verify the original installed CAS/runtime and package cap."
+    "summary": "Compose the existing verifier and beta routing without runtime or permission changes; verify the effective selector with stable/beta positive and cross-package negative tests. Delivery is a reviewed PR for maintainer-controlled merge."
   },
   "decisions": [
     {
@@ -12315,6 +12315,75 @@
       "superseded_by": null,
       "updated_at": "2026-10-12T20:50:24+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:7295aa38e47e0fbe097b899b52ce3981536b5b1e",
+      "candidate_refs": [],
+      "choice": "Prepare and verify the same effective routed selector. Stable releases retain the stable slug; prereleases use the beta slug. Preserve the published-record checksum, size and MIME gate and reject records from the wrong package.",
+      "context_ref": "tests/workflows/release-process.test.mjs",
+      "created_at": "2026-10-14T22:58:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Registry beta release verification composition",
+      "history": [
+        {
+          "at": "2026-10-14T22:58:02+00:00",
+          "choice": "Prepare and verify the same effective routed selector. Stable releases retain the stable slug; prereleases use the beta slug. Preserve the published-record checksum, size and MIME gate and reject records from the wrong package.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T22:58:46+00:00",
+          "choice": "Prepare and verify the same effective routed selector. Stable releases retain the stable slug; prereleases use the beta slug. Preserve the published-record checksum, size and MIME gate and reject records from the wrong package.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T22:58:49+00:00",
+          "choice": "Prepare and verify the same effective routed selector. Stable releases retain the stable slug; prereleases use the beta slug. Preserve the published-record checksum, size and MIME gate and reject records from the wrong package.",
+          "from": "implemented",
+          "implementation_ref": ".github/workflows/emdash-release.yml",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "registry-beta-verifier-composition-001",
+      "implementation_ref": ".github/workflows/emdash-release.yml",
+      "question": "Which selector must the published-record verifier use after beta routing?",
+      "rationale": "Authorized bounded integration of PRs 115 and 116; original matrix selectors identify stable package names even when routing prepares the separate beta package.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-14T22:58:49+00:00",
+      "verification_ref": ".grilltrack/proof/registry-beta-verifier-20261014/PROOF.md"
     }
   ],
   "last_activation": {
@@ -12351,5 +12420,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-12T21:02:05+00:00"
+  "updated_at": "2026-10-14T22:58:49+00:00"
 }
