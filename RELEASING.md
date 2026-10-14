@@ -39,6 +39,13 @@ Registry publishing uses GitHub OIDC and the delegated release service,
 so no Atmosphere credential is stored in this repository. Approvals are
 only requested when a release expands plugin permissions.
 
+The Registry job first runs the normal Commerce build. The preparation helper
+copies its prebundled source into a temporary standalone directory and invokes
+the official `release prepare` command there. This avoids rebuilding the raw
+dependency closure or discovering generated test packages in the checkout.
+The helper preserves the official publisher and version outputs and copies
+the resulting archive back to `.emdash-release` for provenance and publication.
+
 ## Beta status
 
 The locked beta flow publishes `x.y.z-beta.N` under a separate beta

@@ -100,6 +100,9 @@ jobs:
             exit 1
           fi
 
+      - name: "Build Commerce prebundle"
+        run: npm run build
+
       - name: "Prepare plugin release"
         id: prepare
         shell: bash
@@ -107,7 +110,7 @@ jobs:
           EMDASH_RELEASE_SELECTOR: "${{ matrix.selector }}"
         run: |
           set -euo pipefail
-          ./node_modules/.bin/emdash-plugin release prepare "${EMDASH_RELEASE_SELECTOR}" --dir . --out-dir .emdash-release
+          node scripts/prepare-emdash-release.mjs "${EMDASH_RELEASE_SELECTOR}"
 
       - name: "Create build provenance"
         id: attest
