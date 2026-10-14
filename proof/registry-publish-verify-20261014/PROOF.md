@@ -75,3 +75,19 @@ a verified publish after the verifier itself failed. Adjudication:
 `required_fix`. The verifier step now has an id and the note
 requires `steps.verify.outcome == 'success'` as well; the workflow test
 pins that invariant.
+
+
+## Comprehensive review repair
+
+The exact-head comprehensive review of `316ec692b459d9dcbd81a6375ee27384a79585c3`
+identified a P2: DID documents may use either a relative `#atproto_pds`
+service ID or a publisher-qualified ID. Accepted as `required_fix`, consistent
+with https://atproto.com/specs/did#did-documents. The resolver now accepts both
+forms for the requested publisher; IDs qualified by another DID still fail.
+A regression reproduced the failure first and then passed for both `did:plc`
+and `did:web` publishers, with the cross-publisher negative retained.
+The previous failed-intent note finding remains fixed and tested.
+
+Repair validation: Node 22.23.2, all 11 release-process tests and
+`npm run verify:quick` passed (563 unit tests, typecheck, repository/feature
+audits). Fresh exact-head review is required after this repair.

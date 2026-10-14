@@ -9,6 +9,7 @@ import {
 	computePackageChecksum,
 	parseSelector,
 	recordMatches,
+	resolvePdsEndpoint,
 } from "../../.github/scripts/verify-registry-release.mjs";
 
 const read = (relative) => readFile(new URL(relative, import.meta.url), "utf8");
@@ -168,4 +169,21 @@ test("publish outcome is gated on registry verification, not the intent", async 
 		source.indexOf("verify-registry-release.mjs") > source.indexOf("id: publish"),
 		"verification runs after the publish step",
 	);
+});
+
+
+test("PDS resolution supports relative and publisher-qualified service IDs", async () => {
+  for (const did of ["did:plc:publisher", "did:web:publisher.example"]) {
+    for (const id of ["#atproto_pds", `${did}#atproto_pds`]) {
+      const endpoint = await resolvePdsEndpoint(did, async () => new Response(JSON.stringify({
+        id: did,
+        service: [{ id, type: "AtprotoPersonalDataServer", serviceEndpoint: "https://pds.example" }],
+      })));
+      assert.equal(endpoint, "https://pds.example");
+    }
+    await assert.rejects(resolvePdsEndpoint(did, async () => new Response(JSON.stringify({
+      id: did,
+      service: [{ id: "did:plc:other#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: "https://other.example" }],
+    }))), /no #atproto_pds service/);
+  }
 });

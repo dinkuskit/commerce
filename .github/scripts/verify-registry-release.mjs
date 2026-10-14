@@ -65,7 +65,9 @@ export async function resolvePdsEndpoint(publisherDid, fetchImpl = fetch) {
 	const response = await fetchImpl(url);
 	if (!response.ok) throw new Error(`DID resolution failed with HTTP ${response.status}`);
 	const document = await response.json();
-	const service = document?.service?.find((entry) => entry?.id === "#atproto_pds");
+	const service = document?.service?.find((entry) =>
+		entry?.id === "#atproto_pds" || entry?.id === `${publisherDid}#atproto_pds`,
+	);
 	if (!service?.serviceEndpoint) throw new Error("publisher DID has no #atproto_pds service");
 	return service.serviceEndpoint;
 }
