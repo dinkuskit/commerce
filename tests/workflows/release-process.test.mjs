@@ -5,6 +5,12 @@ import test from "node:test";
 import { auditChangesets, parseChangeset } from "../../.github/scripts/check-changeset.mjs";
 import { findMajorViolation } from "../../.github/scripts/check-no-major.mjs";
 import { syncPluginVersion } from "../../.github/scripts/release-version.mjs";
+import {
+	computePackageChecksum,
+	parseSelector,
+	recordMatches,
+	resolvePdsEndpoint,
+} from "../../.github/scripts/verify-registry-release.mjs";
 
 const read = (relative) => readFile(new URL(relative, import.meta.url), "utf8");
 
@@ -97,4 +103,87 @@ test("changeset check workflow runs the audit script on pull requests", async ()
 	assert.match(source, /pull_request:/);
 	assert.match(source, /check-changeset\.mjs/);
 	assert.match(source, /^permissions:\n  contents: read$/m);
+});
+
+test("registry verifier computes the recorded package checksum", () => {
+	assert.equal(
+		computePackageChecksum(Buffer.from("")),
+		"bciqohmgeikmpyhautl57jsezn64sij5oihsgjg4tjssjlgi3pbjlqvi",
+	);
+	assert.equal(
+		computePackageChecksum(Buffer.from("abc")),
+		"bciqlu6awx6hqdt7kifaubxs5vyrchmadmgrzmf32ts2bb73b6iablli",
+	);
+	assert.deepEqual(parseSelector("dinkus-commerce@0.2.1"), {
+		slug: "dinkus-commerce",
+		version: "0.2.1",
+	});
+	assert.equal(parseSelector("no-version"), null);
+	assert.equal(parseSelector("@1.0.0"), null);
+});
+
+test("registry verifier accepts only the exact prepared bundle", () => {
+	const expected = {
+		slug: "dinkus-commerce",
+		version: "0.2.1",
+		checksum: "bciqexample",
+		size: 44347,
+	};
+	const record = {
+		package: "dinkus-commerce",
+		version: "0.2.1",
+		artifacts: {
+			package: {
+				checksum: "bciqexample",
+				blob: { size: 44347, mimeType: "application/gzip" },
+			},
+		},
+	};
+	assert.deepEqual(recordMatches(record, expected), { ok: true, reasons: [] });
+	assert.equal(recordMatches({ ...record, version: "0.2.2" }, expected).ok, false);
+	assert.equal(
+		recordMatches(
+			{ ...record, artifacts: { package: { ...record.artifacts.package, checksum: "bciqother" } } },
+			expected,
+		).ok,
+		false,
+	);
+	assert.equal(recordMatches(null, expected).ok, false);
+	assert.equal(recordMatches({}, expected).ok, false);
+});
+
+test("publish outcome is gated on registry verification, not the intent", async () => {
+	const source = await read("../../.github/workflows/emdash-release.yml");
+	const continuations = [...source.matchAll(/continue-on-error: true/g)];
+	assert.equal(continuations.length, 1, "only the publish step may continue on error");
+	assert.match(source, /id: publish\n\s+continue-on-error: true/);
+	assert.match(source, /verify-registry-release\.mjs/);
+	assert.match(source, /id: verify/);
+	// The intent-failure note claims the Registry record verified, so it
+	// may only run when the verifier itself succeeded.
+	assert.match(
+		source,
+		/steps\.publish\.outcome == 'failure' && steps\.verify\.outcome == 'success'/,
+	);
+	assert.ok(
+		source.indexOf("verify-registry-release.mjs") > source.indexOf("id: publish"),
+		"verification runs after the publish step",
+	);
+});
+
+
+test("PDS resolution supports relative and publisher-qualified service IDs", async () => {
+  for (const did of ["did:plc:publisher", "did:web:publisher.example"]) {
+    for (const id of ["#atproto_pds", `${did}#atproto_pds`]) {
+      const endpoint = await resolvePdsEndpoint(did, async () => new Response(JSON.stringify({
+        id: did,
+        service: [{ id, type: "AtprotoPersonalDataServer", serviceEndpoint: "https://pds.example" }],
+      })));
+      assert.equal(endpoint, "https://pds.example");
+    }
+    await assert.rejects(resolvePdsEndpoint(did, async () => new Response(JSON.stringify({
+      id: did,
+      service: [{ id: "did:plc:other#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: "https://other.example" }],
+    }))), /no #atproto_pds service/);
+  }
 });
