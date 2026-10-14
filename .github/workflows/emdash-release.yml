@@ -84,21 +84,26 @@ jobs:
       - name: "Install dependencies"
         run: npm ci
 
-      # Fail closed: a prerelease published under the real plugin slug
-      # would become the latest version for every install. Betas publish
-      # under a separate beta plugin name once that wiring lands; see
-      # "Beta status" in RELEASING.md.
-      - name: "Refuse prerelease versions"
+      # The Registry has no prerelease filter, so a beta under the real
+      # slug would become the latest version for every install.
+      # Prereleases route to the separate beta package; the prepare
+      # helper refuses any other slug/version pairing. See "Beta
+      # status" in RELEASING.md.
+      - name: "Route release selector"
+        id: route
         shell: bash
         env:
           EMDASH_RELEASE_SELECTOR: "${{ matrix.selector }}"
         run: |
           set -euo pipefail
+          slug="${EMDASH_RELEASE_SELECTOR%@*}"
           version="${EMDASH_RELEASE_SELECTOR##*@}"
-          if [[ "$version" == *-* ]]; then
-            echo "::error title=Prerelease refused::${EMDASH_RELEASE_SELECTOR} is a prerelease. Registry publishing for betas needs the separate beta plugin name; see RELEASING.md."
-            exit 1
+          effective="${EMDASH_RELEASE_SELECTOR}"
+          if [[ "$version" == *-* && "$slug" != *-beta ]]; then
+            effective="${slug}-beta@${version}"
           fi
+          echo "selector=${effective}" >> "${GITHUB_OUTPUT}"
+          echo "Publishing selector: ${effective} (planned: ${EMDASH_RELEASE_SELECTOR})"
 
       - name: "Build Commerce prebundle"
         run: npm run build
@@ -107,7 +112,7 @@ jobs:
         id: prepare
         shell: bash
         env:
-          EMDASH_RELEASE_SELECTOR: "${{ matrix.selector }}"
+          EMDASH_RELEASE_SELECTOR: "${{ steps.route.outputs.selector }}"
         run: |
           set -euo pipefail
           node scripts/prepare-emdash-release.mjs "${EMDASH_RELEASE_SELECTOR}"
@@ -138,7 +143,7 @@ jobs:
         shell: bash
         env:
           PUBLISHER_DID: "${{ steps.prepare.outputs.publisher-did }}"
-          EMDASH_RELEASE_SELECTOR: "${{ matrix.selector }}"
+          EMDASH_RELEASE_SELECTOR: "${{ steps.route.outputs.selector }}"
           BUNDLE_FILE: "${{ steps.prepare.outputs.bundle-file }}"
         run: |
           set -euo pipefail

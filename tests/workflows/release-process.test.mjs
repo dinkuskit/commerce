@@ -5,6 +5,7 @@ import test from "node:test";
 import { auditChangesets, parseChangeset } from "../../.github/scripts/check-changeset.mjs";
 import { findMajorViolation } from "../../.github/scripts/check-no-major.mjs";
 import { syncPluginVersion } from "../../.github/scripts/release-version.mjs";
+import { betaManifest, effectiveSelector } from "../../scripts/beta-release.mjs";
 import {
 	computePackageChecksum,
 	parseSelector,
@@ -75,14 +76,16 @@ test("release workflow versions, tags, and delegates with pinned actions", async
 	assert.doesNotMatch(source, /echo[^\n]*secrets\./);
 });
 
-test("registry workflow is npm-based, pinned, and refuses prereleases", async () => {
+test("registry workflow is npm-based, pinned, and routes prereleases to beta", async () => {
 	const source = await read("../../.github/workflows/emdash-release.yml");
 	assert.match(source, /apps\/release-action@[0-9a-f]{40}/);
 	assert.doesNotMatch(source, /release-action@main/);
 	assert.doesNotMatch(source, /pnpm\/action-setup|pnpm (?:dlx|install)/);
 	assert.match(source, /run: npm ci/);
 	assert.match(source, /node-version-file: \.nvmrc/);
-	assert.match(source, /Refuse prerelease versions/);
+	assert.match(source, /Route release selector/);
+	assert.match(source, /steps\.route\.outputs\.selector/);
+	assert.doesNotMatch(source, /Refuse prerelease versions/);
 	assert.match(source, /id-token: write/);
 	assert.match(source, /attestations: write/);
 	// Release-gate invariant: Registry publishing is reachable only as a
@@ -96,6 +99,35 @@ test("registry workflow is npm-based, pinned, and refuses prereleases", async ()
 	assert.ok(source.indexOf('run: npm run build') < source.indexOf('node scripts/prepare-emdash-release.mjs'));
 	assert.match(source, /node scripts\/prepare-emdash-release\.mjs "\$\{EMDASH_RELEASE_SELECTOR\}"/);
 	assert.doesNotMatch(source, /release prepare[^\n]*--dir \./);
+});
+
+test("beta routing sends only prereleases to the beta package", () => {
+	assert.equal(effectiveSelector("dinkus-commerce@0.2.2"), "dinkus-commerce@0.2.2");
+	assert.equal(
+		effectiveSelector("dinkus-commerce@0.3.0-beta.1"),
+		"dinkus-commerce-beta@0.3.0-beta.1",
+	);
+	assert.equal(
+		effectiveSelector("dinkus-commerce-beta@0.3.0-beta.1"),
+		"dinkus-commerce-beta@0.3.0-beta.1",
+	);
+	assert.equal(effectiveSelector("dinkus-commerce-beta@0.3.0"), null);
+	assert.equal(effectiveSelector("no-version"), null);
+
+	const stable = {
+		slug: "dinkus-commerce",
+		name: "Commerce",
+		version: "0.3.0-beta.1",
+		publisher: "did:plc:example",
+		capabilities: ["media:read"],
+	};
+	const beta = betaManifest(stable);
+	assert.equal(beta.slug, "dinkus-commerce-beta");
+	assert.equal(beta.name, "Commerce Beta");
+	assert.equal(beta.version, stable.version);
+	assert.equal(beta.publisher, stable.publisher);
+	assert.deepEqual(beta.capabilities, stable.capabilities);
+	assert.throws(() => betaManifest(beta), /stable slug/);
 });
 
 test("changeset check workflow runs the audit script on pull requests", async () => {
@@ -171,6 +203,36 @@ test("publish outcome is gated on registry verification, not the intent", async 
 	);
 });
 
+
+test("stable and beta Registry verification use the prepared selector", async () => {
+  const workflow = await read("../../.github/workflows/emdash-release.yml");
+  const stepSelector = (name) => {
+    const step = workflow.split(`      - name: "${name}"`)[1]?.split("      - name:")[0];
+    assert.ok(step, `missing ${name} step`);
+    return step.match(/EMDASH_RELEASE_SELECTOR: "?\$\{\{ ([^}]+) \}\}"?/)?.[1];
+  };
+  const prepareSelector = stepSelector("Prepare plugin release");
+  const verifySelector = stepSelector("Verify Registry release");
+  for (const planned of ["dinkus-commerce@0.2.2", "dinkus-commerce@0.3.0-beta.1"]) {
+    const routed = effectiveSelector(planned);
+    const resolve = (expression) => expression === "steps.route.outputs.selector" ? routed : planned;
+    const prepared = parseSelector(resolve(prepareSelector));
+    const verified = parseSelector(resolve(verifySelector));
+    assert.deepEqual(verified, prepared, `verify must use prepared identity for ${planned}`);
+    const bytes = Buffer.from(`prepared artifact for ${routed}`);
+    const expected = { ...verified, checksum: computePackageChecksum(bytes), size: bytes.length };
+    const record = {
+      package: prepared.slug,
+      version: prepared.version,
+      artifacts: { package: { checksum: computePackageChecksum(bytes), blob: { size: bytes.length, mimeType: "application/gzip" } } },
+    };
+    assert.equal(recordMatches(record, expected).ok, true);
+    const wrongSlug = prepared.slug.endsWith("-beta") ? "dinkus-commerce" : "dinkus-commerce-beta";
+    assert.equal(recordMatches({ ...record, package: wrongSlug }, expected).ok, false);
+  }
+  assert.equal(prepareSelector, "steps.route.outputs.selector");
+  assert.equal(verifySelector, "steps.route.outputs.selector");
+});
 
 test("PDS resolution supports relative and publisher-qualified service IDs", async () => {
   for (const did of ["did:plc:publisher", "did:web:publisher.example"]) {

@@ -30,9 +30,8 @@ import { admitRegistryCheckoutConfig } from "./registry-provider-admission.js";
 import { REGISTRY_CHECKOUT_SETTINGS_KEY, REGISTRY_STORE_KEY } from "./registry-services.js";
 
 export const COMMERCE_CHECKOUT_WAKES_TASK = "commerce-checkout-wakes";
-export const INSTALLED_COMMERCE_PLUGIN_ID = "dinkus-commerce";
-/** EmDash 1.2.0 runtime ID for the manifest publisher DID and slug. */
-export const COMMERCE_REGISTRY_RUNTIME_ID = "r_gshdrqaldna3r7sn";
+export { INSTALLED_COMMERCE_PLUGIN_ID, COMMERCE_REGISTRY_RUNTIME_ID } from "../../shared/plugin-identity.js";
+import { isCommerceInstallationId, isCommerceRegistryRuntimeId } from "../../shared/plugin-identity.js";
 export const CHECKOUT_READINESS_COLLECTION = "checkout_readiness";
 
 const READINESS_RECORD_KEY = "readiness";
@@ -111,8 +110,7 @@ const collectionMethods = {
 
 function installedStorage(ctx: InstalledContext): InstalledStorage {
   if (!isObject(ctx.plugin) ||
-      (ctx.plugin.id !== INSTALLED_COMMERCE_PLUGIN_ID &&
-       ctx.plugin.id !== COMMERCE_REGISTRY_RUNTIME_ID) ||
+      !isCommerceInstallationId(ctx.plugin.id) ||
       typeof ctx.plugin.version !== "string" || !ctx.plugin.version.trim() ||
       !isObject(ctx.storage) ||
       !isObject(ctx.site) ||
@@ -197,7 +195,7 @@ export function createInstalledCheckoutHandlers(
     try {
       installedStorage(ctx);
       const origin = siteOrigin(ctx), presented = headerValue(route.request.headers, "origin");
-      if (ctx.plugin.id !== COMMERCE_REGISTRY_RUNTIME_ID || !ctx.settings || !ctx.http ||
+      if (!isCommerceRegistryRuntimeId(ctx.plugin.id) || !ctx.settings || !ctx.http ||
           canonicalizeHttpOrigin(route.request.url) !== origin ||
           presented && canonicalizeHttpOrigin(presented) !== origin) return unavailable;
       const store = ctx.storage[CHECKOUT_READINESS_COLLECTION] as Pick<StorageCollection<CachedReadinessState>, "getVersioned" | "compareAndSet">;
