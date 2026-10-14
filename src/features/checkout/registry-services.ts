@@ -5,7 +5,7 @@ import type { CommercePaymentWake, CommercePaymentWakePort } from "./wake.js";
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import { registryUnavailable as unavailable, registryText as text, exactKeys as keys } from "./registry-guards.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
-import { INSTALLED_COMMERCE_PLUGIN_ID, COMMERCE_REGISTRY_RUNTIME_ID } from "./installed.js";
+import { isCommerceInstallationId } from "../../shared/plugin-identity.js";
 import type { InstalledCheckoutServices } from "./installed.js";
 import {
   REGISTRY_CHECKOUT_CONFIG_SCHEMA,
@@ -66,7 +66,7 @@ function wakePort(
 /** The store's admitted checkout configuration and origin, or null while checkout is unconfigured. */
 async function registryConfig(ctx: PluginContext) {
   if (!object(ctx.plugin) ||
-      (ctx.plugin.id !== INSTALLED_COMMERCE_PLUGIN_ID && ctx.plugin.id !== COMMERCE_REGISTRY_RUNTIME_ID)) unavailable();
+      !isCommerceInstallationId(ctx.plugin.id)) unavailable();
   const site = resolveTrustedSiteOrigin({ runtimeSiteUrl: ctx.site?.url });
   if (!site.ok) unavailable();
   // Keep the existing unconfigured prepare/capability behavior; start still has no Payments port.
