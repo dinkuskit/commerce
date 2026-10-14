@@ -92,6 +92,8 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     if (typeof label.orderId === "string" && await collection.get(label.orderId)) {
       await completeOrder(collection, label.orderId, label.version as number, label, new Date().toISOString(), r => !r.shipPin);
     }
+    // Admission can win after the initial label read or inside completion's CAS.
+    if (typeof label.orderId === 'string' && (await collection.get(label.orderId))?.shipPin) continue;
     if (!(await call("/v1/labels/ack", { eventId: label.eventId })).ok) unavailable();
   }
   // Each order carries the store's name for Ship's emails: one line, at most 200 UTF-16 units
@@ -128,12 +130,12 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     });
     // 422 means Ship can never label this version, so it waits for the order's next change.
     if (!response.ok && response.status !== 422) unavailable();
-    if (isolated && !matches(await ship.read(response))) unavailable();
+    if (isolated && response.ok && !matches(await ship.read(response))) unavailable();
     if (!await active()) unavailable();
     const current = await collection.getVersioned(facts.orderId);
     if (current && (current.value.revision ?? 1) === facts.version && (isolated ? cohortMatches(current.value, isolated) : !current.value.shipPin)) {
       await collection.compareAndSet(facts.orderId, current.revision, { ...current.value, ...(isolated
-        ? { shipAcknowledgement: { generation: isolated.generation, version: facts.version } } : { shipVersion: facts.version }) });
+        ? { shipAcknowledgement: { generation: isolated.generation, version: facts.version, outcome: response.ok ? 'accepted' : 'refused' } } : { shipVersion: facts.version }) });
     }
   }
 }

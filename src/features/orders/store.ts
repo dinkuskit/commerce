@@ -24,7 +24,7 @@ export interface OrderRecord {
   /** The version Ship last took, or refused for good. Recording it never raises the version. */
   shipVersion?: number;
   shipPin?: ShipPin;
-  shipAcknowledgement?: { generation: string; version: number };
+  shipAcknowledgement?: { generation: string; version: number; outcome: 'accepted' | 'refused' };
 }
 
 export interface OrderCompletion {
