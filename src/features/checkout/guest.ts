@@ -265,6 +265,11 @@ export async function statusGuestCheckout(
       return projected(authorized.capabilityId, currentAttempt(stored?.record.attempts ?? []), currentNow);
     }
     const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
+    // Validation can reject start before any attempt is saved. Observe that
+    // absence without minting a new capability or creating a payment session.
+    if (stored === null && admitted.attemptId === undefined) {
+      return { ok: true, capabilityId: authorized.capabilityId, checkout: projectPreparedGuestCheckout() };
+    }
     const current = currentAttempt(stored?.record.attempts ?? []);
     if (!current) fail("CHECKOUT_NOT_FOUND");
     const hinted = admitted.attemptId ?? "";
