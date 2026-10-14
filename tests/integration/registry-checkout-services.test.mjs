@@ -819,3 +819,38 @@ test('a store upgrading from the three pass settings stays unavailable until it 
     for (const pass of Object.values(legacyPasses)) assert.ok(state.outbound.every(request => !request.text.includes(pass)));
   } finally { await state.close(); }
 });
+
+test('country-rejected start recovers through read-only prepared status on the same capability', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const item = await state.collections.catalog_items.get('hat');
+  await state.collections.catalog_items.put('hat', { ...item, fulfillment: 'physical' });
+  const prepared = await state.invoke(PREPARE);
+  const token = prepared.capability.capability;
+  const input = { ...basket, contact: { ...basket.contact, delivery: syntheticDelivery } };
+  const rejected = await state.invoke(START, input, token);
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'INVALID_CART');
+  assert.equal(rejected.error.message, 'The store does not ship to this country');
+  assert.equal((await state.cartRecords()).length, 0);
+  assert.equal((await state.collections.checkout_payment_associations.query()).items.length, 0);
+  assert.equal(state.requests.length, 0);
+  await saveMerchantStoreSettings(state.settings, {
+    expectedRevision: null, storeCountry: 'US', sellingCountries: ['US'], shippingCountries: ['US'],
+  });
+  const before = { ...state.counts };
+  const capabilities = (await state.collections.checkout_guest_capabilities.query()).items;
+  const status = await state.invoke(STATUS, {}, token);
+  assert.equal(status.ok, true);
+  assert.equal(status.capabilityId, prepared.capabilityId);
+  assert.deepEqual(status.checkout, prepared.checkout);
+  assert.deepEqual({ ...state.counts, credentials: 0 }, { ...before, credentials: 0 });
+  assert.deepEqual((await state.collections.checkout_guest_capabilities.query()).items, capabilities);
+  assert.equal((await state.cartRecords()).length, 0);
+  const started = await state.invoke(START, input, token);
+  assert.equal(started.ok, true);
+  assert.equal(started.checkout.state, 'pending');
+  assert.notEqual(started.checkout.attemptId, null);
+  assert.equal((await state.cartRecords())[0].attempts.length, 1);
+  assert.equal(state.requests.length, 1);
+});

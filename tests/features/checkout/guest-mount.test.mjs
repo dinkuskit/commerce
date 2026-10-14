@@ -819,3 +819,129 @@ test("guest projection suppresses redirectUrl in released state and when real pr
   assert.equal(paid.redirectUrl, null);
   assert.equal(paid.state, "paid");
 });
+
+test("prepared status is read-only and refuses explicit missing attempt hints", async (t) => {
+  const f = setup(t);
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage);
+  const token = capabilityOf(prepared);
+  const before = f.synth.counts();
+  for (let i = 0; i < 2; i++) {
+    const status = await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability: token });
+    assert.equal(status.capabilityId, prepared.capabilityId);
+    assert.deepEqual(status.checkout, prepared.checkout);
+  }
+  await assert.rejects(
+    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, { attemptId: "missing-attempt" }, { capability: token }),
+    (error) => error.code === "CHECKOUT_NOT_FOUND",
+  );
+  assert.equal(await countCollection(f.storage, CHECKOUT_COLLECTION), 0);
+  assert.equal(await countCollection(f.storage, CHECKOUT_GUEST_CAPABILITY_COLLECTION), 1);
+  assert.deepEqual(f.synth.counts(), before);
+});
+
+test("prepared status preserves capability and origin admission", async (t) => {
+  const f = setup(t);
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage);
+  const token = capabilityOf(prepared);
+  for (const capability of [undefined, "missing.secret", `${prepared.capabilityId}.forged`]) {
+    await assert.rejects(
+      invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability }),
+      (error) => error.code === "CAPABILITY_DENIED",
+    );
+  }
+  await assert.rejects(
+    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability: token, origin: "https://foreign.example" }),
+    (error) => error.code === "ORIGIN_DENIED",
+  );
+  const record = await f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION].get(prepared.capabilityId);
+  await f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION].put(prepared.capabilityId, { ...record, siteBinding: "https://foreign.example" });
+  await assert.rejects(
+    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability: token }),
+    (error) => error.code === "CAPABILITY_DENIED",
+  );
+  await f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION].delete(prepared.capabilityId);
+  await assert.rejects(
+    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability: token }),
+    (error) => error.code === "CAPABILITY_DENIED",
+  );
+  assert.equal(f.synth.counts().paymentCreates, 0);
+});
+
+test("prepared status does not turn storage failures or malformed aggregates into absence", async (t) => {
+  const f = setup(t);
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage);
+  const token = capabilityOf(prepared);
+  const carts = f.storage[CHECKOUT_COLLECTION];
+  for (const getVersioned of [
+    async () => { throw new Error("database unavailable"); },
+    async () => { throw new SyntaxError("invalid persisted JSON"); },
+    async () => ({ revision: "1", value: {} }),
+    async () => ({ revision: "1", value: { attempts: [] } }),
+  ]) {
+    await assert.rejects(
+      invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], { ...f.storage, [CHECKOUT_COLLECTION]: { ...carts, getVersioned } }, {}, { capability: token }),
+      (error) => error.code === "UNAVAILABLE",
+    );
+  }
+  await assert.rejects(
+    invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], {
+      ...f.storage, [CHECKOUT_GUEST_CAPABILITY_COLLECTION]: { async get() { throw new Error("database unavailable"); } },
+    }, {}, { capability: token }),
+    (error) => error.code === "UNAVAILABLE",
+  );
+  assert.equal(f.synth.counts().paymentCreates, 0);
+});
+
+test("an existing unknown payment attempt never becomes prepared status", async (t) => {
+  const f = setup(t);
+  await seedGuestCatalog(f.storage);
+  f.synth.setPayment("unknown");
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage);
+  const token = capabilityOf(prepared);
+  const started = await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, lines(), { capability: token });
+  const before = f.synth.counts().paymentCreates;
+  const status = await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], f.storage, {}, { capability: token });
+  assert.notEqual(status.checkout.attemptId, null);
+  assert.equal(status.checkout.attemptId, started.checkout.attemptId);
+  assert.equal(status.checkout.state, "recoverable-failure");
+  assert.equal(status.checkout.redirectUrl, null);
+  assert.equal(f.synth.counts().paymentCreates, before);
+  assert.equal(await countCollection(f.storage, CHECKOUT_COLLECTION), 1);
+});
+
+test("prepared status racing a pre-claim start preserves one attempt and provider operation", async (t) => {
+  const f = setup(t);
+  await seedGuestCatalog(f.storage);
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage);
+  const token = capabilityOf(prepared);
+  const carts = f.storage[CHECKOUT_COLLECTION];
+  let signalClaim, releaseClaim;
+  const atClaim = new Promise(resolve => { signalClaim = resolve; });
+  const released = new Promise(resolve => { releaseClaim = resolve; });
+  let first = true;
+  const racingStorage = { ...f.storage, [CHECKOUT_COLLECTION]: {
+    getVersioned: (...args) => carts.getVersioned(...args),
+    async compareAndSet(...args) {
+      if (first) { first = false; signalClaim(); await released; }
+      return carts.compareAndSet(...args);
+    },
+  } };
+  const firstStart = invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], racingStorage, lines(), { capability: token });
+  await atClaim;
+  try {
+    const status = await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_STATUS_ROUTE], racingStorage, {}, { capability: token });
+    assert.deepEqual(status.checkout, prepared.checkout);
+    const secondStart = await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], racingStorage, lines(), { capability: token });
+    releaseClaim();
+    const firstResult = await firstStart;
+    assert.equal(firstResult.checkout.attemptId, secondStart.checkout.attemptId);
+    assert.equal(f.synth.sessions.size, 1);
+    const stored = (await carts.query()).items;
+    assert.equal(stored.length, 1);
+    assert.equal(stored[0].data.attempts.length, 1);
+    await assert.rejects(
+      invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], racingStorage, lines("hat", 2), { capability: token }),
+      (error) => error.code === "CHECKOUT_FROZEN",
+    );
+  } finally { releaseClaim(); await firstStart.catch(() => {}); }
+});
