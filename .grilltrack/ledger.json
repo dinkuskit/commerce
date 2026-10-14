@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-14T23:03:03+00:00",
-    "domain": "Exact beta Registry runtime compatibility",
-    "started_at": "2026-10-14T23:03:02+00:00",
+    "confirmed_at": "2026-10-14T23:20:41+00:00",
+    "domain": "Enter beta release pre-mode",
+    "started_at": "2026-10-14T23:20:41+00:00",
     "status": "confirmed",
-    "summary": "Add the one exact derived beta Registry identity to installed checkout and Registry services, preserving native/stable admission and strict unknown-ID failures. Validate using the actual prepared beta backend and manifest in isolated EmDash storage and local Payments TEST compatibility; keep PR117 and all live stores untouched."
+    "summary": "Enter beta using pinned Changesets3.0.3 schema mode/tag; preserve starting0.2.2 and pending patch, prove current and future minor release plans, and deliver a reviewed pre-mode PR without publication."
   },
   "decisions": [
     {
@@ -12453,10 +12453,107 @@
       "superseded_by": null,
       "updated_at": "2026-10-14T23:09:34+00:00",
       "verification_ref": ".grilltrack/proof/registry-beta-runtime-20261014/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:01b907a2be1374b0a90b252682677acbc9348e47",
+      "candidate_refs": [],
+      "choice": "Enter Changesets pre-mode with tag beta from unchanged package0.2.2 using the pinned CLI schema. Prove the starting version via release-plan oldVersion; preserve pending changesets. Normal merge updates a beta version PR and never publishes directly; release PR approval remains separate.",
+      "context_ref": "RELEASING.md",
+      "created_at": "2026-10-14T23:19:26+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Enter beta release pre-mode",
+      "history": [
+        {
+          "at": "2026-10-14T23:19:26+00:00",
+          "choice": "Enter Changesets pre-mode with tag beta from package 0.2.2, preserving initialVersions and pending changesets. The normal merge creates or updates a beta version PR and never publishes directly; release PR approval remains separate.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T23:20:41+00:00",
+          "choice": "Enter Changesets pre-mode with tag beta from package 0.2.2, preserving initialVersions and pending changesets. The normal merge creates or updates a beta version PR and never publishes directly; release PR approval remains separate.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Pinned Changesets3.0.3 stores only mode/tag; v2 initialVersions fields are explicitly migrated away. Starting version is proven by package.json and the CLI release plan oldVersion.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T23:20:41+00:00",
+          "choice": "Enter Changesets pre-mode with tag beta from package 0.2.2, preserving initialVersions and pending changesets. The normal merge creates or updates a beta version PR and never publishes directly; release PR approval remains separate.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T23:21:20+00:00",
+          "choice": "Enter Changesets pre-mode with tag beta from unchanged package0.2.2 using the pinned CLI schema. Prove the starting version via release-plan oldVersion; preserve pending changesets. Normal merge updates a beta version PR and never publishes directly; release PR approval remains separate.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-14T23:21:52+00:00",
+          "choice": "Enter Changesets pre-mode with tag beta from unchanged package0.2.2 using the pinned CLI schema. Prove the starting version via release-plan oldVersion; preserve pending changesets. Normal merge updates a beta version PR and never publishes directly; release PR approval remains separate.",
+          "from": "implemented",
+          "implementation_ref": ".changeset/pre.json",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-beta-premode-001",
+      "implementation_ref": ".changeset/pre.json",
+      "question": "Which release mode must precede the next feature release?",
+      "rationale": "Approved ordered release path enters reviewed beta mode before the next feature merge to prevent a stable release.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-14T23:21:52+00:00",
+      "verification_ref": ".grilltrack/proof/beta-premode-20261014/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-11T00:55:32+00:00",
+    "at": "2026-10-14T23:20:41+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -12489,5 +12586,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-14T23:09:34+00:00"
+  "updated_at": "2026-10-14T23:21:52+00:00"
 }
