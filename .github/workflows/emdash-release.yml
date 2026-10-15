@@ -41,6 +41,9 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: "Install locked dependencies"
+        run: npm ci
+
       - name: "Plan Changesets plugin releases"
         id: changesets
         shell: bash
@@ -48,7 +51,7 @@ jobs:
           EMDASH_PUBLISHED_PACKAGES: ${{ inputs.published-packages }}
         run: |
           set -euo pipefail
-          npx --yes @emdash-cms/plugin-cli@0.13.3 release plan --published-packages "${EMDASH_PUBLISHED_PACKAGES}" --dir .
+          node node_modules/@emdash-cms/plugin-cli/dist/index.mjs release plan --published-packages "${EMDASH_PUBLISHED_PACKAGES}" --dir .
 
   publish:
     name: "Build and publish ${{ matrix.selector }}"
