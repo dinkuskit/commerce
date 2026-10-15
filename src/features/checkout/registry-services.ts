@@ -87,8 +87,8 @@ async function storePasses(ctx: PluginContext, config: RegistryCheckoutConfig) {
   // A key pasted with spaces or a line break around it still counts.
   const key = typeof saved == "string" ? saved.trim() : saved, traded: Record<string, Promise<string>> = {};
   if (!text(key, 512)) unavailable();
-  return (scope = "payments:checkout", audience = config.audience) => async () => admitCredential(
-    await (traded[scope] ??= tradeStoreKey(key, config, fetch, scope, audience)), config, scope, audience);
+  return (scope = "payments:checkout", audience = config.audience, generation?: string) => async () => admitCredential(
+    await (traded[scope] ??= tradeStoreKey(key, config, fetch, scope, audience, generation)), config, scope, audience, generation);
 }
 
 export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promise<InstalledCheckoutServices> {
@@ -118,5 +118,11 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
 export async function resolveRegistryShip(ctx: PluginContext): Promise<ShipConnection | undefined> {
   const config = (await registryConfig(ctx))?.config, ship = config?.ship;
   return ship && { origin: ship.origin, site: config!.siteId, name: ctx.site?.name, fetch: ctx.http!.fetch.bind(ctx.http), read: readBoundedPaymentsJson,
-    credential: (await storePasses(ctx, config!))("ship:orders", ship.audience) };
+    ...(ship.recipient ? { isolation: { recipient: ship.recipient, generation: ship.generation!, mode: ship.mode! } } : {}),
+    current: async () => {
+        const latest = (await registryConfig(ctx))?.config;
+        return latest?.siteId === config!.siteId && latest.issuer === config!.issuer && latest.ship?.origin === ship.origin && latest.ship?.audience === ship.audience &&
+          latest.ship?.recipient === ship.recipient && latest.ship?.generation === ship.generation && latest.ship?.mode === ship.mode;
+      },
+    credential: (await storePasses(ctx, config!))("ship:orders", ship.audience, ship.generation) };
 }

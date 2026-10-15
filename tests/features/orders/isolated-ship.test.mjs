@@ -1,0 +1,86 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { syncShip } from '../../../dist/features/orders/ship.js';
+import { admitShipOrder, disableShipOrder } from '../../../dist/features/orders/cohort.js';
+const tuple = {recipient:'ship-sandbox',generation:'fixture-generation-1',mode:'test',site:'fixture-site'};
+const paid = id => ({schema:'dinkuskit.commerce.paid-order/v1', orderId:id,receiptId:'receipt-'+id,attemptId:'attempt-'+id,mode:'test',lines:[{catalogItemId:'hat',name:'Hat',quantity:1,unitPrice:{currency:'USD',minor:'100'}}],total:{currency:'USD',minor:'100'},contactSnapshot:{contact:{email:'fixture@example.test',delivery:{name:'Fixture',line1:'1 Example Way',city:'Fixture',postalCode:'00000',country:'US'}}}});
+function store() {
+ const rows=new Map(); let rev=0;
+ return { rows, beforeCAS:null, async get(id){return structuredClone(rows.get(id)?.value??null)},async getVersioned(id){return structuredClone(rows.get(id)??null)},async compareAndSet(id,expected,value){if(this.beforeCAS) await this.beforeCAS(id,value);if((rows.get(id)?.revision??null)!==expected)return{applied:false};rows.set(id,{revision:String(++rev),value:structuredClone(value)});return{applied:true}},async query(){return{items:[...rows].map(([id,r])=>({id,data:structuredClone(r.value)})),hasMore:false}}};
+}
+async function fixture(){const c=store();await c.compareAndSet('old',null,{paidOrder:paid('old'),number:1001,revision:1,shipVersion:1});await c.compareAndSet('fresh',null,{paidOrder:paid('fresh'),number:1002,revision:1});return c;}
+function service(c,{labels=[],onPost,onAck,receipt=tuple,postStatus=200}={}){const state={sent:[],acks:[],headers:[]};let active=true;
+ return{state,setActive:v=>active=v,connection:{origin:'https://ship.sm0ky.dev',site:'fixture-site',isolation:tuple,current:async()=>active,credential:async()=>'synthetic-pass',read:r=>r.json(),fetch:async(url,init)=>{state.headers.push(new Headers(init.headers));const path=new URL(url).pathname;if(path==='/v1/labels')return Response.json(labels);const body=JSON.parse(init.body);if(path==='/v1/orders'){state.sent.push(body);await onPost?.();return Response.json(receipt,{status:postStatus})}state.acks.push(body);await onAck?.();return Response.json(receipt)}}};}
+const item=async()=>({physical:true});
+
+test('empty cohort sends nothing; exact admission is immutable/idempotent and preserves paid identity/revision',async()=>{const c=await fixture(),before=await c.get('old'),s=service(c);await syncShip(c,s.connection,item);assert.equal(s.state.sent.length,0);const fresh=await c.get('fresh');assert.equal(await admitShipOrder(c,'old',1,tuple),'invalid');assert.equal(await admitShipOrder(c,'fresh',1,tuple),'saved');assert.equal(await admitShipOrder(c,'fresh',1,tuple),'duplicate');assert.equal(await admitShipOrder(c,'fresh',1,{...tuple,generation:'other'}),'conflict');await syncShip(c,s.connection,item);await syncShip(c,s.connection,item);assert.deepEqual(s.state.sent.map(x=>x.orderId),['fresh']);assert.deepEqual(await c.get('old'),before);const kept=await c.get('fresh');assert.deepEqual(kept.paidOrder,fresh.paidOrder);assert.equal(kept.revision,1);assert.equal(kept.shipVersion,undefined);assert.deepEqual(kept.shipAcknowledgement,{generation:tuple.generation,version:1,outcome:'accepted'});for(const h of s.state.headers){assert.equal(h.get('x-ship-recipient'),tuple.recipient);assert.equal(h.get('x-ship-generation'),tuple.generation);assert.equal(h.get('x-ship-mode'),'test')}});
+
+test('only explicit TEST processing unacknowledged revision1 can be admitted',async()=>{for(const delta of [{paidOrder:{...paid('fresh'),mode:'live'}},{paidOrder:{...paid('fresh'),mode:undefined}},{completed:{at:'fixture'}},{revision:2},{shipVersion:1}]){const c=await fixture(),r=await c.getVersioned('fresh');await c.compareAndSet('fresh',r.revision,{...r.value,...delta});assert.equal(await admitShipOrder(c,'fresh',1,tuple),'invalid')}});
+
+test('foreign and historical events never complete or acknowledge; selected event completes only fresh',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);const old=await c.get('old');const labels=[{...tuple,eventId:'old-event',orderId:'old',version:1},{...tuple,generation:'other',eventId:'foreign',orderId:'fresh',version:1},{...tuple,eventId:'fresh-event',orderId:'fresh',version:1,carrier:'fixture'}];const s=service(c,{labels});await syncShip(c,s.connection,item);assert.deepEqual(await c.get('old'),old);assert.equal((await c.get('fresh')).revision,2);assert.deepEqual(s.state.acks,[{eventId:'fresh-event'}])});
+
+test('disable while intake is in flight prevents local acknowledgement and retains permanent pin',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);const s=service(c,{onPost:()=>disableShipOrder(c,'fresh',tuple.generation)});await syncShip(c,s.connection,item);assert.equal((await c.get('fresh')).shipAcknowledgement,undefined);assert.equal((await c.get('fresh')).shipPin.enabled,false);assert.equal(await admitShipOrder(c,'fresh',1,tuple),'disabled');const legacy={...s.connection,isolation:undefined,current:undefined};await syncShip(c,legacy,item);assert.equal(s.state.sent.length,1)});
+
+test('disable wins completion CAS race without changing business revision or paid order',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);const before=await c.get('fresh');let hit=false;c.beforeCAS=async(id,value)=>{if(!hit&&id==='fresh'&&value.completed){hit=true;c.beforeCAS=null;await disableShipOrder(c,id,tuple.generation)}};const s=service(c,{labels:[{...tuple,eventId:'event',orderId:'fresh',version:1}]});await syncShip(c,s.connection,item);const after=await c.get('fresh');assert.equal(hit,true);assert.equal(after.completed,undefined);assert.equal(after.revision,before.revision);assert.deepEqual(after.paidOrder,before.paidOrder);assert.equal(s.state.acks.length,0)});
+
+test('disable wins acknowledgement CAS race',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);let hit=false;c.beforeCAS=async(id,value)=>{if(!hit&&value.shipAcknowledgement){hit=true;c.beforeCAS=null;await disableShipOrder(c,id,tuple.generation)}};const s=service(c);await syncShip(c,s.connection,item);assert.equal(hit,true);assert.equal((await c.get('fresh')).shipAcknowledgement,undefined)});
+
+test('late settings result never stamps acknowledgement; wrong receipt tuple fails closed',async()=>{for(const wrong of [false,true]){const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);let s;s=service(c,{receipt:wrong?{...tuple,generation:'other'}:tuple,onPost:()=>{if(!wrong)s.setActive(false)}});await assert.rejects(syncShip(c,s.connection,item),/Ship unavailable/);assert.equal((await c.get('fresh')).shipAcknowledgement,undefined)}});
+
+test('legacy label cannot complete pinned order even after sandbox disabled',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);await disableShipOrder(c,'fresh',tuple.generation);const s=service(c,{labels:[{eventId:'legacy',orderId:'fresh',version:1}]});await syncShip(c,{...s.connection,isolation:undefined,current:undefined},item);assert.equal((await c.get('fresh')).completed,undefined);assert.equal(s.state.acks.length,0)});
+
+
+test('competing admissions have one storage-CAS winner',async()=>{const c=await fixture();const results=await Promise.all([admitShipOrder(c,'fresh',1,tuple),admitShipOrder(c,'fresh',1,{...tuple,generation:'other'})]);assert.deepEqual(results.sort(),['outdated','saved']);assert.equal((await c.get('fresh')).revision,1)});
+
+test('legacy marker mismatch still cannot send history to sandbox',async()=>{const c=await fixture(),r=await c.getVersioned('old');await c.compareAndSet('old',r.revision,{...r.value,revision:2});const before=await c.get('old');const s=service(c);await syncShip(c,s.connection,item);assert.equal(s.state.sent.length,0);assert.deepEqual(await c.get('old'),before)});
+
+
+test('siteId change cannot reuse immutable admitted pin under same generation',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);assert.equal(await admitShipOrder(c,'fresh',1,{...tuple,site:'other-site'}),'conflict');const s=service(c);await syncShip(c,{...s.connection,site:'other-site'},item);assert.equal(s.state.sent.length,0)});
+
+
+test('legacy invocation that began before admission rechecks pin before POST',async()=>{const c=await fixture();const s=service(c);await syncShip(c,{...s.connection,isolation:undefined,current:undefined},async()=>{await admitShipOrder(c,'fresh',1,tuple);return{physical:true}});assert.equal(s.state.sent.length,0);assert.equal((await c.get('fresh')).shipVersion,undefined)});
+
+test('legacy label read before admission cannot complete after pin CAS',async()=>{const c=await fixture();const get=c.getVersioned.bind(c);let pinned=false;c.getVersioned=async id=>{if(id==='fresh'&&!pinned){pinned=true;await admitShipOrder({...c,getVersioned:get},id,1,tuple)}return get(id)};const s=service(c,{labels:[{eventId:'legacy-race',orderId:'fresh',version:1}]});await syncShip(c,{...s.connection,isolation:undefined,current:undefined},item);assert.equal((await c.get('fresh')).completed,undefined);assert.equal((await c.get('fresh')).revision,1);assert.equal(s.state.acks.length,0)});
+
+
+test('legacy connection becomes stale before POST: fresh unpinned order never reaches old destination',async()=>{const c=await fixture(),s=service(c);await assert.rejects(syncShip(c,{...s.connection,isolation:undefined},async()=>{s.setActive(false);return{physical:true}}),/Ship unavailable/);assert.equal(s.state.sent.length,0);assert.equal((await c.get('fresh')).shipPin,undefined)});
+
+test('legacy connection becomes stale while label response is in flight: no completion or ACK',async()=>{const c=await fixture(),old=await c.get('old'),s=service(c,{labels:[{eventId:'old',orderId:'old',version:1}]});const fetch=s.connection.fetch;await assert.rejects(syncShip(c,{...s.connection,isolation:undefined,fetch:async(...args)=>{const response=await fetch(...args);s.setActive(false);return response}},item),/Ship unavailable/);assert.deepEqual(await c.get('old'),old);assert.equal(s.state.acks.length,0)});
+
+
+test('isolated ordinary422 is a permanent scoped refusal, not success or a retry loop',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);const s=service(c,{postStatus:422,receipt:{error:{code:'NOT_SERVED'}}});await syncShip(c,s.connection,item);await syncShip(c,s.connection,item);assert.equal(s.state.sent.length,1);assert.deepEqual((await c.get('fresh')).shipAcknowledgement,{generation:tuple.generation,version:1,outcome:'refused'});assert.equal((await c.get('fresh')).completed,undefined);assert.equal((await c.get('fresh')).revision,1);assert.equal(s.state.acks.length,0)});
+
+for (const effect of ['intake', 'ack']) {
+ for (const wait of ['credential', 'settings']) {
+  test(`disable during final ${wait} wait prevents ${effect} dispatch`, async () => {
+   const c = await fixture();
+   await admitShipOrder(c, 'fresh', 1, tuple);
+   const old = await c.get('old');
+   const s = service(c, { labels: effect === 'ack' ? [{ ...tuple, eventId: 'event', orderId: 'fresh', version: 1 }] : [] });
+   let credentials = 0, waiting = false;
+   const connection = { ...s.connection,
+    credential: async () => {
+     if (++credentials === 2) {
+      waiting = true;
+      if (wait === 'credential') assert.equal(await disableShipOrder(c, 'fresh', tuple.generation), 'saved');
+     }
+     return 'synthetic-pass';
+    },
+    current: async () => {
+     if (waiting && wait === 'settings') {
+      waiting = false;
+      assert.equal(await disableShipOrder(c, 'fresh', tuple.generation), 'saved');
+     }
+     return true;
+    },
+   };
+   await syncShip(c, connection, item);
+   assert.equal(credentials, 2, 'reached per-order dispatch credential wait');
+   assert.equal(s.state.sent.length, 0, 'no intake after disable');
+   assert.equal(s.state.acks.length, 0, 'receiver event retained after disable');
+   assert.equal((await c.get('fresh')).shipPin.enabled, false);
+   assert.equal((await c.get('fresh')).shipAcknowledgement, undefined);
+   assert.deepEqual(await c.get('old'), old);
+  });
+ }
+}

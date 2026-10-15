@@ -1,6 +1,8 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import { isRecord } from "../../shared/record.js";
 import { completeOrder, listOrders, orderFacts, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
+import { admitShipOrder, disableShipOrder, validGeneration } from './cohort.js';
+import { resolveRegistryShip } from '../checkout/kernel/index.js';
 
 /** Private JSON route for agents and the CLI: the Orders page's reads and owner changes. */
 export const ORDERS_API_ROUTE = "orders";
@@ -29,7 +31,8 @@ export async function ordersApi(route: SandboxedRouteContext, ctx: PluginContext
   if (route.user?.role !== 50) throw new Error("Orders require plugins:manage");
   const input = route.input;
   if (!isRecord(input)) invalid();
-  const allowed = { list: "action,status,offset", show: "action,orderId", complete: "action,orderId,version,carrier,tracking", reopen: "action,orderId,version" }[String(input.action)];
+  const allowed = { list: "action,status,offset", show: "action,orderId", complete: "action,orderId,version,carrier,tracking", reopen: "action,orderId,version",
+    'ship.admit': 'action,orderId,version,generation', 'cohort.disable': 'action,orderId,generation' }[String(input.action)];
   if (!allowed || Object.keys(input).some(key => !allowed.split(",").includes(key))) invalid();
   const collection = ctx.storage[ORDERS_COLLECTION] as OrdersCollection;
   if (input.action === "list") {
@@ -43,6 +46,14 @@ export async function ordersApi(route: SandboxedRouteContext, ctx: PluginContext
   }
   const id = input.orderId, version = input.version as number;
   if (typeof id !== "string" || !id || id.length > 1024) invalid();
+  if (input.action === 'ship.admit' || input.action === 'cohort.disable') {
+    if (id.length > 200 || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(id) || !validGeneration(input.generation)) invalid();
+    if (input.action === 'cohort.disable') return { result: await disableShipOrder(collection, id, input.generation) };
+    if (!Number.isSafeInteger(version) || version < 1) invalid();
+    const ship = await resolveRegistryShip(ctx);
+    if (!ship?.isolation || ship.isolation.generation !== input.generation || !await ship.current?.()) invalid();
+    return { result: await admitShipOrder(collection, id, version, { ...ship.isolation, site: ship.site }) };
+  }
   if (input.action === "show") {
     const kept = await collection.get(id);
     return { order: kept ? apiOrder(kept) : null };

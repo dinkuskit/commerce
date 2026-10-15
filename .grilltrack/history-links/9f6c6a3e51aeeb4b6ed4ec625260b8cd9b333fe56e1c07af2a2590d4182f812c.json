@@ -1,0 +1,12 @@
+{
+  "anchor_ref": "29f55b0857dc4545de70a02f6b549135951ce4b8",
+  "canonical": {
+    "events.jsonl": "2b3630891c5583b52323ea687303760046ed511874d12d9f2255fc75c041b7e4",
+    "ledger.json": "93580bf64d13e3031eb5ab19add258f8936cc3a8ba361c15059f903ae6874c9c"
+  },
+  "lineage_root": "6b1fe7a9f620498b7b23fb28d7085e83187b15e000bd68f72d3eb02764bb50ce",
+  "link_id": "9f6c6a3e51aeeb4b6ed4ec625260b8cd9b333fe56e1c07af2a2590d4182f812c",
+  "plan_id": "87ce7f2c35670b3993b32c695b488654d0e45fcc43a528cfe7f1915e59ac4d5c",
+  "schema": "grilltrack/history-link/v1",
+  "witness_ref": "840652c4d1b22628776496768211de4009a759db"
+}

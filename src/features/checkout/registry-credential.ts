@@ -15,6 +15,7 @@ export function admitCredential(
   config: RegistryCheckoutConfig,
   scope = "payments:checkout",
   audience = config.audience,
+  generation?: string,
 ): string {
   if (!text(token, 16384)) unavailable();
   try {
@@ -27,6 +28,8 @@ export function admitCredential(
         !text(payload.sub) || payload.site_id !== config.siteId || typeof payload.scope !== "string" ||
         !payload.scope.split(" ").includes(scope) ||
         !Number.isSafeInteger(payload.iat) || !Number.isSafeInteger(payload.exp)) unavailable();
+    if (generation !== undefined ? payload.ship_recipient !== 'ship-sandbox' || payload.ship_generation !== generation || payload.ship_mode !== 'test'
+      : ['ship_recipient','ship_generation','ship_mode'].some(key => key in payload)) unavailable();
     const now = Math.floor(Date.now() / 1000), issued = payload.iat as number, expires = payload.exp as number;
     if (issued < 0 || issued > now || expires <= now || expires <= issued || now - issued > 3600 ||
         payload.nbf !== undefined && (!Number.isSafeInteger(payload.nbf) || (payload.nbf as number) > now)) unavailable();
@@ -46,12 +49,13 @@ export async function tradeStoreKey(
   fetch: (url: string, init: RequestInit) => Promise<Response>,
   scope: string,
   audience: string,
+  generation?: string,
 ): Promise<string> {
   const response = await fetch("https://dinkuskit.com/api/store-passes", {
     method: "POST", cache: "no-store", redirect: "error",
     headers: { accept: "application/json", authorization: "Bearer " + key, "content-type": "application/json" },
-    body: JSON.stringify({ site_id: config.siteId, scope, audience }),
+    body: JSON.stringify({ site_id: config.siteId, scope, audience, ...(generation !== undefined ? { generation } : {}) }),
   });
   const body = response.ok ? await readBoundedPaymentsJson(response) : unavailable();
-  return admitCredential(object(body) ? body.access_token : null, config, scope, audience);
+  return admitCredential(object(body) ? body.access_token : null, config, scope, audience, generation);
 }

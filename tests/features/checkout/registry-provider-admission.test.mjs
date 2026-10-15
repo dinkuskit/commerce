@@ -5,10 +5,21 @@ import {
   REGISTRY_CHECKOUT_CONFIG_SCHEMA,
   admitRegistryCheckoutConfig,
   trustedPaymentsHostConfig,
+  resolveRegistryShip,
 } from "../../../dist/features/checkout/index.js";
 
 const SITE = "https://shop.example.test";
 const shipping = { configurationId: "ship", revision: 1, mode: "free" };
+const isolatedShip = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
+
+test('isolated Ship admits only the fixed complete TEST tuple; old shape cannot access sandbox', () => {
+  assert.deepEqual(admitRegistryCheckoutConfig(legacyStripe({ ship: isolatedShip }), SITE).ship, isolatedShip);
+  for (const change of [{ origin: 'https://other.test' }, { audience: 'production' }, { recipient: 'other' }, { generation: '' }, { generation: 'x'.repeat(129) }, { mode: 'live' }]) rejects(legacyStripe({ ship: { ...isolatedShip, ...change } }));
+  for (const key of ['recipient','generation','mode']) { const ship = { ...isolatedShip }; delete ship[key]; rejects(legacyStripe({ ship })); }
+  rejects(legacyStripe({ ship: { origin: isolatedShip.origin, audience: isolatedShip.audience } }));
+  for (const origin of ['https://ship.sm0ky.dev/','https://SHIP.sm0ky.dev','https://ship.sm0ky.dev:443']) rejects(legacyStripe({ship:{origin,audience:'legacy-audience'}}));
+  rejects(legacyStripe({ mode: 'live', ship: isolatedShip }));
+});
 
 function legacyStripe(extra = {}) {
   return {
@@ -104,4 +115,11 @@ test("an optional hosted coupon or Ship service needs exactly an https origin an
   const both = admitRegistryCheckoutConfig(legacyStripe({ mode: "live", coupons, ship }), SITE);
   assert.deepEqual([both.mode, both.coupons, both.ship], ["live", coupons, ship]);
   rejects(legacyStripe({ coupons, ship, shipping2: ship }));
+});
+
+
+test('captured legacy Registry connection re-admits identity when settings switch to sandbox',async()=>{
+ let current=legacyStripe({ship:{origin:'https://ship.dinkuskit.com',audience:'dinkus-ship'}}),calls=0;
+ const ctx={plugin:{id:'dinkus-commerce'},site:{url:SITE},settings:{getVersioned:async()=>({revision:'fixture',value:current}),get:async()=> 'synthetic fixture key'},http:{fetch:async()=>{calls++;throw new Error('unexpected network')}}};
+ const old=await resolveRegistryShip(ctx);assert.equal(await old.current(),true);current=legacyStripe({ship:isolatedShip});assert.equal(await old.current(),false);assert.equal(calls,0);
 });

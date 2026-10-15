@@ -1,5 +1,6 @@
 import { isRecord } from "../../shared/record.js";
 import { completeOrder, listOrders, orderFacts, type OrdersCollection } from "./store.js";
+import { cohortMatches, type ShipIsolation } from './cohort.js';
 
 /** One order version as Orders sends it to Ship's hosted service (docs/contracts/commerce-handoffs.md). */
 export const SHIP_ORDER_SCHEMA = "dinkuskit.commerce.ship-order/v1";
@@ -19,6 +20,9 @@ export interface ShipConnection {
   read: (response: Response) => Promise<unknown>;
   /** A current ship:orders pass for this store. */
   credential: () => Promise<string>;
+  isolation?: ShipIsolation;
+  /** Re-admit current settings before accepting a result from this invocation's connection. */
+  current?: () => Promise<boolean>;
 }
 
 /** Whether a catalog item goes in the box, and its shipping weight in ounces when set; null when it is gone. */
@@ -50,21 +54,57 @@ export function shipLabelPage(ship: Pick<ShipConnection, "origin" | "site">, ord
  * be reached; anything not acknowledged or sent is picked up by the next sync.
  */
 export async function syncShip(collection: OrdersCollection, ship: ShipConnection, item: ShipItemLookup): Promise<void> {
-  const call = async (path: string, body?: unknown) => ship.fetch(new URL(ship.origin).origin + path, {
+  const isolated = ship.isolation && { ...ship.isolation, site: ship.site };
+  const active = async () => ship.current ? await ship.current() : !isolated;
+  const matches = (value: unknown) => isRecord(value) && value.recipient === isolated?.recipient && value.generation === isolated?.generation && value.mode === 'test';
+  if (!await active()) unavailable();
+  const call = async (path: string, body?: unknown, order?: { id: string; version?: number }) => {
+    const token = await ship.credential();
+    if (!await active()) unavailable();
+    // Credentials and settings may wait on I/O. Re-read order authority after both,
+    // with no further await before dispatch. Already dispatched requests still drain.
+    if (order) {
+      const latest = await collection.get(order.id);
+      if (isolated ? !latest || !cohortMatches(latest, isolated) ||
+        order.version !== undefined && (latest.revision ?? 1) !== order.version : latest?.shipPin) return null;
+    }
+    return ship.fetch(new URL(ship.origin).origin + path, {
     method: body ? "POST" : "GET", cache: "no-store", redirect: "error",
-    headers: { accept: "application/json", authorization: "Bearer " + await ship.credential(), "content-type": "application/json" },
+    headers: { accept: "application/json", authorization: "Bearer " + token, "content-type": "application/json",
+      ...(isolated ? { 'X-Ship-Recipient': isolated.recipient, 'X-Ship-Generation': isolated.generation, 'X-Ship-Mode': isolated.mode } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
-  });
+    });
+  };
   const listed = await call("/v1/labels");
-  const labels = listed.ok ? await ship.read(listed) : unavailable();
+  const labels = listed?.ok ? await ship.read(listed) : unavailable();
   if (!Array.isArray(labels) || labels.length > 100) unavailable();
   for (const label of labels) {
     if (!isRecord(label) || typeof label.eventId !== "string") unavailable();
+    const record = typeof label.orderId === 'string' ? await collection.get(label.orderId) : null;
+    if (isolated) {
+      // Foreign events are neither completed nor acknowledged; receiver owns bounded quarantine.
+      if (!matches(label) || !record || !cohortMatches(record, isolated)) continue;
+      if (!await active()) unavailable();
+      await completeOrder(collection, label.orderId as string, label.version as number, label, new Date().toISOString(), r => cohortMatches(r, isolated));
+      const latest = await collection.get(label.orderId as string);
+      if (!latest || !cohortMatches(latest, isolated) || !await active()) continue;
+      const ack = await call('/v1/labels/ack', { eventId: label.eventId }, { id: label.orderId as string });
+      if (!ack) continue;
+      if (!ack.ok || !matches(await ship.read(ack))) unavailable();
+      continue;
+    }
+    // An isolated pin is permanent, including after rollback; legacy events cannot complete it.
+    if (record?.shipPin) continue;
+    if (!await active()) unavailable();
     // A label for an order Orders does not have, an older version or a Completed order changes nothing.
     if (typeof label.orderId === "string" && await collection.get(label.orderId)) {
-      await completeOrder(collection, label.orderId, label.version as number, label, new Date().toISOString());
+      await completeOrder(collection, label.orderId, label.version as number, label, new Date().toISOString(), r => !r.shipPin);
     }
-    if (!(await call("/v1/labels/ack", { eventId: label.eventId })).ok) unavailable();
+    // Admission can win after the initial label read or inside completion's CAS.
+    if (typeof label.orderId === 'string' && (await collection.get(label.orderId))?.shipPin) continue;
+    const ack = await call("/v1/labels/ack", { eventId: label.eventId },
+      typeof label.orderId === 'string' ? { id: label.orderId } : undefined);
+    if (ack && !ack.ok) unavailable();
   }
   // Each order carries the store's name for Ship's emails: one line, at most 200 UTF-16 units
   // without splitting a character, and left out when nothing is left.
@@ -72,7 +112,9 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
   let room = SHIP_ORDERS_PER_SYNC;
   for (const record of await listOrders(collection)) {
     const facts = orderFacts(record);
-    if (!facts.shipTo || record.shipVersion === facts.version) continue;
+    if (isolated ? !cohortMatches(record, isolated) || record.shipAcknowledgement?.generation === isolated.generation && record.shipAcknowledgement.version === facts.version
+      : !!record.shipPin || record.shipVersion === facts.version) continue;
+    if (!facts.shipTo) continue;
     if (!room--) break;
     const lines = [];
     for (const { catalogItemId, name, quantity, unitPrice } of record.paidOrder.lines) {
@@ -84,17 +126,27 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     // What people typed (the address, item names, carrier and tracking number) goes as one line, and an
     // address field, carrier or tracking number with nothing left is left out. The order keeps what was typed.
     const { completed } = facts;
+    if (isolated) {
+      const latest = await collection.get(facts.orderId);
+      if (!latest || !cohortMatches(latest, isolated) || (latest.revision ?? 1) !== facts.version || !await active()) continue;
+    } else if ((await collection.get(facts.orderId))?.shipPin) {
+      continue;
+    }
     const response = await call("/v1/orders", {
       schema: SHIP_ORDER_SCHEMA, ...facts,
       shipTo: Object.fromEntries(Object.entries(facts.shipTo).map(([field, text]) => [field, oneLine(text) || undefined])),
       completed: completed && { ...completed, carrier: oneLine(completed.carrier) || undefined, tracking: oneLine(completed.tracking) || undefined },
       ...(storeName ? { storeName } : {}), lines,
-    });
+    }, { id: facts.orderId, version: facts.version });
+    if (!response) continue;
     // 422 means Ship can never label this version, so it waits for the order's next change.
     if (!response.ok && response.status !== 422) unavailable();
+    if (isolated && response.ok && !matches(await ship.read(response))) unavailable();
+    if (!await active()) unavailable();
     const current = await collection.getVersioned(facts.orderId);
-    if (current && (current.value.revision ?? 1) === facts.version) {
-      await collection.compareAndSet(facts.orderId, current.revision, { ...current.value, shipVersion: facts.version });
+    if (current && (current.value.revision ?? 1) === facts.version && (isolated ? cohortMatches(current.value, isolated) : !current.value.shipPin)) {
+      await collection.compareAndSet(facts.orderId, current.revision, { ...current.value, ...(isolated
+        ? { shipAcknowledgement: { generation: isolated.generation, version: facts.version, outcome: response.ok ? 'accepted' : 'refused' } } : { shipVersion: facts.version }) });
     }
   }
 }
