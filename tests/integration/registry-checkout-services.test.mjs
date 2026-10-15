@@ -1,8 +1,10 @@
 // This SDK uses one workerd port; keep the readiness and service cases in one test process.
 import './registry-checkout-readiness-cases.mjs';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdtemp, readFile, rm, mkdir, writeFile, copyFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { resolveCatalogItemPrice } from '../../dist/features/catalog/index.js';
 import { resolveStorefrontAvailability } from '../../dist/features/storefront-availability/index.js';
@@ -910,4 +912,79 @@ test('compiled legacy Registry invocation cannot POST fresh unpinned order after
    return Response.json([]);
  }});
  try{await shipAdmin(state,{type:'page_load',page:'/orders'});assert.equal(lists,1);assert.equal(posts,0);const fresh=await state.collections.orders.get('fixture-unpinned');assert.equal(fresh.shipPin,undefined);assert.equal(fresh.shipVersion,undefined);assert.equal(fresh.revision,1)}finally{await state.close()}
+});
+
+
+async function preparedBetaArtifact(t) {
+  const root = await mkdtemp('/tmp/commerce-beta-package-');
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await mkdir(join(root, '.tmp/sandbox-source/src'), { recursive: true });
+  for (const file of ['package.json', 'emdash-plugin.jsonc']) {
+    const value = JSON.parse(await readFile(resolve('.tmp/sandbox-source', file), 'utf8'));
+    value.version = '0.3.0-beta.0';
+    const source = JSON.stringify(value, null, 2) + '\n';
+    await writeFile(join(root, file), source);
+    await writeFile(join(root, '.tmp/sandbox-source', file), source);
+  }
+  await copyFile(resolve('.tmp/sandbox-source/src/plugin.ts'), join(root, '.tmp/sandbox-source/src/plugin.ts'));
+  execFileSync(process.execPath, [resolve('scripts/prepare-emdash-release.mjs'), 'dinkus-commerce-beta@0.3.0-beta.0'], { cwd: root, stdio: 'pipe' });
+  const archive = join(root, '.emdash-release/dinkus-commerce-beta-0.3.0-beta.0.tar.gz');
+  const manifest = JSON.parse(execFileSync('tar', ['-xOf', archive, 'manifest.json'], { encoding: 'utf8' }));
+  const backend = execFileSync('tar', ['-xOf', archive, 'backend.js'], { encoding: 'utf8' });
+  assert.equal(manifest.id, 'dinkus-commerce-beta');
+  assert.equal(manifest.version, '0.3.0-beta.0');
+  const shipped = JSON.parse(await readFile(resolve('dist/sandbox/manifest.json'), 'utf8'));
+  assert.deepEqual(manifest.capabilities, shipped.capabilities);
+  assert.deepEqual(manifest.allowedHosts, shipped.allowedHosts);
+  assert.deepEqual(manifest.storage, shipped.storage);
+  assert.equal(createHash('sha256').update(backend).digest('hex'), createHash('sha256').update(await readFile(resolve('dist/sandbox/plugin.mjs'))).digest('hex'));
+  return { manifest, backend };
+}
+
+test('prepared beta package uses its own installed namespace and declared Payments grants', async t => {
+  const beta = await preparedBetaArtifact(t);
+  const config = { ...configuration(), paymentsOrigin: 'https://payments.dinkuskit.com' };
+  const state = await runtimeFixture({ owner: 'r_fjzjvld3ssb4j63o', grants: false, config,
+    artifactManifest: beta.manifest, backendSource: beta.backend });
+  t.after(() => state.close());
+  assert.deepEqual(state.manifest.allowedHosts, beta.manifest.allowedHosts);
+  assert.equal((await state.invokeReadiness()).status, 'supported');
+  const { result, token } = await start(state);
+  assert.equal(result.ok, true);
+  assert.equal(state.requests.length, 1);
+  state.setPaid();
+  assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
+  assert.equal((await state.cartRecords()).length, 1);
+});
+
+test('unknown and unregistered beta IDs fail before service contact', async () => {
+  for (const owner of ['r_fjzjvld3ssb4j63x', 'r_arbitraryplugin0', 'dinkus-commerce-beta']) {
+    const state = await runtimeFixture({ owner });
+    try {
+      assert.equal((await state.invokeReadiness()).status, 'unavailable');
+      assert.equal((await state.invoke(PREPARE)).error.code, 'UNAVAILABLE');
+      assert.equal(state.counts.trades, 0);
+      assert.equal(state.counts.transport, 0);
+    } finally { await state.close(); }
+  }
+});
+
+test('beta installation does not inherit stable storage or settings', async t => {
+  const directory = await mkdtemp('/tmp/commerce-beta-isolation-');
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const databasePath = join(directory, 'runtime.db');
+  const stable = await runtimeFixture({ databasePath });
+  try { assert.equal((await start(stable)).result.ok, true); }
+  finally { await stable.close(); }
+  const beta = await runtimeFixture({ databasePath, owner: 'r_fjzjvld3ssb4j63o', seed: false, config: null, storeKey: null });
+  try {
+    assert.deepEqual(await beta.cartRecords(), []);
+    assert.equal(await beta.collections.catalog_items.get('hat'), null);
+    assert.equal(await beta.settings.get('storeKey'), null);
+    assert.equal((await beta.invokeReadiness()).status, 'unavailable');
+    assert.equal(beta.counts.trades, 0);
+  } finally { await beta.close(); }
+  const restored = await runtimeFixture({ databasePath, seed: false, config: null, storeKey: null });
+  try { assert.equal((await restored.cartRecords()).length, 1); }
+  finally { await restored.close(); }
 });

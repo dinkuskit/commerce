@@ -1,5 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { appendFile, copyFile, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { appendFile, copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+
+import { BETA_SLUG_SUFFIX, betaManifest, isPrereleaseVersion } from './beta-release.mjs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,9 +15,22 @@ const manifestSource = await readFile(resolve(root, 'emdash-plugin.jsonc'), 'utf
 const packageSource = await readFile(resolve(root, 'package.json'), 'utf8');
 const manifest = JSON.parse(manifestSource);
 const pkg = JSON.parse(packageSource);
-if (pkg.version !== manifest.version || selector !== `${manifest.slug}@${manifest.version}`) {
-  throw new Error('Release selector must match the package and plugin version');
+const selectorAt = selector?.lastIndexOf('@') ?? -1;
+const selectorSlug = selectorAt > 0 ? selector.slice(0, selectorAt) : '';
+const selectorVersion = selectorAt > 0 ? selector.slice(selectorAt + 1) : '';
+// Prereleases publish under the beta slug and stable versions under the
+// real slug; any other pairing is refused so a beta can never become
+// the stable package's latest version.
+const beta = selectorSlug === `${manifest.slug}${BETA_SLUG_SUFFIX}`;
+if (
+  pkg.version !== manifest.version ||
+  selectorVersion !== manifest.version ||
+  (!beta && selectorSlug !== manifest.slug) ||
+  beta !== isPrereleaseVersion(manifest.version)
+) {
+  throw new Error('Release selector must match the package and plugin version (prereleases use the beta slug)');
 }
+const effectiveManifest = beta ? betaManifest(manifest) : manifest;
 const staged = resolve(root, '.tmp/sandbox-source');
 if (await readFile(join(staged, 'emdash-plugin.jsonc'), 'utf8') !== manifestSource ||
     await readFile(join(staged, 'package.json'), 'utf8') !== packageSource) {
@@ -26,7 +41,11 @@ const directory = await mkdtemp(join(tmpdir(), 'commerce-release-'));
 try {
   await mkdir(join(directory, 'src'));
   for (const name of ['package.json', 'emdash-plugin.jsonc', 'src/plugin.ts']) {
-    await copyFile(join(staged, name), join(directory, name));
+    if (beta && name === 'emdash-plugin.jsonc') {
+      await writeFile(join(directory, name), `${JSON.stringify(effectiveManifest, null, 2)}\n`);
+    } else {
+      await copyFile(join(staged, name), join(directory, name));
+    }
   }
   const receipt = join(directory, 'github-output');
   const cli = fileURLToPath(new URL('../node_modules/@emdash-cms/plugin-cli/dist/index.mjs', import.meta.url));
@@ -39,8 +58,8 @@ try {
     const separator = line.indexOf('=');
     return [line.slice(0, separator), line.slice(separator + 1)];
   }));
-  const bundle = `.emdash-release/${manifest.slug}-${manifest.version}.tar.gz`;
-  if (fields['package-slug'] !== manifest.slug || fields.version !== manifest.version ||
+  const bundle = `.emdash-release/${effectiveManifest.slug}-${manifest.version}.tar.gz`;
+  if (fields['package-slug'] !== effectiveManifest.slug || fields.version !== manifest.version ||
       fields['publisher-did'] !== manifest.publisher || fields['plugin-directory'] !== '.' ||
       fields['bundle-file'] !== bundle) {
     throw new Error('Official release preparation returned unexpected metadata');

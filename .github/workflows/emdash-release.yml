@@ -84,21 +84,26 @@ jobs:
       - name: "Install dependencies"
         run: npm ci
 
-      # Fail closed: a prerelease published under the real plugin slug
-      # would become the latest version for every install. Betas publish
-      # under a separate beta plugin name once that wiring lands; see
-      # "Beta status" in RELEASING.md.
-      - name: "Refuse prerelease versions"
+      # The Registry has no prerelease filter, so a beta under the real
+      # slug would become the latest version for every install.
+      # Prereleases route to the separate beta package; the prepare
+      # helper refuses any other slug/version pairing. See "Beta
+      # status" in RELEASING.md.
+      - name: "Route release selector"
+        id: route
         shell: bash
         env:
           EMDASH_RELEASE_SELECTOR: "${{ matrix.selector }}"
         run: |
           set -euo pipefail
+          slug="${EMDASH_RELEASE_SELECTOR%@*}"
           version="${EMDASH_RELEASE_SELECTOR##*@}"
-          if [[ "$version" == *-* ]]; then
-            echo "::error title=Prerelease refused::${EMDASH_RELEASE_SELECTOR} is a prerelease. Registry publishing for betas needs the separate beta plugin name; see RELEASING.md."
-            exit 1
+          effective="${EMDASH_RELEASE_SELECTOR}"
+          if [[ "$version" == *-* && "$slug" != *-beta ]]; then
+            effective="${slug}-beta@${version}"
           fi
+          echo "selector=${effective}" >> "${GITHUB_OUTPUT}"
+          echo "Publishing selector: ${effective} (planned: ${EMDASH_RELEASE_SELECTOR})"
 
       - name: "Build Commerce prebundle"
         run: npm run build
@@ -107,7 +112,7 @@ jobs:
         id: prepare
         shell: bash
         env:
-          EMDASH_RELEASE_SELECTOR: "${{ matrix.selector }}"
+          EMDASH_RELEASE_SELECTOR: "${{ steps.route.outputs.selector }}"
         run: |
           set -euo pipefail
           node scripts/prepare-emdash-release.mjs "${EMDASH_RELEASE_SELECTOR}"
@@ -118,10 +123,40 @@ jobs:
         with:
           subject-path: ${{ steps.prepare.outputs.bundle-file }}
 
+      # The release service currently ends successful publishes in
+      # RELEASE_CONFLICT (emdash-cms/emdash#4159), so this step's
+      # outcome is not the gate. The verify step below is: the job
+      # only passes when the publisher PDS record for this version
+      # carries exactly the bundle bytes prepared above.
       - name: "Publish plugin"
+        id: publish
+        continue-on-error: true
         uses: emdash-cms/emdash/apps/release-action@06f911b54f387a1284c767187042d7e11f6044fc # emdash main at generation time; bump deliberately
         with:
           service-url: https://releases.emdashcms.com
           publisher-did: ${{ steps.prepare.outputs.publisher-did }}
           bundle-file: ${{ steps.prepare.outputs.bundle-file }}
           provenance-file: ${{ steps.attest.outputs.bundle-path }}
+
+      - name: "Verify Registry release"
+        id: verify
+        shell: bash
+        env:
+          PUBLISHER_DID: "${{ steps.prepare.outputs.publisher-did }}"
+          EMDASH_RELEASE_SELECTOR: "${{ steps.route.outputs.selector }}"
+          BUNDLE_FILE: "${{ steps.prepare.outputs.bundle-file }}"
+        run: |
+          set -euo pipefail
+          node .github/scripts/verify-registry-release.mjs \
+            "${PUBLISHER_DID}" "${EMDASH_RELEASE_SELECTOR}" "${BUNDLE_FILE}"
+
+      - name: "Note intent outcome"
+        if: ${{ always() && steps.publish.outcome == 'failure' && steps.verify.outcome == 'success' }}
+        shell: bash
+        run: |
+          echo "::warning title=Release intent reported failure::The delegated release intent failed (see Publish plugin step) but the Registry record was verified against the prepared bundle. Known upstream issue: emdash-cms/emdash#4159."
+          {
+            echo "## Registry publish verified despite intent failure"
+            echo
+            echo "The release intent reported failure, but the publisher PDS record for this version carries exactly the prepared bundle bytes. See emdash-cms/emdash#4159."
+          } >> "${GITHUB_STEP_SUMMARY}"

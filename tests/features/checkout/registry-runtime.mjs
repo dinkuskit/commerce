@@ -26,12 +26,12 @@ export const ISSUER_ORIGIN = 'https://dinkuskit.com';
 export const TRADE_URL = ISSUER_ORIGIN + '/api/store-passes';
 const ISSUER = ISSUER_ORIGIN + '/account';
 // EmDash checks a named host by asking Cloudflare's DNS over HTTPS before each request. Answer
-// that lookup here with a public address, for dinkuskit.com only, so no lookup leaves the process.
+// those explicitly allowed issuer/Payments lookups with a public address, so none leaves the process.
 const passThrough = globalThis.fetch;
 globalThis.fetch = (input, init) => {
   const url = new URL(input instanceof Request ? input.url : String(input));
   if (url.origin + url.pathname !== 'https://cloudflare-dns.com/dns-query') return passThrough(input, init);
-  const found = ['dinkuskit.com','ship.sm0ky.dev'].includes(url.searchParams.get('name')) && url.searchParams.get('type') === 'A';
+  const found = ['dinkuskit.com', 'payments.dinkuskit.com', 'ship.sm0ky.dev'].includes(url.searchParams.get('name')) && url.searchParams.get('type') === 'A';
   return Promise.resolve(Response.json({ Status: 0, Answer: found ? [{ type: 1, data: '9.9.9.9' }] : [] }));
 };
 /** The store key the stand-in issuer accepts until a test replaces it. Not a real key format. */
@@ -111,6 +111,8 @@ export async function runtimeFixture({
   passService,
   // What the synthetic Payments says its binding is.
   bindingMode = 'test',
+  artifactManifest = artifact,
+  backendSource = backend,
 } = {}) {
   const sqlite = new BetterSqlite3(databasePath);
   // Minimal tables match the pinned SDK's options, plugin-storage and cron-task schemas (migration 026).
@@ -131,7 +133,7 @@ export async function runtimeFixture({
       query.parameters.includes(`plugin:${owner}:settings:storeKey`)) counts.credentials++;
     if (query.sql.includes('_emdash_cron_tasks')) counts.scheduler++;
   } });
-  const manifest = structuredClone(artifact);
+  const manifest = structuredClone(artifactManifest);
   manifest.id = owner;
   // Explicit SYNTHETIC fixture variant only. Never mutate the shipped manifest or publish this variant.
   if (grants === true) { manifest.capabilities = ['network:request']; manifest.allowedHosts = ['8.8.8.8', '8.8.4.4', '1.1.1.1', 'dinkuskit.com']; }
@@ -207,7 +209,7 @@ export async function runtimeFixture({
       return couponService(url, init);
     }
     counts.transport++;
-    assert.equal(new URL(url).origin, TRANSPORT_ORIGIN);
+    assert.equal(new URL(url).origin, config.paymentsOrigin);
     assert.equal(init.redirect, 'manual'); // EmDash enforces redirect policy itself.
     const headers = new Headers(init.headers);
     const bearer = headers.get('authorization')?.replace(/^Bearer /, '');
@@ -254,7 +256,7 @@ export async function runtimeFixture({
   const runner = new WorkerdSandboxRunner({ db, siteInfo: { name: 'Synthetic fixture', url: SITE, locale: 'en' },
     httpFetch: transportFetch ? (...args) => { counts.transport++; return transportFetch(...args); } : transport, limits: { wallTimeMs: 15000 } });
   assert.equal(runner.isAvailable(), true, 'actual pinned workerd binary must be available');
-  const plugin = await runner.load(manifest, backend);
+  const plugin = await runner.load(manifest, backendSource);
   const invoke = (route, input = {}, capability, origin = SITE) => plugin.invokeRoute(route, input, {
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },

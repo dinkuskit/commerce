@@ -46,18 +46,58 @@ dependency closure or discovering generated test packages in the checkout.
 The helper preserves the official publisher and version outputs and copies
 the resulting archive back to `.emdash-release` for provenance and publication.
 
+## Publish signal (known upstream issue)
+
+The delegated release service currently ends successful publishes in
+`RELEASE_CONFLICT` ([emdash#4159](https://github.com/emdash-cms/emdash/issues/4159)):
+the intent writes the release record, then reconciliation judges that
+same record a conflict. The publish job therefore does not trust the
+intent outcome. After the publish step, `verify-registry-release.mjs`
+reads the publisher PDS record directly and passes the job only when
+that record carries exactly the bundle bytes prepared in the same run
+(version, package checksum, and blob size). A green publish job means
+the Registry holds this run's bytes; a red one means it does not,
+whatever the intent reported. Remove the `continue-on-error` gate swap
+once the upstream issue is fixed.
+
 ## Beta status
 
-The locked beta flow publishes `x.y.z-beta.N` under a separate beta
-plugin name on the demo store. That wiring has **not** landed yet, so
-the Registry workflow refuses prerelease versions instead of publishing
-a beta under the real slug (the Registry has no prerelease filter, and a
-beta would become the latest version for every install). Until the beta
-package lands, validate release candidates from the GitHub prerelease
-instead.
+The locked beta flow publishes `x.y.z-beta.N` under the separate
+`dinkus-commerce-beta` package: the Registry has no prerelease
+filter, so a beta under the real slug would become the latest version
+for every install. The Registry workflow routes prerelease selectors
+to the beta slug, and the prepare helper stages the same audited
+prebundle with only the manifest slug and display name rewritten, so
+beta code and declared access are identical to the stable build.
+Any other slug/version pairing is refused.
+
+Cutting a beta is manual until demo-store e2e automation lands:
+
+1. Open a PR that runs `npx changeset pre enter beta` (commits
+   `.changeset/pre.json`) with an empty changeset, and merge it.
+2. Merge normal feature PRs with changesets; the release bot's
+   `ci: release` PR now proposes `x.y.z-beta.N` versions.
+3. Merging that release PR tags `vX.Y.Z-beta.N` and publishes to
+   `dinkus-commerce-beta` only. Install the beta on the demo store
+   and validate there.
+4. Open a PR that runs `npx changeset pre exit` and merge it; the
+   next `ci: release` PR proposes the final version for the stable
+   package.
+
+Remaining owner setup before the first beta publish: create the
+`dinkus-commerce-beta` package profile (`emdash-plugin profile
+setup` against a staged beta manifest), authorize publishing for it
+in the release dashboard, and approve its workflow connection on the
+first beta publish run. `proof/registry-beta-publishing-20261014/`
+carries a ready-to-run prompt for that setup.
 
 ## 1.0.0 gate
 
 `check-no-major.mjs`, the changeset check, and `scripts/repo-contract.mjs`
 all hold Commerce on 0.x. Removing those guards is the explicit 1.0.0
 decision (coupons, inventory, commerce, payments, and ship landed).
+
+Both preparation and published-record verification consume the effective
+routed selector. A prerelease is checked against its beta package record,
+never a same-version record under the stable slug. Stable releases retain
+the stable package identity and the same checksum, size, and MIME gate.
