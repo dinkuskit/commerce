@@ -86,18 +86,20 @@ jobs:
           pr-title: "ci: release"
 
   publish:
-    name: Tag and create GitHub Release
+    name: Prepare release publication
     needs: select
     if: ${{ needs.select.outputs.mode == 'publish' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
       published: ${{ steps.changesets.outputs.published }}
-      published-packages: ${{ steps.changesets.outputs['published-packages'] }}
+      published-packages: ${{ steps.recovery.outputs['published-packages'] || steps.changesets.outputs['published-packages'] }}
+      registry-recovery: ${{ steps.recovery.outputs.ready }}
     permissions:
       contents: read
     steps:
       - name: Generate token
+        if: ${{ !inputs.publish-only }}
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
@@ -107,13 +109,19 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ steps.app-token.outputs.token || github.token }}
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Validate Registry-only recovery
+        if: ${{ inputs.publish-only }}
+        id: recovery
+        env:
+          REGISTRY_RECOVERY_REQUESTED: ${{ inputs.publish-only }}
+        run: node .github/scripts/registry-recovery.mjs
       - name: Build before tagging
         run: npm run build
       # The package publishes to the EmDash Registry, not npm. Tagging is
@@ -121,6 +129,7 @@ jobs:
       # GitHub Release from CHANGELOG.md, and reports published-packages
       # for the delegated Registry workflow below.
       - name: Create tag and GitHub Release
+        if: ${{ !inputs.publish-only }}
         id: changesets
         uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
@@ -130,7 +139,7 @@ jobs:
   publish-emdash-plugins:
     name: Publish to the EmDash Registry
     needs: publish
-    if: needs.publish.outputs.published == 'true'
+    if: needs.publish.outputs.published == 'true' || needs.publish.outputs['registry-recovery'] == 'true'
     uses: ./.github/workflows/emdash-release.yml
     with:
       published-packages: ${{ needs.publish.outputs['published-packages'] }}

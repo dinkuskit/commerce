@@ -20,8 +20,27 @@ The authoritative plan lives in
    the `vX.Y.Z` tag and the GitHub Release, then
    `.github/workflows/emdash-release.yml` publishes the same version to
    the EmDash Registry through the delegated release service.
-4. Never hand-push a tag and never publish by hand. If a publish step
-   fails, re-run the Release workflow with **publish-only** checked.
+4. Never hand-push a tag and never publish by hand. If tagging succeeded but
+   Registry publication failed, run the Release workflow on `main` with
+   **publish-only** checked after the necessary source repair is reviewed.
+   Recovery requires the existing version tag to be an ancestor of the actual
+   workflow source, with matching package/plugin metadata and unchanged runtime
+   and build inputs. It skips tag/release creation and uses a separate Registry
+   recovery signal, so an existing tag cannot silently suppress the retry.
+
+The supported Registry-only recovery command is:
+
+```sh
+gh workflow run release.yml --repo dinkuskit/commerce --ref main -f publish-only=true
+```
+
+Recovery builds from the actual `main` revision selected for that run. Its
+provenance identifies that source commit and workflow invocation; the existing
+version tag remains at its original commit. Before dispatching recovery, confirm
+that the current version, beta profile and permissions still match the approved
+release. Verify the actual run's prepared archive, provenance and Registry record
+rather than reusing a local preparation digest or treating an existing tag as
+proof that Registry publication succeeded.
 
 ## One-time setup still required (owner)
 
