@@ -58,9 +58,16 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
   const active = async () => ship.current ? await ship.current() : !isolated;
   const matches = (value: unknown) => isRecord(value) && value.recipient === isolated?.recipient && value.generation === isolated?.generation && value.mode === 'test';
   if (!await active()) unavailable();
-  const call = async (path: string, body?: unknown) => {
+  const call = async (path: string, body?: unknown, order?: { id: string; version?: number }) => {
     const token = await ship.credential();
     if (!await active()) unavailable();
+    // Credentials and settings may wait on I/O. Re-read order authority after both,
+    // with no further await before dispatch. Already dispatched requests still drain.
+    if (order) {
+      const latest = await collection.get(order.id);
+      if (isolated ? !latest || !cohortMatches(latest, isolated) ||
+        order.version !== undefined && (latest.revision ?? 1) !== order.version : latest?.shipPin) return null;
+    }
     return ship.fetch(new URL(ship.origin).origin + path, {
     method: body ? "POST" : "GET", cache: "no-store", redirect: "error",
     headers: { accept: "application/json", authorization: "Bearer " + token, "content-type": "application/json",
@@ -69,7 +76,7 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     });
   };
   const listed = await call("/v1/labels");
-  const labels = listed.ok ? await ship.read(listed) : unavailable();
+  const labels = listed?.ok ? await ship.read(listed) : unavailable();
   if (!Array.isArray(labels) || labels.length > 100) unavailable();
   for (const label of labels) {
     if (!isRecord(label) || typeof label.eventId !== "string") unavailable();
@@ -81,7 +88,8 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
       await completeOrder(collection, label.orderId as string, label.version as number, label, new Date().toISOString(), r => cohortMatches(r, isolated));
       const latest = await collection.get(label.orderId as string);
       if (!latest || !cohortMatches(latest, isolated) || !await active()) continue;
-      const ack = await call('/v1/labels/ack', { eventId: label.eventId });
+      const ack = await call('/v1/labels/ack', { eventId: label.eventId }, { id: label.orderId as string });
+      if (!ack) continue;
       if (!ack.ok || !matches(await ship.read(ack))) unavailable();
       continue;
     }
@@ -94,7 +102,9 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     }
     // Admission can win after the initial label read or inside completion's CAS.
     if (typeof label.orderId === 'string' && (await collection.get(label.orderId))?.shipPin) continue;
-    if (!(await call("/v1/labels/ack", { eventId: label.eventId })).ok) unavailable();
+    const ack = await call("/v1/labels/ack", { eventId: label.eventId },
+      typeof label.orderId === 'string' ? { id: label.orderId } : undefined);
+    if (ack && !ack.ok) unavailable();
   }
   // Each order carries the store's name for Ship's emails: one line, at most 200 UTF-16 units
   // without splitting a character, and left out when nothing is left.
@@ -127,7 +137,8 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
       shipTo: Object.fromEntries(Object.entries(facts.shipTo).map(([field, text]) => [field, oneLine(text) || undefined])),
       completed: completed && { ...completed, carrier: oneLine(completed.carrier) || undefined, tracking: oneLine(completed.tracking) || undefined },
       ...(storeName ? { storeName } : {}), lines,
-    });
+    }, { id: facts.orderId, version: facts.version });
+    if (!response) continue;
     // 422 means Ship can never label this version, so it waits for the order's next change.
     if (!response.ok && response.status !== 422) unavailable();
     if (isolated && response.ok && !matches(await ship.read(response))) unavailable();

@@ -49,3 +49,38 @@ test('legacy connection becomes stale while label response is in flight: no comp
 
 
 test('isolated ordinary422 is a permanent scoped refusal, not success or a retry loop',async()=>{const c=await fixture();await admitShipOrder(c,'fresh',1,tuple);const s=service(c,{postStatus:422,receipt:{error:{code:'NOT_SERVED'}}});await syncShip(c,s.connection,item);await syncShip(c,s.connection,item);assert.equal(s.state.sent.length,1);assert.deepEqual((await c.get('fresh')).shipAcknowledgement,{generation:tuple.generation,version:1,outcome:'refused'});assert.equal((await c.get('fresh')).completed,undefined);assert.equal((await c.get('fresh')).revision,1);assert.equal(s.state.acks.length,0)});
+
+for (const effect of ['intake', 'ack']) {
+ for (const wait of ['credential', 'settings']) {
+  test(`disable during final ${wait} wait prevents ${effect} dispatch`, async () => {
+   const c = await fixture();
+   await admitShipOrder(c, 'fresh', 1, tuple);
+   const old = await c.get('old');
+   const s = service(c, { labels: effect === 'ack' ? [{ ...tuple, eventId: 'event', orderId: 'fresh', version: 1 }] : [] });
+   let credentials = 0, waiting = false;
+   const connection = { ...s.connection,
+    credential: async () => {
+     if (++credentials === 2) {
+      waiting = true;
+      if (wait === 'credential') assert.equal(await disableShipOrder(c, 'fresh', tuple.generation), 'saved');
+     }
+     return 'synthetic-pass';
+    },
+    current: async () => {
+     if (waiting && wait === 'settings') {
+      waiting = false;
+      assert.equal(await disableShipOrder(c, 'fresh', tuple.generation), 'saved');
+     }
+     return true;
+    },
+   };
+   await syncShip(c, connection, item);
+   assert.equal(credentials, 2, 'reached per-order dispatch credential wait');
+   assert.equal(s.state.sent.length, 0, 'no intake after disable');
+   assert.equal(s.state.acks.length, 0, 'receiver event retained after disable');
+   assert.equal((await c.get('fresh')).shipPin.enabled, false);
+   assert.equal((await c.get('fresh')).shipAcknowledgement, undefined);
+   assert.deepEqual(await c.get('old'), old);
+  });
+ }
+}
