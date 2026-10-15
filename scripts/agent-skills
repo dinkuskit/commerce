@@ -4,7 +4,7 @@ set -euo pipefail
 # Public, pinned skill bootstrap.  The source repositories remain the owners
 # of these skills; this repository only installs them into the local project.
 SAARIUS_REPO="https://github.com/saariuslystoned/SaariusSkills.git"
-SAARIUS_SHA="5c8476507b0a83e4aef6b54f2e5dfdca2105b6db"
+SAARIUS_SHA="9c7585f34337621d42cc508aff2e3ff317aa4e9c"
 SKILL_NAMES=(grilltrack emdash-sites building-emdash-site creating-plugins emdash-cli upgrading-emdash emdash-commerce emdash-ci-deploy)
 ROOT="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 SKILLS_DIR="${CURSOR_SKILLS_DIR:-$ROOT/.cursor/skills}"
