@@ -1,0 +1,8 @@
+{
+  "id": "dinkus-commerce",
+  "version": "0.3.0-beta.0",
+  "backendSha256": "7ab9cf5c17986dc6ff6b39a561b5a7f8c97dffdf2bd44b96cf0a3afe44164eb4",
+  "runner": "WorkerdSandboxRunner",
+  "available": true,
+  "loaded": true
+}

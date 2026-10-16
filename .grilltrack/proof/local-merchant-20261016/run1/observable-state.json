@@ -1,0 +1,25 @@
+{
+  "run": "local-1792161422941-e075c579-run1",
+  "siteId": "local-local-1792161422941-e075c579-run1",
+  "bindingRef": "binding-local-1792161422941-e075c579-run1",
+  "connectionStarts": 1,
+  "sessions": [
+    {
+      "attemptId": "cad1af35-2da6-4f1a-bd8e-d75f9c7b353f",
+      "total": {
+        "currency": "USD",
+        "minor": "1200"
+      },
+      "paid": true,
+      "paidAt": 1792161446069
+    }
+  ],
+  "acknowledged": true,
+  "boundary": "SYNTHETIC issuer / Payments service / Stripe result; no external calls",
+  "chromium": "149.0.7827.55",
+  "orderLabel": "Inspect #1001 (TEST)",
+  "receiptText": "Receipt: receipt:cad1af35-2da6-4f1a-bd8e-d75f9c7b353f",
+  "attemptText": "Checkout attempt: cad1af35-2da6-4f1a-bd8e-d75f9c7b353f",
+  "result": "PASS_LOCAL_FIXTURE",
+  "shipping": "UNVERIFIED: no hosted Ship/PB/label/PDF/tracking action"
+}
