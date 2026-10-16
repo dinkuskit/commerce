@@ -9,7 +9,7 @@ mode. Closer: maintainer at review/human merge gate. No companion source changed
 Commerce base: `93af4fec2f33f43463d5917972cce574180446d1` (fresh origin/main).
 Both acceptance runs used the clean committed harness revision
 `54764d9b3f68efc80225f7a66237880efeb7e0f2`, branch
-`codex/local-merchant-journey-20261016`. The later proof-only commit changes no
+`codex/local-merchant-journey-20261016`. Later proof and empty-changeset metadata commits change no
 harness, assertions, plugin source or dependencies. Payments source:
 `922e0de9d86ca935bdca852f44552c6c34c50203` in its own clean isolated checkout.
 
@@ -64,7 +64,8 @@ these local fixtures and needs its separately authorized hosted environment.
 
 Validation: production build and registry bundle checks PASS (Commerce backend
 117650bytes, 13422bytes below the 131072byte per-file cap); `npm run typecheck`,
-`npm run audit:repo` and `git diff --check` PASS. These checks are source/build
+`npm run audit:repo`, full `npm test` (604/604 passed, zero skipped),
+and `git diff --check` PASS. These checks are source/build
 proof, not runtime provider evidence. Development failures were preserved in the
 ignored owner run root and fixed: host binary paths, consumed fixture body,
 disposable encryption setup, configured-plugin index initialization, fixture
