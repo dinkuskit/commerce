@@ -1,0 +1,62 @@
+[
+  {
+    "file": "run1-order-detail-fixture.png",
+    "run": "run1",
+    "sha256": "f767d1bf15272946f5d2baf9dd31a5d2786afc5819d6a9aad7dc27073ca63eb3",
+    "bytes": 138602,
+    "sourceHead": "54764d9b3f68efc80225f7a66237880efeb7e0f2",
+    "provenance": "real Playwright capture of local generated fixture data",
+    "redaction": "inspected; synthetic data only; no session/credential material",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-local-merchant-20261016-54764d9/run1-order-detail-fixture.png"
+  },
+  {
+    "file": "run1-payments-commerce-recorded-fixture.png",
+    "run": "run1",
+    "sha256": "08cb145fa0e47f20cb5496f3665e516c3d206747011790fea480dfecaa1a38ea",
+    "bytes": 95452,
+    "sourceHead": "54764d9b3f68efc80225f7a66237880efeb7e0f2",
+    "provenance": "real Playwright capture of local generated fixture data",
+    "redaction": "inspected; synthetic data only; no session/credential material",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-local-merchant-20261016-54764d9/run1-payments-commerce-recorded-fixture.png"
+  },
+  {
+    "file": "run1-guest-paid-fixture.png",
+    "run": "run1",
+    "sha256": "6614950554e331503872f31f380a740cfb22bb69e0e4861c4783b1b7e0225cf6",
+    "bytes": 42946,
+    "sourceHead": "54764d9b3f68efc80225f7a66237880efeb7e0f2",
+    "provenance": "real Playwright capture of local generated fixture data",
+    "redaction": "inspected; synthetic data only; no session/credential material",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-local-merchant-20261016-54764d9/run1-guest-paid-fixture.png"
+  },
+  {
+    "file": "run2-order-detail-fixture.png",
+    "run": "run2",
+    "sha256": "79e06416866ff87182c3315e0ab8620540292e764b3b9dbe1d4b178acd68f309",
+    "bytes": 138193,
+    "sourceHead": "54764d9b3f68efc80225f7a66237880efeb7e0f2",
+    "provenance": "real Playwright capture of local generated fixture data",
+    "redaction": "inspected; synthetic data only; no session/credential material",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-local-merchant-20261016-54764d9/run2-order-detail-fixture.png"
+  },
+  {
+    "file": "run2-payments-commerce-recorded-fixture.png",
+    "run": "run2",
+    "sha256": "c52596a5289066daa1219eaf067012afab6646629c53329dfea16344b072d58d",
+    "bytes": 97324,
+    "sourceHead": "54764d9b3f68efc80225f7a66237880efeb7e0f2",
+    "provenance": "real Playwright capture of local generated fixture data",
+    "redaction": "inspected; synthetic data only; no session/credential material",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-local-merchant-20261016-54764d9/run2-payments-commerce-recorded-fixture.png"
+  },
+  {
+    "file": "run2-guest-paid-fixture.png",
+    "run": "run2",
+    "sha256": "024bc231ab50d6a95c13006929a9207f3bb97ee104a87abe90e77e909009a8e0",
+    "bytes": 42920,
+    "sourceHead": "54764d9b3f68efc80225f7a66237880efeb7e0f2",
+    "provenance": "real Playwright capture of local generated fixture data",
+    "redaction": "inspected; synthetic data only; no session/credential material",
+    "url": "https://github.com/dinkuskit/dinkus-pr-assets/releases/download/commerce-local-merchant-20261016-54764d9/run2-guest-paid-fixture.png"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "commerceHead": "54764d9b3f68efc80225f7a66237880efeb7e0f2",
+  "paymentsHead": "922e0de9d86ca935bdca852f44552c6c34c50203",
+  "sourceDirty": false,
+  "node": "v22.23.2",
+  "emdash": "1.2.0",
+  "runner": "@emdash-cms/sandbox-workerd@0.9.3 (WorkerdSandboxRunner)",
+  "playwright": "1.61.1",
+  "commerceVersion": "0.3.0-beta.0",
+  "paymentsVersion": "0.2.8",
+  "commerceBackend": "7ab9cf5c17986dc6ff6b39a561b5a7f8c97dffdf2bd44b96cf0a3afe44164eb4",
+  "paymentsBackend": "aa132835165479efd0e3c9c68d72810733a6efb61ea135511e01feeca5eee61e",
+  "commerceDescriptor": "50d343c96937545a892b21228ca6947299a12c3b8f309bc4361a7986a70857cd",
+  "paymentsDescriptor": "484ee0a15a4e40716942fc9d61f622dfabe39ddd08467d957ae08d5d973b215c",
+  "workerd": "workerd 2026-08-26",
+  "commerceLock": "e414fbeda2898c4cc28a330fb926f0567d6c8f9e4cbd8a5ce7ea86798499a9b6",
+  "paymentsLock": "8538405646dfba95f9bd1e37942a0e1e1be78ccb9d37f7ad57864b536e3aa912",
+  "assertions": "2a6937c1830490f801fbfab2a8bcd3ffec21963a10cbbc589e1e80abe26a14f1",
+  "paymentsProfile": "supported createPaymentsPlugin testOnly localhost config; unchanged plugin implementation",
+  "registration": "local sandboxed descriptor builds; not Registry installation or hosted authentication"
+}
