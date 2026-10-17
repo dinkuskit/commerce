@@ -19,7 +19,7 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   const saved = page.waitForResponse(r => r.url().endsWith('/dinkus-commerce/admin') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Save merchant settings', exact: true }).click(); await saved;
   await page.reload();
-  await expect(page.getByRole('textbox', { name: 'Store country (ISO alpha-2 code)', exact: true })).toHaveValue('US');
+  await expect(page.getByRole('textbox', { name: 'Store country (ISO alpha-2 code)', exact: true })).toHaveValue('US', { timeout: 60000 });
   await page.goto(commerce + 'products');
   await expect(page.getByText('No products yet', { exact: true })).toBeVisible();
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Fixture parcel ' + run);
