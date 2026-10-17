@@ -7,16 +7,19 @@ ID from the product's admin page. Decisions: `catalog-product-rename-001`,
 ## Behavior
 
 - **Rename.** The product page in both admins has a Name field and Rename.
-  The new name goes on the product and on every choice of a product with
-  choices, so the Shop card, the cart, checkout and new orders all use it.
+  The name lives on the product's own record, which speaks for each of its
+  choices: the Shop card, the cart, checkout and new orders all read it from
+  there, so one compare-and-set renames everything at once.
   Paid orders keep the name the product had when it was bought: each order
   line already stores its own name. The name rules are Add product's (1-160
   characters, no control characters). The record's first `creationPayload` is
   kept so a replayed create still matches.
-- **Archive.** Archive product (it asks first) marks the product and each of its
-  choices `archivedAt`. An archived product is off the public catalog and its
-  item lookup, and checkout refuses it, because `resolveStorefrontAvailability`
-  answers not listable and not sellable. It stays in the Products list marked
+- **Archive.** Archive product (it asks first) marks the product's own record
+  `archivedAt`. That product and every choice of it, including a choice added
+  later, is off the public catalog and its item lookup, and checkout refuses it,
+  because `resolveStorefrontAvailability` and
+  `resolveManagedStorefrontAvailability` both answer not listable and not
+  sellable after checking the product record. It stays in the Products list marked
   Archived, keeps its id, prices, media and orders, and Restore product puts it
   back as it was. Nothing is deleted.
 - **Product ID.** The product page shows the product's id in a box. A product
