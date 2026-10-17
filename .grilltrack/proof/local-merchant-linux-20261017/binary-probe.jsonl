@@ -1,0 +1,2 @@
+{"platform":"linux","arch":"x64","node":"v22.23.2","path":"node_modules/@cloudflare/workerd-darwin-arm64/bin/workerd","status":null,"error":"ENOENT"}
+{"platform":"linux","arch":"x64","node":"v22.23.2","path":"node_modules/.bin/workerd","status":0,"stdout":"workerd 2026-08-26"}

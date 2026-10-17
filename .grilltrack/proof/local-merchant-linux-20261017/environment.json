@@ -1,0 +1,39 @@
+{
+  "schema": "commerce-linux-preparation/v1",
+  "base": "67f2626edb7986d82886f0c015a9305f61c1753e",
+  "testedSource": "c736cc9da85e89f8e61e074fbb7ee6ea9193d672",
+  "payments": "922e0de9d86ca935bdca852f44552c6c34c50203",
+  "node": "22.23.2",
+  "platform": "linux",
+  "arch": "x64",
+  "environment": "local Docker linux/amd64 on an arm64 Mac; emulated; not Cloudflare",
+  "nodeImage": "node@sha256:43aeff40f4afc22e83f7589a2f37e111cff5ca84529571f1c8415bcc5fcc21b2",
+  "baseDistro": "Debian12",
+  "workerd": "1.20260826.1",
+  "workerdVersionOutput": "workerd 2026-08-26",
+  "playwright": "1.61.1",
+  "chromium": "149.0.7827.55",
+  "assertionsSha256": "2a6937c1830490f801fbfab2a8bcd3ffec21963a10cbbc589e1e80abe26a14f1",
+  "commerceLock": "e414fbeda2898c4cc28a330fb926f0567d6c8f9e4cbd8a5ce7ea86798499a9b6",
+  "paymentsLock": "8538405646dfba95f9bd1e37942a0e1e1be78ccb9d37f7ad57864b536e3aa912",
+  "sourceChange": "platform executable lookup only; all merchant assertions unchanged",
+  "initialFailure": {
+    "firstRun": "PASS_LOCAL_FIXTURE",
+    "secondRun": "Astro refused PID of exited zombie from previous run",
+    "pidState": "Z",
+    "parent": "bare sleep PID1",
+    "resolution": "standard child subreaper; no force/lock deletion/test relaxation"
+  },
+  "cloudflareExecution": false,
+  "credentialsTransferred": false,
+  "upstreamCrabbox": {
+    "source": "2bd85693b5fdea67d352516e082b90f8cacfe07b",
+    "entrypoint": [
+      "/usr/bin/tini",
+      "--",
+      "sleep",
+      "infinity"
+    ],
+    "evidence": "coordinator supplied read-only source inspection; actual runner observation pending"
+  }
+}
