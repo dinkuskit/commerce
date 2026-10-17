@@ -1,0 +1,25 @@
+{
+  "source": "local emulated linux/amd64 with OS dependencies already prepared; fresh npm/browser HOME",
+  "packageBootstrapSeconds": 213.7,
+  "runs": [
+    {
+      "run": "run1",
+      "started": "2026-10-17T12:52:51.436Z",
+      "finished": "2026-10-17T12:53:50.747Z",
+      "attemptId": "cfbb3dd7-4905-44e9-9a3f-9c1e069cdcb5",
+      "result": "PASS_LOCAL_FIXTURE"
+    },
+    {
+      "run": "run2",
+      "started": "2026-10-17T12:53:50.780Z",
+      "finished": "2026-10-17T12:54:48.391Z",
+      "attemptId": "32f9f1d4-71aa-446a-87ac-718ff4c37c3d",
+      "result": "PASS_LOCAL_FIXTURE"
+    }
+  ],
+  "preparedDependencyDisk": "about4.1GiB before additional copies",
+  "recommendedWritableDisk": "at least6GiB",
+  "planningAllocationSeconds": 600,
+  "hardAdmissionBudgetSeconds": 900,
+  "cloudCost": "unverified; runtime owner must use actual rate and remaining USD1 total budget"
+}

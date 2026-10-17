@@ -50,7 +50,7 @@ const identities = { commerceHead: git(process.cwd(), 'rev-parse', 'HEAD'), paym
   commerceVersion: JSON.parse(readFileSync('package.json')).version, paymentsVersion: '0.2.8',
   commerceBackend: hash('dist/sandbox/plugin.mjs'), paymentsBackend: hash(resolve(paymentBuild, 'plugin.mjs')),
   commerceDescriptor: hash('dist/sandbox/index.mjs'), paymentsDescriptor: hash(resolve(paymentBuild, 'index.mjs')),
-  workerd: spawnSync(resolve('node_modules/@cloudflare/workerd-darwin-arm64/bin/workerd'), ['--version'], { encoding: 'utf8' }).stdout?.trim() || 'see resolved sandbox package for platform binary',
+  workerd: spawnSync(resolve('node_modules/.bin/workerd'), ['--version'], { encoding: 'utf8' }).stdout?.trim() || 'see resolved sandbox package for platform binary',
   commerceLock: hash('package-lock.json'), paymentsLock: hash(resolve(payments, 'package-lock.json')),
   assertions: hash('tests/local-merchant/journey.spec.mjs'), paymentsProfile: 'supported createPaymentsPlugin testOnly localhost config; unchanged plugin implementation',
   registration: 'local sandboxed descriptor builds; not Registry installation or hosted authentication' };
