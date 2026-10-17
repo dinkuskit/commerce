@@ -1,5 +1,11 @@
 # @dinkuskit/commerce
 
+## 0.3.0-beta.1
+
+### Patch Changes
+
+- [#125](https://github.com/dinkuskit/commerce/pull/125) [`d86690d`](https://github.com/dinkuskit/commerce/commit/d86690d4ba05d2e0f636b83c118bdfe8f219e23c) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Commerce's 5-minute background check now gets 25 seconds instead of EmDash's default 5, so it reaches Ship, collects labels and marks orders Completed on Registry stores without anyone opening Commerce Orders.
+
 ## 0.3.0-beta.0
 
 ### Minor Changes
