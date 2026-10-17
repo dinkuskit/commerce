@@ -1,5 +1,11 @@
 # @dinkuskit/commerce
 
+## 0.3.0-beta.2
+
+### Minor Changes
+
+- [#129](https://github.com/dinkuskit/commerce/pull/129) [`6f4d293`](https://github.com/dinkuskit/commerce/commit/6f4d2935fb899420c02c63569f1923d4c23b071e) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Store owners can rename a product, archive it (it leaves the shop and checkout refuses it) and restore it, and copy its product ID from the product's admin page. Past orders keep the name the product had when bought.
+
 ## 0.3.0-beta.1
 
 ### Patch Changes
