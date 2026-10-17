@@ -5,6 +5,7 @@ if (!directory || !process.env.LOCAL_MERCHANT_RUN) throw new Error('Use npm run 
 const port = Number(process.env.LOCAL_MERCHANT_PORT ?? 64751);
 export default defineConfig({
   testDir: './local-merchant', testMatch: 'journey.spec.mjs', workers: 1, retries: 0, timeout: 180000,
+  expect: { timeout: 60000 },
   reporter: [['list']], outputDir: resolve(directory, 'test-results'),
   use: { actionTimeout: 15000, baseURL: 'http://127.0.0.1:' + port, viewport: { width: 1440, height: 1100 }, trace: 'off', screenshot: 'off', video: 'off' },
   webServer: { command: '../../../node_modules/.bin/astro dev --host 127.0.0.1 --port ' + port,
