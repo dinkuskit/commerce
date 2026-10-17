@@ -98,7 +98,7 @@ Cutting a beta is manual until demo-store e2e automation lands:
    `ci: release` PR now proposes `x.y.z-beta.N` versions.
 3. Merging that release PR tags `vX.Y.Z-beta.N` and publishes to
    `dinkus-commerce-beta` only. Install the beta on the demo store
-   and validate there.
+   and validate there with the live test (below).
 4. Open a PR that runs `npx changeset pre exit` and merge it; the
    next `ci: release` PR proposes the final version for the stable
    package.
@@ -109,6 +109,20 @@ setup` against a staged beta manifest), authorize publishing for it
 in the release dashboard, and approve its workflow connection on the
 first beta publish run. `proof/registry-beta-publishing-20261014/`
 carries a ready-to-run prompt for that setup.
+
+## Live test
+
+The live test is the e2e run that validates a release on a store: the
+[`dinkuskit-live-test`](https://github.com/saariuslystoned/SaariusSkills/tree/main/skills/dinkuskit-live-test)
+skill in SaariusSkills. On a store running the release, it places a Stripe
+TEST order, makes a Pitney Bowes sandbox label in Ship, waits for Commerce's
+5-minute background check to collect the label, and checks that Commerce marks
+the order Completed. Its `PROOF.md` names the plugin versions the store ran, so
+a pass says which release it covers.
+
+It runs only on a machine set up for it (the skill's `references/setup.md`)
+and pays only with Stripe's test card. Hand back its verdict and the plugin
+versions it lists with the release.
 
 ## 1.0.0 gate
 
