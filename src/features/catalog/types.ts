@@ -68,6 +68,8 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   brand?: string;
   /** Optional shipping weight in ounces for physical items; never shown to shoppers. */
   weightOz?: number;
+  /** Set when the owner archived the product: off the shop and not for sale; orders keep pointing at it. */
+  archivedAt?: string;
 }
 
 export type CatalogFulfillment = "physical" | "digital";

@@ -56,6 +56,8 @@ export {
   setCatalogItemSkuRoute,
   setCatalogItemIdentifiersRoute,
   saveCatalogProductPricesRoute,
+  renameCatalogProductRoute,
+  setCatalogProductArchivedRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
@@ -63,6 +65,7 @@ export {
   updateCatalogVariantLabelsRoute,
 } from "./route.js";
 export { setCatalogItemSku } from "./set-sku.js";
+export { renameCatalogProduct, setCatalogProductArchived } from "./product-edit.js";
 export type { SetCatalogItemSkuInput, SetCatalogItemSkuResult } from "./set-sku.js";
 export { setCatalogItemIdentifiers } from "./set-identifiers.js";
 export { CATALOG_WEIGHT_MESSAGE, normalizeWeightOz, setCatalogItemWeight } from "./weight.js";

@@ -74,6 +74,8 @@ export interface CatalogProductListItem {
   brand?: string;
   fulfillment: "physical" | "digital";
   weightOz?: number;
+  /** Present when the product is archived: off the shop and not for sale. */
+  archivedAt?: string;
   variantProduct?: {
     productId: string;
     revision: number;
@@ -208,6 +210,7 @@ export async function listCatalogProducts(
       ...(record.brand ? { brand: record.brand } : {}),
       fulfillment: record.fulfillment ?? "physical",
       ...(record.weightOz ? { weightOz: record.weightOz } : {}),
+      ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
     };
     if (record.variantProduct) {
       const members: CatalogProductVariantListItem[] = [];

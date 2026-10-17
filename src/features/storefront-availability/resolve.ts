@@ -352,6 +352,8 @@ export async function resolveStorefrontAvailability(
     input.catalogItemId,
   );
   if (!item) return unavailable(input.catalogItemId);
+  // An archived product is off the shop and refused at checkout.
+  if (item.archivedAt) return unavailable(item.itemId, false);
   const unlisted = await unlistIfUnpriced(storage, item.itemId);
   if (unlisted) return unlisted;
   if (isManagedCatalogItem(item)) {
