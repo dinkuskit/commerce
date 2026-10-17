@@ -553,7 +553,8 @@ test('real workerd cron wake applies canonical paid order before exact ACK and r
 test('switching Commerce on registers its 5-minute background check with the site scheduler', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
-  assert.deepEqual(state.manifest.hooks, ['plugin:activate', 'cron']);
+  // EmDash stops a hook after 5 seconds unless the manifest says otherwise; the check needs longer to reach Ship.
+  assert.deepEqual(state.manifest.hooks, ['plugin:activate', { name: 'cron', timeout: 25000 }]);
   assert.deepEqual(state.cronTasks(), []);
   await state.plugin.invokeHook('plugin:activate', {});
   const task = [COMMERCE_REGISTRY_RUNTIME_ID, COMMERCE_CHECKOUT_WAKES_TASK, '*/5 * * * *', 1];

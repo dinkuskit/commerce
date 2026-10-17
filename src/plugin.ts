@@ -38,10 +38,15 @@ const plugin: SandboxedPlugin = {
     "plugin:activate": async (_event, ctx) => {
       await ctx.cron?.schedule(COMMERCE_CHECKOUT_WAKES_TASK, { schedule: "*/5 * * * *" });
     },
-    // The background check settles payments, then brings Orders and Ship up to date.
-    cron: async (event, ctx) => {
-      await installedCheckout.cron(event, ctx);
-      if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await syncOrdersWithShip(ctx).catch(() => {});
+    // The background check settles payments, then brings Orders and Ship up to date. Its passes from
+    // DinkusKit.com and calls to Payments and Ship outlast EmDash's default 5-second hook limit, which
+    // stopped it before Ship, so it gets 25 seconds (inside the sandbox's 30-second wall-time limit).
+    cron: {
+      timeout: 25_000,
+      handler: async (event, ctx) => {
+        await installedCheckout.cron(event, ctx);
+        if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await syncOrdersWithShip(ctx).catch(() => {});
+      },
     },
   },
   routes: {
