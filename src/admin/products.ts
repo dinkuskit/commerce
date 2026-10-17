@@ -5,7 +5,7 @@ import {
   CatalogError, createCatalogItem, catalogProductCreateInput, listCatalogProducts,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogCreateInput, admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
-  normalizeWeightOz, setCatalogItemWeight,
+  normalizeWeightOz, setCatalogItemWeight, renameCatalogProduct, setCatalogProductArchived,
   addCatalogVariantOption, bulkSaveCatalogProductPrices, updateCatalogVariantLabels,
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage,
@@ -52,7 +52,7 @@ async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> 
   const blocks: Block[] = [header("Products"), note("Commerce"), navigation(),
     ...addForm(), { type: "divider" }];
   for (const product of products.slice(start, start + PAGE_SIZE)) {
-    blocks.push({ type: "section", text: product.name + " — " + product.sku,
+    blocks.push({ type: "section", text: product.name + " — " + product.sku + (product.archivedAt ? " · Archived" : ""),
       accessory: button("Open " + product.name, "open", product.catalogItemId) });
   }
   if (!products.length) blocks.push({ type: "empty", title: "No products yet", description: "Add your first product." });
@@ -158,12 +158,19 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   return { blocks: [
     header(selected.name), note("Commerce / Products"), navigation(),
     note("SKU: " + selected.sku),
+    ...(selected.archivedAt ? [{ type: "banner" as const, title: "Archived: not in the shop and can't be bought.", variant: "default" as const }] : []),
     ...(form?.message ? [alert(form.message)] : []),
+    note("Product ID, for a product page's Commerce product field:"), { type: "code", code: id },
+    { type: "form", block_id: "rename-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "name", label: "Name", initial_value: selected.name }],
+      submit: { label: "Rename", action_id: "rename:" + id } },
     manageStockNotice(values.manageStock),
     ...(!selected.variantProduct?.options.length ? [productForm(id, { ...values, stockStatus: values.stockStatus ?? status })] : []),
     ...variantEditor(id, selected.variantProduct),
     ...weightForm(selected),
     ...await mediaBlocks(ctx, id, selected.name, media),
+    { type: "actions", elements: [selected.archivedAt ? button("Restore product", "archive", { id, a: false })
+      : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
+        text: "It leaves the shop and can't be bought. Past orders keep it. You can restore it later.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
   ], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: string[]) => string[], toast: string): Promise<BlockResponse> {
@@ -195,6 +202,11 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
         const offset = input.value ?? 0;
         if (typeof offset !== "number" || !Number.isSafeInteger(offset) || offset < 0 || offset > 10000) throw new Error("Invalid page");
         return await products(ctx, offset);
+      }
+      if (action === "archive") {
+        const v = object(input.value);
+        await setCatalogProductArchived(storage(ctx).catalog, { catalogItemId: v.id, archived: v.a });
+        return await product(ctx, text(v.id), undefined, v.a ? "Product archived" : "Product restored");
       }
       if (action === "media.pick") {
         const v = object(input.value);
@@ -257,6 +269,11 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
         }
         return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, feedChannels: channels } : saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }
+      if (action.startsWith("rename:")) {
+        const id = action.slice(7);
+        await renameCatalogProduct(storage(ctx).catalog, { catalogItemId: id, name: values.name });
+        return await product(ctx, id, undefined, "Product renamed");
+      }
       if (action.startsWith("weight:")) {
         const id = action.slice(7);
         const store = storage(ctx);
@@ -311,7 +328,7 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
   } catch (error) {
     const failure = message(error);
     // A refused media choice returns the clerk to the product with the reason; stored values are unchanged.
-    if (input.type === "block_action" && /^media\.(use|clear|remove|up)$/.test(String(input.action_id))) {
+    if (input.type === "block_action" && /^(media\.(use|clear|remove|up)|archive)$/.test(String(input.action_id))) {
       const v = input.value as { t?: unknown; id?: unknown } | null;
       try {
         const back = typeof v?.id === "string" && v.id ? await product(ctx, v.id) : null;
@@ -331,10 +348,10 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
         return refused(failure, [alert(failure), ...back.blocks]);
       } catch { /* storage recovery falls through to the render-only alert */ }
     }
-    // A refused weight keeps what the owner typed.
-    if (input.type === "form_submit" && typeof input.action_id === "string" && input.action_id.startsWith("weight:")) {
+    // A refused rename or weight keeps what the owner typed.
+    if (input.type === "form_submit" && typeof input.action_id === "string" && /^(weight|rename):/.test(input.action_id)) {
       try {
-        const back = await product(ctx, input.action_id.slice(7));
+        const back = await product(ctx, input.action_id.replace(/^\w+:/, ""));
         for (const block of back.blocks) if (block.type === "form" && block.submit.action_id === input.action_id)
           for (const field of block.fields) if (typeof values[field.action_id] === "string") Object.assign(field, { initial_value: values[field.action_id] });
         return refused(failure, [alert(failure), ...back.blocks]);

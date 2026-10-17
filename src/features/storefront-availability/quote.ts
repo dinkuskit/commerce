@@ -27,7 +27,7 @@ export async function quoteCatalogBasket(
   for (const catalogItemId of catalogItemIds) {
     const resolved = await resolveCatalogVariantMember(storage.catalog, catalogItemId);
     if (!resolved) return { ok: false, reason: "unavailable" };
-    const { item, product, member } = resolved;
+    const { item, product, member, parent } = resolved;
     const variant = product && member
       ? { productId: product.productId, selections: variantSelections(product, member), fulfillment: member.fulfillment }
       : undefined;
@@ -37,7 +37,7 @@ export async function quoteCatalogBasket(
     const unitPrice = (await resolveCatalogItemPrice(storage.prices, catalogItemId)).customerPays;
     if (!unitPrice) return { ok: false, reason: "unpriced" };
     const fulfillment = member?.fulfillment ?? item.fulfillment ?? "physical";
-    const line: CatalogQuoteLine = { catalogItemId, name: item.name, unitPrice, fulfillment, ...(variant ? { variant } : {}) };
+    const line: CatalogQuoteLine = { catalogItemId, name: (parent ?? item).name, unitPrice, fulfillment, ...(variant ? { variant } : {}) };
     const management = normalizeStoredStockManagement(item.stockManagement);
     if (management.mode === "managed") {
       if (management.status !== "active") return { ok: false, reason: "inventory-setup" };

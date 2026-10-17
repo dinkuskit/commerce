@@ -22,7 +22,8 @@ export interface UpdateCatalogVariantLabelsInput {
   values: readonly { valueId: string; label: string }[];
   members?: readonly { catalogItemId: string; fulfillment: CatalogFulfillment }[];
 }
-export interface CatalogVariantResolution { item: CatalogItemRecord; product: CatalogVariantProduct | null; member: CatalogVariantMember | null }
+/** parent is the product record a choice belongs to; its name and archive state speak for every choice. */
+export interface CatalogVariantResolution { item: CatalogItemRecord; product: CatalogVariantProduct | null; member: CatalogVariantMember | null; parent?: CatalogItemRecord }
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9:_-]{0,159}$/;
 const id = (v: unknown, field: string) => {
@@ -107,7 +108,7 @@ export async function resolveCatalogVariantMember(
   const product = valid(parent.variantProduct, item.variantProductId);
   const found = product.members.find(m => m.catalogItemId === item.itemId) ?? null;
   return found && same(found.selections, item.variantSelections ?? [])
-    ? { item, product, member: found } : null;
+    ? { item, product, member: found, parent: parent as CatalogItemRecord } : null;
 }
 
 export async function addCatalogVariantOption(

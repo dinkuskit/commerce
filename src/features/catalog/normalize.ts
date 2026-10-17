@@ -35,6 +35,15 @@ export function normalizeSku(value: unknown): string {
   return canonical;
 }
 
+/** The customer-facing product name, as typed at Add product or Rename. */
+export function normalizeProductName(value: unknown): string {
+  const name = requireString(value, "name").normalize("NFKC").trim();
+  if (name.length < 1 || name.length > 160 || CONTROL_PATTERN.test(name)) {
+    catalogFail("INVALID_INPUT", "name must be 1-160 characters without controls",);
+  }
+  return name;
+}
+
 export function normalizeCreateCatalogItemInput(
   input: unknown,
 ): NormalizedCreateCatalogItemInput {
@@ -48,10 +57,7 @@ export function normalizeCreateCatalogItemInput(
     catalogFail("INVALID_INPUT", "commandId must be 1-128 ASCII [A-Za-z0-9:_-]",);
   }
 
-  const name = requireString(candidate.name, "name").normalize("NFKC").trim();
-  if (name.length < 1 || name.length > 160 || CONTROL_PATTERN.test(name)) {
-    catalogFail("INVALID_INPUT", "name must be 1-160 characters without controls",);
-  }
+  const name = normalizeProductName(candidate.name);
 
   const sku = normalizeSku(candidate.sku);
   const manageStock = Object.hasOwn(candidate, "manageStock")

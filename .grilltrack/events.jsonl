@@ -474,3 +474,17 @@
 {"action": "shared_understanding_confirmed", "at": "2026-10-14T23:20:41+00:00", "data": {"summary": "Enter beta using pinned Changesets3.0.3 schema mode/tag; preserve starting0.2.2 and pending patch, prove current and future minor release plans, and deliver a reviewed pre-mode PR without publication."}, "event_id": "b6b990ca-fed6-4688-92ff-e84a5237c39b"}
 {"action": "decision_implemented", "at": "2026-10-14T23:21:20+00:00", "data": {"decision_id": "commerce-beta-premode-001"}, "event_id": "013b8f21-e2fa-4bf3-9eb2-25b2e84aee82"}
 {"action": "decision_verified", "at": "2026-10-14T23:21:52+00:00", "data": {"decision_id": "commerce-beta-premode-001"}, "event_id": "7a42007c-d3d2-4c0d-88e7-14ff02a4a357"}
+{"action": "focus_started", "at": "2026-10-17T21:05:47+00:00", "data": {"cadence": "frontier-batch", "domain": "An owner renames, archives and finds a product"}, "event_id": "6b6f744e-22d9-4705-8a12-5780159037b0"}
+{"action": "decision_proposed", "at": "2026-10-17T21:05:47+00:00", "data": {"decision_id": "catalog-product-rename-001"}, "event_id": "e53bd7db-6060-44c4-881e-45f84817dfc5"}
+{"action": "decision_proposed", "at": "2026-10-17T21:05:47+00:00", "data": {"decision_id": "catalog-product-archive-001"}, "event_id": "8018baa6-c689-48d2-a93a-b92e5531f132"}
+{"action": "decision_proposed", "at": "2026-10-17T21:05:47+00:00", "data": {"decision_id": "catalog-product-id-visible-001"}, "event_id": "b6d1ad1f-947c-49b7-8eae-b8a0d68eb4fe"}
+{"action": "decision_locked", "at": "2026-10-17T21:05:51+00:00", "data": {"decision_id": "catalog-product-rename-001"}, "event_id": "8181d830-1f1e-4346-8f24-6c169c831c6b"}
+{"action": "decision_locked", "at": "2026-10-17T21:05:51+00:00", "data": {"decision_id": "catalog-product-archive-001"}, "event_id": "3e083a9c-3fd4-4ff6-9e04-6e2840a6008f"}
+{"action": "decision_locked", "at": "2026-10-17T21:05:51+00:00", "data": {"decision_id": "catalog-product-id-visible-001"}, "event_id": "a7b51d99-37a0-4b84-a5a1-2a92a7b14b6b"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-17T21:05:56+00:00", "data": {"summary": "Ronald answered 1a 2a 3a on 2026-10-17: rename everywhere shoppers look (orders keep their names), archive with restore and no delete, boxed product id with copy."}, "event_id": "1ff0904e-ecd0-4dfa-afbf-dff067b0639c"}
+{"action": "decision_implemented", "at": "2026-10-17T21:06:00+00:00", "data": {"decision_id": "catalog-product-rename-001"}, "event_id": "dc6468a1-4466-4133-83cc-34dae4730213"}
+{"action": "decision_implemented", "at": "2026-10-17T21:06:00+00:00", "data": {"decision_id": "catalog-product-archive-001"}, "event_id": "8ae50158-c6d0-4ec4-8e19-2bf2c53600f9"}
+{"action": "decision_implemented", "at": "2026-10-17T21:06:00+00:00", "data": {"decision_id": "catalog-product-id-visible-001"}, "event_id": "4cd87c6f-3afc-464b-aeb9-80dd3e58fbe8"}
+{"action": "decision_verified", "at": "2026-10-17T21:18:03+00:00", "data": {"decision_id": "catalog-product-rename-001"}, "event_id": "ee4d244b-449d-482a-b4ad-871ae8013c91"}
+{"action": "decision_verified", "at": "2026-10-17T21:18:03+00:00", "data": {"decision_id": "catalog-product-archive-001"}, "event_id": "5cdbf8be-0af5-4d0b-ba0e-939e8b7abd27"}
+{"action": "decision_verified", "at": "2026-10-17T21:18:03+00:00", "data": {"decision_id": "catalog-product-id-visible-001"}, "event_id": "0b0e474d-541e-4de5-9c90-0623a5d3dac7"}

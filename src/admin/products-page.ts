@@ -62,6 +62,7 @@ export function ProductsPage() {
   const [gtin, setGtin] = useState("");
   const [mpn, setMpn] = useState("");
   const [brand, setBrand] = useState("");
+  const [rename, setRename] = useState("");
   const [choiceIds, setChoiceIds] = useState(() => Array.from({ length: 4 }, () => crypto.randomUUID()));
   useEffect(() => { setChoiceIds(Array.from({ length: 4 }, () => crypto.randomUUID())); setFirstFulfillment(""); setSecondFulfillment(""); }, [selectedId]);
 
@@ -83,6 +84,7 @@ export function ProductsPage() {
       return;
     }
     setSelectedId(selected.catalogItemId);
+    setRename(selected.name);
     setRegular(selected.regular ?? "");
     setSale(selected.sale ?? "");
     setManageStock(selected.manageStock);
@@ -106,6 +108,7 @@ export function ProductsPage() {
 
   function chooseProduct(product: ListedProduct): void {
     setSelectedId(product.catalogItemId);
+    setRename(product.name);
     setRegular(product.regular ?? "");
     setSale(product.sale ?? "");
     setManageStock(product.manageStock);
@@ -254,6 +257,45 @@ export function ProductsPage() {
     }
   }
 
+  async function editProduct(route: string, body: Record<string, unknown>, done: string): Promise<void> {
+    if (selectedId === null) return;
+    setPending(true);
+    setMessage(null);
+    try {
+      await postPlugin(route, { catalogItemId: selectedId, ...body }, "Could not save");
+      await loadProducts(selectedId);
+      setMessage(done);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not save");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const selectedProduct = products.find((product) => product.catalogItemId === selectedId);
+  // The id is what a product page's Commerce product field needs; archive hides without deleting.
+  const productDetails = selectedProduct && createElement(
+    "div",
+    { className: "space-y-3" },
+    selectedProduct.archivedAt ? createElement("p", { role: "status" }, "Archived: not in the shop and can't be bought.") : null,
+    createElement("p", null, "Product ID, for a product page's Commerce product field:"),
+    createElement("div", { className: "dk-product-id" },
+      createElement("code", null, selectedProduct.catalogItemId),
+      createElement("button", { type: "button", "aria-label": "Copy product ID", title: "Copy product ID", onClick: () => {
+        void navigator.clipboard.writeText(selectedProduct.catalogItemId).then(() => setMessage("Product ID copied"), () => setMessage("Could not copy. Select the ID and copy it."));
+      } }, createElement("svg", { viewBox: "0 0 16 16", width: 16, height: 16, "aria-hidden": "true", fill: "none", stroke: "currentColor", strokeWidth: 1.5 },
+        createElement("rect", { x: 5.5, y: 5.5, width: 8, height: 8, rx: 1.5 }),
+        createElement("path", { d: "M10.5 3.5v-1a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h1" })))),
+    labeledField("Name", "product-rename", rename, setRename),
+    createElement("button", { type: "button", disabled: pending,
+      onClick: () => void editProduct("catalog-items/rename", { name: rename }, "Product renamed") }, "Rename"),
+    createElement("button", { type: "button", disabled: pending, onClick: () => {
+      const archived = !selectedProduct.archivedAt;
+      if (archived && !window.confirm("Archive " + selectedProduct.name + "? It leaves the shop and can't be bought. Past orders keep it. You can restore it later.")) return;
+      void editProduct("catalog-items/set-archived", { archived }, archived ? "Product archived" : "Product restored");
+    } }, selectedProduct.archivedAt ? "Restore product" : "Archive product"),
+  );
+
   // Variant parents carry identifiers too; their public projection feeds structured data.
   const identifiersForm = createElement(
     "div",
@@ -305,7 +347,7 @@ export function ProductsPage() {
               onClick: () => chooseProduct(product),
               "aria-current": product.catalogItemId === selectedId ? "true" : undefined,
             },
-            product.name,
+            product.name + (product.archivedAt ? " (archived)" : ""),
           ),
         ),
       ),
@@ -316,6 +358,7 @@ export function ProductsPage() {
         ? createElement(
             "div",
             { className: "space-y-6" },
+            productDetails,
             identifiersForm,
             createElement(VariantProductEditor, { product: products.find(p => p.catalogItemId === selectedId)!, reload: () => loadProducts(selectedId) }),
           )
@@ -365,6 +408,7 @@ export function ProductsPage() {
             createElement("button", { type: "button", disabled: pending, onClick: () => void saveFeedChannels() }, "Save feed eligibility"),
           ),
           ),
+          productDetails,
           identifiersForm,
           createElement("div", null,
             createElement("h3", null, "Add choices"),
@@ -450,6 +494,8 @@ function VariantProductEditor({ product, reload }: { product: CatalogProductList
 }
 
 const PRODUCTS_STYLE = `
+.dk-product-id{display:flex;align-items:center;gap:.5rem;width:fit-content;max-width:100%;padding:.375rem .375rem .375rem .75rem;border:1px solid #9ca3af;border-radius:.5rem;box-shadow:0 1px 2px rgb(0 0 0/.15),0 2px 6px rgb(0 0 0/.08)}
+.dk-product-id code{overflow-wrap:anywhere;user-select:all}.dk-products .dk-product-id button{margin:0;padding:.375rem;display:flex}
 .dk-products{max-width:48rem}.dk-products form{display:grid;gap:.75rem}.dk-products label{display:block}
 .dk-products input:not([type]),.dk-products select{display:block;width:min(100%,24rem);padding:.5rem;border:1px solid #9ca3af;border-radius:.375rem;background:transparent}
 .dk-products fieldset{min-width:0;border:1px solid #9ca3af;border-radius:.5rem;padding:1rem;margin:.75rem 0}

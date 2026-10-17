@@ -77,6 +77,7 @@ async function projectPublicCatalogProduct(
   ) {
     unavailable();
   }
+  if (item.archivedAt) return null;
   const variant = await resolveCatalogVariantMember(storage.catalog, item.itemId);
   if (variant === null) return null;
   const availability = await resolveStorefrontAvailability(storage, { catalogItemId: item.itemId });
