@@ -52,7 +52,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request']);
-  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'ship.sm0ky.dev', 'dinkuskit.com']);
+  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
@@ -435,6 +435,28 @@ test('malformed or copied configuration is rejected before encrypted credential/
   assert.deepEqual(await state.cartRecords(), []);
 });
 
+
+test('a store still saving the retired isolated Ship TEST profile keeps checkout and sends nothing to Ship', async () => {
+  const retired = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
+  const ship = shipStandIn();
+  const state = await runtimeFixture({ config: { ...configuration(), ship: retired }, shipPass: await credential(), shipService: ship.service });
+  try {
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+    await physicalShipOrder(state);
+    const [{ id }] = (await state.collections.orders.query()).items;
+    const pinned = await state.collections.orders.get(id);
+    await state.collections.orders.put(id, { ...pinned, shipPin: { recipient: retired.recipient, generation: retired.generation, site: 'site', enabled: true } });
+    const page = JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' }));
+    assert.match(page, /\(TEST\)/);
+    const detail = JSON.stringify(await shipAdmin(state, { type: 'block_action', action_id: 'orders.open:' + encodeURIComponent(id) }));
+    assert.equal(detail.includes('Create shipping label'), false);
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual([ship.state.calls, state.counts.ship], [0, 0]);
+    assert.ok(state.outbound.every(request => new URL(request.url).hostname !== 'ship.sm0ky.dev'));
+    const kept = await state.collections.orders.get(id);
+    assert.deepEqual([kept.shipPin.enabled, kept.shipVersion, kept.completed], [true, undefined, undefined]);
+  } finally { await state.close(); }
+});
 
 test('legacy enabled v1 stripe config without new fields still starts checkout', async t => {
   const legacy = legacyStripeConfiguration();
@@ -859,56 +881,12 @@ test('country-rejected start recovers through read-only prepared status on the s
 });
 
 
-test('compiled shipped Registry sandbox isolates one admitted TEST order and preserves historical paid proof', async () => {
-  const tuple = { recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
-  const ship = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', ...tuple };
-  const sent = [], acks = []; let labels = [];
-  const state = await runtimeFixture({ grants: 'shipped', config: { ...configuration(), ship },
-    shipPass: await credential({ aud: ship.audience, scope: 'ship:orders', ship_recipient: tuple.recipient, ship_generation: tuple.generation, ship_mode: 'test' }),
-    shipService: (url, init) => {
-      const h = new Headers(init.headers);
-      for (const [key,value] of Object.entries(tuple)) assert.equal(h.get('x-ship-'+key),value);
-      assert.equal(new URL(url).search,'');
-      if (new URL(url).pathname === '/v1/labels') return Response.json(labels);
-      const body=JSON.parse(new TextDecoder().decode(init.body));
-      if (new URL(url).pathname === '/v1/orders') { assert.equal(body.orderId,'fixture-fresh'); assert.equal(body.test,true); assert.equal(body.recipient,undefined); sent.push(body); return Response.json({received:true,...tuple}); }
-      acks.push(body); return Response.json({acknowledged:true,...tuple});
-    } });
-  const paid = id => ({schema:'dinkuskit.commerce.paid-order/v1',orderId:id,receiptId:'receipt-'+id,attemptId:'attempt-'+id,paymentId:'synthetic-payment-'+id,mode:'test',paidAt:'2026-10-14T00:00:00Z',lines:[{catalogItemId:'hat',name:'Hat',quantity:1,unitPrice:{currency:'USD',minor:'250'}}],total:{currency:'USD',minor:'250'},contactSnapshot:{schema:'dinkuskit.commerce.checkout-contact/v1',requirePhoneNumber:false,revision:null,contact:{email:'fixture@example.test',delivery:syntheticDelivery}}});
-  try {
-    assert.deepEqual(state.manifest.allowedHosts,state.artifact.allowedHosts);
-    await state.collections.orders.put('fixture-historical',{paidOrder:paid('fixture-historical'),number:1001,revision:1,shipVersion:1});
-    await state.collections.orders.put('fixture-fresh',{paidOrder:paid('fixture-fresh'),number:1002,revision:1});
-    const old = await state.collections.orders.getVersioned('fixture-historical');
-    await shipAdmin(state,{type:'page_load',page:'/orders'});
-    assert.equal(sent.length,0);
-    await assert.rejects(state.plugin.invokeRoute('orders',{action:'ship.admit',orderId:'fixture-fresh',version:1,generation:tuple.generation},{method:'POST',user:{id:'editor',role:40}}));
-    assert.equal((await shipAgent(state,{action:'ship.admit',orderId:'fixture-historical',version:1,generation:tuple.generation})).result,'invalid');
-    assert.equal((await shipAgent(state,{action:'ship.admit',orderId:'fixture-fresh',version:1,generation:tuple.generation})).result,'saved');
-    assert.equal(sent.length,1);
-    assert.equal((await state.collections.orders.get('fixture-fresh')).revision,1);
-    assert.ok(state.trades.every(t => t.body.scope==='ship:orders' && t.body.generation===tuple.generation && t.body.audience===ship.audience));
-    assert.deepEqual([state.counts.transport,state.requests.length], [0,0]);
-    labels=[{eventId:'historical',orderId:'fixture-historical',version:1,...tuple},{eventId:'wrong',orderId:'fixture-fresh',version:1,...tuple,generation:'wrong'}];
-    await shipAdmin(state,{type:'page_load',page:'/orders'});
-    assert.equal(acks.length,0);
-    assert.deepEqual(await state.collections.orders.getVersioned('fixture-historical'),old);
-    assert.equal((await shipAgent(state,{action:'cohort.disable',orderId:'fixture-fresh',generation:tuple.generation})).result,'saved');
-    labels=[{eventId:'late',orderId:'fixture-fresh',version:1,...tuple}];
-    await shipAdmin(state,{type:'page_load',page:'/orders'});
-    assert.equal((await state.collections.orders.get('fixture-fresh')).completed,undefined);
-    assert.equal(acks.length,0);
-    assert.deepEqual(await state.collections.orders.getVersioned('fixture-historical'),old);
-  } finally { await state.close(); }
-});
-
-
-test('compiled legacy Registry invocation cannot POST fresh unpinned order after connection settings switch',async()=>{
+test('compiled Registry invocation cannot POST a fresh order after Ship connection settings switch',async()=>{
  let state,posts=0,lists=0;
- const isolation={origin:'https://ship.sm0ky.dev',audience:'dinkus-ship-sandbox',recipient:'ship-sandbox',generation:'fixture-generation-1',mode:'test'};
+ const moved={origin:'https://ship.example.test',audience:'dinkus-ship'};
  state=await runtimeFixture({config:{...configuration(),ship:SHIP},shipPass:await shipCredential(),shipService:async(url)=>{
    if(new URL(url).pathname!=='/v1/labels'){posts++;return Response.json({received:true})}
-   lists++;await state.settings.set('installedCheckout',JSON.stringify({...configuration(),ship:isolation}));
+   lists++;await state.settings.set('installedCheckout',JSON.stringify({...configuration(),ship:moved}));
    await state.collections.orders.put('fixture-unpinned',{paidOrder:{schema:'dinkuskit.commerce.paid-order/v1',orderId:'fixture-unpinned',receiptId:'fixture-receipt',attemptId:'fixture-attempt',mode:'test',lines:[{catalogItemId:'hat',name:'Hat',quantity:1,unitPrice:{currency:'USD',minor:'250'}}],total:{currency:'USD',minor:'250'},contactSnapshot:{schema:'dinkuskit.commerce.checkout-contact/v1',requirePhoneNumber:false,revision:null,contact:{email:'fixture@example.test',delivery:syntheticDelivery}}},number:1002,revision:1});
    return Response.json([]);
  }});

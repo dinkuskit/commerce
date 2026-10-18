@@ -12469,6 +12469,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/isolated-ship-cohort-20261014/PROOF.md"
+        },
+        {
+          "at": "2026-10-18T21:32:47+00:00",
+          "choice": "Fixed ship-sandbox recipient/origin and distinct audience; immutable bounded generation and TEST mode; explicit role50 exact-order admission pins recipient/generation with enabled state; disable/completion/ack CAS serialize on the same order. Receiver deployment exact-ID gate stays empty until separately authorized fresh paid proof. Existing orders remain unchanged; pinned orders never reroute or fall back. Production shape remains compatible.",
+          "from": "verified",
+          "implementation_ref": "docs/contracts/isolated-ship.md",
+          "note": "Retired before 0.3.0 on the owner's approval; see isolated-ship-cohort-retired-001.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/isolated-ship-cohort-20261014/PROOF.md"
         }
       ],
       "id": "isolated-ship-cohort-v1",
@@ -12492,9 +12506,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-14T19:55:31+00:00",
+      "status": "superseded",
+      "superseded_by": "isolated-ship-cohort-retired-001",
+      "updated_at": "2026-10-18T21:32:47+00:00",
       "verification_ref": ".grilltrack/proof/isolated-ship-cohort-20261014/PROOF.md"
     },
     {
@@ -12940,6 +12954,91 @@
       "superseded_by": null,
       "updated_at": "2026-10-17T21:18:03+00:00",
       "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
+    },
+    {
+      "baseline_ref": "git:d6a5b09",
+      "candidate_refs": [],
+      "choice": "Retire isolated-ship-cohort-v1 before the 0.3.0 final, through 0.3.0-beta.3 and a journeys run. emdash-plugin.jsonc allowedHosts lists only payments.dinkuskit.com, coupons.dinkuskit.com, ship.dinkuskit.com and dinkuskit.com. The cohort code is removed now: owner actions ship.admit and cohort.disable, sandbox pass claims and the generation in store-pass trades, recipient headers and cohort acknowledgements. Registry checkout settings that still carry the exact isolated tuple beta.0 to beta.2 accepted keep checkout and are admitted with no Ship service; any other ship service carrying recipient, generation or mode is refused. An order already carrying a pin is never sent to Ship and never completed from it. Re-admission of the captured Ship connection before each effect stays for production Ship. Beta and stable Commerce both use Ship at ship.dinkuskit.com; the 0.3.0 final notes do not announce the profile.",
+      "context_ref": null,
+      "created_at": "2026-10-18T21:11:09+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "isolated-ship-cohort-v1"
+      ],
+      "domain": "An owner renames, archives and finds a product",
+      "history": [
+        {
+          "at": "2026-10-18T21:32:47+00:00",
+          "choice": "No. Retire isolated-ship-cohort-v1 before the 0.3.0 final, through one more beta (0.3.0-beta.3) and a journeys run. emdash-plugin.jsonc allowedHosts lists only DinkusKit hosts (payments.dinkuskit.com, coupons.dinkuskit.com, ship.dinkuskit.com, dinkuskit.com). Registry checkout settings refuse a ship service carrying recipient, generation or mode, the shape only that profile used; ship stays exactly {origin, audience}. The cohort pins, owner admission actions and sandbox claim checks stay in the code, unreachable because no setting can name the profile, and are removed after go-live. Beta and stable Commerce both use Ship at ship.dinkuskit.com. The 0.3.0 final notes do not announce the profile.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-18T21:32:47+00:00",
+          "choice": "Retire isolated-ship-cohort-v1 before the 0.3.0 final, through 0.3.0-beta.3 and a journeys run. emdash-plugin.jsonc allowedHosts lists only payments.dinkuskit.com, coupons.dinkuskit.com, ship.dinkuskit.com and dinkuskit.com. The cohort code is removed now: owner actions ship.admit and cohort.disable, sandbox pass claims and the generation in store-pass trades, recipient headers and cohort acknowledgements. Registry checkout settings that still carry the exact isolated tuple beta.0 to beta.2 accepted keep checkout and are admitted with no Ship service; any other ship service carrying recipient, generation or mode is refused. An order already carrying a pin is never sent to Ship and never completed from it. Re-admission of the captured Ship connection before each effect stays for production Ship. Beta and stable Commerce both use Ship at ship.dinkuskit.com; the 0.3.0 final notes do not announce the profile.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency isolated-ship-cohort-v1 changed: Retired before 0.3.0 on the owner's approval; see isolated-ship-cohort-retired-001.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-18T21:32:47+00:00",
+          "choice": "Retire isolated-ship-cohort-v1 before the 0.3.0 final, through 0.3.0-beta.3 and a journeys run. emdash-plugin.jsonc allowedHosts lists only payments.dinkuskit.com, coupons.dinkuskit.com, ship.dinkuskit.com and dinkuskit.com. The cohort code is removed now: owner actions ship.admit and cohort.disable, sandbox pass claims and the generation in store-pass trades, recipient headers and cohort acknowledgements. Registry checkout settings that still carry the exact isolated tuple beta.0 to beta.2 accepted keep checkout and are admitted with no Ship service; any other ship service carrying recipient, generation or mode is refused. An order already carrying a pin is never sent to Ship and never completed from it. Re-admission of the captured Ship connection before each effect stays for production Ship. Beta and stable Commerce both use Ship at ship.dinkuskit.com; the 0.3.0 final notes do not announce the profile.",
+          "from": "needs_reverification",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-18T21:32:47+00:00",
+          "choice": "Retire isolated-ship-cohort-v1 before the 0.3.0 final, through 0.3.0-beta.3 and a journeys run. emdash-plugin.jsonc allowedHosts lists only payments.dinkuskit.com, coupons.dinkuskit.com, ship.dinkuskit.com and dinkuskit.com. The cohort code is removed now: owner actions ship.admit and cohort.disable, sandbox pass claims and the generation in store-pass trades, recipient headers and cohort acknowledgements. Registry checkout settings that still carry the exact isolated tuple beta.0 to beta.2 accepted keep checkout and are admitted with no Ship service; any other ship service carrying recipient, generation or mode is refused. An order already carrying a pin is never sent to Ship and never completed from it. Re-admission of the captured Ship connection before each effect stays for production Ship. Beta and stable Commerce both use Ship at ship.dinkuskit.com; the 0.3.0 final notes do not announce the profile.",
+          "from": "implemented",
+          "implementation_ref": "docs/contracts/isolated-ship.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "isolated-ship-cohort-retired-001",
+      "implementation_ref": "docs/contracts/isolated-ship.md",
+      "question": "Does Commerce 0.3.0 keep the isolated Ship TEST profile and its test host ship.sm0ky.dev?",
+      "rationale": "Ronald approved in the project thread on 18 Oct 2026 21:21 UTC (lock this) and asked for the pin code to come out now. ship.sm0ky.dev was a closed, test-only copy of Ship for one throwaway store; listing it made every install ask to allow a test machine. Keeping checkout for saved beta settings answers ClawSweeper's upgrade finding on commerce#133.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-18T21:32:47+00:00",
+      "verification_ref": ".grilltrack/proof/isolated-ship-retired-20261018/PROOF.md"
     }
   ],
   "last_activation": {
@@ -12976,5 +13075,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-17T21:18:03+00:00"
+  "updated_at": "2026-10-18T21:32:47+00:00"
 }

@@ -488,3 +488,8 @@
 {"action": "decision_verified", "at": "2026-10-17T21:18:03+00:00", "data": {"decision_id": "catalog-product-rename-001"}, "event_id": "ee4d244b-449d-482a-b4ad-871ae8013c91"}
 {"action": "decision_verified", "at": "2026-10-17T21:18:03+00:00", "data": {"decision_id": "catalog-product-archive-001"}, "event_id": "5cdbf8be-0af5-4d0b-ba0e-939e8b7abd27"}
 {"action": "decision_verified", "at": "2026-10-17T21:18:03+00:00", "data": {"decision_id": "catalog-product-id-visible-001"}, "event_id": "0b0e474d-541e-4de5-9c90-0623a5d3dac7"}
+{"action": "decision_proposed", "at": "2026-10-18T21:11:09+00:00", "data": {"decision_id": "isolated-ship-cohort-retired-001"}, "event_id": "2e288e38-8dc5-40ed-a666-2ee8adc4043a"}
+{"action": "decision_locked", "at": "2026-10-18T21:32:47+00:00", "data": {"decision_id": "isolated-ship-cohort-retired-001"}, "event_id": "e9783aa6-690a-4989-adce-3705afa7410e"}
+{"action": "decision_superseded", "at": "2026-10-18T21:32:47+00:00", "data": {"affected": ["isolated-ship-cohort-retired-001"], "decision_id": "isolated-ship-cohort-v1", "replacement_id": "isolated-ship-cohort-retired-001"}, "event_id": "791de154-9dda-4c7e-9298-9e6c4c831359"}
+{"action": "decision_implemented", "at": "2026-10-18T21:32:47+00:00", "data": {"decision_id": "isolated-ship-cohort-retired-001"}, "event_id": "ba6ede08-3945-4280-b3b9-2f88be3d1b47"}
+{"action": "decision_verified", "at": "2026-10-18T21:32:47+00:00", "data": {"decision_id": "isolated-ship-cohort-retired-001"}, "event_id": "fd76282b-7a58-40ef-bb22-720dd5035d0b"}
