@@ -1,5 +1,11 @@
 # Isolated Ship TEST cohort v1
 
+> **Retired before 0.3.0** (GrillTrack `isolated-ship-cohort-retired-001`). Commerce no longer
+> lists `ship.sm0ky.dev` in its allowed hosts, and checkout settings refuse the isolated shape below,
+> so no store can turn this profile on. Every store uses Ship at `ship.dinkuskit.com`. The order pins
+> and claim checks it added stay in the code, unreachable, until a later cleanup. The text below is
+> kept as the record of what 0.3.0-beta.0 to beta.2 accepted.
+
 This optional profile admits one explicitly approved fresh TEST order to a separate recipient. It preserves existing paid orders and production Ship configuration. Source support does not activate a deployment, grant, key, payment or order.
 
 ## Connection and authority

@@ -31,7 +31,7 @@ const passThrough = globalThis.fetch;
 globalThis.fetch = (input, init) => {
   const url = new URL(input instanceof Request ? input.url : String(input));
   if (url.origin + url.pathname !== 'https://cloudflare-dns.com/dns-query') return passThrough(input, init);
-  const found = ['dinkuskit.com', 'payments.dinkuskit.com', 'ship.sm0ky.dev'].includes(url.searchParams.get('name')) && url.searchParams.get('type') === 'A';
+  const found = ['dinkuskit.com', 'payments.dinkuskit.com'].includes(url.searchParams.get('name')) && url.searchParams.get('type') === 'A';
   return Promise.resolve(Response.json({ Status: 0, Answer: found ? [{ type: 1, data: '9.9.9.9' }] : [] }));
 };
 /** The store key the stand-in issuer accepts until a test replaces it. Not a real key format. */
@@ -198,7 +198,7 @@ export async function runtimeFixture({
     outbound.push({ url, text: JSON.stringify([...new Headers(init.headers)]) +
       (typeof init.body === 'string' ? init.body : new TextDecoder().decode(init.body)) });
     if (new URL(url).origin === ISSUER_ORIGIN) return issuer(url, init);
-    if (new URL(url).origin === SHIP_ORIGIN || new URL(url).origin === 'https://ship.sm0ky.dev') {
+    if (new URL(url).origin === SHIP_ORIGIN) {
       counts.ship++;
       assert.equal(init.redirect, 'manual');
       return shipService ? shipService(url, init) : assert.fail('Ship was called without a Ship service');

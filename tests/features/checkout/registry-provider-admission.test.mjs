@@ -12,13 +12,10 @@ const SITE = "https://shop.example.test";
 const shipping = { configurationId: "ship", revision: 1, mode: "free" };
 const isolatedShip = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
 
-test('isolated Ship admits only the fixed complete TEST tuple; old shape cannot access sandbox', () => {
-  assert.deepEqual(admitRegistryCheckoutConfig(legacyStripe({ ship: isolatedShip }), SITE).ship, isolatedShip);
-  for (const change of [{ origin: 'https://other.test' }, { audience: 'production' }, { recipient: 'other' }, { generation: '' }, { generation: 'x'.repeat(129) }, { mode: 'live' }]) rejects(legacyStripe({ ship: { ...isolatedShip, ...change } }));
-  for (const key of ['recipient','generation','mode']) { const ship = { ...isolatedShip }; delete ship[key]; rejects(legacyStripe({ ship })); }
-  rejects(legacyStripe({ ship: { origin: isolatedShip.origin, audience: isolatedShip.audience } }));
-  for (const origin of ['https://ship.sm0ky.dev/','https://SHIP.sm0ky.dev','https://ship.sm0ky.dev:443']) rejects(legacyStripe({ship:{origin,audience:'legacy-audience'}}));
-  rejects(legacyStripe({ mode: 'live', ship: isolatedShip }));
+test('the retired isolated Ship TEST profile is refused in any form', () => {
+  rejects(legacyStripe({ ship: isolatedShip }));
+  for (const key of ['recipient','generation','mode']) rejects(legacyStripe({ ship: { origin: 'https://ship.dinkuskit.com', audience: 'dinkus-ship', [key]: isolatedShip[key] } }));
+  rejects(legacyStripe({ mode: 'test', ship: isolatedShip }));
 });
 
 function legacyStripe(extra = {}) {
@@ -118,8 +115,8 @@ test("an optional hosted coupon or Ship service needs exactly an https origin an
 });
 
 
-test('captured legacy Registry connection re-admits identity when settings switch to sandbox',async()=>{
+test('captured Registry connection re-admits identity when settings switch Ship',async()=>{
  let current=legacyStripe({ship:{origin:'https://ship.dinkuskit.com',audience:'dinkus-ship'}}),calls=0;
  const ctx={plugin:{id:'dinkus-commerce'},site:{url:SITE},settings:{getVersioned:async()=>({revision:'fixture',value:current}),get:async()=> 'synthetic fixture key'},http:{fetch:async()=>{calls++;throw new Error('unexpected network')}}};
- const old=await resolveRegistryShip(ctx);assert.equal(await old.current(),true);current=legacyStripe({ship:isolatedShip});assert.equal(await old.current(),false);assert.equal(calls,0);
+ const old=await resolveRegistryShip(ctx);assert.equal(await old.current(),true);current=legacyStripe({ship:{origin:'https://ship.example.test',audience:'dinkus-ship'}});assert.equal(await old.current(),false);assert.equal(calls,0);
 });
