@@ -1,5 +1,11 @@
 # @dinkuskit/commerce
 
+## 0.3.0-beta.3
+
+### Patch Changes
+
+- [#133](https://github.com/dinkuskit/commerce/pull/133) [`82837f7`](https://github.com/dinkuskit/commerce/commit/82837f75ce0199b263b06d4e150b7535289b8017) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Commerce asks only for DinkusKit's own hosts: payments, coupons and ship under dinkuskit.com, and dinkuskit.com itself. The isolated Ship TEST profile from 0.3.0-beta.0 and its test host `ship.sm0ky.dev` are gone, including the private Orders actions `ship.admit` and `cohort.disable`. A store whose checkout settings still name that profile keeps checkout and simply has no Ship until it is set up with Ship at ship.dinkuskit.com, which every store uses.
+
 ## 0.3.0-beta.2
 
 ### Minor Changes
