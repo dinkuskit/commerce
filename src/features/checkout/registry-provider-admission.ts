@@ -95,6 +95,7 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
       continue;
     }
     if (!obj(service) || !keys(service, "audience,origin") || !https(service.origin) || !text(service.audience)) fail();
+    if (name === 'ship' && (new URL(service.origin).hostname === 'ship.sm0ky.dev' || service.audience === 'dinkus-ship-sandbox')) fail();
   }
   if (providerId === "stripe") {
     if (!text(value.stripeAccountId) || hasMerchant) fail();

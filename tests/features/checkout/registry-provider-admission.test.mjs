@@ -22,6 +22,8 @@ test('a saved retired isolated Ship TEST profile keeps checkout and drops Ship; 
   for (const key of ['recipient','generation','mode']) rejects(legacyStripe({ ship: { origin: 'https://ship.dinkuskit.com', audience: 'dinkus-ship', [key]: isolatedShip[key] } }));
   rejects(legacyStripe({ ship: { origin: isolatedShip.origin, audience: isolatedShip.audience, recipient: 'ship-sandbox', generation: 'g' } }));
   rejects(legacyStripe({ mode: 'live', ship: isolatedShip }));
+  for (const origin of ['https://ship.sm0ky.dev', 'https://ship.sm0ky.dev/', 'https://SHIP.sm0ky.dev', 'https://ship.sm0ky.dev:443']) rejects(legacyStripe({ ship: { origin, audience: 'dinkus-ship' } }));
+  rejects(legacyStripe({ ship: { origin: 'https://ship.dinkuskit.com', audience: 'dinkus-ship-sandbox' } }));
 });
 
 function legacyStripe(extra = {}) {
