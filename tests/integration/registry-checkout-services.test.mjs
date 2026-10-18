@@ -436,6 +436,28 @@ test('malformed or copied configuration is rejected before encrypted credential/
 });
 
 
+test('a store still saving the retired isolated Ship TEST profile keeps checkout and sends nothing to Ship', async () => {
+  const retired = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
+  const ship = shipStandIn();
+  const state = await runtimeFixture({ config: { ...configuration(), ship: retired }, shipPass: await credential(), shipService: ship.service });
+  try {
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+    await physicalShipOrder(state);
+    const [{ id }] = (await state.collections.orders.query()).items;
+    const pinned = await state.collections.orders.get(id);
+    await state.collections.orders.put(id, { ...pinned, shipPin: { recipient: retired.recipient, generation: retired.generation, site: 'site', enabled: true } });
+    const page = JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' }));
+    assert.match(page, /\(TEST\)/);
+    const detail = JSON.stringify(await shipAdmin(state, { type: 'block_action', action_id: 'orders.open:' + encodeURIComponent(id) }));
+    assert.equal(detail.includes('Create shipping label'), false);
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual([ship.state.calls, state.counts.ship], [0, 0]);
+    assert.ok(state.outbound.every(request => new URL(request.url).hostname !== 'ship.sm0ky.dev'));
+    const kept = await state.collections.orders.get(id);
+    assert.deepEqual([kept.shipPin.enabled, kept.shipVersion, kept.completed], [true, undefined, undefined]);
+  } finally { await state.close(); }
+});
+
 test('legacy enabled v1 stripe config without new fields still starts checkout', async t => {
   const legacy = legacyStripeConfiguration();
   assert.equal(Object.hasOwn(legacy, 'mode'), false);

@@ -12,10 +12,16 @@ const SITE = "https://shop.example.test";
 const shipping = { configurationId: "ship", revision: 1, mode: "free" };
 const isolatedShip = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
 
-test('the retired isolated Ship TEST profile is refused in any form', () => {
-  rejects(legacyStripe({ ship: isolatedShip }));
+test('a saved retired isolated Ship TEST profile keeps checkout and drops Ship; any other form is refused', () => {
+  for (const extra of [{}, { mode: 'test' }]) {
+    const admitted = admitRegistryCheckoutConfig(legacyStripe({ ...extra, ship: isolatedShip }), SITE);
+    assert.equal(admitted.ship, undefined);
+    assert.deepEqual(admitted, admitRegistryCheckoutConfig(legacyStripe(extra), SITE));
+  }
+  for (const change of [{ origin: 'https://other.test' }, { audience: 'production' }, { recipient: 'other' }, { generation: '' }, { mode: 'live' }]) rejects(legacyStripe({ ship: { ...isolatedShip, ...change } }));
   for (const key of ['recipient','generation','mode']) rejects(legacyStripe({ ship: { origin: 'https://ship.dinkuskit.com', audience: 'dinkus-ship', [key]: isolatedShip[key] } }));
-  rejects(legacyStripe({ mode: 'test', ship: isolatedShip }));
+  rejects(legacyStripe({ ship: { origin: isolatedShip.origin, audience: isolatedShip.audience, recipient: 'ship-sandbox', generation: 'g' } }));
+  rejects(legacyStripe({ mode: 'live', ship: isolatedShip }));
 });
 
 function legacyStripe(extra = {}) {

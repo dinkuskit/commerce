@@ -1,8 +1,9 @@
 # Isolated Ship TEST cohort v1
 
 > **Retired before 0.3.0** (GrillTrack `isolated-ship-cohort-retired-001`). Commerce no longer
-> lists `ship.sm0ky.dev` in its allowed hosts, and checkout settings refuse the isolated shape below,
-> so no store can turn this profile on. Every store uses Ship at `ship.dinkuskit.com`. The order pins
+> lists `ship.sm0ky.dev` in its allowed hosts. A store still saving the exact isolated shape below keeps
+> checkout but has no Ship (Orders sends nothing and shows no label link, so pinned orders go nowhere);
+> any other form of it is refused. Every store uses Ship at `ship.dinkuskit.com`. The order pins
 > and claim checks it added stay in the code, unreachable, until a later cleanup. The text below is
 > kept as the record of what 0.3.0-beta.0 to beta.2 accepted.
 
