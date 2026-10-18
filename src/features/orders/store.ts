@@ -4,7 +4,6 @@ import { canonical, isRecord } from "../../shared/record.js";
 import { isCheckoutContactSnapshot, normalizeCheckoutDelivery, type CheckoutDeliveryAddress } from "../checkout-contact/index.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
 import { PAID_ORDER_SCHEMA, type PaidOrder, type PaidOrderReceiver } from "../../handoffs/paid-order.js";
-import type { ShipPin } from './cohort.js';
 
 export const ORDERS_COLLECTION = "orders";
 export const ORDER_NUMBERS_COLLECTION = "order_numbers";
@@ -23,8 +22,8 @@ export interface OrderRecord {
   completed?: OrderCompletion;
   /** The version Ship last took, or refused for good. Recording it never raises the version. */
   shipVersion?: number;
-  shipPin?: ShipPin;
-  shipAcknowledgement?: { generation: string; version: number; outcome: 'accepted' | 'refused' };
+  /** Left by the retired isolated Ship TEST profile (0.3.0-beta.0 to beta.2): such an order never goes to Ship. */
+  shipPin?: unknown;
 }
 
 export interface OrderCompletion {
@@ -157,10 +156,9 @@ function note(value: unknown): string | undefined | null {
 export function completeOrder(
   collection: Pick<OrdersCollection, "getVersioned" | "compareAndSet">,
   orderId: string, revision: number, raw: unknown, at: string,
-  permitted?: (record: OrderRecord) => boolean,
 ): Promise<OwnerChange> {
   return change(collection, orderId, revision, record => {
-    if (record.completed || permitted && !permitted(record)) return "outdated";
+    if (record.completed) return "outdated";
     const values = isRecord(raw) ? raw : {};
     const carrier = note(values.carrier), tracking = note(values.tracking);
     if (carrier === null || tracking === null) return "invalid";

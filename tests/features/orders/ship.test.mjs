@@ -221,3 +221,34 @@ test('Ship\'s label page for an order is on Ship\'s origin under the store\'s id
     'https://ship.example.test/stores/synthetic-site/orders/order%3A01%2Fa%20b');
   assert.equal(shipLabelPage({ origin: 'https://ship.example.test', site: 'site/1' }, 'o1'), 'https://ship.example.test/stores/site%2F1/orders/o1');
 });
+
+test('an order pinned by the retired isolated Ship profile never goes to Ship or completes from it', async () => {
+  const kept = await store(order('o1'), order('o2'));
+  const row = await kept.getVersioned('o2');
+  await kept.compareAndSet('o2', row.revision, { ...row.value, shipPin: { recipient: 'ship-sandbox', generation: 'fixture-generation-1', site: 'site', enabled: false } });
+  const before = await kept.get('o2');
+  const { state, connection } = ship([{ eventId: 'lbl_2', orderId: 'o2', version: 1, carrier: 'USPS', tracking: '9400 SYNTHETIC 2' }]);
+  await syncShip(kept, connection, item);
+  assert.deepEqual(state.sent.map(sent => sent.orderId), ['o1']);
+  assert.deepEqual(state.acks, []);
+  assert.deepEqual(await kept.get('o2'), before);
+});
+
+test('settings that stop naming this Ship mid-sync stop it before the next call or record', async () => {
+  for (const at of ['labels', 'order']) {
+    const kept = await store(order('o1'));
+    const { state, connection } = ship([{ eventId: 'lbl_1', orderId: 'o1', version: 1, carrier: 'USPS', tracking: '9400 SYNTHETIC 1' }]);
+    let active = true;
+    const fetch = connection.fetch;
+    const moving = { ...connection, current: async () => active, fetch: async (url, init) => {
+      const response = await fetch(url, init);
+      if (new URL(url).pathname === (at === 'labels' ? '/v1/labels' : '/v1/orders')) active = false;
+      return response;
+    } };
+    if (at === 'order') state.labels = [];
+    const before = await kept.get('o1');
+    await assert.rejects(syncShip(kept, moving, item), /Ship unavailable/);
+    assert.deepEqual(state.acks, []);
+    assert.deepEqual(await kept.get('o1'), before, at);
+  }
+});

@@ -4,7 +4,7 @@ import type { StorageCollection } from "emdash";
 import { loadCheckoutContactRequirements, merchantStoreSettingsBlocks, merchantStoreSettingsInteraction } from "../features/store-settings/kernel/index.js";
 import { resolveCatalogVariantMember, type CatalogStorageRecord } from "../features/catalog/kernel/index.js";
 import { listPaidOrders, resolveRegistryShip, type CheckoutRecord } from "../features/checkout/kernel/index.js";
-import { ordersBlocks, ordersInteraction, shipLabelPage, syncShip, cohortMatches, type OrdersCollection } from "../features/orders/index.js";
+import { ordersBlocks, ordersInteraction, shipLabelPage, syncShip, type OrdersCollection } from "../features/orders/index.js";
 import { productsAdmin } from "./products.js";
 import { settings, settingsAdmin, settingsInteraction } from "./settings.js";
 
@@ -36,7 +36,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     labelPage: async id => {
       const ship = await resolveRegistryShip(ctx);
       const record = await (ctx.storage['orders'] as OrdersCollection).get(id);
-      if (!ship || !record || (ship.isolation ? !cohortMatches(record, { ...ship.isolation, site: ship.site }) : !!record.shipPin)) return undefined;
+      if (!ship || !record || record.shipPin) return undefined;
       return shipLabelPage(ship, id);
     },
   });

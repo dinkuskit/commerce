@@ -2,7 +2,6 @@ import { normalizeMoney } from "../catalog/kernel/index.js";
 import { isRecord as obj } from "../../shared/record.js";
 import { registryUnavailable as fail, registryText as text, exactKeys as keys } from "./registry-guards.js";
 import { CHECKOUT_PRICING_SCHEMA, type PaymentMode, type TrustedShippingConfiguration } from "./types.js";
-import { validGeneration, type ShipIsolation } from '../orders/index.js';
 
 export const REGISTRY_CHECKOUT_CONFIG_SCHEMA = "dinkuskit.commerce.registry-checkout/v1" as const;
 export type RegistryCheckoutProviderId = "stripe" | "authorize_net";
@@ -26,7 +25,7 @@ export interface RegistryCheckoutConfig {
   /** The hosted coupon service. Without it, coupon codes are unavailable. */
   coupons?: { origin: string; audience: string };
   /** Ship's hosted service for Orders. Without it, Orders sends nothing to Ship. */
-  ship?: { origin: string; audience: string } & Partial<ShipIsolation>;
+  ship?: { origin: string; audience: string };
 }
 
 const BASE =
@@ -91,7 +90,7 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
     // saving its exact shape keeps checkout and has no Ship, so pinned orders go nowhere. Anything else is refused.
     if (name === 'ship' && obj(service) && keys(service, 'audience,generation,mode,origin,recipient') &&
         service.origin === 'https://ship.sm0ky.dev' && service.audience === 'dinkus-ship-sandbox' && service.recipient === 'ship-sandbox' &&
-        service.mode === 'test' && validGeneration(service.generation) && value.mode !== 'live') {
+        service.mode === 'test' && typeof service.generation === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(service.generation) && value.mode !== 'live') {
       retiredShip = true;
       continue;
     }
