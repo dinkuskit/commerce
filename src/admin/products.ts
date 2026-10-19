@@ -2,7 +2,7 @@ import type { Block, BlockResponse } from "@emdash-cms/blocks";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
 import {
-  CatalogError, createCatalogItem, catalogProductCreateInput, listCatalogProducts,
+  CatalogError, createCatalogItem, catalogProductCreateInput, listCatalogProductSummaries, loadCatalogProduct,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogCreateInput, admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
   normalizeWeightOz, setCatalogItemWeight, renameCatalogProduct, setCatalogProductArchived,
@@ -47,7 +47,7 @@ function addForm(commandId: string = crypto.randomUUID(), name = "", sku = ""): 
   ];
 }
 async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> {
-  const { products } = await listCatalogProducts(storage(ctx));
+  const products = await listCatalogProductSummaries(storage(ctx).catalog);
   const start = pageOffset(offset, products.length);
   const blocks: Block[] = [header("Products"), note("Commerce"), navigation(),
     ...addForm(), { type: "divider" }];
@@ -146,8 +146,7 @@ async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: 
 }
 async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm & { feedChannels?: readonly ProductFeedChannel[] }, toast?: string): Promise<BlockResponse> {
   const store = storage(ctx);
-  const listed = await listCatalogProducts(store);
-  const selected = listed.products.find((item) => item.catalogItemId === id);
+  const selected = await loadCatalogProduct(store, id);
   if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found. Return to Products.");
   const dormant = await loadCatalogItemManualAvailability(store.availability, id);
   const status = dormant.status === "available-on-backorder" ? "on-backorder" : dormant.status;
@@ -277,7 +276,7 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
       if (action.startsWith("weight:")) {
         const id = action.slice(7);
         const store = storage(ctx);
-        const selected = (await listCatalogProducts(store)).products.find(item => item.catalogItemId === id);
+        const selected = await loadCatalogProduct(store, id);
         if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found. Return to Products.");
         const typed = Object.entries(values).filter(([key]) => key.startsWith("w:")).map(([key, value]) => [key.slice(2), value] as const);
         const own = [selected, ...selected.variantProduct?.members ?? []];
@@ -292,7 +291,7 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
       if (action.startsWith("variant:")) {
         const [operation, id, ...args] = JSON.parse(action.slice(8));
         const store = storage(ctx);
-        const selected = (await listCatalogProducts(store)).products.find(item => item.catalogItemId === id);
+        const selected = await loadCatalogProduct(store, id);
         if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found. Return to Products.");
         if (operation === "add") await addCatalogVariantOption(store, {
           productId: id, optionId: args[0], optionLabel: text(values.optionLabel), values: [

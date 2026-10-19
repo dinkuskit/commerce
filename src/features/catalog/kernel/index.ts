@@ -27,6 +27,8 @@ export type { ClerkStockStatus } from "../clerk-stock.js";
 export {
   bulkSaveCatalogProductPrices,
   listCatalogProducts,
+  listCatalogProductSummaries,
+  loadCatalogProduct,
   saveCatalogProductPrices,
 } from "../product-admin.js";
 export {
@@ -39,6 +41,7 @@ export {
 export type {
   CatalogProductListItem,
   CatalogProductListStorage,
+  CatalogProductSummary,
   CatalogProductPriceForm,
   SaveCatalogProductPricesInput,
   BulkCatalogProductPriceInput,

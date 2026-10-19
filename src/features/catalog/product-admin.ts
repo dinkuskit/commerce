@@ -28,6 +28,7 @@ import { moneyEquals, saleIsStrictlyLower } from "./money.js";
 import { catalogPriceRecord, commitCatalogItemPrice, resolveCatalogItemPrice } from "./price.js";
 import type {
   CatalogItemRecord,
+  CatalogManualAvailabilityRecord,
   CatalogManualAvailabilityStatus,
   CatalogManualAvailabilityStorage,
   CatalogPriceRecord,
@@ -49,17 +50,26 @@ interface PageResult<T> {
   hasMore: boolean;
 }
 
+// getMany is optional so adapters written for 0.2.x, with get only, keep working.
+interface ManyReader<T> {
+  get(id: string): Promise<T | null>;
+  getMany?(ids: string[]): Promise<Map<string, T>>;
+}
+
 export interface CatalogProductListStorage {
-  catalog: {
+  catalog: ManyReader<CatalogStorageRecord> & {
     get(id: string): Promise<CatalogStorageRecord | null>;
     query(options?: {
       limit?: number;
       cursor?: string;
     }): Promise<PageResult<CatalogStorageRecord>>;
   };
-  prices: CatalogPriceStorage;
-  availability: CatalogManualAvailabilityStorage;
+  prices: CatalogPriceStorage & ManyReader<CatalogPriceRecord>;
+  availability: CatalogManualAvailabilityStorage & ManyReader<CatalogManualAvailabilityRecord>;
 }
+
+/** What the Products list shows for each product. */
+export type CatalogProductSummary = Pick<CatalogProductListItem, "catalogItemId" | "name" | "sku" | "archivedAt">;
 
 export interface CatalogProductListItem {
   catalogItemId: string;
@@ -156,8 +166,8 @@ function toStoredStockStatus(
 async function readPages<T>(
   query: (options?: { limit?: number; cursor?: string }) => Promise<PageResult<T>>,
   failure: string,
-): Promise<T[]> {
-  const rows: T[] = [];
+): Promise<Array<{ id: string; data: T }>> {
+  const rows: Array<{ id: string; data: T }> = [];
   let cursor: string | undefined;
   for (let page = 0; page < LIST_PAGE_CAP; page += 1) {
     let result: PageResult<T>;
@@ -166,7 +176,7 @@ async function readPages<T>(
     } catch (error) {
       catalogFail("STORAGE_UNAVAILABLE", failure, { cause: error });
     }
-    for (const item of result.items) rows.push(item.data);
+    rows.push(...result.items);
     if (!result.hasMore) return rows;
     if (result.cursor === undefined || result.cursor === cursor) {
       catalogFail("STORAGE_UNAVAILABLE", failure);
@@ -176,23 +186,56 @@ async function readPages<T>(
   catalogFail("STORAGE_UNAVAILABLE", failure);
 }
 
-export async function listCatalogProducts(
+function isListedProduct(record: CatalogStorageRecord): record is CatalogItemRecord {
+  return record.recordKind === "catalog-item" && !record.variantProductId;
+}
+
+function byNameThenSku(left: { name: string; sku: string }, right: { name: string; sku: string }): number {
+  return left.name.localeCompare(right.name) || left.sku.localeCompare(right.sku);
+}
+
+// Each storage call is one subrequest from the plugin sandbox, which allows only a few per
+// call (EmDash's default is 10, Template Store's 32). So a screen reads prices and stock for
+// all its products in one call each, never one call per product.
+async function readMany<T>(
+  collection: ManyReader<T>,
+  ids: readonly string[],
+  failure: string,
+): Promise<(id: string) => Promise<T | null>> {
+  const unique = [...new Set(ids)];
+  if (!collection.getMany) return (id) => collection.get(id);
+  const found = unique.length
+    ? await catalogStorage(() => collection.getMany!(unique), failure)
+    : new Map<string, T>();
+  return async (id) => found.get(id) ?? null;
+}
+
+async function describeCatalogProducts(
   storage: CatalogProductListStorage,
-): Promise<{ products: CatalogProductListItem[] }> {
-  const records = await readPages(
-    (options) => storage.catalog.query(options),
-    "catalog product list failed",
-  );
+  records: readonly CatalogItemRecord[],
+  catalog: Pick<CatalogProductListStorage["catalog"], "get">,
+): Promise<CatalogProductListItem[]> {
+  const managed = (record: CatalogItemRecord) =>
+    normalizeStoredStockManagement(record.stockManagement).mode === "managed";
+  const resolved = new Map<string, Awaited<ReturnType<typeof resolveCatalogVariantMember>>>();
+  for (const record of records) {
+    for (const member of record.variantProduct?.members ?? []) {
+      resolved.set(member.catalogItemId, await resolveCatalogVariantMember(catalog, member.catalogItemId));
+    }
+  }
+  const unmanaged = [
+    ...records.filter((record) => !managed(record)).map((record) => record.itemId),
+    ...[...resolved].filter(([, member]) => member?.item && !managed(member.item)).map(([id]) => id),
+  ];
+  const prices = { ...storage.prices, get: await readMany(storage.prices, records.map((record) => record.itemId), "catalog price lookup failed") };
+  const availability = { ...storage.availability, get: await readMany(storage.availability, unmanaged, "manual availability lookup failed") };
   const products: CatalogProductListItem[] = [];
   for (const record of records) {
-    if (record.recordKind !== "catalog-item") continue;
-    if (record.variantProductId) continue;
-    const price = await resolveCatalogItemPrice(storage.prices, record.itemId);
-    const managed =
-      normalizeStoredStockManagement(record.stockManagement).mode === "managed";
-    const availability = managed
+    const price = await resolveCatalogItemPrice(prices, record.itemId);
+    const itemManaged = managed(record);
+    const stock = itemManaged
       ? null
-      : await loadCatalogItemManualAvailability(storage.availability, record.itemId);
+      : await loadCatalogItemManualAvailability(availability, record.itemId);
     const product: CatalogProductListItem = {
       catalogItemId: record.itemId,
       name: record.name,
@@ -202,9 +245,8 @@ export async function listCatalogProducts(
           ? formatClerkDollar(price.regular)
           : null,
       sale: price.sale === undefined ? null : formatClerkDollar(price.sale),
-      manageStock: managed,
-      stockStatus:
-        availability === null ? null : toClerkStockStatus(availability.status),
+      manageStock: itemManaged,
+      stockStatus: stock === null ? null : toClerkStockStatus(stock.status),
       ...(record.gtin ? { gtin: record.gtin } : {}),
       ...(record.mpn ? { mpn: record.mpn } : {}),
       ...(record.brand ? { brand: record.brand } : {}),
@@ -215,25 +257,26 @@ export async function listCatalogProducts(
     if (record.variantProduct) {
       const members: CatalogProductVariantListItem[] = [];
       for (const member of record.variantProduct.members) {
-        const resolved = await resolveCatalogVariantMember(storage.catalog, member.catalogItemId);
-        if (!resolved?.member || !resolved.product) continue;
+        const memberRecord = resolved.get(member.catalogItemId);
+        if (!memberRecord?.member || !memberRecord.product) continue;
+        // A choice's price form saves against this revision, which only a read of its own returns.
         const priceState = await storage.prices.getVersioned(member.catalogItemId);
         const memberPrice = await resolveCatalogItemPrice({ ...storage.prices, get: async () => priceState?.value ?? null }, member.catalogItemId);
         const memberManaged =
-          resolved.item.stockManagement && normalizeStoredStockManagement(resolved.item.stockManagement).mode === "managed";
+          memberRecord.item.stockManagement && managed(memberRecord.item);
         const memberAvailability = memberManaged
           ? null
-          : await loadCatalogItemManualAvailability(storage.availability, member.catalogItemId);
+          : await loadCatalogItemManualAvailability(availability, member.catalogItemId);
         members.push({
           catalogItemId: member.catalogItemId,
-          selections: variantSelections(resolved.product, resolved.member),
+          selections: variantSelections(memberRecord.product, memberRecord.member),
           regular: memberPrice.regular ? formatClerkDollar(memberPrice.regular) : null,
           sale: memberPrice.sale ? formatClerkDollar(memberPrice.sale) : null,
           manageStock: memberManaged,
           stockStatus: memberAvailability ? toClerkStockStatus(memberAvailability.status) : null,
           fulfillment: member.fulfillment,
           priceRevision: priceState?.revision ?? null,
-          ...(resolved.item.weightOz ? { weightOz: resolved.item.weightOz } : {}),
+          ...(memberRecord.item.weightOz ? { weightOz: memberRecord.item.weightOz } : {}),
         });
       }
       product.variantProduct = {
@@ -245,11 +288,54 @@ export async function listCatalogProducts(
     }
     products.push(product);
   }
-  products.sort((left, right) => {
-    const byName = left.name.localeCompare(right.name);
-    return byName === 0 ? left.sku.localeCompare(right.sku) : byName;
+  return products;
+}
+
+export async function listCatalogProducts(
+  storage: CatalogProductListStorage,
+): Promise<{ products: CatalogProductListItem[] }> {
+  const rows = await readPages(
+    (options) => storage.catalog.query(options),
+    "catalog product list failed",
+  );
+  const byKey = new Map(rows.map((row) => [row.id, row.data]));
+  const products = await describeCatalogProducts(
+    storage,
+    rows.map((row) => row.data).filter(isListedProduct),
+    { get: async (id) => byKey.get(id) ?? null },
+  );
+  return { products: products.sort(byNameThenSku) };
+}
+
+/** The Products list: names only, so it costs one storage call per 100 products. */
+export async function listCatalogProductSummaries(
+  catalog: Pick<CatalogProductListStorage["catalog"], "query">,
+): Promise<CatalogProductSummary[]> {
+  const rows = await readPages((options) => catalog.query(options), "catalog product list failed");
+  return rows.map((row) => row.data).filter(isListedProduct).map((record) => ({
+    catalogItemId: record.itemId,
+    name: record.name,
+    sku: record.sku,
+    ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
+  })).sort(byNameThenSku);
+}
+
+/**
+ * One product as listCatalogProducts describes it, read by id with its choices, so a product
+ * screen costs the same in a store of 5 products or 5,000. Null when it is not a listed product.
+ */
+export async function loadCatalogProduct(
+  storage: CatalogProductListStorage,
+  catalogItemId: string,
+): Promise<CatalogProductListItem | null> {
+  const record = await catalogStorage(() => storage.catalog.get(catalogItemId), "catalog item lookup failed");
+  if (!record || !isListedProduct(record) || record.itemId !== catalogItemId) return null;
+  const memberIds = (record.variantProduct?.members ?? []).map((member) => member.catalogItemId);
+  const members = await readMany(storage.catalog, memberIds.filter((id) => id !== catalogItemId), "catalog item lookup failed");
+  const [product] = await describeCatalogProducts(storage, [record], {
+    get: async (id) => (id === catalogItemId ? record : members(id)),
   });
-  return { products };
+  return product ?? null;
 }
 
 function invalidMessage(regular: ParsedClerkDollar, sale: ParsedClerkDollar): string | null {

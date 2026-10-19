@@ -95,6 +95,9 @@ test("built public catalog entry keeps default-disabled route objects with handl
     async get() {
       return null;
     },
+    async getMany() {
+      return new Map();
+    },
     async put() {},
     async query() {
       return { items: [], hasMore: false };
