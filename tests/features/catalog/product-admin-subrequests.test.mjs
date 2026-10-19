@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { commerceAdmin } from '../../../dist/admin/index.js';
-import { addCatalogVariantOption, createCatalogItem, setCatalogProductArchived } from '../../../dist/features/catalog/kernel/index.js';
+import { addCatalogVariantOption, createCatalogItem, listCatalogProducts, loadCatalogProduct, setCatalogProductArchived } from '../../../dist/features/catalog/kernel/index.js';
 
 // Every storage call from a Registry plugin is one subrequest, and the sandbox allows only a
 // few per call: EmDash's default is 10, Template Store raises it to 32. A product screen must
@@ -118,4 +118,17 @@ test('a choice price save stays under the limit in a big store', async () => {
   const { answer, calls } = await run(submit(priceForm.submit.action_id, { regular: '15.00', sale: '', stockStatus: 'in-stock' }));
   assert.deepEqual(answer.toast, { type: 'success', message: 'Changes saved' });
   assert.ok(calls <= TEMPLATE_STORE, `choice price save made ${calls} storage calls`);
+});
+
+test('storage adapters written for 0.2.x without getMany still list and load products', async () => {
+  const { storage } = await bigShop(12);
+  const getOnly = (collection) => ({ get: (id) => collection.get(id), getVersioned: (id) => collection.getVersioned(id), query: (options) => collection.query(options) });
+  const batched = { catalog: storage.catalog_items, prices: storage.catalog_prices, availability: storage.catalog_manual_availability };
+  const legacy = { catalog: getOnly(storage.catalog_items), prices: getOnly(storage.catalog_prices), availability: getOnly(storage.catalog_manual_availability) };
+  assert.deepEqual(await listCatalogProducts(legacy), await listCatalogProducts(batched));
+  for (const id of ['p001', 'p002', 'p003']) {
+    assert.deepEqual(await loadCatalogProduct(legacy, id), await loadCatalogProduct(batched, id));
+  }
+  assert.equal((await loadCatalogProduct(legacy, 'p001')).variantProduct.members.length, 2);
+  assert.equal(await loadCatalogProduct(legacy, 'p001-large'), null, 'a choice is not a listed product');
 });

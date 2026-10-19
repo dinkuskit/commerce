@@ -50,8 +50,10 @@ interface PageResult<T> {
   hasMore: boolean;
 }
 
+// getMany is optional so adapters written for 0.2.x, with get only, keep working.
 interface ManyReader<T> {
-  getMany(ids: string[]): Promise<Map<string, T>>;
+  get(id: string): Promise<T | null>;
+  getMany?(ids: string[]): Promise<Map<string, T>>;
 }
 
 export interface CatalogProductListStorage {
@@ -201,8 +203,9 @@ async function readMany<T>(
   failure: string,
 ): Promise<(id: string) => Promise<T | null>> {
   const unique = [...new Set(ids)];
+  if (!collection.getMany) return (id) => collection.get(id);
   const found = unique.length
-    ? await catalogStorage(() => collection.getMany(unique), failure)
+    ? await catalogStorage(() => collection.getMany!(unique), failure)
     : new Map<string, T>();
   return async (id) => found.get(id) ?? null;
 }
