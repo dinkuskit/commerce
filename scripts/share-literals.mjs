@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import ts from 'typescript-api';
 
 // Share only primitive strings and ordinary object property names, including
 // frequent member-access names rewritten to computed access through the same

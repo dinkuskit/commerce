@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import ts from 'typescript';
+import ts from 'typescript-api';
 import { compileMessage } from '@lingui/message-utils/compileMessage';
 
 // couponText uses an explicit t(message, values) wrapper rather than Lingui
