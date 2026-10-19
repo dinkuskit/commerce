@@ -10,8 +10,12 @@ The route accepts only one optional `cursor` query parameter (1–1024 character
 reads at most 50 storage rows per page, and sends `Cache-Control: no-store`.
 Follow each returned opaque cursor until it is absent, including empty filtered
 pages. A page can contain fewer than 50 products because unpriced/nonlistable
-rows are excluded. No caller-supplied collection, namespace, price or settings
-are accepted.
+rows are excluded, and because a page stops early once its products' images
+would take more than 16 Media Library reads (each image is a read of its own;
+the next cursor resumes at the next product). Prices, stock and media records
+for the page are read in a few batched calls, so one page stays inside the
+plugin sandbox's subrequest limit however large the shop is. No caller-supplied
+collection, namespace, price or settings are accepted.
 
 The response is:
 

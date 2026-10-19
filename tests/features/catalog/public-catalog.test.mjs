@@ -33,10 +33,10 @@ test('public projection preserves authoritative sale, listing and managed fail-c
 });
 
 test('catalog page keeps continuation across filtered rows and refuses oversized/nonprogressing pages', async () => {
-  assert.deepEqual(await readPublicCatalog(context({ priced: false, hasMore: true, cursor: 'next' })), { products: [], cursor: 'next' });
+  assert.deepEqual(await readPublicCatalog(context({ priced: false, hasMore: true, cursor: 'next' })), { products: [], cursor: '0.next' });
   await assert.rejects(() => readPublicCatalog(context({ count: 51 })), /Catalog unavailable/);
   await assert.rejects(() => readPublicCatalog(context({ hasMore: true })), /Catalog unavailable/);
-  await assert.rejects(() => readPublicCatalog(context({ hasMore: true, cursor: 'same' }), 'same'), /Catalog unavailable/);
+  await assert.rejects(() => readPublicCatalog(context({ hasMore: true, cursor: 'same' }), '0.same'), /Catalog unavailable/);
   await assert.rejects(() => readPublicCatalog(context(), 'x'.repeat(1025)), /Catalog unavailable/);
 });
 
