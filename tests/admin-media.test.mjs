@@ -15,6 +15,7 @@ function collection(records = []) {
   return {
     map,
     async get(id) { return map.has(id) ? structuredClone(map.get(id)) : null; },
+    async getMany(ids) { return new Map(ids.filter((id) => map.has(id)).map((id) => [id, structuredClone(map.get(id))])); },
     async getVersioned(id) { return map.has(id) ? { value: structuredClone(map.get(id)), revision: "r" } : null; },
     async put(id, value) { map.set(id, structuredClone(value)); },
     async delete(id) { map.delete(id); },

@@ -74,6 +74,15 @@ class MemoryCollection {
     return record === undefined ? null : structuredClone(record);
   }
 
+  async getMany(ids) {
+    const found = new Map();
+    for (const id of ids) {
+      const record = await this.get(id);
+      if (record !== null) found.set(id, record);
+    }
+    return found;
+  }
+
   async getVersioned(id) {
     const record = this.records.get(id);
     if (record === undefined) return null;

@@ -10,6 +10,7 @@ class MemoryCollection {
     this.puts = [];
   }
   async get(id) { return this.records.has(id) ? structuredClone(this.records.get(id)) : null; }
+  async getMany(ids) { const found = new Map(); for (const id of ids) { const row = await this.get(id); if (row !== null) found.set(id, row); } return found; }
   async getVersioned(id) {
     return this.records.has(id) ? { value: structuredClone(this.records.get(id)), revision: this.revisions.get(id) } : null;
   }
