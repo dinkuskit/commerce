@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
+import ts from 'typescript-api';
 import { resolve, relative } from 'node:path';
 
 const PACKAGE_SHA256 = '3dbc70b1a36726738305ec0b67767763afe45a4c55b5736891a6d6e7c7ebc8ea';
