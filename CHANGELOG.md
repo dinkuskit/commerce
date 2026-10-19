@@ -1,5 +1,13 @@
 # @dinkuskit/commerce
 
+## 0.3.0-beta.4
+
+### Patch Changes
+
+- [#135](https://github.com/dinkuskit/commerce/pull/135) [`cb8ba5e`](https://github.com/dinkuskit/commerce/commit/cb8ba5e94857e8e7f1e5b0a7dbcfc62d9471d078) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Product admin screens no longer fail with "Too many subrequests" once a store has more than a handful of products. The Products list reads only names, and each product screen and its saves read that one product directly, with prices and stock in one batched call, so a screen costs the same few storage calls with 10 products or 1,000, archived products included.
+
+- [#137](https://github.com/dinkuskit/commerce/pull/137) [`5a449ec`](https://github.com/dinkuskit/commerce/commit/5a449ec7d127152f65dbd56d5b2e4ef74c71cb02) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - The shop's product list no longer fails with "Too many subrequests" once a shop has more than a couple of live products. Each page reads prices, stock and photo records for all its products in a few batched calls, and a page stops early once its photos would take more than 16 Media Library reads, with the next cursor picking up at the next product. One product's page reads each record once. The cursor stays opaque; follow it until it is absent, as before.
+
 ## 0.3.0-beta.3
 
 ### Patch Changes
