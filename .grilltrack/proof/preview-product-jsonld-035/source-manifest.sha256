@@ -1,0 +1,8 @@
+b7bec96392e6ac21614229fb625283c15b1ff6ad9d21ac55f1e7deafe08be239  .changeset/editorial-product-preview-jsonld.md
+94cda6836c6cfa04319ba59592944bf66a6c8883f92cb729256aed8343203c91  docs/implementation/product-jsonld-policies.md
+bd435b2209e19d3cabbe7b5d67b4cde4fd0bb0ccce6dd9fe6c481cdb35ef322a  src/features/structured-data/index.ts
+94eddce582ff0988a2a165f01187d11446fdc408d32d7a62943912b7dc6b2332  src/features/structured-data/types.ts
+22e8a5958f456a4bd72fe78b324752a87c5b1a7e2572b9a8611758cb9bdf18c8  src/features/structured-data/preview-builder.ts
+5226ac30b1d84724f84838a23964124f500a7c7b96f63426c408dbe49f53c579  tests/features/structured-data/preview-builder.test.mjs
+45bdf10b45eb29cc61627b91a01cf48e137a7a507398af8ba026756af79a3aa9  .grilltrack/proof/preview-product-jsonld-035/public-api.mts
+ff1910a0939859cbf31fff6ca7e1aa98ace6c13ec96970f26c8c50986c574e94  .grilltrack/proof/preview-product-jsonld-035/host-graph.mjs

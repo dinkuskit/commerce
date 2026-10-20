@@ -86,6 +86,20 @@ export interface BuildProductJsonLdInput {
   readonly policies?: StructuredPoliciesInput;
 }
 
+/** Page facts for an editorial product preview with no Commerce identity. */
+export interface BuildProductPreviewJsonLdInput extends StructuredPageFacts {
+  readonly name: string;
+}
+
+export interface ProductPreviewJsonLd {
+  readonly "@context": "https://schema.org";
+  readonly "@type": "Product";
+  readonly name: string;
+  readonly url: string;
+  readonly description?: string;
+  readonly image?: string | readonly string[];
+}
+
 export type JsonLdNode = {
   readonly "@type": string;
   readonly [key: string]: unknown;
