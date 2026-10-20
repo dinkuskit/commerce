@@ -41,7 +41,7 @@ const requiredPublicManifest = {
   dinkuskit: {
     emdashCompatibility: {
       apiPeer: "1.2.0",
-      nodeEngine: ">=22.16.0 <23",
+      nodeEngine: ">=24.15.0 <25",
       packageIntegrity: "sha512-f9s7khWeuOxX5cRimlu9o224hn9TuKnYk/0Vsu1CS9oaVn78V1+MWyfEsZc2iDv8JYWrezEZFkpy/Q6pRgVgzg==",
       mountedSitePilot: "private",
       requiredSourceVisibility: "public",

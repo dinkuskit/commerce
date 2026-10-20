@@ -2,7 +2,7 @@
 
 This is a synthetic, read-only inspection slice. It uses the existing EmDash BlockRenderer and a pure Block Kit response module. It does not register a page, read storage, authenticate requests, or alter checkout. No installed-admin, Registry, payment-provider or fulfillment claim is made. Every fixture identity is synthetic; no customer information is invented.
 
-From the repository root after npm ci, run with Node 22.23.2:
+From the repository root after npm ci, run with Node 24.22.0:
 
     node tools/orders-preview/serve.mjs
 

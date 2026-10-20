@@ -6,7 +6,7 @@ description: Read a Commerce catalog, product list or orders on an EmDash site w
 # Commerce CLI
 
 The CLI does the mechanics; the contract is [docs/CLI-SPEC.md](../../docs/CLI-SPEC.md).
-Run it from a checkout as `bin/dinkus-commerce.mjs` (Node 22.23.2, no build
+Run it from a checkout as `bin/dinkus-commerce.mjs` (Node 24.22.0, no build
 needed) and start with `--help` at the depth you need.
 
 1. Point it at a site with `--url <site-url>` or `EMDASH_URL`, or a
