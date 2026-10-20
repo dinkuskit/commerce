@@ -219,6 +219,8 @@ function nativePublicContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
       catalog_media: ctx.storage.catalogMedia ?? ctx.storage.catalog_media,
       storefront_placeholder_image:
         ctx.storage.storefrontPlaceholderImage ?? ctx.storage.storefront_placeholder_image,
+      product_feed_eligibility:
+        ctx.storage[PRODUCT_FEED_ELIGIBILITY_COLLECTION] ?? ctx.storage.product_feed_eligibility,
     },
   };
 }

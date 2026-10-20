@@ -24,3 +24,10 @@ const oldOutput: ProductJsonLd = preview;
 declare const existingInput: BuildProductJsonLdInput;
 const oldProduct: ProductJsonLd = buildProductJsonLd(existingInput);
 const sku: string = oldProduct.sku;
+
+import type { PublicCatalogProduct } from '@dinkuskit/commerce/features/catalog';
+import type { ProductFeedChannel } from '@dinkuskit/commerce/features/feeds';
+declare const publicProduct: PublicCatalogProduct;
+const channels: readonly ProductFeedChannel[] = publicProduct.feedChannels ?? [];
+// @ts-expect-error Public eligibility admits only the two approved channels.
+const unsupported: NonNullable<PublicCatalogProduct['feedChannels']> = ['unapproved-channel'];

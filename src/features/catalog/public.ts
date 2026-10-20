@@ -16,6 +16,12 @@ import {
 import { bindGuestCheckoutRuntime, SANDBOX_GUEST_CHECKOUT_STORAGE } from "../checkout/kernel/index.js";
 import { rememberReads } from "./remembered-reads.js";
 import type { StorefrontAvailabilityResult } from "../storefront-availability/kernel/index.js";
+import {
+  loadProductFeedEligibility,
+  PRODUCT_FEED_ELIGIBILITY_SANDBOX_COLLECTION,
+  type ProductFeedChannel,
+  type ProductFeedEligibilityStorage,
+} from "../feeds/kernel/index.js";
 
 function unavailable(): never { throw new Error("Catalog unavailable"); }
 function optionalIds(item: { gtin?: string; mpn?: string; brand?: string }) {
@@ -41,6 +47,8 @@ export interface PublicCatalogProduct {
   readonly gtin?: string;
   readonly mpn?: string;
   readonly brand?: string;
+  /** Merchant-approved public feed channels; absent on older storage adapters. */
+  readonly feedChannels?: readonly ProductFeedChannel[];
   readonly variants?: {
     readonly schema: "dinkuskit.commerce.product-variants/v1";
     readonly productId: string;
@@ -69,6 +77,7 @@ async function projectPublicCatalogProduct(
   item: CatalogStorageRecord,
   images: ReturnType<typeof createProductImageProjector>,
   placeholder: Awaited<ReturnType<typeof loadStorefrontPlaceholderImage>>["image"],
+  eligibility: Pick<ProductFeedEligibilityStorage, "get"> | undefined,
 ): Promise<PublicCatalogProduct | null> {
   if (
     item.recordKind !== "catalog-item" ||
@@ -93,6 +102,9 @@ async function projectPublicCatalogProduct(
     const projected = await images.project(entry, item.name);
     if (projected) gallery.push(projected);
   }
+  const feedChannels = eligibility
+    ? await loadProductFeedEligibility(eligibility, item.itemId)
+    : undefined;
   if (variant.product) {
     const members = [];
     for (const member of variant.product.members) {
@@ -126,6 +138,7 @@ async function projectPublicCatalogProduct(
       image,
       gallery,
       ...optionalIds(item),
+      ...(feedChannels ? { feedChannels } : {}),
       variants: {
         schema: variant.product.schema,
         productId: variant.product.productId,
@@ -148,6 +161,7 @@ async function projectPublicCatalogProduct(
     image,
     gallery,
     ...optionalIds(item),
+    ...(feedChannels ? { feedChannels } : {}),
   };
 }
 
@@ -171,6 +185,7 @@ async function rememberCatalogReads(ctx: PluginContext, rows: Array<{ id: string
     reads.prefetch("catalog_manual_availability", ids),
     reads.prefetch("catalog_backorder_policies", ids),
     reads.prefetch("catalog_media", items.map((item) => item.itemId)),
+    reads.prefetch(PRODUCT_FEED_ELIGIBILITY_SANDBOX_COLLECTION, items.map((item) => item.itemId)),
   ]);
   const c = reads.storage as typeof ctx.storage;
   return {
@@ -179,6 +194,7 @@ async function rememberCatalogReads(ctx: PluginContext, rows: Array<{ id: string
     media: c.catalog_media as CatalogMediaStorage,
     images: createProductImageProjector(ctx.media),
     placeholder: (await loadStorefrontPlaceholderImage(c.storefront_placeholder_image as StorefrontPlaceholderImageStorage)).image,
+    eligibility: c[PRODUCT_FEED_ELIGIBILITY_SANDBOX_COLLECTION] as ProductFeedEligibilityStorage | undefined,
   };
 }
 
@@ -195,7 +211,7 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
       (page.hasMore && (!page.cursor || page.cursor === storageCursor || page.cursor.length > 1000))) {
     unavailable();
   }
-  const { storage, media, images, placeholder } = await rememberCatalogReads(ctx, page.items);
+  const { storage, media, images, placeholder, eligibility } = await rememberCatalogReads(ctx, page.items);
   const imageIds = new Set(placeholder ? [placeholder.mediaId] : []);
   const products: PublicCatalogProduct[] = [];
   for (let index = skip; index < page.items.length; index += 1) {
@@ -211,7 +227,7 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
       }
       for (const id of added) imageIds.add(id);
     }
-    const product = await projectPublicCatalogProduct(media, storage, item, images, placeholder);
+    const product = await projectPublicCatalogProduct(media, storage, item, images, placeholder, eligibility);
     if (product) products.push(product);
   }
   return { products, ...(page.hasMore ? { cursor: `0.${page.cursor}` } : {}) };
@@ -236,10 +252,10 @@ export async function readPublicCatalogItem(
     if (!parent) return null;
   }
   const rows = [{ id: itemId, data: row }, ...(parent ? [{ id: item.variantProductId!, data: parent }] : [])];
-  const { storage, media, images, placeholder } = await rememberCatalogReads(ctx, rows);
+  const { storage, media, images, placeholder, eligibility } = await rememberCatalogReads(ctx, rows);
   if (item.variantProductId) {
     if (!await resolveCatalogVariantMember(storage.catalog, itemId)) return null;
     item = parent as CatalogStorageRecord;
   }
-  return projectPublicCatalogProduct(media, storage, item, images, placeholder);
+  return projectPublicCatalogProduct(media, storage, item, images, placeholder, eligibility);
 }

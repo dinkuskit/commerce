@@ -1,16 +1,18 @@
-# Editorial Product preview JSON-LD
+# Public storefront metadata and feed prerequisites
 
 ## Scope and source
 
 - Repository: `dinkuskit/commerce`.
 - Branch: `codex/preview-product-jsonld-035-20261020`.
-- Base: `819fbf903a1e0a6eaab7349d795cc75d15588f31`.
-- Decision: `jsonld-preview-product-035`, confirmed before implementation.
-- Exact implementation content: `source-manifest.sha256` in this directory.
-- This is local source and verification proof. Coordinator review, merge, and
-  any release remain separate; no push, deployment, or release occurred.
+- Original base: `819fbf903a1e0a6eaab7349d795cc75d15588f31`.
+- Preview implementation: `cfa134eaf4c61fab23ffb2c0c33d8bc660192652`.
+- Decisions: `jsonld-preview-product-035` and `public-feed-eligibility-035`, both
+  confirmed before their implementations.
+- Exact current implementation content: `source-manifest.sha256` here.
+- This is local source and verification proof. Coordinator exact-head review,
+  merge, and release remain separate. This worker made no push or deployment.
 
-## Public API
+## Public API and behavior
 
 ```ts
 buildProductPreviewJsonLd(
@@ -18,10 +20,38 @@ buildProductPreviewJsonLd(
 ): ProductPreviewJsonLd;
 ```
 
-The input requires `url` and `name`, with optional `description` and `images`.
-The result is a schema.org `Product` containing only those supplied page facts.
-It has no SKU, GTIN, MPN, brand, price, availability, or `Offer`. The existing
-Commerce product builder and its SKU-bearing output/validator are unchanged.
+The preview input requires `url` and `name`, with optional `description` and
+`images`. Its schema.org Product result contains only those page facts, with
+no SKU, GTIN, MPN, brand, price, availability, or Offer. The preview builder and
+existing SKU-bearing builder/validator are unchanged by the feed completion.
+
+Both `catalog/public` and `catalog/public/item` now project the existing
+merchant eligibility record as `feedChannels?: readonly ProductFeedChannel[]`.
+The only accepted ids are `google-merchant` and `meta-catalog`. A missing record
+or explicit opt-out returns `[]`; an older adapter without the collection omits
+that optional field. Neither case opts in. Unsupported stored channels fail
+validation instead of escaping into a public result.
+
+The actual native and compiled Registry route handlers returned this product
+shape in the focused fixture (also equal to the corresponding list element):
+
+```json
+{
+  "id": "eligible",
+  "name": "eligible",
+  "sku": "ELIGIBLE",
+  "price": { "currency": "USD", "minor": "1250" },
+  "availability": { "status": "in-stock", "sellable": true, "listable": true },
+  "image": null,
+  "gallery": [],
+  "feedChannels": ["google-merchant", "meta-catalog"]
+}
+```
+
+The tests also pass these public results to the actual Google and Meta feed
+builders. Only the eligible product appears. They verify empty, missing, and
+unsupported eligibility, opt-out on subsequent reads, exact public keys, and
+unchanged public GET/no-store route declarations without an admin permission.
 
 ## Verification
 
@@ -31,37 +61,51 @@ Environment: Node `v24.22.0`; dependencies installed using `npm ci`.
 | --- | --- |
 | `npm run build` | Passed, including plugin validation and Registry packaging |
 | `node --test tests/features/structured-data/*.test.mjs` | 11 passed, 0 failed; 7 existing and 4 preview tests |
-| `bin/verify-commerce quick` | Passed: typecheck, build, 609 unit tests, repository and feature audits |
-| `node_modules/.bin/tsc --ignoreConfig --noEmit --strict --target ES2022 --module NodeNext --skipLibCheck .grilltrack/proof/preview-product-jsonld-035/public-api.mts` | Passed, including expected rejection of missing facts/unsupported identity fields and preservation of the existing SKU type |
+| `node --test tests/features/feeds/*.test.mjs tests/features/catalog/public-catalog*.test.mjs tests/features/catalog/public-entry.test.mjs` | 28 passed, 0 failed |
+| `bin/verify-commerce quick` | Passed: typecheck, build, 618 unit tests, repository and feature audits |
+| `node_modules/.bin/tsc --ignoreConfig --noEmit --strict --target ES2022 --module NodeNext --skipLibCheck .grilltrack/proof/preview-product-jsonld-035/public-api.mts` | Passed, including preview type boundaries, preserved SKU type, and closed public channel ids |
 | `node .grilltrack/proof/preview-product-jsonld-035/host-graph.mjs` | 312 modules from `src/plugin.ts`; zero structured-data modules |
 | `git diff --check` | Passed |
 | `scripts/grilltrack --project . validate` | Valid |
 
-Registry packaging reported `backend_bytes=119271`, `headroom_bytes=11801`, and
-SHA-256 `1d03bdb4cebaf56d1a5db12e654eff941df6dcf9b9ba61d68df00869ddd5916a`.
-The build graph check uses the same entry, platform, optimization, and coupon
-transform as `scripts/build-sandbox.mjs`. It asserts that the entire
-structured-data feature is absent, rather than relying on emitted symbol names.
+The focused handler tests cover native camelCase storage, native snake_case
+fallback, and compiled Registry snake_case storage. Native mapping uses the
+existing `PRODUCT_FEED_ELIGIBILITY_COLLECTION`; the shared reader uses the
+Feeds-owned sandbox collection key and `loadProductFeedEligibility`.
 
-The repository audit scans ignored directories too. During the quick gate,
+The existing public catalog subrequest tests now include eligibility records.
+All list pages for 10, 50, and 150 products remain at or below 32 subrequests;
+each tested item read remains at or below 12. Batched and get-only adapters
+produce equal public products. Eligibility uses one batched collection read
+per page when supported, preserving request-local caching.
+
+Final Registry packaging reported `backend_bytes=119426`,
+`headroom_bytes=11646`, and SHA-256
+`9873195d98ce4dc61eee336a0719c3199f44233a61f736d742bfe41e7a77467d`.
+The graph check uses the same entry, platform, optimization, and coupon
+transform as `scripts/build-sandbox.mjs`; all structured-data modules remain
+absent. Host feed builders are not newly imported into the Registry graph.
+
+The repository audit scans ignored directories too. During verification,
 only this task's generated logs were temporarily held under ignored
-`.grilltrack/work/`; they were restored afterward. Raw local command output is
-under ignored `runs/preview-jsonld-035-runs/` and is not part of the public proof.
+`.grilltrack/work/`, then restored. Raw command output is under ignored
+`runs/preview-jsonld-035-runs/` and is not public proof.
 
-One preliminary standalone type-check invocation omitted the TypeScript 7
-`--ignoreConfig` flag and failed with TS5112. The corrected command above
-passed. No implementation change was needed.
+Two preliminary verification harness mistakes were corrected: the standalone
+TypeScript 7 check needed `--ignoreConfig`, and the compiled Registry handler
+needed its actual `(route, context)` calling convention rather than the native
+single-context convention. Final commands above passed; neither repair
+required changing the corresponding product behavior.
 
 ## Local inspection and limits
 
-Source intent: the preview builder constructs an allowlist of page facts;
-tests pass extra identity and transaction properties and verify their omission.
-No existing product builder, validator, sandbox entry, policy, or runtime file
-was changed. Documentation distinguishes the preview from SKU-bearing Commerce
-output. Local inspection found no required fix.
+The public projection copies only the channel ids returned by the existing
+eligibility reader, never the record or admin-only fields. No auth declarations,
+permissions, allowed hosts, storage schema, feed opt-in mutations, or preview
+builder behavior changed. Local inspection found no required fix.
 
-Required-fact checks reject missing, non-string, empty, and whitespace-only
-URLs/names. The host remains responsible for canonical URL selection, absolute
-image URLs, and truthful page content; the helper does not fetch or verify them.
-Browser or merchant integration proof was not run for this pure helper. The
-consuming storefront and exact-head review are coordinator-owned follow-up.
+Preview checks reject missing, non-string, empty, and whitespace-only
+URLs/names. The host remains responsible for canonical URLs, public image URLs,
+and truthful page content. Handler tests execute the compiled route objects;
+they do not claim a live installed HTTP or browser proof. Storefront integration
+and fresh exact-head CI/comprehensive/native review remain coordinator-owned.
