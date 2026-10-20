@@ -88,14 +88,15 @@ merges, and the owner's merge is the stable publish yes. On that push to
 - refuses to tag unless the tree differs from the approved beta tag only in
   `package.json`, `package-lock.json`, `emdash-plugin.jsonc`, `CHANGELOG.md`
   and `.changeset/*.md`, and those three JSON files changed only the version;
-- tags `vX.Y.Z`, creates the GitHub Release from `CHANGELOG.md`, and, when the
-  Registry lacks `dinkus-commerce@X.Y.Z`, calls `emdash-release.yml` with
-  `release_mode: stable` to build, prepare, attest, publish and verify it.
+- tags `vX.Y.Z`, creates the GitHub Release from `CHANGELOG.md`, and calls
+  `emdash-release.yml` with `release_mode: stable` to build and prepare the
+  bundle, attest and publish it when the Registry lacks `dinkus-commerce@X.Y.Z`,
+  and verify the Registry record against it either way.
 
 Never hand-push a tag and never publish by hand. If a stable run fails after
 tagging, re-run the failed Release run: it finds the tag on that commit,
-creates a missing GitHub Release, and publishes when the Registry still lacks
-the version. A fix that needs new source ships as the next version through
+creates a missing GitHub Release, publishes when the Registry still lacks the
+version, and verifies the record again when it is already listed. A fix that needs new source ships as the next version through
 Cut beta and Promote.
 
 ## Bundle preparation

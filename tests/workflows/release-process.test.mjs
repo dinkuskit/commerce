@@ -211,6 +211,17 @@ test("publish outcome is gated on registry verification, not the intent", async 
 		source.indexOf("verify-registry-release.mjs") > source.indexOf("id: publish"),
 		"verification runs after the publish step",
 	);
+	// An already-listed version skips attest and publish but never the verifier.
+	const verifyStep = source.split("      - name: Verify release is indexed in EmDash Registry\n")[1]?.split("      - name:")[0];
+	assert.ok(verifyStep, "missing verify step");
+	assert.doesNotMatch(verifyStep, /^\s+if:/m);
+});
+
+test("a merged release always reaches the Registry job, which verifies even an already-listed version", async () => {
+	const release = await read("../../.github/workflows/release.yml");
+	const job = release.split("\n  publish-emdash:\n")[1]?.split("\n  cut-beta:\n")[0];
+	assert.ok(job, "missing publish-emdash job");
+	assert.match(job, /if: needs\.release\.outputs\.published == 'true' \|\| needs\.release\.outputs\.registry_needed == 'true'/);
 });
 
 
