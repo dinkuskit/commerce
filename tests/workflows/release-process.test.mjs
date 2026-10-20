@@ -54,49 +54,59 @@ test("version sync rewrites only the plugin manifest version", () => {
 	assert.throws(() => syncPluginVersion("{}", "0.3.0"), /no "version" field/);
 });
 
-test("release workflow versions, tags, and delegates with pinned actions", async () => {
+test("release workflow carries Cut beta and Promote, tags merged release PRs, and delegates with pinned actions", async () => {
 	const source = await read("../../.github/workflows/release.yml");
-	for (const action of ["select-mode", "version", "publish"]) {
-		assert.match(
-			source,
-			new RegExp(`changesets/action/${action}@[0-9a-f]{40}`),
-			`changesets/action/${action} must be pinned`,
-		);
-	}
+	// The release PR is opened only by Promote (release-beta-cut-071), never by a bot on every merge.
+	assert.doesNotMatch(source, /changesets\/action/);
+	assert.match(source, /options:\n\s+- cut-beta\n\s+- promote\n/);
 	assert.match(source, /actions\/create-github-app-token@[0-9a-f]{40}/);
 	assert.match(source, /secrets\.RELEASE_APP_ID/);
 	assert.match(source, /secrets\.RELEASE_APP_PRIVATE_KEY/);
-	assert.match(source, /pr-title: "ci: release"/);
-	assert.match(source, /script: npx changeset tag/);
+	assert.match(source, /node scripts\/release-flow\.mjs promote/);
+	assert.match(source, /node scripts\/release-flow\.mjs publish-merged-release/);
 	assert.match(source, /uses: \.\/\.github\/workflows\/emdash-release\.yml/);
-	assert.match(source, /published-packages: \$\{\{ needs\.publish\.outputs\['published-packages'\] \}\}/);
+	assert.match(source, /release_mode: stable/);
+	assert.match(source, /release_mode: beta/);
+	assert.match(source, /needs: cut-beta/);
+	assert.match(source, /secrets\.LIVE_JOURNEYS_TOKEN/);
+	assert.match(source, /gh workflow run live-journeys\.yml --repo saariuslystoned\/SaariusSkills --ref main -f journeys=@running -f beta="\$BETA"/);
 	assert.match(source, /^permissions: \{\}$/m);
 	assert.match(source, /cancel-in-progress: false/);
+	assert.doesNotMatch(source, /publish-only/);
+	assert.doesNotMatch(source, /secrets: inherit/);
 	assert.doesNotMatch(source, /npm publish/);
 	assert.doesNotMatch(source, /echo[^\n]*secrets\./);
+	// Install scripts and tests run before the release token exists.
+	assert.ok(source.indexOf("run: npm ci") < source.indexOf("actions/create-github-app-token@"));
+	assert.ok(source.indexOf("run: npm test") < source.indexOf("actions/create-github-app-token@"));
 });
 
-test("registry workflow is npm-based, pinned, and routes prereleases to beta", async () => {
+test("registry workflow is npm-based, pinned, call-only, and builds the version it publishes", async () => {
 	const source = await read("../../.github/workflows/emdash-release.yml");
 	assert.match(source, /apps\/release-action@[0-9a-f]{40}/);
 	assert.doesNotMatch(source, /release-action@main/);
 	assert.doesNotMatch(source, /pnpm\/action-setup|pnpm (?:dlx|install)/);
 	assert.match(source, /run: npm ci/);
 	assert.match(source, /node-version-file: \.nvmrc/);
-	assert.match(source, /Route release selector/);
-	assert.match(source, /steps\.route\.outputs\.selector/);
-	assert.doesNotMatch(source, /Refuse prerelease versions/);
 	assert.match(source, /id-token: write/);
 	assert.match(source, /attestations: write/);
-	// Release-gate invariant: Registry publishing is reachable only as a
-	// reusable workflow delegated by release.yml after the ci: release
-	// PR merges. A direct dispatch must never feed a hand-picked
-	// package selector into the id-token-backed publish job.
+	// Release-gate invariant: Registry publishing is reachable only as a reusable workflow that
+	// release.yml calls (Cut beta, or a merged ci: release PR), and the dispatch gate runs before
+	// any credential or Registry I/O. A hand-picked package selector never reaches the publish job.
 	assert.doesNotMatch(source, /^ {2}workflow_dispatch:/m);
-	assert.doesNotMatch(source, /inputs\.package/);
-	assert.doesNotMatch(source, /release plan --package/);
 	assert.match(source, /^ {2}workflow_call:/m);
-	assert.ok(source.indexOf('run: npm run build') < source.indexOf('node scripts/prepare-emdash-release.mjs'));
+	assert.doesNotMatch(source, /inputs\.package/);
+	assert.doesNotMatch(source, /release plan/);
+	const at = (needle) => {
+		const index = source.indexOf(needle);
+		assert.notEqual(index, -1, `missing ${needle}`);
+		return index;
+	};
+	assert.ok(at("node .github/scripts/emdash-dispatch-gate.mjs") < at("actions/create-github-app-token@"));
+	// A beta is stamped before the build preparation packs, and its tag is cut only after that build.
+	assert.ok(at("stamp-beta-version") < at("run: npm run build"));
+	assert.ok(at("run: npm run build") < at("release-flow.mjs cut-beta"));
+	assert.ok(at("run: npm run build") < at("node scripts/prepare-emdash-release.mjs"));
 	assert.match(source, /node scripts\/prepare-emdash-release\.mjs "\$\{EMDASH_RELEASE_SELECTOR\}"/);
 	assert.doesNotMatch(source, /release prepare[^\n]*--dir \./);
 });
@@ -188,7 +198,7 @@ test("publish outcome is gated on registry verification, not the intent", async 
 	const source = await read("../../.github/workflows/emdash-release.yml");
 	const continuations = [...source.matchAll(/continue-on-error: true/g)];
 	assert.equal(continuations.length, 1, "only the publish step may continue on error");
-	assert.match(source, /id: publish\n\s+continue-on-error: true/);
+	assert.match(source, /id: publish\n(?:\s+if: [^\n]+\n)?\s+continue-on-error: true/);
 	assert.match(source, /verify-registry-release\.mjs/);
 	assert.match(source, /id: verify/);
 	// The intent-failure note claims the Registry record verified, so it
@@ -201,26 +211,39 @@ test("publish outcome is gated on registry verification, not the intent", async 
 		source.indexOf("verify-registry-release.mjs") > source.indexOf("id: publish"),
 		"verification runs after the publish step",
 	);
+	// An already-listed version skips attest and publish but never the verifier.
+	const verifyStep = source.split("      - name: Verify release is indexed in EmDash Registry\n")[1]?.split("      - name:")[0];
+	assert.ok(verifyStep, "missing verify step");
+	assert.doesNotMatch(verifyStep, /^\s+if:/m);
+});
+
+test("a merged release always reaches the Registry job, which verifies even an already-listed version", async () => {
+	const release = await read("../../.github/workflows/release.yml");
+	const job = release.split("\n  publish-emdash:\n")[1]?.split("\n  cut-beta:\n")[0];
+	assert.ok(job, "missing publish-emdash job");
+	assert.match(job, /if: needs\.release\.outputs\.published == 'true' \|\| needs\.release\.outputs\.registry_needed == 'true'/);
 });
 
 
 test("stable and beta Registry verification use the prepared selector", async () => {
   const workflow = await read("../../.github/workflows/emdash-release.yml");
   const stepSelector = (name) => {
-    const step = workflow.split(`      - name: "${name}"`)[1]?.split("      - name:")[0];
+    const step = workflow.split(`      - name: ${name}\n`)[1]?.split("      - name:")[0];
     assert.ok(step, `missing ${name} step`);
-    return step.match(/EMDASH_RELEASE_SELECTOR: "?\$\{\{ ([^}]+) \}\}"?/)?.[1];
+    return step.match(/EMDASH_RELEASE_SELECTOR: (.+)\n/)?.[1];
   };
-  const prepareSelector = stepSelector("Prepare plugin release");
-  const verifySelector = stepSelector("Verify Registry release");
-  for (const planned of ["dinkus-commerce@0.2.2", "dinkus-commerce@0.3.0-beta.1"]) {
-    const routed = effectiveSelector(planned);
-    const resolve = (expression) => expression === "steps.route.outputs.selector" ? routed : planned;
-    const prepared = parseSelector(resolve(prepareSelector));
-    const verified = parseSelector(resolve(verifySelector));
-    assert.deepEqual(verified, prepared, `verify must use prepared identity for ${planned}`);
-    const bytes = Buffer.from(`prepared artifact for ${routed}`);
-    const expected = { ...verified, checksum: computePackageChecksum(bytes), size: bytes.length };
+  const prepareSelector = stepSelector("Prepare EmDash Registry release bundle");
+  const verifySelector = stepSelector("Verify release is indexed in EmDash Registry");
+  assert.equal(prepareSelector, "${{ steps.meta.outputs.slug }}@${{ steps.meta.outputs.version }}");
+  assert.equal(verifySelector, prepareSelector);
+  for (const [slug, version] of [["dinkus-commerce", "0.4.0"], ["dinkus-commerce-beta", "0.4.0-beta.1"]]) {
+    const selector = prepareSelector
+      .replace("${{ steps.meta.outputs.slug }}", slug)
+      .replace("${{ steps.meta.outputs.version }}", version);
+    assert.equal(effectiveSelector(selector), selector, `${selector} is already the routed identity`);
+    const prepared = parseSelector(selector);
+    const bytes = Buffer.from(`prepared artifact for ${selector}`);
+    const expected = { ...prepared, checksum: computePackageChecksum(bytes), size: bytes.length };
     const record = {
       package: prepared.slug,
       version: prepared.version,
@@ -230,8 +253,6 @@ test("stable and beta Registry verification use the prepared selector", async ()
     const wrongSlug = prepared.slug.endsWith("-beta") ? "dinkus-commerce" : "dinkus-commerce-beta";
     assert.equal(recordMatches({ ...record, package: wrongSlug }, expected).ok, false);
   }
-  assert.equal(prepareSelector, "steps.route.outputs.selector");
-  assert.equal(verifySelector, "steps.route.outputs.selector");
 });
 
 test("PDS resolution supports relative and publisher-qualified service IDs", async () => {
