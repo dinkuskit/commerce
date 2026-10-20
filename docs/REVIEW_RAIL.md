@@ -13,10 +13,14 @@ The accepted commands are one standalone line:
 @clawsweeper re-run
 ```
 
-An initial review requires a maintainer association. A pull-request author may
-request only a later re-review or rerun. Bot comments, edited comments,
-non-pull-request issues, non-`main` targets, and stale or malformed identities
-are rejected.
+All commands require a maintainer association (spark-dgx #269: comments are
+maintainer-only for enqueue and publish; there is no author re-review tier).
+A maintainer may also force a review by applying the `clawsweeper:review`
+label. Bot comments, edited comments, non-pull-request issues, non-`main`
+targets, and stale or malformed identities are rejected. Automatic reviews
+run for human-authored PRs and the shared trusted bots (`smoky-agent[bot]`,
+`dinkuskit-release[bot]`); other bot-authored PRs wait for a maintainer
+label or comment.
 
 ClawSweeper is advisory evidence. It may publish a review comment and labels,
 but it cannot merge the pull request. The current head must still match the
