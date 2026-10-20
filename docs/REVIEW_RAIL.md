@@ -25,3 +25,5 @@ label or comment.
 ClawSweeper is advisory evidence. It may publish a review comment and labels,
 but it cannot merge the pull request. The current head must still match the
 reviewed head before a maintainer treats a verdict as current.
+
+<!-- canary smoke: verifies automatic queue admission after #146; safe to close unmerged -->
