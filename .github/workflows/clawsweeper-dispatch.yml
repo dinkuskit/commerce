@@ -129,7 +129,7 @@ jobs:
       group: ${{ github.repository }}-clawsweeper-dispatch-${{ needs.bind.outputs.pr_number }}
       cancel-in-progress: true
     permissions: {}
-    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@7c3b8cc29bd5b1e18f447ee80626ff618fd23edb
+    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@90f74cb3ad6b53b237c05b2d85c8983fdf2946ff
     with:
       target_repository: commerce
       target_repository_id: '1347692514'
