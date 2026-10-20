@@ -1,6 +1,6 @@
 # Local merchant journey
 
-Use the repository's Node 22.23.2 and install Commerce dependencies with
+Use the repository's Node 24.22.0 and install Commerce dependencies with
 `npm ci`. Supply a clean isolated checkout of `dinkuskit/payments` at
 `922e0de9d86ca935bdca852f44552c6c34c50203`:
 

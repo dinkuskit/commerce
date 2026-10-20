@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { rolldown } from 'rolldown';
 import { buildPlugin } from '@emdash-cms/plugin-cli';
 
-if (process.versions.node !== '22.23.2') throw new Error('Use repository Node 22.23.2');
+if (process.versions.node !== '24.22.0') throw new Error('Use repository Node 24.22.0');
 const paymentIndex = process.argv.indexOf('--payments');
 if (paymentIndex < 0 || !process.argv[paymentIndex + 1]) throw new Error('Supply --payments <isolated Payments checkout>');
 const payments = resolve(process.argv[paymentIndex + 1]);

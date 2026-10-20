@@ -10,13 +10,17 @@ for EmDash sites. Assume every committed byte is immediately public.
 3. `.grilltrack/ledger.json`, maintained only through the GrillTrack CLI.
 4. Current source, tests, and committed proof.
 
-Use Node 22.23.2 per `.nvmrc` and verify `node -v`. In Cursor cloud agents put
+Use Node 24.22.0 per `.nvmrc` and verify `node -v`. In Cursor cloud agents put
 nvm's Node ahead of `/exec-daemon` on `PATH` with
-`export PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH"`. In Claude Code
+`export PATH="$HOME/.nvm/versions/node/v24.22.0/bin:$PATH"`. In Claude Code
 cloud sessions the environment supplies that Node, and
 `.claude/hooks/session-start.sh` installs dependencies from the lockfile, the
 pinned agent skills below and the Playwright browser, then reports anything
 missing; read that report before running project scripts.
+A checkout last installed under Node 22 needs `npm ci` again after switching to
+Node 24: native modules such as better-sqlite3 built for Node 22 fail to load
+otherwise (the session hook reinstalls automatically because its stamp
+includes the Node version).
 
 ## Running GrillTrack
 
