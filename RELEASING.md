@@ -130,9 +130,13 @@ Done for both listings: the release GitHub App (`RELEASE_APP_ID`,
 `RELEASE_APP_PRIVATE_KEY`), the `dinkus-commerce` and `dinkus-commerce-beta`
 package profiles authorized in the
 [release-service dashboard](https://releases.emdashcms.com/publisher), and the
-`release.yml` workflow connection. Registry publishing uses GitHub OIDC, so no
-Atmosphere credential is stored here. Still to add before the first Cut beta
-press can start the journeys: the `LIVE_JOURNEYS_TOKEN` secret (above).
+`release.yml` workflow connection, and the `LIVE_JOURNEYS_TOKEN` secret (above).
+Registry publishing uses GitHub OIDC, so no Atmosphere credential is stored
+here. If the dashboard ever asks to approve the workflow connection again, it
+shows the request only while a run's publish step waits for it, for up to 30
+minutes. If that time runs out, press Cut beta again with the same
+`beta_version`: a re-run of the same run reuses its expired request and fails
+with `WORKFLOW_CONNECTION_CONFLICT`.
 
 ## 1.0.0 gate
 
