@@ -13161,44 +13161,101 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-20T23:40:08+00:00",
+          "choice": "Project approved channel ids from the existing eligibility record on public catalog list and item routes; batch reads and map native and sandbox storage consistently. Missing or empty eligibility never opts a product in.",
+          "from": "verified",
+          "implementation_ref": "src/features/catalog/public.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
+        },
+        {
+          "at": "2026-10-20T23:40:08+00:00",
+          "choice": "Project approved channel ids from the existing eligibility record on public catalog list and item routes; batch reads and map native and sandbox storage consistently. Missing or empty eligibility never opts a product in.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/catalog/public.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "reject_false_positive",
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/preview-product-jsonld-035/REVIEW-REPAIR-1.md",
+          "review_result": "findings",
+          "review_source_identity": "git:c61d63647b3eb7f990d935f170dd93eb6d1c56dd",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
+        },
+        {
+          "at": "2026-10-20T23:44:32+00:00",
+          "choice": "Project approved channel ids from the existing eligibility record on public catalog list and item routes; batch reads and map native and sandbox storage consistently. Missing or empty eligibility never opts a product in.",
+          "from": "implemented",
+          "implementation_ref": "tests/integration/registry-checkout-services.test.mjs",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
         }
       ],
       "id": "public-feed-eligibility-035",
-      "implementation_ref": "src/features/catalog/public.ts",
+      "implementation_ref": "tests/integration/registry-checkout-services.test.mjs",
       "question": "How do storefront public feeds read the existing merchant opt-in without private admin access?",
       "rationale": "Technical completion of the authorized Template Store issue35 feed acceptance; public catalog output currently omits existing merchant eligibility.",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
+      "review_history": [
+        {
+          "classifications": [
+            "reject_false_positive",
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/preview-product-jsonld-035/REVIEW-REPAIR-1.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-20T23:40:08+00:00",
+          "source_identity": "git:c61d63647b3eb7f990d935f170dd93eb6d1c56dd"
+        }
+      ],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-20T23:35:12+00:00",
+      "updated_at": "2026-10-20T23:44:32+00:00",
       "verification_ref": ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-20T23:34:08+00:00",
+    "at": "2026-10-20T23:40:08+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
     "artifact_refs": [
       ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
     ],
-    "next_safe_action": "Review the committed preview helper, consume it in the storefront, and retain separate merge and release gates.",
-    "paused_at": "2026-10-20T23:16:58+00:00",
-    "reason": "Local prerequisite implemented and verified; coordinator owns consuming storefront integration and exact-head review.",
-    "resumed_at": "2026-10-20T23:34:08+00:00"
+    "next_safe_action": "Consume the committed preview and public feed projection, rerun current-head review, and retain separate merge and release gates.",
+    "paused_at": "2026-10-20T23:35:12+00:00",
+    "reason": "Both public storefront prerequisites are implemented and verified; coordinator owns storefront integration and fresh exact-head review.",
+    "resumed_at": "2026-10-20T23:40:08+00:00"
   },
   "pause": {
     "artifact_refs": [
-      ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
+      ".grilltrack/proof/preview-product-jsonld-035/PROOF.md",
+      ".grilltrack/proof/preview-product-jsonld-035/REVIEW-REPAIR-1.md"
     ],
-    "next_safe_action": "Consume the committed preview and public feed projection, rerun current-head review, and retain separate merge and release gates.",
-    "paused_at": "2026-10-20T23:35:12+00:00",
-    "reason": "Both public storefront prerequisites are implemented and verified; coordinator owns storefront integration and fresh exact-head review."
+    "next_safe_action": "Review the committed repair, update the pull request, and rerun current-head CI/comprehensive/native evidence before the merge gate.",
+    "paused_at": "2026-10-20T23:44:32+00:00",
+    "reason": "Review repair cycle 1 complete; core gate passed and runtime source unchanged. Coordinator owns fresh exact-head review."
   },
   "recommendation": {
     "alternatives": [],
@@ -13219,5 +13276,5 @@
   "status": "paused",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-20T23:35:12+00:00"
+  "updated_at": "2026-10-20T23:44:32+00:00"
 }

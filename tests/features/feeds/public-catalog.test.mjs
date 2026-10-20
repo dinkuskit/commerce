@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createPlugin, PRODUCT_FEED_ELIGIBILITY_COLLECTION } from '../../../dist/index.js';
+import { createPlugin } from '../../../dist/index.js';
 import { buildGoogleMerchantFeed, buildMetaCatalogFeed } from '../../../dist/features/feeds/index.js';
 import sandbox from '../../../dist/sandbox/plugin.mjs';
 
@@ -14,7 +14,7 @@ const names = {
   storefront_out_of_stock_listing: 'storefrontOutOfStockListing',
   catalog_media: 'catalogMedia',
   storefront_placeholder_image: 'storefrontPlaceholderImage',
-  product_feed_eligibility: PRODUCT_FEED_ELIGIBILITY_COLLECTION,
+  product_feed_eligibility: 'productFeedEligibility',
 };
 
 function fixture({ nativeNames = false, declared = true } = {}) {
@@ -52,6 +52,27 @@ function fixture({ nativeNames = false, declared = true } = {}) {
     },
   };
 }
+
+test('native schema and public routes use literal productFeedEligibility before snake_case fallback', async () => {
+  const native = createPlugin();
+  assert.ok(Object.hasOwn(native.storage, 'productFeedEligibility'));
+  assert.equal(Object.hasOwn(native.storage, 'product_feed_eligibility'), false);
+  const f = fixture({ nativeNames: true });
+  for (const path of ['catalog/public', 'catalog/public/item?itemId=eligible']) {
+    const context = f.context(path);
+    assert.ok(Object.hasOwn(context.storage, 'productFeedEligibility'));
+    assert.equal(Object.hasOwn(context.storage, 'product_feed_eligibility'), false);
+    // A conflicting fallback makes native precedence observable without using
+    // the implementation's collection constant to construct the fixture.
+    context.storage.product_feed_eligibility = {
+      async get() { return null; },
+      async getMany() { return new Map(); },
+    };
+    const result = await native.routes[path.split('?')[0]].handler(context);
+    const product = result.products ? result.products[0] : result;
+    assert.deepEqual(product.feedChannels, ['google-merchant', 'meta-catalog']);
+  }
+});
 
 for (const [surface, plugin, nativeNames] of [
   ['native camelCase storage', createPlugin(), true],
