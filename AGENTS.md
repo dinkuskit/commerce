@@ -17,6 +17,10 @@ cloud sessions the environment supplies that Node, and
 `.claude/hooks/session-start.sh` installs dependencies from the lockfile, the
 pinned agent skills below and the Playwright browser, then reports anything
 missing; read that report before running project scripts.
+A checkout last installed under Node 22 needs `npm ci` again after switching to
+Node 24: native modules such as better-sqlite3 built for Node 22 fail to load
+otherwise (the session hook reinstalls automatically because its stamp
+includes the Node version).
 
 ## Running GrillTrack
 
