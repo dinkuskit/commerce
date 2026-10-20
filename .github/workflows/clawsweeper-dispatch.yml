@@ -129,7 +129,7 @@ jobs:
       group: ${{ github.repository }}-clawsweeper-dispatch-${{ needs.bind.outputs.pr_number }}
       cancel-in-progress: true
     permissions: {}
-    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@90f74cb3ad6b53b237c05b2d85c8983fdf2946ff
+    uses: dinkuskit/clawsweeper/.github/workflows/dinkuskit-native-canary.yml@b2dd2b5b3fe978645e954f8544612249e77e2891
     with:
       target_repository: commerce
       target_repository_id: '1347692514'
@@ -137,7 +137,6 @@ jobs:
       expected_base_sha: ${{ needs.bind.outputs.base_sha }}
       expected_head_sha: ${{ needs.bind.outputs.head_sha }}
       publish: ${{ needs.bind.outputs.publish == 'true' }}
-      queue_mode: ${{ vars.CLAWSWEEPER_DO_QUEUE_MODE }}
       force_label_by: ${{ needs.bind.outputs.force_label_by }}
     secrets:
       CLAWSWEEPER_DISPATCH_TOKEN: ${{ secrets.CLAWSWEEPER_DISPATCH_TOKEN }}
