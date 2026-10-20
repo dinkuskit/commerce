@@ -41,7 +41,7 @@ async function fixture(t, version = manifest.version) {
   }
   await copyFile(join(root, '.tmp/sandbox-source/src/plugin.ts'), join(directory, '.tmp/sandbox-source/src/plugin.ts'));
   const output = join(directory, 'github-output');
-  // Same routing the release workflow applies to the Changesets selector.
+  // The slug the release flow hands the helper: the beta listing for a prerelease.
   const selector = effectiveSelector(`${manifest.slug}@${version}`);
   return { directory, output, selector, run(value = selector) {
     return execFileSync(process.execPath, [script, value], {
