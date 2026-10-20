@@ -18,7 +18,8 @@ Commerce's names and its own bundle preparation: `scripts/release-flow.mjs`,
 Both buttons are on **Release** (`release.yml`): **Run workflow** with
 `action: cut-beta` or `action: promote`. `emdash-release.yml` has no button of
 its own; only `release.yml` calls it, so the release service connects both
-listings through `release.yml`. Tags start at `v0.3.0`.
+listings through `release.yml`. The flow's baseline is `v0.3.0`, the last
+release from the old Changesets-bot flow.
 
 ## Every pull request adds a changeset
 
