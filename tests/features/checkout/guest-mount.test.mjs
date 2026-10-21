@@ -945,3 +945,41 @@ test("prepared status racing a pre-claim start preserves one attempt and provide
     );
   } finally { releaseClaim(); await firstStart.catch(() => {}); }
 });
+
+test('native guest routes report US-region refusal before effects and recover on the same capability', async t => {
+  const { syntheticDelivery } = await import('./fixture.mjs');
+  const { createSettingsAccess } = await import('emdash');
+  const { OptionsRepository } = await import('emdash/internal/plugins/host');
+  const { saveMerchantStoreSettings } = await import('../../../dist/features/store-settings/index.js');
+  const f = setup(t, { managed: true });
+  await f.db.schema.createTable('options').addColumn('name', 'text', c => c.primaryKey()).addColumn('value', 'text', c => c.notNull()).addColumn('revision', 'text', c => c.notNull()).execute();
+  const settings = createSettingsAccess(new OptionsRepository(f.db), 'dinkus-commerce', {});
+  const saved = await saveMerchantStoreSettings(settings, { expectedRevision: null, storeCountry: 'US' });
+  await seedGuestCatalog(f.storage, { managed: true });
+  const item = await f.storage.catalogItems.get('hat');
+  await f.storage.catalogItems.put('hat', { ...item, fulfillment: 'physical' });
+  const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage, { settings });
+  const token = capabilityOf(prepared);
+  const input = region => ({ ...lines(), contact: { email: 'region-native@example.test', delivery: { ...syntheticDelivery, region } } });
+  for (const region of [undefined, '', 'PR', 'AE', 'California City']) {
+    await assert.rejects(() => invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, input(region), { capability: token, settings }),
+      error => error instanceof PluginRouteError && error.code === 'INVALID_CART' && error.message === 'Delivery address is invalid');
+  }
+  assert.equal(await countCollection(f.storage, CHECKOUT_COLLECTION), 0);
+  assert.equal(await countCollection(f.storage, 'checkoutPaymentAssociations'), 0);
+  assert.equal(f.synth.counts().reserveCalls, 0);
+  assert.equal(f.synth.counts().paymentCreates, 0);
+  const started = await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, input(' aLaSkA '), { capability: token, settings });
+  assert.equal(started.checkout.state, 'pending');
+  assert.equal(f.synth.counts().paymentCreates, 1);
+  await saveMerchantStoreSettings(settings, { expectedRevision: saved.revision, shippingCountries: [], requirePhoneNumber: true });
+  f.synth.setPayment('paid');
+  const replay = await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, { lines: lines().lines }, { capability: token, settings });
+  assert.equal(replay.checkout.attemptId, started.checkout.attemptId);
+  assert.equal(replay.checkout.state, 'paid');
+  const stored = (await f.storage[CHECKOUT_COLLECTION].query({ limit: 50 })).items[0].data;
+  assert.equal(stored.attempts.length, 1);
+  assert.equal(stored.attempts[0].order.contactSnapshot.contact.delivery.region, 'aLaSkA');
+  assert.equal(f.synth.counts().reserveCalls, 1);
+  assert.equal(f.synth.sessions.size, 1);
+});

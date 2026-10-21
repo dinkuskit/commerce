@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-21T15:23:29+00:00",
-    "domain": "Coupons after v1",
-    "started_at": "2026-10-21T15:22:45+00:00",
+    "confirmed_at": "2026-10-21T16:04:32+00:00",
+    "domain": "US delivery feature Registry budget exception",
+    "started_at": "2026-10-21T16:04:31+00:00",
     "status": "confirmed",
-    "summary": "Owner, 21 Oct 2026 15:22 UTC: 'leave it parked for now until we figure out what we're working on with Authorize.net.'"
+    "summary": "Owner approved a feature-only 1518-byte remaining Registry budget for the already verified US delivery rule; no code, general reserve, parked integration or merge/deployment authorization changes."
   },
   "decisions": [
     {
@@ -8765,6 +8765,20 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:07+00:00",
+          "choice": "Physical delivery only to United States all 50 states plus District of Columbia, including Alaska and Hawaii. Territories and military addresses deferred. Reject unsupported delivery regions before payable physical checkout, independently of billing-country origin. Tax rules remain deferred.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Replay the original 2026-10-21 owner reconciliation of the earlier US-only release boundary with configured non-US destinations; source authority and frozen fork are retained in the public decision/replay proof.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
         }
       ],
       "id": "initial-physical-delivery-coverage-001",
@@ -8777,9 +8791,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
-      "superseded_by": null,
-      "updated_at": "2026-10-09T01:49:24+00:00",
+      "status": "superseded",
+      "superseded_by": "us-physical-delivery-regions-20261021",
+      "updated_at": "2026-10-21T15:57:07+00:00",
       "verification_ref": null
     },
     {
@@ -8808,6 +8822,20 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:07+00:00",
+          "choice": "Yes. Commerce initial-release shipping policy allows non-US billing with supported US physical delivery, including Canadian billing with New York delivery, subject to actual provider and legal eligibility. Do not require US billing solely because shipping is US-only. Preserve billing-first and separately captured immutable billing/shipping records. This does not bypass provider country/sanctions controls, admit every digital market, or enable international physical delivery.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency initial-physical-delivery-coverage-001 changed: Replay the original 2026-10-21 owner reconciliation of the earlier US-only release boundary with configured non-US destinations; source authority and frozen fork are retained in the public decision/replay proof.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
         }
       ],
       "id": "initial-foreign-billing-us-delivery-001",
@@ -8820,9 +8848,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-09T01:49:24+00:00",
+      "updated_at": "2026-10-21T15:57:07+00:00",
       "verification_ref": null
     },
     {
@@ -13495,6 +13523,149 @@
       "superseded_by": null,
       "updated_at": "2026-10-21T15:23:29+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:675a191d73648d47f0ac5eb8fe43dc6f64d62641",
+      "candidate_refs": [
+        "git:faa9ee6e2e122d4c4080a175d62152208279eaa3"
+      ],
+      "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+      "context_ref": ".grilltrack/proof/us-region-checkout-20261021/DECISION.md",
+      "created_at": "2026-10-21T15:57:07+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "US physical delivery region eligibility",
+      "history": [
+        {
+          "at": "2026-10-21T15:57:07+00:00",
+          "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:56+00:00",
+          "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:57+00:00",
+          "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout-contact/index.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "us-physical-delivery-regions-20261021",
+      "implementation_ref": "file:src/features/checkout-contact/index.ts",
+      "question": "How should new physical checkout validate US delivery regions while preserving configured countries?",
+      "rationale": "Original owner approval recorded on 2026-10-21 is unchanged. Replay frozen feature faa9ee6e2e122d4c4080a175d62152208279eaa3 onto main 675a191d73648d47f0ac5eb8fe43dc6f64d62641; preserve parked Coupons/Inventory decisions and raise the 682-byte reserve shortfall before merge.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T15:57:57+00:00",
+      "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/REPLAY.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+      "context_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+      "created_at": "2026-10-21T16:04:32+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "us-physical-delivery-regions-20261021",
+        "registry-coupons-parked-20261021"
+      ],
+      "domain": "US delivery feature Registry budget exception",
+      "history": [
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "implemented",
+          "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "us-region-registry-budget-exception-20261021",
+      "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+      "question": "May the approved US delivery-region feature leave 1518 bytes free rather than the default 2200-byte Registry reserve?",
+      "rationale": "Owner explicitly selected Allow 1,518 bytes for this feature after reviewing the measured reserve shortfall.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T16:04:32+00:00",
+      "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
     }
   ],
   "last_activation": {
@@ -13531,5 +13702,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-21T15:23:29+00:00"
+  "updated_at": "2026-10-21T16:04:32+00:00"
 }

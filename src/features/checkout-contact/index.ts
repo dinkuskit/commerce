@@ -35,6 +35,21 @@ const ADDRESS_FIELD_MAX_LENGTH = 200;
 const ADDRESS_FIELDS = ["name", "line1", "line2", "city", "region", "postalCode", "country"];
 const OPTIONAL_ADDRESS_FIELDS = new Set(["line2", "region"]);
 
+// Eligibility belongs to new physical capture, not shared address normalization.
+const US_DELIVERY_REGIONS = new Set((
+  "AL|ALABAMA|AK|ALASKA|AZ|ARIZONA|AR|ARKANSAS|CA|CALIFORNIA|CO|COLORADO|CT|CONNECTICUT|DE|DELAWARE|" +
+  "FL|FLORIDA|GA|GEORGIA|HI|HAWAII|ID|IDAHO|IL|ILLINOIS|IN|INDIANA|IA|IOWA|KS|KANSAS|KY|KENTUCKY|" +
+  "LA|LOUISIANA|ME|MAINE|MD|MARYLAND|MA|MASSACHUSETTS|MI|MICHIGAN|MN|MINNESOTA|MS|MISSISSIPPI|" +
+  "MO|MISSOURI|MT|MONTANA|NE|NEBRASKA|NV|NEVADA|NH|NEW HAMPSHIRE|NJ|NEW JERSEY|NM|NEW MEXICO|" +
+  "NY|NEW YORK|NC|NORTH CAROLINA|ND|NORTH DAKOTA|OH|OHIO|OK|OKLAHOMA|OR|OREGON|PA|PENNSYLVANIA|" +
+  "RI|RHODE ISLAND|SC|SOUTH CAROLINA|SD|SOUTH DAKOTA|TN|TENNESSEE|TX|TEXAS|UT|UTAH|VT|VERMONT|" +
+  "VA|VIRGINIA|WA|WASHINGTON|WV|WEST VIRGINIA|WI|WISCONSIN|WY|WYOMING|DC|DISTRICT OF COLUMBIA"
+).split("|"));
+
+function isEligibleUsRegion(region: string | undefined): boolean {
+  return US_DELIVERY_REGIONS.has(region?.trim().toUpperCase() ?? "");
+}
+
 function normalizeDelivery(value: unknown): CheckoutDeliveryAddress {
   if (!isObject(value) || !Object.keys(value).every((key) => ADDRESS_FIELDS.includes(key))) invalid("DELIVERY_INVALID");
   const address: Record<string, string> = {};
@@ -160,6 +175,7 @@ export async function captureCheckoutContact(
   if (needsDelivery) {
     if (!contact.delivery) invalid("DELIVERY_REQUIRED");
     if (!requirements.shippingCountries.includes(contact.delivery.country)) invalid("DELIVERY_COUNTRY_UNAVAILABLE");
+    if (contact.delivery.country === "US" && !isEligibleUsRegion(contact.delivery.region)) invalid("DELIVERY_INVALID");
   }
 
   const detachedContact: NormalizedCheckoutContact = {
