@@ -205,3 +205,76 @@ export async function listOrders(collection: Pick<OrdersCollection, "query">): P
   });
   return orders.sort((a, b) => a.paidOrder.orderId < b.paidOrder.orderId ? -1 : a.paidOrder.orderId > b.paidOrder.orderId ? 1 : 0);
 }
+
+/** Shopper-safe order summary for a verified customer email. */
+export interface ShopperOrderSummary {
+  orderId: string;
+  receiptId: string;
+  number: number | null;
+  status: "processing" | "completed";
+  paidAt: string | null;
+  total: PaidOrder["total"];
+  lines: PaidOrder["lines"];
+  choices: NonNullable<PaidOrder["variantSelections"]>;
+  pricing: {
+    merchandiseSubtotal: PaidOrder["total"];
+    couponDiscount: PaidOrder["total"];
+    netMerchandise: PaidOrder["total"];
+    shipping: { mode: "free" | "flat"; charge: PaidOrder["total"] };
+    finalTotal: PaidOrder["total"];
+  } | null;
+  delivery: CheckoutDeliveryAddress | null;
+  phone: string | null;
+  completed: OrderCompletion | null;
+}
+
+/** Projects one order record for its verified shopper; omits internal IDs, test flags and provider bindings. */
+export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
+  const order = record.paidOrder;
+  const p = order.pricing;
+  return {
+    orderId: order.orderId,
+    receiptId: order.receiptId,
+    number: record.number ?? null,
+    status: record.completed ? "completed" : "processing",
+    paidAt: order.paidAt ?? null,
+    total: structuredClone(order.total),
+    lines: structuredClone(order.lines),
+    choices: structuredClone(order.variantSelections ?? []),
+    pricing: p
+      ? structuredClone({
+          merchandiseSubtotal: p.merchandiseSubtotal,
+          couponDiscount: p.couponDiscount,
+          netMerchandise: p.netMerchandise,
+          shipping: { mode: p.shipping.mode, charge: p.shipping.charge },
+          finalTotal: p.finalTotal,
+        })
+      : null,
+    delivery: structuredClone(deliveryOf(record) ?? null),
+    phone: order.contactSnapshot?.contact?.phone ?? null,
+    completed: structuredClone(record.completed ?? null),
+  };
+}
+
+/** Every kept order whose frozen checkout email matches the verified email (case-folded), newest first. */
+export async function listOrdersForEmail(
+  collection: Pick<OrdersCollection, "query">,
+  email: string,
+): Promise<ShopperOrderSummary[]> {
+  const target = email.trim().toLowerCase();
+  if (!target) return [];
+  const all = await listOrders(collection);
+  return all
+    .filter(record => record.paidOrder.contactSnapshot?.contact?.email?.trim().toLowerCase() === target)
+    .sort((a, b) => {
+      const aNum = a.number ?? -1;
+      const bNum = b.number ?? -1;
+      if (aNum !== bNum) return bNum - aNum;
+      const aPaid = a.paidOrder.paidAt ?? "";
+      const bPaid = b.paidOrder.paidAt ?? "";
+      if (aPaid !== bPaid) return aPaid > bPaid ? -1 : 1;
+      return a.paidOrder.orderId > b.paidOrder.orderId ? -1 : a.paidOrder.orderId < b.paidOrder.orderId ? 1 : 0;
+    })
+    .map(projectShopperOrder);
+}
+

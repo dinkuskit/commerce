@@ -16,7 +16,8 @@
   "repo": "https://github.com/dinkuskit/commerce",
   "capabilities": [
     "media:read",
-    "network:request"
+    "network:request",
+    "email:send"
   ],
   "allowedHosts": [
     "payments.dinkuskit.com",
@@ -108,6 +109,18 @@
       "uniqueIndexes": []
     },
     "store_return_policy": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "customers": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "customer_login_codes": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "customer_sessions": {
       "indexes": [],
       "uniqueIndexes": []
     }

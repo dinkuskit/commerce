@@ -101,7 +101,23 @@ import {
   type ProductFeedEligibilityStorage,
 } from "./features/feeds/index.js";
 import type { CatalogProductListItem } from "./features/catalog/index.js";
-import { ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, createPaidOrderReceiver, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import { ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, createPaidOrderReceiver, listOrdersForEmail, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import {
+  NATIVE_CUSTOMERS_COLLECTION,
+  NATIVE_CUSTOMER_LOGIN_CODES_COLLECTION,
+  NATIVE_CUSTOMER_SESSIONS_COLLECTION,
+  SHOPPER_ACCOUNT_ORDERS_ROUTE,
+  SHOPPER_ACCOUNT_PROFILE_ROUTE,
+  SHOPPER_SIGN_IN_START_ROUTE,
+  SHOPPER_SIGN_IN_VERIFY_ROUTE,
+  SHOPPER_SIGN_OUT_ROUTE,
+  createShopperAccountOrdersRoute,
+  createShopperAccountProfileRoute,
+  createShopperSignInStartRoute,
+  createShopperSignInVerifyRoute,
+  createShopperSignOutRoute,
+  type ShopperAccountHostOptions,
+} from "./features/customers/index.js";
 
 export * from "./features/inventory-provider/index.js";
 
@@ -176,11 +192,14 @@ export function dinkusCommerce(
 export interface CommercePluginOptions extends CommerceLocalDevelopmentOptions {
   inventorySetup?: ConfigureInventoryExecution;
   checkout?: GuestCheckoutHostOptions;
+  customers?: ShopperAccountHostOptions;
 }
 
 // Checkout hands each paid order to Orders, which keeps its own copy.
 const paidOrders = (storage: Record<string, unknown>) =>
   createPaidOrderReceiver(storage[ORDERS_COLLECTION] as OrdersCollection, storage[ORDER_NUMBERS_COLLECTION] as OrderNumbers);
+const nativeOrdersForEmail = (storage: Record<string, unknown>, emailKey: string) =>
+  listOrdersForEmail(storage[ORDERS_COLLECTION] as OrdersCollection, emailKey);
 
 /** Products list for the native admin, with each product's feed choices from Feeds. */
 function withFeedChannels(route: PluginRoute): PluginRoute {
@@ -268,11 +287,16 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
     checkoutSiteUrl,
     siteUrl: checkoutSiteUrl ?? topLevelSiteUrl,
   });
+  const customersHost: ShopperAccountHostOptions = Object.freeze({
+    ...options.customers,
+    topLevelSiteUrl,
+    siteUrl: options.customers?.siteUrl ?? checkoutSiteUrl ?? topLevelSiteUrl,
+  });
   return definePlugin({
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
     // Product media reads alt text and dimensions live from the Media Library.
-    capabilities: ["media:read", "network:request"],
+    capabilities: ["media:read", "network:request", "email:send"],
     allowedHosts: ["payments.dinkuskit.com"],
     storage: {
       catalogItems: {
@@ -351,6 +375,18 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [NATIVE_CUSTOMERS_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
+      [NATIVE_CUSTOMER_LOGIN_CODES_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
+      [NATIVE_CUSTOMER_SESSIONS_COLLECTION]: {
+        indexes: [],
+        uniqueIndexes: [],
+      },
     },
     admin: {
       entry: COMMERCE_ADMIN_ENTRY,
@@ -393,6 +429,11 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [GUEST_CHECKOUT_PREPARE_ROUTE]: createGuestCheckoutPrepareRoute(checkoutHost),
       [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(checkoutHost, paidOrders),
       [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(checkoutHost, paidOrders),
+      [SHOPPER_SIGN_IN_START_ROUTE]: createShopperSignInStartRoute(customersHost),
+      [SHOPPER_SIGN_IN_VERIFY_ROUTE]: createShopperSignInVerifyRoute(customersHost, nativeOrdersForEmail),
+      [SHOPPER_SIGN_OUT_ROUTE]: createShopperSignOutRoute(customersHost),
+      [SHOPPER_ACCOUNT_ORDERS_ROUTE]: createShopperAccountOrdersRoute(customersHost, nativeOrdersForEmail),
+      [SHOPPER_ACCOUNT_PROFILE_ROUTE]: createShopperAccountProfileRoute(customersHost, nativeOrdersForEmail),
     },
   });
 }
@@ -402,5 +443,7 @@ export default createPlugin;
 export * from "./features/checkout/index.js";
 
 export * from "./features/orders/index.js";
+
+export * from "./features/customers/index.js";
 
 export * from "./features/fixed-bundles/index.js";
