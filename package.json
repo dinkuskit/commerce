@@ -1,6 +1,6 @@
 {
   "name": "@dinkuskit/commerce",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The open-source commerce layer for EmDash sites",
   "type": "module",
   "engines": {

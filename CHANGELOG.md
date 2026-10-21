@@ -1,5 +1,38 @@
 # @dinkuskit/commerce
 
+## 0.4.0
+
+### Minor Changes
+
+- [#151](https://github.com/dinkuskit/commerce/pull/151) [`18f0c19`](https://github.com/dinkuskit/commerce/commit/18f0c196ed71ac74a532fd9d9d650860b9ab70fb) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Add a host-only `buildProductPreviewJsonLd` helper for editorial product pages
+  without a Commerce item. It emits only supplied page facts and never invents
+  identifiers, price, availability, or an Offer.
+  
+  Expose existing merchant-approved feed channels on public catalog list and
+  item responses so storefront hosts can build public feeds without admin
+  reads. Missing or empty eligibility never opts a product in.
+
+- [#143](https://github.com/dinkuskit/commerce/pull/143) [`952b5b9`](https://github.com/dinkuskit/commerce/commit/952b5b984cc966b2f1e3ba33ae9b0e02ea8f8286) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Require Node 24 (engines `>=24.15.0 <25`); Node 22 has critical SQLite bugs. The repository pins Node 24.22.0. To move an existing Node 22 install, switch to Node 24.15 or newer, then reinstall from the lockfile with `npm ci`: native modules built for Node 22, such as better-sqlite3, fail to load under Node 24 until they are reinstalled.
+
+- [#152](https://github.com/dinkuskit/commerce/pull/152) [`c42597b`](https://github.com/dinkuskit/commerce/commit/c42597bddd35d949f4e69f8ca97cc26206200da0) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Add store-local shopper accounts (`dinkus.customers`) with passwordless 6-digit email OTP sign-in (`email:send`), origin-bound `x-commerce-customer-session` capability tokens, automatic case-folded email linking to past and future paid orders, and a single default saved shipping address + optional phone.
+
+- [#161](https://github.com/dinkuskit/commerce/pull/161) [`2d51753`](https://github.com/dinkuskit/commerce/commit/2d51753b0c43bf4663bf429f437793d0e6f502b4) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Require a supported US state or District of Columbia for new physical checkouts to the United States. Accept abbreviations and full names while preserving merchant-configured non-US destinations, saved addresses and existing checkout attempts.
+
+### Patch Changes
+
+- [#157](https://github.com/dinkuskit/commerce/pull/157) [`eebeca0`](https://github.com/dinkuskit/commerce/commit/eebeca0fc2e8dff8c8d3642e525ad1303dc979a8) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Recover the 5-minute background check when the site scheduler fails or stalls
+  while Commerce is switched on. Switching on now gives the scheduler 3 seconds
+  and never fails the hook; until the check is registered, the next request
+  registers it, at most one attempt a minute per isolate, so payments a shopper
+  never returned from and Ship labels are still picked up without switching the
+  plugin off and on.
+
+- [#159](https://github.com/dinkuskit/commerce/pull/159) [`75e90a3`](https://github.com/dinkuskit/commerce/commit/75e90a33cee3d226a2ff16bbad9ea2c4398e3c1a) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Shrink the Registry plugin file by 1,457 bytes with no change in behavior.
+  Shopper accounts, guest checkout and the Inventory Pack button now share one
+  copy of the same-origin request check and the secret hashing helpers, and the
+  shopper account handlers, routes and error table are written once instead of
+  five times.
+
 ## 0.3.0
 
 ### Minor Changes
