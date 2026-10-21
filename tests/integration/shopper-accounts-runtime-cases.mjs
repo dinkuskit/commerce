@@ -224,6 +224,23 @@ test("WorkerdSandboxRunner + SQLite proves existing-install upgrade compatibilit
       paidAt: "2026-10-20T16:00:00.000Z",
     }),
   );
+  // Seed a pre-upgrade legacy order row whose admitted object contactSnapshot has non-string email/phone values.
+  await preCollections.orders.put("ord_legacy_nonstring_contact", {
+    revision: 1,
+    paidOrder: {
+      ...makePaidOrder({
+        orderId: "ord_legacy_nonstring_contact",
+        email: "placeholder@example.test",
+        paidAt: "2026-10-01T00:00:00.000Z",
+      }),
+      contactSnapshot: {
+        contact: {
+          email: 12345,
+          phone: 67890,
+        },
+      },
+    },
+  });
 
   // 2. Upgrade the installation in place to the current manifest + compiled workerd bundle.
   const upgradedManifest = structuredClone(artifactManifest);

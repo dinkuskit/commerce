@@ -244,6 +244,10 @@ async function ensureCustomerProfile(
         : undefined;
   const seededPhone =
     current?.phone !== undefined ? current.phone : (latestWithPhone?.phone ?? undefined);
+  const changed = !current || seededDelivery !== current.delivery || seededPhone !== current.phone;
+  if (!changed) {
+    return current;
+  }
   const nextRecord: CustomerRecord = {
     recordKind: "commerce-customer",
     emailKey,
@@ -251,15 +255,8 @@ async function ensureCustomerProfile(
     ...(seededPhone !== undefined ? { phone: seededPhone } : {}),
     ...(seededDelivery !== undefined ? { delivery: seededDelivery } : {}),
     createdAt: current?.createdAt ?? nowIso,
-    updatedAt: current
-      ? seededDelivery !== current.delivery || seededPhone !== current.phone
-        ? nowIso
-        : current.updatedAt
-      : nowIso,
+    updatedAt: nowIso,
   };
-  if (current && nextRecord.updatedAt === current.updatedAt) {
-    return current;
-  }
   const saved = await runtime.customers.compareAndSet(emailKey, existing?.revision ?? null, nextRecord);
   if (saved.applied) return nextRecord;
   const reread = await runtime.customers.get(emailKey);
@@ -322,11 +319,10 @@ export async function startShopperSignIn(
         text: `Your ${storeLabel} verification code is ${code}. It expires in 10 minutes.`,
       });
     } catch {
-      if (existing) {
-        await runtime.loginCodes.compareAndSet(emailKey, cas.revision, existing.value).catch(() => {});
-      } else {
-        await runtime.loginCodes.delete(emailKey).catch(() => {});
-      }
+      const rollback: CustomerLoginCodeRecord = existing
+        ? existing.value
+        : { ...record, issuedAt: 0, expiresAt: 0, consumed: true };
+      await runtime.loginCodes.compareAndSet(emailKey, cas.revision, rollback).catch(() => {});
       fail("EMAIL_UNAVAILABLE");
     }
     return {

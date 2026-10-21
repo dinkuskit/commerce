@@ -251,7 +251,10 @@ export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
         })
       : null,
     delivery: structuredClone(deliveryOf(record) ?? null),
-    phone: order.contactSnapshot?.contact?.phone ?? null,
+    phone:
+      typeof (order.contactSnapshot as { contact?: { phone?: unknown } } | undefined)?.contact?.phone === "string"
+        ? order.contactSnapshot!.contact.phone!
+        : null,
     completed: structuredClone(record.completed ?? null),
   };
 }
@@ -271,7 +274,10 @@ export async function listOrdersForEmail(
   if (!target) return [];
   const all = await listOrders(collection);
   return all
-    .filter(record => record.paidOrder.contactSnapshot?.contact?.email?.trim().toLowerCase() === target)
+    .filter((record) => {
+      const rawEmail = (record.paidOrder.contactSnapshot as { contact?: { email?: unknown } } | undefined)?.contact?.email;
+      return typeof rawEmail === "string" && rawEmail.trim().toLowerCase() === target;
+    })
     .sort((a, b) => {
       const aTime = paidAtMillis(a.paidOrder.paidAt);
       const bTime = paidAtMillis(b.paidOrder.paidAt);

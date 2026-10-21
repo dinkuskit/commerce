@@ -671,3 +671,121 @@ test("listOrdersForEmail sorts by payment timestamp before order number when an 
     ],
   );
 });
+
+test("delayed first sendEmail failure is revision-fenced and preserves a replacement challenge, and same-second profile seeding persists new order details", async () => {
+  let currentNow = 1_760_000_000;
+  let currentCode = "101010";
+  const { ctx, storage } = createSandboxFixture({
+    now: () => currentNow,
+    code: currentCode,
+  });
+
+  let rejectFirstEmail;
+  let firstEmailEntered;
+  const firstEmailPending = new Promise((resolve) => {
+    firstEmailEntered = resolve;
+  });
+  let firstSendCall = true;
+  ctx.email.send = async () => {
+    if (firstSendCall) {
+      firstSendCall = false;
+      firstEmailEntered();
+      await new Promise((_, reject) => {
+        rejectFirstEmail = reject;
+      });
+    }
+  };
+
+  const dynamicHandlers = createInstalledShopperAccountHandlers(
+    (c, emailKey) => listOrdersForEmail(c.storage.orders, emailKey),
+    {
+      now: () => currentNow,
+      createLoginCode: () => currentCode,
+    },
+  );
+
+  // 1. Start first sign-in; sendEmail hangs beyond the 30-second cooldown.
+  const firstStartPromise = dynamicHandlers.startSignIn(
+    {
+      input: { email: "fenced@example.com" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/start",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  await firstEmailPending;
+
+  // 2. After 31s cooldown, a second startSignIn replaces the challenge and delivers code "202020".
+  currentNow += 31;
+  currentCode = "202020";
+  const secondStart = await dynamicHandlers.startSignIn(
+    {
+      input: { email: "fenced@example.com" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/start",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  assert.equal(secondStart.ok, true);
+
+  // 3. The delayed first sendEmail now fails; revision-fenced rollback must NOT delete the replacement challenge.
+  rejectFirstEmail(new Error("SMTP timeout"));
+  const firstStart = await firstStartPromise;
+  assert.equal(firstStart.ok, false);
+  assert.equal(firstStart.error.code, "EMAIL_UNAVAILABLE");
+
+  // 4. Verify with "202020" succeeds (and creates profile with undefined delivery/phone at currentNow).
+  const verified = await dynamicHandlers.verifySignIn(
+    {
+      input: { email: "fenced@example.com", code: "202020" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  assert.equal(verified.ok, true);
+  assert.equal(verified.profile.delivery, null);
+  assert.equal(verified.profile.phone, null);
+
+  // 5. Within the exact same second (currentNow unchanged), an order arrives for fenced@example.com.
+  const receiver = createPaidOrderReceiver(storage.orders, storage.order_numbers);
+  await receiver.receive(
+    makeOrder({
+      orderId: "ord_same_second",
+      email: "fenced@example.com",
+      phone: "+16175550123",
+      delivery: {
+        name: "Fenced Shopper",
+        line1: "42 Same Second Ave",
+        city: "Boston",
+        region: "MA",
+        postalCode: "02110",
+        country: "US",
+      },
+    }),
+  );
+
+  // Reading profile in the same second detects the field change and persists the newly seeded delivery + phone.
+  const seededSameSecond = await dynamicHandlers.profile(
+    {
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/profile",
+        method: "GET",
+        headers: { [CUSTOMER_SESSION_HEADER]: verified.capability.session },
+      },
+    },
+    ctx,
+  );
+  assert.equal(seededSameSecond.ok, true);
+  assert.equal(seededSameSecond.profile.phone, "+16175550123");
+  assert.equal(seededSameSecond.profile.delivery.line1, "42 Same Second Ave");
+  const persistedCustomer = await storage[CUSTOMERS_COLLECTION].get("fenced@example.com");
+  assert.equal(persistedCustomer.phone, "+16175550123");
+  assert.equal(persistedCustomer.delivery.line1, "42 Same Second Ave");
+});

@@ -13330,6 +13330,50 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T02:21:52+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "verified",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T02:21:52+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-2.md",
+          "review_result": "findings",
+          "review_source_identity": "git:8fd3828d0a68b9a0a87bfc7ab65f8a633f1a39d8",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T02:21:53+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
         }
       ],
       "id": "shopper-accounts-v1-20261020",
@@ -13347,6 +13391,15 @@
           "result": "findings",
           "reviewed_at": "2026-10-21T01:44:54+00:00",
           "source_identity": "git:6f2646665d3983b4bc1d7c026496de9892e523ca"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-2.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-21T02:21:52+00:00",
+          "source_identity": "git:8fd3828d0a68b9a0a87bfc7ab65f8a633f1a39d8"
         }
       ],
       "review_ref": null,
@@ -13354,31 +13407,32 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-21T01:59:58+00:00",
+      "updated_at": "2026-10-21T02:21:53+00:00",
       "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-21T01:44:53+00:00",
+    "at": "2026-10-21T02:21:52+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
-    "artifact_refs": [
-      ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
-    ],
-    "next_safe_action": "Run exact-source review or wire the Account UI in template-store.",
-    "paused_at": "2026-10-21T01:07:32+00:00",
-    "reason": "Shopper accounts v1 Commerce slice implemented and verified; pausing before review/PR or storefront slice.",
-    "resumed_at": "2026-10-21T01:44:53+00:00"
-  },
-  "pause": {
     "artifact_refs": [
       ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md",
       ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-1.md"
     ],
     "next_safe_action": "Run re-review on new PR head and merge #152 once clean.",
     "paused_at": "2026-10-21T01:59:58+00:00",
-    "reason": "Round 1 ClawSweeper repairs implemented and verified on workerd + SQLite; pushing for re-review."
+    "reason": "Round 1 ClawSweeper repairs implemented and verified on workerd + SQLite; pushing for re-review.",
+    "resumed_at": "2026-10-21T02:21:52+00:00"
+  },
+  "pause": {
+    "artifact_refs": [
+      ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md",
+      ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-2.md"
+    ],
+    "next_safe_action": "Run re-review on new PR head and merge #152 once clean.",
+    "paused_at": "2026-10-21T02:21:53+00:00",
+    "reason": "Round 2 ClawSweeper findings repaired and verified on workerd + SQLite; pushing for final review."
   },
   "recommendation": {
     "alternatives": [],
@@ -13399,5 +13453,5 @@
   "status": "paused",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-21T01:59:58+00:00"
+  "updated_at": "2026-10-21T02:21:53+00:00"
 }
