@@ -5,15 +5,15 @@
 - Base: `18f0c196ed71ac74a532fd9d9d650860b9ab70fb`.
 - Scope: [AGENTS.md](../../../AGENTS.md) and this public-safe proof only.
 
-The contract now explicitly includes required checks/proof, commits, non-force
-pushes to the assigned branch, pull-request creation/updates, review requests,
-and bounded in-scope repairs in an assigned source task. These steps do not
+The contract now explicitly includes implementation of locked or approved
+GrillTrack decisions within an assigned source task, required checks/proof,
+commits, non-force pushes to the assigned branch, pull-request creation/updates,
+review requests, and bounded in-scope repairs. These steps do not
 need another permission question. One writer, an isolated branch/worktree,
 and review evidence for the exact current head remain required.
 
-Package publishing, deployment, production mutation, secrets/permissions
-changes, destructive data/infrastructure operations, and merges remain
-separately human-authorized actions. This grants no standing merge authority.
+The existing publishing, deployment, production mutation, secrets/permissions
+and merge gates remain unchanged. This grants no standing merge authority.
 ClawSweeper remains review evidence rather than merge authority. The scoped
 active-policy check found no fixed-count repair cap to remove.
 
