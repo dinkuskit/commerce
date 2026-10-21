@@ -201,8 +201,14 @@ function isValidCustomerRecord(record: unknown, emailKey: string): record is Cus
     return false;
   }
   if (typeof record.createdAt !== "string" || typeof record.updatedAt !== "string") return false;
-  if (record.phone !== undefined && (typeof record.phone !== "string" || !record.phone.trim())) return false;
-  if (record.delivery !== undefined) {
+  if (
+    record.phone !== undefined &&
+    record.phone !== null &&
+    (typeof record.phone !== "string" || !record.phone.trim())
+  ) {
+    return false;
+  }
+  if (record.delivery !== undefined && record.delivery !== null) {
     try {
       normalizeCheckoutDelivery(record.delivery);
     } catch {
@@ -224,14 +230,20 @@ async function ensureCustomerProfile(
     fail("UNAVAILABLE");
   }
   const current = existing?.value;
-  if (current && current.delivery !== undefined) {
+  if (current && current.delivery !== undefined && current.phone !== undefined) {
     return current;
   }
   const orders = preloadedOrders ?? (await runtime.host.loadOrdersForEmail?.(emailKey)) ?? [];
   const latestWithDelivery = orders.find((order) => order.delivery !== null);
   const latestWithPhone = orders.find((order) => order.phone !== null);
-  const seededDelivery = current?.delivery ?? (latestWithDelivery?.delivery ? structuredClone(latestWithDelivery.delivery) : undefined);
-  const seededPhone = current?.phone ?? (latestWithPhone?.phone ?? undefined);
+  const seededDelivery =
+    current?.delivery !== undefined
+      ? current.delivery
+      : latestWithDelivery?.delivery
+        ? structuredClone(latestWithDelivery.delivery)
+        : undefined;
+  const seededPhone =
+    current?.phone !== undefined ? current.phone : (latestWithPhone?.phone ?? undefined);
   const nextRecord: CustomerRecord = {
     recordKind: "commerce-customer",
     emailKey,
@@ -239,7 +251,11 @@ async function ensureCustomerProfile(
     ...(seededPhone !== undefined ? { phone: seededPhone } : {}),
     ...(seededDelivery !== undefined ? { delivery: seededDelivery } : {}),
     createdAt: current?.createdAt ?? nowIso,
-    updatedAt: current ? (seededDelivery !== current.delivery || seededPhone !== current.phone ? nowIso : current.updatedAt) : nowIso,
+    updatedAt: current
+      ? seededDelivery !== current.delivery || seededPhone !== current.phone
+        ? nowIso
+        : current.updatedAt
+      : nowIso,
   };
   if (current && nextRecord.updatedAt === current.updatedAt) {
     return current;
@@ -273,10 +289,14 @@ export async function startShopperSignIn(
     const existing = await runtime.loginCodes.getVersioned(emailKey);
     if (existing) {
       const prior = existing.value;
-      if (!isRecord(prior) || prior.recordKind !== "commerce-customer-login-code") {
+      if (
+        !isRecord(prior) ||
+        prior.recordKind !== "commerce-customer-login-code" ||
+        !Number.isSafeInteger(prior.issuedAt)
+      ) {
         fail("UNAVAILABLE");
       }
-      if (now < prior.expiresAt && now - prior.issuedAt < LOGIN_CODE_COOLDOWN_SECONDS) {
+      if (now - prior.issuedAt < LOGIN_CODE_COOLDOWN_SECONDS) {
         fail("RATE_LIMITED");
       }
     }
@@ -290,6 +310,7 @@ export async function startShopperSignIn(
       attempts: 0,
       issuedAt: now,
       expiresAt,
+      consumed: false,
     };
     const cas = await runtime.loginCodes.compareAndSet(emailKey, existing?.revision ?? null, record);
     if (!cas.applied) fail("CONTENTION");
@@ -301,7 +322,11 @@ export async function startShopperSignIn(
         text: `Your ${storeLabel} verification code is ${code}. It expires in 10 minutes.`,
       });
     } catch {
-      await runtime.loginCodes.delete(emailKey).catch(() => {});
+      if (existing) {
+        await runtime.loginCodes.compareAndSet(emailKey, cas.revision, existing.value).catch(() => {});
+      } else {
+        await runtime.loginCodes.delete(emailKey).catch(() => {});
+      }
       fail("EMAIL_UNAVAILABLE");
     }
     return {
@@ -329,25 +354,27 @@ export async function verifyShopperSignIn(
       fail("CODE_INVALID");
     }
     const challenge = stored.value;
-    if (now >= challenge.expiresAt || challenge.attempts >= LOGIN_CODE_MAX_ATTEMPTS) {
-      await runtime.loginCodes.delete(emailKey).catch(() => {});
-      fail(now >= challenge.expiresAt ? "CODE_EXPIRED" : "CODE_INVALID");
-    }
-    const expected = await hashCustomerSecret(`${emailKey}:${code}`);
-    if (!timingSafeEqual(challenge.verifier, expected)) {
-      const nextAttempts = challenge.attempts + 1;
-      if (nextAttempts >= LOGIN_CODE_MAX_ATTEMPTS) {
-        await runtime.loginCodes.delete(emailKey).catch(() => {});
-      } else {
-        await runtime.loginCodes.compareAndSet(emailKey, stored.revision, {
-          ...challenge,
-          attempts: nextAttempts,
-        });
-      }
+    if (challenge.consumed === true || challenge.attempts >= LOGIN_CODE_MAX_ATTEMPTS) {
       fail("CODE_INVALID");
     }
-    // Single-use challenge: consume via CAS/delete before minting session.
-    await runtime.loginCodes.delete(emailKey);
+    if (now >= challenge.expiresAt) {
+      fail("CODE_EXPIRED");
+    }
+    const expected = await hashCustomerSecret(`${emailKey}:${code}`);
+    const matches = timingSafeEqual(challenge.verifier, expected);
+    const nextAttempts = challenge.attempts + 1;
+    // Atomically claim the attempt budget (and mark consumed on match) on the exact revision before branching or minting a session.
+    const claimed = await runtime.loginCodes.compareAndSet(emailKey, stored.revision, {
+      ...challenge,
+      attempts: nextAttempts,
+      consumed: matches,
+    });
+    if (!claimed.applied) {
+      fail("CONTENTION");
+    }
+    if (!matches) {
+      fail("CODE_INVALID");
+    }
     const sessionId = (runtime.host.createSessionId ?? (() => crypto.randomUUID()))();
     const secret = (runtime.host.createSessionSecret ?? randomSecret)();
     if (!sessionId.trim() || !secret.trim()) fail("UNAVAILABLE");
@@ -491,17 +518,17 @@ export async function updateShopperAccountProfile(
     const requirements = await runtime.host.loadShippingCountries?.();
     const patch = normalizeProfilePatch(input, requirements);
     const nowIso = new Date(nowSeconds(runtime) * 1000).toISOString();
-    const existing = await runtime.customers.getVersioned(authorized.emailKey);
-    if (existing && !isValidCustomerRecord(existing.value, authorized.emailKey)) {
+    await ensureCustomerProfile(runtime, authorized.emailKey);
+    const freshVersion = await runtime.customers.getVersioned(authorized.emailKey);
+    if (!freshVersion || !isValidCustomerRecord(freshVersion.value, authorized.emailKey)) {
       fail("UNAVAILABLE");
     }
-    const base = existing?.value ?? (await ensureCustomerProfile(runtime, authorized.emailKey));
-    const freshVersion = existing ?? (await runtime.customers.getVersioned(authorized.emailKey));
-    const nextPhone = patch.phone === undefined ? base.phone : patch.phone === null ? undefined : patch.phone;
+    const base = freshVersion.value;
+    const nextPhone = patch.phone === undefined ? base.phone : patch.phone;
     if (requirements?.requirePhoneNumber && !nextPhone) {
       fail("PHONE_REQUIRED");
     }
-    const nextDelivery = patch.delivery === undefined ? base.delivery : patch.delivery === null ? undefined : patch.delivery;
+    const nextDelivery = patch.delivery === undefined ? base.delivery : patch.delivery;
     const nextRecord: CustomerRecord = {
       recordKind: "commerce-customer",
       emailKey: authorized.emailKey,

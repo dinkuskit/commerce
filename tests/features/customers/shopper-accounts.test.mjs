@@ -343,7 +343,7 @@ test("6-digit OTP sign-in mints an origin-bound session, auto-links case-folded 
         },
       },
       request: {
-        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/profile",
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/profile",
         method: "POST",
         headers: {
           origin: "https://store.example.com",
@@ -355,6 +355,52 @@ test("6-digit OTP sign-in mints an origin-bound session, auto-links case-folded 
   );
   assert.equal(badCountry.ok, false);
   assert.equal(badCountry.error.code, "DELIVERY_COUNTRY_UNAVAILABLE");
+
+  // Explicitly clearing saved delivery and phone persists null across subsequent profile and orders reads.
+  const clearedProfile = await handlers.profile(
+    {
+      input: { phone: null, delivery: null },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/profile",
+        method: "POST",
+        headers: {
+          origin: "https://store.example.com",
+          [CUSTOMER_SESSION_HEADER]: sessionToken,
+        },
+      },
+    },
+    ctx,
+  );
+  assert.equal(clearedProfile.ok, true);
+  assert.equal(clearedProfile.profile.phone, null);
+  assert.equal(clearedProfile.profile.delivery, null);
+
+  const rereadProfile = await handlers.profile(
+    {
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/profile",
+        method: "GET",
+        headers: { [CUSTOMER_SESSION_HEADER]: sessionToken },
+      },
+    },
+    ctx,
+  );
+  assert.equal(rereadProfile.ok, true);
+  assert.equal(rereadProfile.profile.phone, null);
+  assert.equal(rereadProfile.profile.delivery, null);
+
+  const rereadOrders = await handlers.orders(
+    {
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/orders",
+        headers: { [CUSTOMER_SESSION_HEADER]: sessionToken },
+      },
+    },
+    ctx,
+  );
+  assert.equal(rereadOrders.ok, true);
+  assert.equal(rereadOrders.profile.phone, null);
+  assert.equal(rereadOrders.profile.delivery, null);
 
   // Sign-out revokes session immediately.
   const signedOut = await handlers.signOut(
@@ -397,4 +443,231 @@ test("native createPlugin mounts the shopper account routes and storage collecti
   ]) {
     assert.equal(plugin.routes[route]?.public, true, `${route} should be mounted as public`);
   }
+});
+
+test("OTP verification enforces CAS single-use consumption, attempt reservation under contention, and cooldown preservation after exhaustion", async () => {
+  let currentNow = 1_760_000_000;
+  let currentCode = "111222";
+  const { ctx, storage, handlers } = createSandboxFixture({
+    now: () => currentNow,
+    code: currentCode,
+  });
+  // Override createLoginCode dynamically via custom handler set
+  const dynamicHandlers = createInstalledShopperAccountHandlers(
+    (c, emailKey) => listOrdersForEmail(c.storage.orders, emailKey),
+    {
+      now: () => currentNow,
+      createLoginCode: () => currentCode,
+    },
+  );
+
+  await dynamicHandlers.startSignIn(
+    {
+      input: { email: "grace@example.com" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/start",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+
+  // Exhaust all 5 attempts with wrong codes.
+  for (let i = 0; i < 5; i += 1) {
+    const attemptRes = await dynamicHandlers.verifySignIn(
+      {
+        input: { email: "grace@example.com", code: "999999" },
+        request: {
+          url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify",
+          headers: { origin: "https://store.example.com" },
+        },
+      },
+      ctx,
+    );
+    assert.equal(attemptRes.ok, false);
+    assert.equal(attemptRes.error.code, "CODE_INVALID");
+  }
+
+  // Even the valid code now fails closed because the attempt budget is exhausted.
+  const afterExhaustion = await dynamicHandlers.verifySignIn(
+    {
+      input: { email: "grace@example.com", code: "111222" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  assert.equal(afterExhaustion.ok, false);
+  assert.equal(afterExhaustion.error.code, "CODE_INVALID");
+
+  // Attempting to request a new code within the 30-second cooldown after exhaustion is still RATE_LIMITED.
+  currentNow += 10;
+  const blockedResend = await dynamicHandlers.startSignIn(
+    {
+      input: { email: "grace@example.com" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/start",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  assert.equal(blockedResend.ok, false);
+  assert.equal(blockedResend.error.code, "RATE_LIMITED");
+
+  // After 30 seconds from issuedAt, a new code can be issued.
+  currentNow += 25;
+  currentCode = "333444";
+  const reissued = await dynamicHandlers.startSignIn(
+    {
+      input: { email: "grace@example.com" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/start",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  assert.equal(reissued.ok, true);
+
+  // Deterministic two-party barrier on getVersioned (#154): two simultaneous valid-code submissions
+  // against the same challenge both read getVersioned before either proceeds to compareAndSet.
+  // Exactly one succeeds and creates a session; the loser fails closed with CONTENTION.
+  const baseGetVersioned = storage[CUSTOMER_LOGIN_CODES_COLLECTION].getVersioned;
+  let barrierReads = 0;
+  let releaseBarrier;
+  const bothReadBarrier = new Promise((resolve) => {
+    releaseBarrier = resolve;
+  });
+  storage[CUSTOMER_LOGIN_CODES_COLLECTION].getVersioned = async (id) => {
+    const result = await baseGetVersioned(id);
+    if (id === "grace@example.com" && barrierReads < 2) {
+      barrierReads += 1;
+      if (barrierReads === 2) releaseBarrier();
+      await bothReadBarrier;
+    }
+    return result;
+  };
+
+  const verifyCall = () =>
+    dynamicHandlers.verifySignIn(
+      {
+        input: { email: "grace@example.com", code: "333444" },
+        request: {
+          url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify",
+          headers: { origin: "https://store.example.com" },
+        },
+      },
+      ctx,
+    );
+
+  const [concurrentA, concurrentB] = await Promise.all([verifyCall(), verifyCall()]);
+  storage[CUSTOMER_LOGIN_CODES_COLLECTION].getVersioned = baseGetVersioned;
+
+  const outcomes = [concurrentA.ok, concurrentB.ok];
+  assert.equal(outcomes.filter(Boolean).length, 1, "exactly one concurrent verifier may succeed");
+  const loser = concurrentA.ok ? concurrentB : concurrentA;
+  assert.equal(loser.ok, false);
+  assert.equal(loser.error.code, "CONTENTION");
+  const sessionsAfterConcurrentVerify = await storage[CUSTOMER_SESSIONS_COLLECTION].query();
+  assert.equal(sessionsAfterConcurrentVerify.items.length, 1, "exactly one session may be created");
+
+  // Confirm stale/expired verification cannot delete or overwrite a newly issued replacement challenge (#154).
+  currentNow += 601;
+  let pauseStaleOnce = true;
+  let releaseStale;
+  const stalePaused = new Promise((resolve) => {
+    releaseStale = resolve;
+  });
+  let markStaleRead;
+  const staleHasRead = new Promise((resolve) => {
+    markStaleRead = resolve;
+  });
+  storage[CUSTOMER_LOGIN_CODES_COLLECTION].getVersioned = async (id) => {
+    const result = await baseGetVersioned(id);
+    if (pauseStaleOnce && id === "grace@example.com") {
+      pauseStaleOnce = false;
+      markStaleRead();
+      await stalePaused;
+    }
+    return result;
+  };
+
+  const staleVerifyPromise = dynamicHandlers.verifySignIn(
+    {
+      input: { email: "grace@example.com", code: "333444" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  await staleHasRead;
+
+  // Issue replacement challenge while stale verification is still in flight.
+  currentCode = "777888";
+  const replacementStart = await dynamicHandlers.startSignIn(
+    {
+      input: { email: "grace@example.com" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/start",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  assert.equal(replacementStart.ok, true);
+
+  releaseStale();
+  const staleResult = await staleVerifyPromise;
+  storage[CUSTOMER_LOGIN_CODES_COLLECTION].getVersioned = baseGetVersioned;
+  assert.equal(staleResult.ok, false);
+
+  // The newly issued replacement challenge ("777888") remains intact and succeeds.
+  const replacementVerify = await dynamicHandlers.verifySignIn(
+    {
+      input: { email: "grace@example.com", code: "777888" },
+      request: {
+        url: "https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify",
+        headers: { origin: "https://store.example.com" },
+      },
+    },
+    ctx,
+  );
+  assert.equal(replacementVerify.ok, true);
+  assert.equal((await storage[CUSTOMER_SESSIONS_COLLECTION].query()).items.length, 2);
+});
+
+test("listOrdersForEmail sorts by payment timestamp before order number when an older payment arrives later", async () => {
+  const { storage } = createSandboxFixture();
+  const receiver = createPaidOrderReceiver(storage.orders, storage.order_numbers);
+
+  // Newer payment arrives first and gets order number 1001.
+  await receiver.receive(
+    makeOrder({
+      orderId: "ord_paid_newer",
+      email: "chronology@example.com",
+      paidAt: "2026-10-20T18:00:00.000Z",
+    }),
+  );
+  // Older payment is retried/delivered second and gets order number 1002.
+  await receiver.receive(
+    makeOrder({
+      orderId: "ord_paid_older",
+      email: "chronology@example.com",
+      paidAt: "2026-10-18T09:00:00.000Z",
+    }),
+  );
+
+  const listed = await listOrdersForEmail(storage.orders, "chronology@example.com");
+  assert.deepEqual(
+    listed.map((o) => ({ orderId: o.orderId, number: o.number, paidAt: o.paidAt })),
+    [
+      { orderId: "ord_paid_newer", number: 1001, paidAt: "2026-10-20T18:00:00.000Z" },
+      { orderId: "ord_paid_older", number: 1002, paidAt: "2026-10-18T09:00:00.000Z" },
+    ],
+  );
 });

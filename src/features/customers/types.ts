@@ -58,8 +58,8 @@ export interface CustomerRecord {
   recordKind: "commerce-customer";
   emailKey: string;
   email: string;
-  phone?: string;
-  delivery?: CheckoutDeliveryAddress;
+  phone?: string | null;
+  delivery?: CheckoutDeliveryAddress | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -71,6 +71,7 @@ export interface CustomerLoginCodeRecord {
   attempts: number;
   issuedAt: number;
   expiresAt: number;
+  consumed?: boolean;
 }
 
 export interface CustomerSessionRecord {

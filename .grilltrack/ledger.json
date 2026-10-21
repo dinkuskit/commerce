@@ -13286,44 +13286,99 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T01:44:54+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "verified",
+          "implementation_ref": "file:src/features/customers/index.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T01:59:58+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/customers/index.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-1.md",
+          "review_result": "findings",
+          "review_source_identity": "git:6f2646665d3983b4bc1d7c026496de9892e523ca",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T01:59:58+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
         }
       ],
       "id": "shopper-accounts-v1-20261020",
-      "implementation_ref": "file:src/features/customers/index.ts",
+      "implementation_ref": "file:src/features/customers/account.ts",
       "question": "Where do shopper accounts and WooCommerce-style roles live in DinkusKit on EmDash, and how does v1 shopper sign-in, order linking, and address prefill work?",
       "rationale": "Confirmed across two GrillTrack rounds with emdash-commerce platform research (Shopify Customer Account API, BigCommerce, commercetools, WooCommerce) and verified against EmDash 1.2.0 and 1.3.1 (@emdash-cms/auth closed 5-tier numeric Role enum, read-only users:read capability, and sandbox header stripping).",
       "repair_required": false,
       "review_classifications": [],
-      "review_history": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-1.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-21T01:44:54+00:00",
+          "source_identity": "git:6f2646665d3983b4bc1d7c026496de9892e523ca"
+        }
+      ],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-21T01:07:31+00:00",
+      "updated_at": "2026-10-21T01:59:58+00:00",
       "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-21T01:07:31+00:00",
+    "at": "2026-10-21T01:44:53+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
-    "artifact_refs": [
-      "docs/contracts/shopper-accounts.md"
-    ],
-    "next_safe_action": "Implement bounded Commerce customer session/OTP/order-history/profile slice in an isolated worktree or run the cross-repo EmDash 1.3.1 upgrade track.",
-    "paused_at": "2026-10-21T00:37:50+00:00",
-    "reason": "Shopper accounts v1 architectural decision locked; pausing before implementation per owner instruction.",
-    "resumed_at": "2026-10-21T01:07:31+00:00"
-  },
-  "pause": {
     "artifact_refs": [
       ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
     ],
     "next_safe_action": "Run exact-source review or wire the Account UI in template-store.",
     "paused_at": "2026-10-21T01:07:32+00:00",
-    "reason": "Shopper accounts v1 Commerce slice implemented and verified; pausing before review/PR or storefront slice."
+    "reason": "Shopper accounts v1 Commerce slice implemented and verified; pausing before review/PR or storefront slice.",
+    "resumed_at": "2026-10-21T01:44:53+00:00"
+  },
+  "pause": {
+    "artifact_refs": [
+      ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md",
+      ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-1.md"
+    ],
+    "next_safe_action": "Run re-review on new PR head and merge #152 once clean.",
+    "paused_at": "2026-10-21T01:59:58+00:00",
+    "reason": "Round 1 ClawSweeper repairs implemented and verified on workerd + SQLite; pushing for re-review."
   },
   "recommendation": {
     "alternatives": [],
@@ -13344,5 +13399,5 @@
   "status": "paused",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-21T01:07:32+00:00"
+  "updated_at": "2026-10-21T01:59:58+00:00"
 }

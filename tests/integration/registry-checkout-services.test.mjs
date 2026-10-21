@@ -1,5 +1,6 @@
 // This SDK uses one workerd port; keep the readiness and service cases in one test process.
 import './registry-checkout-readiness-cases.mjs';
+import './shopper-accounts-runtime-cases.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';

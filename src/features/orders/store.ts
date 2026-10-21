@@ -256,6 +256,12 @@ export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
   };
 }
 
+function paidAtMillis(paidAt: string | undefined): number {
+  if (!paidAt) return Number.NEGATIVE_INFINITY;
+  const parsed = Date.parse(paidAt);
+  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+}
+
 /** Every kept order whose frozen checkout email matches the verified email (case-folded), newest first. */
 export async function listOrdersForEmail(
   collection: Pick<OrdersCollection, "query">,
@@ -267,12 +273,15 @@ export async function listOrdersForEmail(
   return all
     .filter(record => record.paidOrder.contactSnapshot?.contact?.email?.trim().toLowerCase() === target)
     .sort((a, b) => {
-      const aNum = a.number ?? -1;
-      const bNum = b.number ?? -1;
-      if (aNum !== bNum) return bNum - aNum;
+      const aTime = paidAtMillis(a.paidOrder.paidAt);
+      const bTime = paidAtMillis(b.paidOrder.paidAt);
+      if (aTime !== bTime) return bTime - aTime;
       const aPaid = a.paidOrder.paidAt ?? "";
       const bPaid = b.paidOrder.paidAt ?? "";
       if (aPaid !== bPaid) return aPaid > bPaid ? -1 : 1;
+      const aNum = a.number ?? -1;
+      const bNum = b.number ?? -1;
+      if (aNum !== bNum) return bNum - aNum;
       return a.paidOrder.orderId > b.paidOrder.orderId ? -1 : a.paidOrder.orderId < b.paidOrder.orderId ? 1 : 0;
     })
     .map(projectShopperOrder);
