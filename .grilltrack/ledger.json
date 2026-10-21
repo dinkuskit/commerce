@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-21T15:22:54+00:00",
+    "confirmed_at": "2026-10-21T15:23:29+00:00",
     "domain": "Coupons after v1",
     "started_at": "2026-10-21T15:22:45+00:00",
     "status": "confirmed",
-    "summary": "Owner answered '1' on 21 Oct 2026 15:21 UTC to: leave coupons parked and separate for now, keep 2.2 KB of Commerce's room reserved for the connection, and raise anything that would spend it."
+    "summary": "Owner, 21 Oct 2026 15:22 UTC: 'leave it parked for now until we figure out what we're working on with Authorize.net.'"
   },
   "decisions": [
     {
@@ -13452,6 +13452,49 @@
       "superseded_by": null,
       "updated_at": "2026-10-21T15:22:54+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Not yet. Inventory stays parked until the Authorize.net proof is settled: Commerce's Registry build keeps Manage stock showing Coming soon as commerce-v1-inventory-unavailable-001 set, and no Inventory refresh, deploy, plugin release or Commerce wiring starts until the owner picks it back up.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanGjpeJwg9z5QUfUpsLoAMCq",
+      "created_at": "2026-10-21T15:23:28+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-v1-inventory-unavailable-001"
+      ],
+      "domain": "Coupons after v1",
+      "history": [
+        {
+          "at": "2026-10-21T15:23:29+00:00",
+          "choice": "Not yet. Inventory stays parked until the Authorize.net proof is settled: Commerce's Registry build keeps Manage stock showing Coming soon as commerce-v1-inventory-unavailable-001 set, and no Inventory refresh, deploy, plugin release or Commerce wiring starts until the owner picks it back up.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "inventory-parked-20261021",
+      "implementation_ref": null,
+      "question": "Does Inventory work resume after v1 now?",
+      "rationale": "The owner, 21 Oct 2026 15:22 UTC: leave Inventory parked until the Authorize.net work is figured out.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T15:23:29+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -13488,5 +13531,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-21T15:22:54+00:00"
+  "updated_at": "2026-10-21T15:23:29+00:00"
 }

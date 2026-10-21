@@ -538,3 +538,6 @@
 {"action": "decision_proposed", "at": "2026-10-21T15:22:54+00:00", "data": {"decision_id": "registry-coupons-parked-20261021"}, "event_id": "027ef234-4563-418b-b78c-7ddcfc2212eb"}
 {"action": "shared_understanding_confirmed", "at": "2026-10-21T15:22:54+00:00", "data": {"summary": "Owner answered '1' on 21 Oct 2026 15:21 UTC to: leave coupons parked and separate for now, keep 2.2 KB of Commerce's room reserved for the connection, and raise anything that would spend it."}, "event_id": "a487b87a-a496-407e-b9bf-84d68e59e05a"}
 {"action": "decision_locked", "at": "2026-10-21T15:22:54+00:00", "data": {"decision_id": "registry-coupons-parked-20261021"}, "event_id": "b2659125-9ac0-4ac3-9a90-0893ce4d2481"}
+{"action": "decision_proposed", "at": "2026-10-21T15:23:29+00:00", "data": {"decision_id": "inventory-parked-20261021"}, "event_id": "644be834-32e4-42a1-8a15-a7a81d8d231c"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-21T15:23:29+00:00", "data": {"summary": "Owner, 21 Oct 2026 15:22 UTC: 'leave it parked for now until we figure out what we're working on with Authorize.net.'"}, "event_id": "341c25a4-091b-4f29-8457-76150822e60a"}
+{"action": "decision_locked", "at": "2026-10-21T15:23:29+00:00", "data": {"decision_id": "inventory-parked-20261021"}, "event_id": "014db7cc-7b17-4b91-9786-ab5ae883bad8"}
