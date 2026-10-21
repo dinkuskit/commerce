@@ -1,5 +1,6 @@
 // This SDK uses one workerd port; keep the readiness and service cases in one test process.
 import './registry-checkout-readiness-cases.mjs';
+import './shopper-accounts-runtime-cases.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -33,12 +34,20 @@ import { couponCollection } from '../features/checkout/pricing-fixture.mjs';
 import { couponServiceFake } from '../features/checkout/coupon-service-fake.mjs';
 import { createCouponAdmin } from '../../dist/features/coupons/index.js';
 import {
+  BACKGROUND_CHECK_REGISTER_BUDGET_MS,
   COMMERCE_CHECKOUT_WAKES_TASK,
   COMMERCE_REGISTRY_RUNTIME_ID,
 } from '../../dist/features/checkout/index.js';
 
 const PREPARE = 'checkout/guest/prepare', START = 'checkout/guest/start', STATUS = 'checkout/guest/status';
 const basket = { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: 'hat', quantity: 1 }] };
+
+// Checkout schedules nothing of its own: the site scheduler holds only the 5-minute background
+// check, which the first request registers when switching on did not.
+const BACKGROUND_CHECK = [COMMERCE_REGISTRY_RUNTIME_ID, COMMERCE_CHECKOUT_WAKES_TASK, '*/5 * * * *', 1];
+function assertOnlyBackgroundCheck(state) {
+  assert.deepEqual(state.cronTasks().map(row => Object.values(row)), [BACKGROUND_CHECK]);
+}
 
 async function start(state, input = basket) {
   const prepared = await state.invoke(PREPARE);
@@ -51,14 +60,14 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const state = await runtimeFixture({ grants: false, config: null, token: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
-  assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request']);
+  assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request', 'email:send']);
   assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
   assert.equal(state.counts.credentials, 0);
   assert.equal(state.counts.transport, 0);
-  assert.equal(state.counts.scheduler, 0);
+  assertOnlyBackgroundCheck(state);
   assert.deepEqual(await state.cartRecords(), []);
 });
 
@@ -122,7 +131,7 @@ test('compiled Registry runtime ships no coupon storage or evaluator, and withou
   assert.equal(state.requests.length, 1);
   assert.equal(state.requests[0].pricing.couponDiscount.minor, '0');
   assert.equal(Object.hasOwn(state.requests[0].pricing, 'coupon'), false);
-  assert.equal(state.counts.scheduler, 0);
+  assertOnlyBackgroundCheck(state);
 });
 
 async function hostedCoupons() {
@@ -186,7 +195,7 @@ test('actual compiled default workerd zero-priced cart writes one payment-free o
   const repeat = await state.invoke(STATUS, {}, token);
   assert.deepEqual(repeat.checkout.order, result.checkout.order);
   assert.equal(state.counts.transport, 0);
-  assert.equal(state.counts.scheduler, 0);
+  assertOnlyBackgroundCheck(state);
 });
 
 test('compiled zero-priced merchandise with positive shipping still uses Payments', async t => {
@@ -509,7 +518,7 @@ test('expired/wrong-scope/wrong-site passes from the trade fail before synthetic
     assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
   }
   assert.equal(state.counts.transport, 0);
-  assert.equal(state.counts.scheduler, 0);
+  assertOnlyBackgroundCheck(state);
   // Legitimate standard scope and audience array are accepted; no obsolete array claim.
   state.setPass('payments:checkout', await credential({ aud: ['synthetic-payments', 'other'] }));
   assert.equal((await start(state)).result.checkout.state, 'pending');
@@ -540,7 +549,7 @@ test('workerd bridge denies missing grants even with configured services and HTT
   assert.equal(attempts.length, 1);
   assert.equal(attempts[0].phase, 'paying');
   assert.equal(attempts[0].order, undefined);
-  assert.equal(state.counts.scheduler, 0);
+  assertOnlyBackgroundCheck(state);
 });
 
 for (const mode of ['free', 'flat']) test(`compiled default workerd ${mode} shipping retains canonical payment/order replay`, async t => {
@@ -570,7 +579,7 @@ for (const mode of ['free', 'flat']) test(`compiled default workerd ${mode} ship
   assert.equal(record.attempts[0].order.total.minor, original.total.minor);
   assert.deepEqual(record.attempts[0].order.pricing, original.pricing);
   assert.equal(state.requests.length, 1);
-  assert.equal(state.counts.scheduler, 0);
+  assertOnlyBackgroundCheck(state);
 });
 
 test('real workerd cron wake applies canonical paid order before exact ACK and replay', async t => {
@@ -586,7 +595,7 @@ test('real workerd cron wake applies canonical paid order before exact ACK and r
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
   assert.deepEqual((await state.cartRecords())[0], record);
   assert.equal(state.counts.acknowledgments, 1);
-  assert.equal(state.counts.scheduler, 0);
+  assertOnlyBackgroundCheck(state);
 });
 
 test('switching Commerce on registers its 5-minute background check with the site scheduler', async t => {
@@ -596,15 +605,85 @@ test('switching Commerce on registers its 5-minute background check with the sit
   assert.deepEqual(state.manifest.hooks, ['plugin:activate', { name: 'cron', timeout: 25000 }]);
   assert.deepEqual(state.cronTasks(), []);
   await state.plugin.invokeHook('plugin:activate', {});
-  const task = [COMMERCE_REGISTRY_RUNTIME_ID, COMMERCE_CHECKOUT_WAKES_TASK, '*/5 * * * *', 1];
-  assert.deepEqual(state.cronTasks().map(row => Object.values(row)), [task]);
+  assertOnlyBackgroundCheck(state);
   // Switching on again, as after re-enabling, keeps one task.
   await state.plugin.invokeHook('plugin:activate', {});
-  assert.deepEqual(state.cronTasks().map(row => Object.values(row)), [task]);
-  // Checkout itself never schedules anything.
+  assertOnlyBackgroundCheck(state);
+  // Once the task is registered, checkout never touches the scheduler.
   const scheduled = state.counts.scheduler;
   await start(state);
   assert.equal(state.counts.scheduler, scheduled);
+});
+
+// The site scheduler runs the task it holds: the cron hook gets the registered row's task name.
+async function runScheduledCheck(state) {
+  const [row] = state.cronTasks();
+  assert.ok(row, 'the background check is registered');
+  await state.plugin.invokeHook('cron', { name: row.task_name });
+}
+
+test('when the scheduler refuses at switch-on, the next request registers the background check, which then settles payments and Ship', async t => {
+  const ship = shipStandIn();
+  const state = await runtimeFixture({ config: { ...configuration(), ship: SHIP }, shipPass: await shipCredential(), shipService: ship.service });
+  t.after(() => state.close());
+  state.setSchedulerFault(() => { throw new Error('synthetic scheduler outage'); });
+  // EmDash sees switching on succeed; nothing is scheduled yet.
+  await state.plugin.invokeHook('plugin:activate', {});
+  assert.deepEqual(state.cronTasks(), []);
+  state.setSchedulerFault(null);
+  // The next request registers the task, without anyone switching Commerce off and on.
+  const hat = await state.collections.catalog_items.get('hat');
+  await state.collections.catalog_items.put('hat', { ...hat, fulfillment: 'physical', weightOz: 4.5 });
+  await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
+  const prepared = await state.invoke(PREPARE);
+  assertOnlyBackgroundCheck(state);
+  // Later requests leave the scheduler alone.
+  const scheduled = state.counts.scheduler;
+  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery },
+    lines: [{ catalogItemId: 'hat', quantity: 1 }] }, prepared.capability.capability);
+  assert.equal(started.ok, true);
+  assert.equal(state.counts.scheduler, scheduled);
+  // The shopper pays and never comes back: the scheduled check settles the payment and sends the order to Ship.
+  state.setPaid();
+  state.setWakes([{ eventId: 'evt_SYNTHETIC', attemptId: state.requests[0].attemptId,
+    bindingRef: configuration().bindingRef, deliveryGeneration: 1, wokeAt: Date.now() }]);
+  await runScheduledCheck(state);
+  assert.equal(state.counts.acknowledgments, 1);
+  const attempt = (await state.cartRecords())[0].attempts[0];
+  assert.equal(attempt.phase, 'paid');
+  assert.deepEqual(ship.state.sent.map(order => [order.orderId, order.status]), [[attempt.order.orderId, 'processing']]);
+  // The merchant buys a label in Ship and leaves Commerce closed: the next check completes the order.
+  ship.state.labels = [{ eventId: 'lbl_synthetic_1', orderId: attempt.order.orderId, version: 1, carrier: 'USPS', tracking: '9400 SYNTHETIC' }];
+  await runScheduledCheck(state);
+  assert.deepEqual(ship.state.acks, ['lbl_synthetic_1']);
+  assert.equal((await state.collections.orders.get(attempt.order.orderId)).completed.tracking, '9400 SYNTHETIC');
+  assert.equal(state.counts.scheduler, scheduled);
+  assertOnlyBackgroundCheck(state);
+});
+
+test('a stalled scheduler holds neither switch-on nor a request past the budget, and its late answer leaves one task', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  let release;
+  const stalled = new Promise(resolve => { release = resolve; });
+  state.setSchedulerFault(() => stalled);
+  const timed = async run => { const began = Date.now(); const result = await run(); return { result, ms: Date.now() - began }; };
+  const activated = await timed(() => state.plugin.invokeHook('plugin:activate', {}));
+  assert.ok(activated.ms >= BACKGROUND_CHECK_REGISTER_BUDGET_MS - 100 && activated.ms < BACKGROUND_CHECK_REGISTER_BUDGET_MS + 1500, String(activated.ms));
+  // The first request waits no longer than the budget, and still answers.
+  const first = await timed(() => state.invoke(PREPARE));
+  assert.equal(first.result.ok, true);
+  assert.ok(first.ms < BACKGROUND_CHECK_REGISTER_BUDGET_MS + 1500, String(first.ms));
+  // Requests in the next minute leave the stalled scheduler alone.
+  const second = await timed(() => state.invoke(PREPARE));
+  assert.equal(second.result.ok, true);
+  assert.ok(second.ms < BACKGROUND_CHECK_REGISTER_BUDGET_MS - 1000, String(second.ms));
+  assert.deepEqual(state.cronTasks(), []);
+  // The scheduler answers late: the stalled calls finish safely with one task.
+  state.setSchedulerFault(null);
+  release();
+  for (let tries = 0; tries < 50 && state.cronTasks().length === 0; tries++) await new Promise(resolve => setTimeout(resolve, 20));
+  assertOnlyBackgroundCheck(state);
 });
 
 test('wake transport rejects oversized/malformed batches with no ACK or canonical order', async t => {

@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-20T23:34:09+00:00",
-    "domain": "public-feed-eligibility",
-    "started_at": "2026-10-20T23:34:08+00:00",
+    "confirmed_at": "2026-10-21T16:04:32+00:00",
+    "domain": "US delivery feature Registry budget exception",
+    "started_at": "2026-10-21T16:04:31+00:00",
     "status": "confirmed",
-    "summary": "Complete public feed projection for issue35 using the existing merchant eligibility record and approved channel ids only; preserve anonymous list/item auth, data boundaries, batching and the existing preview builder."
+    "summary": "Owner approved a feature-only 1518-byte remaining Registry budget for the already verified US delivery rule; no code, general reserve, parked integration or merge/deployment authorization changes."
   },
   "decisions": [
     {
@@ -8765,6 +8765,20 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:07+00:00",
+          "choice": "Physical delivery only to United States all 50 states plus District of Columbia, including Alaska and Hawaii. Territories and military addresses deferred. Reject unsupported delivery regions before payable physical checkout, independently of billing-country origin. Tax rules remain deferred.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Replay the original 2026-10-21 owner reconciliation of the earlier US-only release boundary with configured non-US destinations; source authority and frozen fork are retained in the public decision/replay proof.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
         }
       ],
       "id": "initial-physical-delivery-coverage-001",
@@ -8777,9 +8791,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
-      "superseded_by": null,
-      "updated_at": "2026-10-09T01:49:24+00:00",
+      "status": "superseded",
+      "superseded_by": "us-physical-delivery-regions-20261021",
+      "updated_at": "2026-10-21T15:57:07+00:00",
       "verification_ref": null
     },
     {
@@ -8808,6 +8822,20 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:07+00:00",
+          "choice": "Yes. Commerce initial-release shipping policy allows non-US billing with supported US physical delivery, including Canadian billing with New York delivery, subject to actual provider and legal eligibility. Do not require US billing solely because shipping is US-only. Preserve billing-first and separately captured immutable billing/shipping records. This does not bypass provider country/sanctions controls, admit every digital market, or enable international physical delivery.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency initial-physical-delivery-coverage-001 changed: Replay the original 2026-10-21 owner reconciliation of the earlier US-only release boundary with configured non-US destinations; source authority and frozen fork are retained in the public decision/replay proof.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
         }
       ],
       "id": "initial-foreign-billing-us-delivery-001",
@@ -8820,9 +8848,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-09T01:49:24+00:00",
+      "updated_at": "2026-10-21T15:57:07+00:00",
       "verification_ref": null
     },
     {
@@ -13233,30 +13261,428 @@
       "superseded_by": null,
       "updated_at": "2026-10-20T23:44:32+00:00",
       "verification_ref": ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+      "context_ref": "docs/contracts/shopper-accounts.md",
+      "created_at": "2026-10-21T00:37:49+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Shopper accounts and store role boundary",
+      "history": [
+        {
+          "at": "2026-10-21T00:37:49+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T01:07:31+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T01:07:31+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/customers/index.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T01:44:54+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "verified",
+          "implementation_ref": "file:src/features/customers/index.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T01:59:58+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/customers/index.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-1.md",
+          "review_result": "findings",
+          "review_source_identity": "git:6f2646665d3983b4bc1d7c026496de9892e523ca",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T01:59:58+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T02:21:52+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "verified",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T02:21:52+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-2.md",
+          "review_result": "findings",
+          "review_source_identity": "git:8fd3828d0a68b9a0a87bfc7ab65f8a633f1a39d8",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-10-21T02:21:53+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        }
+      ],
+      "id": "shopper-accounts-v1-20261020",
+      "implementation_ref": "file:src/features/customers/account.ts",
+      "question": "Where do shopper accounts and WooCommerce-style roles live in DinkusKit on EmDash, and how does v1 shopper sign-in, order linking, and address prefill work?",
+      "rationale": "Confirmed across two GrillTrack rounds with emdash-commerce platform research (Shopify Customer Account API, BigCommerce, commercetools, WooCommerce) and verified against EmDash 1.2.0 and 1.3.1 (@emdash-cms/auth closed 5-tier numeric Role enum, read-only users:read capability, and sandbox header stripping).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-1.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-21T01:44:54+00:00",
+          "source_identity": "git:6f2646665d3983b4bc1d7c026496de9892e523ca"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-2.md",
+          "result": "findings",
+          "reviewed_at": "2026-10-21T02:21:52+00:00",
+          "source_identity": "git:8fd3828d0a68b9a0a87bfc7ab65f8a633f1a39d8"
+        }
+      ],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T02:21:53+00:00",
+      "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Not now. Coupons stay a separate Coupons plugin and hosted coupon service; Commerce's Registry build keeps the coupon checkout connection unwired, as registry-coupons-unhooked-v1 set for v1. Commerce keeps at least 2,200 bytes of its Registry backend file free for that connection (about 2 KB measured on 21 Oct 2026). A change that would leave less is raised with the owner before it merges. When coupons come back, the connection is first reshaped for what the coupon module may grow into (shipping discounts, more than one code per order), then switched on together with the coupon service deploy and the Coupons plugin's first release.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanGjpeJwg9z5QUfUpsLoAMCq",
+      "created_at": "2026-10-21T15:22:54+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "registry-coupons-unhooked-v1"
+      ],
+      "domain": "Coupons after v1",
+      "history": [
+        {
+          "at": "2026-10-21T15:22:54+00:00",
+          "choice": "Not now. Coupons stay a separate Coupons plugin and hosted coupon service; Commerce's Registry build keeps the coupon checkout connection unwired, as registry-coupons-unhooked-v1 set for v1. Commerce keeps at least 2,200 bytes of its Registry backend file free for that connection (about 2 KB measured on 21 Oct 2026). A change that would leave less is raised with the owner before it merges. When coupons come back, the connection is first reshaped for what the coupon module may grow into (shipping discounts, more than one code per order), then switched on together with the coupon service deploy and the Coupons plugin's first release.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "registry-coupons-parked-20261021",
+      "implementation_ref": null,
+      "question": "Do coupons come back to the Registry checkout now, and what room does Commerce keep for them?",
+      "rationale": "The owner and his dad: not every store uses coupons, so they stay separate and free to grow. commerce#159 (d5b8e18) brought the free room to 2,274 bytes; re-wiring the current connection measured about 2 KB. Today's connection carries only per-line merchandise discounts and one code per order.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T15:22:54+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Not yet. Inventory stays parked until the Authorize.net proof is settled: Commerce's Registry build keeps Manage stock showing Coming soon as commerce-v1-inventory-unavailable-001 set, and no Inventory refresh, deploy, plugin release or Commerce wiring starts until the owner picks it back up.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanGjpeJwg9z5QUfUpsLoAMCq",
+      "created_at": "2026-10-21T15:23:28+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-v1-inventory-unavailable-001"
+      ],
+      "domain": "Coupons after v1",
+      "history": [
+        {
+          "at": "2026-10-21T15:23:29+00:00",
+          "choice": "Not yet. Inventory stays parked until the Authorize.net proof is settled: Commerce's Registry build keeps Manage stock showing Coming soon as commerce-v1-inventory-unavailable-001 set, and no Inventory refresh, deploy, plugin release or Commerce wiring starts until the owner picks it back up.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "inventory-parked-20261021",
+      "implementation_ref": null,
+      "question": "Does Inventory work resume after v1 now?",
+      "rationale": "The owner, 21 Oct 2026 15:22 UTC: leave Inventory parked until the Authorize.net work is figured out.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T15:23:29+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:675a191d73648d47f0ac5eb8fe43dc6f64d62641",
+      "candidate_refs": [
+        "git:faa9ee6e2e122d4c4080a175d62152208279eaa3"
+      ],
+      "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+      "context_ref": ".grilltrack/proof/us-region-checkout-20261021/DECISION.md",
+      "created_at": "2026-10-21T15:57:07+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "US physical delivery region eligibility",
+      "history": [
+        {
+          "at": "2026-10-21T15:57:07+00:00",
+          "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:56+00:00",
+          "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T15:57:57+00:00",
+          "choice": "Require a valid US state or DC for new US physical checkout; accept all50states and DC as case-insensitive codes/full names with outer whitespace trim; refuse missing/unknown/territory/military US regions before attempt write, stock reservation or payment. Preserve configured non-US destinations, digital-only discard, frozen active attempt replay, shared normalization, saved profiles, historical orders and no billing collection.",
+          "from": "implemented",
+          "implementation_ref": "file:src/features/checkout-contact/index.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "us-physical-delivery-regions-20261021",
+      "implementation_ref": "file:src/features/checkout-contact/index.ts",
+      "question": "How should new physical checkout validate US delivery regions while preserving configured countries?",
+      "rationale": "Original owner approval recorded on 2026-10-21 is unchanged. Replay frozen feature faa9ee6e2e122d4c4080a175d62152208279eaa3 onto main 675a191d73648d47f0ac5eb8fe43dc6f64d62641; preserve parked Coupons/Inventory decisions and raise the 682-byte reserve shortfall before merge.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T15:57:57+00:00",
+      "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/REPLAY.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+      "context_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+      "created_at": "2026-10-21T16:04:32+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "us-physical-delivery-regions-20261021",
+        "registry-coupons-parked-20261021"
+      ],
+      "domain": "US delivery feature Registry budget exception",
+      "history": [
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "implemented",
+          "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "us-region-registry-budget-exception-20261021",
+      "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+      "question": "May the approved US delivery-region feature leave 1518 bytes free rather than the default 2200-byte Registry reserve?",
+      "rationale": "Owner explicitly selected Allow 1,518 bytes for this feature after reviewing the measured reserve shortfall.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T16:04:32+00:00",
+      "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-20T23:40:08+00:00",
+    "at": "2026-10-21T15:22:45+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
     "artifact_refs": [
-      ".grilltrack/proof/preview-product-jsonld-035/PROOF.md"
+      ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md",
+      ".grilltrack/proof/shopper-accounts-v1-20261020/REVIEW-2.md"
     ],
-    "next_safe_action": "Consume the committed preview and public feed projection, rerun current-head review, and retain separate merge and release gates.",
-    "paused_at": "2026-10-20T23:35:12+00:00",
-    "reason": "Both public storefront prerequisites are implemented and verified; coordinator owns storefront integration and fresh exact-head review.",
-    "resumed_at": "2026-10-20T23:40:08+00:00"
+    "next_safe_action": "Run re-review on new PR head and merge #152 once clean.",
+    "paused_at": "2026-10-21T02:21:53+00:00",
+    "reason": "Round 2 ClawSweeper findings repaired and verified on workerd + SQLite; pushing for final review.",
+    "resumed_at": "2026-10-21T15:22:45+00:00"
   },
-  "pause": {
-    "artifact_refs": [
-      ".grilltrack/proof/preview-product-jsonld-035/PROOF.md",
-      ".grilltrack/proof/preview-product-jsonld-035/REVIEW-REPAIR-1.md"
-    ],
-    "next_safe_action": "Review the committed repair, update the pull request, and rerun current-head CI/comprehensive/native evidence before the merge gate.",
-    "paused_at": "2026-10-20T23:44:32+00:00",
-    "reason": "Review repair cycle 1 complete; core gate passed and runtime source unchanged. Coordinator owns fresh exact-head review."
-  },
+  "pause": null,
   "recommendation": {
     "alternatives": [],
     "reason": "The confirmed shared UI/agent authority boundary supports this independent foundation without new variants, migrations, permissions or protocols. Broader variant identity and fulfillment policy remain genuine decisions.",
@@ -13273,8 +13699,8 @@
     "snapshot_ref": ".grilltrack/lineage/1df678b7d46eb74d8c3624fd751d1dcffe773966f913539ae9836afe0c4513bc"
   },
   "schema_version": "grilltrack/v0.1",
-  "status": "paused",
+  "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-20T23:44:32+00:00"
+  "updated_at": "2026-10-21T16:04:32+00:00"
 }

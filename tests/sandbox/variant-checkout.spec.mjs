@@ -136,6 +136,18 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
         expect(db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n).toBe(cartsBeforeDenial);
       }
       await page.getByRole('textbox', {name:'Country'}).fill('us');
+      const cartsBeforeRegionDenials = db.prepare('SELECT id, data FROM _plugin_storage WHERE plugin_id=? AND collection=? ORDER BY id')
+        .all('dinkus-commerce', collections.carts);
+      for (const region of ['', 'PR', 'AE', 'Not a state']) {
+        await page.getByRole('textbox', {name:'State or region'}).fill(region);
+        const regionDenied = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
+        await page.getByRole('button', {name:'Start checkout'}).click();
+        expect((await regionDenied).status()).toBe(400);
+        await expect(page.locator('[data-checkout-result]')).toContainText('Delivery address is invalid');
+        expect(db.prepare('SELECT id, data FROM _plugin_storage WHERE plugin_id=? AND collection=? ORDER BY id')
+          .all('dinkus-commerce', collections.carts)).toEqual(cartsBeforeRegionDenials);
+      }
+      await page.getByRole('textbox', {name:'State or region'}).fill(' nOrTh cArOlInA ');
       const checkoutStarted = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
       await page.getByRole("button", { name: "Start checkout" }).click();
       const startResponse = await checkoutStarted;
@@ -187,7 +199,7 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       expect(attempt.order.variantSelections[0].selections[0].valueLabel).toBe("Large");
       expect(attempt.order.paymentId).toMatch(/^synthetic-payment:/);
       expect(attempt.contactSnapshot).toMatchObject({contact:{email:'variant-shopper@example.test',phone:'555 0142',
-        delivery:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',postalCode:'00000',country:'US'}},requirePhoneNumber:true,revision:capturedRequirementRevision});
+        delivery:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',region:'nOrTh cArOlInA',postalCode:'00000',country:'US'}},requirePhoneNumber:true,revision:capturedRequirementRevision});
       expect(attempt.order.contactSnapshot).toEqual(attempt.contactSnapshot);
       expect(JSON.stringify(attempt.payment)).not.toContain('variant-shopper@example.test');
       expect(JSON.stringify(paidProjection)).not.toContain('variant-shopper@example.test');

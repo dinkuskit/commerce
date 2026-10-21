@@ -64,7 +64,7 @@ export {
   SANDBOX_GUEST_CHECKOUT_STORAGE,
 } from "../runtime.js";
 export type { GuestCheckoutStorageNames } from "../runtime.js";
-export { admitGuestCheckoutWrite } from "../origin-admission.js";
+export { admitGuestCheckoutWrite, admitSameOriginWrite, headerValue } from "../origin-admission.js";
 export { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "../site-scope.js";
 export {
   CHECKOUT_READINESS_COLLECTION,
@@ -82,6 +82,14 @@ export type {
   InstalledPaidOrders,
   InstalledWakeResult,
 } from "../installed.js";
+export {
+  BACKGROUND_CHECK_REGISTER_BUDGET_MS,
+  BACKGROUND_CHECK_RETRY_MS,
+  BACKGROUND_CHECK_SCHEDULE,
+  ensureBackgroundCheck,
+  resetBackgroundCheckForTest,
+  withBackgroundCheck,
+} from "../background-check.js";
 export {
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,

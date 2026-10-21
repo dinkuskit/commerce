@@ -52,7 +52,7 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   await shop.goto(baseURL);
   await expect(shop.getByRole('option', { name: 'Fixture parcel ' + run })).toHaveCount(1);
   await shop.getByLabel('Email', { exact: true }).fill('buyer-' + run + '@example.invalid');
-  for (const [label, value] of [['Recipient', 'Local Fixture'], ['Address line 1', '1 Test Road'], ['City', 'Testville'], ['Postal code', '10001'], ['Country', 'US']]) {
+  for (const [label, value] of [['Recipient', 'Local Fixture'], ['Address line 1', '1 Test Road'], ['City', 'Testville'], ['State or region', 'NY'], ['Postal code', '10001'], ['Country', 'US']]) {
     await shop.getByLabel(label, { exact: true }).fill(value);
   }
   await shop.getByRole('button', { name: 'Prepare checkout', exact: true }).click();

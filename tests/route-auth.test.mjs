@@ -19,6 +19,11 @@ const SANDBOX_PUBLIC = [
   "checkout/guest/start POST",
   "checkout/guest/status POST",
   "checkout/guest/readiness GET",
+  "account/sign-in/start POST",
+  "account/sign-in/verify POST",
+  "account/sign-out POST",
+  "account/orders GET",
+  "account/profile GET,POST",
 ];
 const NATIVE_PUBLIC = SANDBOX_PUBLIC.filter((route) => !route.startsWith("policies/") && !route.includes("/readiness"));
 

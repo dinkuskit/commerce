@@ -9,14 +9,26 @@ import {
 import {
   COMMERCE_CHECKOUT_WAKES_TASK,
   createInstalledCheckoutHandlers,
+  ensureBackgroundCheck,
   GUEST_CHECKOUT_DECLARED_HEADERS,
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_READINESS_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
   resolveRegistryCheckoutServices,
+  withBackgroundCheck,
 } from "./features/checkout/kernel/index.js";
-import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, listOrdersForEmail, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import {
+  createInstalledShopperAccountHandlers,
+  SHOPPER_ACCOUNT_ORDERS_ROUTE,
+  SHOPPER_ACCOUNT_PROFILE_ROUTE,
+  SHOPPER_ACCOUNT_SESSION_HEADERS,
+  SHOPPER_ACCOUNT_WRITE_HEADERS,
+  SHOPPER_SIGN_IN_START_ROUTE,
+  SHOPPER_SIGN_IN_VERIFY_ROUTE,
+  SHOPPER_SIGN_OUT_ROUTE,
+} from "./features/customers/kernel/index.js";
 import {
   PUBLIC_STORE_POLICIES_ROUTE,
   readSandboxPublicStorePolicies,
@@ -26,17 +38,33 @@ const guestRequest = {
   body: "json" as const,
   headers: [...GUEST_CHECKOUT_DECLARED_HEADERS],
 };
+const shopperWriteRequest = {
+  body: "json" as const,
+  headers: [...SHOPPER_ACCOUNT_WRITE_HEADERS],
+};
+const shopperSessionBodyRequest = {
+  body: "json" as const,
+  headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS],
+};
 // Checkout hands each paid order to Orders, which keeps its own copy.
 const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckoutServices,
   ctx => createPaidOrderReceiver(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, ctx.storage[ORDER_NUMBERS_COLLECTION] as OrderNumbers));
+const installedShopperAccounts = createInstalledShopperAccountHandlers(
+  (ctx, emailKey) => listOrdersForEmail(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, emailKey),
+);
+function shopperRoute<T>(methods: ("GET" | "POST")[], request: { body: "json" | "none"; headers: string[] },
+  handler: (route: Parameters<typeof installedShopperAccounts.orders>[0], ctx: Parameters<typeof installedShopperAccounts.orders>[1]) => Promise<T>) {
+  return pluginRoute({ public: true, methods, request, cacheControl: "no-store", handler });
+}
 function guestRoute(handler: typeof installedCheckout.prepare) {
   return pluginRoute({ public: true, methods: ["POST"], request: guestRequest, handler });
 }
 const plugin: SandboxedPlugin = {
   hooks: {
-    // Switched on: the site's EmDash scheduler runs the background check every 5 minutes.
+    // Switched on: the site's EmDash scheduler runs the background check every 5 minutes. If the
+    // scheduler fails or stalls here, the next request registers it instead (see routes below).
     "plugin:activate": async (_event, ctx) => {
-      await ctx.cron?.schedule(COMMERCE_CHECKOUT_WAKES_TASK, { schedule: "*/5 * * * *" });
+      await ensureBackgroundCheck(ctx, true);
     },
     // The background check settles payments, then brings Orders and Ship up to date. Its passes from
     // DinkusKit.com and calls to Payments and Ship outlast EmDash's default 5-second hook limit, which
@@ -109,6 +137,15 @@ const plugin: SandboxedPlugin = {
       cacheControl: "no-store",
       handler: (route, ctx) => installedCheckout.readiness(route, ctx),
     }),
+    [SHOPPER_SIGN_IN_START_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.startSignIn),
+    [SHOPPER_SIGN_IN_VERIFY_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.verifySignIn),
+    [SHOPPER_SIGN_OUT_ROUTE]: shopperRoute(["POST"], shopperSessionBodyRequest, installedShopperAccounts.signOut),
+    [SHOPPER_ACCOUNT_ORDERS_ROUTE]: shopperRoute(["GET"], { body: "none", headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS] }, installedShopperAccounts.orders),
+    [SHOPPER_ACCOUNT_PROFILE_ROUTE]: shopperRoute(["GET", "POST"], shopperSessionBodyRequest, installedShopperAccounts.profile),
   },
 };
+// Every route also registers the background check if switching on could not; after that it costs nothing.
+for (const [name, route] of Object.entries(plugin.routes!)) {
+  plugin.routes![name] = typeof route === "function" ? withBackgroundCheck(route) : { ...route, handler: withBackgroundCheck(route.handler) };
+}
 export default plugin;
