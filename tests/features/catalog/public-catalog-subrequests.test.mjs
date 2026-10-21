@@ -45,7 +45,7 @@ class Collection {
 
 const NAMES = ['catalog_items', 'catalog_prices', 'catalog_manual_availability', 'catalog_backorder_policies',
   'store_inventory_configurations', 'storefront_availability_settings', 'storefront_out_of_stock_listing',
-  'catalog_media', 'storefront_placeholder_image', 'managed_sku_claims'];
+  'catalog_media', 'storefront_placeholder_image', 'managed_sku_claims', 'product_feed_eligibility'];
 
 /** A shop like a real one: archived and unpriced products, sold-out ones hidden, photos and galleries, choices. */
 async function shop(count, { batched = true } = {}) {
@@ -56,6 +56,7 @@ async function shop(count, { batched = true } = {}) {
   for (let i = 0; i < count; i += 1) {
     const id = 'p' + String(i).padStart(3, '0');
     await createCatalogItem(catalog, { commandId: 'create-' + id, name: 'Product ' + id, sku: 'SKU-' + id, fulfillment: 'physical' }, { createId: () => id });
+    if (i % 2 === 0) set('product_feed_eligibility', id, { recordKind: 'product-feed-eligibility', recordId: id, catalogItemId: id, channels: ['google-merchant'] });
     if (i % 5 !== 4) set('catalog_prices', id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor: String(1000 + i) } });
     if (i % 7 === 6) set('catalog_manual_availability', id, { recordKind: 'catalog-manual-availability', recordId: id, catalogItemId: id, status: 'out-of-stock' });
     if (i % 11 === 10) set('catalog_manual_availability', id, { recordKind: 'catalog-manual-availability', recordId: id, catalogItemId: id, status: 'available-on-backorder' });

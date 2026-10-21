@@ -238,7 +238,7 @@ test('EmDash 1.2 original storage shares admin prices, storefront helpers and ca
   assert.deepEqual(paid.checkout.order.total, price.customerPays);
 });
 
-test('public installed catalog reads an admin-created product and canonical order', async t => {
+test('public installed catalog reads an admin-created product, feed eligibility and canonical order', async t => {
   const directory = await mkdtemp('/tmp/commerce-public-catalog-restart-');
   const databasePath = join(directory, 'runtime.db');
   let state = await runtimeFixture({ seed: false, databasePath });
@@ -250,8 +250,23 @@ test('public installed catalog reads an admin-created product and canonical orde
   assert.equal(products.length, 1);
   const id = products[0].id;
   assert.equal((await admin({ type: 'form_submit', action_id: 'save:' + id, values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' } })).toast.type, 'success');
-  const catalog = await state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
-  assert.deepEqual(catalog, { products: [{ id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [] }] });
+  const publicList = () => state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
+  const publicItem = () => state.plugin.invokeRoute('catalog/public/item', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public/item?itemId=${id}`, method: 'GET' });
+  const catalog = await publicList();
+  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [] };
+  assert.deepEqual(catalog, { products: [expectedProduct] });
+  assert.deepEqual(await publicItem(), expectedProduct);
+  for (const enabled of [true, false]) {
+    const saved = await admin({ type: 'form_submit', action_id: 'save:' + id, values: {
+      regular: '4.00', sale: '3.00', stockStatus: 'in-stock',
+      'feed:google-merchant': enabled, 'feed:meta-catalog': enabled,
+    } });
+    assert.equal(saved.toast.type, 'success');
+    const channels = enabled ? ['google-merchant', 'meta-catalog'] : [];
+    assert.deepEqual((await state.collections.product_feed_eligibility.get(id)).channels, channels);
+    assert.deepEqual(await publicList(), { products: [{ ...expectedProduct, feedChannels: channels }] });
+    assert.deepEqual(await publicItem(), { ...expectedProduct, feedChannels: channels });
+  }
   // An admin-created product has no fulfillment mark, so it counts as physical and needs a US address.
   await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
   const input = { contact: { email: 'shopper@example.test', delivery: syntheticDelivery }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
@@ -277,6 +292,8 @@ test('public installed catalog reads an admin-created product and canonical orde
   assert.deepEqual(recovered.checkout.order, paid.checkout.order);
   assert.equal((await state.cartRecords())[0].attempts.length, 1);
   assert.equal(state.counts.transport, 0);
+  assert.deepEqual(await publicList(), { products: [expectedProduct] });
+  assert.deepEqual(await publicItem(), expectedProduct);
 });
 
 test('compiled route rejects missing/foreign capability and browser totals before order creation', async t => {

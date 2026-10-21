@@ -1,4 +1,5 @@
 // Registry-safe public entry: no native routes or host-side feed builders.
+export const PRODUCT_FEED_ELIGIBILITY_SANDBOX_COLLECTION = "product_feed_eligibility";
 export {
   loadProductFeedEligibility,
   normalizeProductFeedChannels,

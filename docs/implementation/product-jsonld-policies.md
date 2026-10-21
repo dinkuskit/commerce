@@ -69,6 +69,28 @@ const jsonLd = buildProductJsonLd({
 Pure function: no network, no storage. Keep this export out of `src/plugin.ts`
 so it stays outside the Registry sandbox backend byte budget.
 
+For an editorial product preview without a linked Commerce item, use the
+host-only page-facts builder:
+
+```ts
+import { buildProductPreviewJsonLd } from "@dinkuskit/commerce/features/structured-data";
+
+const jsonLd = buildProductPreviewJsonLd({
+  url: "https://shop.example.test/products/preview-hat",
+  name: "Preview hat",
+  description: "A forthcoming wool hat", // optional
+  images: ["https://cdn.example.test/preview-hat.jpg"], // optional
+});
+```
+
+The host supplies the canonical URL and a nonempty display name. Only those
+page facts appear: no SKU, GTIN, MPN, brand, price, availability, or `Offer` is
+invented. This metadata does not make the preview sellable. Use
+`buildProductJsonLd` with the public Commerce projection
+for a linked product. The existing `assertProductJsonLdShape` validates that
+SKU-bearing Commerce output; it is not a preview validator. Both builders
+remain outside the Registry sandbox graph.
+
 ## Availability → schema.org
 
 - `in-stock` → `InStock`

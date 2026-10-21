@@ -5,13 +5,16 @@
  * the Registry backend byte budget.
  */
 export { buildProductJsonLd } from "./builder.js";
+export { buildProductPreviewJsonLd } from "./preview-builder.js";
 export { mapAvailabilityToSchemaOrg } from "./availability.js";
 export { formatMinorUnitsAsDecimal } from "./price.js";
 export { assertProductJsonLdShape } from "./validate.js";
 export type {
   BuildProductJsonLdInput,
+  BuildProductPreviewJsonLdInput,
   JsonLdNode,
   ProductJsonLd,
+  ProductPreviewJsonLd,
   StructuredAvailabilityStatus,
   StructuredMoney,
   StructuredPageFacts,

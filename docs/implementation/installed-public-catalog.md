@@ -35,6 +35,7 @@ type PublicCatalogResponse = {
     };
     image: { id: string; alt: string; width: number | null; height: number | null; placeholder: boolean } | null;
     gallery: { id: string; alt: string; width: number | null; height: number | null; placeholder: boolean }[];
+    feedChannels?: readonly ("google-merchant" | "meta-catalog")[];
   }[];
 };
 ```
@@ -43,6 +44,12 @@ type PublicCatalogResponse = {
 `media:read` capability; the storefront host maps ids to public file URLs and
 builds `srcset` with the exported Commerce preset helpers. See
 [product-media.md](./product-media.md).
+
+`feedChannels` contains only merchant-approved public feed channel ids from
+the existing eligibility record. Unset or empty eligibility returns `[]`;
+adapters without the eligibility collection omit the field. Both mean no
+opt-in. The single-item route has the same field and rules. See
+[product-feeds.md](./product-feeds.md).
 
 Only products with an authoritative customer price and `availability.listable`
 are projected. The price is `customerPays` (sale when present, otherwise
