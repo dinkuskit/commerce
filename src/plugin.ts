@@ -16,7 +16,17 @@ import {
   GUEST_CHECKOUT_STATUS_ROUTE,
   resolveRegistryCheckoutServices,
 } from "./features/checkout/kernel/index.js";
-import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, listOrdersForEmail, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import {
+  createInstalledShopperAccountHandlers,
+  SHOPPER_ACCOUNT_ORDERS_ROUTE,
+  SHOPPER_ACCOUNT_PROFILE_ROUTE,
+  SHOPPER_ACCOUNT_SESSION_HEADERS,
+  SHOPPER_ACCOUNT_WRITE_HEADERS,
+  SHOPPER_SIGN_IN_START_ROUTE,
+  SHOPPER_SIGN_IN_VERIFY_ROUTE,
+  SHOPPER_SIGN_OUT_ROUTE,
+} from "./features/customers/kernel/index.js";
 import {
   PUBLIC_STORE_POLICIES_ROUTE,
   readSandboxPublicStorePolicies,
@@ -26,9 +36,20 @@ const guestRequest = {
   body: "json" as const,
   headers: [...GUEST_CHECKOUT_DECLARED_HEADERS],
 };
+const shopperWriteRequest = {
+  body: "json" as const,
+  headers: [...SHOPPER_ACCOUNT_WRITE_HEADERS],
+};
+const shopperSessionBodyRequest = {
+  body: "json" as const,
+  headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS],
+};
 // Checkout hands each paid order to Orders, which keeps its own copy.
 const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckoutServices,
   ctx => createPaidOrderReceiver(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, ctx.storage[ORDER_NUMBERS_COLLECTION] as OrderNumbers));
+const installedShopperAccounts = createInstalledShopperAccountHandlers(
+  (ctx, emailKey) => listOrdersForEmail(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, emailKey),
+);
 function guestRoute(handler: typeof installedCheckout.prepare) {
   return pluginRoute({ public: true, methods: ["POST"], request: guestRequest, handler });
 }
@@ -108,6 +129,41 @@ const plugin: SandboxedPlugin = {
       request: { body: "none", headers: ["origin"] },
       cacheControl: "no-store",
       handler: (route, ctx) => installedCheckout.readiness(route, ctx),
+    }),
+    [SHOPPER_SIGN_IN_START_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["POST"],
+      request: shopperWriteRequest,
+      cacheControl: "no-store",
+      handler: (route, ctx) => installedShopperAccounts.startSignIn(route, ctx),
+    }),
+    [SHOPPER_SIGN_IN_VERIFY_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["POST"],
+      request: shopperWriteRequest,
+      cacheControl: "no-store",
+      handler: (route, ctx) => installedShopperAccounts.verifySignIn(route, ctx),
+    }),
+    [SHOPPER_SIGN_OUT_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["POST"],
+      request: shopperSessionBodyRequest,
+      cacheControl: "no-store",
+      handler: (route, ctx) => installedShopperAccounts.signOut(route, ctx),
+    }),
+    [SHOPPER_ACCOUNT_ORDERS_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["GET"],
+      request: { body: "none", headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS] },
+      cacheControl: "no-store",
+      handler: (route, ctx) => installedShopperAccounts.orders(route, ctx),
+    }),
+    [SHOPPER_ACCOUNT_PROFILE_ROUTE]: pluginRoute({
+      public: true,
+      methods: ["GET", "POST"],
+      request: shopperSessionBodyRequest,
+      cacheControl: "no-store",
+      handler: (route, ctx) => installedShopperAccounts.profile(route, ctx),
     }),
   },
 };

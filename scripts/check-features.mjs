@@ -104,6 +104,7 @@ export const STORAGE_OWNERS = {
   checkout_carts: "checkout", checkout_guest_capabilities: "checkout", checkout_payment_associations: "checkout",
   store_shipping_policy: "store-policies", store_return_policy: "store-policies",
   orders: "orders", order_numbers: "orders",
+  customers: "customers", customer_login_codes: "customers", customer_sessions: "customers",
 };
 const STORAGE_COMPOSITION = ["src/plugin.ts", "src/index.ts"];
 /**
@@ -144,6 +145,7 @@ export async function auditFeatures(repositoryRoot = root) {
     "`dinkus.storefront-availability`",
     "`dinkus.checkout`",
     "`dinkus.orders`",
+    "`dinkus.customers`",
     "`dinkus.store-policies`",
     "`dinkus.structured-data`",
     "`src/features/catalog/`",
@@ -152,6 +154,7 @@ export async function auditFeatures(repositoryRoot = root) {
     "`src/features/storefront-availability/`",
     "`src/features/checkout/`",
     "`src/features/orders/`",
+    "`src/features/customers/`",
     "`src/features/coupons/`",
     "`src/features/store-policies/`",
     "`src/features/structured-data/`",
@@ -216,6 +219,14 @@ export async function auditFeatures(repositoryRoot = root) {
   ) {
     findings.push(
       "package export ./features/structured-data must resolve to the structured-data public entry",
+    );
+  }
+  if (
+    manifest.exports?.["./features/customers"]?.default !==
+    "./dist/features/customers/index.js"
+  ) {
+    findings.push(
+      "package export ./features/customers must resolve to the customers public entry",
     );
   }
   if (manifest.devDependencies?.emdash !== "1.2.0") {
