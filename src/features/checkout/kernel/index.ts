@@ -83,6 +83,14 @@ export type {
   InstalledWakeResult,
 } from "../installed.js";
 export {
+  BACKGROUND_CHECK_REGISTER_BUDGET_MS,
+  BACKGROUND_CHECK_RETRY_MS,
+  BACKGROUND_CHECK_SCHEDULE,
+  ensureBackgroundCheck,
+  resetBackgroundCheckForTest,
+  withBackgroundCheck,
+} from "../background-check.js";
+export {
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,

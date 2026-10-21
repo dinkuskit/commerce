@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import BetterSqlite3 from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import { generateKeyPair, SignJWT, jwtVerify } from 'jose';
-import { PluginStorageRepository, createSettingsAccess } from 'emdash';
+import { CronAccessImpl, PluginStorageRepository, createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { WorkerdSandboxRunner } from '@emdash-cms/sandbox-workerd/sandbox';
 import { COMMERCE_REGISTRY_RUNTIME_ID, REGISTRY_CHECKOUT_CONFIG_SCHEMA } from '../../../dist/features/checkout/index.js';
@@ -16,6 +16,16 @@ process.env.EMDASH_ENCRYPTION_KEY = 'emdash_enc_v1_' + randomBytes(32).toString(
 const artifact = JSON.parse(await readFile(new URL('../../../dist/sandbox/manifest.json', import.meta.url)));
 const backend = await readFile(new URL('../../../dist/sandbox/plugin.mjs', import.meta.url), 'utf8');
 const pair = await generateKeyPair('RS256');
+// The site scheduler as the plugin reaches it through the bridge. A test may make its calls fail or
+// wait before they touch the cron table; EmDash's own code still answers every call it lets through.
+let schedulerFault = null;
+for (const method of ['schedule', 'list']) {
+  const original = CronAccessImpl.prototype[method];
+  CronAccessImpl.prototype[method] = async function (...args) {
+    if (schedulerFault) await schedulerFault(method);
+    return original.apply(this, args);
+  };
+}
 export const SITE = 'https://shop.example.test';
 // Public IP literal avoids DNS; the approved test-only HTTP callback intercepts every request.
 // No connection is made to this address. Production grants remain empty.
@@ -275,9 +285,11 @@ export async function runtimeFixture({
     setBindingMode(mode) { bindingMode = mode; },
     setWakes(values) { pending = structuredClone(values); },
     setTransportOverride(fn) { override = fn; },
+    /** Run before each scheduler call the plugin makes; it may throw or wait. Null clears it. */
+    setSchedulerFault(fn) { schedulerFault = fn; },
     async cartRecords() { return (await collections.checkout_carts.query()).items.map(item => item.data); },
     /** The site scheduler's tasks, as EmDash's cron table holds them. */
     cronTasks() { return sqlite.prepare('SELECT plugin_id, task_name, schedule, enabled FROM _emdash_cron_tasks').all(); },
-    async close() { await runner.terminateAll(); await db.destroy(); },
+    async close() { schedulerFault = null; await runner.terminateAll(); await db.destroy(); },
   };
 }
