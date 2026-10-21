@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-21T15:57:07+00:00",
-    "domain": "US physical delivery region eligibility",
-    "started_at": "2026-10-21T15:57:07+00:00",
+    "confirmed_at": "2026-10-21T16:04:32+00:00",
+    "domain": "US delivery feature Registry budget exception",
+    "started_at": "2026-10-21T16:04:31+00:00",
     "status": "confirmed",
-    "summary": "The owner-approved US state/DC rule, codes/full names and configured non-US preservation are unchanged; replay the frozen feature source onto current main with no new behavior. Keep current Coupons and Inventory parked decisions intact. The measured 1518-byte headroom is 682 bytes below the 2200-byte reserve; owner budget disposition is required before merge. No new runtime proof, push, PR, merge or activation is authorized in this preparation."
+    "summary": "Owner approved a feature-only 1518-byte remaining Registry budget for the already verified US delivery rule; no code, general reserve, parked integration or merge/deployment authorization changes."
   },
   "decisions": [
     {
@@ -13594,6 +13594,78 @@
       "superseded_by": null,
       "updated_at": "2026-10-21T15:57:57+00:00",
       "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/REPLAY.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+      "context_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+      "created_at": "2026-10-21T16:04:32+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "us-physical-delivery-regions-20261021",
+        "registry-coupons-parked-20261021"
+      ],
+      "domain": "US delivery feature Registry budget exception",
+      "history": [
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-21T16:04:32+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "implemented",
+          "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "us-region-registry-budget-exception-20261021",
+      "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+      "question": "May the approved US delivery-region feature leave 1518 bytes free rather than the default 2200-byte Registry reserve?",
+      "rationale": "Owner explicitly selected Allow 1,518 bytes for this feature after reviewing the measured reserve shortfall.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-21T16:04:32+00:00",
+      "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
     }
   ],
   "last_activation": {
@@ -13630,5 +13702,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-21T15:57:57+00:00"
+  "updated_at": "2026-10-21T16:04:32+00:00"
 }

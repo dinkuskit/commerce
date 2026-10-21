@@ -17,7 +17,7 @@ Frozen fork history remains retrievable from `faa9ee6e2e122d4c4080a175d621522082
 
 Main now requires at least **2200 bytes** of Registry backend headroom before merge, under the unchanged official **131072-byte** cap. The frozen feature's existing official artifact is **129554 bytes**, leaving **1518 bytes**, SHA256 `64c60e258da4e22b3bdedd30991e60cff09a1c4c8d8781d98b39aeab31a39260`.
 
-Therefore this source is **682 bytes short of the preserved reserve**. Owner budget disposition is required before merge. This preparation neither relaxes the reserve nor wires Coupons or Inventory, and does not claim the gap is resolved. The separate size investigation retains its own owner.
+At replay preparation, this source was **682 bytes short of the preserved reserve**. The owner subsequently approved **1518 bytes free for this feature only**; [BUDGET.md](BUDGET.md) records that explicit disposition. The general reserve and parked Coupons/Inventory decisions remain intact. No byte saving is claimed; the change is a scoped budget exception.
 
 The prior PROOF.md remains historical evidence bound to its recorded source and artifact. This replay verifies source identity and ledger consistency only; no dependencies or expensive runtime tests were installed/run here. Current-head review, CI and any required revalidation remain outstanding. No push, PR, merge, deployment or package publication is performed or authorized by this note.
 

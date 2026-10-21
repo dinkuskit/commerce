@@ -52,10 +52,10 @@ PR reviews and CI are recorded on the PR; this document grants no merge authorit
 
 The feature was subsequently replayed unchanged onto main `675a191d73648d47f0ac5eb8fe43dc6f64d62641`. See [REPLAY.md](REPLAY.md) for exact source equivalence, retained fork/event identities and current verification limits. The prior runtime results above were not rerun during that preparation.
 
-The current main decision preserves a 2200-byte Registry backend reserve. This feature's measured 1518-byte headroom is 682 bytes short; owner budget disposition is required before merge. Coupons and Inventory remain parked. This note does not weaken the cap/reserve or claim new-head review/CI completion.
+The current main decision preserves a 2200-byte Registry backend reserve. The owner subsequently approved 1518 bytes free for this feature only; see [BUDGET.md](BUDGET.md). This records the required disposition for the 682-byte difference while preserving the general reserve and the parked Coupons/Inventory decisions. Current-head reviews and CI remain separate gates.
 
 ## Final branch artifact check
 
-On the current-main replay source `2d51753b0c43bf4663bf429f437793d0e6f502b4`, a clean `npm ci`, official `npm run build` and the independent 239-case probe passed again. The artifact is byte-identical: 129554 bytes, SHA256 `64c60e258da4e22b3bdedd30991e60cff09a1c4c8d8781d98b39aeab31a39260`, 1518 bytes free. The 682-byte reserve shortfall remains unresolved. Full runtime proof is inherited only through the documented exact source/configuration identity; it was not rerun and relabeled as a new runtime session.
+On the current-main replay source `2d51753b0c43bf4663bf429f437793d0e6f502b4`, a clean `npm ci`, official `npm run build` and the independent 239-case probe passed again. The artifact is byte-identical: 129554 bytes, SHA256 `64c60e258da4e22b3bdedd30991e60cff09a1c4c8d8781d98b39aeab31a39260`, 1518 bytes free. At the time of that artifact check the reserve disposition was unresolved; the subsequent feature-only approval is recorded in [BUDGET.md](BUDGET.md). Full runtime proof is inherited only through the documented exact source/configuration identity; it was not rerun and relabeled as a new runtime session.
 
 The historical foreign-billing dependent decision remains `needs_reverification` after the approved delivery-policy supersession. This change preserves existing billing handling but does not claim foreign-issued payment/provider/legal eligibility proof.
