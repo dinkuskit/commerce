@@ -789,3 +789,38 @@ test("delayed first sendEmail failure is revision-fenced and preserves a replace
   assert.equal(persistedCustomer.phone, "+16175550123");
   assert.equal(persistedCustomer.delivery.line1, "42 Same Second Ave");
 });
+
+test('historical US orders and saved profiles retain optional regions outside new checkout capture', async () => {
+  const { ctx, storage, handlers } = createSandboxFixture();
+  const email = 'legacy-region@example.test';
+  const delivery = {
+    name: 'Historical Shopper', line1: '1 Example Way', city: 'Testville', postalCode: '00000', country: 'US',
+  };
+  await createPaidOrderReceiver(storage.orders, storage.order_numbers).receive(
+    makeOrder({ orderId: 'legacy-without-region', email, delivery }),
+  );
+  const request = (route, session, method = 'POST') => ({
+    url: `https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/${route}`,
+    method,
+    headers: { origin: 'https://store.example.com', ...(session ? { [CUSTOMER_SESSION_HEADER]: session } : {}) },
+  });
+  assert.equal((await handlers.startSignIn({ input: { email }, request: request('sign-in/start') }, ctx)).ok, true);
+  const signedIn = await handlers.verifySignIn({ input: { email, code: '482910' }, request: request('sign-in/verify') }, ctx);
+  assert.equal(signedIn.ok, true);
+  assert.deepEqual(signedIn.profile.delivery, delivery);
+  const session = signedIn.capability.session;
+  // Saving and re-reading a profile still uses structural address normalization.
+  for (const region of [undefined, 'PR', 'Unknown']) {
+    const savedDelivery = { ...delivery, ...(region === undefined ? {} : { region }) };
+    const saved = await handlers.profile({ input: { delivery: savedDelivery }, request: request('profile', session) }, ctx);
+    assert.equal(saved.ok, true);
+    assert.deepEqual(saved.profile.delivery, savedDelivery);
+    const read = await handlers.profile({ request: request('profile', session, 'GET') }, ctx);
+    assert.equal(read.ok, true);
+    assert.deepEqual(read.profile.delivery, savedDelivery);
+  }
+  const orders = await listOrdersForEmail(storage.orders, email);
+  assert.equal(orders.length, 1);
+  const stored = await storage.orders.get('legacy-without-region');
+  assert.deepEqual(stored.paidOrder.contactSnapshot.contact.delivery, delivery);
+});

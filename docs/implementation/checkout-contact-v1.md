@@ -32,6 +32,14 @@ Each field is trimmed, at most 200 characters and free of control characters;
 a two-letter code stored upper case. Unknown fields are rejected. It is never
 a billing address and no billing address is collected.
 
+This shared normalization remains permissive for saved addresses and historical
+orders. New physical checkout capture additionally requires a recognized region
+for US delivery: one of the 50 states or District of Columbia, as an abbreviation
+or full name, case-insensitively with surrounding whitespace trimmed. Alaska,
+Hawaii and DC are included; missing, unknown, territory and military regions are
+rejected with `DELIVERY_INVALID`. The accepted address text retains the existing
+normalization. Configured non-US destinations do not gain a region requirement.
+
 ## Requirements and snapshot
 
 `captureCheckoutContact` receives a trusted injected loader returning:
@@ -62,7 +70,8 @@ Checkout captures the contact after Catalog's basket quote. When any line is
 physical (a catalog item with no fulfillment mark counts as physical) the
 address is required (`DELIVERY_REQUIRED`) and its country must be one of
 `shippingCountries` (`DELIVERY_COUNTRY_UNAVAILABLE`); with no destinations set
-a physical basket is refused. Both happen before any attempt is written or
+a physical basket is refused. The US region check follows country eligibility.
+These checks happen before any attempt is written, stock is reserved or
 Payments is called, and the guest routes answer `INVALID_CART` with that
 message. A digital-only basket keeps no address even when one was sent. There
 is no store setting for this; local pickup, if added later, is a shopper choice

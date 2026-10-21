@@ -9,7 +9,7 @@ const products = (json.data ?? json).products ?? [];
 <label>Email <input id="email" type="email" /></label>
 <fieldset><legend>Delivery address</legend>
 <label>Recipient <input id="recipient" /></label><label>Address line 1 <input id="line1" /></label>
-<label>City <input id="city" /></label><label>Postal code <input id="postal" /></label><label>Country <input id="country" /></label>
+<label>City <input id="city" /></label><label>State or region <input id="region" /></label><label>Postal code <input id="postal" /></label><label>Country <input id="country" /></label>
 </fieldset>
 <button id="prepare">Prepare checkout</button><button id="start" disabled>Start checkout</button>
 <button id="pay" disabled>Simulate provider payment</button><button id="status" disabled>Refresh payment status</button>
@@ -27,7 +27,7 @@ async function call(name, data) {
 document.querySelector('#prepare').onclick = async () => { const b = await call('prepare', {}); capability = b.capability.capability; state.textContent = 'Prepared'; document.querySelector('#start').disabled = false; };
 document.querySelector('#start').onclick = async () => { const b = await call('start', { contact: { email: document.querySelector('#email').value,
   delivery: { name: document.querySelector('#recipient').value, line1: document.querySelector('#line1').value,
-    city: document.querySelector('#city').value, postalCode: document.querySelector('#postal').value, country: document.querySelector('#country').value } },
+    city: document.querySelector('#city').value, region: document.querySelector('#region').value, postalCode: document.querySelector('#postal').value, country: document.querySelector('#country').value } },
   lines: [{ catalogItemId: document.querySelector('#product').value, quantity: 1 }] });
   attempt = b.checkout.attemptId; state.textContent = 'Payment pending'; document.querySelector('#pay').disabled = false; document.querySelector('#status').disabled = false; };
 document.querySelector('#pay').onclick = async () => { await fetch('/fixture?action=pay', { method: 'POST' }); state.textContent = 'Fixture provider paid; Commerce pending'; };

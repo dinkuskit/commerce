@@ -24,7 +24,7 @@ const collection = records => ({
   async query() { return { items: [...this.records].map(([id,data]) => ({id,data:structuredClone(data)})), hasMore:false }; },
 });
 /** Synthetic delivery address; fixture items carry no fulfillment mark, so they count as physical. */
-export const syntheticDelivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', postalCode: '00000', country: 'US' };
+export const syntheticDelivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', region: 'CA', postalCode: '00000', country: 'US' };
 /** Explicit synthetic shopper input for existing non-contact checkout scenarios. */
 export function withSyntheticCheckoutContact(input) {
   const contact = { email: 'checkout-fixture@example.test', delivery: syntheticDelivery };

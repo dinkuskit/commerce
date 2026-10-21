@@ -127,6 +127,7 @@ for (const product of products) {
       <label>Recipient <input name="delivery-name" autocomplete="shipping name" maxlength="200" /></label>
       <label>Address line 1 <input name="delivery-line1" autocomplete="shipping address-line1" maxlength="200" /></label>
       <label>City <input name="delivery-city" autocomplete="shipping address-level2" maxlength="200" /></label>
+      <label>State or region <input name="delivery-region" autocomplete="shipping address-level1" maxlength="200" /></label>
       <label>Postal code <input name="delivery-postalCode" autocomplete="shipping postal-code" maxlength="200" /></label>
       <label>Country <input name="delivery-country" autocomplete="shipping country" maxlength="2" /></label>
     </fieldset>
@@ -150,7 +151,7 @@ for (const product of products) {
     const emailInput = checkout.querySelector('[name="checkout-email"]');
     const phoneInput = checkout.querySelector('[name="checkout-phone"]');
     const delivery = () => {
-      const fields = ["name", "line1", "city", "postalCode", "country"];
+      const fields = ["name", "line1", "city", "region", "postalCode", "country"];
       const value = Object.fromEntries(fields.map((field) => [field, checkout.querySelector(`[name="delivery-${field}"]`).value]));
       return value.line1.trim() ? { delivery: value } : {};
     };
