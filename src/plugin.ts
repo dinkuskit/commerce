@@ -52,6 +52,10 @@ const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckou
 const installedShopperAccounts = createInstalledShopperAccountHandlers(
   (ctx, emailKey) => listOrdersForEmail(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, emailKey),
 );
+function shopperRoute<T>(methods: ("GET" | "POST")[], request: { body: "json" | "none"; headers: string[] },
+  handler: (route: Parameters<typeof installedShopperAccounts.orders>[0], ctx: Parameters<typeof installedShopperAccounts.orders>[1]) => Promise<T>) {
+  return pluginRoute({ public: true, methods, request, cacheControl: "no-store", handler });
+}
 function guestRoute(handler: typeof installedCheckout.prepare) {
   return pluginRoute({ public: true, methods: ["POST"], request: guestRequest, handler });
 }
@@ -133,41 +137,11 @@ const plugin: SandboxedPlugin = {
       cacheControl: "no-store",
       handler: (route, ctx) => installedCheckout.readiness(route, ctx),
     }),
-    [SHOPPER_SIGN_IN_START_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["POST"],
-      request: shopperWriteRequest,
-      cacheControl: "no-store",
-      handler: (route, ctx) => installedShopperAccounts.startSignIn(route, ctx),
-    }),
-    [SHOPPER_SIGN_IN_VERIFY_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["POST"],
-      request: shopperWriteRequest,
-      cacheControl: "no-store",
-      handler: (route, ctx) => installedShopperAccounts.verifySignIn(route, ctx),
-    }),
-    [SHOPPER_SIGN_OUT_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["POST"],
-      request: shopperSessionBodyRequest,
-      cacheControl: "no-store",
-      handler: (route, ctx) => installedShopperAccounts.signOut(route, ctx),
-    }),
-    [SHOPPER_ACCOUNT_ORDERS_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["GET"],
-      request: { body: "none", headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS] },
-      cacheControl: "no-store",
-      handler: (route, ctx) => installedShopperAccounts.orders(route, ctx),
-    }),
-    [SHOPPER_ACCOUNT_PROFILE_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["GET", "POST"],
-      request: shopperSessionBodyRequest,
-      cacheControl: "no-store",
-      handler: (route, ctx) => installedShopperAccounts.profile(route, ctx),
-    }),
+    [SHOPPER_SIGN_IN_START_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.startSignIn),
+    [SHOPPER_SIGN_IN_VERIFY_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.verifySignIn),
+    [SHOPPER_SIGN_OUT_ROUTE]: shopperRoute(["POST"], shopperSessionBodyRequest, installedShopperAccounts.signOut),
+    [SHOPPER_ACCOUNT_ORDERS_ROUTE]: shopperRoute(["GET"], { body: "none", headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS] }, installedShopperAccounts.orders),
+    [SHOPPER_ACCOUNT_PROFILE_ROUTE]: shopperRoute(["GET", "POST"], shopperSessionBodyRequest, installedShopperAccounts.profile),
   },
 };
 // Every route also registers the background check if switching on could not; after that it costs nothing.

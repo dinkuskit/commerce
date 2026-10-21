@@ -64,7 +64,7 @@ export {
   SANDBOX_GUEST_CHECKOUT_STORAGE,
 } from "../runtime.js";
 export type { GuestCheckoutStorageNames } from "../runtime.js";
-export { admitGuestCheckoutWrite } from "../origin-admission.js";
+export { admitGuestCheckoutWrite, admitSameOriginWrite, headerValue } from "../origin-admission.js";
 export { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "../site-scope.js";
 export {
   CHECKOUT_READINESS_COLLECTION,

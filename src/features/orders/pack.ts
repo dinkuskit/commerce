@@ -1,3 +1,5 @@
+import { sha256Hex } from '../../shared/secret.js';
+
 /**
  * Order Pack through the configured Inventory provider. Commerce never records
  * packed state itself: Inventory owns the tickets, and any answer other than a
@@ -17,10 +19,7 @@ export interface InventoryPackPort {
 /** Inventory's hosted route accepts at most this many tickets per stock.pack_all. */
 export const ORDER_PACK_MAX_TICKETS = 100;
 
-async function digest(value: string): Promise<string> {
-  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
-  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
-}
+const digest = sha256Hex;
 
 /**
  * Exact Inventory pack body. One ticket is stock.pack; every ticket is

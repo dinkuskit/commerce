@@ -37,22 +37,31 @@ export function admitGuestCheckoutWrite(input: {
   headers?: Headers | Record<string, string>;
   siteOrigin: string;
 }): void {
+  admitSameOriginWrite(input, () => { throw new GuestCheckoutError("ORIGIN_DENIED"); });
+}
+
+/** The same-origin write check above, failing through the caller's own error. */
+export function admitSameOriginWrite(input: {
+  requestUrl: string;
+  headers?: Headers | Record<string, string>;
+  siteOrigin: string;
+}, deny: () => never): void {
   const requestOrigin = canonicalizeHttpOrigin(input.requestUrl);
   if (requestOrigin === null || requestOrigin !== input.siteOrigin) {
-    throw new GuestCheckoutError("ORIGIN_DENIED");
+    deny();
   }
   const originHeader = headerValue(input.headers, GUEST_ORIGIN_HEADER);
   const fetchSite = headerValue(input.headers, GUEST_SEC_FETCH_SITE_HEADER)?.toLowerCase();
   if (originHeader !== undefined) {
     const presented = canonicalizeHttpOrigin(originHeader);
     if (presented === null || presented !== input.siteOrigin) {
-      throw new GuestCheckoutError("ORIGIN_DENIED");
+      deny();
     }
     if (fetchSite !== undefined && fetchSite !== "same-origin") {
-      throw new GuestCheckoutError("ORIGIN_DENIED");
+      deny();
     }
     return;
   }
   if (fetchSite === "same-origin") return;
-  throw new GuestCheckoutError("ORIGIN_DENIED");
+  deny();
 }

@@ -1,4 +1,5 @@
 import { GuestCheckoutError } from "./errors.js";
+import { randomSecret, sha256Hex, timingSafeEqual } from "../../shared/secret.js";
 import { canonicalizeHttpOrigin, presentSiteUrl, resolveTrustedSiteOrigin } from "./site-scope.js";
 import {
   GUEST_CAPABILITY_HEADER,
@@ -7,29 +8,7 @@ import {
   type GuestCheckoutRuntime,
 } from "./types.js";
 
-function bytesToHex(bytes: Uint8Array): string {
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-function timingSafeEqual(left: string, right: string): boolean {
-  if (left.length !== right.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  }
-  return mismatch === 0;
-}
-
-export async function hashGuestCapabilitySecret(secret: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
-  return bytesToHex(new Uint8Array(digest));
-}
-
-function randomSecret(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return bytesToHex(bytes);
-}
+export const hashGuestCapabilitySecret = sha256Hex;
 
 function knownOriginsAgree(left: string, right: string): boolean {
   const leftOrigin = canonicalizeHttpOrigin(presentSiteUrl(left));
