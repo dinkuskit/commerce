@@ -9,12 +9,14 @@ import {
 import {
   COMMERCE_CHECKOUT_WAKES_TASK,
   createInstalledCheckoutHandlers,
+  ensureBackgroundCheck,
   GUEST_CHECKOUT_DECLARED_HEADERS,
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_READINESS_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
   resolveRegistryCheckoutServices,
+  withBackgroundCheck,
 } from "./features/checkout/kernel/index.js";
 import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
 import {
@@ -34,9 +36,10 @@ function guestRoute(handler: typeof installedCheckout.prepare) {
 }
 const plugin: SandboxedPlugin = {
   hooks: {
-    // Switched on: the site's EmDash scheduler runs the background check every 5 minutes.
+    // Switched on: the site's EmDash scheduler runs the background check every 5 minutes. If the
+    // scheduler fails or stalls here, the next request registers it instead (see routes below).
     "plugin:activate": async (_event, ctx) => {
-      await ctx.cron?.schedule(COMMERCE_CHECKOUT_WAKES_TASK, { schedule: "*/5 * * * *" });
+      await ensureBackgroundCheck(ctx, true);
     },
     // The background check settles payments, then brings Orders and Ship up to date. Its passes from
     // DinkusKit.com and calls to Payments and Ship outlast EmDash's default 5-second hook limit, which
@@ -111,4 +114,8 @@ const plugin: SandboxedPlugin = {
     }),
   },
 };
+// Every route also registers the background check if switching on could not; after that it costs nothing.
+for (const [name, route] of Object.entries(plugin.routes!)) {
+  plugin.routes![name] = typeof route === "function" ? withBackgroundCheck(route) : { ...route, handler: withBackgroundCheck(route.handler) };
+}
 export default plugin;
