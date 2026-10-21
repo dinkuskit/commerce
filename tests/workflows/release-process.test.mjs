@@ -68,8 +68,8 @@ test("release workflow carries Cut beta and Promote, tags merged release PRs, an
 	assert.match(source, /release_mode: stable/);
 	assert.match(source, /release_mode: beta/);
 	assert.match(source, /needs: cut-beta/);
-	assert.match(source, /secrets\.LIVE_JOURNEYS_TOKEN/);
-	assert.match(source, /gh workflow run live-journeys\.yml --repo saariuslystoned\/SaariusSkills --ref main -f journeys=@running -f beta="\$BETA"/);
+	assert.match(source, /secrets\.DINKUS_LIVE_JOURNEYS_TOKEN/);
+	assert.match(source, /gh workflow run live-journeys\.yml --repo dinkuskit\/live-journeys --ref main -f journeys=@running -f beta="\$BETA"/);
 	assert.match(source, /^permissions: \{\}$/m);
 	assert.match(source, /cancel-in-progress: false/);
 	assert.doesNotMatch(source, /publish-only/);

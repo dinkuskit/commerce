@@ -48,7 +48,7 @@ the next `X.Y.Z-beta.N`, or give one.
 
 Once the beta is published, Release's **Start the live journeys on the beta
 store** job presses **Live journeys** in
-[SaariusSkills](https://github.com/saariuslystoned/SaariusSkills/actions/workflows/live-journeys.yml)
+[dinkuskit/live-journeys](https://github.com/dinkuskit/live-journeys/actions/workflows/live-journeys.yml)
 with `beta: dinkus-commerce-beta X.Y.Z-beta.N`. That run waits for the
 Registry to offer the beta, updates the beta store (beta.sm0ky.dev) to it, and
 runs the `@running` journeys. It is named `Live journeys for
@@ -57,9 +57,9 @@ fail and the plugin versions tested. If an update asks for new permissions the
 run stops and says what was asked; update the plugin by hand on the store's
 Plugins page, then press Run workflow there again with the same `beta`.
 
-The press needs the `LIVE_JOURNEYS_TOKEN` repository secret: a fine-grained
-GitHub token whose only access is **Actions: Read and write** on
-`saariuslystoned/SaariusSkills` (the same token Payments uses). Without it the
+The press needs the `DINKUS_LIVE_JOURNEYS_TOKEN` org secret, shared by every dinkuskit
+plugin repo: a fine-grained GitHub token owned by dinkuskit whose only access is
+**Actions: Read and write** on `dinkuskit/live-journeys`. Without it the
 job fails after the publish, and the journeys can be started by hand with the
 same `beta` input.
 
@@ -68,7 +68,7 @@ same `beta` input.
 When that run passes, press **Run workflow** on **Release** with
 `action: promote`, `beta_version: X.Y.Z-beta.N`, and `proof_ref` set to the
 run's address followed by the beta version, for example
-`https://github.com/saariuslystoned/SaariusSkills/actions/runs/<run id> (X.Y.Z-beta.N @running pass)`.
+`https://github.com/dinkuskit/live-journeys/actions/runs/<run id> (X.Y.Z-beta.N @running pass)`.
 The address alone has no version in it, and the gate refuses a proof that
 doesn't name the beta.
 
@@ -131,7 +131,7 @@ Done for both listings: the release GitHub App (`RELEASE_APP_ID`,
 `RELEASE_APP_PRIVATE_KEY`), the `dinkus-commerce` and `dinkus-commerce-beta`
 package profiles authorized in the
 [release-service dashboard](https://releases.emdashcms.com/publisher), and the
-`release.yml` workflow connection, and the `LIVE_JOURNEYS_TOKEN` secret (above).
+`release.yml` workflow connection, and the `DINKUS_LIVE_JOURNEYS_TOKEN` org secret (above).
 Registry publishing uses GitHub OIDC, so no Atmosphere credential is stored
 here. If the dashboard ever asks to approve the workflow connection again, it
 shows the request only while a run's publish step waits for it, for up to 30
