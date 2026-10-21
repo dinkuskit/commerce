@@ -52,6 +52,12 @@ Public Registry/sandbox paths today:
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/prepare` |
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/start` |
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/status` |
+| `GET` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/readiness` |
+| `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-in/start` |
+| `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify` |
+| `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-out` |
+| `GET` | `/_emdash/api/plugins/dinkus-commerce/account/orders` |
+| `GET,POST` | `/_emdash/api/plugins/dinkus-commerce/account/profile` |
 
 The native plugin mounts the same set without `policies/public`. Never open a
 `/_emdash/api/plugins/dinkus-commerce/*` wildcard.
