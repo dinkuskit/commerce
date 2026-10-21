@@ -65,7 +65,13 @@ access and an immutable public-safe commit pin.
 
 - Product decisions flow through GrillTrack before implementation.
 - Changes use focused branches and pull requests with tests and proof.
+- An assigned source task authorizes required checks/proof, commits, non-force
+  pushes to its assigned branch, pull-request creation/updates, review requests,
+  and bounded in-scope repairs without separate permission questions. Keep one
+  writer in an isolated branch/worktree and bind review evidence to the exact
+  head; a changed head requires current review evidence.
 - ClawSweeper is review evidence, not merge authority. Findings are adjudicated
   before changes are routed.
-- Publishing, deployment, production mutation, secrets or permissions changes,
-  and merges require explicit human approval.
+- Package publishing, deployment, production mutation, secrets or permissions
+  changes, destructive data or infrastructure operations, and merges require
+  explicit human approval.
