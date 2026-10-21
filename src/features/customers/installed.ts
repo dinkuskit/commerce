@@ -85,15 +85,14 @@ export function bindShopperAccountRuntime(
     host?: ShopperAccountHostOptions;
   } = {},
 ): ShopperAccountRuntime {
+  const resolveCol = (key: keyof ShopperAccountStorageNames) =>
+    storage[names[key]] ?? storage[SANDBOX_SHOPPER_ACCOUNT_STORAGE[key]];
   for (const [name, methods] of Object.entries(collectionMethods)) {
-    const key = names[name as keyof ShopperAccountStorageNames];
-    const collection = storage[key] ?? storage[SANDBOX_SHOPPER_ACCOUNT_STORAGE[name as keyof ShopperAccountStorageNames]];
+    const collection = resolveCol(name as keyof ShopperAccountStorageNames);
     if (!isRecord(collection) || methods.some((method) => typeof collection[method] !== "function")) {
       throw new ShopperAccountError("UNAVAILABLE");
     }
   }
-  const resolveCol = (key: keyof ShopperAccountStorageNames) =>
-    storage[names[key]] ?? storage[SANDBOX_SHOPPER_ACCOUNT_STORAGE[key]];
   return {
     customers: resolveCol("customers") as CustomersStorage,
     loginCodes: resolveCol("loginCodes") as CustomerLoginCodesStorage,
@@ -155,72 +154,33 @@ export function createInstalledShopperAccountHandlers(
   loadOrdersForEmail: InstalledOrdersForEmailLoader,
   hostOverrides?: ShopperAccountHostOptions,
 ): InstalledShopperAccountHandlers {
-  return {
-    async startSignIn(route, ctx) {
+  // Writes need a same-origin browser request; reads only a request URL on this site.
+  const run = <T>(write: boolean | ((route: InstalledShopperAccountRequest) => boolean),
+    action: (runtime: ShopperAccountRuntime, route: InstalledShopperAccountRequest) => Promise<T>) =>
+    async (route: InstalledShopperAccountRequest, ctx: PluginContext): Promise<T> => {
       try {
         const runtime = installedRuntime(ctx, loadOrdersForEmail, hostOverrides);
-        admitShopperAccountOrigin({
-          requestUrl: route.request.url,
-          headers: route.request.headers,
-          siteOrigin: runtime.runtimeSiteUrl!,
-        });
-        return await startShopperSignIn(runtime, route.input);
-      } catch (error) {
-        return shopperAccountFailure(error instanceof ShopperAccountError ? error.code : "UNAVAILABLE");
-      }
-    },
-    async verifySignIn(route, ctx) {
-      try {
-        const runtime = installedRuntime(ctx, loadOrdersForEmail, hostOverrides);
-        admitShopperAccountOrigin({
-          requestUrl: route.request.url,
-          headers: route.request.headers,
-          siteOrigin: runtime.runtimeSiteUrl!,
-        });
-        return await verifyShopperSignIn(runtime, route.input);
-      } catch (error) {
-        return shopperAccountFailure(error instanceof ShopperAccountError ? error.code : "UNAVAILABLE");
-      }
-    },
-    async signOut(route, ctx) {
-      try {
-        const runtime = installedRuntime(ctx, loadOrdersForEmail, hostOverrides);
-        admitShopperAccountOrigin({
-          requestUrl: route.request.url,
-          headers: route.request.headers,
-          siteOrigin: runtime.runtimeSiteUrl!,
-        });
-        return await signOutShopperSession(runtime, route.input, route.request.headers);
-      } catch (error) {
-        return shopperAccountFailure(error instanceof ShopperAccountError ? error.code : "UNAVAILABLE");
-      }
-    },
-    async orders(route, ctx) {
-      try {
-        const runtime = installedRuntime(ctx, loadOrdersForEmail, hostOverrides);
-        admitReadRequestUrl(route.request.url, runtime.runtimeSiteUrl!);
-        return await readShopperAccountOrders(runtime, route.request.headers);
-      } catch (error) {
-        return shopperAccountFailure(error instanceof ShopperAccountError ? error.code : "UNAVAILABLE");
-      }
-    },
-    async profile(route, ctx) {
-      try {
-        const runtime = installedRuntime(ctx, loadOrdersForEmail, hostOverrides);
-        const method = (route.request.method ?? (route.input !== undefined ? "POST" : "GET")).toUpperCase();
-        if (method === "POST") {
+        if (typeof write == "function" ? write(route) : write) {
           admitShopperAccountOrigin({
             requestUrl: route.request.url,
             headers: route.request.headers,
             siteOrigin: runtime.runtimeSiteUrl!,
           });
-          return await updateShopperAccountProfile(runtime, route.input, route.request.headers);
-        }
-        admitReadRequestUrl(route.request.url, runtime.runtimeSiteUrl!);
-        return await readShopperAccountProfile(runtime, route.request.headers);
+        } else admitReadRequestUrl(route.request.url, runtime.runtimeSiteUrl!);
+        return await action(runtime, route);
       } catch (error) {
-        return shopperAccountFailure(error instanceof ShopperAccountError ? error.code : "UNAVAILABLE");
+        return shopperAccountFailure(error instanceof ShopperAccountError ? error.code : "UNAVAILABLE") as T;
       }
-    },
+    };
+  const isPost = (route: InstalledShopperAccountRequest) =>
+    (route.request.method ?? (route.input !== undefined ? "POST" : "GET")).toUpperCase() === "POST";
+  return {
+    startSignIn: run(true, (runtime, route) => startShopperSignIn(runtime, route.input)),
+    verifySignIn: run(true, (runtime, route) => verifyShopperSignIn(runtime, route.input)),
+    signOut: run(true, (runtime, route) => signOutShopperSession(runtime, route.input, route.request.headers)),
+    orders: run(false, (runtime, route) => readShopperAccountOrders(runtime, route.request.headers)),
+    profile: run(isPost, (runtime, route) => isPost(route)
+      ? updateShopperAccountProfile(runtime, route.input, route.request.headers)
+      : readShopperAccountProfile(runtime, route.request.headers)),
   };
 }

@@ -1,15 +1,14 @@
 import { isRecord, sortedKeys } from "../../shared/record.js";
+import { randomSecret, sha256Hex, timingSafeEqual } from "../../shared/secret.js";
 import {
   CheckoutContactError,
   normalizeCheckoutContactInput,
   normalizeCheckoutDelivery,
   type CheckoutDeliveryAddress,
 } from "../checkout-contact/index.js";
-import { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "../checkout/kernel/index.js";
+import { admitSameOriginWrite, headerValue, resolveTrustedSiteOrigin } from "../checkout/kernel/index.js";
 import { ShopperAccountError, shopperAccountFailure } from "./errors.js";
 import {
-  CUSTOMER_ORIGIN_HEADER,
-  CUSTOMER_SEC_FETCH_SITE_HEADER,
   CUSTOMER_SESSION_HEADER,
   CUSTOMER_SESSION_TTL_SECONDS,
   LOGIN_CODE_COOLDOWN_SECONDS,
@@ -36,29 +35,7 @@ function nowSeconds(runtime: ShopperAccountRuntime): number {
   return runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
 }
 
-function bytesToHex(bytes: Uint8Array): string {
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-function timingSafeEqual(left: string, right: string): boolean {
-  if (left.length !== right.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  }
-  return mismatch === 0;
-}
-
-export async function hashCustomerSecret(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
-  return bytesToHex(new Uint8Array(digest));
-}
-
-function randomSecret(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return bytesToHex(bytes);
-}
+export const hashCustomerSecret = sha256Hex;
 
 function randomSixDigitCode(): string {
   const array = new Uint32Array(1);
@@ -81,47 +58,12 @@ export function requireCustomerSiteOrigin(runtime: ShopperAccountRuntime): strin
   return resolved.origin;
 }
 
-function headerValue(
-  headers: Headers | Record<string, string> | undefined,
-  name: string,
-): string | undefined {
-  if (!headers) return undefined;
-  const want = name.toLowerCase();
-  if (typeof (headers as Headers).get === "function") {
-    const value = (headers as Headers).get(name) ?? (headers as Headers).get(want);
-    return value?.trim() || undefined;
-  }
-  for (const [key, value] of Object.entries(headers as Record<string, string>)) {
-    if (key.toLowerCase() === want && typeof value === "string" && value.trim()) {
-      return value.trim();
-    }
-  }
-  return undefined;
-}
-
 export function admitShopperAccountOrigin(input: {
   requestUrl: string;
   headers?: Headers | Record<string, string>;
   siteOrigin: string;
 }): void {
-  const requestOrigin = canonicalizeHttpOrigin(input.requestUrl);
-  if (requestOrigin === null || requestOrigin !== input.siteOrigin) {
-    fail("ORIGIN_DENIED");
-  }
-  const originHeader = headerValue(input.headers, CUSTOMER_ORIGIN_HEADER);
-  const fetchSite = headerValue(input.headers, CUSTOMER_SEC_FETCH_SITE_HEADER)?.toLowerCase();
-  if (originHeader !== undefined) {
-    const presented = canonicalizeHttpOrigin(originHeader);
-    if (presented === null || presented !== input.siteOrigin) {
-      fail("ORIGIN_DENIED");
-    }
-    if (fetchSite !== undefined && fetchSite !== "same-origin") {
-      fail("ORIGIN_DENIED");
-    }
-    return;
-  }
-  if (fetchSite === "same-origin") return;
-  fail("ORIGIN_DENIED");
+  admitSameOriginWrite(input, () => fail("ORIGIN_DENIED"));
 }
 
 export function readCustomerSessionHeader(
