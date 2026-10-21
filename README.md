@@ -50,15 +50,22 @@ data migration path to the Registry build.
 
 ## Status
 
-Pilot stage. Package metadata and the plugin manifest are aligned for the
-`0.2.0` Registry release, which adds the bounded public checkout-readiness route.
-The Registry already contains immutable `0.1.0`, without that route. The new
-version follows EmDash's minor-version rule for added routes; it does not
-replace the existing release. Publication of `0.2.0`, npm publication and site
-deployment remain separate human approval gates. A local Registry-format
-sandbox artifact is built from `emdash-plugin.jsonc` and `src/plugin.ts`; it is
-not a claim of public Registry installation. See the
-[release record](docs/implementation/releases.md).
+Released: Commerce `0.3.0` on the EmDash Registry, 19 Oct 2026
+([release](https://github.com/dinkuskit/commerce/releases/tag/v0.3.0),
+[changes](CHANGELOG.md)). Its last beta, `dinkus-commerce-beta@0.3.0-beta.4`,
+passed all eight live test journeys on the beta store together with Payments
+and Ship in
+[run 18](https://github.com/saariuslystoned/SaariusSkills/actions/runs/39533111037)
+on 21 Oct 2026.
+
+On `main`, not released yet: store-local shopper accounts with emailed sign-in
+codes ([#152](https://github.com/dinkuskit/commerce/pull/152)), preview product
+metadata and feed eligibility ([#151](https://github.com/dinkuskit/commerce/pull/151)),
+and a background check that recovers when registering it fails
+([#157](https://github.com/dinkuskit/commerce/pull/157)). They reach stores
+through the next beta and then a final release, each on the owner's go; see
+[RELEASING.md](RELEASING.md). Older release records are in
+[docs/implementation/releases.md](docs/implementation/releases.md).
 
 Development and the private package's runtime peer are pinned to exact
 `emdash@1.2.0`. The first feature is the `dinkus.catalog` draft-item creation
