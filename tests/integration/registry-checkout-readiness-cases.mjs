@@ -16,6 +16,7 @@ import {
   runtimeFixture,
   SITE,
   STORE_KEY,
+  connectionFor,
 } from '../features/checkout/registry-runtime.mjs';
 
 const READINESS_ROUTE = 'checkout/guest/readiness';
@@ -233,9 +234,9 @@ test('readiness: missing store key returns unavailable without trade', async t =
 });
 
 test('readiness: refused store key trade returns unavailable with no transport call', async t => {
-  const state = await runtimeFixture({ storeKey: 'invalid-key' });
+  const state = await runtimeFixture({ storeKey: 'dk_store_' + 'i'.repeat(43) });
   t.after(() => state.close());
-  state.acceptStoreKey('other-key');
+  state.acceptStoreKey('dk_store_' + 'o'.repeat(43));
 
   const res = await state.invokeReadiness();
   assert.deepEqual(res, UNAVAILABLE);
@@ -669,8 +670,8 @@ test('readiness: replacing the store key invalidates the result without resettin
   t.after(() => state.close());
   assert.deepEqual(await state.invokeReadiness(), SUPPORTED_TEST);
   const old = await readinessRecord(state);
-  const replacementKey = 'replacement synthetic key';
-  await state.settings.set('storeKey', replacementKey);
+  const replacementKey = 'dk_store_' + 'r'.repeat(43);
+  await state.settings.set('connection', connectionFor(replacementKey));
   state.acceptStoreKey(replacementKey);
   assert.deepEqual(await state.invokeReadiness(), UNAVAILABLE);
   assert.equal(state.counts.trades, 1);

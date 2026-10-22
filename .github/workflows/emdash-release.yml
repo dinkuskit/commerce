@@ -1,27 +1,20 @@
 name: Publish to EmDash Registry
 
-# Only release.yml calls this: its Cut beta (a workflow_dispatch) with release_mode 'beta', and a
-# merged "ci: release" PR (a push to main) with release_mode 'stable'. It has no button of its own,
-# so the release service sees release.yml as the workflow behind both Registry listings.
+# Only release.yml's version-tag run (the tag's push, or Retry the publish pressed on the tag) calls
+# this: a vX.Y.Z-beta.N tag with release_mode 'beta', a vX.Y.Z tag with release_mode 'stable'. Both tags sit on a release/X.Y.Z branch, so the Registry
+# record names the tested commit. It has no button of its own, so the release service sees
+# release.yml as the workflow behind both Registry listings.
 on:
   workflow_call:
     inputs:
       version:
-        description: "Stable: the release version (e.g. 0.4.0). Beta: blank for the next X.Y.Z-beta.N from pending changesets on main, or an explicit X.Y.Z-beta.N"
-        required: false
-        default: ""
+        description: "The pushed tag's version: X.Y.Z (stable) or X.Y.Z-beta.N (beta)"
+        required: true
         type: string
       release_mode:
         description: "Delegated release mode from release.yml ('beta' or 'stable')"
         required: true
         type: string
-    secrets:
-      RELEASE_APP_ID:
-        description: "Release GitHub App id, for Cut beta's tag push"
-        required: false
-      RELEASE_APP_PRIVATE_KEY:
-        description: "Release GitHub App private key, for Cut beta's tag push"
-        required: false
     outputs:
       slug:
         description: "The Registry listing published (dinkus-commerce-beta or dinkus-commerce)"
@@ -39,7 +32,7 @@ concurrency:
 jobs:
   publish:
     name: Bundle and publish plugin to EmDash Registry
-    if: github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.release_mode == 'beta') || (github.event_name == 'push' && inputs.release_mode == 'stable' && inputs.version != ''))
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && inputs.version != '' && github.ref == format('refs/tags/v{0}', inputs.version) && ((inputs.release_mode == 'beta' && contains(inputs.version, '-beta.')) || (inputs.release_mode == 'stable' && !contains(inputs.version, '-beta.')))
     runs-on: ubuntu-latest
     # Install, tests and the build come first, then the release action may wait up to 30 minutes
     # for a dashboard approval.
@@ -104,24 +97,16 @@ jobs:
             --ref "$GITHUB_REF" \
             --version "$INPUT_VERSION" \
             --release-mode "$INPUT_RELEASE_MODE"
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            if [ -z "$INPUT_VERSION" ]; then
-              node scripts/release-flow.mjs plan-beta --github-output "$GITHUB_OUTPUT"
-            else
-              node scripts/release-flow.mjs plan-beta --version "$INPUT_VERSION" --github-output "$GITHUB_OUTPUT"
-            fi
-          else
-            VERSION="$INPUT_VERSION"
-            SLUG="dinkus-commerce"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-            echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
-          fi
+          SLUG="dinkus-commerce"
+          case "$INPUT_VERSION" in *-beta.*) SLUG="dinkus-commerce-beta" ;; esac
+          echo "version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
 
       # The release preparation helper packs the prebundle `npm run build` stages and requires
-      # package.json and emdash-plugin.jsonc to carry the published version. A merged ci: release PR
+      # package.json and emdash-plugin.jsonc to carry the published version. A stable tag's commit
       # already does; a beta is stamped into this checkout only, never committed.
       - name: Stamp beta version for the beta build
-        if: github.event_name == 'workflow_dispatch'
+        if: inputs.release_mode == 'beta'
         env:
           RELEASE_VERSION: ${{ steps.meta.outputs.version }}
         run: node scripts/release-flow.mjs stamp-beta-version --version "$RELEASE_VERSION"
@@ -131,25 +116,6 @@ jobs:
 
       - name: Build Commerce prebundle
         run: npm run build
-
-      - name: Mint release GitHub App token
-        id: app-token
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          app-id: ${{ secrets.RELEASE_APP_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          permission-contents: write
-
-      - name: Cut beta tag on main
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          APP_TOKEN: ${{ steps.app-token.outputs.token }}
-          RELEASE_VERSION: ${{ steps.meta.outputs.version }}
-        run: |
-          set -euo pipefail
-          git config --local "http.https://github.com/.extraheader" "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$APP_TOKEN" | base64 | tr -d '\n')"
-          node scripts/release-flow.mjs cut-beta --version "$RELEASE_VERSION"
 
       - name: Check whether release version is already indexed in EmDash Registry
         id: registry-check

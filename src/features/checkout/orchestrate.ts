@@ -1,4 +1,5 @@
 import { isRecord, sortedKeys } from "../../shared/record.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
@@ -64,7 +65,8 @@ async function freeze(
     if (variant) selections.push({ schema: CHECKOUT_VARIANT_SELECTION_SCHEMA, productId: variant.productId,
       catalogItemId: line.catalogItemId, selections: variant.selections, fulfillment: variant.fulfillment });
     lines.push({ ...line, name: quoted.name, unitPrice: quoted.unitPrice });
-    if (quoted.stock) {
+    // Catalog quotes stock only for a managed item, which the Registry build never has.
+    if (!REGISTRY_BUILD && quoted.stock) {
       stock ??= { operationId: attemptId, binding: quote.inventory!, requirements: [] };
       const existing = stock.requirements.find(r => r.skuId === quoted.stock!.skuId);
       if (existing) {
@@ -90,7 +92,8 @@ async function freeze(
     ...(pricing ? { pricing: pricing.snapshot } : {}),
     }),
     ...(stock ? { stock } : {}),
-    ...(pricing?.couponId ? { coupon: { couponId: pricing.couponId, code: pricing.couponCode!, status: "unreserved" as const } } : {}),
+    // Pricing never quotes a coupon in the Registry build, so no attempt there carries one.
+    ...(!REGISTRY_BUILD && pricing?.couponId ? { coupon: { couponId: pricing.couponId, code: pricing.couponCode!, status: "unreserved" as const } } : {}),
     phase: "reserving",
   };
 }
@@ -265,7 +268,7 @@ async function persistCouponStatus(
 
 async function finishPaid(e: CheckoutExecution, cartId: string, attempt: CheckoutAttempt): Promise<CheckoutAttempt> {
   await handOffPaidOrder(e, attempt);
-  if (attempt.coupon?.status === "pending") {
+  if (!REGISTRY_BUILD && attempt.coupon?.status === "pending") {
     try {
       await reconcileCoupon(e, attempt, "paid");
       return await persistCouponStatus(e, cartId, attempt.attemptId, "consumed") ?? attempt;
@@ -319,7 +322,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       next.contactSnapshot = freezeContactSnapshot(attempt.contactSnapshot);
     }
     if (attempt.phase === "reserving") {
-      if (attempt.stock) {
+      if (!REGISTRY_BUILD && attempt.stock) {
         const provider = await e.resolveInventory(attempt.stock.binding);
         if (!provider) return attempt;
         let result;
@@ -334,7 +337,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           next.phase = "paying";
         }
       } else next.phase = "paying";
-      if (next.phase === "paying" && next.coupon?.status === "unreserved") {
+      if (!REGISTRY_BUILD && next.phase === "paying" && next.coupon?.status === "unreserved") {
         try {
           const owner = couponOwner(e);
           const reservation = await owner.reserve({
@@ -360,7 +363,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         }
       }
     } else if (attempt.phase === "releasing") {
-      if (next.coupon && next.coupon.status !== "released") {
+      if (!REGISTRY_BUILD && next.coupon && next.coupon.status !== "released") {
         try {
           await reconcileCoupon(e, next, "released");
           next.coupon.status = "released";
@@ -368,7 +371,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           return attempt;
         }
       }
-      if (attempt.stock) {
+      if (!REGISTRY_BUILD && attempt.stock) {
         const provider = await e.resolveInventory(attempt.stock.binding);
         if (!provider) return attempt;
         let result;
@@ -396,7 +399,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           release(next, "not-created");
         }
         else {
-          if (attempt.coupon) {
+          if (!REGISTRY_BUILD && attempt.coupon) {
             try {
               const owner = couponOwner(e);
               await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);

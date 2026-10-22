@@ -127,15 +127,10 @@
   },
   "admin": {
     "settingsSchema": {
-      "installedCheckout": {
-        "type": "string",
-        "label": "Checkout settings",
-        "description": "Paste from the Set up Commerce box on DinkusKit.com. Empty or switched off keeps checkout unavailable."
-      },
-      "storeKey": {
+      "connection": {
         "type": "secret",
-        "label": "Store key",
-        "description": "Paste from the Set up Commerce box on DinkusKit.com. Commerce trades it there for short passes to Payments and Ship; Replace key on DinkusKit.com stops this one."
+        "label": "DinkusKit connection",
+        "description": "Encrypted Store ID and this plugin's own DinkusKit store key. Managed by Connect on Commerce Settings; don't change it here."
       }
     },
     "pages": [

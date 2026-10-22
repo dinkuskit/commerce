@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
+import BetterSqlite3 from 'better-sqlite3';
 import { resolveCatalogItemPrice } from '../../dist/features/catalog/index.js';
 import { resolveStorefrontAvailability } from '../../dist/features/storefront-availability/index.js';
 import { saveMerchantStoreSettings } from '../../dist/features/store-settings/index.js';
@@ -25,6 +26,7 @@ import {
   shipCredential,
   SITE,
   STORE_KEY,
+  connectionFor,
   TRADE_URL,
   TRANSPORT_ORIGIN,
   verifyCouponPass,
@@ -57,7 +59,7 @@ async function start(state, input = basket) {
 }
 
 test('actual compiled default workerd profile preserves empty-grants/unconfigured admission', async t => {
-  const state = await runtimeFixture({ grants: false, config: null, token: null });
+  const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request', 'email:send']);
@@ -65,7 +67,9 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
-  assert.equal(state.counts.credentials, 0);
+  // The background check looks once for the key Connect saves and, finding none, sends nothing.
+  assert.equal(state.counts.credentials, 1);
+  assert.equal(state.counts.trades, 0);
   assert.equal(state.counts.transport, 0);
   assertOnlyBackgroundCheck(state);
   assert.deepEqual(await state.cartRecords(), []);
@@ -814,7 +818,7 @@ test('Commerce trades its store key at DinkusKit.com once per call, only for the
   try {
     const trade = scope => ({ method: 'POST', url: TRADE_URL, authorization: 'Bearer ' + STORE_KEY, cookie: null,
       contentType: 'application/json', body: { site_id: 'synthetic-site', scope,
-        audience: scope === 'ship:orders' ? 'synthetic-ship' : 'synthetic-payments' } });
+        audience: scope === 'ship:orders' ? 'synthetic-ship' : scope === 'commerce:settings' ? 'dinkuskit' : 'synthetic-payments' } });
     // Preparing a checkout needs no service, so nothing is traded.
     const prepared = await state.invoke(PREPARE);
     assert.equal(state.counts.trades, 0);
@@ -835,13 +839,13 @@ test('Commerce trades its store key at DinkusKit.com once per call, only for the
     await shipAdmin(state, { type: 'page_load', page: '/orders' });
     assert.ok(ship.state.calls >= 2);
     assert.deepEqual(state.trades.slice(2), [trade('ship:orders')]);
-    // The background check trades at most once for Payments and once for Ship.
+    // The background check fetches the checkout settings, then trades at most once for Payments and once for Ship.
     await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
-    assert.deepEqual(state.trades.slice(3), [trade('payments:checkout'), trade('ship:orders')]);
-    // Payments and Ship got passes only: the key itself went in the five trades and nowhere else.
+    assert.deepEqual(state.trades.slice(3), [trade('commerce:settings'), trade('payments:checkout'), trade('ship:orders')]);
+    // Payments and Ship got passes only: the key itself went in the six trades and nowhere else.
     assert.deepEqual(state.outbound.filter(request => request.text.includes(STORE_KEY)).map(request => request.url),
-      Array(5).fill(TRADE_URL));
-    assert.ok(state.outbound.length > 5);
+      Array(6).fill(TRADE_URL));
+    assert.ok(state.outbound.length > 6);
   } finally { await state.close(); }
 });
 
@@ -856,7 +860,7 @@ test('the store key goes only to DinkusKit.com even when the checkout settings n
       assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
       await shipAdmin(state, { type: 'page_load', page: '/orders' });
       await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
-      assert.deepEqual([...new Set(state.trades.map(trade => trade.body.scope))].sort(), ['payments:checkout', 'ship:orders']);
+      assert.deepEqual([...new Set(state.trades.map(trade => trade.body.scope))].sort(), ['commerce:settings', 'payments:checkout', 'ship:orders']);
       // Nothing went anywhere else: not to the address the settings named, Payments, Coupons or Ship.
       assert.deepEqual(state.outbound.map(request => request.url), state.trades.map(() => TRADE_URL));
       assert.deepEqual([state.counts.transport, state.counts.ship, ship.state.calls], [0, 0, 0]);
@@ -897,18 +901,22 @@ test('a refused trade makes no call: refused or replaced key, service off or cut
   } finally { await state.close(); }
 });
 
-test('Replace key on DinkusKit.com stops the old key at once, and without a key checkout stays unavailable', async () => {
+test('Connect again on DinkusKit.com stops the old key at once, and without a key checkout stays unavailable', async () => {
   const state = await runtimeFixture();
+  const replacement = 'dk_store_' + 'r'.repeat(43);
   try {
     assert.equal((await start(state)).result.checkout.state, 'pending');
     const before = state.counts.transport;
-    state.acceptStoreKey('the replacement synthetic key');
+    state.acceptStoreKey(replacement);
     assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
     assert.equal(state.counts.transport, before);
-    // Pasted with a space and a line break around it, the key still trades as itself.
-    await state.settings.set('storeKey', ' the replacement synthetic key\n');
+    // The key Connect again saved trades as itself; a key saved for another store is never used.
+    await state.settings.set('connection', connectionFor(replacement, 'another-site'));
+    assert.equal((await state.invoke(PREPARE)).ok, false);
+    assert.equal(state.trades.at(-1).authorization, 'Bearer ' + STORE_KEY);
+    await state.settings.set('connection', connectionFor(replacement));
     assert.equal((await start(state)).result.checkout.state, 'pending');
-    assert.equal(state.trades.at(-1).authorization, 'Bearer the replacement synthetic key');
+    assert.equal(state.trades.at(-1).authorization, 'Bearer ' + replacement);
   } finally { await state.close(); }
   const unset = await runtimeFixture({ storeKey: null });
   try {
@@ -918,7 +926,7 @@ test('Replace key on DinkusKit.com stops the old key at once, and without a key 
   } finally { await unset.close(); }
 });
 
-test('a store upgrading from the three pass settings stays unavailable until it pastes a store key, and its old passes are never sent', async () => {
+test('a store upgrading from the three pass settings stays unavailable until it connects, and its old passes are never sent', async () => {
   const ship = shipStandIn();
   const old = { sub: 'owner-before-the-store-key' };
   const legacyPasses = { installedCheckoutCredential: await credential(old),
@@ -931,14 +939,119 @@ test('a store upgrading from the three pass settings stays unavailable until it 
     assert.match(JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' })), /No orders recorded yet/);
     await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
     assert.deepEqual([state.counts.trades, state.outbound.length, ship.state.calls], [0, 0, 0]);
-    // Pasting the key DinkusKit.com made for the store is all it takes.
-    await state.settings.set('storeKey', STORE_KEY);
+    // The key Connect brings is all it takes.
+    await state.settings.set('connection', connectionFor(STORE_KEY));
     state.acceptStoreKey(STORE_KEY);
     assert.equal((await start(state)).result.checkout.state, 'pending');
     await shipAdmin(state, { type: 'page_load', page: '/orders' });
     assert.ok(state.counts.transport >= 2 && ship.state.calls >= 1);
     for (const pass of Object.values(legacyPasses)) assert.ok(state.outbound.every(request => !request.text.includes(pass)));
   } finally { await state.close(); }
+});
+
+test('a store upgrading from 0.4.0 keeps its catalog and saved checkout settings, never sends its pasted key, and works again after Connect', async () => {
+  const ship = shipStandIn();
+  // What 0.4.0 saved: the key pasted into its "storeKey" secret setting, and the pasted checkout settings.
+  const pasted = 'dk_store_' + 'p'.repeat(43);
+  const state = await runtimeFixture({ config: { ...configuration(), ship: SHIP }, storeKey: null, legacyPasses: { storeKey: pasted },
+    shipPass: await shipCredential(), shipService: ship.service });
+  try {
+    state.acceptStoreKey(pasted);
+    assert.equal((await state.invoke(PREPARE)).error.code, 'UNAVAILABLE');
+    assert.match(JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' })), /No orders recorded yet/);
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual([state.counts.trades, state.outbound.length, ship.state.calls], [0, 0, 0], 'the pasted key is never traded, even though DinkusKit.com would still take it');
+    assert.equal(JSON.parse(await state.settings.get('installedCheckout')).ship.origin, SHIP.origin, 'the saved checkout settings are kept');
+    assert.equal((await state.collections.catalog_items.get('hat')).name, 'Hat', 'the catalog is kept');
+    // Connect saves Commerce's own key; checkout and Ship work again on it alone.
+    await state.settings.set('connection', connectionFor(STORE_KEY));
+    state.acceptStoreKey(STORE_KEY);
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+    await shipAdmin(state, { type: 'page_load', page: '/orders' });
+    assert.ok(state.counts.transport >= 2 && ship.state.calls >= 1);
+    assert.ok(state.trades.every(trade => trade.authorization === 'Bearer ' + STORE_KEY));
+    assert.ok(state.outbound.every(request => !request.text.includes(pasted)));
+  } finally { await state.close(); }
+});
+
+test('Connect through the compiled runtime saves the approved key encrypted, and a key arriving late for a cancelled Connect is never saved or used', async t => {
+  const dir = await mkdtemp('/tmp/commerce-connect-');
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const database = join(dir, 'site.db');
+  const approved = 'dk_store_' + 'a'.repeat(43), late = 'dk_store_' + 'l'.repeat(43);
+  // A stand-in DinkusKit.com: Connect start, the token exchange (held open when a test asks), passes and checkout settings.
+  const seen = [], proofs = [];
+  let flows = 0, hold = null, answer = null;
+  const body = init => init.body === undefined ? '' : typeof init.body === 'string' ? init.body : new TextDecoder().decode(init.body);
+  const state = await runtimeFixture({ databasePath: database, config: null, storeKey: null, transportFetch: async (url, init) => {
+    const text = body(init), path = new URL(url).pathname, headers = new Headers(init.headers);
+    seen.push({ path, authorization: headers.get('authorization'), text });
+    assert.equal(new URL(url).origin, ISSUER_ORIGIN);
+    if (path === '/api/store-connections') {
+      const request = JSON.parse(text), id = 'connection-' + ++flows;
+      assert.deepEqual([request.protocol_version, request.client_id, request.service, request.site_origin, request.code_challenge_method],
+        [2, 'dinkus-commerce-emdash', 'commerce', SITE, 'S256']);
+      return Response.json({ protocol_version: 2, site_id: 'synthetic-site', connection_id: id, challenge: 'challenge-' + id,
+        expires_at: Date.now() + 300_000, interval: 5, verification_uri: `${ISSUER_ORIGIN}/account/connect?connection_id=${id}` });
+    }
+    if (path === '/api/store-connections/token') {
+      if (hold) await hold;
+      return answer ? Response.json(answer) : Response.json({ error: 'authorization_pending' }, { status: 400 });
+    }
+    if (path === '/api/store-passes') return Response.json({ access_token: 'pass-for-' + headers.get('authorization').slice(-4), token_type: 'Bearer', expires_in: 300 });
+    if (path === '/api/commerce-settings') return new Response(JSON.stringify(configuration()), { headers: { 'content-type': 'application/json' } });
+    return assert.fail('unexpected DinkusKit.com call ' + path);
+  } });
+  t.after(() => state.close());
+  const press = action_id => shipAdmin(state, { type: 'block_action', action_id });
+  const proof = async connection => {
+    const response = await state.plugin.invokeRoute('store-proof', { connection_id: connection },
+      { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/store-proof?connection_id=${connection}`, method: 'GET' });
+    proofs.push(response);
+    return response.status;
+  };
+  const saved = async () => JSON.parse(await state.settings.get('connection') ?? '{}');
+  const sqlite = new BetterSqlite3(database, { readonly: true });
+  t.after(() => sqlite.close());
+  const raw = () => sqlite.prepare('SELECT value FROM options').all().map(row => row.value).join('\n');
+
+  // Allowed: Connect, the owner approves, Check saves the key in the encrypted setting and fetches the checkout settings with it.
+  assert.match(JSON.stringify(await press('connect')), /Approve at DinkusKit.com/);
+  assert.equal(await proof('connection-1'), 200, 'DinkusKit.com can read the waiting Connect');
+  answer = { site_id: 'synthetic-site', store_key: approved };
+  assert.match(JSON.stringify(await press('connect.check')), /Checkout settings are up to date/);
+  assert.equal((await saved()).storeKey, approved);
+  assert.equal((await saved()).flow, undefined);
+  assert.ok(!raw().includes(approved), 'the key is stored encrypted, never as plain text');
+  assert.equal(JSON.parse(await state.settings.get('installedCheckout')).siteId, 'synthetic-site');
+  assert.equal(seen.find(call => call.path === '/api/store-passes').authorization, 'Bearer ' + approved);
+  assert.equal(await proof('connection-1'), 404, 'a finished Connect is no longer vouched for');
+
+  // Revoked while DinkusKit.com answers: Connect again, Check is held open, Cancel lands, then a key arrives for the cancelled Connect.
+  answer = null;
+  await press('connect');
+  assert.equal(await proof('connection-2'), 200);
+  let release;
+  hold = new Promise(resolve => { release = resolve; });
+  const checking = press('connect.check');
+  while (!seen.some(call => call.path === '/api/store-connections/token' && call.text.includes('connection-2'))) await new Promise(r => setTimeout(r, 10));
+  assert.match(JSON.stringify(await press('connect.cancel')), /Connected to DinkusKit.com, store synthetic-site/);
+  assert.equal(await proof('connection-2'), 404, 'a cancelled Connect is not vouched for');
+  answer = { site_id: 'synthetic-site', store_key: late };
+  release();
+  assert.doesNotMatch(JSON.stringify(await checking), new RegExp(late));
+  hold = null;
+  assert.equal((await saved()).storeKey, approved, 'the key from before Connect again is kept');
+  assert.equal((await saved()).flow, undefined);
+  assert.ok(!raw().includes(late));
+  // The rejected key is never used: the next fetch and the background check trade only the approved key.
+  const from = seen.length;
+  await press('connect.refresh');
+  await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK }).catch(() => {});
+  const after = seen.slice(from).filter(call => call.path === '/api/store-passes');
+  assert.ok(after.length >= 1);
+  assert.ok(after.every(call => call.authorization === 'Bearer ' + approved));
+  assert.ok(seen.every(call => call.authorization !== 'Bearer ' + late && !call.text.includes(late)), 'the late key is never sent anywhere');
 });
 
 test('country-rejected start recovers through read-only prepared status on the same capability', async t => {
@@ -1055,7 +1168,7 @@ test('beta installation does not inherit stable storage or settings', async t =>
   try {
     assert.deepEqual(await beta.cartRecords(), []);
     assert.equal(await beta.collections.catalog_items.get('hat'), null);
-    assert.equal(await beta.settings.get('storeKey'), null);
+    assert.equal(await beta.settings.get('connection'), null);
     assert.equal((await beta.invokeReadiness()).status, 'unavailable');
     assert.equal(beta.counts.trades, 0);
   } finally { await beta.close(); }

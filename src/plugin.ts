@@ -15,7 +15,9 @@ import {
   GUEST_CHECKOUT_READINESS_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
+  refreshCheckoutSettings,
   resolveRegistryCheckoutServices,
+  storeProof,
   withBackgroundCheck,
 } from "./features/checkout/kernel/index.js";
 import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, listOrdersForEmail, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
@@ -72,6 +74,8 @@ const plugin: SandboxedPlugin = {
     cron: {
       timeout: 25_000,
       handler: async (event, ctx) => {
+        // A change made at DinkusKit.com reaches checkout within one run (store-connect-checkout-settings-083).
+        if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await refreshCheckoutSettings(ctx);
         await installedCheckout.cron(event, ctx);
         if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await syncOrdersWithShip(ctx).catch(() => {});
       },
@@ -109,6 +113,8 @@ const plugin: SandboxedPlugin = {
       cacheControl: "no-store",
       handler: async (_route, ctx) => readSandboxPublicStorePolicies(ctx),
     }),
+    // DinkusKit.com reads a waiting Connect's receipt here, on the store's own web address.
+    "store-proof": { public: true, methods: ["GET"], response: "raw", request: { body: "none" }, handler: (route, ctx) => storeProof(route.input, ctx) },
     admin: {
       public: false,
       permission: "content:edit_any",

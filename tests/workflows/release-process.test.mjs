@@ -5,6 +5,7 @@ import test from "node:test";
 import { auditChangesets, parseChangeset } from "../../.github/scripts/check-changeset.mjs";
 import { findMajorViolation } from "../../.github/scripts/check-no-major.mjs";
 import { syncPluginVersion } from "../../.github/scripts/release-version.mjs";
+import { syncLockVersion } from "../../.github/scripts/sync-lock-version.mjs";
 import { betaManifest, effectiveSelector } from "../../scripts/beta-release.mjs";
 import {
 	computePackageChecksum,
@@ -54,20 +55,23 @@ test("version sync rewrites only the plugin manifest version", () => {
 	assert.throws(() => syncPluginVersion("{}", "0.3.0"), /no "version" field/);
 });
 
-test("release workflow carries Cut beta and Promote, tags merged release PRs, and delegates with pinned actions", async () => {
+test("release workflow carries Cut beta, Add fix to beta and Promote, tags merged release PRs on their branch, and publishes from tags", async () => {
 	const source = await read("../../.github/workflows/release.yml");
-	// The release PR is opened only by Promote (release-beta-cut-071), never by a bot on every merge.
+	// The release PR is opened only by Promote (release-branches-079), never by a bot on every merge.
 	assert.doesNotMatch(source, /changesets\/action/);
-	assert.match(source, /options:\n\s+- cut-beta\n\s+- promote\n/);
+	assert.match(source, /options:\n\s+- cut-beta\n\s+- add-fix\n\s+- promote\n/);
+	assert.match(source, /^ {4}branches: \[main\]\n {4}tags: \["v\*\.\*\.\*"\]$/m);
+	assert.match(source, /node scripts\/release-flow\.mjs cut-beta/);
+	assert.match(source, /node scripts\/release-flow\.mjs add-fix/);
+	assert.match(source, /node scripts\/release-flow\.mjs verify-release-tag/);
 	assert.match(source, /actions\/create-github-app-token@[0-9a-f]{40}/);
 	assert.match(source, /secrets\.RELEASE_APP_ID/);
 	assert.match(source, /secrets\.RELEASE_APP_PRIVATE_KEY/);
 	assert.match(source, /node scripts\/release-flow\.mjs promote/);
 	assert.match(source, /node scripts\/release-flow\.mjs publish-merged-release/);
 	assert.match(source, /uses: \.\/\.github\/workflows\/emdash-release\.yml/);
-	assert.match(source, /release_mode: stable/);
-	assert.match(source, /release_mode: beta/);
-	assert.match(source, /needs: cut-beta/);
+	assert.match(source, /release_mode: \$\{\{ needs\.release-tag\.outputs\.release_mode \}\}/);
+	assert.match(source, /needs: \[release-tag, publish-emdash\]\n\s+if: needs\.release-tag\.outputs\.release_mode == 'beta'/);
 	assert.match(source, /secrets\.DINKUS_LIVE_JOURNEYS_TOKEN/);
 	assert.match(source, /gh workflow run live-journeys\.yml --repo dinkuskit\/live-journeys --ref main -f journeys=@running -f beta="\$BETA"/);
 	assert.match(source, /^permissions: \{\}$/m);
@@ -91,8 +95,8 @@ test("registry workflow is npm-based, pinned, call-only, and builds the version 
 	assert.match(source, /id-token: write/);
 	assert.match(source, /attestations: write/);
 	// Release-gate invariant: Registry publishing is reachable only as a reusable workflow that
-	// release.yml calls (Cut beta, or a merged ci: release PR), and the dispatch gate runs before
-	// any credential or Registry I/O. A hand-picked package selector never reaches the publish job.
+	// release.yml's version-tag run calls, and the dispatch gate runs before any Registry I/O. It
+	// holds no GitHub write token. A hand-picked package selector never reaches the publish job.
 	assert.doesNotMatch(source, /^ {2}workflow_dispatch:/m);
 	assert.match(source, /^ {2}workflow_call:/m);
 	assert.doesNotMatch(source, /inputs\.package/);
@@ -102,10 +106,10 @@ test("registry workflow is npm-based, pinned, call-only, and builds the version 
 		assert.notEqual(index, -1, `missing ${needle}`);
 		return index;
 	};
-	assert.ok(at("node .github/scripts/emdash-dispatch-gate.mjs") < at("actions/create-github-app-token@"));
-	// A beta is stamped before the build preparation packs, and its tag is cut only after that build.
+	assert.doesNotMatch(source, /actions\/create-github-app-token@|RELEASE_APP_PRIVATE_KEY|release-flow\.mjs cut-beta/);
+	assert.ok(at("node .github/scripts/emdash-dispatch-gate.mjs") < at("check-registry-version"));
+	// A beta is stamped before the build preparation packs.
 	assert.ok(at("stamp-beta-version") < at("run: npm run build"));
-	assert.ok(at("run: npm run build") < at("release-flow.mjs cut-beta"));
 	assert.ok(at("run: npm run build") < at("node scripts/prepare-emdash-release.mjs"));
 	assert.match(source, /node scripts\/prepare-emdash-release\.mjs "\$\{EMDASH_RELEASE_SELECTOR\}"/);
 	assert.doesNotMatch(source, /release prepare[^\n]*--dir \./);
@@ -217,11 +221,14 @@ test("publish outcome is gated on registry verification, not the intent", async 
 	assert.doesNotMatch(verifyStep, /^\s+if:/m);
 });
 
-test("a merged release always reaches the Registry job, which verifies even an already-listed version", async () => {
+test("every version tag run reaches the Registry job, which verifies even an already-listed version", async () => {
 	const release = await read("../../.github/workflows/release.yml");
-	const job = release.split("\n  publish-emdash:\n")[1]?.split("\n  cut-beta:\n")[0];
+	const job = release.split("\n  publish-emdash:\n")[1]?.split("\n  # A beta that")[0];
 	assert.ok(job, "missing publish-emdash job");
-	assert.match(job, /if: needs\.release\.outputs\.published == 'true' \|\| needs\.release\.outputs\.registry_needed == 'true'/);
+	assert.match(job, /needs: release-tag\n/);
+	assert.doesNotMatch(job, /^ {4}if:/m);
+	const tagJob = release.split("\n  release-tag:\n")[1]?.split("\n  publish-emdash:\n")[0];
+	assert.match(tagJob, /if: startsWith\(github\.ref, 'refs\/tags\/v'\) && \(github\.event_name == 'push' \|\| inputs\.action == 'retry-publish'\)/);
 });
 
 
@@ -269,4 +276,20 @@ test("PDS resolution supports relative and publisher-qualified service IDs", asy
       service: [{ id: "did:plc:other#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: "https://other.example" }],
     }))), /no #atproto_pds service/);
   }
+});
+
+test("release:version changes only the lockfile's two version fields", async () => {
+	const pkg = JSON.parse(await read("../../package.json"));
+	assert.match(pkg.scripts["release:version"], /sync-lock-version\.mjs/);
+	assert.doesNotMatch(pkg.scripts["release:version"], /npm install/);
+	const before = await read("../../package-lock.json");
+	const after = JSON.parse(syncLockVersion(before, "9.9.9"));
+	const original = JSON.parse(before);
+	assert.equal(after.version, "9.9.9");
+	assert.equal(after.packages[""].version, "9.9.9");
+	original.version = "9.9.9";
+	original.packages[""].version = "9.9.9";
+	assert.deepEqual(after, original);
+	assert.equal(syncLockVersion(before, JSON.parse(before).version), before);
+	assert.throws(() => syncLockVersion("{}", "1.0.0"), /no "version"/);
 });

@@ -20,7 +20,7 @@ with exactly two fields, like `coupons`:
 `origin` is a bare HTTPS origin. Ship is called with its own pass: once per
 sync, Commerce trades the store key at DinkusKit.com for a `ship:orders` pass
 with audience `ship.audience`
-([store key and passes](installed-checkout-services.md#store-key-and-passes)),
+([Connect and the store key](installed-checkout-services.md#connect-and-the-store-key)),
 from the same issuer as the Payments pass (same `iss` and `site_id`, at most an
 hour old). Ship knows the store from the pass's `site_id`. Orders trades only
 for this pass to talk to Ship, never for a Payments pass. Without `ship`, or

@@ -14,13 +14,12 @@ import {
   type RegistryCheckoutConfig,
 } from "./registry-provider-admission.js";
 import { admitCredential, tradeStoreKey } from "./registry-credential.js";
+import { CHECKOUT_SETTING, storeKey } from "./registry-connect.js";
 import type { ShipConnection } from "../orders/index.js";
 
 export { REGISTRY_CHECKOUT_CONFIG_SCHEMA };
 export type { RegistryCheckoutConfig };
-export const REGISTRY_CHECKOUT_SETTINGS_KEY = "installedCheckout";
-/** The store key from DinkusKit.com, traded for each service's pass; one key covers them all. */
-export const REGISTRY_STORE_KEY = "storeKey";
+export const REGISTRY_CHECKOUT_SETTINGS_KEY = CHECKOUT_SETTING;
 
 
 
@@ -79,14 +78,13 @@ async function registryConfig(ctx: PluginContext) {
 }
 
 /**
- * Passes for one invocation. Without a store key nothing is configured; with one, each service's
- * pass is traded the first time a call needs it, then rechecked, expiry included, before every call.
+ * Passes for one invocation. Until Connect has given Commerce its store key nothing is configured; then
+ * each service's pass is traded the first time a call needs it, then rechecked, expiry included, before every call.
  */
 async function storePasses(ctx: PluginContext, config: RegistryCheckoutConfig) {
-  const saved = await ctx.settings!.get(REGISTRY_STORE_KEY), fetch = ctx.http!.fetch.bind(ctx.http);
-  // A key pasted with spaces or a line break around it still counts.
-  const key = typeof saved == "string" ? saved.trim() : saved, traded: Record<string, Promise<string>> = {};
-  if (!text(key, 512)) unavailable();
+  const found = await storeKey(ctx), fetch = ctx.http!.fetch.bind(ctx.http), traded: Record<string, Promise<string>> = {};
+  if (found?.siteId !== config.siteId) unavailable();
+  const key = found!.key;
   return (scope = "payments:checkout", audience = config.audience) => async () => admitCredential(
     await (traded[scope] ??= tradeStoreKey(key, config, fetch, scope, audience)), config, scope, audience);
 }
@@ -103,7 +101,9 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
   });
   // Coupons are unhooked from the Registry build for v1 to save room (GrillTrack
   // registry-coupons-unhooked-v1): settings may still name the coupon service,
-  // but a coupon code is refused before any call.
+  // but a coupon code is refused before any call. REGISTRY_BUILD gates in
+  // checkout (pricing, orchestrate, project, test-payments) keep the coupon
+  // paths out of the bundle; lift them when the port is wired again.
   return {
     host: { ...host, pricing: { paymentPricingSchema: CHECKOUT_PRICING_SCHEMA,
       resolveShippingConfiguration: async () => structuredClone(config.shipping) } },

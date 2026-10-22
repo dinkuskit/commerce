@@ -203,7 +203,15 @@ publication requires separate approval. No npm publication is needed for the
 Registry path. No plugin-supplied JavaScript runs in the browser: EmDash renders
 Block Kit JSON and sends authenticated private interactions to the sandbox.
 The only runtime access is declared plugin storage; no network hosts or
-Inventory service are required for unmanaged products.
+Inventory service are required for unmanaged products. The Registry build
+leaves out the paths it cannot reach (`src/shared/registry-build.ts`): Manage
+stock cannot be turned on there and no Inventory provider is wired, so the
+managed-stock availability read, checkout stock reservation and the order Pack
+command are dropped from `backend.js` to stay under the Registry's per-file
+size limit. The same switch leaves out checkout's coupon quoting, reservation
+and reconciliation: the Registry build binds no coupon port, so a coupon code
+is refused as `COUPON_UNAVAILABLE` (`try-later`) before anything is frozen,
+exactly as before. The native entry keeps them all.
 
 The released CLI requires lowercase storage collection names. Fresh sandbox
 installs use snake_case names, preserving the kernel record shapes and actual

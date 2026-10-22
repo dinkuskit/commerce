@@ -167,11 +167,11 @@ export type {
 export {
   REGISTRY_CHECKOUT_CONFIG_SCHEMA,
   REGISTRY_CHECKOUT_SETTINGS_KEY,
-  REGISTRY_STORE_KEY,
   resolveRegistryCheckoutServices,
   resolveRegistryShip,
 } from "../registry-services.js";
 export type { RegistryCheckoutConfig } from "../registry-services.js";
+export { cancelConnect, connectState, refreshCheckoutSettings, startConnect, storeProof, type ConnectState } from "../registry-connect.js";
 export { createHostedCouponPort } from "../registry-coupons.js";
 export type { HostedCouponServiceConfig } from "../registry-coupons.js";
 export {

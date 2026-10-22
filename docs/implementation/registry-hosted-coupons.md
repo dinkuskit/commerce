@@ -7,9 +7,14 @@ with reason `try-later` before any call, even when the checkout settings name
 the coupon service, and no `coupons:checkout` pass is traded. Settings that
 name `coupons` stay valid, `coupons.dinkuskit.com` stays declared so coupons
 can return without stores approving a new host, and the port, its tests and
-checkout's coupon pricing stay in the source. Hooking the port back in
-`resolveRegistryCheckoutServices` restores everything below; until then it
-describes the port, not the shipped build.
+checkout's coupon pricing stay in the source. Since 2026-10-22 the Registry
+build switch (`src/shared/registry-build.ts`, `REGISTRY_BUILD`) also leaves
+checkout's coupon quoting, reservation and reconciliation out of `backend.js`
+(about 5.6 KB): the refusal is the same `try-later` answer, raised where the
+native entry raises it without a port. Hooking the port back means wiring it in
+`resolveRegistryCheckoutServices` and lifting those gates in
+`src/features/checkout/pricing.ts`, `orchestrate.ts`, `project.ts` and
+`test-payments.ts`; then everything below applies to the shipped build too.
 
 Coupons left the Registry artifact on 2026-10-08 to keep the backend under
 EmDash's 128 KiB per-file limit
@@ -38,7 +43,7 @@ with exactly two fields:
 `origin` is a bare HTTPS origin. The service is called with its own pass:
 Commerce trades the store key at DinkusKit.com for a `coupons:checkout` pass
 with audience `coupons.audience`
-([store key and passes](installed-checkout-services.md#store-key-and-passes)),
+([Connect and the store key](installed-checkout-services.md#connect-and-the-store-key)),
 from the same issuer as the Payments pass (same `iss` and `site_id`, at most an
 hour old). Commerce trades for it only when a checkout uses a coupon, so a
 refused or stale coupon pass never blocks checkout without a coupon. The

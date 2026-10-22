@@ -1,4 +1,5 @@
 import { isRecord } from "../../shared/record.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import {
   normalizeStoredStockManagement,
   setManageStock,
@@ -38,6 +39,7 @@ import type {
   Money,
 } from "./types.js";
 import { resolveCatalogVariantMember, variantSelections } from "./variants.js";
+import { MANAGE_STOCK_UNAVAILABLE_MESSAGE } from "./v1-stock-admission.js";
 
 export { CLERK_STOCK_STATUSES, type ClerkStockStatus } from "./clerk-stock.js";
 
@@ -512,6 +514,8 @@ export async function saveCatalogProductPrices(
       priceCommitted = true;
     }
     if (!manageUnchanged) {
+      // v1 admission strips or refuses Manage stock changes before a Registry save gets here.
+      if (REGISTRY_BUILD) catalogFail("MANAGE_STOCK_UNAVAILABLE", MANAGE_STOCK_UNAVAILABLE_MESSAGE);
       await persistManageStock(storage, item, nextManaged);
     }
     if (!nextManaged && storage.releaseRegistrationClaims) {
