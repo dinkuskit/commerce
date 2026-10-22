@@ -143,6 +143,32 @@ test("checkout settings come from DinkusKit.com with a commerce:settings pass, n
   assert.equal(await refreshCheckoutSettings(host().ctx), "not_connected");
 });
 
+test("a key that arrives late for a cancelled Connect is never saved", async () => {
+  let answerFirst, first = true;
+  const late = "dk_store_" + "l".repeat(43);
+  const h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: {
+    "/api/store-connections": () => Response.json(started(first ? {} : { connection_id: "conn_2", verification_uri: "https://dinkuskit.com/account/connect?connection_id=conn_2" })),
+    "/api/store-connections/token": body => body.connection_id === CONNECTION
+      ? new Promise(resolve => { answerFirst = () => resolve(Response.json({ store_key: late, site_id: SITE_ID })); })
+      : Response.json({ error: "authorization_pending" }, { status: 400 }),
+  } });
+  await startConnect(h.ctx);
+  const slow = connectState(h.ctx, true);
+  while (!answerFirst) await new Promise(resolve => setTimeout(resolve, 1));
+  // The owner approved, but the Administrator cancelled and pressed Connect again before the key came back.
+  await cancelConnect(h.ctx); first = false;
+  await startConnect(h.ctx);
+  const replacement = h.saved().flow.id;
+  answerFirst();
+  const answered = await slow;
+  assert.equal(answered.key, KEY, "the slow Check answers with the key the store already had");
+  assert.equal(answered.finished, undefined);
+  assert.equal(h.saved().storeKey, KEY, "the key the store had stays; the late one is dropped");
+  assert.equal(h.saved().flow.id, replacement);
+  assert.deepEqual([...h.kv.keys()], ["state:connect:" + replacement]);
+  assert.equal((await proof(h, { connection_id: "conn_2" })).status, 200);
+});
+
 test("settings saved while a fetch is on its way are not overwritten by the older answer", async () => {
   let h;
   const newer = checkout({ shipping: { configurationId: "free", revision: 9, mode: "free" } });
