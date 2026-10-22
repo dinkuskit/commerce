@@ -52,7 +52,7 @@ async function products(ctx: PluginContext, offset = 0): Promise<BlockResponse> 
   const blocks: Block[] = [header("Products"), note("Commerce"), navigation(),
     ...addForm(), { type: "divider" }];
   for (const product of products.slice(start, start + PAGE_SIZE)) {
-    blocks.push({ type: "section", text: product.name + " — " + product.sku + (product.archivedAt ? " · Archived" : ""),
+    blocks.push({ type: "section", text: product.name + " \u2014 " + product.sku + (product.archivedAt ? " \u00b7 Archived" : ""),
       accessory: button("Open " + product.name, "open", product.catalogItemId) });
   }
   if (!products.length) blocks.push({ type: "empty", title: "No products yet", description: "Add your first product." });
@@ -67,7 +67,7 @@ type ProductFields = {
   feedChannels?: readonly ProductFeedChannel[];
 };
 function manageStockNotice(managed: boolean | null): Block {
-  const base = "Manage stock — Coming soon";
+  const base = "Manage stock \u2014 Coming soon";
   return {
     type: "context",
     text: managed === true
@@ -118,10 +118,27 @@ function variantEditor(id: string, variant: CatalogProductListItem["variantProdu
         "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision])),
     ]),
     { type: "form", block_id: "variant-details-" + crypto.randomUUID(), fields: [
-      { type: "text_input", action_id: "optionLabel", label: "Option", initial_value: variant.options[0].label },
-      ...variant.options[0].values.map(v => ({ type: "text_input" as const, action_id: "label:" + v.valueId, label: "Value: " + v.label, initial_value: v.label })),
+      ...variant.options.flatMap((o, i) => [
+        { type: "text_input" as const, action_id: i ? "option:" + o.optionId : "optionLabel", label: i ? "Option: " + o.label : "Option", initial_value: o.label },
+        ...o.values.map(v => ({ type: "text_input" as const, action_id: "label:" + JSON.stringify([o.optionId, v.valueId]), label: "Value: " + v.label, initial_value: v.label })),
+      ]),
       ...variant.members.map(m => ({ type: "radio" as const, action_id: "fulfillment:" + m.catalogItemId, label: label(m) + " fulfillment", options: FULFILLMENT, initial_value: m.fulfillment })),
     ], submit: { label: "Save choices", action_id: "variant:" + JSON.stringify(["details", id, variant.revision]) } },
+    ...(variant.options.length < 3 ? [{
+      type: "form" as const, block_id: "variant-option-" + crypto.randomUUID(), fields: [
+        { type: "text_input" as const, action_id: "optionLabel", label: "Next option", initial_value: variant.options.length === 1 ? "Color" : "Material" },
+        { type: "text_input" as const, action_id: "firstValue", label: "First option value", initial_value: "Sand" },
+        { type: "text_input" as const, action_id: "secondValue", label: "Second option value", initial_value: "Ink" },
+        ...variant.members.map(m => ({ type: "text_input" as const, action_id: "member:" + m.catalogItemId, label: "Value for " + label(m), initial_value: "Sand" })),
+      ], submit: { label: "Add option", action_id: "variant:" + JSON.stringify(["option", id, variant.revision, crypto.randomUUID()]) },
+    }] : []),
+    ...(variant.members.length < 50 ? [{
+      type: "form" as const, block_id: "variant-member-" + crypto.randomUUID(), fields: [
+        ...variant.options.map(o => ({ type: "text_input" as const, action_id: "choice:" + o.optionId, label: "Choice: " + o.label })),
+        { type: "text_input" as const, action_id: "sku", label: "Variant SKU" },
+        { type: "radio" as const, action_id: "fulfillment", label: "Variant fulfillment", options: FULFILLMENT, initial_value: "physical" },
+      ], submit: { label: "Add variant", action_id: "variant:" + JSON.stringify(["member", id, variant.revision, crypto.randomUUID()]) },
+    }] : []),
     { type: "form", block_id: "variant-bulk-" + crypto.randomUUID(), fields: [
       { type: "text_input", action_id: "regular", label: "Same regular price" },
       ...variant.members.map(m => ({ type: "toggle" as const, action_id: JSON.stringify([m.catalogItemId, m.priceRevision, m.sale ?? ""]), label: "Apply to " + label(m), initial_value: false })),
@@ -299,16 +316,55 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
             { valueId: args[2], label: text(values.largeLabel), member: { commandId: args[3], name: selected.name, sku: text(values.sku), fulfillment: values.second as never } },
           ],
         }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
-        else if (operation === "price") {
+        else if (operation === "option") {
+          const byLabel = new Map<string, { valueId: string; label: string }>();
+          const ensure = (rawLabel: unknown) => {
+            const l = text(rawLabel), k = l.toLowerCase();
+            if (!byLabel.has(k)) {
+              const base = k.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "v";
+              const valueId = [...byLabel.values()].some(v => v.valueId === base) ? `${base}-${byLabel.size + 1}` : base;
+              byLabel.set(k, { valueId, label: l });
+            }
+            return byLabel.get(k)!.valueId;
+          };
+          ensure(values.firstValue); ensure(values.secondValue);
+          const members = (selected.variantProduct?.members ?? []).map(m => ({
+            catalogItemId: m.catalogItemId, valueId: ensure(values["member:" + m.catalogItemId]), fulfillment: m.fulfillment,
+          }));
+          await addCatalogVariantOption(store, {
+            productId: id, expectedRevision: args[0], optionId: args[1], optionLabel: text(values.optionLabel),
+            values: [...byLabel.values()], members,
+          }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
+        } else if (operation === "member") {
+          const selections = (selected.variantProduct?.options ?? []).map((o, i) => {
+            const l = text(values["choice:" + o.optionId]), k = l.toLowerCase();
+            const found = o.values.find(v => v.label.toLowerCase() === k || v.valueId === l);
+            if (found) return { optionId: o.optionId, valueId: found.valueId };
+            const base = k.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "v" + i;
+            const valueId = o.values.some(v => v.valueId === base) ? `${base}-${o.values.length + 1}` : base;
+            return { optionId: o.optionId, valueId, label: l };
+          });
+          await addCatalogVariantOption(store, {
+            productId: id, expectedRevision: args[0], commandId: args[1], name: selected.name,
+            sku: text(values.sku), fulfillment: values.fulfillment as never, selections,
+          }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
+        } else if (operation === "price") {
           const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]);
           if (!member) throw new Error("Member unavailable");
           const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: args[1], regular: text(values.regular), sale: text(values.sale),
             ...(!member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {}) });
           if (!saved.saved) throw new Error(saved.message ?? "Could not save price");
         } else if (operation === "details") await updateCatalogVariantLabels(store, {
-          productId: id, expectedRevision: args[0], optionLabel: text(values.optionLabel),
-          values: Object.entries(values).filter(([k]) => k.startsWith("label:")).map(([k,v]) => ({ valueId: k.slice(6), label: text(v) })),
-          members: Object.entries(values).filter(([k]) => k.startsWith("fulfillment:")).map(([k,v]) => ({ catalogItemId: k.slice(12), fulfillment: v as never })),
+          productId: id, expectedRevision: args[0],
+          ...(values.optionLabel !== undefined ? { optionLabel: text(values.optionLabel) } : {}),
+          options: Object.entries(values).filter(([k]) => k.startsWith("option:")).map(([k, v]) => ({ optionId: k.slice(7), label: text(v) })),
+          values: Object.entries(values).filter(([k]) => k.startsWith("label:")).map(([k, v]) => {
+            const key = k.slice(6);
+            if (!key.startsWith("[")) return { valueId: key, label: text(v) };
+            const [optionId, valueId] = JSON.parse(key);
+            return { optionId, valueId, label: text(v) };
+          }),
+          members: Object.entries(values).filter(([k]) => k.startsWith("fulfillment:")).map(([k, v]) => ({ catalogItemId: k.slice(12), fulfillment: v as never })),
         });
         else if (operation === "bulk") {
           const rows = Object.entries(values).filter(([k,v]) => k.startsWith("[") && v === true).map(([k]) => {

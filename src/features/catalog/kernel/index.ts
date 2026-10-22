@@ -69,12 +69,14 @@ export {
   BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
 } from "../route-ids.js";
 export {
+  addCatalogVariantMember,
   addCatalogVariantOption,
   resolveCatalogVariantMember,
   updateCatalogVariantLabels,
   variantSelections,
 } from "../variants.js";
 export type {
+  AddCatalogVariantMemberInput,
   AddCatalogVariantOptionInput,
   UpdateCatalogVariantLabelsInput,
   CatalogVariantMember,
@@ -84,6 +86,7 @@ export type {
   CatalogVariantResolution,
   CatalogVariantStorage,
   VariantMemberInput,
+  VariantSelectionInput,
 } from "../variants.js";
 
 export {

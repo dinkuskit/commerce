@@ -247,7 +247,7 @@ test('merchant creates choices and edits independent and bulk prices through the
   const all = c => db.prepare('SELECT id,data FROM _plugin_storage WHERE plugin_id=? AND collection=?').all('dinkus-commerce',c).map(r => ({ id:r.id, ...JSON.parse(r.data) }));
   const name = 'Merchant variant proof';
   let owned = [];
-  let shopperContext, shopper, guestId, guestCartId, guestAttemptId;
+  let shopperContext, shopper, guestIds = [], guestCartIds = [], guestAttemptIds = [];
   const capture = async suffix => page.screenshot({ path: `${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-merchant-${native ? 'native' : 'sandbox'}-${suffix}.png`, fullPage:true });
   try {
     await page.goto('/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/products');
@@ -309,16 +309,17 @@ test('merchant creates choices and edits independent and bulk prices through the
       await shopper.getByRole('button',{name:'Prepare checkout'}).click();
       await expect(shopper.locator('[data-checkout-result]')).toContainText('"ok": true');
       const prepared = JSON.parse(await shopper.locator('[data-checkout-result]').textContent());
-      guestId = (prepared.data ?? prepared).capabilityId;
+      const guestId = (prepared.data ?? prepared).capabilityId;
+      guestIds.push(guestId);
       const capability = all('checkoutGuestCapabilities').find(r => r.capabilityId === guestId);
-      guestCartId = capability.cartId;
+      guestCartIds.push(capability.cartId);
       await shopper.getByRole('textbox',{name:'Email'}).fill('guest-shopper@example.test');
       await shopper.getByRole('button',{name:'Start checkout'}).click();
       await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "pending"');
       await expect(shopper.locator('[data-checkout-result]')).toContainText('\"minor\": \"2400\"');
       const started = JSON.parse(await shopper.locator('[data-checkout-result]').textContent());
       const checkout = (started.data ?? started).checkout;
-      guestAttemptId = checkout.attemptId;
+      guestAttemptIds.push(checkout.attemptId);
       expect(checkout.total.minor).toBe('2400');
       expect(checkout.variantSelections[0].catalogItemId).toBe(owned[1]);
       expect(checkout.variantSelections[0].selections[0].valueLabel).toBe('Large');
@@ -378,10 +379,66 @@ test('merchant creates choices and edits independent and bulk prices through the
       expect(order.total.minor).toBe('2400');
       expect(order.variantSelections[0].selections[0].valueLabel).toBe('Large');
       expect(order.variantSelections[0].fulfillment).toBe('digital');
-      const persisted = all('checkoutCarts').find(r => r.id === guestCartId).attempts.at(-1);
+      const persisted = all('checkoutCarts').find(r => r.id === guestCartIds[0]).attempts.at(-1);
       expect(persisted.order.total.minor).toBe('2400');
       expect(persisted.order.variantSelections).toEqual(order.variantSelections);
       expect(persisted.payment.total.minor).toBe('2400');
+    }
+
+    // Append second option (Size × Color) with explicit existing-member values (Sand for Small and Big), then add Medium / Ink.
+    await page.getByRole('button',{name:'Add option',exact:true}).click();
+    await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.options.length).toBe(2);
+    await expect(page.getByRole('textbox',{name:'Choice: Size',exact:true})).toBeVisible();
+    await page.getByRole('textbox',{name:'Choice: Size',exact:true}).fill('Medium');
+    await page.getByRole('textbox',{name:'Choice: Color',exact:true}).fill('Ink');
+    await page.getByRole('textbox',{name:'Variant SKU',exact:true}).fill('MERCHANT-PROOF-MEDIUM-INK');
+    if (native) await page.getByRole('combobox',{name:'Variant fulfillment',exact:true}).selectOption('digital');
+    else await page.locator('form').filter({has:page.getByRole('button',{name:'Add variant',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).check();
+    await page.getByRole('button',{name:'Add variant',exact:true}).click();
+    await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.length).toBe(3);
+    owned = all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.map(m => m.catalogItemId);
+    const mediumForm = priceForms.nth(2);
+    await mediumForm.getByRole('textbox',{name:'Regular',exact:true}).fill('28');
+    await mediumForm.getByRole('radio',{name:'In stock',exact:true}).check();
+    await mediumForm.getByRole('button',{name:/^Save/}).click();
+    await expect(mediumForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('28.00');
+    expect(all(prices).find(r => r.catalogItemId === owned[2]).regular.minor).toBe('2800');
+
+    if (shopper) {
+      await shopper.goto(new URL('/', test.info().project.use.baseURL).href);
+      const choices = shopper.locator(`[data-variants="${root.itemId}"]`);
+      await expect(choices.locator('legend')).toHaveText('Size / Color');
+      await expect(choices).toContainText('Medium / Ink');
+      await choices.locator(`input[value="${owned[2]}"]`).check();
+      await shopper.getByRole('button',{name:'Prepare checkout'}).click();
+      await expect(shopper.locator('[data-checkout-result]')).toContainText('"ok": true');
+      const prepared = JSON.parse(await shopper.locator('[data-checkout-result]').textContent());
+      const guestId = (prepared.data ?? prepared).capabilityId;
+      guestIds.push(guestId);
+      const capability = all('checkoutGuestCapabilities').find(r => r.capabilityId === guestId);
+      guestCartIds.push(capability.cartId);
+      await shopper.getByRole('textbox',{name:'Email'}).fill('medium-ink-shopper@example.test');
+      await shopper.getByRole('button',{name:'Start checkout'}).click();
+      await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "pending"');
+      await expect(shopper.locator('[data-frozen-order]')).toContainText('Medium / Ink');
+      const started = JSON.parse(await shopper.locator('[data-checkout-result]').textContent());
+      guestAttemptIds.push((started.data ?? started).checkout.attemptId);
+    }
+
+    // Rename Color and Ink in the editor; the pending Medium / Ink order must keep its frozen Size / Color selections.
+    await page.getByRole('textbox',{name:'Option: Color',exact:true}).fill('Shade');
+    await page.getByRole('textbox',{name:'Value: Ink',exact:true}).fill('Midnight');
+    await page.getByRole('button',{name:'Save choices',exact:true}).click();
+    await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.options[1].label).toBe('Shade');
+
+    if (shopper) {
+      await shopper.getByRole('button',{name:'Refresh payment status'}).click();
+      await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "paid"');
+      const result = JSON.parse(await shopper.locator('[data-checkout-result]').textContent());
+      const order = (result.data ?? result).checkout.order;
+      expect(order.total.minor).toBe('2800');
+      expect(order.variantSelections[0].selections.map(s => [s.optionLabel, s.valueLabel])).toEqual([['Size', 'Medium'], ['Color', 'Ink']]);
+      expect(order.variantSelections[0].fulfillment).toBe('digital');
       await shopper.setViewportSize({width:1440,height:1000});
       await shopper.screenshot({path:`${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-journey-desktop.png`,fullPage:true});
       await shopper.setViewportSize({width:390,height:844});
@@ -391,8 +448,9 @@ test('merchant creates choices and edits independent and bulk prices through the
     await page.setViewportSize({width:390,height:844}); await capture('phone');
   } finally {
     if (shopperContext) await shopperContext.close();
-    for (const [c,id] of [['checkoutCarts',guestCartId],['checkoutGuestCapabilities',guestId]]) if (id) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce',c,id);
-    if (guestAttemptId) for (const row of all('checkoutPaymentAssociations').filter(r => r.attemptId === guestAttemptId)) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce','checkoutPaymentAssociations',row.id);
+    for (const id of guestCartIds) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce','checkoutCarts',id);
+    for (const id of guestIds) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce','checkoutGuestCapabilities',id);
+    for (const attemptId of guestAttemptIds) for (const row of all('checkoutPaymentAssociations').filter(r => r.attemptId === attemptId)) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce','checkoutPaymentAssociations',row.id);
     for (const id of owned) for (const c of [catalog,prices,availability]) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce',c,id);
     db.close();
   }
