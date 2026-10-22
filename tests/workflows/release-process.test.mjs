@@ -5,6 +5,7 @@ import test from "node:test";
 import { auditChangesets, parseChangeset } from "../../.github/scripts/check-changeset.mjs";
 import { findMajorViolation } from "../../.github/scripts/check-no-major.mjs";
 import { syncPluginVersion } from "../../.github/scripts/release-version.mjs";
+import { syncLockVersion } from "../../.github/scripts/sync-lock-version.mjs";
 import { betaManifest, effectiveSelector } from "../../scripts/beta-release.mjs";
 import {
 	computePackageChecksum,
@@ -275,4 +276,20 @@ test("PDS resolution supports relative and publisher-qualified service IDs", asy
       service: [{ id: "did:plc:other#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: "https://other.example" }],
     }))), /no #atproto_pds service/);
   }
+});
+
+test("release:version changes only the lockfile's two version fields", async () => {
+	const pkg = JSON.parse(await read("../../package.json"));
+	assert.match(pkg.scripts["release:version"], /sync-lock-version\.mjs/);
+	assert.doesNotMatch(pkg.scripts["release:version"], /npm install/);
+	const before = await read("../../package-lock.json");
+	const after = JSON.parse(syncLockVersion(before, "9.9.9"));
+	const original = JSON.parse(before);
+	assert.equal(after.version, "9.9.9");
+	assert.equal(after.packages[""].version, "9.9.9");
+	original.version = "9.9.9";
+	original.packages[""].version = "9.9.9";
+	assert.deepEqual(after, original);
+	assert.equal(syncLockVersion(before, JSON.parse(before).version), before);
+	assert.throws(() => syncLockVersion("{}", "1.0.0"), /no "version"/);
 });

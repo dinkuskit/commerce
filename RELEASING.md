@@ -99,7 +99,8 @@ The gate checks that `vX.Y.Z-beta.N` is the tip of `release/X.Y.Z` (if a
 fix was added since, promote that newer beta once it passes), that `vX.Y.Z`
 isn't released yet, and that the Registry holds the beta. Then it runs
 `npm run release:version` on the branch (`changeset version`, the
-`emdash-plugin.jsonc` version sync, a lockfile-only install) and refuses if
+`emdash-plugin.jsonc` version sync, and a copy of the new version into
+`package-lock.json` that changes nothing else) and refuses if
 the branch's changesets make a different version. It opens or updates the one
 `ci: release vX.Y.Z` PR to `main` from `changeset-release/main`, carrying only
 the version, the `X.Y.Z` CHANGELOG section, and the removal of the changesets
