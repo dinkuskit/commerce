@@ -338,7 +338,8 @@ function createStubEnvironment({
       for (const file of ["package.json", "package-lock.json", "emdash-plugin.jsonc"]) {
         const path = join(cwd, file);
         const value = JSON.parse(await readFile(path, "utf8"));
-        value.version = version;
+        // A manifest without a version (the Registry workspace stamps it) stays without one.
+        if (file !== "emdash-plugin.jsonc" || "version" in value) value.version = version;
         if (value.packages?.[""]) value.packages[""].version = version;
         await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
       }
