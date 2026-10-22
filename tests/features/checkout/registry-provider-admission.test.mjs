@@ -125,6 +125,6 @@ test("an optional hosted coupon or Ship service needs exactly an https origin an
 
 test('captured Registry connection re-admits identity when settings switch Ship',async()=>{
  let current=legacyStripe({ship:{origin:'https://ship.dinkuskit.com',audience:'dinkus-ship'}}),calls=0;
- const ctx={plugin:{id:'dinkus-commerce'},site:{url:SITE},settings:{getVersioned:async()=>({revision:'fixture',value:current}),get:async()=> 'synthetic fixture key'},http:{fetch:async()=>{calls++;throw new Error('unexpected network')}}};
+ const ctx={plugin:{id:'dinkus-commerce'},site:{url:SITE},settings:{getVersioned:async name=>({revision:'fixture',value:name==='connection'?JSON.stringify({siteId:current.siteId,storeKey:'dk_store_'+'f'.repeat(43)}):current})},http:{fetch:async()=>{calls++;throw new Error('unexpected network')}}};
  const old=await resolveRegistryShip(ctx);assert.equal(await old.current(),true);current=legacyStripe({ship:{origin:'https://ship.example.test',audience:'dinkus-ship'}});assert.equal(await old.current(),false);assert.equal(calls,0);
 });

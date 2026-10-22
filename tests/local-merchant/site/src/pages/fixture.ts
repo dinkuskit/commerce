@@ -17,14 +17,14 @@ export async function POST({ request }) {
   if (action !== 'bootstrap' || seeded) return new Response(null, { status: 409 });
   return withEmDashRuntime(async runtime => {
     await runtime.syncPluginStorageIndexesOnce();
-    const schema = { installedCheckout: { type: 'string', label: 'Checkout' }, storeKey: { type: 'secret', label: 'Store key' } };
+    const schema = { installedCheckout: { type: 'string', label: 'Checkout' }, connection: { type: 'secret', label: 'DinkusKit connection' } };
     const settings = createSettingsAccess(new OptionsRepository(runtime.db), 'dinkus-commerce', schema);
     await settings.set('installedCheckout', JSON.stringify({ schema: 'dinkuskit.commerce.registry-checkout/v1', enabled: true,
       commerceOrigin: origin, siteId, paymentsOrigin: 'https://payments.dinkuskit.com', bindingRef,
       providerId: 'stripe', mode: 'test', stripeAccountId: 'acct_localfixture',
       pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1', issuer: 'https://dinkuskit.com/account', audience: 'local-payments',
       shipping: { configurationId: 'local-free-shipping', revision: 1, mode: 'free' } }));
-    await settings.set('storeKey', 'synthetic store key');
+    await settings.set('connection', JSON.stringify({ siteId, storeKey: 'dk_store_' + 's'.repeat(43) }));
     seeded = true;
     return Response.json({ seeded: true, sandboxAvailable: runtime.getSandboxRunner()?.isAvailable() });
   });
