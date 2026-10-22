@@ -9,8 +9,30 @@ on:
 permissions:
   contents: read
 
+# A new push to a PR cancels that PR's older run, which no one waits on any more.
+# Pushes to main each get their own group and are never cancelled.
+concurrency:
+  group: repo-contract-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  public-contract:
+  # bin/verify-commerce core runs as three parallel jobs (checks, storefront,
+  # packaged); public-contract below passes only when all three pass.
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: bin/verify-commerce checks
+
+  storefront:
     runs-on: ubuntu-latest
     # The browser's Ubuntu packages alone can take over 9 minutes on a slow mirror.
     timeout-minutes: 20
@@ -26,7 +48,25 @@ jobs:
       # The runner image already has Chromium's system libraries; --with-deps only
       # added fonts and package upgrades from a mirror that is sometimes very slow.
       - run: npx playwright install chromium
-      - run: bin/verify-commerce core
+      - run: bin/verify-commerce storefront
+
+  packaged:
+    runs-on: ubuntu-latest
+    # The browser's Ubuntu packages alone can take over 9 minutes on a slow mirror.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # The runner image already has Chromium's system libraries; --with-deps only
+      # added fonts and package upgrades from a mirror that is sometimes very slow.
+      - run: npx playwright install chromium
+      - run: bin/verify-commerce packaged
       - name: Preserve allowlisted installed-consumer evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -42,6 +82,26 @@ jobs:
           retention-days: 14
           include-hidden-files: true
           if-no-files-found: warn
+
+  # Keeps the single public-contract check that reviewers and ClawSweeper wait on.
+  # It runs even when a part fails, so a failed part shows as a failed check
+  # instead of a skipped (passing) one.
+  public-contract:
+    needs: [checks, storefront, packaged]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require checks, storefront and packaged
+        env:
+          CHECKS: ${{ needs.checks.result }}
+          STOREFRONT: ${{ needs.storefront.result }}
+          PACKAGED: ${{ needs.packaged.result }}
+        run: |
+          echo "checks=${CHECKS} storefront=${STOREFRONT} packaged=${PACKAGED}"
+          test "$CHECKS" = success
+          test "$STOREFRONT" = success
+          test "$PACKAGED" = success
 
   merchant-settings:
     runs-on: ubuntu-latest

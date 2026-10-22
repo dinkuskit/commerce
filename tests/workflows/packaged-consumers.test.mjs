@@ -29,10 +29,17 @@ test('installed consumer reporter retains failure status without logs, errors, a
 test('consumer CI keeps failure propagation and uploads only explicit synthetic receipts and screenshots', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/repo-contract.yml', import.meta.url), 'utf8');
   const verifier = readFileSync(new URL('../../bin/verify-commerce', import.meta.url), 'utf8');
+  const packaged = verifier.match(/packaged\)([\s\S]*?)\n  core\)/)?.[1];
+  assert.match(packaged, /npm run test:sandbox:orders[\s\S]*npm run test:consumer:native/);
   const core = verifier.match(/core\)([\s\S]*?)\n  full\)/)?.[1];
-  assert.match(core, /npm run test:sandbox:orders[\s\S]*npm run test:consumer:native/);
+  assert.match(core, /verify-commerce" checks[\s\S]*verify-commerce" storefront[\s\S]*verify-commerce" packaged/);
   assert.match(verifier, /full\)[\s\S]*"\$script_dir\/verify-commerce" core[\s\S]*npm run test:settings/);
-  assert.match(workflow, /run: bin\/verify-commerce core/);
+  // CI runs core's three parts as parallel jobs that public-contract requires.
+  for (const part of ['checks', 'storefront', 'packaged']) {
+    assert.match(workflow, new RegExp(`run: bin/verify-commerce ${part}\\n`));
+  }
+  assert.match(workflow, /public-contract:\n    needs: \[checks, storefront, packaged\]/);
+  assert.match(workflow, /packaged:[\s\S]*Preserve allowlisted installed-consumer evidence/);
   assert.doesNotMatch(workflow, /continue-on-error/);
   assert.match(workflow, /if: always\(\)/);
   assert.match(workflow, /retention-days: 14/);

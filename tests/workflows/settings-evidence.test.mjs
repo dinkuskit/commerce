@@ -44,7 +44,9 @@ test('collector refuses malformed outcomes and reused evidence', () => {
 test('CI retains original verification plus a failing settings gate and narrow fourteen-day evidence', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/repo-contract.yml', import.meta.url), 'utf8');
   const verifier = readFileSync(new URL('../../bin/verify-commerce', import.meta.url), 'utf8');
-  assert.match(workflow, /run: bin\/verify-commerce core/);
+  for (const part of ['checks', 'storefront', 'packaged']) {
+    assert.match(workflow, new RegExp(`run: bin/verify-commerce ${part}\\n`));
+  }
   assert.match(workflow, /merchant-settings:[\s\S]*run: npm run test:settings/);
   assert.doesNotMatch(workflow, /continue-on-error/);
   assert.match(workflow, /if: always\(\)/);
