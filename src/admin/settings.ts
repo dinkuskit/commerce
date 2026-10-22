@@ -7,8 +7,8 @@ import {
 } from "../features/storefront-availability/kernel/index.js";
 import { merchantStoreSettingsBlocks } from "../features/store-settings/kernel/index.js";
 import { adminAuthorized, navigation } from "../shared/admin-blocks.js";
-import { connectState } from "../features/checkout/kernel/index.js";
-import { connectBlocks } from "./connect.js";
+import { connectState, type ConnectState } from "../features/checkout/kernel/index.js";
+import { connectBlocks, finishedConnect } from "./connect.js";
 import { alert, bool, button, failed, header, message, note, object, refused, text } from "./common.js";
 import { preview, target } from "./media.js";
 
@@ -42,7 +42,10 @@ export async function settings(ctx: PluginContext, route: SandboxedRouteContext,
   const listing = await loadOutOfStockListing(listingStorage(ctx));
   const response = settingsResponse(listing.hideOutOfStock);
   // A waiting Connect is checked here, so the owner's return from DinkusKit.com's Approve lands connected.
-  const dinkus = connectBlocks(await connectState(ctx).catch(() => ({ state: "disconnected" as const })), adminAuthorized(route));
+  const state = await connectState(ctx).catch((): ConnectState => ({ state: "disconnected" }));
+  // Connect finished on this load: fetch the checkout settings now and answer with the DinkusKit section alone, as its buttons do.
+  if (state.state === "connected" && state.finished) return finishedConnect(ctx, state, adminAuthorized(route));
+  const dinkus = connectBlocks(state, adminAuthorized(route));
   return { blocks: [...response.blocks.slice(0, 2), ...dinkus, ...response.blocks.slice(2), ...await placeholderBlocks(ctx), ...(merchant ?? await merchantStoreSettingsBlocks({ ...route, input: { type: "page_load", page: "/settings" } }, ctx)).blocks], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 

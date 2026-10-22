@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import { cancelConnect, connectState, refreshCheckoutSettings, startConnect, storeKey, storeProof } from "../../../dist/features/checkout/registry-connect.js";
+import { finishedConnect } from "../../../dist/admin/connect.js";
 
 // Connect to DinkusKit from Commerce (GrillTrack 080 to 083) against a stand-in DinkusKit.com.
 const SITE = "https://shop.example.test", SITE_ID = "site_demo", CONNECTION = "conn_1";
@@ -72,7 +73,8 @@ test("Connect: the owner approves, the proof route vouches for this store, and C
   assert.deepEqual(h.calls.at(-1).body, { client_id: "dinkus-commerce-emdash", connection_id: CONNECTION, code_verifier: verifier });
 
   approved = true;
-  assert.deepEqual(await connectState(h.ctx, true), { state: "connected", siteId: SITE_ID, key: KEY });
+  assert.deepEqual(await connectState(h.ctx, true), { state: "connected", siteId: SITE_ID, key: KEY, finished: true }, "this load finished Connect");
+  assert.deepEqual(await connectState(h.ctx), { state: "connected", siteId: SITE_ID, key: KEY }, "later loads only show it");
   assert.deepEqual(h.saved(), { siteId: SITE_ID, storeKey: KEY });
   assert.equal((await storeKey(h.ctx)).key, KEY);
   assert.equal((await proof(h, { connection_id: CONNECTION })).status, 404, "a finished Connect vouches for nothing");
@@ -134,4 +136,40 @@ test("checkout settings come from DinkusKit.com with a commerce:settings pass, n
   const unknown = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-passes": () => Response.json({ error: "invalid_store_key" }, { status: 401 }) } });
   assert.equal(await refreshCheckoutSettings(unknown.ctx), "invalid_store_key");
   assert.equal(await refreshCheckoutSettings(host().ctx), "not_connected");
+});
+
+test("the proof route vouches only for the Connect still waiting in the encrypted setting", async () => {
+  const h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-connections": started() } });
+  await startConnect(h.ctx);
+  assert.equal((await proof(h, { connection_id: CONNECTION })).status, 200);
+  // The setting now holds another flow (a replaced or rolled-back Connect): its old receipt is not vouched for.
+  const saved = h.saved(); h.stored.set("connection", { value: JSON.stringify({ ...saved, flow: { ...saved.flow, id: "other-flow" } }), revision: "9" });
+  assert.equal((await proof(h, { connection_id: CONNECTION })).status, 404);
+  h.stored.set("connection", { value: JSON.stringify(saved), revision: "10" });
+  assert.equal((await proof(h, { connection_id: CONNECTION })).status, 200);
+  // Cancel removes the receipt too, and the key the store had stays.
+  assert.equal((await cancelConnect(h.ctx)).state, "connected");
+  assert.equal((await proof(h, { connection_id: CONNECTION })).status, 404);
+  assert.equal(h.kv.size, 0, "no receipt is left behind");
+  // A refused Connect cleans up the same way.
+  const denied = host({ dinkus: { "/api/store-connections": started(), "/api/store-connections/token": () => Response.json({ error: "access_denied" }, { status: 400 }) } });
+  await startConnect(denied.ctx); await connectState(denied.ctx, true);
+  assert.equal((await proof(denied, { connection_id: CONNECTION })).status, 404);
+  assert.equal(denied.kv.size, 0);
+});
+
+test("the owner's return after Approve fetches the checkout settings at once", async () => {
+  const h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: {
+    "/api/store-passes": { access_token: "pass.for.settings" }, "/api/commerce-settings": () => new Response(checkout()),
+  } });
+  const page = await finishedConnect(h.ctx, { state: "connected", siteId: SITE_ID, key: KEY, finished: true }, true);
+  assert.deepEqual(h.calls.map(c => new URL(c.url).pathname), ["/api/store-passes", "/api/commerce-settings"]);
+  assert.equal(h.stored.get("installedCheckout").value, checkout());
+  assert.equal(page.toast.message, "Checkout settings are up to date");
+  const refused = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: {
+    "/api/store-passes": { access_token: "pass.for.settings" }, "/api/commerce-settings": () => Response.json({ error: "payments_not_connected" }, { status: 409 }),
+  } });
+  const shown = JSON.stringify(await finishedConnect(refused.ctx, { state: "connected", siteId: SITE_ID, key: KEY, finished: true }, true));
+  assert.match(shown, /Connect Payments, then press Get checkout settings/);
+  assert.doesNotMatch(shown, /up to date/);
 });

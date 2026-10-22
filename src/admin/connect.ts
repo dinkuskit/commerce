@@ -48,3 +48,10 @@ export async function connectAdmin(route: SandboxedRouteContext, ctx: PluginCont
   return { blocks: [header("Commerce settings"), navigation(), ...connectBlocks(state, admin, failure)],
     ...(state.state === "connected" && !failure && action !== "connect.cancel" ? { toast: { type: "success", message: "Checkout settings are up to date" } } : {}) };
 }
+
+/** The owner's return after Approve finished Connect: the checkout settings are fetched at once, as after Check. */
+export async function finishedConnect(ctx: PluginContext, state: ConnectState & { state: "connected" }, admin: boolean): Promise<BlockResponse> {
+  const failure = refused(await refreshCheckoutSettings(ctx, state).catch(() => "unavailable"));
+  return { blocks: [header("Commerce settings"), navigation(), ...connectBlocks(state, admin, failure)],
+    ...(failure ? {} : { toast: { type: "success", message: "Checkout settings are up to date" } }) };
+}

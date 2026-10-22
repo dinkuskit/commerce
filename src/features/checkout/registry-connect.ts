@@ -24,7 +24,7 @@ const KEY = /^dk_store_[A-Za-z0-9_-]{43}$/, ID = /^[A-Za-z0-9_-]{1,200}$/;
 interface Saved { siteId?: string; storeKey?: string; flow?: { id: string; verifier: string } }
 interface Control { flowId: string; expiresAt: number; nextPollAt: number; interval: number; uri: string; receipt: Record<string, unknown> & { connection_id: string; site_id: string; site_origin: string } }
 export type ConnectState =
-  | { state: "connected"; siteId: string; key: string }
+  | { state: "connected"; siteId: string; key: string; finished?: true }
   | { state: "pending"; uri: string; checked?: boolean }
   | { state: "disconnected"; failure?: string };
 
@@ -62,12 +62,12 @@ export async function storeKey(ctx: PluginContext): Promise<{ siteId: string; ke
 export async function connectState(ctx: PluginContext, check = false): Promise<ConnectState> {
   const { value, revision } = await saved(ctx), flow = value.flow;
   if (!flow) return connected(value) ?? { state: "disconnected" };
+  const control = await ctx.kv.get<Control>(CONTROL);
   const restart = async (failure = FIRST): Promise<ConnectState> => {
     const { flow: _, ...rest } = value;
-    await write(ctx, revision, rest);
+    if ((await write(ctx, revision, rest)).applied && control?.flowId === flow.id) await ctx.kv.delete(CONTROL);
     return connected(rest) ?? { state: "disconnected", failure };
   };
-  const control = await ctx.kv.get<Control>(CONTROL);
   if (!control || control.flowId !== flow.id || control.expiresAt <= Date.now()) return restart();
   if (!check && Date.now() < control.nextPollAt) return { state: "pending", uri: control.uri };
   let answer;
@@ -86,7 +86,7 @@ export async function connectState(ctx: PluginContext, check = false): Promise<C
   const next = { siteId: control.receipt.site_id, storeKey: body.store_key };
   if (!(await write(ctx, revision, next)).applied) return restart();
   await ctx.kv.delete(CONTROL);
-  return { state: "connected", siteId: next.siteId, key: next.storeKey };
+  return { state: "connected", siteId: next.siteId, key: next.storeKey, finished: true };
 }
 
 /** Connect, or Connect again: the current key keeps working until DinkusKit.com hands over the next one. */
@@ -120,7 +120,7 @@ export async function startConnect(ctx: PluginContext): Promise<ConnectState> {
 /** Cancel a waiting Connect; a key the store already had keeps working. */
 export async function cancelConnect(ctx: PluginContext): Promise<ConnectState> {
   const { value, revision } = await saved(ctx), { flow, ...rest } = value;
-  if (flow) await write(ctx, revision, rest);
+  if (flow && (await write(ctx, revision, rest)).applied && (await ctx.kv.get<Control>(CONTROL))?.flowId === flow.id) await ctx.kv.delete(CONTROL);
   return connected(rest) ?? { state: "disconnected" };
 }
 
@@ -132,9 +132,10 @@ export async function storeProof(input: unknown, ctx: PluginContext) {
   const query = object(input) ? input : {};
   if (Object.keys(query).length !== 1 || !text(query.connection_id)) return reply(400, { error: "invalid_request" });
   try {
+    // Only the Connect still waiting in the encrypted setting is vouched for: a cancelled or replaced one is not.
     const control = await ctx.kv.get<Control>(CONTROL);
-    return control && control.receipt.connection_id === query.connection_id && control.expiresAt > Date.now() && control.receipt.site_origin === origin(ctx)
-      ? reply(200, control.receipt) : reply(404, { error: "not_found" });
+    if (!control || control.receipt.connection_id !== query.connection_id || control.expiresAt <= Date.now() || control.receipt.site_origin !== origin(ctx)) return reply(404, { error: "not_found" });
+    return (await saved(ctx)).value.flow?.id === control.flowId ? reply(200, control.receipt) : reply(404, { error: "not_found" });
   } catch { return reply(503, { error: "connection_unavailable" }); }
 }
 
