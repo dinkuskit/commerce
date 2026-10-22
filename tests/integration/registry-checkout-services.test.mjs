@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
+import BetterSqlite3 from 'better-sqlite3';
 import { resolveCatalogItemPrice } from '../../dist/features/catalog/index.js';
 import { resolveStorefrontAvailability } from '../../dist/features/storefront-availability/index.js';
 import { saveMerchantStoreSettings } from '../../dist/features/store-settings/index.js';
@@ -971,6 +972,86 @@ test('a store upgrading from 0.4.0 keeps its catalog and saved checkout settings
     assert.ok(state.trades.every(trade => trade.authorization === 'Bearer ' + STORE_KEY));
     assert.ok(state.outbound.every(request => !request.text.includes(pasted)));
   } finally { await state.close(); }
+});
+
+test('Connect through the compiled runtime saves the approved key encrypted, and a key arriving late for a cancelled Connect is never saved or used', async t => {
+  const dir = await mkdtemp('/tmp/commerce-connect-');
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const database = join(dir, 'site.db');
+  const approved = 'dk_store_' + 'a'.repeat(43), late = 'dk_store_' + 'l'.repeat(43);
+  // A stand-in DinkusKit.com: Connect start, the token exchange (held open when a test asks), passes and checkout settings.
+  const seen = [], proofs = [];
+  let flows = 0, hold = null, answer = null;
+  const body = init => init.body === undefined ? '' : typeof init.body === 'string' ? init.body : new TextDecoder().decode(init.body);
+  const state = await runtimeFixture({ databasePath: database, config: null, storeKey: null, transportFetch: async (url, init) => {
+    const text = body(init), path = new URL(url).pathname, headers = new Headers(init.headers);
+    seen.push({ path, authorization: headers.get('authorization'), text });
+    assert.equal(new URL(url).origin, ISSUER_ORIGIN);
+    if (path === '/api/store-connections') {
+      const request = JSON.parse(text), id = 'connection-' + ++flows;
+      assert.deepEqual([request.protocol_version, request.client_id, request.service, request.site_origin, request.code_challenge_method],
+        [2, 'dinkus-commerce-emdash', 'commerce', SITE, 'S256']);
+      return Response.json({ protocol_version: 2, site_id: 'synthetic-site', connection_id: id, challenge: 'challenge-' + id,
+        expires_at: Date.now() + 300_000, interval: 5, verification_uri: `${ISSUER_ORIGIN}/account/connect?connection_id=${id}` });
+    }
+    if (path === '/api/store-connections/token') {
+      if (hold) await hold;
+      return answer ? Response.json(answer) : Response.json({ error: 'authorization_pending' }, { status: 400 });
+    }
+    if (path === '/api/store-passes') return Response.json({ access_token: 'pass-for-' + headers.get('authorization').slice(-4), token_type: 'Bearer', expires_in: 300 });
+    if (path === '/api/commerce-settings') return new Response(JSON.stringify(configuration()), { headers: { 'content-type': 'application/json' } });
+    return assert.fail('unexpected DinkusKit.com call ' + path);
+  } });
+  t.after(() => state.close());
+  const press = action_id => shipAdmin(state, { type: 'block_action', action_id });
+  const proof = async connection => {
+    const response = await state.plugin.invokeRoute('store-proof', { connection_id: connection },
+      { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/store-proof?connection_id=${connection}`, method: 'GET' });
+    proofs.push(response);
+    return response.status;
+  };
+  const saved = async () => JSON.parse(await state.settings.get('connection') ?? '{}');
+  const sqlite = new BetterSqlite3(database, { readonly: true });
+  t.after(() => sqlite.close());
+  const raw = () => sqlite.prepare('SELECT value FROM options').all().map(row => row.value).join('\n');
+
+  // Allowed: Connect, the owner approves, Check saves the key in the encrypted setting and fetches the checkout settings with it.
+  assert.match(JSON.stringify(await press('connect')), /Approve at DinkusKit.com/);
+  assert.equal(await proof('connection-1'), 200, 'DinkusKit.com can read the waiting Connect');
+  answer = { site_id: 'synthetic-site', store_key: approved };
+  assert.match(JSON.stringify(await press('connect.check')), /Checkout settings are up to date/);
+  assert.equal((await saved()).storeKey, approved);
+  assert.equal((await saved()).flow, undefined);
+  assert.ok(!raw().includes(approved), 'the key is stored encrypted, never as plain text');
+  assert.equal(JSON.parse(await state.settings.get('installedCheckout')).siteId, 'synthetic-site');
+  assert.equal(seen.find(call => call.path === '/api/store-passes').authorization, 'Bearer ' + approved);
+  assert.equal(await proof('connection-1'), 404, 'a finished Connect is no longer vouched for');
+
+  // Revoked while DinkusKit.com answers: Connect again, Check is held open, Cancel lands, then a key arrives for the cancelled Connect.
+  answer = null;
+  await press('connect');
+  assert.equal(await proof('connection-2'), 200);
+  let release;
+  hold = new Promise(resolve => { release = resolve; });
+  const checking = press('connect.check');
+  while (!seen.some(call => call.path === '/api/store-connections/token' && call.text.includes('connection-2'))) await new Promise(r => setTimeout(r, 10));
+  assert.match(JSON.stringify(await press('connect.cancel')), /Connected to DinkusKit.com, store synthetic-site/);
+  assert.equal(await proof('connection-2'), 404, 'a cancelled Connect is not vouched for');
+  answer = { site_id: 'synthetic-site', store_key: late };
+  release();
+  assert.doesNotMatch(JSON.stringify(await checking), new RegExp(late));
+  hold = null;
+  assert.equal((await saved()).storeKey, approved, 'the key from before Connect again is kept');
+  assert.equal((await saved()).flow, undefined);
+  assert.ok(!raw().includes(late));
+  // The rejected key is never used: the next fetch and the background check trade only the approved key.
+  const from = seen.length;
+  await press('connect.refresh');
+  await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK }).catch(() => {});
+  const after = seen.slice(from).filter(call => call.path === '/api/store-passes');
+  assert.ok(after.length >= 1);
+  assert.ok(after.every(call => call.authorization === 'Bearer ' + approved));
+  assert.ok(seen.every(call => call.authorization !== 'Bearer ' + late && !call.text.includes(late)), 'the late key is never sent anywhere');
 });
 
 test('country-rejected start recovers through read-only prepared status on the same capability', async t => {
