@@ -2,13 +2,12 @@
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
-    "cadence": "frontier-batch",
-    "confirmed": true,
-    "confirmed_at": "2026-10-22T13:25:04+00:00",
+    "cadence": "sequential",
+    "confirmed": false,
     "domain": "Connect to DinkusKit in Commerce, room for it, and the add-ons door",
-    "started_at": "2026-10-22T13:25:03+00:00",
-    "status": "confirmed",
-    "summary": "Ronald answered the Connect grill in the OIDC in DinkusKit thread on 22 Oct 2026 (12:57 to 13:23 UTC), including the size session and no fixed reserve."
+    "started_at": "2026-10-22T13:36:01+00:00",
+    "status": "grilling",
+    "summary": "Reopen commerce-connect-store-key-20261022: Ronald (13:35 UTC): Commerce connects first and creates the store."
   },
   "decisions": [
     {
@@ -13824,7 +13823,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "Commerce gets its own store key by pressing Connect (dinkuskit/dinkuskit store-connect-080 and 081) and keeps it in its encrypted settings; there is no store key box. It still trades the key only at the fixed POST https://dinkuskit.com/api/store-passes for 5-minute payments:checkout and ship:orders passes. It fetches its checkout settings from DinkusKit.com with a pass instead of reading a pasted installedCheckout (store-connect-083), and still refuses settings made for another site.",
+      "choice": "Commerce connects first. Its Connect (dinkuskit/dinkuskit store-connect-081) runs the web-address check that proves the store owns its address, creates the store's DinkusKit ID, and leaves Commerce's own store key in its encrypted settings; there is no store key box. Commerce still trades the key only at the fixed POST https://dinkuskit.com/api/store-passes for 5-minute payments:checkout and ship:orders passes. It fetches its checkout settings from DinkusKit.com with a pass instead of reading a pasted installedCheckout (store-connect-083), and still refuses settings made for another site. Commerce works without Payments or Ship; they need Commerce connected first.",
       "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanCBvyAFsykj4wHAKkvd8pTJ",
       "created_at": "2026-10-22T13:25:03+00:00",
       "deferred_reason": null,
@@ -13845,12 +13844,40 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T13:36:01+00:00",
+          "choice": "Commerce gets its own store key by pressing Connect (dinkuskit/dinkuskit store-connect-080 and 081) and keeps it in its encrypted settings; there is no store key box. It still trades the key only at the fixed POST https://dinkuskit.com/api/store-passes for 5-minute payments:checkout and ship:orders passes. It fetches its checkout settings from DinkusKit.com with a pass instead of reading a pasted installedCheckout (store-connect-083), and still refuses settings made for another site.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Ronald (13:35 UTC): Commerce connects first and creates the store.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T13:36:01+00:00",
+          "choice": "Commerce gets its own store key by pressing Connect (dinkuskit/dinkuskit store-connect-080 and 081) and keeps it in its encrypted settings; there is no store key box. It still trades the key only at the fixed POST https://dinkuskit.com/api/store-passes for 5-minute payments:checkout and ship:orders passes. It fetches its checkout settings from DinkusKit.com with a pass instead of reading a pasted installedCheckout (store-connect-083), and still refuses settings made for another site.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
         }
       ],
       "id": "commerce-connect-store-key-20261022",
       "implementation_ref": null,
       "question": "Where do Commerce's passes and checkout settings come from once Connect replaces the paste?",
-      "rationale": "Ronald agreed to the Connect design on 22 Oct 2026 (answers 1, 5 and 6).",
+      "rationale": "Ronald agreed to the Connect design on 22 Oct 2026 (answers 1, 5 and 6) and at 13:35 UTC made Commerce the base layer that connects first.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -13859,7 +13886,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-10-22T13:25:04+00:00",
+      "updated_at": "2026-10-22T13:36:01+00:00",
       "verification_ref": null
     },
     {
@@ -13946,7 +13973,7 @@
     }
   ],
   "last_activation": {
-    "at": "2026-10-21T15:22:45+00:00",
+    "at": "2026-10-22T13:36:01+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -13979,5 +14006,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-22T13:25:05+00:00"
+  "updated_at": "2026-10-22T13:36:01+00:00"
 }
