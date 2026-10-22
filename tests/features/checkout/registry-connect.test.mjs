@@ -173,3 +173,27 @@ test("the owner's return after Approve fetches the checkout settings at once", a
   assert.match(shown, /Connect Payments, then press Get checkout settings/);
   assert.doesNotMatch(shown, /up to date/);
 });
+
+test("a store set up with released 0.4.0 keeps its saved settings, never sends the pasted key, and Connect takes over", async () => {
+  // Exactly what 0.4.0 saved: the pasted key in "storeKey" and the pasted checkout settings in "installedCheckout".
+  const pasted = "dk_store_" + "p".repeat(43);
+  let approved = false;
+  const h = host({ dinkus: {
+    "/api/store-connections": started(),
+    "/api/store-connections/token": () => approved ? Response.json({ store_key: KEY, site_id: SITE_ID }) : Response.json({ error: "authorization_pending" }, { status: 400 }),
+    "/api/store-passes": { access_token: "pass.for.settings" },
+    "/api/commerce-settings": () => new Response(checkout({ shipping: { configurationId: "free", revision: 2, mode: "free" } })),
+  } });
+  h.stored.set("storeKey", { value: pasted, revision: "1" });
+  h.stored.set("installedCheckout", { value: checkout(), revision: "1" });
+  assert.equal(await storeKey(h.ctx), null, "the pasted key is not used");
+  assert.deepEqual(await connectState(h.ctx), { state: "disconnected" });
+  assert.equal(await refreshCheckoutSettings(h.ctx), "not_connected");
+  assert.equal(h.stored.get("installedCheckout").value, checkout(), "the saved checkout settings are kept until Connect replaces them");
+  await startConnect(h.ctx); approved = true;
+  const state = await connectState(h.ctx, true);
+  assert.equal(state.finished, true);
+  await finishedConnect(h.ctx, state, true);
+  assert.equal(JSON.parse(h.stored.get("installedCheckout").value).shipping.revision, 2, "Connect brings the current settings");
+  assert.equal(h.calls.some(c => c.authorization === "Bearer " + pasted), false, "the pasted key never leaves the store");
+});
