@@ -22,10 +22,19 @@ const pureVendorModules = {
     return id.includes('/node_modules/@oslojs/') ? { code, moduleSideEffects: false } : null;
   },
 };
+// The Registry build cannot reach Manage stock, stock reservation or Pack (see
+// src/shared/registry-build.ts), so the flag is true here and Rolldown drops
+// those paths. Everything else is built exactly as the native entry is.
+const registryBuild = {
+  name: 'commerce-registry-build',
+  load(id) {
+    return id === resolve('src/shared/registry-build.ts') ? 'export const REGISTRY_BUILD = true;' : null;
+  },
+};
 const bundle = await rolldown({
   input: resolve('src/plugin.ts'), platform: 'browser',
   optimization: { inlineConst: false },
-  plugins: [authTransform, pureVendorModules],
+  plugins: [authTransform, pureVendorModules, registryBuild],
   onwarn(warning) {
     if (warning.code === 'UNRESOLVED_IMPORT') throw new Error(warning.message);
     console.warn(warning.message);

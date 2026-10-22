@@ -8,6 +8,7 @@ import { normalizeStoredStockManagement } from "../inventory-provider/kernel/ind
 import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import type { CatalogQuote, CatalogQuoteLine } from "../../handoffs/catalog-quote.js";
 import { resolveStorefrontAvailability } from "./resolve.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import type {
   ResolveStorefrontAvailabilityExecution,
   StorefrontAvailabilityResolverStorage,
@@ -38,8 +39,9 @@ export async function quoteCatalogBasket(
     if (!unitPrice) return { ok: false, reason: "unpriced" };
     const fulfillment = member?.fulfillment ?? item.fulfillment ?? "physical";
     const line: CatalogQuoteLine = { catalogItemId, name: (parent ?? item).name, unitPrice, fulfillment, ...(variant ? { variant } : {}) };
-    const management = normalizeStoredStockManagement(item.stockManagement);
-    if (management.mode === "managed") {
+    // A managed item is never sellable on the Registry (see resolve.ts), so this never runs there.
+    const management = REGISTRY_BUILD ? undefined : normalizeStoredStockManagement(item.stockManagement);
+    if (management?.mode === "managed") {
       if (management.status !== "active") return { ok: false, reason: "inventory-setup" };
       if (!inventory) {
         inventory = (await loadStoreInventoryConfiguration(storage.configurations))?.binding;

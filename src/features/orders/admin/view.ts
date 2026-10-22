@@ -2,6 +2,7 @@ import { fields } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
 import { deliveryOf, type OrderRecord } from '../store.js';
+import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
 import type { Money } from '../../catalog/kernel/index.js';
 import { normalizeMoney } from '../../catalog/kernel/index.js';
 
@@ -99,7 +100,8 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
         ...(deliveryOf(record) ? [{ type: 'button' as const, label: 'Correct address', action_id: 'orders.address:' + id }] : [])] });
     blocks.push({ type: 'header', text: 'Items' });
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
-    if (order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + id));
+    // Reserve mints tickets only through an Inventory provider, which the Registry build never has.
+    if (!REGISTRY_BUILD && order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + id));
     for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
       'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
     if (order.pricing) {
