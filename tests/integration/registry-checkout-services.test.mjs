@@ -25,6 +25,7 @@ import {
   shipCredential,
   SITE,
   STORE_KEY,
+  connectionFor,
   TRADE_URL,
   TRANSPORT_ORIGIN,
   verifyCouponPass,
@@ -57,7 +58,7 @@ async function start(state, input = basket) {
 }
 
 test('actual compiled default workerd profile preserves empty-grants/unconfigured admission', async t => {
-  const state = await runtimeFixture({ grants: false, config: null, token: null });
+  const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request', 'email:send']);
@@ -65,7 +66,9 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
-  assert.equal(state.counts.credentials, 0);
+  // The background check looks once for the key Connect saves and, finding none, sends nothing.
+  assert.equal(state.counts.credentials, 1);
+  assert.equal(state.counts.trades, 0);
   assert.equal(state.counts.transport, 0);
   assertOnlyBackgroundCheck(state);
   assert.deepEqual(await state.cartRecords(), []);
@@ -814,7 +817,7 @@ test('Commerce trades its store key at DinkusKit.com once per call, only for the
   try {
     const trade = scope => ({ method: 'POST', url: TRADE_URL, authorization: 'Bearer ' + STORE_KEY, cookie: null,
       contentType: 'application/json', body: { site_id: 'synthetic-site', scope,
-        audience: scope === 'ship:orders' ? 'synthetic-ship' : 'synthetic-payments' } });
+        audience: scope === 'ship:orders' ? 'synthetic-ship' : scope === 'commerce:settings' ? 'dinkuskit' : 'synthetic-payments' } });
     // Preparing a checkout needs no service, so nothing is traded.
     const prepared = await state.invoke(PREPARE);
     assert.equal(state.counts.trades, 0);
@@ -835,13 +838,13 @@ test('Commerce trades its store key at DinkusKit.com once per call, only for the
     await shipAdmin(state, { type: 'page_load', page: '/orders' });
     assert.ok(ship.state.calls >= 2);
     assert.deepEqual(state.trades.slice(2), [trade('ship:orders')]);
-    // The background check trades at most once for Payments and once for Ship.
+    // The background check fetches the checkout settings, then trades at most once for Payments and once for Ship.
     await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
-    assert.deepEqual(state.trades.slice(3), [trade('payments:checkout'), trade('ship:orders')]);
-    // Payments and Ship got passes only: the key itself went in the five trades and nowhere else.
+    assert.deepEqual(state.trades.slice(3), [trade('commerce:settings'), trade('payments:checkout'), trade('ship:orders')]);
+    // Payments and Ship got passes only: the key itself went in the six trades and nowhere else.
     assert.deepEqual(state.outbound.filter(request => request.text.includes(STORE_KEY)).map(request => request.url),
-      Array(5).fill(TRADE_URL));
-    assert.ok(state.outbound.length > 5);
+      Array(6).fill(TRADE_URL));
+    assert.ok(state.outbound.length > 6);
   } finally { await state.close(); }
 });
 
@@ -856,7 +859,7 @@ test('the store key goes only to DinkusKit.com even when the checkout settings n
       assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
       await shipAdmin(state, { type: 'page_load', page: '/orders' });
       await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
-      assert.deepEqual([...new Set(state.trades.map(trade => trade.body.scope))].sort(), ['payments:checkout', 'ship:orders']);
+      assert.deepEqual([...new Set(state.trades.map(trade => trade.body.scope))].sort(), ['commerce:settings', 'payments:checkout', 'ship:orders']);
       // Nothing went anywhere else: not to the address the settings named, Payments, Coupons or Ship.
       assert.deepEqual(state.outbound.map(request => request.url), state.trades.map(() => TRADE_URL));
       assert.deepEqual([state.counts.transport, state.counts.ship, ship.state.calls], [0, 0, 0]);
@@ -897,18 +900,22 @@ test('a refused trade makes no call: refused or replaced key, service off or cut
   } finally { await state.close(); }
 });
 
-test('Replace key on DinkusKit.com stops the old key at once, and without a key checkout stays unavailable', async () => {
+test('Connect again on DinkusKit.com stops the old key at once, and without a key checkout stays unavailable', async () => {
   const state = await runtimeFixture();
+  const replacement = 'dk_store_' + 'r'.repeat(43);
   try {
     assert.equal((await start(state)).result.checkout.state, 'pending');
     const before = state.counts.transport;
-    state.acceptStoreKey('the replacement synthetic key');
+    state.acceptStoreKey(replacement);
     assert.equal((await start(state)).result.checkout.state, 'recoverable-failure');
     assert.equal(state.counts.transport, before);
-    // Pasted with a space and a line break around it, the key still trades as itself.
-    await state.settings.set('storeKey', ' the replacement synthetic key\n');
+    // The key Connect again saved trades as itself; a key saved for another store is never used.
+    await state.settings.set('connection', connectionFor(replacement, 'another-site'));
+    assert.equal((await state.invoke(PREPARE)).ok, false);
+    assert.equal(state.trades.at(-1).authorization, 'Bearer ' + STORE_KEY);
+    await state.settings.set('connection', connectionFor(replacement));
     assert.equal((await start(state)).result.checkout.state, 'pending');
-    assert.equal(state.trades.at(-1).authorization, 'Bearer the replacement synthetic key');
+    assert.equal(state.trades.at(-1).authorization, 'Bearer ' + replacement);
   } finally { await state.close(); }
   const unset = await runtimeFixture({ storeKey: null });
   try {
@@ -918,7 +925,7 @@ test('Replace key on DinkusKit.com stops the old key at once, and without a key 
   } finally { await unset.close(); }
 });
 
-test('a store upgrading from the three pass settings stays unavailable until it pastes a store key, and its old passes are never sent', async () => {
+test('a store upgrading from the three pass settings stays unavailable until it connects, and its old passes are never sent', async () => {
   const ship = shipStandIn();
   const old = { sub: 'owner-before-the-store-key' };
   const legacyPasses = { installedCheckoutCredential: await credential(old),
@@ -931,8 +938,8 @@ test('a store upgrading from the three pass settings stays unavailable until it 
     assert.match(JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' })), /No orders recorded yet/);
     await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
     assert.deepEqual([state.counts.trades, state.outbound.length, ship.state.calls], [0, 0, 0]);
-    // Pasting the key DinkusKit.com made for the store is all it takes.
-    await state.settings.set('storeKey', STORE_KEY);
+    // The key Connect brings is all it takes.
+    await state.settings.set('connection', connectionFor(STORE_KEY));
     state.acceptStoreKey(STORE_KEY);
     assert.equal((await start(state)).result.checkout.state, 'pending');
     await shipAdmin(state, { type: 'page_load', page: '/orders' });
@@ -1055,7 +1062,7 @@ test('beta installation does not inherit stable storage or settings', async t =>
   try {
     assert.deepEqual(await beta.cartRecords(), []);
     assert.equal(await beta.collections.catalog_items.get('hat'), null);
-    assert.equal(await beta.settings.get('storeKey'), null);
+    assert.equal(await beta.settings.get('connection'), null);
     assert.equal((await beta.invokeReadiness()).status, 'unavailable');
     assert.equal(beta.counts.trades, 0);
   } finally { await beta.close(); }

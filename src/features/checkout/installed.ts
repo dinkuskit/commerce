@@ -27,7 +27,8 @@ import type { CommercePaymentWakePort, WakeReconciliationResult } from "./wake.j
 import type { CheckoutCouponPort } from "../coupons/index.js";
 import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
 import { admitRegistryCheckoutConfig } from "./registry-provider-admission.js";
-import { REGISTRY_CHECKOUT_SETTINGS_KEY, REGISTRY_STORE_KEY } from "./registry-services.js";
+import { REGISTRY_CHECKOUT_SETTINGS_KEY } from "./registry-services.js";
+import { storeKey } from "./registry-connect.js";
 
 export const COMMERCE_CHECKOUT_WAKES_TASK = "commerce-checkout-wakes";
 export { INSTALLED_COMMERCE_PLUGIN_ID, COMMERCE_REGISTRY_RUNTIME_ID } from "../../shared/plugin-identity.js";
@@ -201,11 +202,10 @@ export function createInstalledCheckoutHandlers(
       const store = ctx.storage[CHECKOUT_READINESS_COLLECTION] as Pick<StorageCollection<CachedReadinessState>, "getVersioned" | "compareAndSet">;
       if (typeof store?.getVersioned !== "function" || typeof store.compareAndSet !== "function") return unavailable;
       const config = await ctx.settings.getVersioned(REGISTRY_CHECKOUT_SETTINGS_KEY);
-      const key = await ctx.settings.getVersioned(REGISTRY_STORE_KEY);
+      const key = await storeKey(ctx);
       const admitted = admitRegistryCheckoutConfig(config?.value ?? null, origin);
-      if (!admitted || (admitted.mode ?? "test") !== "test" ||
-          typeof key?.value !== "string" || !key.value.trim() || key.value.trim().length > 512 ||
-          !config?.revision || !key.revision) return unavailable;
+      if (!admitted || (admitted.mode ?? "test") !== "test" || key?.siteId !== admitted.siteId ||
+          !config?.revision) return unavailable;
       const generation = (c: { revision: string } | null, k: { revision: string } | null) =>
         JSON.stringify([origin, c?.revision, k?.revision]);
       const gen = generation(config, key);
@@ -228,8 +228,7 @@ export function createInstalledCheckoutHandlers(
       if ((host.paymentMode ?? "test") !== "test" || !host.paymentBindingRef) return unavailable;
       const binding = await (await host.resolvePayments?.(host.paymentBindingRef))?.verifyBinding?.();
       if (binding?.ready !== true || binding.mode !== "test") return unavailable;
-      const current = generation(await ctx.settings.getVersioned(REGISTRY_CHECKOUT_SETTINGS_KEY),
-        await ctx.settings.getVersioned(REGISTRY_STORE_KEY));
+      const current = generation(await ctx.settings.getVersioned(REGISTRY_CHECKOUT_SETTINGS_KEY), await storeKey(ctx));
       // The claim's opaque CAS revision is the fence. Never re-read and adopt a
       // replacement writer's revision. A late result cannot publish after its lease.
       const finished = Date.now() / 1000;

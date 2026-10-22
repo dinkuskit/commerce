@@ -15,6 +15,7 @@ const SANDBOX_PUBLIC = [
   "catalog/public GET",
   "catalog/public/item GET",
   "policies/public GET",
+  "store-proof GET",
   "checkout/guest/prepare POST",
   "checkout/guest/start POST",
   "checkout/guest/status POST",
@@ -25,7 +26,8 @@ const SANDBOX_PUBLIC = [
   "account/orders GET",
   "account/profile GET,POST",
 ];
-const NATIVE_PUBLIC = SANDBOX_PUBLIC.filter((route) => !route.startsWith("policies/") && !route.includes("/readiness"));
+// Connect is a Registry install's only: the native entry has no store-proof route.
+const NATIVE_PUBLIC = SANDBOX_PUBLIC.filter((route) => !route.startsWith("policies/") && !route.includes("/readiness") && !route.startsWith("store-proof"));
 
 function publicSet(routes) {
   return Object.entries(routes)

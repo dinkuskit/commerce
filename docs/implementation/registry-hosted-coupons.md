@@ -38,7 +38,7 @@ with exactly two fields:
 `origin` is a bare HTTPS origin. The service is called with its own pass:
 Commerce trades the store key at DinkusKit.com for a `coupons:checkout` pass
 with audience `coupons.audience`
-([store key and passes](installed-checkout-services.md#store-key-and-passes)),
+([Connect and the store key](installed-checkout-services.md#connect-and-the-store-key)),
 from the same issuer as the Payments pass (same `iss` and `site_id`, at most an
 hour old). Commerce trades for it only when a checkout uses a coupon, so a
 refused or stale coupon pass never blocks checkout without a coupon. The

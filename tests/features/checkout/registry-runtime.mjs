@@ -45,7 +45,9 @@ globalThis.fetch = (input, init) => {
   return Promise.resolve(Response.json({ Status: 0, Answer: found ? [{ type: 1, data: '9.9.9.9' }] : [] }));
 };
 /** The store key the stand-in issuer accepts until a test replaces it. Not a real key format. */
-export const STORE_KEY = 'synthetic store key';
+export const STORE_KEY = 'dk_store_' + 's'.repeat(43);
+/** The encrypted "connection" setting Connect saves: this store's ID and Commerce's own key. */
+export const connectionFor = (storeKey, siteId = 'synthetic-site') => JSON.stringify({ siteId, storeKey });
 const AUDIENCE = 'synthetic-payments';
 const SITE_ID = 'synthetic-site';
 const BINDING = 'synthetic-binding';
@@ -114,7 +116,7 @@ export async function runtimeFixture({
   couponService,
   shipPass = null,
   shipService,
-  // The store key in Commerce's settings (null leaves it unset) and an optional stand-in issuer.
+  // The store key Connect saved in Commerce's settings (null leaves it unset) and an optional stand-in issuer.
   storeKey = STORE_KEY,
   // Passes an upgraded store still has in the three settings Commerce used before the store key.
   legacyPasses = null,
@@ -140,7 +142,7 @@ export async function runtimeFixture({
     if (event.level !== 'query') return;
     const query = event.query;
     if (/^select /i.test(query.sql) && query.sql.includes('"options"') &&
-      query.parameters.includes(`plugin:${owner}:settings:storeKey`)) counts.credentials++;
+      query.parameters.includes(`plugin:${owner}:settings:connection`)) counts.credentials++;
     if (query.sql.includes('_emdash_cron_tasks')) counts.scheduler++;
   } });
   const manifest = structuredClone(artifactManifest);
@@ -161,7 +163,7 @@ export async function runtimeFixture({
   }
   const settings = createSettingsAccess(new OptionsRepository(db), owner, manifest.admin.settingsSchema);
   if (config !== null) await settings.set('installedCheckout', JSON.stringify(config));
-  if (storeKey !== null) await settings.set('storeKey', storeKey);
+  if (storeKey !== null) await settings.set('connection', connectionFor(storeKey));
   // Saved as the version before the store key saved them: three secret settings it no longer has.
   if (legacyPasses) {
     const legacy = createSettingsAccess(new OptionsRepository(db), owner, { ...manifest.admin.settingsSchema,
