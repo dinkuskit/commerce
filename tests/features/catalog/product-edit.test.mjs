@@ -156,3 +156,20 @@ test('an existing product without a creation record keeps create replay working 
   assert.equal(replay.item.itemId, 'cap');
   assert.equal(replay.item.name, 'Proof hat');
 });
+
+test('Save choices keeps option and value ids that contain a colon', async () => {
+  const { catalog, ctx } = await shop();
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Proof cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap' });
+  await addCatalogVariantOption({ catalog }, { productId: 'cap', optionId: 'fit:v1', optionLabel: 'Fit', values: [
+    { valueId: 'size:small', label: 'Small', member: { catalogItemId: 'cap', fulfillment: 'physical' } },
+    { valueId: 'size:large', label: 'Large', member: { commandId: 'create-cap-large', name: 'Proof cap', sku: 'CAP-L', fulfillment: 'physical' } },
+  ] }, { createId: () => 'cap-large' });
+  const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'cap' } }, ctx);
+  const form = opened.blocks.find((block) => block.type === 'form' && block.submit.label === 'Save choices');
+  const values = Object.fromEntries(form.fields.map((field) => [field.action_id, field.initial_value]));
+  values[form.fields.find((field) => field.initial_value === 'Small').action_id] = 'Petite';
+  const saved = await commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values } }, ctx);
+  assert.notEqual(saved.toast?.type, 'error');
+  assert.deepEqual((await catalog.get('cap')).variantProduct.options[0].values.map((value) => [value.valueId, value.label]),
+    [['size:small', 'Petite'], ['size:large', 'Large']]);
+});

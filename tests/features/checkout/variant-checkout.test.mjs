@@ -1,7 +1,7 @@
 import { withSyntheticCheckoutContact } from './fixture.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCatalogItem, addCatalogVariantOption, saveCatalogProductPrices, updateCatalogVariantLabels } from '../../../dist/features/catalog/kernel/index.js';
+import { createCatalogItem, addCatalogVariantMember, addCatalogVariantOption, saveCatalogProductPrices, updateCatalogVariantLabels } from '../../../dist/features/catalog/kernel/index.js';
 import { startCheckout, reconcileCheckout } from '../../../dist/features/checkout/index.js';
 import { openStore, fixture } from './fixture.mjs';
 
@@ -56,4 +56,67 @@ test('merchant variant writes deny Small before Payments and freeze Large money,
   assert.equal(paid.order.variantSelections[0].fulfillment, 'digital');
   assert.deepEqual((await reconcileCheckout(f.execution, 'large-cart', started.attemptId)).order, paid.order);
   assert.deepEqual((await opened.store.read('large-cart')).record.attempts[0].order, paid.order);
+});
+
+test('two-option variant checkout freezes both Size and Color selections against later option and value renames', async t => {
+  const opened = openStore(':memory:'); t.after(() => opened.db.close());
+  const f = fixture(opened.store, false);
+  const catalog = collection(), prices = collection(), availability = collection();
+  const writes = { catalog, prices, availability, claims: collection() };
+  Object.assign(f.execution.catalog, { catalog, prices, manualAvailability: availability });
+  f.execution.resolveInventory = async () => { throw Error('unmanaged variants must not activate Inventory'); };
+
+  await createCatalogItem(catalog, { commandId: 'shirt-2', name: 'Proof shirt', sku: 'PROOF-S-OAT', fulfillment: 'physical' }, { createId: () => 'small' });
+  const sizeAdded = await addCatalogVariantOption(writes, {
+    productId: 'small', optionId: 'size', optionLabel: 'Size',
+    values: [
+      { valueId: 's', label: 'Small', member: { catalogItemId: 'small', fulfillment: 'physical' } },
+      { valueId: 'l', label: 'Large', member: { commandId: 'large-2', name: 'Proof shirt', sku: 'PROOF-L-OAT', fulfillment: 'physical' } },
+    ],
+  }, { createId: () => 'large' });
+  const colorAdded = await addCatalogVariantOption(writes, {
+    productId: 'small', expectedRevision: sizeAdded.product.revision, optionId: 'color', optionLabel: 'Color',
+    values: [{ valueId: 'oat', label: 'Oat' }, { valueId: 'ink', label: 'Ink' }],
+    members: [
+      { catalogItemId: 'small', valueId: 'oat', fulfillment: 'physical' },
+      { catalogItemId: 'large', valueId: 'oat', fulfillment: 'physical' },
+    ],
+  });
+  const memberAdded = await addCatalogVariantMember(writes, {
+    productId: 'small', expectedRevision: colorAdded.product.revision, commandId: 'medium-ink',
+    name: 'Proof shirt', sku: 'PROOF-M-INK', fulfillment: 'digital',
+    selections: [
+      { optionId: 'size', valueId: 'm', label: 'Medium' },
+      { optionId: 'color', valueId: 'ink' },
+    ],
+  }, { createId: () => 'medium-ink' });
+  await saveCatalogProductPrices(writes, { catalogItemId: 'medium-ink', regular: '28', sale: '', stockStatus: 'in-stock', expectedRevision: null });
+
+  const started = await startCheckout(f.execution, 'medium-ink-cart', withSyntheticCheckoutContact([{ catalogItemId: 'medium-ink', quantity: 1 }]));
+  assert.equal(started.payment.total.minor, '2800');
+  assert.deepEqual(started.variantSelections[0].selections, [
+    { optionId: 'size', optionLabel: 'Size', valueId: 'm', valueLabel: 'Medium' },
+    { optionId: 'color', optionLabel: 'Color', valueId: 'ink', valueLabel: 'Ink' },
+  ]);
+
+  await updateCatalogVariantLabels(writes, {
+    productId: 'small', expectedRevision: memberAdded.product.revision,
+    options: [{ optionId: 'size', label: 'Fit' }, { optionId: 'color', label: 'Shade' }],
+    values: [
+      { optionId: 'size', valueId: 'm', label: 'Renamed Medium' },
+      { optionId: 'color', valueId: 'ink', label: 'Renamed Ink' },
+    ],
+    members: [{ catalogItemId: 'medium-ink', fulfillment: 'physical' }],
+  });
+  await saveCatalogProductPrices(writes, { catalogItemId: 'medium-ink', regular: '99', sale: '', stockStatus: 'out-of-stock', expectedRevision: (await prices.getVersioned('medium-ink')).revision });
+
+  f.setPayment('paid');
+  const paid = await reconcileCheckout(f.execution, 'medium-ink-cart', started.attemptId);
+  assert.equal(paid.phase, 'paid');
+  assert.equal(paid.order.total.minor, '2800');
+  assert.equal(paid.order.variantSelections[0].fulfillment, 'digital');
+  assert.deepEqual(paid.order.variantSelections[0].selections, [
+    { optionId: 'size', optionLabel: 'Size', valueId: 'm', valueLabel: 'Medium' },
+    { optionId: 'color', optionLabel: 'Color', valueId: 'ink', valueLabel: 'Ink' },
+  ]);
 });

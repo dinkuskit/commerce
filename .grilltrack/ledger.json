@@ -3,11 +3,12 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": false,
-    "domain": "Connect to DinkusKit in Commerce, room for it, and the add-ons door",
-    "started_at": "2026-10-22T13:36:01+00:00",
-    "status": "grilling",
-    "summary": "Reopen commerce-connect-store-key-20261022: Ronald (13:35 UTC): Commerce connects first and creates the store."
+    "confirmed": true,
+    "confirmed_at": "2026-10-22T21:14:21+00:00",
+    "domain": "Multi-option product variants (Size x Color) in Commerce",
+    "started_at": "2026-10-22T21:14:01+00:00",
+    "status": "confirmed",
+    "summary": "Ronald chose 'Lock as built' on the multi-option limits card (Commerce 165 and 173 landing thread, 22 Oct 2026 21:13 UTC)."
   },
   "decisions": [
     {
@@ -13970,6 +13971,78 @@
       "superseded_by": null,
       "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "A product may have 1 to 3 variant-defining options, each with 2 to 50 values, and at most 50 concrete members (variants). Each member holds exactly one value per option; combinations are unique and sparse combinations are allowed. Commands stay small, each under the parent expectedRevision with resumable commandIds: appending an option to a product with members requires an explicit value on the new option for every existing member, the default included (nothing is filled in silently); a new combination is added one member at a time (addCatalogVariantMember, also accepted by addCatalogVariantOption with selections[]) and may add a new value to an existing option in the same CAS; any option or value label may be renamed under expectedRevision. Removing an option or a value is not offered (archive the member instead). The product's own item stays the permanent default member. No wildcard (Any) variants. Storage stays dinkuskit.commerce.product-variants/v1.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/172",
+      "created_at": "2026-10-22T21:14:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-model-20261008",
+        "variant-price-availability-20261008"
+      ],
+      "domain": "Multi-option product variants (Size x Color) in Commerce",
+      "history": [
+        {
+          "at": "2026-10-22T21:14:02+00:00",
+          "choice": "A product may have 1 to 3 variant-defining options, each with 2 to 50 values, and at most 50 concrete members (variants). Each member holds exactly one value per option; combinations are unique and sparse combinations are allowed. Commands stay small, each under the parent expectedRevision with resumable commandIds: appending an option to a product with members requires an explicit value on the new option for every existing member, the default included (nothing is filled in silently); a new combination is added one member at a time (addCatalogVariantMember, also accepted by addCatalogVariantOption with selections[]) and may add a new value to an existing option in the same CAS; any option or value label may be renamed under expectedRevision. Removing an option or a value is not offered (archive the member instead). The product's own item stays the permanent default member. No wildcard (Any) variants. Storage stays dinkuskit.commerce.product-variants/v1.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T21:14:21+00:00",
+          "choice": "A product may have 1 to 3 variant-defining options, each with 2 to 50 values, and at most 50 concrete members (variants). Each member holds exactly one value per option; combinations are unique and sparse combinations are allowed. Commands stay small, each under the parent expectedRevision with resumable commandIds: appending an option to a product with members requires an explicit value on the new option for every existing member, the default included (nothing is filled in silently); a new combination is added one member at a time (addCatalogVariantMember, also accepted by addCatalogVariantOption with selections[]) and may add a new value to an existing option in the same CAS; any option or value label may be renamed under expectedRevision. Removing an option or a value is not offered (archive the member instead). The product's own item stays the permanent default member. No wildcard (Any) variants. Storage stays dinkuskit.commerce.product-variants/v1.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T21:14:21+00:00",
+          "choice": "A product may have 1 to 3 variant-defining options, each with 2 to 50 values, and at most 50 concrete members (variants). Each member holds exactly one value per option; combinations are unique and sparse combinations are allowed. Commands stay small, each under the parent expectedRevision with resumable commandIds: appending an option to a product with members requires an explicit value on the new option for every existing member, the default included (nothing is filled in silently); a new combination is added one member at a time (addCatalogVariantMember, also accepted by addCatalogVariantOption with selections[]) and may add a new value to an existing option in the same CAS; any option or value label may be renamed under expectedRevision. Removing an option or a value is not offered (archive the member instead). The product's own item stays the permanent default member. No wildcard (Any) variants. Storage stays dinkuskit.commerce.product-variants/v1.",
+          "from": "implemented",
+          "implementation_ref": "https://github.com/dinkuskit/commerce/pull/173",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "product-variant-multi-option-20261022",
+      "implementation_ref": "https://github.com/dinkuskit/commerce/pull/173",
+      "question": "What limits and command shape apply when a product has more than one variant-defining option?",
+      "rationale": "Ronald chose 'Lock as built' on the decision card in the Commerce 165 and 173 landing thread, 22 Oct 2026 21:13 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-22T21:14:21+00:00",
+      "verification_ref": "commerce#173 head 4618b38: verify-commerce quick 660/660, tests/sandbox/variant-checkout.spec.mjs 4/4 (sandbox and native-variant), registry_bundle=pass backend_bytes=130340 headroom_bytes=732"
     }
   ],
   "last_activation": {
@@ -14006,5 +14079,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-22T13:36:01+00:00"
+  "updated_at": "2026-10-22T21:14:21+00:00"
 }

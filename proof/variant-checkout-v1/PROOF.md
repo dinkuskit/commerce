@@ -9,6 +9,16 @@ Payments binding. Later merchant money/status/label/fulfillment edits preserve
 the frozen USD2400 payment and original Large/digital selection in the paid
 canonical SQLite order and guest order projection.
 
+In the same merchant editor journey, the merchant appends a second option
+(`Color`: `Sand` / `Ink`) with explicit values for existing members (`Small` and
+`Big` assigned `Sand`), adds the sparse combination member `Medium / Ink`
+(`MERCHANT-PROOF-MEDIUM-INK`, `digital`, USD2800 in-stock), and renames `Color`
+to `Shade` and `Ink` to `Midnight` under `expectedRevision`. On the storefront,
+the shopper sees the grouped `Size / Color` legend and `Medium / Ink` choice,
+starts checkout for `Medium / Ink`, and reconciles a paid order whose frozen
+`variantSelections` retain both `Size: Medium` and `Color: Ink` despite the
+merchant's later option and value renames.
+
 ## Verification
 
 The full repository gate passes on the integrated literal-sharing build:
@@ -19,13 +29,17 @@ adjacent receipt before commit. Added regressions include orphan hiding,
 incompatible replay, permanent IDs and label revision conflicts, independent
 bulk outcomes and stale revisions, price-only bulk admission, foreign-member
 refusal, ordinary non-member bulk refusal, parent-CAS retry, same-price concurrent-write rollback protection,
-immutable paid selection snapshots, and public price/listability admission
-for hidden defaults and independent variant siblings.
+multi-option append with required explicit existing-member assignments, sparse
+combination member creation, duplicate combination and 3-option cap refusal,
+multi-option label renaming under `expectedRevision`, immutable paid selection
+snapshots across options, and public price/listability admission for hidden
+defaults and independent variant siblings.
 
 The browser exercises actual pages, mounted routes and SQLite. Registry proof
-covers merchant editing/grouping using the official sandbox artifact. Paid
-browser proof covers the native disposable Payments port; shipped defaults
-remain unavailable and no Registry or real Stripe paid checkout is claimed.
+covers merchant editing/grouping (including `Size × Color` and `Medium / Ink`)
+using the official sandbox artifact. Paid browser proof covers the native
+disposable Payments port; shipped defaults remain unavailable and no Registry or
+real Stripe paid checkout is claimed.
 
 ## Build and visual evidence
 
