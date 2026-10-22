@@ -19,7 +19,7 @@ export interface VariantMemberInput {
   selections?: readonly VariantSelectionInput[];
 }
 export interface AddCatalogVariantMemberInput {
-  productId: string; expectedRevision?: number;
+  productId: string; expectedRevision: number;
   commandId: string; name: string; sku: string; fulfillment: CatalogFulfillment;
   selections: readonly VariantSelectionInput[];
 }
@@ -132,10 +132,9 @@ export async function addCatalogVariantMember(
   const p = valid(parent.value.variantProduct, productId);
   if (p.creationPayload === payload(raw)) return { changed: false, product: p };
   if (!p.options.length) catalogFail("INVALID_INPUT", "variant product has no options");
-  if (raw.expectedRevision !== undefined) {
-    if (!Number.isSafeInteger(raw.expectedRevision) || raw.expectedRevision < 0) catalogFail("INVALID_INPUT", "invalid expectedRevision");
-    if (raw.expectedRevision !== p.revision) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload first");
-  }
+  // A new member is always fenced by the caller's revision, so a stale request cannot write old member values.
+  if (!Number.isSafeInteger(raw.expectedRevision) || raw.expectedRevision < 0) catalogFail("INVALID_INPUT", "invalid expectedRevision");
+  if (raw.expectedRevision !== p.revision) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload first");
   if (p.members.length >= 50) catalogFail("INVALID_INPUT", "variant member cap exceeded");
   if (!Array.isArray(raw.selections) || raw.selections.length !== p.options.length)
     catalogFail("INVALID_INPUT", "new member requires a value for every option");
@@ -189,13 +188,16 @@ export async function addCatalogVariantOption(
     options: [], members: [{ catalogItemId: productId, selections: [], fulfillment: (parent.value as CatalogItemRecord).variantFulfillment ?? "physical" }],
   };
   if (current && p.creationPayload === payload(input)) return { changed: false, product: p };
-  if (input.expectedRevision !== undefined) {
+  // Only the first option may come without a revision (v1 callers); appending one must name the revision it read.
+  if (input.expectedRevision === undefined) {
+    if (p.options.length) catalogFail("COMMAND_CONFLICT", "variant choices already exist; reload first");
+  } else {
     if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) catalogFail("INVALID_INPUT", "invalid expectedRevision");
     if (input.expectedRevision !== (current ? p.revision : 0)) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload first");
   }
   const optionId = id(input.optionId, "optionId"), optionLabel = text(input.optionLabel, "option label");
   if (p.options.some(o => o.optionId === optionId))
-    catalogFail(input.expectedRevision === undefined ? "COMMAND_CONFLICT" : "INVALID_INPUT", "variant option already exists");
+    catalogFail("INVALID_INPUT", "variant option already exists");
   if (p.options.length >= 3) catalogFail("INVALID_INPUT", "variant option cap exceeded");
   const empty = p.options.length === 0;
   if (!Array.isArray(input.values) || input.values.length < 2 || input.values.length > 50 ||

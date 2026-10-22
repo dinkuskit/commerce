@@ -198,6 +198,22 @@ test('appending a second option requires explicit existing-member values, accept
   assert.equal(await catalog.get('orphan-item'), null);
   assert.equal((await catalog.get('product')).variantProduct.revision, 1);
 
+  // Appending an option or adding a member without the revision the caller read is refused, so a stale form cannot write old member values.
+  await assert.rejects(addCatalogVariantOption({ catalog }, {
+    productId: 'product', optionId: 'color', optionLabel: 'Color',
+    values: [{ valueId: 'oat', label: 'Oat' }, { valueId: 'ink', label: 'Ink' }],
+    members: [
+      { catalogItemId: 'product', valueId: 'oat', fulfillment: 'digital' },
+      { catalogItemId: 'large-item', valueId: 'oat', fulfillment: 'digital' },
+    ],
+  }), error => error.code === 'COMMAND_CONFLICT');
+  await assert.rejects(addCatalogVariantMember({ catalog }, {
+    productId: 'product', commandId: 'unfenced-member', name: 'Proof shirt', sku: 'PROOF-UNFENCED', fulfillment: 'physical',
+    selections: [{ optionId: 'size', valueId: 'medium', label: 'Medium' }],
+  }, { createId: () => 'unfenced-item' }), error => error.code === 'INVALID_INPUT');
+  assert.equal(await catalog.get('unfenced-item'), null);
+  assert.equal((await catalog.get('product')).variantProduct.revision, 1);
+
   // Appending Color with explicit values for both existing members (Small/Oat and Large/Oat) succeeds as a sparse matrix.
   const second = await addCatalogVariantOption({ catalog }, {
     productId: 'product', expectedRevision: 1, optionId: 'color', optionLabel: 'Color',
