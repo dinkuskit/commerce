@@ -16,6 +16,32 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Pull requests that only touch records and docs (.github/scripts/browser-plan.mjs)
+  # skip the browser steps; their jobs still report success. Pushes to main and
+  # manual runs always run everything.
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      browser: ${{ steps.plan.outputs.browser }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            git diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA" | node .github/scripts/browser-plan.mjs >> "$GITHUB_OUTPUT"
+          else
+            echo "browser=true" >> "$GITHUB_OUTPUT"
+          fi
+          cat "$GITHUB_OUTPUT"
+
   # bin/verify-commerce core runs as three parallel jobs (checks, storefront,
   # packaged); public-contract below passes only when all three pass.
   checks:
@@ -33,42 +59,54 @@ jobs:
       - run: bin/verify-commerce checks
 
   storefront:
+    needs: plan
     runs-on: ubuntu-latest
     # The browser's Ubuntu packages alone can take over 9 minutes on a slow mirror.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - if: needs.plan.outputs.browser != 'true'
+        run: echo "Only records and docs changed; the browser tests are skipped."
+      - if: needs.plan.outputs.browser == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - if: needs.plan.outputs.browser == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
-      # The runner image already has Chromium's system libraries; --with-deps only
-      # added fonts and package upgrades from a mirror that is sometimes very slow.
-      - run: npx playwright install chromium
-      - run: bin/verify-commerce storefront
+      - if: needs.plan.outputs.browser == 'true'
+        run: npm ci
+      - if: needs.plan.outputs.browser == 'true'
+        uses: ./.github/actions/setup-chromium
+      - if: needs.plan.outputs.browser == 'true'
+        run: bin/verify-commerce storefront
 
   packaged:
+    needs: plan
     runs-on: ubuntu-latest
     # The browser's Ubuntu packages alone can take over 9 minutes on a slow mirror.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - if: needs.plan.outputs.browser != 'true'
+        run: echo "Only records and docs changed; the browser tests are skipped."
+      - if: needs.plan.outputs.browser == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - if: needs.plan.outputs.browser == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
-      # The runner image already has Chromium's system libraries; --with-deps only
-      # added fonts and package upgrades from a mirror that is sometimes very slow.
-      - run: npx playwright install chromium
-      - run: bin/verify-commerce packaged
+      - if: needs.plan.outputs.browser == 'true'
+        run: npm ci
+      - if: needs.plan.outputs.browser == 'true'
+        uses: ./.github/actions/setup-chromium
+      - if: needs.plan.outputs.browser == 'true'
+        run: bin/verify-commerce packaged
       - name: Preserve allowlisted installed-consumer evidence
-        if: always()
+        if: always() && needs.plan.outputs.browser == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: commerce-consumers-${{ github.run_id }}-${{ github.run_attempt }}
@@ -87,7 +125,7 @@ jobs:
   # It runs even when a part fails, so a failed part shows as a failed check
   # instead of a skipped (passing) one.
   public-contract:
-    needs: [checks, storefront, packaged]
+    needs: [plan, checks, storefront, packaged]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -104,25 +142,31 @@ jobs:
           test "$PACKAGED" = success
 
   merchant-settings:
+    needs: plan
     runs-on: ubuntu-latest
     # The browser's Ubuntu packages alone can take over 9 minutes on a slow mirror.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - if: needs.plan.outputs.browser != 'true'
+        run: echo "Only records and docs changed; the browser tests are skipped."
+      - if: needs.plan.outputs.browser == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - if: needs.plan.outputs.browser == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
-      # The runner image already has Chromium's system libraries; --with-deps only
-      # added fonts and package upgrades from a mirror that is sometimes very slow.
-      - run: npx playwright install chromium
+      - if: needs.plan.outputs.browser == 'true'
+        run: npm ci
+      - if: needs.plan.outputs.browser == 'true'
+        uses: ./.github/actions/setup-chromium
       - name: Native and Registry merchant settings
+        if: needs.plan.outputs.browser == 'true'
         run: npm run test:settings
       - name: Preserve allowlisted synthetic settings evidence
-        if: always()
+        if: always() && needs.plan.outputs.browser == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: commerce-settings-${{ github.run_id }}-${{ github.run_attempt }}
