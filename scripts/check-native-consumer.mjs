@@ -122,19 +122,50 @@ host.stderr.on('data', chunk => {
   if (text.includes('Cannot find') && text.includes(name) || text.includes('Failed to resolve') && text.includes(name)) missingPackages.add(name);
  }
 });
-let browser, page;
-function stopHost() {
- if (host.exitCode === null && host.pid) {
-  try { if (process.platform !== 'win32') process.kill(-host.pid, 'SIGTERM'); else host.kill('SIGTERM'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+let browser, page, stoppingHost;
+function signalHost(signal) {
+ if (!host.pid) return false;
+ if (process.platform === 'win32' && (host.exitCode !== null || host.signalCode !== null)) return false;
+ try {
+  if (process.platform !== 'win32') process.kill(-host.pid, signal);
+  else if (signal === 0) process.kill(host.pid, 0);
+  else host.kill(signal);
+  return true;
+ } catch (error) {
+  if (error.code !== 'ESRCH') throw error;
+  return false;
  }
 }
-process.once('exit', stopHost);
-process.once('SIGTERM', () => { stopHost(); process.exit(1); });
+function stopHost(force = false) {
+ host.stdout.destroy();
+ host.stderr.destroy();
+ host.unref();
+ if (force === true) {
+  signalHost('SIGKILL');
+  return Promise.resolve();
+ }
+ return stoppingHost ??= (async () => {
+  if (!signalHost('SIGTERM')) return;
+  const deadline = Date.now() + 2000;
+  while (Date.now() < deadline && (host.exitCode === null && host.signalCode === null || signalHost(0))) {
+   await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  if (host.exitCode === null && host.signalCode === null || signalHost(0)) {
+   signalHost('SIGKILL');
+   const killDeadline = Date.now() + 1000;
+   while (Date.now() < killDeadline && (host.exitCode === null && host.signalCode === null || signalHost(0))) {
+    await new Promise(resolve => setTimeout(resolve, 25));
+   }
+  }
+ })();
+}
+process.once('exit', () => { stopHost(true); });
+process.once('SIGTERM', () => { void stopHost().finally(() => process.exit(1)); });
 try {
  const deadline = Date.now() + 120000;
  let ready = false;
  while (Date.now() < deadline) {
-  if (host.exitCode !== null) throw new Error('Native host exited');
+  if (host.exitCode !== null || host.signalCode !== null) throw new Error('Native host exited');
   try { ready = (await fetch(origin, { signal: AbortSignal.timeout(2000) })).ok; } catch {}
   if (ready) break;
   await new Promise(resolve => setTimeout(resolve, 250));
@@ -163,7 +194,7 @@ try {
 } finally {
  await browser?.close();
  // Only this test's newly spawned host process group is touched.
- stopHost();
+ await stopHost();
 }
 `);
   const smoke = spawnSync(process.execPath, ['smoke.mjs'], { cwd: external, env, encoding: 'utf8', timeout: 240000 });
