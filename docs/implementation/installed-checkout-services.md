@@ -16,7 +16,7 @@ The shipped manifest declares `network:request` with exactly
 host. The coupon host serves only coupon checkouts
 ([registry-hosted-coupons](registry-hosted-coupons.md); unhooked in v1), the Ship host only
 Orders ([registry-ship-sync](registry-ship-sync.md)), and `dinkuskit.com` only
-the store-key trade ([store key and passes](#store-key-and-passes)). The behavior below
+the store-key trade ([Connect and the store key](#connect-and-the-store-key)). The behavior below
 applies whenever the Payments grant is not active.
 Absent or explicitly disabled configuration preserves prepare/capability
 minting and makes start return `PAYMENTS_UNAVAILABLE`, without reading the
@@ -36,7 +36,9 @@ on any site; activation stays a host and owner step.
 
 ## Versioned owner configuration
 
-`installedCheckout` is a declared string setting containing JSON. It is read
+`installedCheckout` is a string setting containing JSON that Commerce writes
+itself from DinkusKit.com ([Connect](#connect-and-the-store-key)); it is not in
+the settings form and nobody pastes it. It is read
 with the SDK's `getVersioned`; the resulting configuration snapshot and opaque
 revision belong to this invocation. Every enabled field below is required;
 unknown fields, unsupported schema and invalid shipping fail closed.
@@ -76,19 +78,35 @@ The configuration is scoped by the runtime plugin ID. Native and Registry
 IDs have different settings namespaces; no automatic migration or foreign
 coupon collection is accepted.
 
-## Store key and passes
+## Connect and the store key
 
-`storeKey` is Commerce's only secret setting: one key per store, pasted from
-the Set up Commerce box on DinkusKit.com (GrillTrack `commerce-store-key-001`).
-EmDash owns its encryption and redaction. Commerce ignores spaces or line
-breaks pasted around the key, treats it as opaque text of at most 512
-characters and sends it nowhere but the trade below.
+Commerce gets its Store ID and its own store key from **Connect to DinkusKit**
+(GrillTrack `store-connect-per-plugin-key-080` to `store-connect-checkout-settings-083`),
+never from a paste. An Administrator presses Connect on Commerce Settings; Commerce
+starts a protocol-2 connection (`client_id: "dinkus-commerce-emdash"`,
+`service: "commerce"`, PKCE S256, callback `/_emdash/admin/plugins/<installed id>/settings`),
+serves the waiting connection's receipt on its public `store-proof` route, and polls
+`/api/store-connections/token` on Check or on the Settings page load. The business owner
+approves at DinkusKit.com, and the answer `{ store_key, site_id }` is saved in the
+encrypted secret setting `connection` as `{ siteId, storeKey }`. Commerce connects
+first: its Connect makes the store at DinkusKit.com, and Payments and Ship join it.
+Connect again keeps the current key until the new one arrives; Cancel keeps it too.
+EmDash owns the setting's encryption and redaction. Commerce uses the key only when
+it is a well-formed `dk_store_` key for the same `siteId` as the checkout settings,
+and sends it nowhere but the trades below.
+
+After Connect, on **Get checkout settings** and on every background check, Commerce
+trades the key for a `commerce:settings` pass (audience `dinkuskit`) and reads
+`GET https://dinkuskit.com/api/commerce-settings`. Settings that fail admission, or
+name another store or web address, are refused and the saved ones stay; unchanged
+settings are not written again. So a change made in Set up Commerce reaches checkout
+within one background check, with nothing to paste.
 
 Each Payments, Coupons or Ship call trades the key for a short pass scoped to
 that one service: `POST https://dinkuskit.com/api/store-passes`, an address
 fixed in Commerce that no setting changes, with `Authorization: Bearer <store
 key>`, no cookies, `redirect: "error"` and exactly `{ "site_id", "scope",
-"audience" }`. Payments, Coupons and Ship are allowed hosts too, so pasted
+"audience" }`. Payments, Coupons and Ship are allowed hosts too, so
 settings that name one of them as the `issuer` still send the key only to
 DinkusKit.com; its passes then fail admission and no call is made.
 The pairs are `payments:checkout` with the configured `audience`,
@@ -107,22 +125,22 @@ Orders leaves Ship for its next sync. Commerce does not retry in a loop and does
 not show DinkusKit.com's error codes (`invalid_store_key`, `site_mismatch`,
 `service_not_enabled`, `service_cut_off`, `store_suspended`, `rate_limited`,
 `merchant_unavailable`, `signing_unavailable`); they are for its logs and the
-owner. A configured checkout without a store key is `UNAVAILABLE` before any
+owner. A configured checkout without a Connect key is `UNAVAILABLE` before any
 trade.
 
 Stores that saved passes in `installedCheckoutCredential`,
 `installedCheckoutCouponsCredential` or `installedShipCredential` before the
 store key keep those saved values, but Commerce no longer reads or sends them:
 checkout stays `UNAVAILABLE`, and Orders and the background check call nothing,
-until the owner pastes a store key.
+until the owner presses Connect.
 
 Each store turns on any of Payments, Coupons and Ship on DinkusKit.com.
 Payments counts as on while its Connect grant is active, Coupons and Ship are
 switches there, and DinkusKit.com mints passes only for services that are on.
-Commerce calls only the services its pasted checkout settings name, so a switch
-change comes with new settings to paste. Replace key on DinkusKit.com stops the
-old key at once: its next trade answers 401, and pasting the new key is the
-only step in Commerce.
+Commerce calls only the services its fetched checkout settings name, and a switch
+change reaches it with the next fetch. Connect again or Disconnect on DinkusKit.com
+stops the old key at once: its next trade answers 401, and pressing Connect again is
+the only step in Commerce.
 
 The local token reader requires the configured issuer, the audience asked for,
 a nonempty subject, the matching signed-claim site, the scope asked for in the
