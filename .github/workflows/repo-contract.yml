@@ -23,7 +23,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # The runner image already has Chromium's system libraries; --with-deps only
+      # added fonts and package upgrades from a mirror that is sometimes very slow.
+      - run: npx playwright install chromium
       - run: bin/verify-commerce core
       - name: Preserve allowlisted installed-consumer evidence
         if: always()
@@ -54,7 +56,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # The runner image already has Chromium's system libraries; --with-deps only
+      # added fonts and package upgrades from a mirror that is sometimes very slow.
+      - run: npx playwright install chromium
       - name: Native and Registry merchant settings
         run: npm run test:settings
       - name: Preserve allowlisted synthetic settings evidence
