@@ -3,6 +3,7 @@ import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import { isCurrentPaymentRequest } from "./payment-window.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
 import { normalizeCouponCode } from "../coupons/index.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import type {
   CheckoutPaymentPort,
   CurrentPaymentRequest,
@@ -146,7 +147,8 @@ function assertPricing(
     }
     check(sumSubtotal === subtotal && sumDiscount === discount && sumNet === net);
     if (pricing.coupon) {
-      if (!validateCouponQuoteSnapshot) throw new Error("Coupon validation unavailable");
+      // The Registry services bind no validator, so a coupon there is malformed before any check.
+      if (REGISTRY_BUILD || !validateCouponQuoteSnapshot) throw new Error("Coupon validation unavailable");
       check(normalizeCouponCode(pricing.coupon.code) === pricing.coupon.code);
       const quote = pricing.coupon.quote;
       validateCouponQuoteSnapshot(quote, "payment pricing coupon");
