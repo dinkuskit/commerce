@@ -121,6 +121,7 @@ export async function startConnect(ctx: PluginContext): Promise<ConnectState> {
     await ctx.kv.delete(CONTROL(flowId));
     return { state: "disconnected", failure: FIRST };
   }
+  if (value.flow) await ctx.kv.delete(CONTROL(value.flow.id));
   return { state: "pending", uri };
 }
 

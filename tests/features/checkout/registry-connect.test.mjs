@@ -186,6 +186,9 @@ test("a slow Check of a cancelled Connect never wipes the Connect that replaced 
   assert.equal((await proof(h, { connection_id: CONNECTION })).status, 404);
   assert.equal((await connectState(h.ctx, true)).state, "pending", "the replacement still waits for the owner");
   assert.equal(h.saved().flow.id, replacement);
+  // Connect again over a waiting Connect drops the old one's record as well.
+  await startConnect(h.ctx);
+  assert.deepEqual([...h.kv.keys()], ["state:connect:" + h.saved().flow.id]);
 });
 
 test("the owner's return after Approve fetches the checkout settings at once", async () => {
