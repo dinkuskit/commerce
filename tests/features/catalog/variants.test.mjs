@@ -330,3 +330,25 @@ test('multi-option commands enforce the 3-option cap, refuse duplicate assignmen
     ],
   }), error => error.code === 'INVALID_INPUT');
 });
+
+test('scoped value labels keep option/value pairs apart when ids contain colons', async () => {
+  const catalog = new Catalog();
+  await catalog.put('product', { ...base, variantProduct: {
+    schema: 'dinkuskit.commerce.product-variants/v1', productId: 'product', revision: 1, defaultMemberId: 'product',
+    options: [
+      { optionId: 'a:b', label: 'First', values: [{ valueId: 'c', label: 'C' }, { valueId: 'x', label: 'X' }] },
+      { optionId: 'a', label: 'Second', values: [{ valueId: 'b:c', label: 'BC' }, { valueId: 'y', label: 'Y' }] },
+    ],
+    members: [
+      { catalogItemId: 'product', fulfillment: 'physical', selections: [{ optionId: 'a:b', valueId: 'c' }, { optionId: 'a', valueId: 'b:c' }] },
+      { catalogItemId: 'other', fulfillment: 'physical', selections: [{ optionId: 'a:b', valueId: 'x' }, { optionId: 'a', valueId: 'y' }] },
+    ],
+  } });
+  const one = await updateCatalogVariantLabels({ catalog }, { productId: 'product', expectedRevision: 1,
+    values: [{ optionId: 'a:b', valueId: 'c', label: 'Renamed C' }] });
+  assert.deepEqual(one.product.options.map(o => o.values[0].label), ['Renamed C', 'BC']);
+  const both = await updateCatalogVariantLabels({ catalog }, { productId: 'product', expectedRevision: 2, values: [
+    { optionId: 'a:b', valueId: 'c', label: 'C2' }, { optionId: 'a', valueId: 'b:c', label: 'BC2' },
+  ] });
+  assert.deepEqual(both.product.options.map(o => o.values[0].label), ['C2', 'BC2']);
+});

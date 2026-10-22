@@ -120,7 +120,7 @@ function variantEditor(id: string, variant: CatalogProductListItem["variantProdu
     { type: "form", block_id: "variant-details-" + crypto.randomUUID(), fields: [
       ...variant.options.flatMap((o, i) => [
         { type: "text_input" as const, action_id: i ? "option:" + o.optionId : "optionLabel", label: i ? "Option: " + o.label : "Option", initial_value: o.label },
-        ...o.values.map(v => ({ type: "text_input" as const, action_id: "label:" + o.optionId + ":" + v.valueId, label: "Value: " + v.label, initial_value: v.label })),
+        ...o.values.map(v => ({ type: "text_input" as const, action_id: "label:" + JSON.stringify([o.optionId, v.valueId]), label: "Value: " + v.label, initial_value: v.label })),
       ]),
       ...variant.members.map(m => ({ type: "radio" as const, action_id: "fulfillment:" + m.catalogItemId, label: label(m) + " fulfillment", options: FULFILLMENT, initial_value: m.fulfillment })),
     ], submit: { label: "Save choices", action_id: "variant:" + JSON.stringify(["details", id, variant.revision]) } },
@@ -359,8 +359,10 @@ export async function productsAdmin(route: SandboxedRouteContext, ctx: PluginCon
           ...(values.optionLabel !== undefined ? { optionLabel: text(values.optionLabel) } : {}),
           options: Object.entries(values).filter(([k]) => k.startsWith("option:")).map(([k, v]) => ({ optionId: k.slice(7), label: text(v) })),
           values: Object.entries(values).filter(([k]) => k.startsWith("label:")).map(([k, v]) => {
-            const [a, b] = k.slice(6).split(":");
-            return b ? { optionId: a, valueId: b, label: text(v) } : { valueId: a, label: text(v) };
+            const key = k.slice(6);
+            if (!key.startsWith("[")) return { valueId: key, label: text(v) };
+            const [optionId, valueId] = JSON.parse(key);
+            return { optionId, valueId, label: text(v) };
           }),
           members: Object.entries(values).filter(([k]) => k.startsWith("fulfillment:")).map(([k, v]) => ({ catalogItemId: k.slice(12), fulfillment: v as never })),
         });

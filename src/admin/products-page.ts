@@ -450,7 +450,7 @@ function VariantProductEditor({ product, reload }: { product: CatalogProductList
   useEffect(() => {
     setForms(Object.fromEntries(variant.members.map(m => [m.catalogItemId, { regular: m.regular ?? "", sale: m.sale ?? "", status: m.stockStatus ?? "in-stock", fulfillment: m.fulfillment }])));
     setOptionLabels(Object.fromEntries(variant.options.map(o => [o.optionId, o.label])));
-    setValueLabels(Object.fromEntries(variant.options.flatMap(o => o.values.map(v => [`${o.optionId}:${v.valueId}`, v.label]))));
+    setValueLabels(Object.fromEntries(variant.options.flatMap(o => o.values.map(v => [JSON.stringify([o.optionId, v.valueId]), v.label]))));
     setNextOptionLabel(variant.options.length === 1 ? "Color" : "Material");
     setMemberOptionValues(prev => Object.fromEntries(variant.members.map(m => [m.catalogItemId, prev[m.catalogItemId] ?? "Sand"])));
     setMemberChoices(prev => Object.fromEntries(variant.options.map(o => [o.optionId, prev[o.optionId] ?? ""])));
@@ -477,7 +477,7 @@ function VariantProductEditor({ product, reload }: { product: CatalogProductList
       await postPlugin("catalog-items/update-variant-labels", {
         productId: product.catalogItemId, expectedRevision: variant.revision,
         options: variant.options.map(o => ({ optionId: o.optionId, label: optionLabels[o.optionId] ?? o.label })),
-        values: variant.options.flatMap(o => o.values.map(v => ({ optionId: o.optionId, valueId: v.valueId, label: valueLabels[`${o.optionId}:${v.valueId}`] ?? v.label }))),
+        values: variant.options.flatMap(o => o.values.map(v => ({ optionId: o.optionId, valueId: v.valueId, label: valueLabels[JSON.stringify([o.optionId, v.valueId])] ?? v.label }))),
         members: variant.members.map(m => ({ catalogItemId: m.catalogItemId, fulfillment: forms[m.catalogItemId].fulfillment })),
       }, "Could not save choices"); await reload(); setMessage("Choices saved");
     });
@@ -547,7 +547,7 @@ function VariantProductEditor({ product, reload }: { product: CatalogProductList
     createElement("form", { onSubmit: (e: FormEvent) => void details(e) },
       ...variant.options.flatMap((o, oi) => [
         labeledField(oi ? `Option: ${o.label}` : "Option", `choice-option-${o.optionId}`, optionLabels[o.optionId] ?? "", value => setOptionLabels({ ...optionLabels, [o.optionId]: value })),
-        ...o.values.map((v, vi) => labeledField(oi ? `Value: ${v.label}` : `Value ${vi + 1}`, `choice-${o.optionId}-${v.valueId}`, valueLabels[`${o.optionId}:${v.valueId}`] ?? "", value => setValueLabels({ ...valueLabels, [`${o.optionId}:${v.valueId}`]: value }))),
+        ...o.values.map((v, vi) => labeledField(oi ? `Value: ${v.label}` : `Value ${vi + 1}`, `choice-${o.optionId}-${v.valueId}`, valueLabels[JSON.stringify([o.optionId, v.valueId])] ?? "", value => setValueLabels({ ...valueLabels, [JSON.stringify([o.optionId, v.valueId])]: value }))),
       ]),
       createElement("button", { type: "submit", disabled: pending }, "Save choices")),
     variant.options.length < 3 ? createElement("form", { onSubmit: (e: FormEvent) => void appendOption(e) },

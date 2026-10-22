@@ -342,7 +342,7 @@ export async function updateCatalogVariantLabels(storage: CatalogVariantStorage,
     if (!isRecord(v)) catalogFail("INVALID_INPUT", "invalid variant label update");
     const vId = id(v.valueId, "valueId"), label = text(v.label, "value label");
     if (v.optionId !== undefined) {
-      const oId = id(v.optionId, "optionId"), k = `${oId}:${vId}`;
+      const oId = id(v.optionId, "optionId"), k = JSON.stringify([oId, vId]);
       if (scopedValues.has(k) || !p.options.some(o => o.optionId === oId && o.values.some(x => x.valueId === vId)))
         catalogFail("INVALID_INPUT", "unknown or duplicate value");
       scopedValues.set(k, label);
@@ -358,7 +358,7 @@ export async function updateCatalogVariantLabels(storage: CatalogVariantStorage,
   const next = { ...p, revision: p.revision + 1, options: p.options.map(o => ({
     ...o, ...(optionLabels.has(o.optionId) ? { label: optionLabels.get(o.optionId)! } : {}),
     values: o.values.map(v => {
-      const nextLabel = scopedValues.get(`${o.optionId}:${v.valueId}`) ?? unscopedValues.get(v.valueId);
+      const nextLabel = scopedValues.get(JSON.stringify([o.optionId, v.valueId])) ?? unscopedValues.get(v.valueId);
       return nextLabel !== undefined ? { ...v, label: nextLabel } : v;
     }),
   })), members: p.members.map(m => ({ ...m, fulfillment: fulfillment.get(m.catalogItemId) ?? m.fulfillment })) };
