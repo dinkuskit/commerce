@@ -2,13 +2,13 @@
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
-    "cadence": "sequential",
+    "cadence": "frontier-batch",
     "confirmed": true,
-    "confirmed_at": "2026-10-21T16:04:32+00:00",
-    "domain": "US delivery feature Registry budget exception",
-    "started_at": "2026-10-21T16:04:31+00:00",
+    "confirmed_at": "2026-10-22T13:25:04+00:00",
+    "domain": "Connect to DinkusKit in Commerce, room for it, and the add-ons door",
+    "started_at": "2026-10-22T13:25:03+00:00",
     "status": "confirmed",
-    "summary": "Owner approved a feature-only 1518-byte remaining Registry budget for the already verified US delivery rule; no code, general reserve, parked integration or merge/deployment authorization changes."
+    "summary": "Ronald answered the Connect grill in the OIDC in DinkusKit thread on 22 Oct 2026 (12:57 to 13:23 UTC), including the size session and no fixed reserve."
   },
   "decisions": [
     {
@@ -11092,6 +11092,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Each store pastes one store key from the Set up Commerce box on DinkusKit.com into Commerce's only secret setting, storeKey, which replaces installedCheckoutCredential, installedCheckoutCouponsCredential and installedShipCredential. Before a Payments, Coupons or Ship call, Commerce trades the key at POST https://dinkuskit.com/api/store-passes, a fixed address no setting changes (never the origin of an issuer named in the settings), for a fresh 5-minute pass for that one service (payments:checkout with the checkout audience, coupons:checkout with coupons.audience, ship:orders with ship.audience), at most once per service per invocation, and admits the pass like any pass. One replaceable key covers all three, and each store turns on any of them on DinkusKit.com: Payments counts as on while its Connect grant is active, Coupons and Ship are switches, and DinkusKit.com mints passes only for services that are on. Commerce calls only the services its pasted settings name. Any answer other than a 200 with an admissible pass means that call is not made; Replace key on DinkusKit.com stops the old key at once. This replaces where commerce-ship-sync-001 and registry-checkout-hosted-coupons-001 get their passes; what they send is unchanged.",
+          "from": "verified",
+          "implementation_ref": "src/features/checkout/registry-credential.ts (tradeStoreKey, fixed https://dinkuskit.com/api/store-passes); src/features/checkout/registry-services.ts (storePasses); emdash-plugin.jsonc (storeKey); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
         }
       ],
       "id": "commerce-store-key-001",
@@ -11104,9 +11118,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-11T01:31:35+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-connect-store-key-20261022",
+      "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
@@ -11303,6 +11317,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "DinkusKit.com's Set up Commerce box gives each store the exact installedCheckout JSON to paste beside the store key: the store ID from Connect, issuer https://dinkuskit.com/account, the Payments origin, audience, binding and account from Payments' status, mode (test unless the owner says live), shipping, and coupons and ship only while those services are on, with new settings to paste whenever a switch changes. Commerce keeps reading installedCheckout exactly as today and refuses settings made for another site. A setup page inside Commerce that fetches these itself is after v1.",
+          "from": "verified",
+          "implementation_ref": "emdash-plugin.jsonc (installedCheckout description); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-22T13:25:05+00:00",
+          "choice": "DinkusKit.com's Set up Commerce box gives each store the exact installedCheckout JSON to paste beside the store key: the store ID from Connect, issuer https://dinkuskit.com/account, the Payments origin, audience, binding and account from Payments' status, mode (test unless the owner says live), shipping, and coupons and ship only while those services are on, with new settings to paste whenever a switch changes. Commerce keeps reading installedCheckout exactly as today and refuses settings made for another site. A setup page inside Commerce that fetches these itself is after v1.",
+          "from": "needs_reverification",
+          "implementation_ref": "emdash-plugin.jsonc (installedCheckout description); docs/implementation/installed-checkout-services.md#store-key-and-passes",
+          "note": "Commerce fetches its checkout settings after Connect instead of a paste.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
         }
       ],
       "id": "commerce-checkout-settings-paste-001",
@@ -11315,9 +11357,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-11T01:31:35+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-connect-store-key-20261022",
+      "updated_at": "2026-10-22T13:25:05+00:00",
       "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
@@ -11515,6 +11557,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "No. To keep room under the 128 KiB backend limit, the v1 Registry build does not wire the hosted coupon port: a coupon code is refused as COUPON_UNAVAILABLE (try-later) before any call, even when the checkout settings name the coupon service, and no coupons:checkout pass is traded. Settings that name coupons stay valid, coupons.dinkuskit.com stays declared so coupons can return without stores approving a new host, and the port, its tests and checkout's coupon pricing stay in the source. Inventory-managed stock stays in unless a v1 piece does not fit. Template Store's checkout shows a greyed 'Coupons coming soon' box (the owner's other agents).",
+          "from": "verified",
+          "implementation_ref": "src/features/checkout/registry-services.ts (resolveRegistryCheckoutServices); docs/implementation/registry-hosted-coupons.md",
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
         }
       ],
       "id": "registry-coupons-unhooked-v1",
@@ -11527,9 +11583,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-11T01:31:35+00:00",
+      "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
@@ -11642,6 +11698,20 @@
           "review_source_identity": null,
           "to": "implemented",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Yes. commerce#98 merges once ClawSweeper's gate passes, proven against a stand-in for DinkusKit.com's trade and checked by reading against DinkusKit.com's merged store-pass code (dinkuskit#29). No store takes real orders on Registry checkout until one real pass from the live DinkusKit.com works with this Commerce build; that check comes after DinkusKit.com is deployed with its Set up Commerce box.",
+          "from": "implemented",
+          "implementation_ref": "commerce#98 merged 23:25 UTC 2026-10-10 (main 28cec7b) once ClawSweeper's gate passed. The live check, one real pass from the live DinkusKit.com working with this build before any store takes real orders on Registry checkout, is a launch step not yet run.",
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
         }
       ],
       "id": "commerce-store-key-release-gate-001",
@@ -11654,9 +11724,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-11T01:31:35+00:00",
+      "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": null
     },
     {
@@ -11771,6 +11841,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "When the store's checkout settings name ship and a store key is saved, the Orders page of each Processing order with a delivery address shows a \"Create shipping label\" link, first among the order's actions. It opens Ship's own label page for that order: <ship origin from the settings>/stores/<siteId from the settings>/orders/<order id>, each part URL-encoded, the address Ship's thread gave for its label page. The link carries no pass; Ship asks the owner to sign in with DinkusKit.com (Ship's ship-owner-signin-001). Opening an order makes no call to Ship or DinkusKit.com and stores nothing. The order list, Completed orders and orders without an address show no link.",
+          "from": "verified",
+          "implementation_ref": "src/features/orders/ship.ts (shipLabelPage); src/features/orders/admin/view.ts (ordersView labelPage link); src/features/orders/admin/page.ts (OrdersServices.labelPage); src/admin/index.ts and src/features/checkout/registry-services.ts (ship site id); docs/implementation/registry-ship-sync.md#create-shipping-label; docs/contracts/commerce-handoffs.md",
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
         }
       ],
       "id": "commerce-ship-label-link-001",
@@ -11783,9 +11867,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-11T01:31:35+00:00",
+      "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": ".grilltrack/proof/ship-label-link-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
     },
     {
@@ -12147,6 +12231,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Expose a thin PUBLIC GET checkout/guest/readiness route returning a versioned closed non-secret schema (dinkuskit.commerce.checkout-readiness/v1) with status 'supported' (mode 'test') or 'unavailable'. Verify actual existing owner-controlled Payments binding (ready===true, exact provider/merchant/site/origin/mode) via scoped service assembly, trading storeKey at dinkuskit.com if necessary as a read-time service effect without mutating orders, capabilities, or settings. Inspect original installed storage identity and validate capability structure without minting or writing records. Reject missing/disabled/malformed config, wrong plugin namespace, bad origin, non-test/wrong mode, missing store key, expired/refused pass, and unconnected/mismatched binding. Start and status retain independent authoritative binding revalidation.",
+          "from": "verified",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
         }
       ],
       "id": "installed-checkout-readiness-001",
@@ -12214,9 +12312,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-12T21:02:05+00:00",
+      "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
     },
     {
@@ -12317,6 +12415,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 100 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "verified",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
         }
       ],
       "id": "installed-checkout-readiness-bounds-001",
@@ -12339,9 +12451,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-12T20:50:24+00:00",
+      "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
     },
     {
@@ -13464,6 +13576,34 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Not now. Coupons stay a separate Coupons plugin and hosted coupon service; Commerce's Registry build keeps the coupon checkout connection unwired, as registry-coupons-unhooked-v1 set for v1. Commerce keeps at least 2,200 bytes of its Registry backend file free for that connection (about 2 KB measured on 21 Oct 2026). A change that would leave less is raised with the owner before it merges. When coupons come back, the connection is first reshaped for what the coupon module may grow into (shipping discounts, more than one code per order), then switched on together with the coupon service deploy and the Coupons plugin's first release.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T13:25:05+00:00",
+          "choice": "Not now. Coupons stay a separate Coupons plugin and hosted coupon service; Commerce's Registry build keeps the coupon checkout connection unwired, as registry-coupons-unhooked-v1 set for v1. Commerce keeps at least 2,200 bytes of its Registry backend file free for that connection (about 2 KB measured on 21 Oct 2026). A change that would leave less is raised with the owner before it merges. When coupons come back, the connection is first reshaped for what the coupon module may grow into (shipping discounts, more than one code per order), then switched on together with the coupon service deploy and the Coupons plugin's first release.",
+          "from": "needs_reverification",
+          "implementation_ref": null,
+          "note": "Coupons stay separate, Commerce carries no coupon code, and the 2,200-byte reserve is dropped.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
         }
       ],
       "id": "registry-coupons-parked-20261021",
@@ -13476,9 +13616,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
-      "superseded_by": null,
-      "updated_at": "2026-10-21T15:22:54+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-addons-door-20261022",
+      "updated_at": "2026-10-22T13:25:05+00:00",
       "verification_ref": null
     },
     {
@@ -13650,6 +13790,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "verified",
+          "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+          "note": "dependency commerce-store-key-001 changed: A store key pasted once is replaced by Commerce's own key delivered at Connect.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
         }
       ],
       "id": "us-region-registry-budget-exception-20261021",
@@ -13662,10 +13816,133 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-21T16:04:32+00:00",
+      "updated_at": "2026-10-22T13:25:04+00:00",
       "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce gets its own store key by pressing Connect (dinkuskit/dinkuskit store-connect-080 and 081) and keeps it in its encrypted settings; there is no store key box. It still trades the key only at the fixed POST https://dinkuskit.com/api/store-passes for 5-minute payments:checkout and ship:orders passes. It fetches its checkout settings from DinkusKit.com with a pass instead of reading a pasted installedCheckout (store-connect-083), and still refuses settings made for another site.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanCBvyAFsykj4wHAKkvd8pTJ",
+      "created_at": "2026-10-22T13:25:03+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Connect to DinkusKit in Commerce, room for it, and the add-ons door",
+      "history": [
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Commerce gets its own store key by pressing Connect (dinkuskit/dinkuskit store-connect-080 and 081) and keeps it in its encrypted settings; there is no store key box. It still trades the key only at the fixed POST https://dinkuskit.com/api/store-passes for 5-minute payments:checkout and ship:orders passes. It fetches its checkout settings from DinkusKit.com with a pass instead of reading a pasted installedCheckout (store-connect-083), and still refuses settings made for another site.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-connect-store-key-20261022",
+      "implementation_ref": null,
+      "question": "Where do Commerce's passes and checkout settings come from once Connect replaces the paste?",
+      "rationale": "Ronald agreed to the Connect design on 22 Oct 2026 (answers 1, 5 and 6).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-22T13:25:04+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Before the Commerce side of Connect is built, a dedicated session (Fable 5.1, effort high) finds enough room in the Registry backend file for Connect and the checkout settings fetch without losing any functionality, measured with npm run build:sandbox. There is no fixed reserve: the 2,200-byte figure was the room left on 21 Oct 2026, not a rule. Main 96bcecd measured 129,554 bytes, 1,518 free, on 22 Oct.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanCBvyAFsykj4wHAKkvd8pTJ",
+      "created_at": "2026-10-22T13:25:03+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Connect to DinkusKit in Commerce, room for it, and the add-ons door",
+      "history": [
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Before the Commerce side of Connect is built, a dedicated session (Fable 5.1, effort high) finds enough room in the Registry backend file for Connect and the checkout settings fetch without losing any functionality, measured with npm run build:sandbox. There is no fixed reserve: the 2,200-byte figure was the room left on 21 Oct 2026, not a rule. Main 96bcecd measured 129,554 bytes, 1,518 free, on 22 Oct.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-connect-size-20261022",
+      "implementation_ref": null,
+      "question": "How does Commerce find room for Connect, and does it keep a fixed reserve?",
+      "rationale": "Ronald: if it does not fit, launch a Fable 5.1 high session for size savings without losing functionality; 'no reserve is mandatory; that was just the amount left at the time'.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-22T13:25:04+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Coupons stay out of Commerce: they are their own Registry plugin and hosted service, and Commerce carries no coupon-specific code. Because EmDash plugins cannot call each other, an add-on that must change a checkout (coupons first, later others) reaches it through one generic Commerce door that asks DinkusKit add-ons for changes to the cart. The door is after v1, and no bytes are reserved for it.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanCBvyAFsykj4wHAKkvd8pTJ",
+      "created_at": "2026-10-22T13:25:04+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Connect to DinkusKit in Commerce, room for it, and the add-ons door",
+      "history": [
+        {
+          "at": "2026-10-22T13:25:04+00:00",
+          "choice": "Coupons stay out of Commerce: they are their own Registry plugin and hosted service, and Commerce carries no coupon-specific code. Because EmDash plugins cannot call each other, an add-on that must change a checkout (coupons first, later others) reaches it through one generic Commerce door that asks DinkusKit add-ons for changes to the cart. The door is after v1, and no bytes are reserved for it.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-addons-door-20261022",
+      "implementation_ref": null,
+      "question": "Do coupons belong inside Commerce, and how would an add-on change a checkout?",
+      "rationale": "Ronald and his dad: Commerce sells end to end, every other feature is its own module, one tool one job. Matches EmDash's sandbox design: fixed core hooks, no plugin-to-plugin calls, a 128 KiB cap that is not rising.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-22T13:25:04+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -13702,5 +13979,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-21T16:04:32+00:00"
+  "updated_at": "2026-10-22T13:25:05+00:00"
 }
