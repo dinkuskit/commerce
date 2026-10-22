@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices } from '../../../dist/features/catalog/kernel/index.js';
+import { addCatalogVariantMember, addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices } from '../../../dist/features/catalog/kernel/index.js';
 import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
 // Small isolated store retains the same unique indexes and revision fence as the catalog contract.
@@ -180,4 +180,153 @@ test('retrying a refused parent commit resumes the same linked member', async ()
   await addCatalogVariantOption({ catalog }, input, { createId: () => 'must-not-create-another-member' });
   assert.equal((await resolveCatalogVariantMember(catalog,'large-item')).member.catalogItemId,'large-item');
   assert.equal(await catalog.get('must-not-create-another-member'),null);
+});
+
+test('appending a second option requires explicit existing-member values, accepts sparse combinations, and renames any option or value under expectedRevision', async () => {
+  const catalog = new Catalog(); await catalog.put('product', base);
+  const first = await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
+  assert.equal(first.product.revision, 1);
+
+  // Missing an existing member's value on the appended option is refused without mutating the parent or leaving orphans.
+  await assert.rejects(addCatalogVariantOption({ catalog }, {
+    productId: 'product', expectedRevision: 1, optionId: 'color', optionLabel: 'Color',
+    values: [
+      { valueId: 'oat', label: 'Oat', member: { catalogItemId: 'product', fulfillment: 'physical' } },
+      { valueId: 'ink', label: 'Ink', member: { commandId: 'orphan-attempt', name: 'Proof shirt', sku: 'PROOF-ORPHAN', fulfillment: 'physical', selections: [{ optionId: 'size', valueId: 'small' }, { optionId: 'color', valueId: 'ink' }] } },
+    ],
+  }, { createId: () => 'orphan-item' }), error => error.code === 'INVALID_INPUT');
+  assert.equal(await catalog.get('orphan-item'), null);
+  assert.equal((await catalog.get('product')).variantProduct.revision, 1);
+
+  // Appending Color with explicit values for both existing members (Small/Oat and Large/Oat) succeeds as a sparse matrix.
+  const second = await addCatalogVariantOption({ catalog }, {
+    productId: 'product', expectedRevision: 1, optionId: 'color', optionLabel: 'Color',
+    values: [{ valueId: 'oat', label: 'Oat' }, { valueId: 'ink', label: 'Ink' }],
+    members: [
+      { catalogItemId: 'product', valueId: 'oat', fulfillment: 'physical' },
+      { catalogItemId: 'large-item', valueId: 'oat', fulfillment: 'physical' },
+    ],
+  });
+  assert.equal(second.changed, true);
+  assert.equal(second.product.revision, 2);
+  assert.deepEqual(second.product.options.map(o => o.optionId), ['size', 'color']);
+  assert.deepEqual((await resolveCatalogVariantMember(catalog, 'large-item')).member.selections, [
+    { optionId: 'size', valueId: 'large' },
+    { optionId: 'color', valueId: 'oat' },
+  ]);
+
+  // Adding a sparse combination member (Medium / Ink) introduces Medium on Size and reuses Ink on Color.
+  const added = await addCatalogVariantMember({ catalog }, {
+    productId: 'product', expectedRevision: 2, commandId: 'create-medium-ink', name: 'Proof shirt',
+    sku: 'PROOF-MEDIUM-INK', fulfillment: 'digital',
+    selections: [
+      { optionId: 'size', valueId: 'medium', label: 'Medium' },
+      { optionId: 'color', valueId: 'ink' },
+    ],
+  }, { createId: () => 'medium-ink-item' });
+  assert.equal(added.product.revision, 3);
+  assert.equal(added.product.members.length, 3);
+  assert.deepEqual(added.product.options[0].values.map(v => v.valueId), ['small', 'large', 'medium']);
+  assert.deepEqual((await resolveCatalogVariantMember(catalog, 'medium-ink-item')).member, {
+    catalogItemId: 'medium-ink-item',
+    selections: [{ optionId: 'size', valueId: 'medium' }, { optionId: 'color', valueId: 'ink' }],
+    fulfillment: 'digital',
+  });
+
+  // Duplicate combination (Medium / Ink again) is refused before creating a catalog item.
+  await assert.rejects(addCatalogVariantMember({ catalog }, {
+    productId: 'product', expectedRevision: 3, commandId: 'dup-medium-ink', name: 'Proof shirt',
+    sku: 'PROOF-DUP', fulfillment: 'physical',
+    selections: [
+      { optionId: 'color', valueId: 'ink' },
+      { optionId: 'size', valueId: 'medium' },
+    ],
+  }, { createId: () => 'dup-item' }), error => error.code === 'INVALID_INPUT');
+  assert.equal(await catalog.get('dup-item'), null);
+
+  // Stale expectedRevision is refused with COMMAND_CONFLICT on both member addition and label update.
+  await assert.rejects(addCatalogVariantMember({ catalog }, {
+    productId: 'product', expectedRevision: 2, commandId: 'stale-member', name: 'Proof shirt',
+    sku: 'PROOF-STALE', fulfillment: 'physical',
+    selections: [{ optionId: 'size', valueId: 'small' }, { optionId: 'color', valueId: 'ink' }],
+  }), error => error.code === 'COMMAND_CONFLICT');
+
+  // Any option label and any value label across options can be renamed under expectedRevision.
+  const renamed = await updateCatalogVariantLabels({ catalog }, {
+    productId: 'product', expectedRevision: 3,
+    options: [{ optionId: 'size', label: 'Fit' }, { optionId: 'color', label: 'Shade' }],
+    values: [
+      { optionId: 'size', valueId: 'medium', label: 'M' },
+      { optionId: 'color', valueId: 'oat', label: 'Sand' },
+      { optionId: 'color', valueId: 'ink', label: 'Deep Ink' },
+    ],
+  });
+  assert.equal(renamed.product.revision, 4);
+  assert.deepEqual(renamed.product.options.map(o => [o.optionId, o.label]), [['size', 'Fit'], ['color', 'Shade']]);
+  assert.deepEqual(renamed.product.options[1].values, [
+    { valueId: 'oat', label: 'Sand' },
+    { valueId: 'ink', label: 'Deep Ink' },
+  ]);
+});
+
+test('multi-option commands enforce the 3-option cap, refuse duplicate assignments, and resume cleanly after a failed parent CAS', async () => {
+  const catalog = new Catalog(); await catalog.put('product', base);
+  await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
+
+  // Appending an option that assigns two existing members with the same prior selection to the same new value is impossible,
+  // and assigning a new member with the same combination as an existing member is refused without creating an orphan.
+  await assert.rejects(addCatalogVariantOption({ catalog }, {
+    productId: 'product', expectedRevision: 1, optionId: 'color', optionLabel: 'Color',
+    values: [{ valueId: 'oat', label: 'Oat' }, { valueId: 'ink', label: 'Ink' }],
+    members: [
+      { catalogItemId: 'product', valueId: 'oat', fulfillment: 'physical' },
+      { catalogItemId: 'large-item', valueId: 'oat', fulfillment: 'physical' },
+      { commandId: 'dup-combo', name: 'Proof shirt', sku: 'PROOF-DUP-COMBO', fulfillment: 'physical', valueId: 'oat', selections: [{ optionId: 'size', valueId: 'small' }] },
+    ],
+  }, { createId: () => 'dup-combo-item' }), error => error.code === 'INVALID_INPUT');
+  assert.equal(await catalog.get('dup-combo-item'), null);
+
+  // Appending option 2 with a new member when parent CAS fails, then resuming the same command reuses the created member identity.
+  const appendColor = {
+    productId: 'product', expectedRevision: 1, optionId: 'color', optionLabel: 'Color',
+    values: [{ valueId: 'oat', label: 'Oat' }, { valueId: 'ink', label: 'Ink' }],
+    members: [
+      { catalogItemId: 'product', valueId: 'oat', fulfillment: 'physical' },
+      { catalogItemId: 'large-item', valueId: 'oat', fulfillment: 'physical' },
+      { commandId: 'create-small-ink', name: 'Proof shirt', sku: 'PROOF-SMALL-INK', fulfillment: 'physical', valueId: 'ink', selections: [{ optionId: 'size', valueId: 'small' }] },
+    ],
+  };
+  catalog.rejectParent = true;
+  await assert.rejects(addCatalogVariantOption({ catalog }, appendColor, { createId: () => 'small-ink-item' }), error => error.code === 'STORAGE_UNAVAILABLE');
+  assert.equal(await resolveCatalogVariantMember(catalog, 'small-ink-item'), null);
+  catalog.rejectParent = false;
+  const resumed = await addCatalogVariantOption({ catalog }, appendColor, { createId: () => 'unused-id' });
+  assert.equal(resumed.changed, true);
+  assert.equal(await catalog.get('unused-id'), null);
+  assert.equal((await resolveCatalogVariantMember(catalog, 'small-ink-item')).member.catalogItemId, 'small-ink-item');
+  const replayed = await addCatalogVariantOption({ catalog }, appendColor, { createId: () => 'unused-id-2' });
+  assert.equal(replayed.changed, false);
+
+  // Appending option 3 (Material) succeeds up to the 3-option cap.
+  const third = await addCatalogVariantOption({ catalog }, {
+    productId: 'product', expectedRevision: resumed.product.revision, optionId: 'material', optionLabel: 'Material',
+    values: [{ valueId: 'cotton', label: 'Cotton' }, { valueId: 'linen', label: 'Linen' }],
+    members: [
+      { catalogItemId: 'product', valueId: 'cotton', fulfillment: 'physical' },
+      { catalogItemId: 'large-item', valueId: 'cotton', fulfillment: 'physical' },
+      { catalogItemId: 'small-ink-item', valueId: 'linen', fulfillment: 'physical' },
+    ],
+  });
+  assert.equal(third.product.options.length, 3);
+
+  // Appending a 4th option is refused by the option cap.
+  await assert.rejects(addCatalogVariantOption({ catalog }, {
+    productId: 'product', expectedRevision: third.product.revision, optionId: 'fit', optionLabel: 'Fit',
+    values: [{ valueId: 'regular', label: 'Regular' }, { valueId: 'relaxed', label: 'Relaxed' }],
+    members: [
+      { catalogItemId: 'product', valueId: 'regular', fulfillment: 'physical' },
+      { catalogItemId: 'large-item', valueId: 'regular', fulfillment: 'physical' },
+      { catalogItemId: 'small-ink-item', valueId: 'relaxed', fulfillment: 'physical' },
+    ],
+  }), error => error.code === 'INVALID_INPUT');
 });

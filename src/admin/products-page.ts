@@ -434,12 +434,26 @@ function fulfillmentSelect(label: string, value: string, change: (value: string)
 function VariantProductEditor({ product, reload }: { product: CatalogProductListItem; reload: () => Promise<void> }) {
   const variant = product.variantProduct!;
   const [forms, setForms] = useState<Record<string, { regular: string; sale: string; status: ClerkStockStatus; fulfillment: string }>>({});
-  const [labels, setLabels] = useState<string[]>([]); const [option, setOption] = useState("");
+  const [optionLabels, setOptionLabels] = useState<Record<string, string>>({});
+  const [valueLabels, setValueLabels] = useState<Record<string, string>>({});
+  const [nextOptionLabel, setNextOptionLabel] = useState("Color");
+  const [firstOptionValue, setFirstOptionValue] = useState("Sand");
+  const [secondOptionValue, setSecondOptionValue] = useState("Ink");
+  const [memberOptionValues, setMemberOptionValues] = useState<Record<string, string>>({});
+  const [nextOptionId, setNextOptionId] = useState(() => crypto.randomUUID());
+  const [memberChoices, setMemberChoices] = useState<Record<string, string>>({});
+  const [memberSku, setMemberSku] = useState("");
+  const [memberFulfillment, setMemberFulfillment] = useState("physical");
+  const [memberCommandId, setMemberCommandId] = useState(() => crypto.randomUUID());
   const [checked, setChecked] = useState<string[]>([]); const [amount, setAmount] = useState("");
   const [message, setMessage] = useState<string | null>(null); const [pending, setPending] = useState(false);
   useEffect(() => {
     setForms(Object.fromEntries(variant.members.map(m => [m.catalogItemId, { regular: m.regular ?? "", sale: m.sale ?? "", status: m.stockStatus ?? "in-stock", fulfillment: m.fulfillment }])));
-    setLabels(variant.options[0].values.map(v => v.label)); setOption(variant.options[0].label);
+    setOptionLabels(Object.fromEntries(variant.options.map(o => [o.optionId, o.label])));
+    setValueLabels(Object.fromEntries(variant.options.flatMap(o => o.values.map(v => [`${o.optionId}:${v.valueId}`, v.label]))));
+    setNextOptionLabel(variant.options.length === 1 ? "Color" : "Material");
+    setMemberOptionValues(prev => Object.fromEntries(variant.members.map(m => [m.catalogItemId, prev[m.catalogItemId] ?? "Sand"])));
+    setMemberChoices(prev => Object.fromEntries(variant.options.map(o => [o.optionId, prev[o.optionId] ?? ""])));
   }, [variant]);
   const label = (id: string) => variant.members.find(m => m.catalogItemId === id)?.selections.map(s => s.valueLabel).join(" / ") ?? "Variant";
   async function run(work: () => Promise<void>) {
@@ -460,10 +474,52 @@ function VariantProductEditor({ product, reload }: { product: CatalogProductList
   }
   async function details(event: FormEvent) {
     event.preventDefault(); await run(async () => {
-      await postPlugin("catalog-items/update-variant-labels", { productId: product.catalogItemId, expectedRevision: variant.revision, optionLabel: option,
-        values: variant.options[0].values.map((v, i) => ({ valueId: v.valueId, label: labels[i] })),
+      await postPlugin("catalog-items/update-variant-labels", {
+        productId: product.catalogItemId, expectedRevision: variant.revision,
+        options: variant.options.map(o => ({ optionId: o.optionId, label: optionLabels[o.optionId] ?? o.label })),
+        values: variant.options.flatMap(o => o.values.map(v => ({ optionId: o.optionId, valueId: v.valueId, label: valueLabels[`${o.optionId}:${v.valueId}`] ?? v.label }))),
         members: variant.members.map(m => ({ catalogItemId: m.catalogItemId, fulfillment: forms[m.catalogItemId].fulfillment })),
       }, "Could not save choices"); await reload(); setMessage("Choices saved");
+    });
+  }
+  async function appendOption(event: FormEvent) {
+    event.preventDefault(); await run(async () => {
+      const byLabel = new Map<string, { valueId: string; label: string }>();
+      const ensure = (rawLabel: string) => {
+        const l = rawLabel.trim(), k = l.toLowerCase();
+        if (!byLabel.has(k)) {
+          const base = k.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "v";
+          const valueId = [...byLabel.values()].some(v => v.valueId === base) ? `${base}-${byLabel.size + 1}` : base;
+          byLabel.set(k, { valueId, label: l });
+        }
+        return byLabel.get(k)!.valueId;
+      };
+      ensure(firstOptionValue); ensure(secondOptionValue);
+      const members = variant.members.map(m => ({
+        catalogItemId: m.catalogItemId, valueId: ensure(memberOptionValues[m.catalogItemId] ?? ""), fulfillment: m.fulfillment,
+      }));
+      await postPlugin("catalog-items/add-variant-option", {
+        productId: product.catalogItemId, expectedRevision: variant.revision, optionId: nextOptionId,
+        optionLabel: nextOptionLabel, values: [...byLabel.values()], members,
+      }, "Could not add option");
+      setNextOptionId(crypto.randomUUID()); await reload(); setMessage("Option added");
+    });
+  }
+  async function addMember(event: FormEvent) {
+    event.preventDefault(); await run(async () => {
+      const selections = variant.options.map((o, i) => {
+        const l = (memberChoices[o.optionId] ?? "").trim(), k = l.toLowerCase();
+        const found = o.values.find(v => v.label.toLowerCase() === k || v.valueId === l);
+        if (found) return { optionId: o.optionId, valueId: found.valueId };
+        const base = k.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "v" + i;
+        const valueId = o.values.some(v => v.valueId === base) ? `${base}-${o.values.length + 1}` : base;
+        return { optionId: o.optionId, valueId, label: l };
+      });
+      await postPlugin("catalog-items/add-variant-option", {
+        productId: product.catalogItemId, expectedRevision: variant.revision, commandId: memberCommandId,
+        name: product.name, sku: memberSku, fulfillment: memberFulfillment, selections,
+      }, "Could not add variant");
+      setMemberCommandId(crypto.randomUUID()); setMemberSku(""); await reload(); setMessage("Variant added");
     });
   }
   async function bulk() {
@@ -488,9 +544,23 @@ function VariantProductEditor({ product, reload }: { product: CatalogProductList
         fulfillmentSelect(`${label(m.catalogItemId)} fulfillment`, f.fulfillment, v => change(m.catalogItemId, "fulfillment", v)));
     }),
     labeledField("Same Regular price", "bulk-regular", amount, setAmount), createElement("button", { type: "button", disabled: pending || !checked.length, onClick: () => void bulk() }, "Apply to selected variants"),
-    createElement("form", { onSubmit: (e: FormEvent) => void details(e) }, labeledField("Option", "choice-option", option, setOption),
-      ...variant.options[0].values.map((v, i) => labeledField(`Value ${i + 1}`, `choice-${v.valueId}`, labels[i] ?? "", value => setLabels(labels.map((x, n) => n === i ? value : x)))),
-      createElement("button", { type: "submit", disabled: pending }, "Save choices")));
+    createElement("form", { onSubmit: (e: FormEvent) => void details(e) },
+      ...variant.options.flatMap((o, oi) => [
+        labeledField(oi ? `Option: ${o.label}` : "Option", `choice-option-${o.optionId}`, optionLabels[o.optionId] ?? "", value => setOptionLabels({ ...optionLabels, [o.optionId]: value })),
+        ...o.values.map((v, vi) => labeledField(oi ? `Value: ${v.label}` : `Value ${vi + 1}`, `choice-${o.optionId}-${v.valueId}`, valueLabels[`${o.optionId}:${v.valueId}`] ?? "", value => setValueLabels({ ...valueLabels, [`${o.optionId}:${v.valueId}`]: value }))),
+      ]),
+      createElement("button", { type: "submit", disabled: pending }, "Save choices")),
+    variant.options.length < 3 ? createElement("form", { onSubmit: (e: FormEvent) => void appendOption(e) },
+      labeledField("Next option", "next-option", nextOptionLabel, setNextOptionLabel),
+      labeledField("First option value", "first-option-value", firstOptionValue, setFirstOptionValue),
+      labeledField("Second option value", "second-option-value", secondOptionValue, setSecondOptionValue),
+      ...variant.members.map(m => labeledField(`Value for ${label(m.catalogItemId)}`, `member-option-${m.catalogItemId}`, memberOptionValues[m.catalogItemId] ?? "Sand", value => setMemberOptionValues({ ...memberOptionValues, [m.catalogItemId]: value }))),
+      createElement("button", { type: "submit", disabled: pending }, "Add option")) : null,
+    variant.members.length < 50 ? createElement("form", { onSubmit: (e: FormEvent) => void addMember(e) },
+      ...variant.options.map(o => labeledField(`Choice: ${o.label}`, `member-choice-${o.optionId}`, memberChoices[o.optionId] ?? "", value => setMemberChoices({ ...memberChoices, [o.optionId]: value }))),
+      labeledField("Variant SKU", "member-sku", memberSku, setMemberSku),
+      fulfillmentSelect("Variant fulfillment", memberFulfillment, setMemberFulfillment),
+      createElement("button", { type: "submit", disabled: pending }, "Add variant")) : null);
 }
 
 const PRODUCTS_STYLE = `
