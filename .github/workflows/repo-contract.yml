@@ -12,7 +12,8 @@ permissions:
 jobs:
   public-contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The browser's Ubuntu packages alone can take over 9 minutes on a slow mirror.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -22,7 +23,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # The runner image already has Chromium's system libraries; --with-deps only
+      # added fonts and package upgrades from a mirror that is sometimes very slow.
+      - run: npx playwright install chromium
       - run: bin/verify-commerce core
       - name: Preserve allowlisted installed-consumer evidence
         if: always()
@@ -53,7 +56,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # The runner image already has Chromium's system libraries; --with-deps only
+      # added fonts and package upgrades from a mirror that is sometimes very slow.
+      - run: npx playwright install chromium
       - name: Native and Registry merchant settings
         run: npm run test:settings
       - name: Preserve allowlisted synthetic settings evidence
