@@ -18,7 +18,8 @@ const CLIENT_ID = "dinkus-commerce-emdash";
 export const CONNECTION_SETTING = "connection";
 /** The fetched checkout settings, written by Commerce only. */
 export const CHECKOUT_SETTING = "installedCheckout";
-const CONTROL = "state:connect";
+/** Each Connect keeps its waiting record under its own flow, so a slow Check of an old Connect never touches a newer one. */
+const CONTROL = (flowId: string) => "state:connect:" + flowId;
 const KEY = /^dk_store_[A-Za-z0-9_-]{43}$/, ID = /^[A-Za-z0-9_-]{1,200}$/;
 
 interface Saved { siteId?: string; storeKey?: string; flow?: { id: string; verifier: string } }
@@ -62,10 +63,10 @@ export async function storeKey(ctx: PluginContext): Promise<{ siteId: string; ke
 export async function connectState(ctx: PluginContext, check = false): Promise<ConnectState> {
   const { value, revision } = await saved(ctx), flow = value.flow;
   if (!flow) return connected(value) ?? { state: "disconnected" };
-  const control = await ctx.kv.get<Control>(CONTROL);
+  const control = await ctx.kv.get<Control>(CONTROL(flow.id));
   const restart = async (failure = FIRST): Promise<ConnectState> => {
     const { flow: _, ...rest } = value;
-    if ((await write(ctx, revision, rest)).applied && control?.flowId === flow.id) await ctx.kv.delete(CONTROL);
+    if ((await write(ctx, revision, rest)).applied) await ctx.kv.delete(CONTROL(flow.id));
     return connected(rest) ?? { state: "disconnected", failure };
   };
   if (!control || control.flowId !== flow.id || control.expiresAt <= Date.now()) return restart();
@@ -77,7 +78,9 @@ export async function connectState(ctx: PluginContext, check = false): Promise<C
   const { ok, body } = answer;
   if (!ok) {
     if (body.error === "authorization_pending") {
-      await ctx.kv.set(CONTROL, { ...control, nextPollAt: Date.now() + control.interval * 1000 });
+      await ctx.kv.set(CONTROL(flow.id), { ...control, nextPollAt: Date.now() + control.interval * 1000 });
+      // Cancelled or replaced while DinkusKit.com answered: leave nothing behind for it.
+      if ((await saved(ctx)).value.flow?.id !== flow.id) await ctx.kv.delete(CONTROL(flow.id));
       return { state: "pending", uri: control.uri, checked: check };
     }
     return restart(body.error === "access_denied" ? "The business owner did not approve Commerce at DinkusKit.com. Press Connect to ask again." : FIRST);
@@ -85,7 +88,7 @@ export async function connectState(ctx: PluginContext, check = false): Promise<C
   if (body.site_id !== control.receipt.site_id || typeof body.store_key !== "string" || !KEY.test(body.store_key)) return restart();
   const next = { siteId: control.receipt.site_id, storeKey: body.store_key };
   if (!(await write(ctx, revision, next)).applied) return restart();
-  await ctx.kv.delete(CONTROL);
+  await ctx.kv.delete(CONTROL(flow.id));
   return { state: "connected", siteId: next.siteId, key: next.storeKey, finished: true };
 }
 
@@ -110,17 +113,21 @@ export async function startConnect(ctx: PluginContext): Promise<ConnectState> {
       typeof interval !== "number" || !Number.isInteger(interval) || interval < 1 || interval > 60 || body.verification_uri !== uri ||
       value.siteId && value.siteId !== siteId) return { state: "disconnected", failure: FIRST };
   const flowId = random(18);
-  if (!(await write(ctx, revision, { ...value, flow: { id: flowId, verifier } })).applied) return { state: "disconnected", failure: FIRST };
-  await ctx.kv.set(CONTROL, { flowId, expiresAt, interval, nextPollAt: now + interval * 1000, uri,
+  // The waiting record goes first, so the flow is never saved without it; the proof route vouches for it only once the flow is saved.
+  await ctx.kv.set(CONTROL(flowId), { flowId, expiresAt, interval, nextPollAt: now + interval * 1000, uri,
     receipt: { version: 2, site_id: siteId, connection_id: connectionId, challenge: body.challenge, client_id: CLIENT_ID, service: "commerce",
       site_origin: site, callback_uri: callback, code_challenge: challenge, expires_at: expiresAt } } satisfies Control);
+  if (!(await write(ctx, revision, { ...value, flow: { id: flowId, verifier } })).applied) {
+    await ctx.kv.delete(CONTROL(flowId));
+    return { state: "disconnected", failure: FIRST };
+  }
   return { state: "pending", uri };
 }
 
 /** Cancel a waiting Connect; a key the store already had keeps working. */
 export async function cancelConnect(ctx: PluginContext): Promise<ConnectState> {
   const { value, revision } = await saved(ctx), { flow, ...rest } = value;
-  if (flow && (await write(ctx, revision, rest)).applied && (await ctx.kv.get<Control>(CONTROL))?.flowId === flow.id) await ctx.kv.delete(CONTROL);
+  if (flow && (await write(ctx, revision, rest)).applied) await ctx.kv.delete(CONTROL(flow.id));
   return connected(rest) ?? { state: "disconnected" };
 }
 
@@ -133,9 +140,9 @@ export async function storeProof(input: unknown, ctx: PluginContext) {
   if (Object.keys(query).length !== 1 || !text(query.connection_id)) return reply(400, { error: "invalid_request" });
   try {
     // Only the Connect still waiting in the encrypted setting is vouched for: a cancelled or replaced one is not.
-    const control = await ctx.kv.get<Control>(CONTROL);
-    if (!control || control.receipt.connection_id !== query.connection_id || control.expiresAt <= Date.now() || control.receipt.site_origin !== origin(ctx)) return reply(404, { error: "not_found" });
-    return (await saved(ctx)).value.flow?.id === control.flowId ? reply(200, control.receipt) : reply(404, { error: "not_found" });
+    const flow = (await saved(ctx)).value.flow, control = flow && await ctx.kv.get<Control>(CONTROL(flow.id));
+    return control && control.flowId === flow.id && control.receipt.connection_id === query.connection_id && control.expiresAt > Date.now() &&
+      control.receipt.site_origin === origin(ctx) ? reply(200, control.receipt) : reply(404, { error: "not_found" });
   } catch { return reply(503, { error: "connection_unavailable" }); }
 }
 
@@ -154,7 +161,9 @@ export async function refreshCheckoutSettings(ctx: PluginContext, known?: { site
       headers: { accept: "application/json", authorization: "Bearer " + pass.body.access_token } });
     const settings = (await response.text()).slice(0, 16385);
     if (!response.ok) { try { return String(JSON.parse(settings).error); } catch { return "unavailable"; } }
-    if (admitRegistryCheckoutConfig(settings, site)?.siteId !== found.siteId) return "unavailable";
+    // The settings must be this store's; the documented turned-off form (admitted as null) is saved as it is.
+    const admitted = admitRegistryCheckoutConfig(settings, site);
+    if (admitted && admitted.siteId !== found.siteId) return "unavailable";
     const current = await ctx.settings!.getVersioned<unknown>(CHECKOUT_SETTING);
     if (current?.value !== settings) await ctx.settings!.compareAndSet(CHECKOUT_SETTING, current?.revision ?? null, settings);
     return null;

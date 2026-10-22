@@ -133,6 +133,11 @@ test("checkout settings come from DinkusKit.com with a commerce:settings pass, n
   assert.equal(await refreshCheckoutSettings(h.ctx), "payments_not_connected");
   assert.equal(h.stored.get("installedCheckout").revision, revision);
 
+  // The documented turned-off settings replace enabled ones.
+  settings = JSON.stringify({ schema: "dinkuskit.commerce.registry-checkout/v1", enabled: false }); status = 200;
+  assert.equal(await refreshCheckoutSettings(h.ctx), null);
+  assert.equal(h.stored.get("installedCheckout").value, settings);
+
   const unknown = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-passes": () => Response.json({ error: "invalid_store_key" }, { status: 401 }) } });
   assert.equal(await refreshCheckoutSettings(unknown.ctx), "invalid_store_key");
   assert.equal(await refreshCheckoutSettings(host().ctx), "not_connected");
@@ -156,6 +161,31 @@ test("the proof route vouches only for the Connect still waiting in the encrypte
   await startConnect(denied.ctx); await connectState(denied.ctx, true);
   assert.equal((await proof(denied, { connection_id: CONNECTION })).status, 404);
   assert.equal(denied.kv.size, 0);
+});
+
+test("a slow Check of a cancelled Connect never wipes the Connect that replaced it", async () => {
+  let answerFirst, first = true;
+  const h = host({ dinkus: {
+    "/api/store-connections": body => Response.json(started(first ? {} : { connection_id: "conn_2", verification_uri: "https://dinkuskit.com/account/connect?connection_id=conn_2" })),
+    "/api/store-connections/token": body => body.connection_id === CONNECTION
+      ? new Promise(resolve => { answerFirst = () => resolve(Response.json({ error: "authorization_pending" }, { status: 400 })); })
+      : Response.json({ error: "authorization_pending" }, { status: 400 }),
+  } });
+  await startConnect(h.ctx);
+  const slow = connectState(h.ctx, true);
+  while (!answerFirst) await new Promise(resolve => setTimeout(resolve, 1));
+  // Another tab cancels and connects again while DinkusKit.com is still answering the first Check.
+  await cancelConnect(h.ctx); first = false;
+  await startConnect(h.ctx);
+  const replacement = h.saved().flow.id;
+  answerFirst();
+  await slow;
+  assert.equal(h.saved().flow.id, replacement);
+  assert.deepEqual([...h.kv.keys()], ["state:connect:" + replacement], "only the replacement's waiting record is left");
+  assert.equal((await proof(h, { connection_id: "conn_2" })).status, 200);
+  assert.equal((await proof(h, { connection_id: CONNECTION })).status, 404);
+  assert.equal((await connectState(h.ctx, true)).state, "pending", "the replacement still waits for the owner");
+  assert.equal(h.saved().flow.id, replacement);
 });
 
 test("the owner's return after Approve fetches the checkout settings at once", async () => {
