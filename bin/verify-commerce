@@ -7,26 +7,39 @@ cd "$repo_root"
 
 mode="${1:-quick}"
 
+# core is checks, storefront and packaged in that order. CI runs those three as
+# parallel jobs; locally `core` still runs everything one after another.
 case "$mode" in
   quick)
     npm run typecheck
     npm run test:unit
     npm run audit:repo
     ;;
-  core)
+  checks)
     "$script_dir/verify-commerce" quick
     npm run test:integration
+    ;;
+  storefront)
+    npm run build
     npm run test:sandbox
+    ;;
+  packaged)
+    npm run build
     npm run test:sandbox:native-local-stock
     npm run test:sandbox:orders
     npm run test:consumer:native
+    ;;
+  core)
+    "$script_dir/verify-commerce" checks
+    "$script_dir/verify-commerce" storefront
+    "$script_dir/verify-commerce" packaged
     ;;
   full)
     "$script_dir/verify-commerce" core
     npm run test:settings
     ;;
   *)
-    echo "Usage: bin/verify-commerce [quick|core|full]" >&2
+    echo "Usage: bin/verify-commerce [quick|checks|storefront|packaged|core|full]" >&2
     exit 64
     ;;
 esac
