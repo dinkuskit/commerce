@@ -1,4 +1,5 @@
 import { isRecord, sortedKeys } from "../../shared/record.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
@@ -64,7 +65,8 @@ async function freeze(
     if (variant) selections.push({ schema: CHECKOUT_VARIANT_SELECTION_SCHEMA, productId: variant.productId,
       catalogItemId: line.catalogItemId, selections: variant.selections, fulfillment: variant.fulfillment });
     lines.push({ ...line, name: quoted.name, unitPrice: quoted.unitPrice });
-    if (quoted.stock) {
+    // Catalog quotes stock only for a managed item, which the Registry build never has.
+    if (!REGISTRY_BUILD && quoted.stock) {
       stock ??= { operationId: attemptId, binding: quote.inventory!, requirements: [] };
       const existing = stock.requirements.find(r => r.skuId === quoted.stock!.skuId);
       if (existing) {
@@ -319,7 +321,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
       next.contactSnapshot = freezeContactSnapshot(attempt.contactSnapshot);
     }
     if (attempt.phase === "reserving") {
-      if (attempt.stock) {
+      if (!REGISTRY_BUILD && attempt.stock) {
         const provider = await e.resolveInventory(attempt.stock.binding);
         if (!provider) return attempt;
         let result;
@@ -368,7 +370,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           return attempt;
         }
       }
-      if (attempt.stock) {
+      if (!REGISTRY_BUILD && attempt.stock) {
         const provider = await e.resolveInventory(attempt.stock.binding);
         if (!provider) return attempt;
         let result;

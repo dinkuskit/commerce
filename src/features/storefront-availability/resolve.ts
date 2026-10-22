@@ -9,6 +9,7 @@ import {
 import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
 import { StorefrontAvailabilityError } from "./errors.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import {
   exactQuantitySign,
   normalizeExactQuantity,
@@ -368,6 +369,9 @@ export async function resolveStorefrontAvailability(
   const unlisted = await unlistIfUnpriced(storage, item.itemId);
   if (unlisted) return unlisted;
   if (isManagedCatalogItem(item)) {
+    // No Registry store has an Inventory binding, so a managed item there is
+    // unavailable, exactly as resolveManagedItem answers without one.
+    if (REGISTRY_BUILD) return unavailable(item.itemId);
     return applyOutOfStockListing(
       storage,
       await resolveManagedItem(storage, item, execution),

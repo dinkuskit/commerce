@@ -5,6 +5,7 @@ import type { PaidOrder } from '../../../handoffs/paid-order.js';
 import { completeOrder, correctDelivery, createPaidOrderReceiver, deliveryOf, listOrders, numberOrders, ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, reopenOrder, type OrderNumbers, type OrdersCollection } from '../store.js';
 import { addressForm, completeForm, ordersView } from './view.js';
 import { orderPackBody, type InventoryPackPort } from '../pack.js';
+import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
 
 /** Host-wired services. Without a pack port, Pack reports Not packed and writes nothing. */
 export interface OrdersServices {
@@ -111,7 +112,9 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
       if (saved) view.blocks.splice(2, 0, saved === 'saved'
         ? { type: 'banner', variant: 'default', title: done, description: doneText }
         : { type: 'banner', variant: 'error', title: refused, description: 'This order changed since you opened it. ' + refusedText });
+      // The Registry build shows no Pack button (see view.ts), so Pack is unavailable there.
       if (!pack) return view;
+      if (REGISTRY_BUILD) throw new Error('Pack unavailable');
       const order = record?.paidOrder;
       const body = await orderPackBody(order?.ticketIds);
       if (!body) throw new Error('Pack unavailable');
