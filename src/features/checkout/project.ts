@@ -1,4 +1,5 @@
 import { guestCheckoutErrorMessage } from "./errors.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import {
   GUEST_CHECKOUT_PROJECTION_SCHEMA,
   type CheckoutAttempt,
@@ -46,10 +47,11 @@ function unavailableOf(
   attempt: CheckoutAttempt,
 ): GuestCheckoutProjection["unavailable"] {
   if (attempt.phase === "paid" && attempt.order) return null;
-  if (attempt.phase === "released" && !attempt.coupon?.refused) return null;
+  // Registry attempts never carry a coupon (pricing refuses the code first), so none is refused.
+  if (attempt.phase === "released" && (REGISTRY_BUILD || !attempt.coupon?.refused)) return null;
   if (attempt.phase === "paying" && attempt.session) return null;
   const refused: unknown = attempt.coupon?.refused;
-  if (refused) {
+  if (!REGISTRY_BUILD && refused) {
     // Attempts saved before reasons existed hold `refused: true`; they answer the fallback reason.
     const reason = typeof refused === "string" && COUPON_REASONS.includes(refused)
       ? refused as CouponUnavailableReason

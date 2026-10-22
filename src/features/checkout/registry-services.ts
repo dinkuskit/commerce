@@ -103,7 +103,9 @@ export async function resolveRegistryCheckoutServices(ctx: PluginContext): Promi
   });
   // Coupons are unhooked from the Registry build for v1 to save room (GrillTrack
   // registry-coupons-unhooked-v1): settings may still name the coupon service,
-  // but a coupon code is refused before any call.
+  // but a coupon code is refused before any call. REGISTRY_BUILD gates in
+  // checkout (pricing, orchestrate, project, test-payments) keep the coupon
+  // paths out of the bundle; lift them when the port is wired again.
   return {
     host: { ...host, pricing: { paymentPricingSchema: CHECKOUT_PRICING_SCHEMA,
       resolveShippingConfiguration: async () => structuredClone(config.shipping) } },
