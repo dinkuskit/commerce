@@ -32,7 +32,7 @@ calendar. Ordinary PRs merge to `main` with their changesets and ship nothing
 on their own. Docs, tests and CI-only changes never get a beta, and Cut beta
 refuses when nothing version-bumping has merged since the last release. One
 release is on test at a time: Cut beta refuses while an earlier
-`release/X.Y.Z` has no `vX.Y.Z` tag yet.
+`release/X.Y.Z` has no `vX.Y.Z` tag yet, and so does Add fix to beta when it would start a patch branch.
 
 ## Every pull request adds a changeset
 

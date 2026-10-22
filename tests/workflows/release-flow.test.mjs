@@ -760,12 +760,12 @@ test("extractChangelogSection extracts the matching version notes", () => {
   assert.equal(extractChangelogSection(changelog, "0.9.9"), null);
 });
 
-test("release-authority-proof harness passes all 12 release-authority scenarios (a)-(l)", async () => {
+test("release-authority-proof harness passes all 13 release-authority scenarios (a)-(m)", async () => {
   const report = await runReleaseAuthorityProof();
   assert.equal(report.allPassed, true);
-  assert.equal(report.scenarioCount, 12);
+  assert.equal(report.scenarioCount, 13);
   assert.deepEqual(
     report.scenarios.map((s) => s.id),
-    ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"],
+    ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"],
   );
 });
