@@ -135,7 +135,7 @@
     "test:integration": "npm run build && node --test tests/integration/*.test.mjs",
     "proof:registration-retry:real": "npm run build && node --no-warnings --experimental-sqlite --experimental-strip-types tools/prove-registration-retry-real.mjs",
     "changeset": "changeset",
-    "release:version": "node .github/scripts/release-version.mjs && npm install --package-lock-only --ignore-scripts",
+    "release:version": "node .github/scripts/release-version.mjs && node .github/scripts/sync-lock-version.mjs",
     "proof:release-authority": "node scripts/release-authority-proof.mjs",
     "audit:features": "node scripts/check-features.mjs",
     "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features",
