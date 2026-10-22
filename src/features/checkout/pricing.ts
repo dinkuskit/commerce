@@ -1,5 +1,6 @@
 import { normalizeCouponCode, validateCouponQuoteSnapshot } from "../coupons/index.js";
 import type { CouponQuote, CouponQuoteSnapshot } from "../coupons/index.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { normalizeMoney, parseMinorUnits, type Money } from "../catalog/kernel/index.js";
 import type {
   CartLine,
@@ -92,6 +93,59 @@ export interface ComposedPricing {
   couponCode?: string;
 }
 
+interface QuotedCoupon { couponId: string; code: string; quote: CouponQuote }
+
+/** Prices the cart with a coupon through the entry's coupon port; without a port the code is unavailable. */
+async function quoteCoupon(
+  code: string,
+  lines: readonly CheckoutLine[],
+  cart: readonly CartLine[],
+  attemptId: string,
+  execution: CheckoutExecution,
+): Promise<QuotedCoupon> {
+  const pricing = execution.pricing!;
+  let quoted;
+  try {
+    quoted = await pricing.coupons?.quote(code, {
+      catalog: execution.catalog.catalog,
+      prices: execution.catalog.prices,
+    }, {
+      quoteId: `${attemptId}:coupon`,
+      lines: cart.map((line) => ({ productId: line.catalogItemId, quantity: line.quantity })),
+      now: new Date((execution.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
+    });
+  } catch (error) {
+    // An unknown, expired or unreachable coupon never prices the cart; the
+    // shopper removes it to accept the full price (issue 34).
+    if (error instanceof Error && /Product un/.test(error.message)) throw error;
+    // The coupon owner answers INVALID_INPUT in process and NOT_APPLICABLE
+    // over HTTP when a coupon does not apply, with a reason when it has one.
+    const { code, notApplicable } = (error ?? {}) as {
+      code?: unknown; notApplicable?: { reason?: unknown; minimum?: Money };
+    };
+    if (code !== "INVALID_INPUT" && code !== "NOT_APPLICABLE") couponUnavailable("try-later");
+    const reason = notApplicable?.reason;
+    if (typeof reason !== "string" || !REASONS.includes(reason)) couponUnavailable("not-applicable");
+    couponUnavailable(reason as CouponUnavailable["reason"],
+      reason === "minimum-not-met" ? notApplicable!.minimum : undefined);
+  }
+  if (pricing.coupons && !quoted) couponUnavailable("not-found");
+  if (!quoted) couponUnavailable("try-later");
+  const quote = quoted.quote;
+  if (quote.lines.length !== lines.length || quote.lines.some((line, index) =>
+    line.productId !== lines[index].catalogItemId ||
+    line.quantity !== lines[index].quantity ||
+    !sameMoney(line.unitPrice, lines[index].unitPrice))) {
+    fail("Catalog changed during pricing");
+  }
+  // A quote whose arithmetic disagrees with Commerce's own prices never
+  // freezes, wherever it was evaluated.
+  try {
+    validateCouponQuoteSnapshot(quoteSnapshot(quote, quote.payableMerchandiseTotal), "coupon quote");
+  } catch { couponUnavailable("try-later"); }
+  return { couponId: quoted.couponId, code, quote };
+}
+
 export async function composeCheckoutPricing(
   lines: readonly CheckoutLine[],
   cart: readonly CartLine[],
@@ -104,52 +158,15 @@ export async function composeCheckoutPricing(
   const config = await pricing.resolveShippingConfiguration();
   if (!config) fail(couponCode ? "Shipping configuration unavailable" : "Pricing configuration unavailable");
   const charge = shippingCharge(config);
-  let quote: CouponQuote | undefined;
-  let couponId: string | undefined;
-  let normalizedCode: string | undefined;
+  let quoted: QuotedCoupon | undefined;
   if (couponCode !== undefined) {
-    normalizedCode = normalizeCouponCode(couponCode);
-    let quoted;
-    try {
-      quoted = await pricing.coupons?.quote(normalizedCode, {
-        catalog: execution.catalog.catalog,
-        prices: execution.catalog.prices,
-      }, {
-        quoteId: `${attemptId}:coupon`,
-        lines: cart.map((line) => ({ productId: line.catalogItemId, quantity: line.quantity })),
-        now: new Date((execution.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
-      });
-    } catch (error) {
-      // An unknown, expired or unreachable coupon never prices the cart; the
-      // shopper removes it to accept the full price (issue 34).
-      if (error instanceof Error && /Product un/.test(error.message)) throw error;
-      // The coupon owner answers INVALID_INPUT in process and NOT_APPLICABLE
-      // over HTTP when a coupon does not apply, with a reason when it has one.
-      const { code, notApplicable } = (error ?? {}) as {
-        code?: unknown; notApplicable?: { reason?: unknown; minimum?: Money };
-      };
-      if (code !== "INVALID_INPUT" && code !== "NOT_APPLICABLE") couponUnavailable("try-later");
-      const reason = notApplicable?.reason;
-      if (typeof reason !== "string" || !REASONS.includes(reason)) couponUnavailable("not-applicable");
-      couponUnavailable(reason as CouponUnavailable["reason"],
-        reason === "minimum-not-met" ? notApplicable!.minimum : undefined);
-    }
-    if (pricing.coupons && !quoted) couponUnavailable("not-found");
-    if (!quoted) couponUnavailable("try-later");
-    couponId = quoted.couponId;
-    quote = quoted.quote;
-    if (quote.lines.length !== lines.length || quote.lines.some((line, index) =>
-      line.productId !== lines[index].catalogItemId ||
-      line.quantity !== lines[index].quantity ||
-      !sameMoney(line.unitPrice, lines[index].unitPrice))) {
-      fail("Catalog changed during pricing");
-    }
-    // A quote whose arithmetic disagrees with Commerce's own prices never
-    // freezes, wherever it was evaluated.
-    try {
-      validateCouponQuoteSnapshot(quoteSnapshot(quote, quote.payableMerchandiseTotal), "coupon quote");
-    } catch { couponUnavailable("try-later"); }
+    const code = normalizeCouponCode(couponCode);
+    // The Registry build binds no coupon port (GrillTrack registry-coupons-unhooked-v1),
+    // so it refuses the code here exactly as the native entry does without a
+    // port, and Rolldown leaves the quote path and its validation out.
+    quoted = REGISTRY_BUILD ? couponUnavailable("try-later") : await quoteCoupon(code, lines, cart, attemptId, execution);
   }
+  const quote = quoted?.quote;
   const pricingLines = lines.map((line, index) => couponLine(quote, line, index));
   const merchandiseSubtotal = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n));
   const couponDiscount = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.discount.minor), 0n));
@@ -168,10 +185,10 @@ export async function composeCheckoutPricing(
     },
     finalTotal,
     lines: Object.freeze(pricingLines),
-    ...(quote && normalizedCode ? { coupon: { code: normalizedCode, quote: quoteSnapshot(quote, finalTotal) } } : {}),
+    ...(!REGISTRY_BUILD && quoted ? { coupon: { code: quoted.code, quote: quoteSnapshot(quoted.quote, finalTotal) } } : {}),
   });
-  if (quote && BigInt(snapshot.couponDiscount.minor) !== BigInt(quote.discount.minor)) {
+  if (!REGISTRY_BUILD && quoted && BigInt(snapshot.couponDiscount.minor) !== BigInt(quoted.quote.discount.minor)) {
     fail("Coupon allocation is not conserved");
   }
-  return { snapshot, ...(couponId ? { couponId } : {}), ...(normalizedCode ? { couponCode: normalizedCode } : {}) };
+  return { snapshot, ...(quoted ? { couponId: quoted.couponId, couponCode: quoted.code } : {}) };
 }
