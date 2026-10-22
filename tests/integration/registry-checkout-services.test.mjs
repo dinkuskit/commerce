@@ -948,6 +948,31 @@ test('a store upgrading from the three pass settings stays unavailable until it 
   } finally { await state.close(); }
 });
 
+test('a store upgrading from 0.4.0 keeps its catalog and saved checkout settings, never sends its pasted key, and works again after Connect', async () => {
+  const ship = shipStandIn();
+  // What 0.4.0 saved: the key pasted into its "storeKey" secret setting, and the pasted checkout settings.
+  const pasted = 'dk_store_' + 'p'.repeat(43);
+  const state = await runtimeFixture({ config: { ...configuration(), ship: SHIP }, storeKey: null, legacyPasses: { storeKey: pasted },
+    shipPass: await shipCredential(), shipService: ship.service });
+  try {
+    state.acceptStoreKey(pasted);
+    assert.equal((await state.invoke(PREPARE)).error.code, 'UNAVAILABLE');
+    assert.match(JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' })), /No orders recorded yet/);
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.deepEqual([state.counts.trades, state.outbound.length, ship.state.calls], [0, 0, 0], 'the pasted key is never traded, even though DinkusKit.com would still take it');
+    assert.equal(JSON.parse(await state.settings.get('installedCheckout')).ship.origin, SHIP.origin, 'the saved checkout settings are kept');
+    assert.equal((await state.collections.catalog_items.get('hat')).name, 'Hat', 'the catalog is kept');
+    // Connect saves Commerce's own key; checkout and Ship work again on it alone.
+    await state.settings.set('connection', connectionFor(STORE_KEY));
+    state.acceptStoreKey(STORE_KEY);
+    assert.equal((await start(state)).result.checkout.state, 'pending');
+    await shipAdmin(state, { type: 'page_load', page: '/orders' });
+    assert.ok(state.counts.transport >= 2 && ship.state.calls >= 1);
+    assert.ok(state.trades.every(trade => trade.authorization === 'Bearer ' + STORE_KEY));
+    assert.ok(state.outbound.every(request => !request.text.includes(pasted)));
+  } finally { await state.close(); }
+});
+
 test('country-rejected start recovers through read-only prepared status on the same capability', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());

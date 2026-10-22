@@ -156,6 +156,8 @@ export async function refreshCheckoutSettings(ctx: PluginContext, known?: { site
   const found = known ?? await storeKey(ctx), site = origin(ctx);
   if (!found || !site) return "not_connected";
   try {
+    // The revision is read before fetching, so a newer save made meanwhile is never overwritten by these settings.
+    const current = await ctx.settings!.getVersioned<unknown>(CHECKOUT_SETTING);
     const pass = await post(ctx, DINKUS + "/api/store-passes", { site_id: found.siteId, scope: "commerce:settings", audience: "dinkuskit" }, found.key);
     if (!pass.ok || !text(pass.body.access_token, 16384)) return typeof pass.body.error === "string" ? pass.body.error : "unavailable";
     const response = await ctx.http!.fetch(DINKUS + "/api/commerce-settings", { cache: "no-store", redirect: "error",
@@ -165,7 +167,6 @@ export async function refreshCheckoutSettings(ctx: PluginContext, known?: { site
     // The settings must be this store's; the documented turned-off form (admitted as null) is saved as it is.
     const admitted = admitRegistryCheckoutConfig(settings, site);
     if (admitted && admitted.siteId !== found.siteId) return "unavailable";
-    const current = await ctx.settings!.getVersioned<unknown>(CHECKOUT_SETTING);
     if (current?.value !== settings) await ctx.settings!.compareAndSet(CHECKOUT_SETTING, current?.revision ?? null, settings);
     return null;
   } catch { return "unavailable"; }

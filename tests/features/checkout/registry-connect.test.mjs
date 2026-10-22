@@ -143,6 +143,22 @@ test("checkout settings come from DinkusKit.com with a commerce:settings pass, n
   assert.equal(await refreshCheckoutSettings(host().ctx), "not_connected");
 });
 
+test("settings saved while a fetch is on its way are not overwritten by the older answer", async () => {
+  let h;
+  const newer = checkout({ shipping: { configurationId: "free", revision: 9, mode: "free" } });
+  h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: {
+    "/api/store-passes": { access_token: "pass.for.settings" },
+    "/api/commerce-settings": async () => {
+      // A second fetch (another tab, or the background check) saves newer settings first.
+      const current = h.stored.get("installedCheckout");
+      await h.ctx.settings.compareAndSet("installedCheckout", current?.revision ?? null, newer);
+      return new Response(checkout());
+    },
+  } });
+  assert.equal(await refreshCheckoutSettings(h.ctx), null);
+  assert.equal(h.stored.get("installedCheckout").value, newer);
+});
+
 test("the proof route vouches only for the Connect still waiting in the encrypted setting", async () => {
   const h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-connections": started() } });
   await startConnect(h.ctx);
