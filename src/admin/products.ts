@@ -2,7 +2,7 @@ import type { Block, BlockResponse } from "@emdash-cms/blocks";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
 import {
-  CatalogError, createCatalogItem, listCatalogProductSummaries, loadCatalogProduct, setCatalogProductOnSale,
+  CatalogError, createCatalogItem, listCatalogProductSummaries, loadCatalogProduct, editProduct,
   linkProductPage, pageProduct, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
@@ -213,12 +213,12 @@ async function sell(ctx: PluginContext, entryId: string, fields: Record<string, 
     const title = typeof fields.title === "string" && fields.title.trim() ? fields.title.trim().slice(0, 160) : "New product";
     id = (await createCatalogItem(store.catalog, { commandId: "page:" + command, name: title, sku: sku.trim() || skuFrom(title, command), fulfillment: "physical" },
       { collection: "catalog_items", pluginId: ctx.plugin?.id })).item.itemId;
-    await setCatalogProductOnSale(store.catalog, { catalogItemId: id, onSale: false });
+    await editProduct(store.catalog, id, item => ({ ...item, offSale: true }));
     toast = "Draft made. Save, then Publish to sell it.";
   }
   // The product view refuses a product that is gone, before anything is linked.
   const view = await product(ctx, id, undefined, toast);
-  await linkProductPage(store.pages, entryId, id);
+  await linkProductPage(store, entryId, id);
   return typed === id ? view : { ...view, patch: { type: "editor-draft-patch", operations: [{ op: "set", field: "commerce_item_id", value: id }] } };
 }
 /** The Dinkus Commerce panel on a product page: that page's price, sale, SKU, sizes, stock, weight and photos. */

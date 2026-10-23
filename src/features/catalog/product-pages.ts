@@ -1,7 +1,7 @@
 import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
-import { setCatalogProductOnSale } from "./product-edit.js";
+import { editProduct } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
@@ -9,11 +9,14 @@ import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
  * CMS: the page's own Commerce panel and the store's publish check tell it, so
  * Commerce Settings can list products without a page.
  *
- * Two kinds of row share the collection:
- * - `e:<entryId>`: the panel's note of the product an editor picked. It is only
- *   a convenience for reopening the panel and never decides who sells what.
- * - `<catalogItemId>`: which page sells the product, written only by the
- *   publish check, one row per product, so one product has one page.
+ * The page that sells a product is kept on the product itself (`pageId`), set
+ * by the publish check in the same write that puts it on sale or takes it off,
+ * so one product has one page and a page that lost a product can never change
+ * it again. Two kinds of row share this collection:
+ * - `e:<entryId>`: the panel's note of the product an editor picked. It only
+ *   reopens the panel and never decides who sells what.
+ * - `p:<entryId>`: the product the page's last publish check sold, so a page
+ *   that now sells another product gives the old one up.
  */
 export const PRODUCT_PAGES_COLLECTION = "product_pages";
 export interface ProductPageRecord {
@@ -29,17 +32,17 @@ function id(value: unknown, field: string): string {
 }
 const conflict = () => new CatalogError("PRODUCT_PAGE_CONFLICT", "Another page sells this product");
 
-/** The product a page's panel picked, else the one its publish check recorded. */
+/** The product a page's panel picked, else the one its publish check sold. */
 export async function pageProduct(pages: ProductPages, entryId: string): Promise<string | undefined> {
   const rows = (await pages.query({ where: { entryId }, limit: 10 })).items;
   return (rows.find(row => row.id.startsWith("e:")) ?? rows[0])?.data.catalogItemId;
 }
 
-/** The panel notes the product an editor picked; a product another page's publish check recorded is refused. */
-export async function linkProductPage(pages: ProductPages, entryId: string, catalogItemId: string): Promise<void> {
-  const owner = (await pages.get(catalogItemId))?.entryId;
+/** The panel notes the product an editor picked; a product another page sells is refused. */
+export async function linkProductPage(storage: { catalog: Catalog; pages: ProductPages }, entryId: string, catalogItemId: string): Promise<void> {
+  const owner = ((await storage.catalog.getVersioned(catalogItemId))?.value as CatalogItemRecord | undefined)?.pageId;
   if (owner && owner !== entryId) throw conflict();
-  await pages.put("e:" + entryId, { entryId, catalogItemId });
+  await storage.pages.put("e:" + entryId, { entryId, catalogItemId });
 }
 
 /** Every linked product id, so Settings can show the ones no page sells. */
@@ -57,25 +60,42 @@ export async function productPageLinks(pages: ProductPages): Promise<Set<string>
 /**
  * The store's publish check: publishing a product page puts its product on
  * sale; unpublishing or deleting the page takes it back to Draft. The page is
- * required, the whole request and the product are checked before any write,
- * and the page claims the product in one conditional write, so a product
- * another page sells is refused. A page that now sells another product gives
- * up its old one, and a deleted page drops its rows; each removal is
- * conditional on the row still being that page's.
+ * required and the whole request is checked before any write. The product's
+ * page and its sale state change in one conditional write, refused when
+ * another page sells it. The page's own pointer then moves to this product
+ * from the revision read before, so of two overlapping checks for one page
+ * only one lands; the other gives its product back and is refused. A product
+ * the page no longer sells, or every product of a deleted page, goes back to
+ * Draft with no page.
  */
 export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages }, input: unknown): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
-  const catalogItemId = id(input.catalogItemId, "catalogItemId"), entryId = id(input.entryId, "entryId"), { pages } = storage;
-  if (typeof input.onSale !== "boolean" || (input.deleted !== undefined && (input.deleted !== true || input.onSale))) throw new CatalogError("INVALID_INPUT", "Invalid onSale");
-  const item = (await storage.catalog.getVersioned(catalogItemId))?.value as CatalogItemRecord | undefined;
-  if (item?.recordKind !== "catalog-item" || item.variantProductId) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
-  const owner = await pages.getVersioned(catalogItemId);
-  if (owner ? owner.value.entryId !== entryId : !(await pages.compareAndSet(catalogItemId, null, { entryId, catalogItemId })).applied) throw conflict();
-  const changed = await setCatalogProductOnSale(storage.catalog, { catalogItemId, onSale: input.onSale });
-  for (const row of (await pages.query({ where: { entryId }, limit: 10 })).items) {
-    if (row.id === catalogItemId && !input.deleted) continue;
-    const mine = await pages.getVersioned(row.id);
-    if (mine?.value.entryId === entryId) await pages.compareAndDelete(row.id, mine.revision);
+  const catalogItemId = id(input.catalogItemId, "catalogItemId"), entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
+  const { onSale, deleted } = input;
+  if (typeof onSale !== "boolean" || (deleted !== undefined && (deleted !== true || onSale))) throw new CatalogError("INVALID_INPUT", "Invalid onSale");
+  const mine = await pages.getVersioned(key);
+  let changed = false;
+  // Only while this page still sells it: give a product back, off the shop with no page.
+  const release = (itemId: string) => editProduct(catalog, itemId, item => {
+    if (item.pageId !== entryId) return null;
+    const { pageId: _page, ...rest } = item;
+    return { ...rest, offSale: true };
+  });
+  await editProduct(catalog, catalogItemId, item => {
+    if (item.pageId && item.pageId !== entryId) throw conflict();
+    const { offSale: _off, pageId: _page, ...rest } = item;
+    changed = !item.offSale !== onSale;
+    const next: CatalogItemRecord = { ...rest, ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId }) };
+    return changed || item.pageId !== next.pageId ? next : null;
+  });
+  const moved = deleted ? !mine || (await pages.compareAndDelete(key, mine.revision)).applied
+    : (await pages.compareAndSet(key, mine?.revision ?? null, { entryId, catalogItemId })).applied;
+  if (!moved && (await pages.get(key))?.catalogItemId !== catalogItemId) {
+    await release(catalogItemId);
+    throw conflict();
   }
+  const old = mine?.value.catalogItemId;
+  if (old && old !== catalogItemId) await release(old);
+  if (deleted) await pages.delete("e:" + entryId);
   return { changed };
 }

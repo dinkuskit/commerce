@@ -96,3 +96,22 @@ while another page only noted it. Unit 680 of 681 (the native-consumer
 teardown signal test this container cannot run), integration 105 of 105,
 Playwright 10 of 10 (the sandbox walk now expects only the owner row after the
 publish check). Registry backend 131059 bytes, 13 bytes under the limit.
+
+## Review fixes, round 6
+
+The page that sells a product now lives on the product (`pageId`), changed in
+the same conditional write as its sale state, so a stale request from a page
+that lost the product is refused at the write that would change it. Each
+page's pointer (`p:<entryId>`) moves by revision, so the later of two
+overlapping checks for one page gives its product back instead of deleting the
+other check's link. A product a page gives up goes back to Draft with no page.
+Unit tests cover a delayed unpublish and delete after reassignment (refused,
+product unchanged), overlapping checks for one page, two pages claiming at
+once, and an unsaved relink. The sandbox walk now proves reassignment against
+the real EmDash runtime through the production route: the page is deleted
+(product Draft, no page), a second page takes the product, the first page's
+delayed unpublish is refused with the conflict reason, and the product keeps
+the second page and stays on sale. Unit 681 of 682 (the native-consumer
+teardown signal test this container cannot run), integration 105 of 105,
+Playwright 10 of 10. Registry backend 131020 bytes, 52 bytes under the limit
+(the panel's new-Draft write now reuses the product edit helper).

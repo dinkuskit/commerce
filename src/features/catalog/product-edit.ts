@@ -10,7 +10,7 @@ type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "c
  * choices: the shop, cart and checkout read the name and archive state from it.
  * One compare-and-set per edit, so two edits can never leave a mix.
  */
-async function editProduct(catalog: Catalog, catalogItemId: unknown,
+export async function editProduct(catalog: Catalog, catalogItemId: unknown,
   edit: (item: CatalogItemRecord) => CatalogItemRecord | null): Promise<boolean> {
   if (typeof catalogItemId !== "string" || !catalogItemId || catalogItemId.length > 1024) throw new CatalogError("INVALID_INPUT", "catalogItemId must be a valid itemId");
   for (let attempt = 0; attempt < 4; attempt += 1) {

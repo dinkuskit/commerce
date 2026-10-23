@@ -101,8 +101,24 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
       expect(JSON.stringify(refusal)).toContain("Another page sells this product");
     }
     expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
-    // The publish check recorded the page that sells it and replaced the panel's note.
-    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id }]);
+    // The product records the page that sells it; product_pages keeps the panel's note and the page's pointer.
+    expect(raw("catalog_items")[0].pageId).toBe(pageId);
+    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id }, { entryId: pageId, catalogItemId: id }]);
+    // Reassignment: once the page is deleted, another page takes the product, and the old page's delayed request is refused.
+    const competingPage = "01COMPETINGPAGE000000000000";
+    const post = (body) => page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { data: { catalogItemId: id, ...body }, headers: { "X-EmDash-Request": "1" } });
+    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: false, deleted: true })).toEqual({ changed: true });
+    expect(raw("catalog_items")[0]).toMatchObject({ offSale: true });
+    expect(raw("catalog_items")[0]).not.toHaveProperty("pageId");
+    expect(await setOnSale(page.request, { catalogItemId: id, entryId: competingPage, onSale: true })).toEqual({ changed: true });
+    const stale = await post({ entryId: pageId, onSale: false });
+    expect(stale.status()).toBe(400);
+    expect(JSON.stringify(await stale.json())).toContain("Another page sells this product");
+    expect(raw("catalog_items")[0].pageId).toBe(competingPage);
+    expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
+    // Hand it back for the rest of the walk.
+    await setOnSale(page.request, { catalogItemId: id, entryId: competingPage, onSale: false, deleted: true });
+    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: true })).toEqual({ changed: true });
     await page.reload();
     panel = await openPanel(page);
     await expect(panel.getByText(/^On sale/)).toBeVisible();

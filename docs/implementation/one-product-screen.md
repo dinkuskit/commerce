@@ -68,28 +68,31 @@ The store's publish check calls the private route `catalog-items/set-on-sale`
 - `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
   which also drops the page's link.
 
-One product has one page, and only the publish check decides which.
+One product has one page, and only the publish check decides which. The
+product itself records the page that sells it (`pageId`), and the check
+changes that page and the sale state in one conditional write on the product.
+A check from any other page is refused there with `PRODUCT_PAGE_CONFLICT` (409
+from the native route; a sandboxed route answers 400 with the same reason), so
+a page that lost its product, even with a request already in flight, can never
+change it again.
+
 `product_pages` holds two kinds of row:
 
 - `e:<entryId>`: the panel's note of the product an editor picked. It reopens
   the panel and keeps the product off "Products without a page", and never
-  decides who sells it. Two unsaved pages may both note one product.
-- `<catalogItemId>`: the page that sells the product, written only by the
-  publish check with one conditional create (`compareAndSet`), so two pages
-  can never both hold it.
+  decides who sells it. An unsaved relink changes only this note, and the
+  panel refuses a product another page sells.
+- `p:<entryId>`: the product the page's last publish check sold. Each check
+  moves it with one conditional write from the revision it read before
+  claiming, so of two overlapping checks for one page only one lands; the
+  other gives its product back and is refused.
 
-The page id is required. The publish check validates the whole request, and
-that the id is a product (not a variant member), before it writes anything,
-so a refused call leaves the rows as they were. A page with no owner row (for
+The page id is required, and the whole request is checked before any write;
+a variant member is refused as not found. A product the page no longer sells,
+and the product of a deleted page, go back to Draft with no page, but only
+while the product still names that page. A page with no recorded product (for
 example one published before links existed) claims its product on its next
-publish check, so it can always withdraw it. A product another page sells is
-refused with `PRODUCT_PAGE_CONFLICT` (409 from the native route; a sandboxed
-route answers 400 with the same reason), in the panel and in the publish
-check. An unsaved relink in the panel changes only the note, so the page that
-sells the product keeps it. After a successful check the page's other rows (its
-note, a product it no longer sells, or all of them when the page is deleted)
-are removed, each only while a re-read shows it is still that page's row
-(`compareAndDelete` on its revision). Commerce never reads the CMS. The store template owns that call.
+check, so it can always withdraw it. Commerce never reads the CMS. The store template owns that call.
 
 ## Sidebar folders
 

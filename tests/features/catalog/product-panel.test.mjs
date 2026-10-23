@@ -89,18 +89,18 @@ test('picking a product without a page links it, and a page already holding that
   const moved = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx, 'page-2');
   assert.notEqual(moved.toast?.type, 'error', JSON.stringify(moved.toast));
   assert.equal(await pageProduct(pages, 'page-2'), 'mug');
-  assert.equal(await pages.get('mug'), null, 'no panel step decides who sells it');
+  assert.equal((await ctx.storage.catalog_items.get('mug')).pageId, undefined, 'no panel step decides who sells it');
   // ...but once page-2's publish check records it, page-3 naming the product is refused and notes nothing.
   await setProductPageOnSale({ catalog: ctx.storage.catalog_items, pages }, { catalogItemId: 'mug', entryId: 'page-2', onSale: true });
-  assert.deepEqual(await pages.get('mug'), { entryId: 'page-2', catalogItemId: 'mug' });
-  assert.equal(await pages.get('e:page-2'), null, 'the publish check replaces the page\'s note');
+  assert.equal((await ctx.storage.catalog_items.get('mug')).pageId, 'page-2');
+  assert.deepEqual(await pages.get('p:page-2'), { entryId: 'page-2', catalogItemId: 'mug' });
   const typed = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx, 'page-3');
   assert.equal(typed.toast?.type, 'error');
   assert.match(typed.toast.message, /Another page sells this product/);
   assert.equal(await pageProduct(pages, 'page-3'), undefined);
   // page-1's own publish check is refused too, and page-2 keeps the product.
   await assert.rejects(setProductPageOnSale({ catalog: ctx.storage.catalog_items, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: false }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
-  assert.deepEqual(await pages.get('mug'), { entryId: 'page-2', catalogItemId: 'mug' });
+  assert.equal((await ctx.storage.catalog_items.get('mug')).pageId, 'page-2');
   const unlinkedCount = (await panel({ type: 'panel_load' }, ctx, 'page-3'));
   assert.doesNotMatch(texts(unlinkedCount.blocks), /"mug"/, 'a linked product leaves the without-a-page list');
 });
@@ -216,38 +216,49 @@ test('upgrade: a published page with no link can still withdraw its product afte
   await panel({ type: 'form_submit', action_id: 'link', values: { product: 'mug' }, draft: { fields: {} } }, ctx, 'page-new');
   assert.equal(await pageProduct(pages, 'page-new'), 'mug');
   assert.deepEqual(await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-old', onSale: false }), { changed: true });
-  assert.deepEqual(await pages.get('mug'), { entryId: 'page-old', catalogItemId: 'mug' }, 'the publish check records the page that names it');
+  assert.equal((await catalog.get('mug')).pageId, 'page-old', 'the publish check records the page that names it');
   await assert.rejects(setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-new', onSale: true }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
 });
 
 test('two pages claiming one product at once: only one claim lands', async () => {
   const { catalog, pages } = await shop();
-  const read = pages.getVersioned.bind(pages);
-  // Both pages read the product as unclaimed before either writes.
-  pages.getVersioned = async () => null;
   const claims = await Promise.allSettled(['page-a', 'page-b'].map((entryId) => setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId, onSale: true })));
-  pages.getVersioned = read;
   assert.deepEqual(claims.map((c) => c.status).sort(), ['fulfilled', 'rejected']);
   assert.equal(claims.find((c) => c.status === 'rejected').reason.code, 'PRODUCT_PAGE_CONFLICT');
-  assert.equal(pages.records.size, 1);
+  const owner = (await catalog.get('mug')).pageId;
+  assert.deepEqual([...pages.records.keys()], ['p:' + owner]);
 });
 
-test('an unsaved relink keeps the page that sells the product, and cleanup never removes another page\'s row', async () => {
+test('a page that gave its product up can never change it again, even with a request already in flight', async () => {
   const { ctx, catalog, pages } = await shop();
   await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
   await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
-  // The editor picks another product in the panel but never saves: the shop still knows page-1 sells the mug.
+  // An unsaved relink in the panel changes only the note: page-1 still sells the mug.
   await panel({ type: 'form_submit', action_id: 'link', values: { product: 'cap' }, draft: { fields: {} } }, ctx, 'page-1');
-  assert.equal(await pageProduct(pages, 'page-1'), 'cap');
-  assert.deepEqual(await pages.get('mug'), { entryId: 'page-1', catalogItemId: 'mug' });
-  assert.deepEqual(await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: false }), { changed: true });
-  // A cleanup that read page-1's row before page-2 took the product over removes nothing of page-2's.
-  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'cap', entryId: 'page-2', onSale: true });
-  const query = pages.query.bind(pages);
-  pages.query = async (options) => options?.where?.entryId === 'page-1' ? { items: [{ id: 'cap', data: { entryId: 'page-1', catalogItemId: 'cap' } }], hasMore: false } : query(options);
-  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: false, deleted: true });
-  pages.query = query;
-  assert.deepEqual(await pages.get('cap'), { entryId: 'page-2', catalogItemId: 'cap' });
+  assert.equal((await catalog.get('mug')).pageId, 'page-1');
+  // page-1 is published again selling the cap: the mug goes back to Draft with no page, and page-2 takes it.
+  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'cap', entryId: 'page-1', onSale: true });
+  assert.deepEqual([(await catalog.get('mug')).pageId, (await catalog.get('mug')).offSale], [undefined, true]);
+  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-2', onSale: true });
+  // page-1's old unpublish, delayed until now, is refused in the same write that would change the mug.
+  const before = await catalog.get('mug');
+  for (const body of [{ onSale: false }, { onSale: false, deleted: true }]) {
+    await assert.rejects(setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', ...body }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
+  }
+  assert.deepEqual(await catalog.get('mug'), before);
+  assert.equal((await catalog.get('cap')).pageId, 'page-1');
+});
+
+test('of two overlapping publish checks for one page, the late one gives its product back', async () => {
+  const { catalog, pages } = await shop();
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  // The cap check reads the page's pointer, then the mug check runs to the end before the cap check writes.
+  const read = pages.getVersioned.bind(pages);
+  pages.getVersioned = async (key) => { pages.getVersioned = read; await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: true }); return null; };
+  await assert.rejects(setProductPageOnSale({ catalog, pages }, { catalogItemId: 'cap', entryId: 'page-1', onSale: true }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
+  assert.deepEqual(await pages.get('p:page-1'), { entryId: 'page-1', catalogItemId: 'mug' });
+  assert.equal((await catalog.get('mug')).pageId, 'page-1');
+  assert.deepEqual([(await catalog.get('cap')).pageId, (await catalog.get('cap')).offSale], [undefined, true]);
 });
 
 test('a variant member is refused before any link changes', async () => {

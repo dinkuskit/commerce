@@ -72,6 +72,8 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   archivedAt?: string;
   /** Set while the product is a Draft: off the shop and not for sale until the store's publish check puts it on sale. */
   offSale?: true;
+  /** The product page whose publish check sells it; set only by that check. */
+  pageId?: string;
 }
 
 export type CatalogFulfillment = "physical" | "digital";
