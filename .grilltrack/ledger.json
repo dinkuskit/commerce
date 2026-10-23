@@ -2,13 +2,13 @@
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
-    "cadence": "sequential",
+    "cadence": "frontier-batch",
     "confirmed": true,
-    "confirmed_at": "2026-10-22T21:14:21+00:00",
-    "domain": "Multi-option product variants (Size x Color) in Commerce",
-    "started_at": "2026-10-22T21:14:01+00:00",
+    "confirmed_at": "2026-10-23T19:30:30+00:00",
+    "domain": "One product screen, product states and plugin sidebar folders",
+    "started_at": "2026-10-23T19:30:29+00:00",
     "status": "confirmed",
-    "summary": "Ronald chose 'Lock as built' on the multi-option limits card (Commerce 165 and 173 landing thread, 22 Oct 2026 21:13 UTC)."
+    "summary": "Ronald said 'lock it' at 19:29 UTC 23 Oct 2026 in the playground thread after agreeing the one-tab design (18:54), picking per-plugin sidebar folders with his own page names (19:28) and reviewing product states; Ship's page named Shipments as offered."
   },
   "decisions": [
     {
@@ -112,6 +112,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T19:30:51+00:00",
+          "choice": "Yes. Products includes Add product with Name and SKU. After creation open the product for pricing. Manage stock defaults off; creation needs neither developer work nor Inventory setup. Name is the customer-facing product title and supplies the H1 on its customer-facing product page, not a separate internal label. This title contract does not by itself authorize building a new storefront product page in this admin slice.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/sandbox-admin.md",
+          "note": "The Commerce Products page is removed; adding and pricing move into the Content > Products editor panel and Make this sellable links the id (Ronald, 23 Oct 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "block-admin-create-002",
@@ -149,9 +163,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
+      "status": "superseded",
+      "superseded_by": "catalog-products-page-removed-20261023",
+      "updated_at": "2026-10-23T19:30:51+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
@@ -487,6 +501,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T19:30:51+00:00",
+          "choice": "Yes. Preserve the current Products workflow: open a product, type Regular and Sale, and use one Save for prices, Manage stock and unmanaged stock status. Replace native React rendering with host-rendered Block Kit JSON; preserve catalog kernel contracts.",
+          "from": "verified",
+          "implementation_ref": "file:package.json file:src/admin/index.ts file:docs/implementation/emdash-1-0-1-compatibility.md",
+          "note": "The Commerce Products page is removed; adding and pricing move into the Content > Products editor panel and Make this sellable links the id (Ronald, 23 Oct 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "block-admin-save-001",
@@ -560,9 +588,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:43+00:00",
+      "status": "superseded",
+      "superseded_by": "catalog-products-page-removed-20261023",
+      "updated_at": "2026-10-23T19:30:51+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
@@ -12940,6 +12968,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T19:30:51+00:00",
+          "choice": "Yes. Both admins rename a product (same name rules as Add product). The name changes on the product and each of its choices, so the Shop card, cart, checkout and new orders use it; it stays the product page heading per block-admin-create-002. Paid orders keep the name stored on each order line when bought. The first creationPayload is kept.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/product-rename-archive.md",
+          "note": "dependency block-admin-create-002 changed: The Commerce Products page is removed; adding and pricing move into the Content > Products editor panel and Make this sellable links the id (Ronald, 23 Oct 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
         }
       ],
       "id": "catalog-product-rename-001",
@@ -12952,9 +12994,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-17T21:18:03+00:00",
+      "updated_at": "2026-10-23T19:30:51+00:00",
       "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
     },
     {
@@ -13078,6 +13120,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T19:30:52+00:00",
+          "choice": "Each product's admin page shows its product id in a box. The native admin adds a copy button; the Registry admin shows a Block Kit code block because EmDash 1.2.0 Block Kit has no copy element. No picker in this slice.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/product-rename-archive.md",
+          "note": "The Commerce Products page is removed; adding and pricing move into the Content > Products editor panel and Make this sellable links the id (Ronald, 23 Oct 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
         }
       ],
       "id": "catalog-product-id-visible-001",
@@ -13090,9 +13146,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-17T21:18:03+00:00",
+      "status": "superseded",
+      "superseded_by": "catalog-products-page-removed-20261023",
+      "updated_at": "2026-10-23T19:30:52+00:00",
       "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
     },
     {
@@ -14043,6 +14099,177 @@
       "superseded_by": null,
       "updated_at": "2026-10-22T21:14:21+00:00",
       "verification_ref": "commerce#173 head 4618b38: verify-commerce quick 660/660, tests/sandbox/variant-checkout.spec.mjs 4/4 (sandbox and native-variant), registry_bundle=pass backend_bytes=130340 headroom_bytes=732"
+    },
+    {
+      "baseline_ref": "git:9860194",
+      "candidate_refs": [],
+      "choice": "Each plugin puts its admin pages in a sidebar folder named after the plugin, using EmDash 1.2.0 page groups (emdash#3546): Dinkus Commerce > Commerce settings; Dinkus Payments > Payment settings; Dinkus Ship > Shipments (Ship's page lists paid orders and buys labels). Content keeps Pages, Posts, Products and Categories. The playground's tour page sits in its own Playground folder. Payments and Ship adopt their folder in their next releases.",
+      "context_ref": "https://claude.ai/artifact/65TfhB7RTAhaWdXf7L8kn8",
+      "created_at": "2026-10-23T19:30:50+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-23T19:30:50+00:00",
+          "choice": "Each plugin puts its admin pages in a sidebar folder named after the plugin, using EmDash 1.2.0 page groups (emdash#3546): Dinkus Commerce > Commerce settings; Dinkus Payments > Payment settings; Dinkus Ship > Shipments (Ship's page lists paid orders and buys labels). Content keeps Pages, Posts, Products and Categories. The playground's tour page sits in its own Playground folder. Payments and Ship adopt their folder in their next releases.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "admin-sidebar-plugin-folders-20261023",
+      "implementation_ref": null,
+      "question": "How do our plugins' admin pages appear in the EmDash sidebar?",
+      "rationale": "Ronald could not tell which plugin owned 'Products' and 'Store'; he picked one folder per plugin with these names (19:28 UTC 23 Oct 2026).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-23T19:30:50+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:9860194",
+      "candidate_refs": [],
+      "choice": "Content > Products is the one product screen. Commerce adds an EmDash editor panel (admin.editorPanels, emdash#3188/#3251) to the products collection editor showing that product's price, sale price, SKU, sizes/options, stock, weight and photos, saved to Commerce by the panel. An unlinked product page shows Make this sellable, which creates the Commerce product (name from the page title) and fills the page's commerce_item_id through the declared editor-draft patch, so nobody copies an ID. Commerce gains no content read/write access; EmDash draws the panel from Commerce's private routes, and the page is saved only when the merchant presses Save. Renaming keeps catalog-product-rename-001.",
+      "context_ref": "https://claude.ai/artifact/65TfhB7RTAhaWdXf7L8kn8",
+      "created_at": "2026-10-23T19:30:51+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-product-page-boundary-058"
+      ],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-23T19:30:51+00:00",
+          "choice": "Content > Products is the one product screen. Commerce adds an EmDash editor panel (admin.editorPanels, emdash#3188/#3251) to the products collection editor showing that product's price, sale price, SKU, sizes/options, stock, weight and photos, saved to Commerce by the panel. An unlinked product page shows Make this sellable, which creates the Commerce product (name from the page title) and fills the page's commerce_item_id through the declared editor-draft patch, so nobody copies an ID. Commerce gains no content read/write access; EmDash draws the panel from Commerce's private routes, and the page is saved only when the merchant presses Save. Renaming keeps catalog-product-rename-001.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-one-product-screen-20261023",
+      "implementation_ref": null,
+      "question": "Where does a merchant edit a product?",
+      "rationale": "One product screen like Shopify, WooCommerce and BigCommerce; every product stays a CMS page (cms-page-mapping rule). Ronald 18:52 to 19:29 UTC 23 Oct 2026.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-23T19:30:51+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:9860194",
+      "candidate_refs": [],
+      "choice": "Remove it from both the native and Block Kit admins. Commerce settings gains a Products without a page list (Commerce products no product page links to) with a button that starts a product page for it. Adding, pricing, stock and archiving move into the editor panel per catalog-one-product-screen-20261023.",
+      "context_ref": "https://claude.ai/artifact/65TfhB7RTAhaWdXf7L8kn8",
+      "created_at": "2026-10-23T19:30:51+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-one-product-screen-20261023"
+      ],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-23T19:30:51+00:00",
+          "choice": "Remove it from both the native and Block Kit admins. Commerce settings gains a Products without a page list (Commerce products no product page links to) with a button that starts a product page for it. Adding, pricing, stock and archiving move into the editor panel per catalog-one-product-screen-20261023.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-products-page-removed-20261023",
+      "implementation_ref": null,
+      "question": "What happens to the separate Commerce Products admin page?",
+      "rationale": "Ronald agreed 18:54 UTC 23 Oct 2026; the list keeps orphan products findable.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-23T19:30:51+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:9860194",
+      "candidate_refs": [],
+      "choice": "One status on the product screen that both follow. Draft: not in the shop and cannot be bought (new products start here, including after Make this sellable). Published: in the shop and buyable; EmDash Schedule publishes at a set time. Archived: catalog-product-archive-001, and Restore returns the product as Draft. Commerce gets an on-sale flag that checkout and public lookup respect; the store's publish check turns it on when the product page is published and off when it is unpublished or deleted, through an explicit host-provided call, so Commerce still never reads CMS state. Products whose page is already published stay on sale. Not now: Unlisted (link only), Pending review, Private.",
+      "context_ref": "https://claude.ai/artifact/65TfhB7RTAhaWdXf7L8kn8",
+      "created_at": "2026-10-23T19:30:51+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-product-page-boundary-058",
+        "catalog-product-archive-001"
+      ],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-23T19:30:51+00:00",
+          "choice": "One status on the product screen that both follow. Draft: not in the shop and cannot be bought (new products start here, including after Make this sellable). Published: in the shop and buyable; EmDash Schedule publishes at a set time. Archived: catalog-product-archive-001, and Restore returns the product as Draft. Commerce gets an on-sale flag that checkout and public lookup respect; the store's publish check turns it on when the product page is published and off when it is unpublished or deleted, through an explicit host-provided call, so Commerce still never reads CMS state. Products whose page is already published stay on sale. Not now: Unlisted (link only), Pending review, Private.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-product-states-20261023",
+      "implementation_ref": null,
+      "question": "What states does a product have, and how do the page and Commerce agree?",
+      "rationale": "Shopify ProductStatus (ACTIVE/DRAFT/ARCHIVED/UNLISTED), WooCommerce status (draft/pending/private/publish); today a draft page hides only the page while Commerce would still sell the item by id. Ronald locked 19:29 UTC 23 Oct 2026.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-23T19:30:51+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -14079,5 +14306,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-22T21:14:21+00:00"
+  "updated_at": "2026-10-23T19:30:52+00:00"
 }
