@@ -111,7 +111,7 @@ for the same page):
   then moves elsewhere or is deleted, that product is not given back.
 
 In both cases the product keeps its page record, and another page asking for
-it is refused, so republishing the page or archiving the product clears it.
+it is refused; archiving the product in its panel or the native screen takes it off the shop.
 Ordering checks by the page's version would close both, at the cost of a
 template change and bundle room this build does not have. Commerce never reads the CMS. The store template owns that call.
 
