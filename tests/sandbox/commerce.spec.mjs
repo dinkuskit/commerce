@@ -92,6 +92,16 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     // The store's publish check puts the product on sale when its page is published.
     expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: true })).toEqual({ changed: true });
     expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
+    // Another page naming this product is refused before any write, whichever way it asks.
+    for (const body of [{ onSale: false }, { onSale: true }, { onSale: false, deleted: true }]) {
+      const competing = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { data: { catalogItemId: id, entryId: "01COMPETINGPAGE000000000000", ...body }, headers: { "X-EmDash-Request": "1" } });
+      const refusal = await competing.json();
+      // A sandboxed route answers a refused call with 400; the reason names the conflict.
+      expect(competing.status()).toBe(400);
+      expect(JSON.stringify(refusal)).toContain("Another page sells this product");
+    }
+    expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
+    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id }]);
     await page.reload();
     panel = await openPanel(page);
     await expect(panel.getByText(/^On sale/)).toBeVisible();

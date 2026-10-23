@@ -79,11 +79,28 @@ test('picking a product without a page links it, and a page already holding that
   assert.notEqual(linked.toast?.type, 'error', JSON.stringify(linked));
   assert.equal(linked.patch.operations[0].value, 'mug');
   assert.equal((await pages.get('page-1')).catalogItemId, 'mug');
+  const same = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx);
+  assert.equal(same.patch, undefined, 'a page already holding the id gets no patch');
+  // One product has one page: a second page naming it is refused and links nothing.
   const typed = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx, 'page-2');
-  assert.equal(typed.patch, undefined);
-  assert.equal((await pages.get('page-2')).catalogItemId, 'mug');
+  assert.equal(typed.toast?.type, 'error');
+  assert.match(typed.toast.message, /Another page sells this product/);
+  assert.equal(await pages.get('page-2'), null);
   const unlinkedCount = (await panel({ type: 'panel_load' }, ctx, 'page-3'));
   assert.doesNotMatch(texts(unlinkedCount.blocks), /"mug"/, 'a linked product leaves the without-a-page list');
+});
+
+test('a typed SKU sells a product the list does not show', async () => {
+  const { ctx, catalog, pages } = await shop();
+  for (let i = 0; i < 55; i++) await createCatalogItem(catalog, { commandId: 'create-' + i, name: 'Tee ' + i, sku: 'TEE-' + i, fulfillment: 'physical' }, { createId: () => 'tee-' + i, collection: 'catalog_items' });
+  const list = await panel({ type: 'panel_load' }, ctx);
+  assert.equal(list.blocks.find((block) => block.block_id?.startsWith('link-')).fields[0].options.length, 50);
+  const out = await panel({ type: 'form_submit', action_id: 'link', values: { sku: ' tee-3 ' }, draft: { fields: {} } }, ctx);
+  assert.notEqual(out.toast?.type, 'error', JSON.stringify(out.toast));
+  assert.equal((await pages.get('page-1')).catalogItemId, 'tee-3');
+  const missing = await panel({ type: 'form_submit', action_id: 'link', values: { sku: 'NOPE' }, draft: { fields: {} } }, ctx, 'page-2');
+  assert.equal(missing.toast?.type, 'error');
+  assert.equal(await pages.get('page-2'), null);
 });
 
 test('a refused Make this sellable keeps the typed SKU', async () => {
@@ -162,6 +179,18 @@ test('the publish check puts a product on sale and back to Draft, and a deleted 
   assert.equal(await pages.get('page-1'), null);
   await assert.rejects(setProductPageOnSale(storage, { catalogItemId: id, onSale: true, deleted: true }), (error) => error.code === 'INVALID_INPUT');
   await assert.rejects(setProductPageOnSale(storage, { catalogItemId: ' ', onSale: true }), (error) => error.code === 'INVALID_INPUT');
+});
+
+test('the page that sells a product can always take it off sale, whatever other pages name it', async () => {
+  const { catalog, pages } = await shop();
+  const storage = { catalog, pages };
+  await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
+  await assert.rejects(setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale: true }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
+  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: false }), { changed: true });
+  await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: false, deleted: true });
+  assert.equal(await pages.get('page-1'), null);
+  // Once its page is gone, another page may sell it.
+  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale: true }), { changed: true });
 });
 
 test('a page naming a product another page sells changes nothing', async () => {

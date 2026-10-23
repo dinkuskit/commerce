@@ -22,8 +22,12 @@ function id(value: unknown, field: string): string {
   return value.trim();
 }
 
-export function linkProductPage(pages: ProductPages, entryId: string, catalogItemId: string): Promise<void> {
-  return pages.put(entryId, { entryId, catalogItemId });
+/** Links a page to its product. One product has one page: a product another page sells is refused. */
+export async function linkProductPage(pages: ProductPages, entryId: string, catalogItemId: string): Promise<void> {
+  if ((await pages.query({ where: { catalogItemId }, limit: 2 })).items.some(row => row.id !== entryId)) {
+    throw new CatalogError("PRODUCT_PAGE_CONFLICT", "Another page sells this product");
+  }
+  await pages.put(entryId, { entryId, catalogItemId });
 }
 
 /** Every linked product id, so Settings can show the ones no page sells. */
@@ -50,12 +54,8 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
   const entryId = input.entryId === undefined ? undefined : id(input.entryId, "entryId");
   if (input.deleted !== undefined && (input.deleted !== true || input.onSale !== false || !entryId)) throw new CatalogError("INVALID_INPUT", "Invalid deleted");
   // A page can only change the product it sells: one another page already sells is refused before any write.
-  if (entryId && (await storage.pages.query({ where: { catalogItemId }, limit: 2 })).items.some(row => row.id !== entryId)) {
-    throw new CatalogError("PRODUCT_PAGE_CONFLICT", "Another page sells this product");
-  }
+  if (entryId) await linkProductPage(storage.pages, entryId, catalogItemId);
   const changed = await setCatalogProductOnSale(storage.catalog, { catalogItemId, onSale: input.onSale });
-  if (entryId && input.deleted) {
-    if ((await storage.pages.get(entryId))?.catalogItemId === catalogItemId) await storage.pages.delete(entryId);
-  } else if (entryId) await linkProductPage(storage.pages, entryId, catalogItemId);
+  if (entryId && input.deleted) await storage.pages.delete(entryId);
   return { changed };
 }

@@ -192,7 +192,8 @@ async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.r
     { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
       submit: { label: "Make this sellable", action_id: "sell:" + command } },
     ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
-      label: "Or sell a product without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) }],
+      label: "Or sell a product without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
+      { type: "text_input" as const, action_id: "sku", label: "Or its SKU" }],
       submit: { label: "Sell it here", action_id: "link" } }] : []),
   ] };
 }
@@ -228,7 +229,11 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
   try {
     const draft = input.draft as Draft | undefined, fields = draft?.fields ?? {}, action = String(input.action_id ?? "");
     if (action.startsWith("sell")) return await sell(ctx, entryId, fields, undefined, text(object(input.values).sku ?? ""), command(action));
-    if (action === "link") return await sell(ctx, entryId, fields, text(object(input.values).product));
+    if (action === "link") {
+      // A typed SKU reaches every product, past the 50 the list shows.
+      const v = object(input.values), sku = String(v.sku ?? "").trim().toUpperCase();
+      return await sell(ctx, entryId, fields, sku ? (await listCatalogProductSummaries(storage(ctx).catalog)).find(p => p.sku.toUpperCase() === sku)?.catalogItemId ?? sku : text(v.product));
+    }
     const linked = (await storage(ctx).pages.get(entryId))?.catalogItemId;
     if (input.type === "panel_load") return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
     // The editor's commerce_item_id wins: a page saved before the link list existed, a changed id, or a declined

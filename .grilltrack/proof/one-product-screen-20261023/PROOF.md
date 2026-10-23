@@ -4,7 +4,7 @@ Run locally on 23 Oct 2026 with Node 24.22.0, EmDash 1.2.0, on this branch.
 
 ## Registry bundle
 
-`npm run build`: `registry_bundle=pass backend_bytes=130682 headroom_bytes=390` (after the review fixes; 216 after the native Restore fix and the page-conflict check).
+`npm run build`: `registry_bundle=pass backend_bytes=130682 headroom_bytes=390` (after the review fixes; 59 after the native Restore fix, the one-page-per-product check and SKU linking).
 `emdash-plugin validate` accepts the editor panel, the page groups and the two
 editor-draft capabilities.
 
@@ -60,3 +60,14 @@ untouched, and a declined or unsaved link is offered again; archived products
 without a page stay listed, marked "(archived)", in the panel and in Commerce
 settings. The sandbox browser run (10 of 10) saves the editor after applying
 the link, as an owner does.
+
+## Review fixes, round 3
+
+One product has one page: `linkProductPage` refuses a product another page
+links (`PRODUCT_PAGE_CONFLICT`), so the selling page can always take it off
+sale and a second page can never flip it. Unit tests cover the panel refusal,
+the selling page withdrawing while another page names the product, and a
+typed SKU linking a product past the 50 the list shows. The sandbox browser
+run posts `set-on-sale` from a competing page id for publish, unpublish and
+delete against the real EmDash runtime: each is refused with the conflict
+reason, the product stays on sale and `product_pages` keeps only its page.

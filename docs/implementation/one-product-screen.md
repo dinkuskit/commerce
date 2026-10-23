@@ -12,7 +12,8 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
 `admin.editor-draft:read` and `admin.editor-draft:patch` capabilities.
 
 - A page with no product shows "Make this sellable" with an optional SKU, and,
-  when any exist, a list of products without a page ("Sell it here").
+  when any exist, a list of products without a page ("Sell it here"). The
+  list shows 50; typing a product's SKU there reaches every product.
 - Make this sellable creates a physical product named from the page title.
   The SKU is the one typed, or one made from the title. The product starts as
   a Draft (`offSale: true`). The panel links the page in `product_pages` and
@@ -67,8 +68,11 @@ The store's publish check calls the private route `catalog-items/set-on-sale`
 - `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
   which also drops the page's link.
 
-A call whose product another page already sells is refused with
-`PRODUCT_PAGE_CONFLICT` (409) and changes nothing. Commerce never reads the CMS. The store template owns that call.
+One product has one page. A call whose product another page already sells is
+refused with `PRODUCT_PAGE_CONFLICT` before any write (409 from the native
+route; a sandboxed route answers 400 with the same reason). The page that sells
+a product can always take it off sale. The panel refuses the same way when a
+page names a product another page sells. Commerce never reads the CMS. The store template owns that call.
 
 ## Sidebar folders
 
