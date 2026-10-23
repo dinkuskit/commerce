@@ -97,7 +97,23 @@ it, and a check that stops halfway leaves the pointer unmoved, so the next
 check finishes the release. A deleted page's product goes back to Draft in the
 same write that removes its page. A page with no recorded product (for
 example one published before links existed) claims its product on its next
-check, so it can always withdraw it. Commerce never reads the CMS. The store template owns that call.
+check, so it can always withdraw it.
+
+Known limits (no page version is sent, so Commerce cannot order two checks
+for the same page):
+
+- Two publish checks for the same page that overlap within one request's time
+  and name the same product can leave the page's pointer holding a different
+  claim from the product; a later move of the page then leaves that product
+  with the page instead of giving it back.
+- A Worker that stops after putting a new product on sale and before moving
+  the pointer leaves that product recorded only on the product; if the page
+  then moves elsewhere or is deleted, that product is not given back.
+
+In both cases the product keeps its page record, and another page asking for
+it is refused, so republishing the page or archiving the product clears it.
+Ordering checks by the page's version would close both, at the cost of a
+template change and bundle room this build does not have. Commerce never reads the CMS. The store template owns that call.
 
 ## Sidebar folders
 
