@@ -1,5 +1,17 @@
 # @dinkuskit/commerce
 
+## 0.5.0
+
+### Minor Changes
+
+- [#170](https://github.com/dinkuskit/commerce/pull/170) [`1d6bb4c`](https://github.com/dinkuskit/commerce/commit/1d6bb4ccbf4475e6e19d21e366729508d9a0241d) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - Connect to DinkusKit replaces pasting the checkout settings and the store key: an Administrator presses Connect on Commerce Settings, the business owner approves at DinkusKit.com, and Commerce gets its own store key, kept encrypted. Commerce connects first; Payments and Ship join the store it makes. Commerce fetches its checkout settings from DinkusKit.com itself, after Connect, on Get checkout settings and on every background check. The Checkout settings and Store key boxes are gone.
+
+### Patch Changes
+
+- [#169](https://github.com/dinkuskit/commerce/pull/169) [`8064ddf`](https://github.com/dinkuskit/commerce/commit/8064ddfa2449dab62875086d0c436d067bc567c5) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - The Registry build leaves out checkout's coupon quoting, reservation and reconciliation, which it cannot reach without a coupon port, freeing about 5.6 KB under the Registry's per-file size limit. A coupon code is refused exactly as before; the native entry keeps every coupon path.
+
+- [#168](https://github.com/dinkuskit/commerce/pull/168) [`8dac3cf`](https://github.com/dinkuskit/commerce/commit/8dac3cf8fd29ab143c8c753be45c1125e11d7126) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - The Registry build leaves out the Manage stock, stock reservation and order Pack paths it cannot reach, freeing about 6.9 KB under the Registry's per-file size limit. Nothing a Registry store can do changes; the native entry keeps every path.
+
 ## 0.4.0
 
 ### Minor Changes
