@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { validateBlockResponse } from '@emdash-cms/blocks/server';
 import { commerceAdmin, productPanel } from '../../../dist/admin/index.js';
-import { createCatalogItem, setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
+import { createCatalogItem, setCatalogProductArchived, setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
 import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
 class Store {
@@ -94,6 +94,46 @@ test('a refused Make this sellable keeps the typed SKU', async () => {
   assert.match(texts(out.blocks), /"initial_value":"MUG"/);
 });
 
+test('a retried Make this sellable resumes the product its first try made', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const action = 'sell:' + crypto.randomUUID(), put = pages.put.bind(pages);
+  pages.put = async () => { throw new Error('storage hiccup'); };
+  const failed = await panel({ type: 'form_submit', action_id: action, values: { sku: '' }, draft: { fields: { title: 'Cap' } } }, ctx);
+  assert.equal(failed.toast?.type, 'error');
+  assert.match(texts(failed.blocks), new RegExp('"action_id":"' + action + '"'), 'the retry form keeps its create command');
+  pages.put = put;
+  const retried = await panel({ type: 'form_submit', action_id: action, values: { sku: '' }, draft: { fields: { title: 'Cap' } } }, ctx);
+  assert.notEqual(retried.toast?.type, 'error', JSON.stringify(retried));
+  const caps = [...catalog.records.values()].filter((row) => row.name === 'Cap');
+  assert.equal(caps.length, 1, 'one product, not a second one');
+  assert.equal((await pages.get('page-1')).catalogItemId, caps[0].itemId);
+});
+
+test('the page editor\'s commerce_item_id settles the link on the next step', async () => {
+  const { ctx, catalog, pages } = await shop();
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  // A page saved before the link list existed: Make this sellable opens its product and makes nothing new.
+  const old = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx);
+  assert.equal(old.patch, undefined);
+  assert.match(texts(old.blocks), /SKU MUG/);
+  assert.equal(catalog.records.size, 2);
+  // The page now names another product: the next step opens that one, never the old link.
+  const moved = await panel({ type: 'form_submit', action_id: 'save:mug', values: { regular: '9.00', sale: '' }, draft: { fields: { commerce_item_id: 'cap' } } }, ctx);
+  assert.equal((await pages.get('page-1')).catalogItemId, 'cap');
+  assert.match(texts(moved.blocks), /SKU CAP/);
+  assert.equal((await ctx.storage.catalog_prices.get('mug')), null, 'the old product is not changed');
+  // A declined or unsaved link: the next step offers the link again.
+  const declined = await panel({ type: 'block_action', action_id: 'open', value: 'cap', draft: { fields: { title: 'Cap' } } }, ctx);
+  assert.deepEqual(declined.patch, { type: 'editor-draft-patch', operations: [{ op: 'set', field: 'commerce_item_id', value: 'cap' }] });
+});
+
+test('archived products without a page stay listed so they can be restored', async () => {
+  const { ctx, catalog } = await shop();
+  await setCatalogProductArchived(catalog, { catalogItemId: 'mug', archived: true });
+  const out = await panel({ type: 'panel_load' }, ctx);
+  assert.match(texts(out.blocks), /Mug \\u2014 MUG \(archived\)|Mug — MUG \(archived\)/);
+});
+
 test('linking a product that is gone links nothing', async () => {
   const { ctx, pages } = await shop();
   const out = await panel({ type: 'form_submit', action_id: 'link', values: { product: 'ghost' }, draft: { fields: {} } }, ctx);
@@ -134,4 +174,7 @@ test('Commerce settings lists products without a page with Make a page', async (
   assert.match(body, /Products without a page/);
   assert.match(body, /Make a page/);
   assert.match(body, /"collection":"products","id":"new"/);
+  await setCatalogProductArchived(ctx.storage.catalog_items, { catalogItemId: 'mug', archived: true });
+  const archived = await commerceAdmin({ input: { type: 'page_load', page: '/settings' }, user: { role: 50 }, ui: { surface: 'admin-page', locale: 'en', direction: 'ltr' } }, ctx);
+  assert.match(texts(archived.blocks), /MUG \(archived\)/);
 });

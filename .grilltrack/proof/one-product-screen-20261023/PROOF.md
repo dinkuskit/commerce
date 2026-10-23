@@ -4,7 +4,7 @@ Run locally on 23 Oct 2026 with Node 24.22.0, EmDash 1.2.0, on this branch.
 
 ## Registry bundle
 
-`npm run build`: `registry_bundle=pass backend_bytes=130388 headroom_bytes=684`.
+`npm run build`: `registry_bundle=pass backend_bytes=130682 headroom_bytes=390` (after the review fixes).
 `emdash-plugin validate` accepts the editor panel, the page groups and the two
 editor-draft capabilities.
 
@@ -49,3 +49,14 @@ On the Registry sandbox build:
 - A Draft product stays out of the public catalog until that call.
 - The existing price, stock, weight, media and choices walks pass inside the
   panel, including storage-refusal recovery and the phone layout.
+
+## Review fixes (upgrade and recovery)
+
+`tests/features/catalog/product-panel.test.mjs` adds: a retried Make this
+sellable after a failed link resumes the first product (one product, same
+link); a page saved before `product_pages` existed opens its product from
+`commerce_item_id`, a changed id opens the new product and leaves the old one
+untouched, and a declined or unsaved link is offered again; archived products
+without a page stay listed, marked "(archived)", in the panel and in Commerce
+settings. The sandbox browser run (10 of 10) saves the editor after applying
+the link, as an owner does.

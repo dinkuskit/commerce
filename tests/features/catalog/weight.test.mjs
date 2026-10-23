@@ -37,7 +37,7 @@ const item = (itemId, overrides = {}) => ({
 function context(records) {
   const catalog = new MemoryCollection(records);
   const storage = { catalog_items: catalog };
-  for (const name of ["catalog_prices", "catalog_manual_availability", "managed_sku_claims", "storefront_out_of_stock_listing", "catalog_media", "storefront_placeholder_image"]) storage[name] = new MemoryCollection();
+  for (const name of ["catalog_prices", "catalog_manual_availability", "managed_sku_claims", "storefront_out_of_stock_listing", "catalog_media", "storefront_placeholder_image", "product_pages"]) storage[name] = new MemoryCollection();
   return { catalog, ctx: { storage } };
 }
 const weightForm = (response) => response.blocks.find((block) => block.type === "form" && block.submit.action_id.startsWith("weight:"));

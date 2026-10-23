@@ -22,6 +22,16 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   Archived) and SKU, then the editor that used to live on the Products page:
   rename, price and sale, stock status, choices, weight, images and Archive or
   Restore.
+- The page's own `commerce_item_id` wins over `product_pages`. EmDash sends no
+  draft on `panel_load`, so the panel opens from the stored link, and the next
+  step the owner takes settles it: a page saved before `product_pages` existed
+  gets its link, a page whose id was changed opens that product, and a page
+  whose link patch was declined or never saved is offered the patch again.
+  Make this sellable on a page that already names a product opens that
+  product. The publish check also writes the link.
+- The sell form carries its create command in its action id (`sell:<uuid>`),
+  and a made-up SKU takes its tail from that command. A retry after a partial
+  failure resumes the product the first try made instead of making another.
 - The bulk "Apply same price" form is not in the panel, to stay under the
   Registry's 128 KiB backend limit. Each choice keeps its own Save.
 - A refused Make this sellable keeps the typed SKU and its buttons.
@@ -30,8 +40,15 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
 
 The Registry build no longer mounts `/products`. Commerce settings has a
 "Products without a page" section that lists up to 25 products no page sells.
-Each has a "Make a page" link to `content/products/new`. Native installs keep
-their React Products and Store pages, which sit in the same sidebar group.
+Each has a "Make a page" link to `content/products/new`. Archived products
+without a page are listed too, marked "(archived)", so they can be given a page
+and restored.
+
+Native installs keep their React Products and Store pages, which sit in the
+same sidebar group. EmDash 1.2.0 serves no Block Kit editor panel for a plugin
+that has a React admin entry (`getPluginEditorExtension` returns null when
+`admin.entry` is set), so the native build cannot carry the panel without
+moving its admin off React.
 
 ## Product states
 

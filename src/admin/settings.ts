@@ -11,7 +11,7 @@ import { connectState, type ConnectState } from "../features/checkout/kernel/ind
 import { connectBlocks, finishedConnect } from "./connect.js";
 import { alert, bool, button, failed, header, message, note, object, refused, text } from "./common.js";
 import { library, preview, target } from "./media.js";
-import { productsWithoutPage } from "./products.js";
+import { productLabel, productsWithoutPage } from "./products.js";
 
 function placeholderStorage(ctx: PluginContext) {
   return ctx.storage["storefront_placeholder_image"] as StorefrontPlaceholderImageStorage;
@@ -45,7 +45,7 @@ async function orphanBlocks(ctx: PluginContext): Promise<Block[]> {
   if (!orphans.length) return [];
   return [header("Products without a page"),
     note("Save the new page, then pick the product in its Dinkus Commerce panel."),
-    ...orphans.slice(0, 25).map((p): Block => ({ type: "section", text: p.name + " \u2014 " + p.sku,
+    ...orphans.slice(0, 25).map((p): Block => ({ type: "section", text: productLabel(p),
       accessory: { type: "link", label: "Make a page", target: { kind: "content", collection: "products", id: "new" } } }))];
 }
 export async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse): Promise<BlockResponse> {

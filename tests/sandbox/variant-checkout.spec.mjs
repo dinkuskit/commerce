@@ -5,7 +5,7 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { loadMerchantStoreSettings, saveMerchantStoreSettings } from '../../dist/features/store-settings/kernel/index.js';
-import { openPanel, openProductPage } from './product-page.mjs';
+import { openPanel, openProductPage, saveEditor } from './product-page.mjs';
 
 function proofDb() {
   const native = test.info().project.name === "native-variant";
@@ -271,6 +271,8 @@ test('merchant creates choices and edits independent and bulk prices through the
       await ui.getByRole('textbox',{name:'SKU (optional)',exact:true}).fill('MERCHANT-PROOF-SMALL');
       await ui.getByRole('button',{name:'Make this sellable',exact:true}).click();
       await page.getByRole('dialog',{name:'Review proposed changes'}).getByRole('button',{name:'Apply changes',exact:true}).click();
+      // The page keeps its product only once saved; an unsaved link is offered again on the next step.
+      await saveEditor(page);
     }
     await expect.poll(() => all(catalog).filter(r => r.name === name).length).toBe(1);
     const root = all(catalog).find(r => r.name === name);

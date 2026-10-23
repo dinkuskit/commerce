@@ -176,30 +176,33 @@ function galleryIndex(value: unknown, mediaId: string, gallery: string[]): numbe
   return value;
 }
 type Draft = { fields?: Record<string, unknown> };
-/** Commerce products no product page sells yet, newest first; Commerce Settings lists them too. */
+const command = (action: string) => /^sell:[\w-]{8,64}$/.test(action) ? action.slice(5) : crypto.randomUUID();
+/** Commerce products no product page sells yet, newest first, archived ones too so they can be restored; Commerce Settings lists them. */
 export async function productsWithoutPage(ctx: PluginContext) {
   const store = storage(ctx);
   const linked = await productPageLinks(store.pages);
-  return (await listCatalogProductSummaries(store.catalog)).filter(p => !p.archivedAt && !linked.has(p.catalogItemId));
+  return (await listCatalogProductSummaries(store.catalog)).filter(p => !linked.has(p.catalogItemId));
 }
-async function unlinked(ctx: PluginContext, sku = ""): Promise<BlockResponse> {
+export const productLabel = (p: { name: string; sku: string; archivedAt?: string | null }) => p.name + " \u2014 " + p.sku + (p.archivedAt ? " (archived)" : "");
+/** The sell form carries its create command, so a retry after a partial failure resumes the same product. */
+async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const orphans = await productsWithoutPage(ctx);
   return { blocks: [
-    note("Not for sale yet. Make this sellable to add price, stock and photos."),
+    note("Not for sale yet. Make this sellable to add price, stock and photos, or to open the product this page already names."),
     { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
-      submit: { label: "Make this sellable", action_id: "sell" } },
+      submit: { label: "Make this sellable", action_id: "sell:" + command } },
     ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
-      label: "Or sell a product without a page", options: orphans.slice(0, 50).map(p => ({ label: p.name + " \u2014 " + p.sku, value: p.catalogItemId })) }],
+      label: "Or sell a product without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) }],
       submit: { label: "Sell it here", action_id: "link" } }] : []),
   ] };
 }
-/** A SKU from the page title, made unique with a short random tail. */
-const skuFrom = (title: string) => (title.toUpperCase().replace(/[^A-Z0-9]+/g, "-").slice(0, 40) + "-" + crypto.randomUUID().slice(0, 4)).toUpperCase().replace(/^-+/, "");
+/** A SKU from the page title, made unique with a tail from its create command so a retry asks for the same SKU. */
+const skuFrom = (title: string, command: string) => (title.toUpperCase().replace(/[^A-Z0-9]+/g, "-").slice(0, 40) + "-" + command.slice(0, 4)).toUpperCase().replace(/^-+/, "");
 /**
  * Links this page to a Commerce product and fills the page's commerce_item_id
  * in the open editor. The page keeps it only when the merchant presses Save.
  */
-async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, chosen?: string, sku = ""): Promise<BlockResponse> {
+async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, chosen?: string, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const store = storage(ctx);
   const typed = typeof fields.commerce_item_id === "string" ? fields.commerce_item_id.trim() : "";
   let id = chosen ?? (typed && await loadCatalogProduct(store, typed) ? typed : (await store.pages.get(entryId))?.catalogItemId);
@@ -207,7 +210,7 @@ async function sell(ctx: PluginContext, entryId: string, fields: Record<string, 
   if (!id) {
     // New products start as a physical Draft: off the shop until this page is published.
     const title = typeof fields.title === "string" && fields.title.trim() ? fields.title.trim().slice(0, 160) : "New product";
-    id = (await createCatalogItem(store.catalog, { commandId: "page:" + crypto.randomUUID(), name: title, sku: sku.trim() || skuFrom(title), fulfillment: "physical" },
+    id = (await createCatalogItem(store.catalog, { commandId: "page:" + command, name: title, sku: sku.trim() || skuFrom(title, command), fulfillment: "physical" },
       { collection: "catalog_items", pluginId: ctx.plugin?.id })).item.itemId;
     await setCatalogProductOnSale(store.catalog, { catalogItemId: id, onSale: false });
     toast = "Draft made. Save, then Publish to sell it.";
@@ -223,16 +226,18 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
   if (!entryId) return failed("Invalid panel");
   const input = route.input as Record<string, unknown>;
   try {
-    const fields = (input.draft as Draft | undefined)?.fields ?? {};
-    if (input.action_id === "sell") return await sell(ctx, entryId, fields, undefined, text(object(input.values).sku ?? ""));
-    if (input.action_id === "link") return await sell(ctx, entryId, fields, text(object(input.values).product));
-    if (input.type === "panel_load") {
-      const linked = (await storage(ctx).pages.get(entryId))?.catalogItemId;
-      return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
-    }
+    const draft = input.draft as Draft | undefined, fields = draft?.fields ?? {}, action = String(input.action_id ?? "");
+    if (action.startsWith("sell")) return await sell(ctx, entryId, fields, undefined, text(object(input.values).sku ?? ""), command(action));
+    if (action === "link") return await sell(ctx, entryId, fields, text(object(input.values).product));
+    const linked = (await storage(ctx).pages.get(entryId))?.catalogItemId;
+    if (input.type === "panel_load") return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
+    // The editor's commerce_item_id wins: a page saved before the link list existed, a changed id, or a declined
+    // or unsaved link is settled here, and the owner's next step acts on the product the page names.
+    const named = typeof fields.commerce_item_id === "string" ? fields.commerce_item_id.trim() : "";
+    if (draft && named !== (linked ?? "") && (linked || await loadCatalogProduct(storage(ctx), named))) return await sell(ctx, entryId, fields);
   } catch (error) {
-    // A refused sell keeps the typed SKU and the buttons so the owner can retry.
-    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, typeof sku === "string" ? sku.slice(0, 1024) : "").catch(() => ({ blocks: [] }));
+    // A refused sell keeps the typed SKU, its create command and the buttons so the owner can retry.
+    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, typeof sku === "string" ? sku.slice(0, 1024) : "", command(String(input.action_id ?? ""))).catch(() => ({ blocks: [] }));
     return refused(message(error), [alert(message(error)), ...again.blocks]);
   }
   return productEdit(route, ctx);
