@@ -115,3 +115,16 @@ the second page and stays on sale. Unit 681 of 682 (the native-consumer
 teardown signal test this container cannot run), integration 105 of 105,
 Playwright 10 of 10. Registry backend 131020 bytes, 52 bytes under the limit
 (the panel's new-Draft write now reuses the product edit helper).
+
+## Review fixes, round 7
+
+Each publish check writes a fresh claim on its product (`pageClaim`, kept in
+the page's pointer too). Giving the old product back is conditional on that
+claim, so an old check can never release a product a newer check by the same
+page took again, and it happens before the pointer moves, so a check that
+stops halfway is finished by the next one. Unit tests cover both (a newer
+check retaking the product mid-release keeps it on sale; a check stopped
+before its release leaves the pointer unmoved and the next check releases the
+old product). Unit 683 of 684 (the native-consumer teardown signal test),
+integration 105 of 105, Playwright 10 of 10. Registry backend 131070 bytes,
+2 bytes under the limit.

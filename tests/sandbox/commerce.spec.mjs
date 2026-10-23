@@ -103,7 +103,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
     // The product records the page that sells it; product_pages keeps the panel's note and the page's pointer.
     expect(raw("catalog_items")[0].pageId).toBe(pageId);
-    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id }, { entryId: pageId, catalogItemId: id }]);
+    expect(raw("product_pages").map(({ claim, ...row }) => row)).toEqual([{ entryId: pageId, catalogItemId: id }, { entryId: pageId, catalogItemId: id }]);
     // Reassignment: once the page is deleted, another page takes the product, and the old page's delayed request is refused.
     const competingPage = "01COMPETINGPAGE000000000000";
     const post = (body) => page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { data: { catalogItemId: id, ...body }, headers: { "X-EmDash-Request": "1" } });

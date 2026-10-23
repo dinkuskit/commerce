@@ -93,7 +93,7 @@ test('picking a product without a page links it, and a page already holding that
   // ...but once page-2's publish check records it, page-3 naming the product is refused and notes nothing.
   await setProductPageOnSale({ catalog: ctx.storage.catalog_items, pages }, { catalogItemId: 'mug', entryId: 'page-2', onSale: true });
   assert.equal((await ctx.storage.catalog_items.get('mug')).pageId, 'page-2');
-  assert.deepEqual(await pages.get('p:page-2'), { entryId: 'page-2', catalogItemId: 'mug' });
+  assert.equal((await pages.get('p:page-2')).catalogItemId, 'mug');
   const typed = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx, 'page-3');
   assert.equal(typed.toast?.type, 'error');
   assert.match(typed.toast.message, /Another page sells this product/);
@@ -256,9 +256,47 @@ test('of two overlapping publish checks for one page, the late one gives its pro
   const read = pages.getVersioned.bind(pages);
   pages.getVersioned = async (key) => { pages.getVersioned = read; await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: true }); return null; };
   await assert.rejects(setProductPageOnSale({ catalog, pages }, { catalogItemId: 'cap', entryId: 'page-1', onSale: true }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
-  assert.deepEqual(await pages.get('p:page-1'), { entryId: 'page-1', catalogItemId: 'mug' });
+  assert.equal((await pages.get('p:page-1')).catalogItemId, 'mug');
   assert.equal((await catalog.get('mug')).pageId, 'page-1');
   assert.deepEqual([(await catalog.get('cap')).pageId, (await catalog.get('cap')).offSale], [undefined, true]);
+});
+
+test('an old check giving a product up never takes it from a newer check by the same page', async () => {
+  const { catalog, pages } = await shop();
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
+  // The page moves to the cap; before that check gives the mug up, a newer check moves the page back to the mug.
+  const edit = catalog.compareAndSet.bind(catalog);
+  let raced = false;
+  catalog.compareAndSet = async (id, revision, value) => {
+    if (id === 'mug' && !raced && value.offSale && !value.pageId) {
+      raced = true;
+      catalog.compareAndSet = edit;
+      await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
+      return { applied: false };
+    }
+    return edit(id, revision, value);
+  };
+  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'cap', entryId: 'page-1', onSale: true }).catch(() => {});
+  assert.ok(raced);
+  const mug = await catalog.get('mug');
+  assert.deepEqual([mug.pageId, mug.offSale], ['page-1', undefined], 'the newer check keeps the mug on sale');
+});
+
+test('a check that stops halfway is finished by the next one', async () => {
+  const { catalog, pages } = await shop();
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
+  // The cap check claims the cap, then stops before it gives the mug up.
+  const edit = catalog.compareAndSet.bind(catalog);
+  catalog.compareAndSet = async (id, revision, value) => { if (id === 'mug') throw new Error('worker stopped'); return edit(id, revision, value); };
+  await assert.rejects(setProductPageOnSale({ catalog, pages }, { catalogItemId: 'cap', entryId: 'page-1', onSale: true }));
+  catalog.compareAndSet = edit;
+  assert.equal((await pages.get('p:page-1')).catalogItemId, 'mug', 'the pointer has not moved');
+  await setProductPageOnSale({ catalog, pages }, { catalogItemId: 'cap', entryId: 'page-1', onSale: true });
+  const mug = await catalog.get('mug');
+  assert.deepEqual([mug.pageId, mug.offSale], [undefined, true]);
+  assert.equal((await pages.get('p:page-1')).catalogItemId, 'cap');
 });
 
 test('a variant member is refused before any link changes', async () => {

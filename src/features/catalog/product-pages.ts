@@ -22,6 +22,8 @@ export const PRODUCT_PAGES_COLLECTION = "product_pages";
 export interface ProductPageRecord {
   entryId: string;
   catalogItemId: string;
+  /** On a `p:` row: the claim its check wrote on the product. */
+  claim?: string;
 }
 export type ProductPages = Pick<StorageCollection<ProductPageRecord>, "get" | "put" | "getVersioned" | "compareAndSet" | "compareAndDelete" | "delete" | "query">;
 type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet">;
@@ -62,40 +64,41 @@ export async function productPageLinks(pages: ProductPages): Promise<Set<string>
  * sale; unpublishing or deleting the page takes it back to Draft. The page is
  * required and the whole request is checked before any write. The product's
  * page and its sale state change in one conditional write, refused when
- * another page sells it. The page's own pointer then moves to this product
- * from the revision read before, so of two overlapping checks for one page
- * only one lands; the other gives its product back and is refused. A product
- * the page no longer sells, or every product of a deleted page, goes back to
- * Draft with no page.
+ * another page sells it, and each check writes a fresh claim on the product.
+ * The product the page sold before goes back to Draft with no page first, only
+ * while the claim that took it still holds, so a newer check that took it
+ * again keeps it and a check that stops halfway is finished by the next. The
+ * page's own pointer then moves from the revision read before, so of two
+ * overlapping checks for one page only one lands; the other gives its product
+ * back and is refused.
  */
 export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages }, input: unknown): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
   const catalogItemId = id(input.catalogItemId, "catalogItemId"), entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
   const { onSale, deleted } = input;
   if (typeof onSale !== "boolean" || (deleted !== undefined && (deleted !== true || onSale))) throw new CatalogError("INVALID_INPUT", "Invalid onSale");
-  const mine = await pages.getVersioned(key);
+  const mine = await pages.getVersioned(key), claim = crypto.randomUUID(), old = mine?.value;
   let changed = false;
-  // Only while this page still sells it: give a product back, off the shop with no page.
-  const release = (itemId: string) => editProduct(catalog, itemId, item => {
-    if (item.pageId !== entryId) return null;
-    const { pageId: _page, ...rest } = item;
+  // Only while the claim that took it still holds: give a product back, off the shop with no page.
+  const release = (itemId: string, token?: string) => editProduct(catalog, itemId, item => {
+    if (!token || item.pageClaim !== token) return null;
+    const { pageId: _page, pageClaim: _claim, ...rest } = item;
     return { ...rest, offSale: true };
   });
   await editProduct(catalog, catalogItemId, item => {
     if (item.pageId && item.pageId !== entryId) throw conflict();
-    const { offSale: _off, pageId: _page, ...rest } = item;
+    const { offSale: _off, pageId: _page, pageClaim: _claim, ...rest } = item;
     changed = !item.offSale !== onSale;
-    const next: CatalogItemRecord = { ...rest, ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId }) };
-    return changed || item.pageId !== next.pageId ? next : null;
+    return { ...rest, ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
   });
+  // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
+  if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);
   const moved = deleted ? !mine || (await pages.compareAndDelete(key, mine.revision)).applied
-    : (await pages.compareAndSet(key, mine?.revision ?? null, { entryId, catalogItemId })).applied;
+    : (await pages.compareAndSet(key, mine?.revision ?? null, { entryId, catalogItemId, claim })).applied;
   if (!moved && (await pages.get(key))?.catalogItemId !== catalogItemId) {
-    await release(catalogItemId);
+    await release(catalogItemId, claim);
     throw conflict();
   }
-  const old = mine?.value.catalogItemId;
-  if (old && old !== catalogItemId) await release(old);
   if (deleted) await pages.delete("e:" + entryId);
   return { changed };
 }

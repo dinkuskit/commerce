@@ -74,6 +74,8 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   offSale?: true;
   /** The product page whose publish check sells it; set only by that check. */
   pageId?: string;
+  /** The claim that check wrote; only that claim may give the product back. */
+  pageClaim?: string;
 }
 
 export type CatalogFulfillment = "physical" | "digital";

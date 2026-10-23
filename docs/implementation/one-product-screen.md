@@ -82,15 +82,20 @@ change it again.
   the panel and keeps the product off "Products without a page", and never
   decides who sells it. An unsaved relink changes only this note, and the
   panel refuses a product another page sells.
-- `p:<entryId>`: the product the page's last publish check sold. Each check
-  moves it with one conditional write from the revision it read before
-  claiming, so of two overlapping checks for one page only one lands; the
-  other gives its product back and is refused.
+- `p:<entryId>`: the product the page's last publish check sold, and the
+  claim that check wrote on it. Each check moves it with one conditional
+  write from the revision it read before claiming, so of two overlapping
+  checks for one page only one lands; the other gives its product back and is
+  refused.
 
 The page id is required, and the whole request is checked before any write;
-a variant member is refused as not found. A product the page no longer sells,
-and the product of a deleted page, go back to Draft with no page, but only
-while the product still names that page. A page with no recorded product (for
+a variant member is refused as not found. Each check writes a fresh claim
+(`pageClaim`) on its product. The product the page sold before goes back to
+Draft with no page before the pointer moves, and only while the claim that
+took it still holds: a newer check by the same page that took it again keeps
+it, and a check that stops halfway leaves the pointer unmoved, so the next
+check finishes the release. A deleted page's product goes back to Draft in the
+same write that removes its page. A page with no recorded product (for
 example one published before links existed) claims its product on its next
 check, so it can always withdraw it. Commerce never reads the CMS. The store template owns that call.
 
