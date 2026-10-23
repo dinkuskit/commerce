@@ -82,7 +82,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect((await readProductPage(page.request, pageId)).data?.commerce_item_id ?? null).toBeNull();
     await saveEditor(page);
     await expect.poll(async () => (await readProductPage(page.request, pageId)).data?.commerce_item_id).toBe(id);
-    await expect(panel.getByText(/^Draft: publish this page to sell it/)).toBeVisible();
+    await expect(panel.getByText(/^Draft: publish to sell it/)).toBeVisible();
     const availability = () => resolveStorefrontAvailability(store, { catalogItemId: id }, { resolveProvider: async () => { throw new Error("Inventory must not be needed"); } });
     expect((await availability()).listable).toBe(false);
     const replay = await page.request.post(createdResponse.request().url(), { data: createdResponse.request().postDataJSON(), headers: { "X-EmDash-Request": "1" } });
@@ -101,7 +101,8 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
       expect(JSON.stringify(refusal)).toContain("Another page sells this product");
     }
     expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
-    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id, confirmed: true }]);
+    // The publish check recorded the page that sells it and replaced the panel's note.
+    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id }]);
     await page.reload();
     panel = await openPanel(page);
     await expect(panel.getByText(/^On sale/)).toBeVisible();

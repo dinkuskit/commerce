@@ -44,7 +44,7 @@ async function orphanBlocks(ctx: PluginContext): Promise<Block[]> {
   const orphans = await productsWithoutPage(ctx);
   if (!orphans.length) return [];
   return [header("Products without a page"),
-    note("Pick or type it in a saved page's Dinkus Commerce panel."),
+    note("Pick it in a page's Dinkus Commerce panel."),
     ...orphans.slice(0, 25).map((p): Block => ({ type: "section", text: productLabel(p),
       accessory: { type: "link", label: "Make a page", target: { kind: "content", collection: "products", id: "new" } } }))];
 }

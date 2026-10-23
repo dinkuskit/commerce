@@ -68,16 +68,28 @@ The store's publish check calls the private route `catalog-items/set-on-sale`
 - `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
   which also drops the page's link.
 
-One product has one page. `product_pages` is keyed by the product id, and a
-page claims a product with one conditional write (`compareAndSet`), so two
-pages can never both hold it. The panel's link is unconfirmed until the page is
-published; the publish check confirms it. An unconfirmed link gives way to
-another page, so a page published before links existed can always withdraw its
-product. A product another page's publish check confirmed is refused with
-`PRODUCT_PAGE_CONFLICT` (409 from the native route; a sandboxed route answers
-400 with the same reason). The publish check validates the whole request and
-that the product exists before it claims anything, so a refused call leaves the
-links as they were. Commerce never reads the CMS. The store template owns that call.
+One product has one page, and only the publish check decides which.
+`product_pages` holds two kinds of row:
+
+- `e:<entryId>`: the panel's note of the product an editor picked. It reopens
+  the panel and keeps the product off "Products without a page", and never
+  decides who sells it. Two unsaved pages may both note one product.
+- `<catalogItemId>`: the page that sells the product, written only by the
+  publish check with one conditional create (`compareAndSet`), so two pages
+  can never both hold it.
+
+The page id is required. The publish check validates the whole request, and
+that the id is a product (not a variant member), before it writes anything,
+so a refused call leaves the rows as they were. A page with no owner row (for
+example one published before links existed) claims its product on its next
+publish check, so it can always withdraw it. A product another page sells is
+refused with `PRODUCT_PAGE_CONFLICT` (409 from the native route; a sandboxed
+route answers 400 with the same reason), in the panel and in the publish
+check. An unsaved relink in the panel changes only the note, so the page that
+sells the product keeps it. After a successful check the page's other rows (its
+note, a product it no longer sells, or all of them when the page is deleted)
+are removed, each only while a re-read shows it is still that page's row
+(`compareAndDelete` on its revision). Commerce never reads the CMS. The store template owns that call.
 
 ## Sidebar folders
 

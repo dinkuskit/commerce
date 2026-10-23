@@ -2,22 +2,25 @@ import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
 import { setCatalogProductOnSale } from "./product-edit.js";
-import type { CatalogStorageRecord } from "./types.js";
+import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
- * Which product page sells which Commerce product, keyed by the product id so
- * one product has one page. Commerce never reads the CMS: the page's own
- * Commerce panel and the store's publish check tell it, so Commerce Settings
- * can list products without a page.
+ * Which product page sells which Commerce product. Commerce never reads the
+ * CMS: the page's own Commerce panel and the store's publish check tell it, so
+ * Commerce Settings can list products without a page.
+ *
+ * Two kinds of row share the collection:
+ * - `e:<entryId>`: the panel's note of the product an editor picked. It is only
+ *   a convenience for reopening the panel and never decides who sells what.
+ * - `<catalogItemId>`: which page sells the product, written only by the
+ *   publish check, one row per product, so one product has one page.
  */
 export const PRODUCT_PAGES_COLLECTION = "product_pages";
 export interface ProductPageRecord {
   entryId: string;
   catalogItemId: string;
-  /** Set by the publish check. Without it the link is the panel's, unsaved until the page is published. */
-  confirmed?: true;
 }
-export type ProductPages = Pick<StorageCollection<ProductPageRecord>, "get" | "getVersioned" | "compareAndSet" | "delete" | "query">;
+export type ProductPages = Pick<StorageCollection<ProductPageRecord>, "get" | "put" | "getVersioned" | "compareAndSet" | "compareAndDelete" | "delete" | "query">;
 type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet">;
 
 function id(value: unknown, field: string): string {
@@ -26,22 +29,17 @@ function id(value: unknown, field: string): string {
 }
 const conflict = () => new CatalogError("PRODUCT_PAGE_CONFLICT", "Another page sells this product");
 
-/** The product a page sells, if it has a link. */
+/** The product a page's panel picked, else the one its publish check recorded. */
 export async function pageProduct(pages: ProductPages, entryId: string): Promise<string | undefined> {
-  return (await pages.query({ where: { entryId }, limit: 1 })).items[0]?.data.catalogItemId;
+  const rows = (await pages.query({ where: { entryId }, limit: 10 })).items;
+  return (rows.find(row => row.id.startsWith("e:")) ?? rows[0])?.data.catalogItemId;
 }
 
-/**
- * Claims a product for a page in one conditional write, so two pages can never
- * both hold it. A product another page's publish check confirmed is refused; an
- * unconfirmed panel link of another page gives way. The page's other links go.
- */
-export async function linkProductPage(pages: ProductPages, entryId: string, catalogItemId: string, confirmed = false): Promise<void> {
-  const current = await pages.getVersioned(catalogItemId), mine = current?.value.entryId === entryId;
-  if (current && !mine && current.value.confirmed) throw conflict();
-  const keep = confirmed || (mine && current.value.confirmed);
-  if (!(await pages.compareAndSet(catalogItemId, current?.revision ?? null, { entryId, catalogItemId, ...(keep ? { confirmed: true as const } : {}) })).applied) throw conflict();
-  for (const row of (await pages.query({ where: { entryId }, limit: 10 })).items) if (row.id !== catalogItemId) await pages.delete(row.id);
+/** The panel notes the product an editor picked; a product another page's publish check recorded is refused. */
+export async function linkProductPage(pages: ProductPages, entryId: string, catalogItemId: string): Promise<void> {
+  const owner = (await pages.get(catalogItemId))?.entryId;
+  if (owner && owner !== entryId) throw conflict();
+  await pages.put("e:" + entryId, { entryId, catalogItemId });
 }
 
 /** Every linked product id, so Settings can show the ones no page sells. */
@@ -58,20 +56,26 @@ export async function productPageLinks(pages: ProductPages): Promise<Set<string>
 
 /**
  * The store's publish check: publishing a product page puts its product on
- * sale; unpublishing or deleting the page takes it back to Draft. A deleted
- * page also drops its link, so the product shows as having no page. The whole
- * request is checked before anything is written, and the page's claim on the
- * product is made first, so a page naming a product another page's publish
- * check confirmed changes nothing.
+ * sale; unpublishing or deleting the page takes it back to Draft. The page is
+ * required, the whole request and the product are checked before any write,
+ * and the page claims the product in one conditional write, so a product
+ * another page sells is refused. A page that now sells another product gives
+ * up its old one, and a deleted page drops its rows; each removal is
+ * conditional on the row still being that page's.
  */
 export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages }, input: unknown): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
-  const catalogItemId = id(input.catalogItemId, "catalogItemId");
-  const entryId = input.entryId === undefined ? undefined : id(input.entryId, "entryId");
-  if (typeof input.onSale !== "boolean" || (input.deleted !== undefined && (input.deleted !== true || input.onSale || !entryId))) throw new CatalogError("INVALID_INPUT", "Invalid onSale");
-  if (!await storage.catalog.getVersioned(catalogItemId)) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
-  if (entryId) await linkProductPage(storage.pages, entryId, catalogItemId, true);
+  const catalogItemId = id(input.catalogItemId, "catalogItemId"), entryId = id(input.entryId, "entryId"), { pages } = storage;
+  if (typeof input.onSale !== "boolean" || (input.deleted !== undefined && (input.deleted !== true || input.onSale))) throw new CatalogError("INVALID_INPUT", "Invalid onSale");
+  const item = (await storage.catalog.getVersioned(catalogItemId))?.value as CatalogItemRecord | undefined;
+  if (item?.recordKind !== "catalog-item" || item.variantProductId) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
+  const owner = await pages.getVersioned(catalogItemId);
+  if (owner ? owner.value.entryId !== entryId : !(await pages.compareAndSet(catalogItemId, null, { entryId, catalogItemId })).applied) throw conflict();
   const changed = await setCatalogProductOnSale(storage.catalog, { catalogItemId, onSale: input.onSale });
-  if (entryId && input.deleted) await storage.pages.delete(catalogItemId);
+  for (const row of (await pages.query({ where: { entryId }, limit: 10 })).items) {
+    if (row.id === catalogItemId && !input.deleted) continue;
+    const mine = await pages.getVersioned(row.id);
+    if (mine?.value.entryId === entryId) await pages.compareAndDelete(row.id, mine.revision);
+  }
   return { changed };
 }

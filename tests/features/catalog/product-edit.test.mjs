@@ -126,7 +126,7 @@ test('the owner renames, archives and restores from the product page panel', asy
   assert.equal(restore.label, 'Restore');
   const restored = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: restore.value } }, ctx);
   assert.deepEqual(restored.toast, { type: 'success', message: 'Restored as a Draft' });
-  assert.ok(restored.blocks.some((block) => block.type === 'context' && /^Draft: publish this page/.test(block.text)));
+  assert.ok(restored.blocks.some((block) => block.type === 'context' && /^Draft: publish to sell/.test(block.text)));
   assert.equal('archivedAt' in await catalog.get('mug'), false);
 });
 

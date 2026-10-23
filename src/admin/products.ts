@@ -144,7 +144,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const values = form ? { ...form, feedChannels: form.feedChannels ?? feedChannels } : { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
     header(selected.name),
-    note((selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish this page to sell it" : "On sale") + " \u00b7 SKU " + selected.sku),
+    note((selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish to sell it" : "On sale") + " \u00b7 SKU " + selected.sku),
     ...(form?.message ? [alert(form.message)] : []),
     { type: "form", block_id: "rename-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "name", label: "Name", initial_value: selected.name }],
       submit: { label: "Rename", action_id: "rename:" + id } },
@@ -155,7 +155,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     ...await mediaBlocks(ctx, id, selected.name, media),
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
       : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
-        text: "It leaves the shop. Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
+        text: "Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
   ], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: string[]) => string[], toast: string): Promise<BlockResponse> {
@@ -192,7 +192,7 @@ async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.r
     { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
       submit: { label: "Make this sellable", action_id: "sell:" + command } },
     ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
-      label: "Or a product without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
+      label: "Or one without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
       { type: "text_input" as const, action_id: "sku", label: "Or its SKU" }],
       submit: { label: "Sell it here", action_id: "link" } }] : []),
   ] };

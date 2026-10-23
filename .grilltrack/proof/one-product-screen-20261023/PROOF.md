@@ -81,3 +81,18 @@ linked it in the panel, two simultaneous claims where only one lands, and
 refused publish checks (bad `onSale`, missing product) leaving the links
 unchanged. Sandbox: 10 of 10 pass (the variant-checkout walk failed once on
 "Add variant" timing and passed on a re-run).
+
+## Review fixes, round 5
+
+The panel and the publish check no longer share ownership. A panel link is a
+note (`e:<entryId>`); the row keyed by product id is written only by the
+publish check, which now requires the page id and refuses variant members
+before any write. Cleanup removes a row only through `compareAndDelete` on the
+revision it re-read. Unit tests cover: a page id is required; a variant member
+changes nothing; two simultaneous publish checks where only one lands; an
+unsaved relink keeping the selling page's row; a stale cleanup leaving another
+page's row alone; a page published before links existed claiming its product
+while another page only noted it. Unit 680 of 681 (the native-consumer
+teardown signal test this container cannot run), integration 105 of 105,
+Playwright 10 of 10 (the sandbox walk now expects only the owner row after the
+publish check). Registry backend 131059 bytes, 13 bytes under the limit.
