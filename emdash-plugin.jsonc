@@ -128,7 +128,7 @@
     },
     "product_pages": {
       "indexes": [
-        "catalogItemId"
+        "entryId"
       ],
       "uniqueIndexes": []
     }

@@ -68,11 +68,16 @@ The store's publish check calls the private route `catalog-items/set-on-sale`
 - `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
   which also drops the page's link.
 
-One product has one page. A call whose product another page already sells is
-refused with `PRODUCT_PAGE_CONFLICT` before any write (409 from the native
-route; a sandboxed route answers 400 with the same reason). The page that sells
-a product can always take it off sale. The panel refuses the same way when a
-page names a product another page sells. Commerce never reads the CMS. The store template owns that call.
+One product has one page. `product_pages` is keyed by the product id, and a
+page claims a product with one conditional write (`compareAndSet`), so two
+pages can never both hold it. The panel's link is unconfirmed until the page is
+published; the publish check confirms it. An unconfirmed link gives way to
+another page, so a page published before links existed can always withdraw its
+product. A product another page's publish check confirmed is refused with
+`PRODUCT_PAGE_CONFLICT` (409 from the native route; a sandboxed route answers
+400 with the same reason). The publish check validates the whole request and
+that the product exists before it claims anything, so a refused call leaves the
+links as they were. Commerce never reads the CMS. The store template owns that call.
 
 ## Sidebar folders
 

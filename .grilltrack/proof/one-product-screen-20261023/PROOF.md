@@ -4,7 +4,7 @@ Run locally on 23 Oct 2026 with Node 24.22.0, EmDash 1.2.0, on this branch.
 
 ## Registry bundle
 
-`npm run build`: `registry_bundle=pass backend_bytes=130682 headroom_bytes=390` (after the review fixes; 59 after the native Restore fix, the one-page-per-product check and SKU linking).
+`npm run build`: `registry_bundle=pass backend_bytes=130682 headroom_bytes=390` (after the review fixes; 13 after round 4; panel and settings copy was shortened to fit).
 `emdash-plugin validate` accepts the editor panel, the page groups and the two
 editor-draft capabilities.
 
@@ -71,3 +71,13 @@ typed SKU linking a product past the 50 the list shows. The sandbox browser
 run posts `set-on-sale` from a competing page id for publish, unpublish and
 delete against the real EmDash runtime: each is refused with the conflict
 reason, the product stays on sale and `product_pages` keeps only its page.
+
+## Review fixes, round 4
+
+`product_pages` is keyed by product id with a conditional claim; panel links
+stay unconfirmed until the publish check confirms them. Unit tests cover a
+page published before links existed withdrawing its product after another page
+linked it in the panel, two simultaneous claims where only one lands, and
+refused publish checks (bad `onSale`, missing product) leaving the links
+unchanged. Sandbox: 10 of 10 pass (the variant-checkout walk failed once on
+"Add variant" timing and passed on a re-run).

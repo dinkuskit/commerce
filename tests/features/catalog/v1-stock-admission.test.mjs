@@ -1000,7 +1000,7 @@ test("Block Kit recovery after a storage read failure does not pretend managed i
   assert.equal(recovered.toast.type, "error");
   const texts = flatten(recovered.blocks);
   assert.ok(texts.some((text) => text.includes("Coming soon")));
-  assert.ok(texts.some((text) => text.includes("until stored tracking can be proven")));
+  assert.ok(texts.some((text) => text.includes("Stock status hidden")));
   assert.equal(hasWorkingManageStock(recovered.blocks), false);
   const form = recovered.blocks.find((block) => block.type === "form");
   assert.ok(form);

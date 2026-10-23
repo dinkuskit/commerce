@@ -58,7 +58,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     ({ panel } = opened);
     panelEndpoint = opened.endpoint;
     const pageId = opened.id;
-    await expect(panel.getByText("Not for sale yet. Make this sellable to add price, stock and photos, or to open the product this page already names.", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Not for sale yet. Make this sellable to add price, stock and photos.", { exact: true })).toBeVisible();
     await capture("product-page-unlinked");
     await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("RED-HAT");
     const createResponse = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
@@ -101,7 +101,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
       expect(JSON.stringify(refusal)).toContain("Another page sells this product");
     }
     expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
-    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id }]);
+    expect(raw("product_pages")).toEqual([{ entryId: pageId, catalogItemId: id, confirmed: true }]);
     await page.reload();
     panel = await openPanel(page);
     await expect(panel.getByText(/^On sale/)).toBeVisible();

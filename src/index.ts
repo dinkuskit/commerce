@@ -394,7 +394,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         uniqueIndexes: [],
       },
       [PRODUCT_PAGES_COLLECTION]: {
-        indexes: ["catalogItemId"],
+        indexes: ["entryId"],
         uniqueIndexes: [],
       },
     },

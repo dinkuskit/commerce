@@ -3,7 +3,7 @@ import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
 import {
   CatalogError, createCatalogItem, listCatalogProductSummaries, loadCatalogProduct, setCatalogProductOnSale,
-  linkProductPage, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
+  linkProductPage, pageProduct, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
   normalizeWeightOz, setCatalogItemWeight, renameCatalogProduct, setCatalogProductArchived,
@@ -47,10 +47,10 @@ function manageStockNotice(managed: boolean | null): Block {
   return {
     type: "context",
     text: managed === true
-      ? base + ". This product stays managed; tracking cannot be changed."
+      ? base + ". This product stays managed."
       : managed === false
         ? base
-        : base + ". Manual status is hidden until stored tracking can be proven.",
+        : base + ". Stock status hidden.",
   };
 }
 const FEEDS = [["google-merchant", "Google Merchant"], ["meta-catalog", "Meta catalog"]] as const;
@@ -144,7 +144,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const values = form ? { ...form, feedChannels: form.feedChannels ?? feedChannels } : { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
     header(selected.name),
-    note((selected.archivedAt ? "Archived: not in the shop and can't be bought" : selected.offSale ? "Draft: publish this page to sell it" : "On sale") + " \u00b7 SKU " + selected.sku),
+    note((selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish this page to sell it" : "On sale") + " \u00b7 SKU " + selected.sku),
     ...(form?.message ? [alert(form.message)] : []),
     { type: "form", block_id: "rename-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "name", label: "Name", initial_value: selected.name }],
       submit: { label: "Rename", action_id: "rename:" + id } },
@@ -155,7 +155,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     ...await mediaBlocks(ctx, id, selected.name, media),
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
       : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
-        text: "It leaves the shop and can't be bought. Past orders keep it. You can restore it later.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
+        text: "It leaves the shop. Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
   ], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: string[]) => string[], toast: string): Promise<BlockResponse> {
@@ -188,17 +188,17 @@ export const productLabel = (p: { name: string; sku: string; archivedAt?: string
 async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const orphans = await productsWithoutPage(ctx);
   return { blocks: [
-    note("Not for sale yet. Make this sellable to add price, stock and photos, or to open the product this page already names."),
+    note("Not for sale yet. Make this sellable to add price, stock and photos."),
     { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
       submit: { label: "Make this sellable", action_id: "sell:" + command } },
     ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
-      label: "Or sell a product without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
+      label: "Or a product without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
       { type: "text_input" as const, action_id: "sku", label: "Or its SKU" }],
       submit: { label: "Sell it here", action_id: "link" } }] : []),
   ] };
 }
 /** A SKU from the page title, made unique with a tail from its create command so a retry asks for the same SKU. */
-const skuFrom = (title: string, command: string) => (title.toUpperCase().replace(/[^A-Z0-9]+/g, "-").slice(0, 40) + "-" + command.slice(0, 4)).toUpperCase().replace(/^-+/, "");
+const skuFrom = (title: string, command: string) => (title.replace(/[^A-Za-z0-9]+/g, "-").slice(0, 40) + "-" + command.slice(0, 4)).toUpperCase().replace(/^-+/, "");
 /**
  * Links this page to a Commerce product and fills the page's commerce_item_id
  * in the open editor. The page keeps it only when the merchant presses Save.
@@ -206,7 +206,7 @@ const skuFrom = (title: string, command: string) => (title.toUpperCase().replace
 async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, chosen?: string, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const store = storage(ctx);
   const typed = typeof fields.commerce_item_id === "string" ? fields.commerce_item_id.trim() : "";
-  let id = chosen ?? (typed && await loadCatalogProduct(store, typed) ? typed : (await store.pages.get(entryId))?.catalogItemId);
+  let id = chosen ?? (typed && await loadCatalogProduct(store, typed) ? typed : await pageProduct(store.pages, entryId));
   let toast = "Linked. Save to keep it.";
   if (!id) {
     // New products start as a physical Draft: off the shop until this page is published.
@@ -234,7 +234,7 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
       const v = object(input.values), sku = String(v.sku ?? "").trim().toUpperCase();
       return await sell(ctx, entryId, fields, sku ? (await listCatalogProductSummaries(storage(ctx).catalog)).find(p => p.sku.toUpperCase() === sku)?.catalogItemId ?? sku : text(v.product));
     }
-    const linked = (await storage(ctx).pages.get(entryId))?.catalogItemId;
+    const linked = await pageProduct(storage(ctx).pages, entryId);
     if (input.type === "panel_load") return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
     // The editor's commerce_item_id wins: a page saved before the link list existed, a changed id, or a declined
     // or unsaved link is settled here, and the owner's next step acts on the product the page names.
@@ -242,7 +242,7 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
     if (draft && named !== (linked ?? "") && (linked || await loadCatalogProduct(storage(ctx), named))) return await sell(ctx, entryId, fields);
   } catch (error) {
     // A refused sell keeps the typed SKU, its create command and the buttons so the owner can retry.
-    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, typeof sku === "string" ? sku.slice(0, 1024) : "", command(String(input.action_id ?? ""))).catch(() => ({ blocks: [] }));
+    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? ""))).catch(() => ({ blocks: [] }));
     return refused(message(error), [alert(message(error)), ...again.blocks]);
   }
   return productEdit(route, ctx);
