@@ -101,7 +101,7 @@ export async function couponBlocks(route: SandboxedRouteContext, ctx: PluginCont
     stale = error instanceof CouponAdminError && error.code === 'REVISION_CONFLICT';
     failure = error instanceof CouponAdminError ? t('Coupon changes were not saved. {reason}', { reason: error.message }) : t('Could not complete the request. Reload and try again.');
   }
-  const blocks: Block[] = [{ type: 'header', text: t('Coupons') }, navigation(t('Products'), t('Settings'), t('Coupons')), ...(failure ? [{ type: 'banner' as const, variant: 'error' as const, title: failure }] : [])];
+  const blocks: Block[] = [{ type: 'header', text: t('Coupons') }, navigation(t('Orders'), t('Settings'), t('Coupons')), ...(failure ? [{ type: 'banner' as const, variant: 'error' as const, title: failure }] : [])];
   try {
     const listed = await listCoupons(ports);
     const selected = selectedId ? listed.find(item => item.coupon.couponId === selectedId) : undefined;

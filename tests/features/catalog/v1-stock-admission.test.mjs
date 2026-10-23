@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { PluginRouteError } from "emdash";
 
-import { commerceAdmin } from "../../../dist/admin/index.js";
+import { productPanel } from "../../../dist/admin/index.js";
+
+// Product editing lives in the Dinkus Commerce panel on each Content > Products page.
+const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
 import {
   CatalogError,
   CREATE_CATALOG_ITEM_ROUTE,
@@ -225,6 +228,7 @@ function sandboxContext(store) {
       storefront_out_of_stock_listing: new MemoryCollection(),
       catalog_media: new MemoryCollection(),
       storefront_placeholder_image: new MemoryCollection(),
+      product_pages: new MemoryCollection(),
     },
   };
 }
@@ -556,23 +560,6 @@ test("Block Kit product form shows Coming soon and no working Manage stock contr
   assert.equal(hasWorkingManageStock(opened.blocks), false);
   assert.ok(opened.blocks.some((block) =>
     block.type === "form" && block.fields.some((field) => field.action_id === "stockStatus")));
-});
-
-test("Block Kit create refuses manageStock true without writing a product", async () => {
-  const store = stores([]);
-  const refused = await commerceAdmin(
-    {
-      input: {
-        type: "form_submit",
-        action_id: "create:cmd-evil",
-        values: { name: "Evil", sku: "EVIL", manageStock: true },
-      },
-    },
-    sandboxContext(store),
-  );
-  assert.equal(refused.toast.type, "error");
-  assert.equal(refused.toast.message, MANAGE_STOCK_UNAVAILABLE_MESSAGE);
-  assert.equal(store.catalog.records.size, 0);
 });
 
 test("Block Kit save refuses enable and omitted tracking preserves a managed product", async () => {

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { commerceAdmin } from '../../../dist/admin/index.js';
-import { addCatalogVariantOption, createCatalogItem, renameCatalogProduct, setCatalogProductArchived, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
+import { productPanel } from '../../../dist/admin/index.js';
+
+// Product editing lives in the Dinkus Commerce panel on each Content > Products page.
+const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
+import { addCatalogVariantOption, createCatalogItem, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
 import { readPublicCatalog, readPublicCatalogItem, renameCatalogProductRoute, setCatalogProductArchivedRoute } from '../../../dist/features/catalog/index.js';
 import { quoteCatalogBasket, resolveManagedStorefrontAvailability } from '../../../dist/features/storefront-availability/kernel/index.js';
 
@@ -37,7 +40,7 @@ async function shop() {
   ] }, { createId: () => 'shirt-large' });
   await createCatalogItem(catalog, { commandId: 'create-mug', name: 'Proof mug', sku: 'MUG', fulfillment: 'physical' }, { createId: () => 'mug' });
   for (const [id, minor] of [['shirt', '2000'], ['shirt-large', '2400'], ['mug', '1200']]) prices.records.set(id, price(id, minor));
-  const storage = { catalog_items: catalog, catalog_prices: prices, catalog_manual_availability: empty,
+  const storage = { catalog_items: catalog, product_pages: new Catalog(), catalog_prices: prices, catalog_manual_availability: empty,
     catalog_backorder_policies: empty, store_inventory_configurations: empty, storefront_availability_settings: empty,
     storefront_out_of_stock_listing: empty, catalog_media: empty, storefront_placeholder_image: empty, managed_sku_claims: empty };
   const quoteStorage = { catalog, prices, manualAvailability: empty, backorderPolicies: empty, configurations: empty, settings: empty, listing: empty };
@@ -58,7 +61,7 @@ test('renaming a product renames it for every choice, so cart and new orders car
   await assert.rejects(renameCatalogProduct(catalog, { catalogItemId: 'missing', name: 'X' }), (error) => error.code === 'CATALOG_ITEM_NOT_FOUND');
 });
 
-test('an archived product leaves the shop and checkout refuses it; restoring brings it back', async () => {
+test('an archived product leaves the shop and checkout refuses it; restoring brings it back as a Draft', async () => {
   const { catalog, ctx, quote } = await shop();
   assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true }, () => new Date('2026-10-17T21:00:00Z')), true);
   assert.equal((await catalog.get('shirt')).archivedAt, '2026-10-17T21:00:00.000Z');
@@ -72,6 +75,11 @@ test('an archived product leaves the shop and checkout refuses it; restoring bri
   assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true }), false);
   assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: false }), true);
   assert.equal('archivedAt' in await catalog.get('shirt'), false);
+  // Restore returns it as a Draft: still off the shop until its page is published again.
+  assert.equal((await catalog.get('shirt')).offSale, true);
+  assert.deepEqual((await readPublicCatalog(ctx)).products.map((product) => product.id), ['mug']);
+  assert.deepEqual(await quote(['shirt-large']), { ok: false, reason: 'unavailable' });
+  assert.equal(await setCatalogProductOnSale(catalog, { catalogItemId: 'shirt', onSale: true }), true);
   assert.deepEqual((await readPublicCatalog(ctx)).products.map((product) => product.id).sort(), ['mug', 'shirt']);
   assert.equal((await quote(['shirt-large'])).ok, true);
   await assert.rejects(setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: 'yes' }), (error) => error.code === 'INVALID_INPUT');
@@ -90,10 +98,11 @@ test('native routes rename and archive with content:edit_any over POST', async (
   await assert.rejects(call(setCatalogProductArchivedRoute, {}, 'GET'), (error) => error.code === 'METHOD_NOT_ALLOWED');
 });
 
-test('the owner sees the product id, renames, archives and restores from the Products page', async () => {
+test('the owner renames, archives and restores from the product page panel', async () => {
   const { catalog, ctx } = await shop();
   const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
-  assert.ok(opened.blocks.some((block) => block.type === 'code' && block.code === 'mug'));
+  assert.equal(opened.blocks.some((block) => block.type === 'code'), false, 'nobody copies an id any more');
+  assert.ok(opened.blocks.some((block) => block.type === 'context' && block.text === 'On sale \u00b7 SKU MUG'));
   const renameForm = opened.blocks.find((block) => block.type === 'form' && block.submit.action_id === 'rename:mug');
   assert.equal(renameForm.fields[0].initial_value, 'Proof mug');
   const refused = await commerceAdmin({ input: { type: 'form_submit', action_id: 'rename:mug', values: { name: '\u0007' } } }, ctx);
@@ -107,13 +116,12 @@ test('the owner sees the product id, renames, archives and restores from the Pro
   assert.ok(archive.confirm, 'archiving asks first');
   const archived = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: archive.value } }, ctx);
   assert.deepEqual(archived.toast, { type: 'success', message: 'Product archived' });
-  assert.ok(archived.blocks.some((block) => block.type === 'banner' && /Archived/.test(block.title)));
-  const list = await commerceAdmin({ input: { type: 'page_load', page: '/products' } }, ctx);
-  assert.ok(list.blocks.some((block) => block.type === 'section' && block.text === 'Proof cup — MUG · Archived'));
+  assert.ok(archived.blocks.some((block) => block.type === 'context' && /^Archived/.test(block.text)));
   const restore = archived.blocks.flatMap((block) => block.type === 'actions' ? block.elements : []).find((element) => element.action_id === 'archive');
-  assert.equal(restore.label, 'Restore product');
+  assert.equal(restore.label, 'Restore');
   const restored = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: restore.value } }, ctx);
-  assert.deepEqual(restored.toast, { type: 'success', message: 'Product restored' });
+  assert.deepEqual(restored.toast, { type: 'success', message: 'Restored as a Draft' });
+  assert.ok(restored.blocks.some((block) => block.type === 'context' && /^Draft: publish this page/.test(block.text)));
   assert.equal('archivedAt' in await catalog.get('mug'), false);
 });
 
@@ -128,6 +136,7 @@ test('a choice added to an archived product stays off the shop and out of checko
   assert.deepEqual(await quote(['mug-large']), { ok: false, reason: 'unavailable' });
   assert.equal(await readPublicCatalogItem(ctx, 'mug-large'), null);
   await setCatalogProductArchived(catalog, { catalogItemId: 'mug', archived: false });
+  await setCatalogProductOnSale(catalog, { catalogItemId: 'mug', onSale: true });
   assert.equal((await quote(['mug-large'])).ok, true);
 });
 

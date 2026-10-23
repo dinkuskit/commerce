@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { commerceAdmin } from "../../../dist/admin/index.js";
+import { productPanel } from "../../../dist/admin/index.js";
+
+// Product editing lives in the Dinkus Commerce panel on each Content > Products page.
+const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
 import { normalizeWeightOz, setCatalogItemWeight } from "../../../dist/features/catalog/index.js";
 
 class MemoryCollection {

@@ -5,6 +5,7 @@ import {
   resolveCatalogItemPrice,
   type CatalogItemRecord,
   type CatalogStorageRecord,
+  offShop,
 } from "../catalog/kernel/index.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { loadStoreInventoryConfiguration } from "../inventory-setup/kernel/index.js";
@@ -117,12 +118,12 @@ function normalizeCatalogItem(
   };
 }
 
-/** An archived product, or a choice of one, is off the shop and refused at checkout. Only the product record holds the state. */
+/** An archived or Draft product, or a choice of one, is off the shop and refused at checkout. Only the product record holds the state. */
 async function archived(storage: StorefrontAvailabilityStorage, item: CatalogItemRecord): Promise<boolean> {
-  if (item.archivedAt || !item.variantProductId) return Boolean(item.archivedAt);
+  if (offShop(item) || !item.variantProductId) return offShop(item);
   try {
     const parent = await storage.catalog.get(item.variantProductId);
-    return parent?.recordKind !== "catalog-item" || Boolean(parent.archivedAt);
+    return parent?.recordKind !== "catalog-item" || offShop(parent);
   } catch {
     return true;
   }

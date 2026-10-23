@@ -17,6 +17,9 @@ import {
   SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   RENAME_CATALOG_PRODUCT_ROUTE,
   ARCHIVE_CATALOG_PRODUCT_ROUTE,
+  PRODUCT_PAGE_ON_SALE_ROUTE,
+  PRODUCT_PAGES_COLLECTION,
+  setProductPageOnSaleRoute,
   ADD_CATALOG_VARIANT_OPTION_ROUTE,
   BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
@@ -139,15 +142,18 @@ export * from "./features/structured-data/index.js";
 const COMMERCE_PLUGIN_VERSION = "0.2.0";
 
 const COMMERCE_ADMIN_ENTRY = "@dinkuskit/commerce/admin";
+// The development Products screen stays only for stores that run Commerce from source; Registry stores edit products in Content > Products.
 const COMMERCE_PRODUCTS_PAGE = {
   path: "/products",
   label: "Products",
   icon: "storefront",
+  group: "Dinkus Commerce",
 } as const;
 const COMMERCE_STORE_PAGE = {
   path: "/store",
   label: "Store",
   icon: "storefront",
+  group: "Dinkus Commerce",
 } as const;
 
 export interface CommerceLocalDevelopmentOptions {
@@ -387,6 +393,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [PRODUCT_PAGES_COLLECTION]: {
+        indexes: ["catalogItemId"],
+        uniqueIndexes: [],
+      },
     },
     admin: {
       entry: COMMERCE_ADMIN_ENTRY,
@@ -414,6 +424,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SET_CATALOG_ITEM_IDENTIFIERS_ROUTE]: setCatalogItemIdentifiersRoute,
       [RENAME_CATALOG_PRODUCT_ROUTE]: renameCatalogProductRoute,
       [ARCHIVE_CATALOG_PRODUCT_ROUTE]: setCatalogProductArchivedRoute,
+      [PRODUCT_PAGE_ON_SALE_ROUTE]: setProductPageOnSaleRoute,
       [ADD_CATALOG_VARIANT_OPTION_ROUTE]: addCatalogVariantOptionRoute,
       [UPDATE_CATALOG_VARIANT_LABELS_ROUTE]: updateCatalogVariantLabelsRoute,
       [BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: bulkSaveCatalogProductPricesRoute,

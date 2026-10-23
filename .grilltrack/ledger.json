@@ -14124,10 +14124,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:27:02+00:00",
+          "choice": "Each plugin puts its admin pages in a sidebar folder named after the plugin, using EmDash 1.2.0 page groups (emdash#3546): Dinkus Commerce > Commerce settings; Dinkus Payments > Payment settings; Dinkus Ship > Shipments (Ship's page lists paid orders and buys labels). Content keeps Pages, Posts, Products and Categories. The playground's tour page sits in its own Playground folder. Payments and Ship adopt their folder in their next releases.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:33:55+00:00",
+          "choice": "Each plugin puts its admin pages in a sidebar folder named after the plugin, using EmDash 1.2.0 page groups (emdash#3546): Dinkus Commerce > Commerce settings; Dinkus Payments > Payment settings; Dinkus Ship > Shipments (Ship's page lists paid orders and buys labels). Content keeps Pages, Posts, Products and Categories. The playground's tour page sits in its own Playground folder. Payments and Ship adopt their folder in their next releases.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "admin-sidebar-plugin-folders-20261023",
-      "implementation_ref": null,
+      "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
       "question": "How do our plugins' admin pages appear in the EmDash sidebar?",
       "rationale": "Ronald could not tell which plugin owned 'Products' and 'Store'; he picked one folder per plugin with these names (19:28 UTC 23 Oct 2026).",
       "repair_required": false,
@@ -14136,10 +14164,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-23T19:30:50+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-23T21:33:55+00:00",
+      "verification_ref": ".grilltrack/proof/one-product-screen-20261023/PROOF.md; local unit and browser acceptance; Payments and Ship folders in dinkuskit/payments#86 and dinkuskit/ship#69"
     },
     {
       "baseline_ref": "git:9860194",
@@ -14167,10 +14195,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:27:02+00:00",
+          "choice": "Content > Products is the one product screen. Commerce adds an EmDash editor panel (admin.editorPanels, emdash#3188/#3251) to the products collection editor showing that product's price, sale price, SKU, sizes/options, stock, weight and photos, saved to Commerce by the panel. An unlinked product page shows Make this sellable, which creates the Commerce product (name from the page title) and fills the page's commerce_item_id through the declared editor-draft patch, so nobody copies an ID. Commerce gains no content read/write access; EmDash draws the panel from Commerce's private routes, and the page is saved only when the merchant presses Save. Renaming keeps catalog-product-rename-001.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:33:54+00:00",
+          "choice": "Content > Products is the one product screen. Commerce adds an EmDash editor panel (admin.editorPanels, emdash#3188/#3251) to the products collection editor showing that product's price, sale price, SKU, sizes/options, stock, weight and photos, saved to Commerce by the panel. An unlinked product page shows Make this sellable, which creates the Commerce product (name from the page title) and fills the page's commerce_item_id through the declared editor-draft patch, so nobody copies an ID. Commerce gains no content read/write access; EmDash draws the panel from Commerce's private routes, and the page is saved only when the merchant presses Save. Renaming keeps catalog-product-rename-001.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "catalog-one-product-screen-20261023",
-      "implementation_ref": null,
+      "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
       "question": "Where does a merchant edit a product?",
       "rationale": "One product screen like Shopify, WooCommerce and BigCommerce; every product stays a CMS page (cms-page-mapping rule). Ronald 18:52 to 19:29 UTC 23 Oct 2026.",
       "repair_required": false,
@@ -14179,10 +14235,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-23T19:30:51+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-23T21:33:54+00:00",
+      "verification_ref": ".grilltrack/proof/one-product-screen-20261023/PROOF.md; local unit and browser acceptance"
     },
     {
       "baseline_ref": "git:9860194",
@@ -14210,10 +14266,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:27:02+00:00",
+          "choice": "Remove it from both the native and Block Kit admins. Commerce settings gains a Products without a page list (Commerce products no product page links to) with a button that starts a product page for it. Adding, pricing, stock and archiving move into the editor panel per catalog-one-product-screen-20261023.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:33:54+00:00",
+          "choice": "Remove it from both the native and Block Kit admins. Commerce settings gains a Products without a page list (Commerce products no product page links to) with a button that starts a product page for it. Adding, pricing, stock and archiving move into the editor panel per catalog-one-product-screen-20261023.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "catalog-products-page-removed-20261023",
-      "implementation_ref": null,
+      "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
       "question": "What happens to the separate Commerce Products admin page?",
       "rationale": "Ronald agreed 18:54 UTC 23 Oct 2026; the list keeps orphan products findable.",
       "repair_required": false,
@@ -14222,10 +14306,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-23T19:30:51+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-23T21:33:54+00:00",
+      "verification_ref": ".grilltrack/proof/one-product-screen-20261023/PROOF.md; local unit and browser acceptance"
     },
     {
       "baseline_ref": "git:9860194",
@@ -14254,10 +14338,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:27:02+00:00",
+          "choice": "One status on the product screen that both follow. Draft: not in the shop and cannot be bought (new products start here, including after Make this sellable). Published: in the shop and buyable; EmDash Schedule publishes at a set time. Archived: catalog-product-archive-001, and Restore returns the product as Draft. Commerce gets an on-sale flag that checkout and public lookup respect; the store's publish check turns it on when the product page is published and off when it is unpublished or deleted, through an explicit host-provided call, so Commerce still never reads CMS state. Products whose page is already published stay on sale. Not now: Unlisted (link only), Pending review, Private.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-23T21:33:54+00:00",
+          "choice": "One status on the product screen that both follow. Draft: not in the shop and cannot be bought (new products start here, including after Make this sellable). Published: in the shop and buyable; EmDash Schedule publishes at a set time. Archived: catalog-product-archive-001, and Restore returns the product as Draft. Commerce gets an on-sale flag that checkout and public lookup respect; the store's publish check turns it on when the product page is published and off when it is unpublished or deleted, through an explicit host-provided call, so Commerce still never reads CMS state. Products whose page is already published stay on sale. Not now: Unlisted (link only), Pending review, Private.",
+          "from": "implemented",
+          "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "catalog-product-states-20261023",
-      "implementation_ref": null,
+      "implementation_ref": "file:docs/implementation/one-product-screen.md file:src/admin/products.ts file:src/admin/settings.ts file:src/features/catalog/product-pages.ts file:emdash-plugin.jsonc",
       "question": "What states does a product have, and how do the page and Commerce agree?",
       "rationale": "Shopify ProductStatus (ACTIVE/DRAFT/ARCHIVED/UNLISTED), WooCommerce status (draft/pending/private/publish); today a draft page hides only the page while Commerce would still sell the item by id. Ronald locked 19:29 UTC 23 Oct 2026.",
       "repair_required": false,
@@ -14266,10 +14378,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-23T19:30:51+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-23T21:33:54+00:00",
+      "verification_ref": ".grilltrack/proof/one-product-screen-20261023/PROOF.md; local unit and browser acceptance; Commerce half only: the store template's publish check wiring follows in template-store"
     }
   ],
   "last_activation": {
@@ -14306,5 +14418,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-23T19:30:52+00:00"
+  "updated_at": "2026-10-23T21:33:55+00:00"
 }

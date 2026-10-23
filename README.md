@@ -127,8 +127,11 @@ storefront. Sale requires Regular and must be strictly lower; invalid Sale is
 refused rather than silently cleared. `resolveStorefrontAvailability` returns
 `listable: false` when Regular is missing.
 
-The sandboxed EmDash Block Kit Products page lists those catalog products by name and
-lets a clerk add one with a name and SKU. Name is the customer-facing title
+On Registry installs each Content > Products page has a Dinkus Commerce editor
+panel; Make this sellable makes a Draft catalog product for the page and links
+it, and the product goes on sale when the store publishes the page. Commerce
+settings lists products without a page. Native installs keep a Products page
+that lists catalog products and adds one with a name and SKU. Name is the customer-facing title
 (the product page H1 contract); this plugin does not render a storefront page.
 Opening a product shows Regular, Sale, the Manage stock slider, and In stock /
 Out of stock / On backorder when the product is unmanaged. On Registry

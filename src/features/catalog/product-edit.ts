@@ -35,13 +35,28 @@ export async function renameCatalogProduct(catalog: Catalog, input: { catalogIte
   });
 }
 
-/** Archives a product (off the shop, not for sale) or restores it. Nothing is deleted. */
+/** Archives a product (off the shop, not for sale) or restores it as a Draft. Nothing is deleted. */
 export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date()): Promise<boolean> {
   if (typeof input.archived !== "boolean") throw new CatalogError("INVALID_INPUT", "archived must be true or false");
   const archivedAt = now().toISOString();
   return editProduct(catalog, input.catalogItemId, (item) => {
     if (Boolean(item.archivedAt) === input.archived) return null;
     const { archivedAt: _old, ...rest } = item;
-    return input.archived ? { ...rest, archivedAt } : rest;
+    return input.archived ? { ...rest, archivedAt } : { ...rest, offSale: true };
   });
+}
+
+/** Puts a product on sale or takes it back to Draft. Only the store's publish check calls this; Commerce never reads the page. */
+export async function setCatalogProductOnSale(catalog: Catalog, input: { catalogItemId?: unknown; onSale?: unknown }): Promise<boolean> {
+  if (typeof input.onSale !== "boolean") throw new CatalogError("INVALID_INPUT", "onSale must be true or false");
+  return editProduct(catalog, input.catalogItemId, (item) => {
+    if (!item.offSale === input.onSale) return null;
+    const { offSale: _old, ...rest } = item;
+    return input.onSale ? rest : { ...rest, offSale: true };
+  });
+}
+
+/** Off the shop and refused at checkout: archived, or a Draft whose page is not published. */
+export function offShop(item: { archivedAt?: string; offSale?: true } | null | undefined): boolean {
+  return Boolean(item?.archivedAt || item?.offSale);
 }

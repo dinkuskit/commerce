@@ -15,6 +15,7 @@ import {
 } from "./variants.js";
 import { bindGuestCheckoutRuntime, SANDBOX_GUEST_CHECKOUT_STORAGE } from "../checkout/kernel/index.js";
 import { rememberReads } from "./remembered-reads.js";
+import { offShop } from "./product-edit.js";
 import type { StorefrontAvailabilityResult } from "../storefront-availability/kernel/index.js";
 import {
   loadProductFeedEligibility,
@@ -87,7 +88,7 @@ async function projectPublicCatalogProduct(
   ) {
     unavailable();
   }
-  if (item.archivedAt) return null;
+  if (offShop(item)) return null;
   const variant = await resolveCatalogVariantMember(storage.catalog, item.itemId);
   if (variant === null) return null;
   const availability = await resolveStorefrontAvailability(storage, { catalogItemId: item.itemId });
@@ -176,7 +177,7 @@ async function rememberCatalogReads(ctx: PluginContext, rows: Array<{ id: string
   const reads = rememberReads(ctx.storage as Record<string, unknown>);
   reads.seed("catalog_items", rows);
   const items = rows.map((row) => row.data as CatalogStorageRecord)
-    .filter((item): item is CatalogItemRecord => item.recordKind === "catalog-item" && !item.archivedAt);
+    .filter((item): item is CatalogItemRecord => item.recordKind === "catalog-item" && !offShop(item));
   const members = items.flatMap((item) => item.variantProduct?.members.map((member) => member.catalogItemId) ?? []);
   const ids = [...items.map((item) => item.itemId), ...members];
   await Promise.all([
@@ -219,7 +220,7 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
     const item = row.data as unknown as CatalogStorageRecord;
     if (item.recordKind !== "catalog-item" || item.variantProductId) continue;
     if (row.id !== item.itemId) unavailable();
-    if (!item.archivedAt) {
+    if (!offShop(item)) {
       const stored = await loadCatalogItemMedia(media, item.itemId);
       const added = [stored.image, ...stored.gallery].flatMap((entry) => entry && !imageIds.has(entry.mediaId) ? [entry.mediaId] : []);
       if (index > skip && imageIds.size + added.length > IMAGE_READS_PER_PAGE) {

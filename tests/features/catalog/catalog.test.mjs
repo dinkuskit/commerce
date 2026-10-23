@@ -513,8 +513,8 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
     entrypoint: "@dinkuskit/commerce",
     adminEntry: "@dinkuskit/commerce/admin",
     adminPages: [
-      { path: "/products", label: "Products", icon: "storefront" },
-      { path: "/store", label: "Store", icon: "storefront" },
+      { path: "/products", label: "Products", icon: "storefront", group: "Dinkus Commerce" },
+      { path: "/store", label: "Store", icon: "storefront", group: "Dinkus Commerce" },
     ],
     options: { enableLocalStockManagement: false },
   });

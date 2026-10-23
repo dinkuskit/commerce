@@ -88,6 +88,8 @@ export interface CatalogProductListItem {
   weightOz?: number;
   /** Present when the product is archived: off the shop and not for sale. */
   archivedAt?: string;
+  /** Present while the product is a Draft, until its page is published. */
+  offSale?: true;
   variantProduct?: {
     productId: string;
     revision: number;
@@ -255,6 +257,7 @@ async function describeCatalogProducts(
       fulfillment: record.fulfillment ?? "physical",
       ...(record.weightOz ? { weightOz: record.weightOz } : {}),
       ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
+      ...(record.offSale ? { offSale: true as const } : {}),
     };
     if (record.variantProduct) {
       const members: CatalogProductVariantListItem[] = [];

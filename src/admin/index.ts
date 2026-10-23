@@ -5,8 +5,7 @@ import { loadCheckoutContactRequirements, merchantStoreSettingsBlocks, merchantS
 import { resolveCatalogVariantMember, type CatalogStorageRecord } from "../features/catalog/kernel/index.js";
 import { listPaidOrders, resolveRegistryShip, type CheckoutRecord } from "../features/checkout/kernel/index.js";
 import { ordersBlocks, ordersInteraction, shipLabelPage, syncShip, type OrdersCollection } from "../features/orders/index.js";
-import { productsAdmin } from "./products.js";
-import { settings, settingsAdmin, settingsInteraction } from "./settings.js";
+import { settings, settingsAdmin } from "./settings.js";
 import { connectAdmin, connectInteraction } from "./connect.js";
 
 /** Brings Orders and Ship up to date when the store has a Ship service; each line's weight comes from Catalog. */
@@ -42,6 +41,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     },
   });
   if (connectInteraction(route.input)) return connectAdmin(route, ctx);
-  if (settingsInteraction(route.input)) return settingsAdmin(route, ctx);
-  return productsAdmin(route, ctx);
+  return settingsAdmin(route, ctx);
 }
+
+export { productPanel } from "./products.js";

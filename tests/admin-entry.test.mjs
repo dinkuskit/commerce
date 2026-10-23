@@ -37,8 +37,8 @@ test("built package root descriptor and plugin declare compatible native admin e
   assert.equal(descriptor.entrypoint, "@dinkuskit/commerce");
   assert.equal(descriptor.adminEntry, "@dinkuskit/commerce/admin");
   assert.deepEqual(descriptor.adminPages, [
-    { path: "/products", label: "Products", icon: "storefront" },
-    { path: "/store", label: "Store", icon: "storefront" },
+    { path: "/products", label: "Products", icon: "storefront", group: "Dinkus Commerce" },
+    { path: "/store", label: "Store", icon: "storefront", group: "Dinkus Commerce" },
   ]);
 
   const plugin = commerce.createPlugin();
@@ -46,7 +46,7 @@ test("built package root descriptor and plugin declare compatible native admin e
   assert.ok(plugin.admin, "plugin should have admin configuration");
   assert.equal(plugin.admin.entry, "@dinkuskit/commerce/admin");
   assert.deepEqual(plugin.admin.pages, [
-    { path: "/products", label: "Products", icon: "storefront" },
-    { path: "/store", label: "Store", icon: "storefront" },
+    { path: "/products", label: "Products", icon: "storefront", group: "Dinkus Commerce" },
+    { path: "/store", label: "Store", icon: "storefront", group: "Dinkus Commerce" },
   ]);
 });
