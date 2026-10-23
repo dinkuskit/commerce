@@ -252,7 +252,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
       if (action === "open") return await product(ctx, text(input.value));
       if (action === "archive") {
         const v = object(input.value);
-        await setCatalogProductArchived(storage(ctx).catalog, { catalogItemId: v.id, archived: v.a });
+        await setCatalogProductArchived(storage(ctx).catalog, { catalogItemId: v.id, archived: v.a }, undefined, true);
         return await product(ctx, text(v.id), undefined, v.a ? "Product archived" : "Restored as a Draft");
       }
       if (action === "media.pick") {

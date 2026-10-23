@@ -36,13 +36,17 @@ export async function renameCatalogProduct(catalog: Catalog, input: { catalogIte
 }
 
 /** Archives a product (off the shop, not for sale) or restores it as a Draft. Nothing is deleted. */
-export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date()): Promise<boolean> {
+/**
+ * Archives or restores a product. The product page panel restores it as a Draft (`toDraft`) for its page's publish
+ * check to put back on sale; the native Products screen, which has no page, restores it straight onto the shop.
+ */
+export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date(), toDraft = false): Promise<boolean> {
   if (typeof input.archived !== "boolean") throw new CatalogError("INVALID_INPUT", "archived must be true or false");
   const archivedAt = now().toISOString();
   return editProduct(catalog, input.catalogItemId, (item) => {
     if (Boolean(item.archivedAt) === input.archived) return null;
     const { archivedAt: _old, ...rest } = item;
-    return input.archived ? { ...rest, archivedAt } : { ...rest, offSale: true };
+    return input.archived ? { ...rest, archivedAt } : toDraft ? { ...rest, offSale: true } : rest;
   });
 }
 

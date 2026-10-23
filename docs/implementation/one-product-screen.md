@@ -56,7 +56,8 @@ moving its admin off React.
 basket quotes and storefront availability treat it like an archived product.
 Products made before this flag existed have no `offSale`, so a product whose
 page is already published stays on sale. Restoring an archived product
-returns it as a Draft.
+returns it as a Draft from the product page panel; the native Products screen, which has
+no page to publish, restores it straight onto the shop.
 
 The store's publish check calls the private route `catalog-items/set-on-sale`
 (`content:publish_any`, POST) with:

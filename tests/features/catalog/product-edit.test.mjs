@@ -73,14 +73,19 @@ test('an archived product leaves the shop and checkout refuses it; restoring bri
   const listed = (await listCatalogProducts({ catalog, prices: ctx.storage.catalog_prices, availability: ctx.storage.catalog_manual_availability })).products;
   assert.equal(listed.find((product) => product.catalogItemId === 'shirt').archivedAt, '2026-10-17T21:00:00.000Z', 'the owner still finds it');
   assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true }), false);
-  assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: false }), true);
+  assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: false }, undefined, true), true);
   assert.equal('archivedAt' in await catalog.get('shirt'), false);
-  // Restore returns it as a Draft: still off the shop until its page is published again.
+  // The product page panel restores it as a Draft: still off the shop until its page is published again.
   assert.equal((await catalog.get('shirt')).offSale, true);
   assert.deepEqual((await readPublicCatalog(ctx)).products.map((product) => product.id), ['mug']);
   assert.deepEqual(await quote(['shirt-large']), { ok: false, reason: 'unavailable' });
   assert.equal(await setCatalogProductOnSale(catalog, { catalogItemId: 'shirt', onSale: true }), true);
   assert.deepEqual((await readPublicCatalog(ctx)).products.map((product) => product.id).sort(), ['mug', 'shirt']);
+  assert.equal((await quote(['shirt-large'])).ok, true);
+  // The native Products screen has no page to publish, so its Restore puts the product straight back on the shop.
+  await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true });
+  assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: false }), true);
+  assert.equal((await catalog.get('shirt')).offSale, undefined);
   assert.equal((await quote(['shirt-large'])).ok, true);
   await assert.rejects(setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: 'yes' }), (error) => error.code === 'INVALID_INPUT');
 });
