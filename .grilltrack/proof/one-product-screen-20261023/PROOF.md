@@ -4,7 +4,7 @@ Run locally on 23 Oct 2026 with Node 24.22.0, EmDash 1.2.0, on this branch.
 
 ## Registry bundle
 
-`npm run build`: `registry_bundle=pass backend_bytes=130682 headroom_bytes=390` (after the review fixes; 371 after the native Restore fix).
+`npm run build`: `registry_bundle=pass backend_bytes=130682 headroom_bytes=390` (after the review fixes; 216 after the native Restore fix and the page-conflict check).
 `emdash-plugin validate` accepts the editor panel, the page groups and the two
 editor-draft capabilities.
 

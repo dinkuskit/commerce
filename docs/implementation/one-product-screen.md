@@ -67,7 +67,8 @@ The store's publish check calls the private route `catalog-items/set-on-sale`
 - `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
   which also drops the page's link.
 
-Commerce never reads the CMS. The store template owns that call.
+A call whose product another page already sells is refused with
+`PRODUCT_PAGE_CONFLICT` (409) and changes nothing. Commerce never reads the CMS. The store template owns that call.
 
 ## Sidebar folders
 

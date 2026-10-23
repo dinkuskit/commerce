@@ -164,6 +164,21 @@ test('the publish check puts a product on sale and back to Draft, and a deleted 
   await assert.rejects(setProductPageOnSale(storage, { catalogItemId: ' ', onSale: true }), (error) => error.code === 'INVALID_INPUT');
 });
 
+test('a page naming a product another page sells changes nothing', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const storage = { catalog, pages };
+  await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
+  const before = await catalog.get('mug');
+  for (const onSale of [true, false]) {
+    await assert.rejects(setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT' && error.status === 409);
+  }
+  await assert.rejects(setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale: false, deleted: true }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
+  assert.deepEqual(await catalog.get('mug'), before);
+  assert.equal((await pages.get('page-1')).catalogItemId, 'mug');
+  assert.equal(await pages.get('page-2'), null);
+  assert.equal(ctx.storage.product_pages, pages);
+});
+
 test('Commerce settings lists products without a page with Make a page', async () => {
   const { ctx } = await shop();
   ctx.storage.storefront_out_of_stock_listing = new Store();

@@ -41,13 +41,18 @@ export async function productPageLinks(pages: ProductPages): Promise<Set<string>
 /**
  * The store's publish check: publishing a product page puts its product on
  * sale; unpublishing or deleting the page takes it back to Draft. A deleted
- * page also drops its link, so the product shows as having no page.
+ * page also drops its link, so the product shows as having no page. A page
+ * naming a product another page sells is refused, so it changes nothing.
  */
 export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages }, input: unknown): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
   const catalogItemId = id(input.catalogItemId, "catalogItemId");
   const entryId = input.entryId === undefined ? undefined : id(input.entryId, "entryId");
   if (input.deleted !== undefined && (input.deleted !== true || input.onSale !== false || !entryId)) throw new CatalogError("INVALID_INPUT", "Invalid deleted");
+  // A page can only change the product it sells: one another page already sells is refused before any write.
+  if (entryId && (await storage.pages.query({ where: { catalogItemId }, limit: 2 })).items.some(row => row.id !== entryId)) {
+    throw new CatalogError("PRODUCT_PAGE_CONFLICT", "Another page sells this product");
+  }
   const changed = await setCatalogProductOnSale(storage.catalog, { catalogItemId, onSale: input.onSale });
   if (entryId && input.deleted) {
     if ((await storage.pages.get(entryId))?.catalogItemId === catalogItemId) await storage.pages.delete(entryId);
