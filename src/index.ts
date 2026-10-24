@@ -262,9 +262,26 @@ function nativeBlockKitRoute(handler: typeof commerceAdmin): PluginRoute {
     public: false,
     permission: "content:edit_any",
     methods: ["POST"],
-    handler: (ctx) => handler({ input: ctx.input, user: ctx.user, ui: ctx.ui,
-      request: { method: ctx.request.method, url: ctx.request.url, headers: {} } } as never, nativeAdminContext(ctx) as never),
+    handler: async (ctx) => {
+      // DinkusKit Connect only accepts Registry installs, so a native store's Settings has no Connect to press.
+      const action = (ctx.input as { type?: unknown; action_id?: unknown } | null)?.action_id;
+      const input = typeof action === "string" && action.startsWith("connect") ? { type: "page_load", page: "/settings" } : ctx.input;
+      const response = await handler({ input, user: ctx.user, ui: ctx.ui,
+        request: { method: ctx.request.method, url: ctx.request.url, headers: {} } } as never, nativeAdminContext(ctx) as never);
+      return withoutConnect(response);
+    },
   };
+}
+
+/** Swaps Settings' DinkusKit section for a note marked (DEV): Connect is for Registry stores. */
+function withoutConnect<T>(response: T): T {
+  const blocks = (response as { blocks?: { type: string; text?: unknown }[] } | null)?.blocks;
+  const start = blocks?.findIndex(block => block.type === "header" && block.text === "DinkusKit") ?? -1;
+  if (!blocks || start < 0) return response;
+  let end = start + 1;
+  while (end < blocks.length && blocks[end].type !== "header") end++;
+  const note = { type: "context", text: "(DEV) This store runs Commerce from source. DinkusKit Connect is on Registry stores only." };
+  return { ...response, blocks: [...blocks.slice(0, start), note, ...blocks.slice(end)] };
 }
 
 const publicCatalogRoute = {

@@ -208,6 +208,11 @@ test.describe("Native populated-browser continuity fixture", () => {
     const hide = page.getByRole("switch", { name: "Hide out-of-stock products", exact: true });
     await expect(hide).toBeChecked({ timeout: 30000 });
     await expect(page.getByRole("heading", { name: "Products without a page" })).toBeVisible();
+    // DinkusKit Connect only accepts Registry installs, so a native store shows a (DEV) note instead of a Connect it cannot finish.
+    await expect(page.getByText("(DEV) This store runs Commerce from source. DinkusKit Connect is on Registry stores only.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Connect", exact: true })).toHaveCount(0);
+    const connect = await page.request.post("/_emdash/api/plugins/dinkus-commerce/admin", { headers: { "X-EmDash-Request": "1" }, data: { type: "block_action", action_id: "connect" } });
+    expect(JSON.stringify(await connect.json())).not.toContain("Approve at DinkusKit.com");
     await expect(page.getByText("Wool Blanket \u2014 BLANKET-01", { exact: true })).toBeVisible();
     await saveScreenshot(page, "native-store-populated.png", artifactsDir);
 
