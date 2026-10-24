@@ -61,6 +61,12 @@ Removed with it: the React Products, Store and Coupons screens, the
 Manage stock browser check. Coupon records stay in storage; coupons are built in
 dinkuskit/coupons. Local stock comes back with Inventory, in Block Kit.
 
+Two native screens have no Block Kit twin yet. The GTIN, MPN and Brand form is
+not in the panel (the Registry build never had it and has no room for it); the
+stored values and the identifiers route are unchanged, and the form's return is
+with the owner. DinkusKit Connect only accepts Registry installs, so a native
+store's Commerce settings shows a note marked "(DEV)" in place of Connect.
+
 ## Product states
 
 `offSale` on a catalog item means Draft: public catalog reads, item lookups,
