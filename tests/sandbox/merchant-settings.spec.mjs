@@ -7,9 +7,8 @@ test.afterEach(async ({ page }, info) => {
 const headers = { "X-EmDash-Request": "1" };
 test("merchant settings persist independently and reject stale or unauthorized writes", async ({ page, request, browser }, info) => {
   page.on("pageerror", error => console.log("Browser script error:", error.message.slice(0, 500)));
-  const native = info.project.name === "native";
   const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
-  const adminPath = "/_emdash/admin/plugins/dinkus-commerce/" + (native ? "store" : "settings");
+  const adminPath = "/_emdash/admin/plugins/dinkus-commerce/settings";
   expect((await request.get("/_emdash/api/setup/dev-bypass")).status()).toBe(200);
   await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath);
   const getStarted = page.getByRole("button", { name: "Get Started", exact: true });
@@ -75,5 +74,6 @@ test("merchant settings persist independently and reject stale or unauthorized w
   await page.reload();
   await expect(store).toHaveValue("GB");
   if (process.env.COMMERCE_SETTINGS_CONTROLLED_FAILURE === "1") expect("synthetic controlled failure").toBe("pass");
-  if (native) await expect(page.getByRole("heading", { name: "Out-of-stock products on the shop" })).toBeVisible();
+  // Native and Registry installs show the same Commerce settings page.
+  await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).toBeVisible();
 });

@@ -1,5 +1,6 @@
 import { pluginRoute, type SandboxedPlugin } from "emdash/plugin";
-import { commerceAdmin, syncOrdersWithShip } from "./admin/index.js";
+import { commerceAdmin, productPanel, syncOrdersWithShip } from "./admin/index.js";
+import { PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
   PUBLIC_CATALOG_ITEM_ROUTE,
@@ -61,6 +62,20 @@ function shopperRoute<T>(methods: ("GET" | "POST")[], request: { body: "json" | 
 function guestRoute(handler: typeof installedCheckout.prepare) {
   return pluginRoute({ public: true, methods: ["POST"], request: guestRequest, handler });
 }
+type PublicReadHandler = Parameters<typeof pluginRoute>[0]["handler"];
+/** A public, uncached GET with no body, as every storefront read is. */
+const publicRead = (handler: PublicReadHandler, headers?: ["origin"]) => pluginRoute({ public: true, methods: ["GET"], request: { body: "none", ...(headers ? { headers } : {}) }, cacheControl: "no-store", handler });
+/** The one query key a storefront read takes: at most once, or exactly once when required; anything else is refused. */
+function queryValue(url: string, key: string, refusal: string, required = false): string | undefined {
+  const query = new URL(url).searchParams, values = query.getAll(key);
+  if ([...query.keys()].some(name => name !== key) || values.length > 1 || (required && !values.length)) throw new Error(refusal);
+  return values[0];
+}
+
+type PrivateRoute = Extract<NonNullable<SandboxedPlugin["routes"]>[string], { handler: unknown }>;
+/** A private POST route for signed-in users holding the permission. */
+const privatePost = (permission: PrivateRoute["permission"], handler: PrivateRoute["handler"]): PrivateRoute => ({ public: false, permission, methods: ["POST"], handler });
+
 const plugin: SandboxedPlugin = {
   hooks: {
     // Switched on: the site's EmDash scheduler runs the background check every 5 minutes. If the
@@ -82,67 +97,28 @@ const plugin: SandboxedPlugin = {
     },
   },
   routes: {
-    [PUBLIC_CATALOG_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["GET"],
-      request: { body: "none" },
-      cacheControl: "no-store",
-      handler: async (route, ctx) => {
-        const query = new URL(route.request.url).searchParams;
-        if ([...query.keys()].some(key => key !== "cursor") || query.getAll("cursor").length > 1) throw new Error("Invalid catalog query");
-        return readPublicCatalog(ctx, query.get("cursor") ?? undefined);
-      },
-    }),
-    [PUBLIC_CATALOG_ITEM_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["GET"],
-      request: { body: "none" },
-      cacheControl: "no-store",
-      handler: async (route, ctx) => {
-        const query = new URL(route.request.url).searchParams;
-        if ([...query.keys()].some((key) => key !== "itemId") || query.getAll("itemId").length !== 1) {
-          throw new Error("Invalid catalog item query");
-        }
-        return readPublicCatalogItem(ctx, query.get("itemId")!);
-      },
-    }),
-    [PUBLIC_STORE_POLICIES_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["GET"],
-      request: { body: "none" },
-      cacheControl: "no-store",
-      handler: async (_route, ctx) => readSandboxPublicStorePolicies(ctx),
-    }),
+    [PUBLIC_CATALOG_ROUTE]: publicRead(async (route, ctx) => readPublicCatalog(ctx, queryValue(route.request.url, "cursor", "Invalid catalog query"))),
+    [PUBLIC_CATALOG_ITEM_ROUTE]: publicRead(async (route, ctx) => readPublicCatalogItem(ctx, queryValue(route.request.url, "itemId", "Invalid catalog item query", true)!)),
+    [PUBLIC_STORE_POLICIES_ROUTE]: publicRead(async (_route, ctx) => readSandboxPublicStorePolicies(ctx)),
     // DinkusKit.com reads a waiting Connect's receipt here, on the store's own web address.
     "store-proof": { public: true, methods: ["GET"], response: "raw", request: { body: "none" }, handler: (route, ctx) => storeProof(route.input, ctx) },
-    admin: {
-      public: false,
-      permission: "content:edit_any",
-      methods: ["POST"],
-      handler: commerceAdmin,
-    },
+    admin: privatePost("content:edit_any", commerceAdmin),
+    // The Dinkus Commerce panel on each Content > Products page.
+    "product-panel": privatePost("content:edit_any", productPanel),
+    // The store's publish check: a published product page puts its product on sale (catalog-product-states-20261023).
+    [PRODUCT_PAGE_ON_SALE_ROUTE]: privatePost("content:publish_any", (route, ctx) => setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never,
+      pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, route.input)),
     // Agents and the CLI read and complete orders here with an EmDash API token.
-    [ORDERS_API_ROUTE]: {
-      public: false,
-      permission: "plugins:manage",
-      methods: ["POST"],
-      handler: async (route, ctx) => {
-        const answer = await ordersApi(route, ctx);
-        // Ship hears about a saved change right away, as it does from the Orders page.
-        if ((answer as { result?: string }).result === "saved") await syncOrdersWithShip(ctx).catch(() => {});
-        return answer;
-      },
-    },
+    [ORDERS_API_ROUTE]: privatePost("plugins:manage", async (route, ctx) => {
+      const answer = await ordersApi(route, ctx);
+      // Ship hears about a saved change right away, as it does from the Orders page.
+      if ((answer as { result?: string }).result === "saved") await syncOrdersWithShip(ctx).catch(() => {});
+      return answer;
+    }),
     [GUEST_CHECKOUT_PREPARE_ROUTE]: guestRoute(installedCheckout.prepare),
     [GUEST_CHECKOUT_START_ROUTE]: guestRoute(installedCheckout.start),
     [GUEST_CHECKOUT_STATUS_ROUTE]: guestRoute(installedCheckout.status),
-    [GUEST_CHECKOUT_READINESS_ROUTE]: pluginRoute({
-      public: true,
-      methods: ["GET"],
-      request: { body: "none", headers: ["origin"] },
-      cacheControl: "no-store",
-      handler: (route, ctx) => installedCheckout.readiness(route, ctx),
-    }),
+    [GUEST_CHECKOUT_READINESS_ROUTE]: publicRead((route, ctx) => installedCheckout.readiness(route, ctx), ["origin"]),
     [SHOPPER_SIGN_IN_START_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.startSignIn),
     [SHOPPER_SIGN_IN_VERIFY_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.verifySignIn),
     [SHOPPER_SIGN_OUT_ROUTE]: shopperRoute(["POST"], shopperSessionBodyRequest, installedShopperAccounts.signOut),

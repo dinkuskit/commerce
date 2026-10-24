@@ -17,7 +17,7 @@ The default is `quick`. Both modes resolve the repository from the script path,
 so an absolute invocation also works from another directory.
 
 `quick` runs typechecking, the build (including sandbox validation/bundle), unit and workflow tests, and repository/feature audits.
-`full` adds SQLite/D1 integration and the sandbox, native-local-stock, and installed-coupon browser profiles.
+`full` adds SQLite/D1 integration and the sandbox and installed-coupon browser profiles.
 Success exits 0 and prints `verify-commerce: <mode> passed`; unsupported modes
 exit 64. A failed child command stops the gate with a non-zero exit.
 

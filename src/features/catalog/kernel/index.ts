@@ -49,7 +49,9 @@ export type {
   CatalogProductVariantListItem,
 } from "../product-admin.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "../normalize.js";
-export { renameCatalogProduct, setCatalogProductArchived } from "../product-edit.js";
+export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct } from "../product-edit.js";
+export { PRODUCT_PAGES_COLLECTION, linkProductPage, pageProduct, productPageLinks, setProductPageOnSale } from "../product-pages.js";
+export type { ProductPageRecord, ProductPages } from "../product-pages.js";
 export {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
@@ -64,6 +66,7 @@ export {
   SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   RENAME_CATALOG_PRODUCT_ROUTE,
   ARCHIVE_CATALOG_PRODUCT_ROUTE,
+  PRODUCT_PAGE_ON_SALE_ROUTE,
   ADD_CATALOG_VARIANT_OPTION_ROUTE,
   UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
   BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,

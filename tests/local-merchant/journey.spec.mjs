@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { openProductPage, readProductPage, saveEditor, setOnSale } from '../sandbox/product-page.mjs';
 test.afterEach(async ({ page }, info) => {
   if (info.status !== info.expectedStatus) await page.screenshot({ path: resolve(process.env.LOCAL_MERCHANT_DIRECTORY, 'failure.png'), fullPage: true });
 });
@@ -20,18 +21,20 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   await page.getByRole('button', { name: 'Save merchant settings', exact: true }).click(); await saved;
   await page.reload();
   await expect(page.getByRole('textbox', { name: 'Store country (ISO alpha-2 code)', exact: true })).toHaveValue('US');
-  await page.goto(commerce + 'products');
-  await expect(page.getByText('No products yet', { exact: true })).toBeVisible();
-  await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Fixture parcel ' + run);
-  await page.getByRole('textbox', { name: 'SKU', exact: true }).fill('FIXTURE-' + run);
-  await page.getByRole('radio', { name: 'Physical', exact: true }).check();
-  const added = page.waitForResponse(r => r.url().endsWith('/dinkus-commerce/admin') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Add product', exact: true }).click();
-  const addedResult = await (await added).json(); expect(addedResult.data.toast?.type, JSON.stringify(addedResult.data.toast)).toBe('success');
-  await page.getByRole('textbox', { name: 'Regular', exact: true }).fill('12');
-  await page.getByRole('radio', { name: 'In stock', exact: true }).check();
-  const priced = page.waitForResponse(r => r.url().endsWith('/dinkus-commerce/admin') && r.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Save', exact: true }).click(); await priced;
+  // Products are sold from a product page's Dinkus Commerce panel, then published by the store's publish check.
+  const { id: pageId, panel } = await openProductPage(page, 'Fixture parcel ' + run);
+  await panel.getByRole('textbox', { name: 'SKU (optional)', exact: true }).fill('FIXTURE-' + run);
+  await panel.getByRole('button', { name: 'Add price and stock', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Review proposed changes' }).getByRole('button', { name: 'Apply changes', exact: true }).click();
+  await saveEditor(page);
+  const priceForm = panel.locator('form').filter({ has: page.getByRole('textbox', { name: 'Regular', exact: true }) });
+  await priceForm.getByRole('textbox', { name: 'Regular', exact: true }).fill('12');
+  await priceForm.getByRole('radio', { name: 'In stock', exact: true }).check();
+  await priceForm.getByRole('button', { name: /^Save/ }).click();
+  await expect(priceForm.getByRole('textbox', { name: 'Regular', exact: true })).toHaveValue('12.00');
+  const catalogItemId = (await readProductPage(page.request, pageId)).data?.commerce_item_id;
+  expect(catalogItemId).toBeTruthy();
+  await setOnSale(page.request, { catalogItemId, entryId: pageId, onSale: true });
   await capture('catalog');
   await page.goto('/_emdash/admin/plugins/r_3brsc2on3bu673rn/status');
   await expect(page.getByRole('heading', { name: 'Payment setup', exact: true })).toBeVisible();

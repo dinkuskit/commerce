@@ -31,6 +31,19 @@ test('sharing retains import specifiers and rejects invalid source', () => {
   assert.equal(shareLiterals('const x=1;'), 'const x=1;');
 });
 
+test('destructured property names share through computed keys with identical semantics', () => {
+  const source = `(() => {
+    const record = {someLongPropertyName: 4, otherLongPropertyName: {someLongPropertyName: 5}};
+    const {someLongPropertyName: first, otherLongPropertyName: {someLongPropertyName: second}} = record;
+    const read = ({someLongPropertyName: value = 9}) => value;
+    let assigned; ({someLongPropertyName: assigned} = record);
+    return JSON.stringify([first, second, read({}), read(record), assigned, record.someLongPropertyName]);
+  })()`;
+  const shared = shareLiterals(source);
+  assert.match(shared, /\{\[__commerceLiteral\d+\]: ?first/);
+  assert.equal(result(shared), result(source));
+});
+
 test('top-level strict directives remain first', () => {
   const source = `'use strict'; const one='a repeated long value';const two='a repeated long value'; this.result = (function(){return this === undefined})(); JSON.stringify([this.result,one,two]);`;
   const shared = shareLiterals(source);

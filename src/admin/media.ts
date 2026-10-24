@@ -25,7 +25,7 @@ export async function library(ctx: PluginContext, t: Target, cursor?: string): P
   const page = await ctx.media.list({ limit: LIBRARY_PAGE, mimeType: "image/", ...(cursor ? { cursor } : {}) });
   const blocks: Block[] = [
     header(t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image"),
-    navigation(), note("Media Library images."),
+    ...(t.t === "placeholder" ? [navigation()] : []), note("Media Library images."),
     { type: "actions", elements: [button("Cancel", t.t === "placeholder" ? "settings" : "open", t.id)] },
   ];
   for (const item of page.items) {

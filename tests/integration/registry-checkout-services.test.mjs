@@ -58,11 +58,13 @@ async function start(state, input = basket) {
   return { token, result: await state.invoke(START, input, token) };
 }
 
+const productPanelUi = entryId => ({ surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: entryId, locale: null, version: 1 } });
+
 test('actual compiled default workerd profile preserves empty-grants/unconfigured admission', async t => {
   const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
-  assert.deepEqual(state.artifact.capabilities, ['media:read', 'network:request', 'email:send']);
+  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'admin.editor-draft:patch', 'media:read', 'network:request', 'email:send']);
   assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
@@ -223,10 +225,10 @@ test('EmDash 1.2 original storage shares admin prices, storefront helpers and ca
   assert.equal(prepared.ok, true);
   // Invoke the compiled admin handler on its original owner storage. Actual
   // HTTP admin authorization is separately exercised by the browser suite.
-  const saved = await state.plugin.invokeRoute('admin', {
+  const saved = await state.plugin.invokeRoute('product-panel', {
     type: 'form_submit', action_id: 'save:hat',
     values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' },
-  }, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/admin`, method: 'POST' });
+  }, { url: `${SITE}/_emdash/api/content/products/page-hat/plugin-extensions/${state.manifest.id}/panel/product`, method: 'POST', ui: productPanelUi('page-hat') });
   assert.equal(saved.toast.type, 'success');
   const c = state.collections;
   const price = await resolveCatalogItemPrice(c.catalog_prices, 'hat');
@@ -256,17 +258,24 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   const databasePath = join(directory, 'runtime.db');
   let state = await runtimeFixture({ seed: false, databasePath });
   t.after(async () => { await state.close(); await rm(directory, { recursive: true, force: true }); });
-  const admin = input => state.plugin.invokeRoute('admin', input, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/admin`, method: 'POST' });
-  const created = await admin({ type: 'form_submit', action_id: 'create:public-catalog-flow', values: { name: 'Public Hat', sku: 'PUBLIC-HAT' } });
+  // Products are made from their page's Dinkus Commerce panel and go on sale when the store publishes that page.
+  const admin = input => state.plugin.invokeRoute('product-panel', input, { url: `${SITE}/_emdash/api/content/products/page-public-hat/plugin-extensions/${state.manifest.id}/panel/product`, method: 'POST', ui: productPanelUi('page-public-hat') });
+  const created = await admin({ type: 'form_submit', action_id: 'sell', values: { sku: 'PUBLIC-HAT' }, draft: { fields: { title: 'Public Hat' } } });
   assert.equal(created.toast.type, 'success');
   const products = (await state.collections.catalog_items.query()).items.filter(row => row.data.recordKind === 'catalog-item');
   assert.equal(products.length, 1);
   const id = products[0].id;
+  assert.deepEqual(created.patch, { type: 'editor-draft-patch', operations: [{ op: 'set', field: 'commerce_item_id', value: id }] });
+  assert.deepEqual(await state.plugin.invokeRoute('catalog-items/set-on-sale', { catalogItemId: id, entryId: 'page-public-hat', onSale: true },
+    { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog-items/set-on-sale`, method: 'POST' }), { changed: true });
   assert.equal((await admin({ type: 'form_submit', action_id: 'save:' + id, values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' } })).toast.type, 'success');
   const publicList = () => state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
   const publicItem = () => state.plugin.invokeRoute('catalog/public/item', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public/item?itemId=${id}`, method: 'GET' });
   const catalog = await publicList();
-  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [] };
+  // Add price and stock makes a physical product, which carries its one-member variant group.
+  const { variants } = catalog.products[0] ?? {};
+  assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment]), [[id, 'physical']]);
+  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], variants };
   assert.deepEqual(catalog, { products: [expectedProduct] });
   assert.deepEqual(await publicItem(), expectedProduct);
   for (const enabled of [true, false]) {

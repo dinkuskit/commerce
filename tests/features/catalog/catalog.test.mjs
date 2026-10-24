@@ -511,11 +511,17 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
     version: "0.2.0",
     format: "native",
     entrypoint: "@dinkuskit/commerce",
-    adminEntry: "@dinkuskit/commerce/admin",
     adminPages: [
-      { path: "/products", label: "Products", icon: "storefront" },
-      { path: "/store", label: "Store", icon: "storefront" },
+      { path: "/orders", label: "Orders", icon: "storefront", group: "Dinkus Commerce" },
+      { path: "/settings", label: "Commerce settings", icon: "settings", group: "Dinkus Commerce" },
     ],
+    editorPanels: [{
+      id: "product",
+      title: "Dinkus Commerce",
+      route: "product-panel",
+      collections: ["products"],
+      draft: { read: { fields: ["title", "commerce_item_id"] }, patch: { fields: ["commerce_item_id"] } },
+    }],
     options: { enableLocalStockManagement: false },
   });
   assert.deepEqual(dinkusCommerce({ enableLocalStockManagement: true }).options, {

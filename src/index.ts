@@ -1,4 +1,5 @@
 import { definePlugin, type PluginDescriptor, type PluginRoute, type ResolvedPlugin } from "emdash";
+import { commerceAdmin, productPanel } from "./admin/index.js";
 
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
@@ -17,6 +18,9 @@ import {
   SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
   RENAME_CATALOG_PRODUCT_ROUTE,
   ARCHIVE_CATALOG_PRODUCT_ROUTE,
+  PRODUCT_PAGE_ON_SALE_ROUTE,
+  PRODUCT_PAGES_COLLECTION,
+  setProductPageOnSaleRoute,
   ADD_CATALOG_VARIANT_OPTION_ROUTE,
   BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
@@ -129,7 +133,7 @@ export * from "./features/inventory-setup/index.js";
 
 export * from "./features/storefront-availability/index.js";
 
-import { MERCHANT_STORE_SETTINGS_ROUTE, createMerchantStoreSettingsRoute } from "./features/store-settings/index.js";
+import { MERCHANT_STORE_SETTINGS_ROUTE } from "./features/store-settings/index.js";
 export * from "./features/store-settings/index.js";
 
 export * from "./features/store-policies/index.js";
@@ -138,17 +142,18 @@ export * from "./features/structured-data/index.js";
 
 const COMMERCE_PLUGIN_VERSION = "0.2.0";
 
-const COMMERCE_ADMIN_ENTRY = "@dinkuskit/commerce/admin";
-const COMMERCE_PRODUCTS_PAGE = {
-  path: "/products",
-  label: "Products",
-  icon: "storefront",
-} as const;
-const COMMERCE_STORE_PAGE = {
-  path: "/store",
-  label: "Store",
-  icon: "storefront",
-} as const;
+// Every install, native or Registry, gets the same Block Kit pages and product page panel (commerce-admin-block-kit-only-20261024).
+const COMMERCE_ADMIN_PAGES = [
+  { path: "/orders", label: "Orders", icon: "storefront", group: "Dinkus Commerce" },
+  { path: "/settings", label: "Commerce settings", icon: "settings", group: "Dinkus Commerce" },
+];
+const COMMERCE_EDITOR_PANELS = [{
+  id: "product",
+  title: "Dinkus Commerce",
+  route: "product-panel",
+  collections: ["products"],
+  draft: { read: { fields: ["title", "commerce_item_id"] }, patch: { fields: ["commerce_item_id"] } },
+}];
 
 export interface CommerceLocalDevelopmentOptions {
   /**
@@ -184,8 +189,8 @@ export function dinkusCommerce(
         ? { siteUrl: options.siteUrl.trim() }
         : {}),
     },
-    adminEntry: COMMERCE_ADMIN_ENTRY,
-    adminPages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
+    adminPages: COMMERCE_ADMIN_PAGES,
+    editorPanels: COMMERCE_EDITOR_PANELS,
   };
 }
 
@@ -244,6 +249,41 @@ function nativePublicContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
   };
 }
 
+/** Native storage names some collections in camelCase; the Block Kit admin reads them by their Registry (snake_case) names. */
+function nativeAdminContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
+  const storage: Record<string, unknown> = { ...ctx.storage };
+  for (const [name, collection] of Object.entries(ctx.storage)) storage[name.replace(/[A-Z]/g, letter => "_" + letter.toLowerCase())] ??= collection;
+  return { ...ctx, storage };
+}
+
+/** A private Block Kit route (admin pages or the product page panel), handed the same route shape the Registry build gets. */
+function nativeBlockKitRoute(handler: typeof commerceAdmin): PluginRoute {
+  return {
+    public: false,
+    permission: "content:edit_any",
+    methods: ["POST"],
+    handler: async (ctx) => {
+      // DinkusKit Connect only accepts Registry installs, so a native store's Settings has no Connect to press.
+      const action = (ctx.input as { type?: unknown; action_id?: unknown } | null)?.action_id;
+      const input = typeof action === "string" && action.startsWith("connect") ? { type: "page_load", page: "/settings" } : ctx.input;
+      const response = await handler({ input, user: ctx.user, ui: ctx.ui,
+        request: { method: ctx.request.method, url: ctx.request.url, headers: {} } } as never, nativeAdminContext(ctx) as never);
+      return withoutConnect(response);
+    },
+  };
+}
+
+/** Swaps Settings' DinkusKit section for a note marked (DEV): Connect is for Registry stores. */
+function withoutConnect<T>(response: T): T {
+  const blocks = (response as { blocks?: { type: string; text?: unknown }[] } | null)?.blocks;
+  const start = blocks?.findIndex(block => block.type === "header" && block.text === "DinkusKit") ?? -1;
+  if (!blocks || start < 0) return response;
+  let end = start + 1;
+  while (end < blocks.length && blocks[end].type !== "header") end++;
+  const note = { type: "context", text: "(DEV) This store runs Commerce from source. DinkusKit Connect is on Registry stores only." };
+  return { ...response, blocks: [...blocks.slice(0, start), note, ...blocks.slice(end)] };
+}
+
 const publicCatalogRoute = {
   public: true,
   methods: ["GET"],
@@ -296,7 +336,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
     // Product media reads alt text and dimensions live from the Media Library.
-    capabilities: ["media:read", "network:request", "email:send"],
+    capabilities: ["media:read", "network:request", "email:send", "admin.editor-draft:read", "admin.editor-draft:patch"],
     allowedHosts: ["payments.dinkuskit.com"],
     storage: {
       catalogItems: {
@@ -387,15 +427,20 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         indexes: [],
         uniqueIndexes: [],
       },
+      [PRODUCT_PAGES_COLLECTION]: {
+        indexes: ["entryId"],
+        uniqueIndexes: [],
+      },
     },
     admin: {
-      entry: COMMERCE_ADMIN_ENTRY,
-      pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
+      pages: COMMERCE_ADMIN_PAGES,
+      editorPanels: COMMERCE_EDITOR_PANELS,
     },
     routes: {
+      [MERCHANT_STORE_SETTINGS_ROUTE]: nativeBlockKitRoute(commerceAdmin),
+      "product-panel": nativeBlockKitRoute(productPanel),
       [PUBLIC_CATALOG_ROUTE]: publicCatalogRoute,
       [PUBLIC_CATALOG_ITEM_ROUTE]: publicCatalogItemRoute,
-      [MERCHANT_STORE_SETTINGS_ROUTE]: createMerchantStoreSettingsRoute(),
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
       [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:
@@ -414,6 +459,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [SET_CATALOG_ITEM_IDENTIFIERS_ROUTE]: setCatalogItemIdentifiersRoute,
       [RENAME_CATALOG_PRODUCT_ROUTE]: renameCatalogProductRoute,
       [ARCHIVE_CATALOG_PRODUCT_ROUTE]: setCatalogProductArchivedRoute,
+      [PRODUCT_PAGE_ON_SALE_ROUTE]: setProductPageOnSaleRoute,
       [ADD_CATALOG_VARIANT_OPTION_ROUTE]: addCatalogVariantOptionRoute,
       [UPDATE_CATALOG_VARIANT_LABELS_ROUTE]: updateCatalogVariantLabelsRoute,
       [BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: bulkSaveCatalogProductPricesRoute,

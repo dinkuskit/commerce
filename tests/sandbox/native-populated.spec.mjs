@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { ensureProductsCollection, openPanel } from "./product-page.mjs";
 
 const grilltrackScreenshotsDir = resolve(".grilltrack/work/native-continuity/screenshots");
 mkdirSync(grilltrackScreenshotsDir, { recursive: true });
@@ -20,7 +21,7 @@ async function saveScreenshot(page, filename, artifactsDir) {
 }
 
 test.describe("Native populated-browser continuity fixture", () => {
-  test("seeds old data, verifies rendering, edits via restored UI, and asserts storage retention", async ({
+  test("seeds old data, verifies rendering, edits in the Block Kit panel, and asserts storage retention", async ({
     page,
     request,
   }) => {
@@ -129,90 +130,44 @@ test.describe("Native populated-browser continuity fixture", () => {
     };
     insertStorage.run("dinkus-commerce", "storefrontOutOfStockListing", storeSettings.recordId, JSON.stringify(storeSettings), now, now);
 
-    // 3. Authenticate clerk session and navigate to restored Products admin
-    await page.goto("/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/products");
-
-    // Dismiss setup dialog if present; an already-initialized native fixture has no dialog.
+    // 3. Sign in and open a product page that names the seeded boot; native stores use the same Block Kit panel as the Registry build.
+    await page.goto("/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/settings");
     const getStartedButton = page.getByRole("button", { name: "Get Started" });
-    await getStartedButton.or(page.locator("h1")).first().waitFor({ state: "visible", timeout: 60000 });
+    await getStartedButton.or(page.getByRole("heading", { name: "Commerce settings" })).first().waitFor({ state: "visible", timeout: 60000 });
     if (await getStartedButton.isVisible()) await getStartedButton.click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    // The old React Products and Store screens are gone; the sidebar matches a Registry store.
+    await expect(page.getByRole("link", { name: "Commerce settings" })).toBeVisible();
+    await expect(page.locator('a[href$="/plugins/dinkus-commerce/products"], a[href$="/plugins/dinkus-commerce/store"]')).toHaveCount(0);
 
-    // Verify header and product list
-    await expect(page.locator("h1")).toHaveText("Products", { timeout: 30000 });
-    const bootButton = page.locator("button", { hasText: "Heritage Boot" });
-    const blanketButton = page.locator("button", { hasText: "Wool Blanket" });
-    await expect(bootButton).toBeVisible();
-    await expect(blanketButton).toBeVisible();
+    await ensureProductsCollection(page.request);
+    const created = await page.request.post("/_emdash/api/content/products", {
+      headers: { "X-EmDash-Request": "1" },
+      data: { data: { title: "Heritage Boot", commerce_item_id: unmanagedProduct.itemId } },
+    });
+    expect(created.ok()).toBe(true);
+    const createdData = (await created.json()).data;
+    const bootPageId = (createdData.item ?? createdData).id;
+    await page.goto("/_emdash/admin/content/products/" + bootPageId);
+    let panel = await openPanel(page);
+    // A page saved before the panel existed is linked once, by the product's SKU; the page already names it, so nothing waits on Save.
+    await panel.getByRole("textbox", { name: "Or its SKU", exact: true }).fill("BOOT-01");
+    await panel.getByRole("button", { name: "Sell it here", exact: true }).click();
 
-    // 4. Verify unmanaged product data renders correctly in form fields
-    await bootButton.click();
-    await expect(page.locator("#regular-price")).toHaveValue("180.00");
-    await expect(page.locator("#sale-price")).toHaveValue("150.00");
-    const manageStock = page.locator("#manage-stock");
-    const manageStockRow = page.locator(".dk-manage-stock-row");
-    await expect(manageStock).toHaveAttribute("role", "switch");
-    await expect(manageStock).not.toBeChecked();
-    await expect(manageStock).toBeDisabled();
-    await expect(manageStockRow.getByText("Coming soon", { exact: true })).toBeVisible();
-    await expect(manageStockRow).toHaveCSS("display", "flex");
-    const filter = await manageStock.evaluate((element) => getComputedStyle(element).filter);
-    expect(filter).toMatch(/grayscale/);
-    await manageStock.click({ force: true });
-    await expect(manageStock).not.toBeChecked();
-    await manageStock.focus();
-    await page.keyboard.press("Space");
-    await expect(manageStock).not.toBeChecked();
-    const outOfStockRadio = page.locator("label:has-text('Out of stock') input");
-    await expect(outOfStockRadio).toBeChecked();
-
+    // 4. Old native data shows in the panel
+    await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("180.00");
+    await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("150.00");
+    await expect(panel.getByRole("radio", { name: "Out of stock", exact: true })).toBeChecked();
+    await expect(panel.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
     await saveScreenshot(page, "native-products-populated.png", artifactsDir);
 
     const storageRow = (collection, id) => JSON.parse(db.prepare(
       "SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?",
     ).get("dinkus-commerce", collection, id).data);
-    const saveNativeProduct = async (expectedSaved = true) => {
-      const response = page.waitForResponse(r => r.url().endsWith("/catalog-items/save-prices") && r.request().method() === "POST");
-      await page.locator("form:has(#regular-price)").getByRole("button", { name: "Save", exact: true }).click();
-      const received = await response;
-      const body = await received.json();
-      if (expectedSaved) {
-        expect(received.status()).toBe(200);
-        expect(body.data.saved).toBe(true);
-        await expect(page.getByRole("button", { name: "Save", exact: true })).toBeEnabled();
-      }
-      return { received, body, values: received.request().postDataJSON() };
-    };
 
-    await blanketButton.click();
-    await expect(manageStock).toBeChecked();
-    await expect(manageStock).toBeDisabled();
-    await expect(page.getByText("Coming soon", { exact: true })).toBeVisible();
-    await expect(page.locator("fieldset:has-text('Stock status')")).not.toBeVisible();
-    await saveScreenshot(page, "native-managed-setup.png", artifactsDir);
-
-    const claimBefore = storageRow("managedSkuClaims", managedClaim.recordId);
-    const bindingBefore = storageRow("storeInventoryConfigurations", managedBinding.recordId);
+    // 5. Managed setup cannot be switched off through the native JSON route.
     const managedBefore = storageRow("catalogItems", managedProduct.itemId);
-    await page.locator("#regular-price").fill("42.00");
-    await page.locator("#sale-price").fill("35.00");
-    const managedSave = await saveNativeProduct();
-    expect(managedSave.values).toMatchObject({ regular: "42.00", sale: "35.00" });
-    expect(managedSave.values).not.toHaveProperty("manageStock");
-    writeFileSync(resolve(artifactsDir, "native-managed-price-omit.json"), JSON.stringify({
-      fixture: "synthetic managed blanket", transport: "EmDash 1.2.0 / native React / SQLite",
-      submittedValues: (({ catalogItemId, ...rest }) => rest)(managedSave.values),
-      persistedStock: storageRow("catalogItems", managedProduct.itemId).stockManagement,
-    }, null, 2) + "\n");
-    expect(storageRow("catalogItems", managedProduct.itemId)).toEqual(managedBefore);
-    expect(storageRow("managedSkuClaims", managedClaim.recordId)).toEqual(claimBefore);
-    expect(storageRow("storeInventoryConfigurations", managedBinding.recordId)).toEqual(bindingBefore);
-    expect(storageRow("catalogPrices", managedProduct.itemId)).toMatchObject({
-      regular: { currency: "USD", minor: "4200" },
-      sale: { currency: "USD", minor: "3500" },
-    });
-    await saveScreenshot(page, "native-managed-price-preserved.png", artifactsDir);
-
+    const claimBefore = storageRow("managedSkuClaims", managedClaim.recordId);
     const disableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
       data: { catalogItemId: managedProduct.itemId, regular: "42.00", sale: "35.00", manageStock: false },
       headers: { "X-EmDash-Request": "1" },
@@ -222,39 +177,27 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(storageRow("catalogItems", managedProduct.itemId)).toEqual(managedBefore);
     expect(storageRow("managedSkuClaims", managedClaim.recordId)).toEqual(claimBefore);
 
-    // 6. Edit Heritage Boot via restored UI: change price and set In stock
-    await bootButton.click();
-    await page.locator("#regular-price").fill("195.00");
-    await page.locator("#sale-price").fill("160.00");
-    const inStockRadio = page.locator("label:has-text('In stock') input");
-    await inStockRadio.check();
-
-    // Click Save
-    await page.locator("form:has(#regular-price)").getByRole("button", { name: "Save", exact: true }).click();
-    await page.waitForLoadState("networkidle");
-
-    // Verify fields retain saved values in UI
-    await expect(page.locator("#regular-price")).toHaveValue("195.00");
-    await expect(page.locator("#sale-price")).toHaveValue("160.00");
-    await expect(inStockRadio).toBeChecked();
-
+    // 6. Edit Heritage Boot in the panel: change price and set In stock
+    const priceForm = panel.locator("form").filter({ has: page.getByRole("textbox", { name: "Regular", exact: true }) });
+    await priceForm.getByRole("textbox", { name: "Regular", exact: true }).fill("195");
+    await priceForm.getByRole("textbox", { name: "Sale", exact: true }).fill("160");
+    await priceForm.getByRole("radio", { name: "In stock", exact: true }).check();
+    await priceForm.getByRole("button", { name: /^Save/ }).click();
+    await expect(priceForm.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("195.00");
+    await expect(priceForm.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("160.00");
     await saveScreenshot(page, "native-products-edited.png", artifactsDir);
+    // Native stores keep their GTIN, MPN and Brand form, now in the same panel as Registry stores.
+    const idsForm = panel.locator("form").filter({ has: page.getByRole("button", { name: "Save identifiers", exact: true }) });
+    await idsForm.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333931");
+    await idsForm.getByRole("textbox", { name: "Brand", exact: true }).fill("Heritage");
+    await idsForm.getByRole("button", { name: "Save identifiers", exact: true }).click();
+    await expect.poll(() => storageRow("catalogItems", unmanagedProduct.itemId).gtin).toBe("4006381333931");
+    expect(storageRow("catalogItems", unmanagedProduct.itemId).brand).toBe("Heritage");
 
-    // 7. Verify storage retention in SQLite for the edited product
-    const updatedPriceRow = db
-      .prepare("SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?")
-      .get("dinkus-commerce", "catalogPrices", "item-heritage-boot");
-    expect(updatedPriceRow).toBeDefined();
-    const updatedPriceData = JSON.parse(updatedPriceRow.data);
-    expect(updatedPriceData.regular).toEqual({ currency: "USD", minor: "19500" });
-    expect(updatedPriceData.sale).toEqual({ currency: "USD", minor: "16000" });
-
-    const updatedAvailabilityRow = db
-      .prepare("SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?")
-      .get("dinkus-commerce", "catalogManualAvailability", "item-heritage-boot");
-    expect(updatedAvailabilityRow).toBeDefined();
-    const updatedAvailabilityData = JSON.parse(updatedAvailabilityRow.data);
-    expect(updatedAvailabilityData.status).toBe("in-stock");
+    // 7. Storage keeps the native collection names
+    await expect.poll(() => storageRow("catalogPrices", unmanagedProduct.itemId).regular).toEqual({ currency: "USD", minor: "19500" });
+    expect(storageRow("catalogPrices", unmanagedProduct.itemId).sale).toEqual({ currency: "USD", minor: "16000" });
+    expect(storageRow("catalogManualAvailability", unmanagedProduct.itemId).status).toBe("in-stock");
 
     const bootBeforeEnable = storageRow("catalogItems", unmanagedProduct.itemId);
     const bootPriceBeforeEnable = storageRow("catalogPrices", unmanagedProduct.itemId);
@@ -266,36 +209,29 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(await enableAttempt.text()).toMatch(/coming soon|MANAGE_STOCK_UNAVAILABLE/i);
     expect(storageRow("catalogItems", unmanagedProduct.itemId)).toEqual(bootBeforeEnable);
     expect(storageRow("catalogPrices", unmanagedProduct.itemId)).toEqual(bootPriceBeforeEnable);
-    expect(storageRow("catalogItems", unmanagedProduct.itemId).stockManagement).toEqual({ mode: "unmanaged" });
 
-    // 8. Navigate to Store settings admin and verify seeded setting
-    await page.goto("/_emdash/admin/plugins/dinkus-commerce/store");
-    await page.waitForLoadState("networkidle");
-
-    await expect(page.locator("h1")).toHaveText("Store");
-    const hideThemRadio = page.locator("label:has-text('Hide them') input");
-    const showOutOfStockRadio = page.locator("label:has-text('Show as out of stock') input");
-    await expect(hideThemRadio).toBeChecked();
-
+    // 8. Commerce settings shows the seeded setting and the product no page sells
+    await page.goto("/_emdash/admin/plugins/dinkus-commerce/settings");
+    const hide = page.getByRole("switch", { name: "Hide out-of-stock products", exact: true });
+    await expect(hide).toBeChecked({ timeout: 30000 });
+    await expect(page.getByRole("heading", { name: "Products without a page" })).toBeVisible();
+    // DinkusKit Connect only accepts Registry installs, so a native store shows a (DEV) note instead of a Connect it cannot finish.
+    await expect(page.getByText("(DEV) This store runs Commerce from source. DinkusKit Connect is on Registry stores only.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Connect", exact: true })).toHaveCount(0);
+    const connect = await page.request.post("/_emdash/api/plugins/dinkus-commerce/admin", { headers: { "X-EmDash-Request": "1" }, data: { type: "block_action", action_id: "connect" } });
+    expect(JSON.stringify(await connect.json())).not.toContain("Approve at DinkusKit.com");
+    await expect(page.getByText("Wool Blanket \u2014 BLANKET-01", { exact: true })).toBeVisible();
     await saveScreenshot(page, "native-store-populated.png", artifactsDir);
 
-    // 9. Edit Store setting via restored UI
-    await showOutOfStockRadio.check();
-    await page.getByRole("button", { name: "Save", exact: true }).click();
-    await page.waitForLoadState("networkidle");
-    await expect(showOutOfStockRadio).toBeChecked();
-
+    // 9. Edit the setting
+    await hide.uncheck();
+    await page.locator("form").filter({ has: hide }).getByRole("button", { name: "Save", exact: true }).click();
+    await expect.poll(() => storageRow("storefrontOutOfStockListing", "active").hideOutOfStock).toBe(false);
+    await page.reload();
+    await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).not.toBeChecked({ timeout: 30000 });
     await saveScreenshot(page, "native-store-edited.png", artifactsDir);
 
-    // 10. Verify Store setting storage retention in SQLite
-    const updatedStoreRow = db
-      .prepare("SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?")
-      .get("dinkus-commerce", "storefrontOutOfStockListing", "active");
-    expect(updatedStoreRow).toBeDefined();
-    const updatedStoreData = JSON.parse(updatedStoreRow.data);
-    expect(updatedStoreData.hideOutOfStock).toBe(false);
-
-    // Existing identity and managed setup survive edits without a collection migration.
+    // 10. Existing identity and managed setup survive edits without a collection migration.
     const storedItems = db.prepare("SELECT id, data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? ORDER BY id")
       .all("dinkus-commerce", "catalogItems");
     expect(storedItems.map(row => row.id)).toEqual(["item-heritage-boot", "item-wool-blanket"]);
@@ -305,13 +241,10 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(JSON.parse(storedItems[0].data)).toMatchObject({ itemId: unmanagedProduct.itemId, sku: "BOOT-01", stockManagement: { mode: "unmanaged" } });
     expect(db.prepare("SELECT COUNT(*) AS count FROM _plugin_storage WHERE plugin_id = ? AND collection = ?")
       .get("dinkus-commerce", "catalog_items").count).toBe(0);
-    await page.reload();
-    await expect(showOutOfStockRadio).toBeChecked();
-    await page.goto("/_emdash/admin/plugins/dinkus-commerce/products");
-    await bootButton.click();
-    await expect(page.locator("#regular-price")).toHaveValue("195.00");
-    await expect(page.locator("#sale-price")).toHaveValue("160.00");
-    await expect(inStockRadio).toBeChecked();
+    await page.goto("/_emdash/admin/content/products/" + bootPageId);
+    panel = await openPanel(page);
+    await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("195.00");
+    await expect(panel.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
 
     db.close();
   });
@@ -322,9 +255,9 @@ test.describe("Native populated-browser continuity fixture", () => {
     const anonPage = await anonContext.newPage();
 
     // Verify unauthenticated admin page access redirects or denies
-    await anonPage.goto("/_emdash/admin/plugins/dinkus-commerce/products");
+    await anonPage.goto("/_emdash/admin/plugins/dinkus-commerce/settings");
     // EmDash redirects unauthenticated admin requests to setup/login
-    expect(anonPage.url()).not.toContain("/_emdash/admin/plugins/dinkus-commerce/products");
+    expect(anonPage.url()).not.toContain("/_emdash/admin/plugins/dinkus-commerce/settings");
 
     // Verify unauthenticated API POST fails closed
     const apiResponse = await request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {

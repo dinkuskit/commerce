@@ -1,3 +1,4 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 export type InventorySetupErrorCode =
   | "CATALOG_ITEM_NOT_FOUND"
   | "INVALID_CONFIGURATION"
@@ -29,6 +30,7 @@ export class InventorySetupError extends Error {
     super(message, options);
     this.name = "InventorySetupError";
     this.code = code;
-    this.status = STATUS_BY_CODE[code];
+    // Only native routes read status (the Registry answers refusals itself), so its table stays out of the Registry build.
+    this.status = REGISTRY_BUILD ? 0 : STATUS_BY_CODE[code];
   }
 }

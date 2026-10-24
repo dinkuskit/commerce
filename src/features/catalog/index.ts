@@ -58,6 +58,7 @@ export {
   saveCatalogProductPricesRoute,
   renameCatalogProductRoute,
   setCatalogProductArchivedRoute,
+  setProductPageOnSaleRoute,
   setCatalogItemBackordersRoute,
   setCatalogItemManualAvailabilityRoute,
   setCatalogItemRegularPriceRoute,
@@ -65,7 +66,9 @@ export {
   updateCatalogVariantLabelsRoute,
 } from "./route.js";
 export { setCatalogItemSku } from "./set-sku.js";
-export { renameCatalogProduct, setCatalogProductArchived } from "./product-edit.js";
+export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct } from "./product-edit.js";
+export { PRODUCT_PAGES_COLLECTION, linkProductPage, pageProduct, productPageLinks, setProductPageOnSale } from "./product-pages.js";
+export type { ProductPageRecord, ProductPages } from "./product-pages.js";
 export type { SetCatalogItemSkuInput, SetCatalogItemSkuResult } from "./set-sku.js";
 export { setCatalogItemIdentifiers } from "./set-identifiers.js";
 export { CATALOG_WEIGHT_MESSAGE, normalizeWeightOz, setCatalogItemWeight } from "./weight.js";

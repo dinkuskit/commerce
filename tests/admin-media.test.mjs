@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { commerceAdmin } from "../dist/admin/index.js";
+import { commerceAdmin, productPanel } from "../dist/admin/index.js";
 
 // Block Kit 1.2.0 renders no media_picker on plugin admin pages, so the sandbox
 // admin lists the Media Library itself through media:read. This exercises that
@@ -44,6 +44,7 @@ function context({ media = true, pageSize = 12 } = {}) {
     catalog_media: collection(),
     storefront_out_of_stock_listing: collection(),
     storefront_placeholder_image: collection(),
+    product_pages: collection(),
   };
   const listCalls = [];
   const ctx = {
@@ -66,14 +67,18 @@ function context({ media = true, pageSize = 12 } = {}) {
 }
 
 const route = (input) => ({ input, user: { role: 50 }, ui: { surface: "admin-page", locale: "en", direction: "ltr" } });
+// Product images live in the Dinkus Commerce panel on the product page; the placeholder lives on Commerce settings.
+const panel = (input, ctx) => productPanel({ input, user: { role: 50 }, ui: { surface: "content-editor-panel", locale: "en", direction: "ltr",
+  extensionId: "product", entry: { collection: "products", id: "page-hat", locale: null, version: 1 } } }, ctx);
+const send = (input, ctx) => input.action_id === "settings" || input.value?.t === "placeholder" ? commerceAdmin(route(input), ctx) : panel(input, ctx);
 const labels = (response) => response.blocks.flatMap((block) => block.type === "actions" ? block.elements.filter((element) => element.type === "button").map((element) => element.label) : []);
 const texts = (response) => response.blocks.map((block) => block.text ?? block.title ?? block.url ?? "").filter(Boolean);
 const button = (response, label) => response.blocks.flatMap((block) => block.type === "actions" ? block.elements : []).find((element) => element.label === label);
-const act = (ctx, element) => commerceAdmin(route({ type: "block_action", action_id: element.action_id, value: element.value }), ctx);
+const act = (ctx, element) => send({ type: "block_action", action_id: element.action_id, value: element.value }, ctx);
 
 test("a clerk chooses, reorders and removes product images from the Media Library page", async () => {
   const { ctx, storage, listCalls } = context();
-  let page = await commerceAdmin(route({ type: "block_action", action_id: "open", value: "hat" }), ctx);
+  let page = await panel({ type: "block_action", action_id: "open", value: "hat" }, ctx);
   assert.ok(texts(page).includes("Images") && texts(page).includes("No image") && texts(page).includes("Gallery (0 of 8)"));
   assert.deepEqual(labels(page).filter((label) => /image|gallery/i.test(label)), ["Choose image", "Add to gallery"]);
 
@@ -117,9 +122,9 @@ test("a clerk chooses, reorders and removes product images from the Media Librar
   assert.deepEqual(storage.catalog_media.map.get("hat"), { recordKind: "catalog-media", recordId: "hat", catalogItemId: "hat", image: null, gallery: [{ mediaId: SIDE }] });
   assert.deepEqual(storage.catalog_prices.map.get("hat").regular, { currency: "USD", minor: "400" }, "prices stay untouched");
 
-  const forged = await commerceAdmin(route({ type: "block_action", action_id: "media.up", value: { id: "hat", index: 7, m: SIDE } }), ctx);
+  const forged = await panel({ type: "block_action", action_id: "media.up", value: { id: "hat", index: 7, m: SIDE } }, ctx);
   assert.equal(forged.toast.type, "error");
-  const stale = await commerceAdmin(route({ type: "block_action", action_id: "media.remove", value: { id: "hat", index: 0, m: BACK } }), ctx);
+  const stale = await panel({ type: "block_action", action_id: "media.remove", value: { id: "hat", index: 0, m: BACK } }, ctx);
   assert.match(stale.toast.message, /gallery changed/);
   assert.equal(stale.blocks[1].text, "Red hat", "a stale page returns to the product");
   assert.deepEqual(storage.catalog_media.map.get("hat").gallery, [{ mediaId: SIDE }], "a stale page never removes a different image");
@@ -151,7 +156,7 @@ test("the library page paginates and the placeholder uses the same chooser", asy
 
 test("without media access the chooser refuses and previews degrade honestly", async () => {
   const { ctx } = context({ media: false });
-  const page = await commerceAdmin(route({ type: "block_action", action_id: "open", value: "hat" }), ctx);
+  const page = await panel({ type: "block_action", action_id: "open", value: "hat" }, ctx);
   const refused = await act(ctx, button(page, "Choose image"));
   assert.equal(refused.toast.type, "error");
 });

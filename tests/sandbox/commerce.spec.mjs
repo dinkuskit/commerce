@@ -4,6 +4,7 @@ import { writeFileSync } from "node:fs";
 import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 import { resolveStorefrontAvailability } from "../../dist/features/storefront-availability/index.js";
+import { openPanel, openProductPage, openProductPageTitled, readProductPage, saveEditor, setOnSale } from "./product-page.mjs";
 
 // Primary owner for transport/rendering: real workerd, host authorization and SQLite.
 // Kernel unit tests cannot detect broken sandbox RPC, invalid Block Kit, or lost form state.
@@ -22,13 +23,15 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
   const capture = async (name) => page.screenshot({ path: process.env.COMMERCE_PROOF_ARTIFACTS + "/" + name + ".png", animations: "disabled", fullPage: true });
   const adminPath = "/_emdash/admin/plugins/dinkus-commerce/";
   const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
-  let lastSave;
-  const save = async () => {
-    const response = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
-    await page.getByRole("button", { name: "Save", exact: true }).click();
+  let lastSave, lastSaveUrl, panel, panelEndpoint;
+  // Product changes go through the Dinkus Commerce panel on the product page; Settings through the admin route.
+  const save = async (scope = panel, url = panelEndpoint) => {
+    const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(url) && r.request().method() === "POST");
+    await scope.getByRole("button", { name: "Save", exact: true }).click();
     const received = await response;
     expect(received.status()).toBe(200);
     lastSave = received.request().postDataJSON();
+    lastSaveUrl = received.request().url();
     const body = await received.json();
     expect(body.success).toBe(true);
     return body.data;
@@ -39,87 +42,166 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     const denial = await anonymous.request.post(new URL(endpoint, test.info().project.use.baseURL).href, { data: { type: "form_submit", action_id: "settings.save", values: { hideOutOfStock: true } }, headers: { "X-EmDash-Request": "1" } });
     expect([401, 403]).toContain(denial.status());
     expect(raw("storefront_out_of_stock_listing")).toHaveLength(0);
+    // Only someone who may publish content can put a product on sale.
+    const anonymousOnSale = await anonymous.request.post(new URL("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", test.info().project.use.baseURL).href, { data: { catalogItemId: "any", onSale: true }, headers: { "X-EmDash-Request": "1" } });
+    expect([401, 403]).toContain(anonymousOnSale.status());
     await anonymous.close();
 
-    await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath + "products");
+    await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath + "settings");
     await page.getByRole("button", { name: "Get Started" }).click({ timeout: 60000 });
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(page.getByText("No products yet", { exact: true })).toBeVisible();
-    await capture("products-empty");
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Red hat");
-    await page.getByRole("textbox", { name: "SKU", exact: true }).fill("RED-HAT");
-    const createResponse = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
-    await page.getByRole("button", { name: "Add product", exact: true }).click();
+    // The Commerce pages sit in their own sidebar folder; the Products page is gone.
+    const folder = page.getByLabel("Admin navigation").getByRole("button", { name: "Dinkus Commerce", exact: true });
+    await expect(folder).toBeVisible();
+    await expect(page.getByLabel("Admin navigation").getByRole("link", { name: "Commerce settings", exact: true })).toHaveCount(1);
+    let opened = await openProductPage(page, "Red hat");
+    ({ panel } = opened);
+    panelEndpoint = opened.endpoint;
+    const pageId = opened.id;
+    await expect(panel.getByText("Not a product yet. Add price and stock to sell it.", { exact: true })).toBeVisible();
+    await capture("product-page-unlinked");
+    await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("RED-HAT");
+    const createResponse = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
+    await panel.getByRole("button", { name: "Add price and stock", exact: true }).click();
     const createdResponse = await createResponse;
-    expect((await createdResponse.json()).data.toast.type).toBe("success");
-    await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("");
+    const createdBody = (await createdResponse.json()).data;
+    expect(createdBody.toast.type).toBe("success");
+    // EmDash asks the owner to apply the panel's change to the open editor.
+    const review = page.getByRole("dialog", { name: "Review proposed changes" });
+    await expect(review.getByText("Commerce product", { exact: true })).toBeVisible();
+    await capture("product-page-apply-link");
+    await review.getByRole("button", { name: "Apply changes", exact: true }).click();
+    await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("");
     const created = raw("catalog_items").filter(row => row.recordKind === "catalog-item");
     expect(created).toHaveLength(1);
-    expect(created[0]).toMatchObject({ name: "Red hat", sku: "RED-HAT", stockManagement: { mode: "unmanaged" } });
+    expect(created[0]).toMatchObject({ name: "Red hat", sku: "RED-HAT", offSale: true, stockManagement: { mode: "unmanaged" } });
     const id = created[0].itemId;
+    expect(createdBody.patch).toEqual({ type: "editor-draft-patch", operations: [{ op: "set", field: "commerce_item_id", value: id }] });
+    // The link waits in the open editor until the owner presses Save.
+    await expect(page.getByRole("textbox", { name: "Commerce product (optional)" })).toHaveValue(id);
+    expect((await readProductPage(page.request, pageId)).data?.commerce_item_id ?? null).toBeNull();
+    await saveEditor(page);
+    await expect.poll(async () => (await readProductPage(page.request, pageId)).data?.commerce_item_id).toBe(id);
+    await expect(panel.getByText(/^Draft: publish to sell it/)).toBeVisible();
     const availability = () => resolveStorefrontAvailability(store, { catalogItemId: id }, { resolveProvider: async () => { throw new Error("Inventory must not be needed"); } });
     expect((await availability()).listable).toBe(false);
-    const replay = await page.request.post(endpoint, { data: createdResponse.request().postDataJSON(), headers: { "X-EmDash-Request": "1" } });
-    expect((await replay.json()).data.toast.type).toBe("success");
+    const replay = await page.request.post(createdResponse.request().url(), { data: createdResponse.request().postDataJSON(), headers: { "X-EmDash-Request": "1" } });
+    // EmDash refuses a replay against the saved page; either way no second product is made.
+    expect((await replay.json()).error?.code).toBe("EDITOR_DRAFT_STALE");
     expect(raw("catalog_items").filter(row => row.recordKind === "catalog-item")).toHaveLength(1);
+    // The store's publish check puts the product on sale when its page is published.
+    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: true })).toEqual({ changed: true });
+    expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
+    // Another page naming this product is refused before any write, whichever way it asks.
+    for (const body of [{ onSale: false }, { onSale: true }, { onSale: false, deleted: true }]) {
+      const competing = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { data: { catalogItemId: id, entryId: "01COMPETINGPAGE000000000000", ...body }, headers: { "X-EmDash-Request": "1" } });
+      const refusal = await competing.json();
+      // A sandboxed route answers a refused call with 400; the reason names the conflict.
+      expect(competing.status()).toBe(400);
+      expect(JSON.stringify(refusal)).toContain("Another page sells this product");
+    }
+    expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
+    // The product records the page that sells it; product_pages keeps the panel's note and the page's pointer.
+    expect(raw("catalog_items")[0].pageId).toBe(pageId);
+    expect(raw("product_pages").map(({ claim, ...row }) => row)).toEqual([{ entryId: pageId, catalogItemId: id }, { entryId: pageId, catalogItemId: id }]);
+    // Reassignment: once the page is deleted, another page takes the product, and the old page's delayed request is refused.
+    const competingPage = "01COMPETINGPAGE000000000000";
+    const post = (body) => page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { data: { catalogItemId: id, ...body }, headers: { "X-EmDash-Request": "1" } });
+    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: false, deleted: true })).toEqual({ changed: true });
+    expect(raw("catalog_items")[0]).toMatchObject({ offSale: true });
+    expect(raw("catalog_items")[0]).not.toHaveProperty("pageId");
+    expect(await setOnSale(page.request, { catalogItemId: id, entryId: competingPage, onSale: true })).toEqual({ changed: true });
+    const stale = await post({ entryId: pageId, onSale: false });
+    expect(stale.status()).toBe(400);
+    expect(JSON.stringify(await stale.json())).toContain("Another page sells this product");
+    expect(raw("catalog_items")[0].pageId).toBe(competingPage);
+    expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
+    // Hand it back for the rest of the walk.
+    await setOnSale(page.request, { catalogItemId: id, entryId: competingPage, onSale: false, deleted: true });
+    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: true })).toEqual({ changed: true });
+    await page.reload();
+    panel = await openPanel(page);
+    await expect(panel.getByText(/^On sale/)).toBeVisible();
 
-    await expect(page.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
-    await expect(page.getByRole("switch", { name: /Manage stock/ })).toHaveCount(0);
-    await expect(page.locator('input[type="checkbox"][id="manage-stock"]')).toHaveCount(0);
-    await expect(page.locator('[data-action-id="manageStock"], [name="manageStock"]')).toHaveCount(0);
-    await page.getByText("Manage stock — Coming soon", { exact: true }).click();
+    await expect(panel.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
+    await expect(panel.getByRole("switch", { name: /Manage stock/ })).toHaveCount(0);
+    await expect(panel.locator('input[type="checkbox"][id="manage-stock"]')).toHaveCount(0);
+    await expect(panel.locator('[data-action-id="manageStock"], [name="manageStock"]')).toHaveCount(0);
+    await panel.getByText("Manage stock — Coming soon", { exact: true }).click();
     await page.keyboard.press("Space");
     await page.keyboard.press("Enter");
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     await capture("manage-stock-coming-soon");
 
-    await page.getByRole("textbox", { name: "Regular", exact: true }).fill("12");
-    await page.getByRole("textbox", { name: "Sale", exact: true }).fill("10");
-    await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
+    await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("12");
+    await panel.getByRole("textbox", { name: "Sale", exact: true }).fill("10");
+    await panel.getByRole("radio", { name: "Out of stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
-    await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
+    await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
     expect(lastSave.values).not.toHaveProperty("manageStock");
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
     // Shipping weight in ounces sits on the catalog item; a refused weight keeps the typing and the stored value.
     const saveWeight = async () => {
-      const response = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
-      await page.getByRole("button", { name: "Save weight", exact: true }).click();
+      const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
+      await panel.getByRole("button", { name: "Save weight", exact: true }).click();
       return (await (await response).json()).data;
     };
-    await page.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
+    await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
     expect((await saveWeight()).toast.message).toBe("Weight saved");
-    await expect(page.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("12.5");
+    await expect(panel.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("12.5");
     expect(raw("catalog_items")[0].weightOz).toBe(12.5);
-    await page.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("heavy");
+    await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("heavy");
     expect((await saveWeight()).toast.type).toBe("error");
-    await expect(page.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("heavy");
+    await expect(panel.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("heavy");
     expect(raw("catalog_items")[0].weightOz).toBe(12.5);
     await capture("product-weight-refused");
-    await page.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
+    await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
     expect((await saveWeight()).toast.type).toBe("success");
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
+    // GTIN, MPN and Brand for shopping feeds: checked like the identifiers route, an empty box clears its field.
+    const saveIds = async () => {
+      const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
+      await panel.getByRole("button", { name: "Save identifiers", exact: true }).click();
+      return (await (await response).json()).data;
+    };
+    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381 333931");
+    await panel.getByRole("textbox", { name: "MPN", exact: true }).fill("RH-1");
+    await panel.getByRole("textbox", { name: "Brand", exact: true }).fill("Smoky");
+    expect((await saveIds()).toast.message).toBe("Identifiers saved");
+    expect(raw("catalog_items")[0]).toMatchObject({ gtin: "4006381333931", mpn: "RH-1", brand: "Smoky" });
+    await expect(panel.getByRole("textbox", { name: "GTIN", exact: true })).toHaveValue("4006381333931");
+    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333932");
+    expect((await saveIds()).toast.type).toBe("error");
+    // The refused form comes back with what was typed; the stored GTIN is unchanged.
+    await expect(panel.getByRole("textbox", { name: "GTIN", exact: true })).toHaveValue("4006381333932");
+    expect(raw("catalog_items")[0].gtin).toBe("4006381333931");
+    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333931");
+    await panel.getByRole("textbox", { name: "Brand", exact: true }).fill("");
+    expect((await saveIds()).toast.type).toBe("success");
+    expect(raw("catalog_items")[0]).not.toHaveProperty("brand");
+    expect(raw("catalog_items")[0]).toMatchObject({ gtin: "4006381333931", mpn: "RH-1" });
     expect(await availability()).toMatchObject({ status: "out-of-stock", sellable: false, listable: true });
     await capture("price-stock-saved");
 
     for (const [regular, sale, error] of [["12.999", "10", "Enter a dollar amount"], ["12", "15", "Sale must be lower"]]) {
-      await page.getByRole("textbox", { name: "Regular", exact: true }).fill(regular);
-      await page.getByRole("textbox", { name: "Sale", exact: true }).fill(sale);
+      await panel.getByRole("textbox", { name: "Regular", exact: true }).fill(regular);
+      await panel.getByRole("textbox", { name: "Sale", exact: true }).fill(sale);
       const rejected = await save(); expect(rejected.toast.type).toBe("error"); expect(rejected.toast.message).toContain(error);
-      await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue(regular);
-      await expect(page.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue(sale);
+      await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue(regular);
+      await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue(sale);
       expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
     }
     await capture("price-refused");
-    await page.getByRole("textbox", { name: "Regular", exact: true }).fill("12.00");
-    await page.getByRole("textbox", { name: "Sale", exact: true }).fill("10.00");
-    await page.getByRole("radio", { name: "In stock", exact: true }).check();
+    await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("12.00");
+    await panel.getByRole("textbox", { name: "Sale", exact: true }).fill("10.00");
+    await panel.getByRole("radio", { name: "In stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
     expect(raw("catalog_manual_availability")[0].status).toBe("in-stock");
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     const catalogBeforeEnable = JSON.stringify(raw("catalog_items"));
     const pricesBeforeEnable = JSON.stringify(raw("catalog_prices"));
     const claimsBeforeEnable = JSON.stringify(raw("managed_sku_claims"));
-    const maliciousEnable = await page.request.post(endpoint, {
+    const maliciousEnable = await page.request.post(lastSaveUrl, {
       data: { ...lastSave, values: { ...lastSave.values, manageStock: true } },
       headers: { "X-EmDash-Request": "1" },
     });
@@ -132,13 +214,13 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     await capture("manage-stock-enable-refused");
     await page.reload();
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
-    await expect(page.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
+    panel = await openPanel(page);
+    await expect(panel.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
+    await expect(panel.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
     expect(raw("managed_sku_claims")).toHaveLength(0);
-    await page.getByRole("radio", { name: "Out of stock", exact: true }).check();
+    await panel.getByRole("radio", { name: "Out of stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
     expect(raw("catalog_manual_availability")[0].status).toBe("out-of-stock");
 
@@ -146,24 +228,24 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await expect(page.getByRole("heading", { name: "Catalog", exact: true })).toBeVisible();
     await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).not.toBeChecked();
     await page.getByRole("switch", { name: "Hide out-of-stock products", exact: true }).check();
-    expect((await save()).toast.type).toBe("success");
+    expect((await save(page, endpoint)).toast.type).toBe("success");
     await page.reload();
     await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).toBeChecked();
     expect((await availability()).listable).toBe(false);
     await capture("settings-catalog");
     await page.getByRole("switch", { name: "Hide out-of-stock products", exact: true }).uncheck();
-    expect((await save()).toast.type).toBe("success");
+    expect((await save(page, endpoint)).toast.type).toBe("success");
     expect((await availability()).listable).toBe(true);
 
-    await page.goto(adminPath + "products");
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Another hat");
-    await page.getByRole("textbox", { name: "SKU", exact: true }).fill("RED-HAT");
-    await page.getByRole("button", { name: "Add product", exact: true }).click();
-    await expect(page.getByText("sku is already assigned to another catalog item", { exact: true }).first()).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Another hat");
+    // A second page cannot take a SKU another product holds; the panel keeps the typing.
+    const another = await openProductPage(page, "Another hat");
+    await another.panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("RED-HAT");
+    await another.panel.getByRole("button", { name: "Add price and stock", exact: true }).click();
+    await expect(another.panel.getByText("sku is already assigned to another catalog item", { exact: true }).first()).toBeVisible();
+    await expect(another.panel.getByRole("textbox", { name: "SKU (optional)", exact: true })).toHaveValue("RED-HAT");
     expect(raw("catalog_items").filter(row => row.recordKind === "catalog-item")).toHaveLength(1);
-    await page.goto(adminPath + "products");
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    await page.goto("/_emdash/admin/content/products/" + pageId);
+    panel = await openPanel(page);
     // A real storage failure must not erase clerk inputs or remove retry controls.
     const refuseWrites = (collectionName) => {
       for (const event of ["INSERT", "UPDATE"]) database.exec(
@@ -173,14 +255,14 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     const allowWrites = () => {
       for (const event of ["INSERT", "UPDATE"]) database.exec("DROP TRIGGER IF EXISTS proof_refuse_" + event);
     };
-    await page.getByRole("textbox", { name: "Regular", exact: true }).fill("13.25");
-    await page.getByRole("textbox", { name: "Sale", exact: true }).fill("8.50");
+    await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("13.25");
+    await panel.getByRole("textbox", { name: "Sale", exact: true }).fill("8.50");
     refuseWrites("catalog_prices");
     try {
       expect((await save()).toast.message).toContain("catalog price update failed");
-      await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.25");
-      await expect(page.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("8.50");
-      await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+      await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.25");
+      await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("8.50");
+      await expect(panel.getByRole("button", { name: "Save", exact: true })).toBeVisible();
       expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
       await capture("save-storage-refused");
     } finally { allowWrites(); }
@@ -189,18 +271,18 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await page.getByRole("switch", { name: "Hide out-of-stock products", exact: true }).check();
     refuseWrites("storefront_out_of_stock_listing");
     try {
-      expect((await save()).toast.message).toContain("out-of-stock listing update failed");
+      expect((await save(page, endpoint)).toast.message).toContain("out-of-stock listing update failed");
       await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).toBeChecked();
       expect(raw("storefront_out_of_stock_listing")[0].hideOutOfStock).toBe(false);
       await capture("settings-storage-refused");
     } finally { allowWrites(); }
-    expect((await save()).toast.type).toBe("success");
-    await page.goto(adminPath + "products");
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    expect((await save(page, endpoint)).toast.type).toBe("success");
+    await page.goto("/_emdash/admin/content/products/" + pageId);
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(page.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.25");
+    panel = await openPanel(page);
+    await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.25");
     await capture("product-mobile");
-    console.log("sandbox_proof=pass create replay price-refusal coming-soon-disabled malicious-enable-refused settings anonymous-denial unmanaged-without-Inventory; DB=" + filename);
+    console.log("sandbox_proof=pass sidebar-folder panel make-sellable draft-patch on-sale create replay price-refusal coming-soon-disabled malicious-enable-refused settings anonymous-denial unmanaged-without-Inventory; DB=" + filename);
   } finally { await db.destroy(); }
 });
 
@@ -216,15 +298,17 @@ test("clerk sets product images from the Media Library and the storefront render
   const capture = async (name) => page.screenshot({ path: process.env.COMMERCE_PROOF_ARTIFACTS + "/" + name + ".png", animations: "disabled", fullPage: true });
   const adminPath = "/_emdash/admin/plugins/dinkus-commerce/";
   const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
-  const interact = async (name) => {
-    const response = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
-    await page.getByRole("button", { name, exact: true }).click();
+  let panel, panelEndpoint;
+  // Product images are chosen in the product page's Dinkus Commerce panel; the placeholder on Commerce settings.
+  const interact = async (name, scope = panel, url = panelEndpoint) => {
+    const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(url) && r.request().method() === "POST");
+    await scope.getByRole("button", { name, exact: true }).click();
     const body = await (await response).json();
     expect(body.success).toBe(true);
     return body.data;
   };
   try {
-    await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath + "products");
+    await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath + "settings");
     const started = page.getByRole("button", { name: "Get Started" });
     if (await started.count()) await started.click();
     const upload = async (name, colour, fields = {}) => {
@@ -241,35 +325,35 @@ test("clerk sets product images from the Media Library and the storefront render
     const placeholder = await upload("store-placeholder.png", [120, 120, 120]);
     expect(front.storageKey.split(".")[0]).not.toBe(front.id);
 
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
+    ({ panel, endpoint: panelEndpoint } = await openProductPageTitled(page, "Red hat"));
     // The first spec leaves Hide out-of-stock on and Red hat out of stock; make it listable again.
-    await page.getByRole("radio", { name: "In stock", exact: true }).check();
+    await panel.getByRole("radio", { name: "In stock", exact: true }).check();
     expect((await interact("Save")).toast.type).toBe("success");
-    await expect(page.getByText("No image", { exact: true })).toBeVisible();
-    await expect(page.getByText("Gallery (0 of 8)", { exact: true })).toBeVisible();
+    await expect(panel.getByText("No image", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Gallery (0 of 8)", { exact: true })).toBeVisible();
     expect((await interact("Choose image")).blocks[0].text).toBe("Choose an image");
-    await expect(page.getByRole("heading", { name: "Choose an image" })).toBeVisible();
-    await expect(page.getByRole("img", { name: "Red hat, front" })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: "Choose an image" })).toBeVisible();
+    await expect(panel.getByRole("img", { name: "Red hat, front" })).toBeVisible();
     await capture("media-chooser");
     expect((await interact("Use red-hat-front.png")).toast.message).toBe("Image saved");
     expect(raw("catalog_media")[0]).toMatchObject({ recordKind: "catalog-media", image: { mediaId: front.id }, gallery: [] });
-    await expect(page.getByRole("img", { name: "Red hat, front" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Change image", exact: true })).toBeVisible();
+    await expect(panel.getByRole("img", { name: "Red hat, front" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Change image", exact: true })).toBeVisible();
     await capture("product-image-chosen");
 
     await interact("Add to gallery");
     expect((await interact("Use red-hat-side.png")).toast.message).toBe("Added to gallery");
     await interact("Add to gallery");
     expect((await interact("Use red-hat-back.png")).toast.message).toBe("Added to gallery");
-    await expect(page.getByText("Gallery (2 of 8)", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Gallery (2 of 8)", { exact: true })).toBeVisible();
     expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }, { mediaId: back.id }]);
     await interact("Add to gallery");
     const duplicate = await interact("Use red-hat-side.png");
     expect(duplicate.toast.type).toBe("error");
     expect(duplicate.toast.message).toContain("already in the gallery");
     expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }, { mediaId: back.id }]);
-    await expect(page.getByText("That image is already in the gallery", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Gallery (2 of 8)", { exact: true })).toBeVisible();
+    await expect(panel.getByText("That image is already in the gallery", { exact: true }).first()).toBeVisible();
+    await expect(panel.getByText("Gallery (2 of 8)", { exact: true })).toBeVisible();
     await capture("product-gallery");
     expect((await interact("Move image 2 up")).toast.message).toBe("Gallery reordered");
     expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: back.id }, { mediaId: side.id }]);
@@ -277,25 +361,33 @@ test("clerk sets product images from the Media Library and the storefront render
     expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }]);
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1325" }, sale: { minor: "850" } });
     await page.reload();
-    await page.getByRole("button", { name: "Open Red hat", exact: true }).click();
-    await expect(page.getByRole("img", { name: "Red hat, front" })).toBeVisible();
-    await expect(page.getByText("Gallery (1 of 8)", { exact: true })).toBeVisible();
+    panel = await openPanel(page);
+    await expect(panel.getByRole("img", { name: "Red hat, front" })).toBeVisible();
+    await expect(panel.getByText("Gallery (1 of 8)", { exact: true })).toBeVisible();
 
     await page.goto(adminPath + "settings");
     await expect(page.getByRole("heading", { name: "Placeholder image" })).toBeVisible();
-    await interact("Choose placeholder");
+    await interact("Choose placeholder", page, endpoint);
     await expect(page.getByRole("heading", { name: "Choose a placeholder image" })).toBeVisible();
-    expect((await interact("Use store-placeholder.png")).toast.message).toBe("Placeholder saved");
+    expect((await interact("Use store-placeholder.png", page, endpoint)).toast.message).toBe("Placeholder saved");
     expect(raw("storefront_placeholder_image")[0].image).toEqual({ mediaId: placeholder.id });
     await expect(page.getByRole("button", { name: "Remove placeholder", exact: true })).toBeVisible();
     await capture("settings-placeholder");
 
-    await page.goto(adminPath + "products");
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Blue hat");
-    await page.getByRole("textbox", { name: "SKU", exact: true }).fill("BLUE-HAT");
-    expect((await interact("Add product")).toast.message).toBe("Product added");
-    await page.getByRole("textbox", { name: "Regular", exact: true }).fill("5");
+    const bluePage = await openProductPage(page, "Blue hat");
+    ({ panel, endpoint: panelEndpoint } = bluePage);
+    await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("BLUE-HAT");
+    expect((await interact("Add price and stock")).toast.message).toBe("Draft made. Save, then Publish to sell it.");
+    await page.getByRole("dialog", { name: "Review proposed changes" }).getByRole("button", { name: "Apply changes", exact: true }).click();
+    await saveEditor(page);
+    const blueId = raw("catalog_items").find((row) => row.sku === "BLUE-HAT").itemId;
+    await expect.poll(async () => (await readProductPage(page.request, bluePage.id)).data?.commerce_item_id).toBe(blueId);
+    await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("5");
     expect((await interact("Save")).toast.type).toBe("success");
+    // A Draft stays off the shop until the store's publish check puts it on sale.
+    const publicCatalog = async () => (await (await page.request.get("/_emdash/api/plugins/dinkus-commerce/catalog/public")).json()).data;
+    expect((await publicCatalog()).products.some((product) => product.sku === "BLUE-HAT")).toBe(false);
+    await setOnSale(page.request, { catalogItemId: blueId, entryId: bluePage.id, onSale: true });
 
     const shopper = await browser.newContext();
     const catalog = (await (await shopper.request.get(new URL("/_emdash/api/plugins/dinkus-commerce/catalog/public", test.info().project.use.baseURL).href)).json()).data;

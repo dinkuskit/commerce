@@ -1,3 +1,4 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 export type FixedBundleErrorCode =
   | "CATALOG_ITEM_NOT_FOUND"
   | "CATALOG_RECORD_MISMATCH"
@@ -23,6 +24,7 @@ export class FixedBundleError extends Error {
     super(message, options);
     this.name = "FixedBundleError";
     this.code = code;
-    this.status = STATUS_BY_CODE[code];
+    // Only native routes read status (the Registry answers refusals itself), so its table stays out of the Registry build.
+    this.status = REGISTRY_BUILD ? 0 : STATUS_BY_CODE[code];
   }
 }

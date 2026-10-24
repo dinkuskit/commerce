@@ -24,6 +24,8 @@ export interface CreateCatalogItemOptions {
   pluginId?: string;
   createId?: () => string;
   now?: () => Date;
+  /** The product is written off the shop (a Draft) in its first write. */
+  offSale?: true;
   /** Internal member linkage must be durable before a parent commits membership. */
   variantMember?: {
     productId: string;
@@ -114,6 +116,7 @@ export async function createCatalogItem(
     itemId: (options.createId ?? (() => globalThis.crypto.randomUUID()))(),
     ...input,
     state: "draft",
+    ...options.offSale && { offSale: true },
     createdAt: (options.now ?? (() => new Date()))().toISOString(),
     ...(options.variantMember ? {
       variantProductId: options.variantMember.productId,

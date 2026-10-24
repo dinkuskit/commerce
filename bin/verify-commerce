@@ -25,7 +25,6 @@ case "$mode" in
     ;;
   packaged)
     npm run build
-    npm run test:sandbox:native-local-stock
     npm run test:sandbox:orders
     npm run test:consumer:native
     ;;

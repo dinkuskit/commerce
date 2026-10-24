@@ -70,6 +70,12 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   weightOz?: number;
   /** Set when the owner archived the product: off the shop and not for sale; orders keep pointing at it. */
   archivedAt?: string;
+  /** Set while the product is a Draft: off the shop and not for sale until the store's publish check puts it on sale. */
+  offSale?: true;
+  /** The product page whose publish check sells it; set only by that check. */
+  pageId?: string;
+  /** The claim that check wrote; only that claim may give the product back. */
+  pageClaim?: string;
 }
 
 export type CatalogFulfillment = "physical" | "digital";

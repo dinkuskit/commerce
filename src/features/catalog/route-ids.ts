@@ -19,3 +19,5 @@ export const UPDATE_CATALOG_VARIANT_LABELS_ROUTE = "catalog-items/update-variant
 export const BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE = "catalog-items/bulk-save-prices";
 export const RENAME_CATALOG_PRODUCT_ROUTE = "catalog-items/rename";
 export const ARCHIVE_CATALOG_PRODUCT_ROUTE = "catalog-items/set-archived";
+/** The store's publish check: a published product page puts its product on sale. */
+export const PRODUCT_PAGE_ON_SALE_ROUTE = "catalog-items/set-on-sale";

@@ -1,0 +1,229 @@
+{
+  "from": "v0.5.0",
+  "ids": {
+    "hat": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+    "scarf": "553f10db-c78b-4efa-bfea-23b711d240ce",
+    "cap": "50a8cac3-d32c-4242-b6e8-b517e7019bed"
+  },
+  "pageId": "01M5QCFFMEWHTV9XM2ZKTF6KM6",
+  "shop": [
+    {
+      "id": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+      "name": "Red hat",
+      "sku": "RED-HAT",
+      "price": {
+        "currency": "USD",
+        "minor": "1000"
+      },
+      "availability": {
+        "status": "in-stock",
+        "sellable": true,
+        "listable": true
+      },
+      "image": null,
+      "gallery": [],
+      "feedChannels": [],
+      "variants": {
+        "schema": "dinkuskit.commerce.product-variants/v1",
+        "productId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+        "options": [],
+        "members": [
+          {
+            "catalogItemId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+            "selections": [],
+            "price": {
+              "currency": "USD",
+              "minor": "1000"
+            },
+            "availability": {
+              "status": "in-stock",
+              "sellable": true,
+              "listable": true
+            },
+            "fulfillment": "physical"
+          }
+        ]
+      }
+    }
+  ],
+  "storage": {
+    "catalog_items": {
+      "4999e4a6-eb45-4dfa-a546-3d572973530d": {
+        "recordKind": "catalog-item",
+        "itemId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+        "commandId": "028666f3-dbcc-4280-a72e-98ca5a0f2bbb",
+        "creationIntent": {
+          "manageStock": false
+        },
+        "kind": "simple-product",
+        "name": "Red hat",
+        "sku": "RED-HAT",
+        "skuKey": "RED-HAT",
+        "stockManagement": {
+          "mode": "unmanaged"
+        },
+        "fulfillment": "physical",
+        "state": "draft",
+        "createdAt": "2026-10-24T16:39:06.085Z",
+        "creationPayload": {
+          "kind": "simple-product",
+          "name": "Red hat",
+          "sku": "RED-HAT",
+          "skuKey": "RED-HAT",
+          "manageStock": false,
+          "fulfillment": "physical"
+        },
+        "variantProduct": {
+          "creationPayload": "{\"commandId\":\"028666f3-dbcc-4280-a72e-98ca5a0f2bbb\",\"fulfillment\":\"physical\",\"kind\":\"simple-product\",\"name\":\"Red hat\",\"sku\":\"RED-HAT\",\"skuKey\":\"RED-HAT\"}",
+          "schema": "dinkuskit.commerce.product-variants/v1",
+          "productId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+          "revision": 0,
+          "defaultMemberId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+          "options": [],
+          "members": [
+            {
+              "catalogItemId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+              "selections": [],
+              "fulfillment": "physical"
+            }
+          ]
+        },
+        "weightOz": 6
+      },
+      "50a8cac3-d32c-4242-b6e8-b517e7019bed": {
+        "recordKind": "catalog-item",
+        "itemId": "50a8cac3-d32c-4242-b6e8-b517e7019bed",
+        "commandId": "109bbc1c-0469-4368-b66a-dc5eca84900c",
+        "creationIntent": {
+          "manageStock": false
+        },
+        "kind": "simple-product",
+        "name": "Old cap",
+        "sku": "OLD-CAP",
+        "skuKey": "OLD-CAP",
+        "stockManagement": {
+          "mode": "unmanaged"
+        },
+        "fulfillment": "physical",
+        "state": "draft",
+        "createdAt": "2026-10-24T16:39:06.362Z",
+        "creationPayload": {
+          "kind": "simple-product",
+          "name": "Old cap",
+          "sku": "OLD-CAP",
+          "skuKey": "OLD-CAP",
+          "manageStock": false,
+          "fulfillment": "physical"
+        },
+        "variantProduct": {
+          "creationPayload": "{\"commandId\":\"109bbc1c-0469-4368-b66a-dc5eca84900c\",\"fulfillment\":\"physical\",\"kind\":\"simple-product\",\"name\":\"Old cap\",\"sku\":\"OLD-CAP\",\"skuKey\":\"OLD-CAP\"}",
+          "schema": "dinkuskit.commerce.product-variants/v1",
+          "productId": "50a8cac3-d32c-4242-b6e8-b517e7019bed",
+          "revision": 0,
+          "defaultMemberId": "50a8cac3-d32c-4242-b6e8-b517e7019bed",
+          "options": [],
+          "members": [
+            {
+              "catalogItemId": "50a8cac3-d32c-4242-b6e8-b517e7019bed",
+              "selections": [],
+              "fulfillment": "physical"
+            }
+          ]
+        },
+        "archivedAt": "2026-10-24T16:39:06.479Z"
+      },
+      "553f10db-c78b-4efa-bfea-23b711d240ce": {
+        "recordKind": "catalog-item",
+        "itemId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+        "commandId": "b462349e-f052-4b40-b604-f0ab13b1f344",
+        "creationIntent": {
+          "manageStock": false
+        },
+        "kind": "simple-product",
+        "name": "Blue scarf",
+        "sku": "BLUE-SCARF",
+        "skuKey": "BLUE-SCARF",
+        "stockManagement": {
+          "mode": "unmanaged"
+        },
+        "fulfillment": "physical",
+        "state": "draft",
+        "createdAt": "2026-10-24T16:39:06.245Z",
+        "creationPayload": {
+          "kind": "simple-product",
+          "name": "Blue scarf",
+          "sku": "BLUE-SCARF",
+          "skuKey": "BLUE-SCARF",
+          "manageStock": false,
+          "fulfillment": "physical"
+        },
+        "variantProduct": {
+          "creationPayload": "{\"commandId\":\"b462349e-f052-4b40-b604-f0ab13b1f344\",\"fulfillment\":\"physical\",\"kind\":\"simple-product\",\"name\":\"Blue scarf\",\"sku\":\"BLUE-SCARF\",\"skuKey\":\"BLUE-SCARF\"}",
+          "schema": "dinkuskit.commerce.product-variants/v1",
+          "productId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+          "revision": 0,
+          "defaultMemberId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+          "options": [],
+          "members": [
+            {
+              "catalogItemId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+              "selections": [],
+              "fulfillment": "physical"
+            }
+          ]
+        }
+      }
+    },
+    "catalog_prices": {
+      "4999e4a6-eb45-4dfa-a546-3d572973530d": {
+        "recordKind": "catalog-price",
+        "recordId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+        "catalogItemId": "4999e4a6-eb45-4dfa-a546-3d572973530d",
+        "regular": {
+          "currency": "USD",
+          "minor": "1200"
+        },
+        "sale": {
+          "currency": "USD",
+          "minor": "1000"
+        }
+      },
+      "50a8cac3-d32c-4242-b6e8-b517e7019bed": {
+        "recordKind": "catalog-price",
+        "recordId": "50a8cac3-d32c-4242-b6e8-b517e7019bed",
+        "catalogItemId": "50a8cac3-d32c-4242-b6e8-b517e7019bed",
+        "regular": {
+          "currency": "USD",
+          "minor": "900"
+        }
+      },
+      "553f10db-c78b-4efa-bfea-23b711d240ce": {
+        "recordKind": "catalog-price",
+        "recordId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+        "catalogItemId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+        "regular": {
+          "currency": "USD",
+          "minor": "1800"
+        }
+      }
+    },
+    "catalog_manual_availability": {
+      "553f10db-c78b-4efa-bfea-23b711d240ce": {
+        "recordKind": "catalog-manual-availability",
+        "recordId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+        "catalogItemId": "553f10db-c78b-4efa-bfea-23b711d240ce",
+        "status": "out-of-stock"
+      }
+    },
+    "storefront_out_of_stock_listing": {
+      "active": {
+        "recordKind": "storefront-out-of-stock-listing",
+        "recordId": "active",
+        "hideOutOfStock": true,
+        "updatedAt": "2026-10-24T16:39:06.519Z"
+      }
+    },
+    "managed_sku_claims": {}
+  },
+  "settingsRows": {}
+}

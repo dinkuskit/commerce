@@ -25,6 +25,7 @@ import { setCatalogItemBackorders } from "./set-backorders.js";
 import { saveCatalogItemMedia, type CatalogMediaStorage } from "./media.js";
 import { setCatalogItemSku } from "./set-sku.js";
 import { renameCatalogProduct, setCatalogProductArchived } from "./product-edit.js";
+import { PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./product-pages.js";
 import { setCatalogItemIdentifiers } from "./set-identifiers.js";
 import { addCatalogVariantOption, updateCatalogVariantLabels } from "./variants.js";
 import {
@@ -352,6 +353,21 @@ function productEditRoute(edit: (catalog: StorageCollection<CatalogStorageRecord
 export const renameCatalogProductRoute = productEditRoute(renameCatalogProduct);
 /** Archives or restores a product; nothing is deleted. */
 export const setCatalogProductArchivedRoute = productEditRoute((catalog, input) => setCatalogProductArchived(catalog, input));
+/** The store's publish check puts a product on sale when its page is published, and back to Draft when it is not. */
+export const setProductPageOnSaleRoute: PluginRoute = {
+  public: false,
+  permission: "content:publish_any",
+  handler: async (ctx) => {
+    if (ctx.request.method.toUpperCase() !== "POST") routeFail("METHOD_NOT_ALLOWED", "Product changes require POST", 405);
+    try {
+      return await setProductPageOnSale({ catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
+        pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, ctx.input);
+    } catch (error) {
+      if (error instanceof CatalogError) throw new PluginRouteError(error.code, error.message, error.status);
+      throw error;
+    }
+  },
+};
 
 export const setCatalogItemSkuRoute: PluginRoute = {
   public: false,

@@ -88,6 +88,8 @@ export interface CatalogProductListItem {
   weightOz?: number;
   /** Present when the product is archived: off the shop and not for sale. */
   archivedAt?: string;
+  /** Present while the product is a Draft, until its page is published. */
+  offSale?: true;
   variantProduct?: {
     productId: string;
     revision: number;
@@ -255,6 +257,7 @@ async function describeCatalogProducts(
       fulfillment: record.fulfillment ?? "physical",
       ...(record.weightOz ? { weightOz: record.weightOz } : {}),
       ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
+      ...(record.offSale ? { offSale: true as const } : {}),
     };
     if (record.variantProduct) {
       const members: CatalogProductVariantListItem[] = [];
@@ -515,10 +518,11 @@ export async function saveCatalogProductPrices(
     }
     if (!manageUnchanged) {
       // v1 admission strips or refuses Manage stock changes before a Registry save gets here.
+      // An else, so the Registry build drops the native-only write path.
       if (REGISTRY_BUILD) catalogFail("MANAGE_STOCK_UNAVAILABLE", MANAGE_STOCK_UNAVAILABLE_MESSAGE);
-      await persistManageStock(storage, item, nextManaged);
+      else await persistManageStock(storage, item, nextManaged);
     }
-    if (!nextManaged && storage.releaseRegistrationClaims) {
+    if (!REGISTRY_BUILD && !nextManaged && storage.releaseRegistrationClaims) {
       await catalogStorage(() => storage.releaseRegistrationClaims!(catalogItemId), "managed SKU registration claim release failed");
     }
     if (!nextManaged && nextStockStatus !== null && !stockUnchanged) {

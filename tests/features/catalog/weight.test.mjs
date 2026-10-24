@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { commerceAdmin } from "../../../dist/admin/index.js";
+import { productPanel } from "../../../dist/admin/index.js";
+
+// Product editing lives in the Dinkus Commerce panel on each Content > Products page.
+const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
 import { normalizeWeightOz, setCatalogItemWeight } from "../../../dist/features/catalog/index.js";
 
 class MemoryCollection {
@@ -34,7 +37,7 @@ const item = (itemId, overrides = {}) => ({
 function context(records) {
   const catalog = new MemoryCollection(records);
   const storage = { catalog_items: catalog };
-  for (const name of ["catalog_prices", "catalog_manual_availability", "managed_sku_claims", "storefront_out_of_stock_listing", "catalog_media", "storefront_placeholder_image"]) storage[name] = new MemoryCollection();
+  for (const name of ["catalog_prices", "catalog_manual_availability", "managed_sku_claims", "storefront_out_of_stock_listing", "catalog_media", "storefront_placeholder_image", "product_pages"]) storage[name] = new MemoryCollection();
   return { catalog, ctx: { storage } };
 }
 const weightForm = (response) => response.blocks.find((block) => block.type === "form" && block.submit.action_id.startsWith("weight:"));

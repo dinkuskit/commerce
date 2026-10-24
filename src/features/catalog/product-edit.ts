@@ -10,7 +10,7 @@ type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "c
  * choices: the shop, cart and checkout read the name and archive state from it.
  * One compare-and-set per edit, so two edits can never leave a mix.
  */
-async function editProduct(catalog: Catalog, catalogItemId: unknown,
+export async function editProduct(catalog: Catalog, catalogItemId: unknown,
   edit: (item: CatalogItemRecord) => CatalogItemRecord | null): Promise<boolean> {
   if (typeof catalogItemId !== "string" || !catalogItemId || catalogItemId.length > 1024) throw new CatalogError("INVALID_INPUT", "catalogItemId must be a valid itemId");
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -35,13 +35,32 @@ export async function renameCatalogProduct(catalog: Catalog, input: { catalogIte
   });
 }
 
-/** Archives a product (off the shop, not for sale) or restores it. Nothing is deleted. */
-export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date()): Promise<boolean> {
+/** Archives a product (off the shop, not for sale) or restores it as a Draft. Nothing is deleted. */
+/**
+ * Archives or restores a product. The product page panel restores it as a Draft (`toDraft`) for its page's publish
+ * check to put back on sale; the native Products screen, which has no page, restores it straight onto the shop.
+ */
+export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date(), toDraft = false): Promise<boolean> {
   if (typeof input.archived !== "boolean") throw new CatalogError("INVALID_INPUT", "archived must be true or false");
   const archivedAt = now().toISOString();
   return editProduct(catalog, input.catalogItemId, (item) => {
     if (Boolean(item.archivedAt) === input.archived) return null;
     const { archivedAt: _old, ...rest } = item;
-    return input.archived ? { ...rest, archivedAt } : rest;
+    return input.archived ? { ...rest, archivedAt } : toDraft ? { ...rest, offSale: true } : rest;
   });
+}
+
+/** Puts a product on sale or takes it back to Draft. Only the store's publish check calls this; Commerce never reads the page. */
+export async function setCatalogProductOnSale(catalog: Catalog, input: { catalogItemId?: unknown; onSale?: unknown }): Promise<boolean> {
+  if (typeof input.onSale !== "boolean") throw new CatalogError("INVALID_INPUT", "onSale must be true or false");
+  return editProduct(catalog, input.catalogItemId, (item) => {
+    if (!item.offSale === input.onSale) return null;
+    const { offSale: _old, ...rest } = item;
+    return input.onSale ? rest : { ...rest, offSale: true };
+  });
+}
+
+/** Off the shop and refused at checkout: archived, or a Draft whose page is not published. */
+export function offShop(item: { archivedAt?: string; offSale?: true } | null | undefined): boolean {
+  return Boolean(item?.archivedAt || item?.offSale);
 }
