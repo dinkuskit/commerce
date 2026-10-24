@@ -178,3 +178,16 @@ still a Draft. Unit 668 of 669 (the native-consumer teardown signal test),
 integration 105 of 105, Playwright 10 of 10, merchant settings 2 of 2.
 Registry backend 131050 bytes, 22 bytes under the limit (the fix is smaller
 than the extra write it replaces).
+
+## Registry upgrade from 0.5.0 (owner chose "prove it locally first", 24 Oct)
+
+`npm run test:registry-upgrade` (`scripts/registry-upgrade-proof.mjs`, after `npm run build`) builds the v0.5.0 tag's Registry bundle in a temporary worktree, starts the sandboxed proof site on it, and stocks the store through 0.5.0's own Block Kit admin: Red hat (12.00, sale 10.00, in stock, 6 oz), Blue scarf (18.00, out of stock), Old cap (9.00, archived), "Hide out-of-stock products" on, and a Content > Products page for Red hat with `commerce_item_id`. It then restarts the same site on this build against the same SQLite database and checks:
+
+- every `catalog_items`, `catalog_prices`, `catalog_manual_availability`, `storefront_out_of_stock_listing`, `managed_sku_claims` and storefront settings row is byte-for-byte what 0.5.0 wrote, with no `offSale` or `pageId` added and no `product_pages` rows;
+- the public catalog answers exactly what it did on 0.5.0 (Red hat on sale; the hidden and archived products off);
+- Commerce settings keeps the toggle and lists Blue scarf and "Old cap (archived)" under Products without a page;
+- the old page links Red hat by SKU in the panel, shows 12.00 / 10.00 / In stock / On sale, and a panel price edit reaches storage;
+- the page's first publish check records it as seller with no change for shoppers (`changed: false`), another page is refused with "Another page sells this product", and unpublishing takes Red hat off the shop;
+- the products no page sells are left exactly as they were.
+
+Run 24 Oct 16:38 UTC: `registry_upgrade=pass from=v0.5.0`, both phases passed. The 0.5.0 snapshot and screenshots are in `registry-upgrade/`. 0.5.0's settings save redraws its DinkusKit Connect status after saving, which can fail offline, so the proof checks the stored toggle rather than that toast.
