@@ -118,12 +118,15 @@ async function change(
   collection: Pick<OrdersCollection, "getVersioned" | "compareAndSet">, orderId: string, revision: number,
   edit: (record: OrderRecord) => OrderRecord | OwnerChange,
 ): Promise<OwnerChange> {
-  const current = await collection.getVersioned(orderId);
-  if (!current) throw new Error("Invalid order");
-  if ((current.value.revision ?? 1) !== revision) return "outdated";
-  const next = edit(current.value);
-  if (typeof next === "string") return next;
-  return (await collection.compareAndSet(orderId, current.revision, { ...next, revision: revision + 1 })).applied ? "saved" : "outdated";
+  for (let tries = 0; tries < 8; tries++) {
+    const current = await collection.getVersioned(orderId);
+    if (!current) throw new Error("Invalid order");
+    if ((current.value.revision ?? 1) !== revision) return "outdated";
+    const next = edit(current.value);
+    if (typeof next === "string") return next;
+    if ((await collection.compareAndSet(orderId, current.revision, { ...next, revision: revision + 1 })).applied) return "saved";
+  }
+  throw new Error("Order busy");
 }
 
 /**
@@ -232,31 +235,31 @@ export interface ShopperOrderSummary {
 export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
   const order = record.paidOrder;
   const p = order.pricing;
-  return {
+  return structuredClone({
     orderId: order.orderId,
     receiptId: order.receiptId,
     number: record.number ?? null,
-    status: record.completed ? "completed" : "processing",
+    status: (record.completed ? "completed" : "processing") as "completed" | "processing",
     paidAt: order.paidAt ?? null,
-    total: structuredClone(order.total),
-    lines: structuredClone(order.lines),
-    choices: structuredClone(order.variantSelections ?? []),
+    total: order.total,
+    lines: order.lines,
+    choices: order.variantSelections ?? [],
     pricing: p
-      ? structuredClone({
+      ? {
           merchandiseSubtotal: p.merchandiseSubtotal,
           couponDiscount: p.couponDiscount,
           netMerchandise: p.netMerchandise,
           shipping: { mode: p.shipping.mode, charge: p.shipping.charge },
           finalTotal: p.finalTotal,
-        })
+        }
       : null,
-    delivery: structuredClone(deliveryOf(record) ?? null),
+    delivery: deliveryOf(record) ?? null,
     phone:
       typeof (order.contactSnapshot as { contact?: { phone?: unknown } } | undefined)?.contact?.phone === "string"
         ? order.contactSnapshot!.contact.phone!
         : null,
-    completed: structuredClone(record.completed ?? null),
-  };
+    completed: record.completed ?? null,
+  });
 }
 
 function paidAtMillis(paidAt: string | undefined): number {
