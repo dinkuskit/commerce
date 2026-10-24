@@ -69,12 +69,7 @@ export async function setCatalogItemIdentifiers(
       };
       return { changed: false, item: current, identifiers };
     }
-    const item: CatalogItemRecord = {
-      ...current,
-      ...(gtin !== undefined ? { gtin } : { gtin: undefined }),
-      ...(mpn !== undefined ? { mpn } : { mpn: undefined }),
-      ...(brand !== undefined ? { brand } : { brand: undefined }),
-    };
+    const item: CatalogItemRecord = { ...current, gtin, mpn, brand };
     // Drop cleared optional keys rather than storing undefined.
     if (!gtin) delete (item as { gtin?: string }).gtin;
     if (!mpn) delete (item as { mpn?: string }).mpn;

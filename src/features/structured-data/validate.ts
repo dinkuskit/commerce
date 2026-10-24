@@ -64,9 +64,6 @@ export function assertProductJsonLdShape(value: unknown): asserts value is Produ
     if (typeof offer.availability !== "string" || !offer.availability.startsWith("https://schema.org/")) {
       throw new Error("Offer.availability must be a schema.org URL");
     }
-    if (offer.availability === "https://schema.org/InStock" && value) {
-      // availability-unavailable must never reach InStock; callers assert mapping separately.
-    }
     if (offer.shippingDetails !== undefined) {
       assertType(offer.shippingDetails, "OfferShippingDetails", "Offer.shippingDetails");
       const shipping = offer.shippingDetails;
