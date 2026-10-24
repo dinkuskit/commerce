@@ -218,9 +218,9 @@ async function sell(ctx: PluginContext, entryId: string, fields: Record<string, 
   if (!id) {
     // New products start as a physical Draft: off the shop until this page is published.
     const title = typeof fields.title === "string" && fields.title.trim() ? fields.title.trim().slice(0, 160) : "New product";
+    // Its first write is already a Draft, so a retry that finds the earlier try's product finds a Draft.
     id = (await createCatalogItem(store.catalog, { commandId: "page:" + command, name: title, sku: sku.trim() || skuFrom(title, command), fulfillment: "physical" },
-      unique(ctx))).item.itemId;
-    await editProduct(store.catalog, id, item => ({ ...item, offSale: true }));
+      { ...unique(ctx), offSale: true })).item.itemId;
     toast = "Draft made. Save, then Publish to sell it.";
   }
   // The product view refuses a product that is gone, before anything is linked.

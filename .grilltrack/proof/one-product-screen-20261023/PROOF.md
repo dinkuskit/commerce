@@ -166,3 +166,15 @@ Unit 668 of 669 (the native-consumer teardown signal test), integration 105
 of 105, Playwright 10 of 10, merchant settings 2 of 2. Registry backend 131054
 bytes, 18 bytes under the limit.
 
+
+## Draft in the first write (review fix, 24 Oct)
+
+Add price and stock now writes the new product as a Draft in its first save
+(`createCatalogItem` takes `offSale`), instead of saving it on sale and then
+turning it into a Draft, so a stop between the two can no longer leave a
+product on the shop. A retry finds that same Draft. The panel test checks the
+first catalog write carries `offSale: true` and that a resumed product is
+still a Draft. Unit 668 of 669 (the native-consumer teardown signal test),
+integration 105 of 105, Playwright 10 of 10, merchant settings 2 of 2.
+Registry backend 131050 bytes, 22 bytes under the limit (the fix is smaller
+than the extra write it replaces).

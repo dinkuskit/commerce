@@ -16,7 +16,8 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   list shows 50; typing a product's SKU there reaches every product.
 - Add price and stock creates a physical product named from the page title.
   The SKU is the one typed, or one made from the title. The product starts as
-  a Draft (`offSale: true`). The panel links the page in `product_pages` and
+  a Draft (`offSale: true`) in its first write, so a stop before linking never
+  leaves it on the shop, and a retry finds that same Draft. The panel links the page in `product_pages` and
   returns an `editor-draft-patch` setting `commerce_item_id`. EmDash asks the
   owner to apply it, and the page keeps it only when they press Save.
 - A linked page shows the product's name, its state (Draft, On sale or

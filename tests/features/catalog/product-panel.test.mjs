@@ -61,7 +61,10 @@ test('an unlinked page offers Add price and stock and the products without a pag
 
 test('Add price and stock makes an unmanaged Draft and patches the unsaved page', async () => {
   const { ctx, catalog, pages } = await shop();
+  const writes = [], put = catalog.put.bind(catalog);
+  catalog.put = async (id, row) => { writes.push(structuredClone(row)); return put(id, row); };
   const out = await panel({ type: 'form_submit', action_id: 'sell', values: { sku: '', manageStock: true }, draft: { fields: { title: 'Black hoodie' } } }, ctx);
+  assert.equal(writes.find((row) => row.recordKind === 'catalog-item')?.offSale, true, 'the first write is already a Draft, so no stop leaves it on the shop');
   assert.notEqual(out.toast?.type, 'error', JSON.stringify(out));
   assert.equal(validateBlockResponse(out).valid, true);
   const made = [...catalog.records.values()].find((row) => row.name === 'Black hoodie' && row.itemId !== 'mug');
@@ -138,6 +141,7 @@ test('a retried Add price and stock resumes the product its first try made', asy
   assert.notEqual(retried.toast?.type, 'error', JSON.stringify(retried));
   const caps = [...catalog.records.values()].filter((row) => row.name === 'Cap');
   assert.equal(caps.length, 1, 'one product, not a second one');
+  assert.equal(caps[0].offSale, true, 'the resumed product is still a Draft');
   assert.equal(await pageProduct(pages, 'page-1'), caps[0].itemId);
 });
 
