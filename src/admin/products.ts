@@ -7,7 +7,7 @@ import {
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
   normalizeWeightOz, setCatalogItemWeight, renameCatalogProduct, setCatalogProductArchived,
-  addCatalogVariantOption, updateCatalogVariantLabels,
+  addCatalogVariantOption, updateCatalogVariantLabels, normalizeIdentifierPatch,
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage,
 } from "../features/catalog/kernel/index.js";
@@ -66,6 +66,7 @@ function productForm(id: string, values: ProductFields, action = "save:" + id): 
         ({ type: "toggle" as const, action_id: "feed:" + channel, label, initial_value: values.feedChannels!.includes(channel) }))),
     ], submit: { label: "Save", action_id: action } };
 }
+const IDENTIFIERS = [["gtin", "GTIN"], ["mpn", "MPN"], ["brand", "Brand"]] as const;
 const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
 /** Shipping weight for each physical item, in ounces; Ship's label form starts from it. Digital items have none. */
 function weightForm(selected: CatalogProductListItem): Block[] {
@@ -154,6 +155,10 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     ...(!selected.variantProduct?.options.length ? [productForm(id, { ...values, stockStatus: values.stockStatus ?? status })] : []),
     ...variantEditor(id, selected.variantProduct),
     ...weightForm(selected),
+    // Barcode and brand for shopping feeds and the product page's structured data; empty clears one.
+    { type: "form", block_id: "ids-" + crypto.randomUUID(), fields: IDENTIFIERS.map(([key, label]) =>
+      ({ type: "text_input" as const, action_id: key, label, initial_value: selected[key] ?? "" })),
+      submit: { label: "Save identifiers", action_id: "ids:" + id } },
     ...await mediaBlocks(ctx, id, selected.name, media),
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
       : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
@@ -318,6 +323,13 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         await renameCatalogProduct(storage(ctx).catalog, { catalogItemId: id, name: values.name });
         return await product(ctx, id, undefined, "Product renamed");
       }
+      if (action.startsWith("ids:")) {
+        const id = action.slice(4);
+        // The same checks as the identifiers route (GS1 check digit, 256 characters); an empty box clears its field.
+        const typed = normalizeIdentifierPatch(Object.fromEntries(IDENTIFIERS.map(([key]) => [key, text(values[key])])));
+        await editProduct(storage(ctx).catalog, id, ({ gtin: _gtin, mpn: _mpn, brand: _brand, ...item }) => ({ ...item, ...Object.fromEntries(Object.entries(typed).filter(([, value]) => value)) }));
+        return await product(ctx, id, undefined, "Identifiers saved");
+      }
       if (action.startsWith("weight:")) {
         const id = action.slice(7);
         const store = storage(ctx);
@@ -404,7 +416,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
       } catch { /* fall through to the generic alert */ }
     }
     // A refused form keeps what the owner typed: the product comes back with the same form refilled.
-    if (input.type === "form_submit" && typeof input.action_id === "string" && /^(variant|weight|rename|save):/.test(input.action_id)) {
+    if (input.type === "form_submit" && typeof input.action_id === "string" && /^(variant|weight|rename|save|ids):/.test(input.action_id)) {
       try {
         const sent = input.action_id, args = sent.startsWith("variant:") ? JSON.parse(sent.slice(8)) : null;
         const back = await product(ctx, args ? args[1] : sent.replace(/^\w+:/, ""));

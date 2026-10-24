@@ -186,6 +186,13 @@ test.describe("Native populated-browser continuity fixture", () => {
     await expect(priceForm.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("195.00");
     await expect(priceForm.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("160.00");
     await saveScreenshot(page, "native-products-edited.png", artifactsDir);
+    // Native stores keep their GTIN, MPN and Brand form, now in the same panel as Registry stores.
+    const idsForm = panel.locator("form").filter({ has: page.getByRole("button", { name: "Save identifiers", exact: true }) });
+    await idsForm.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333931");
+    await idsForm.getByRole("textbox", { name: "Brand", exact: true }).fill("Heritage");
+    await idsForm.getByRole("button", { name: "Save identifiers", exact: true }).click();
+    await expect.poll(() => storageRow("catalogItems", unmanagedProduct.itemId).gtin).toBe("4006381333931");
+    expect(storageRow("catalogItems", unmanagedProduct.itemId).brand).toBe("Heritage");
 
     // 7. Storage keeps the native collection names
     await expect.poll(() => storageRow("catalogPrices", unmanagedProduct.itemId).regular).toEqual({ currency: "USD", minor: "19500" });

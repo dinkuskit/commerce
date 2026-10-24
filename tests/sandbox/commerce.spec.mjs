@@ -158,6 +158,28 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
     expect((await saveWeight()).toast.type).toBe("success");
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
+    // GTIN, MPN and Brand for shopping feeds: checked like the identifiers route, an empty box clears its field.
+    const saveIds = async () => {
+      const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
+      await panel.getByRole("button", { name: "Save identifiers", exact: true }).click();
+      return (await (await response).json()).data;
+    };
+    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381 333931");
+    await panel.getByRole("textbox", { name: "MPN", exact: true }).fill("RH-1");
+    await panel.getByRole("textbox", { name: "Brand", exact: true }).fill("Smoky");
+    expect((await saveIds()).toast.message).toBe("Identifiers saved");
+    expect(raw("catalog_items")[0]).toMatchObject({ gtin: "4006381333931", mpn: "RH-1", brand: "Smoky" });
+    await expect(panel.getByRole("textbox", { name: "GTIN", exact: true })).toHaveValue("4006381333931");
+    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333932");
+    expect((await saveIds()).toast.type).toBe("error");
+    // The refused form comes back with what was typed; the stored GTIN is unchanged.
+    await expect(panel.getByRole("textbox", { name: "GTIN", exact: true })).toHaveValue("4006381333932");
+    expect(raw("catalog_items")[0].gtin).toBe("4006381333931");
+    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333931");
+    await panel.getByRole("textbox", { name: "Brand", exact: true }).fill("");
+    expect((await saveIds()).toast.type).toBe("success");
+    expect(raw("catalog_items")[0]).not.toHaveProperty("brand");
+    expect(raw("catalog_items")[0]).toMatchObject({ gtin: "4006381333931", mpn: "RH-1" });
     expect(await availability()).toMatchObject({ status: "out-of-stock", sellable: false, listable: true });
     await capture("price-stock-saved");
 

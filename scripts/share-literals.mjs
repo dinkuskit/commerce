@@ -16,7 +16,9 @@ export function shareLiterals(code) {
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node) ||
         ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) return;
     const parent = node.parent;
-    const key = parent && ts.isPropertyAssignment(parent) && parent.name === node;
+    // A destructured name ({ name: binding } = value) reads through the same binding as a computed key.
+    const key = parent && (ts.isPropertyAssignment(parent) && parent.name === node ||
+      ts.isBindingElement(parent) && parent.propertyName === node && ts.isIdentifier(node));
     const literal = ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
     const unsupportedName = parent && 'name' in parent && parent.name === node && !key;
     const dynamicImport = parent && ts.isCallExpression(parent) && parent.expression.kind === ts.SyntaxKind.ImportKeyword;

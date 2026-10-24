@@ -1,3 +1,4 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import type { CouponUnavailable, GuestCheckoutErrorCode } from "./types.js";
 
 const STATUS_BY_CODE: Record<GuestCheckoutErrorCode, number> = {
@@ -40,7 +41,8 @@ export class GuestCheckoutError extends Error {
     super(message, options);
     this.name = "GuestCheckoutError";
     this.code = code;
-    this.status = STATUS_BY_CODE[code];
+    // Only native routes read status (the Registry answers refusals itself), so its table stays out of the Registry build.
+    this.status = REGISTRY_BUILD ? 0 : STATUS_BY_CODE[code];
   }
 }
 

@@ -286,7 +286,7 @@ export function createCouponAdmin(collection: CouponCollection): CouponAdminPort
   };
 }
 
-export const couponStorageDeclaration = Object.freeze({
+export const couponStorageDeclaration = /* @__PURE__ */ Object.freeze({
   collection: COUPONS_COLLECTION,
   indexes: ["normalizedCode"],
   uniqueIndexes: ["normalizedCode"],

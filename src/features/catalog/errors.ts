@@ -1,3 +1,4 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 export type CatalogErrorCode =
   | "CATALOG_ITEM_NOT_FOUND"
   | "COMMAND_CONFLICT"
@@ -37,7 +38,8 @@ export class CatalogError extends Error {
     super(message, options);
     this.name = "CatalogError";
     this.code = code;
-    this.status = STATUS_BY_CODE[code];
+    // Only native routes read status (the Registry answers refusals itself), so its table stays out of the Registry build.
+    this.status = REGISTRY_BUILD ? 0 : STATUS_BY_CODE[code];
   }
 }
 

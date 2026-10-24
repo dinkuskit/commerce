@@ -61,10 +61,14 @@ Removed with it: the React Products, Store and Coupons screens, the
 Manage stock browser check. Coupon records stay in storage; coupons are built in
 dinkuskit/coupons. Local stock comes back with Inventory, in Block Kit.
 
-Two native screens have no Block Kit twin yet. The GTIN, MPN and Brand form is
-not in the panel (the Registry build never had it and has no room for it); the
-stored values and the identifiers route are unchanged, and the form's return is
-with the owner. DinkusKit Connect only accepts Registry installs, so a native
+The panel carries the GTIN, MPN and Brand form the native Products screen had,
+for every store (the owner's call, 24 Oct). It runs the identifiers route's own
+checks (GS1 check digit, 256 characters) and an empty box clears its field. Its
+room in the Registry build came from size work that cuts nothing: native-only
+error status tables and the Manage stock write are left out of the Registry
+build behind `REGISTRY_BUILD`, the storefront and private routes share one route
+shape each, a dead coupon declaration is marked pure, and the literal-sharing
+step now also shares destructured property names. DinkusKit Connect only accepts Registry installs, so a native
 store's Commerce settings shows a note marked "(DEV)" in place of Connect.
 
 ## Product states

@@ -150,3 +150,19 @@ set-on-sale route, and buys a variant on the native storefront. Unit 667 of 668
 (the native-consumer teardown signal test this container cannot run),
 integration 105 of 105, Playwright 10 of 10, merchant settings 2 of 2
 (registry and native). Registry backend 131025 bytes, 47 bytes under the limit.
+
+## GTIN, MPN and Brand in the panel (owner's call, 24 Oct)
+
+The panel gains the GTIN, MPN and Brand form for every store, with the
+identifiers route's checks. Room came only from size work that removes no
+feature: native-only error status tables and the Manage stock write leave the
+Registry build behind `REGISTRY_BUILD` (the Registry never reads `status` and
+already refused Manage stock first), the public reads and private POST routes
+share one route shape each, a dead coupon storage declaration is marked pure,
+and literal sharing covers destructured property names (new semantics test).
+The sandbox walk saves, refuses a bad check digit and clears a field; the
+native walk saves on old native data; a refused form keeps what was typed.
+Unit 668 of 669 (the native-consumer teardown signal test), integration 105
+of 105, Playwright 10 of 10, merchant settings 2 of 2. Registry backend 131054
+bytes, 18 bytes under the limit.
+
