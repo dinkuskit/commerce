@@ -11,10 +11,10 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
 `commerce_item_id` and may patch only `commerce_item_id`; that needs the
 `admin.editor-draft:read` and `admin.editor-draft:patch` capabilities.
 
-- A page with no product shows "Make this sellable" with an optional SKU, and,
+- A page with no product shows "Add price and stock" with an optional SKU, and,
   when any exist, a list of products without a page ("Sell it here"). The
   list shows 50; typing a product's SKU there reaches every product.
-- Make this sellable creates a physical product named from the page title.
+- Add price and stock creates a physical product named from the page title.
   The SKU is the one typed, or one made from the title. The product starts as
   a Draft (`offSale: true`). The panel links the page in `product_pages` and
   returns an `editor-draft-patch` setting `commerce_item_id`. EmDash asks the
@@ -28,14 +28,14 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   step the owner takes settles it: a page saved before `product_pages` existed
   gets its link, a page whose id was changed opens that product, and a page
   whose link patch was declined or never saved is offered the patch again.
-  Make this sellable on a page that already names a product opens that
+  Add price and stock on a page that already names a product opens that
   product. The publish check also writes the link.
 - The sell form carries its create command in its action id (`sell:<uuid>`),
   and a made-up SKU takes its tail from that command. A retry after a partial
   failure resumes the product the first try made instead of making another.
 - The bulk "Apply same price" form is not in the panel, to stay under the
   Registry's 128 KiB backend limit. Each choice keeps its own Save.
-- A refused Make this sellable keeps the typed SKU and its buttons.
+- A refused Add price and stock keeps the typed SKU and its buttons.
 
 ## Products page removed
 

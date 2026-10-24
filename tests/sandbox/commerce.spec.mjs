@@ -58,11 +58,11 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     ({ panel } = opened);
     panelEndpoint = opened.endpoint;
     const pageId = opened.id;
-    await expect(panel.getByText("Not for sale yet. Make this sellable to add price, stock and photos.", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Not a product yet. Add price and stock to sell it.", { exact: true })).toBeVisible();
     await capture("product-page-unlinked");
     await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("RED-HAT");
     const createResponse = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
-    await panel.getByRole("button", { name: "Make this sellable", exact: true }).click();
+    await panel.getByRole("button", { name: "Add price and stock", exact: true }).click();
     const createdResponse = await createResponse;
     const createdBody = (await createdResponse.json()).data;
     expect(createdBody.toast.type).toBe("success");
@@ -218,7 +218,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     // A second page cannot take a SKU another product holds; the panel keeps the typing.
     const another = await openProductPage(page, "Another hat");
     await another.panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("RED-HAT");
-    await another.panel.getByRole("button", { name: "Make this sellable", exact: true }).click();
+    await another.panel.getByRole("button", { name: "Add price and stock", exact: true }).click();
     await expect(another.panel.getByText("sku is already assigned to another catalog item", { exact: true }).first()).toBeVisible();
     await expect(another.panel.getByRole("textbox", { name: "SKU (optional)", exact: true })).toHaveValue("RED-HAT");
     expect(raw("catalog_items").filter(row => row.recordKind === "catalog-item")).toHaveLength(1);
@@ -355,7 +355,7 @@ test("clerk sets product images from the Media Library and the storefront render
     const bluePage = await openProductPage(page, "Blue hat");
     ({ panel, endpoint: panelEndpoint } = bluePage);
     await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("BLUE-HAT");
-    expect((await interact("Make this sellable")).toast.message).toBe("Draft made. Save, then Publish to sell it.");
+    expect((await interact("Add price and stock")).toast.message).toBe("Draft made. Save, then Publish to sell it.");
     await page.getByRole("dialog", { name: "Review proposed changes" }).getByRole("button", { name: "Apply changes", exact: true }).click();
     await saveEditor(page);
     const blueId = raw("catalog_items").find((row) => row.sku === "BLUE-HAT").itemId;

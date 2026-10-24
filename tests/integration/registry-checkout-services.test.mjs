@@ -272,7 +272,7 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   const publicList = () => state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
   const publicItem = () => state.plugin.invokeRoute('catalog/public/item', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public/item?itemId=${id}`, method: 'GET' });
   const catalog = await publicList();
-  // Make this sellable makes a physical product, which carries its one-member variant group.
+  // Add price and stock makes a physical product, which carries its one-member variant group.
   const { variants } = catalog.products[0] ?? {};
   assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment]), [[id, 'physical']]);
   const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], variants };

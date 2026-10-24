@@ -188,9 +188,9 @@ export const productLabel = (p: { name: string; sku: string; archivedAt?: string
 async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const orphans = await productsWithoutPage(ctx);
   return { blocks: [
-    note("Not for sale yet. Make this sellable to add price, stock and photos."),
+    note("Not a product yet. Add price and stock to sell it."),
     { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
-      submit: { label: "Make this sellable", action_id: "sell:" + command } },
+      submit: { label: "Add price and stock", action_id: "sell:" + command } },
     ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
       label: "Or one without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
       { type: "text_input" as const, action_id: "sku", label: "Or its SKU" }],

@@ -50,16 +50,16 @@ test('the panel refuses to run outside a product page editor', async () => {
   assert.equal(out.toast?.type, 'error');
 });
 
-test('an unlinked page offers Make this sellable and the products without a page', async () => {
+test('an unlinked page offers Add price and stock and the products without a page', async () => {
   const { ctx } = await shop();
   const out = await panel({ type: 'panel_load' }, ctx);
   assert.equal(validateBlockResponse(out).valid, true);
-  assert.match(texts(out.blocks), /Make this sellable/);
+  assert.match(texts(out.blocks), /Add price and stock/);
   assert.match(texts(out.blocks), /"mug"/);
   assert.equal(out.patch, undefined, 'loading never touches the page');
 });
 
-test('Make this sellable makes an unmanaged Draft and patches the unsaved page', async () => {
+test('Add price and stock makes an unmanaged Draft and patches the unsaved page', async () => {
   const { ctx, catalog, pages } = await shop();
   const out = await panel({ type: 'form_submit', action_id: 'sell', values: { sku: '', manageStock: true }, draft: { fields: { title: 'Black hoodie' } } }, ctx);
   assert.notEqual(out.toast?.type, 'error', JSON.stringify(out));
@@ -118,7 +118,7 @@ test('a typed SKU sells a product the list does not show', async () => {
   assert.equal(await pageProduct(pages, 'page-2'), undefined);
 });
 
-test('a refused Make this sellable keeps the typed SKU', async () => {
+test('a refused Add price and stock keeps the typed SKU', async () => {
   const { ctx } = await shop();
   const out = await panel({ type: 'form_submit', action_id: 'sell', values: { sku: 'MUG' }, draft: { fields: { title: 'Second mug' } } }, ctx);
   assert.equal(out.toast?.type, 'error');
@@ -126,7 +126,7 @@ test('a refused Make this sellable keeps the typed SKU', async () => {
   assert.match(texts(out.blocks), /"initial_value":"MUG"/);
 });
 
-test('a retried Make this sellable resumes the product its first try made', async () => {
+test('a retried Add price and stock resumes the product its first try made', async () => {
   const { ctx, catalog, pages } = await shop();
   const action = 'sell:' + crypto.randomUUID(), put = pages.put.bind(pages);
   pages.put = async () => { throw new Error('storage hiccup'); };
@@ -144,7 +144,7 @@ test('a retried Make this sellable resumes the product its first try made', asyn
 test('the page editor\'s commerce_item_id settles the link on the next step', async () => {
   const { ctx, catalog, pages } = await shop();
   await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
-  // A page saved before the link list existed: Make this sellable opens its product and makes nothing new.
+  // A page saved before the link list existed: Add price and stock opens its product and makes nothing new.
   const old = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx);
   assert.equal(old.patch, undefined);
   assert.match(texts(old.blocks), /SKU MUG/);
@@ -171,7 +171,7 @@ test('linking a product that is gone links nothing', async () => {
   const out = await panel({ type: 'form_submit', action_id: 'link', values: { product: 'ghost' }, draft: { fields: {} } }, ctx);
   assert.equal(out.toast?.type, 'error');
   assert.equal(validateBlockResponse(out).valid, true);
-  assert.match(texts(out.blocks), /Make this sellable/, 'the owner can retry from the same panel');
+  assert.match(texts(out.blocks), /Add price and stock/, 'the owner can retry from the same panel');
   assert.equal(await pageProduct(pages, 'page-1'), undefined);
 });
 

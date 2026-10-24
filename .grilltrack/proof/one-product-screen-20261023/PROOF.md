@@ -18,12 +18,12 @@ change does not touch that script or test.
 New `tests/features/catalog/product-panel.test.mjs`:
 
 - the panel refuses to run outside a product page editor;
-- an unlinked page offers Make this sellable and lists products without a page;
-- Make this sellable makes an unmanaged physical Draft, links the page and
+- an unlinked page offers Add price and stock and lists products without a page;
+- Add price and stock makes an unmanaged physical Draft, links the page and
   returns only an `editor-draft-patch` for `commerce_item_id`;
 - picking a product without a page links it; a page already holding that id
   gets no patch;
-- a refused Make this sellable keeps the typed SKU; a missing product links
+- a refused Add price and stock keeps the typed SKU; a missing product links
   nothing;
 - the publish check route puts a product on sale and back to Draft, and a
   deleted page drops its link; bad input is refused;

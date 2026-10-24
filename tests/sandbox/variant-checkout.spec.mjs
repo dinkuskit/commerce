@@ -269,7 +269,7 @@ test('merchant creates choices and edits independent and bulk prices through the
     } else {
       ui = (await openProductPage(page, name)).panel;
       await ui.getByRole('textbox',{name:'SKU (optional)',exact:true}).fill('MERCHANT-PROOF-SMALL');
-      await ui.getByRole('button',{name:'Make this sellable',exact:true}).click();
+      await ui.getByRole('button',{name:'Add price and stock',exact:true}).click();
       await page.getByRole('dialog',{name:'Review proposed changes'}).getByRole('button',{name:'Apply changes',exact:true}).click();
       // The page keeps its product only once saved; an unsaved link is offered again on the next step.
       await saveEditor(page);
