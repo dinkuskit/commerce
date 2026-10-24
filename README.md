@@ -24,13 +24,12 @@ offer features the Registry build lacks, except temporary gaps listed here with
 the work that closes them. The project owner set this rule on 2026-10-08.
 
 Commerce's Registry build comes from `emdash-plugin.jsonc` and `src/plugin.ts`
-(see Sandbox distribution below). The package root and `./admin` export are the
-native entry. Native-only gaps:
+(see Sandbox distribution below). The package root is the
+native entry. Both builds serve the same Block Kit admin (no React admin
+screens; `commerce-admin-block-kit-only-20261024`). Native-only gaps:
 
-- Coupons: native installs keep coupon storage, the coupon admin and coupon
-  codes at checkout. The default `./admin` pages mount only `/products` and
-  `/store`; the `CouponsPage` named export is there for a host to mount at
-  `/coupons` itself. The Registry build leaves coupon storage and admin out to
+- Coupons: native installs keep coupon storage and coupon codes at checkout,
+  with no coupon admin screen (coupons are built in dinkuskit/coupons). The Registry build leaves coupon storage and admin out to
   stay under the Registry's per-file size limit
   ([registry-coupons-deferred](docs/implementation/registry-coupons-deferred.md)).
   Registry checkout refuses coupon codes in v1: its port to the hosted
@@ -127,19 +126,15 @@ storefront. Sale requires Regular and must be strictly lower; invalid Sale is
 refused rather than silently cleared. `resolveStorefrontAvailability` returns
 `listable: false` when Regular is missing.
 
-On Registry installs each Content > Products page has a Dinkus Commerce editor
-panel; Make this sellable makes a Draft catalog product for the page and links
+Each Content > Products page has a Dinkus Commerce editor
+panel; Add price and stock makes a Draft catalog product for the page and links
 it, and the product goes on sale when the store publishes the page. Commerce
-settings lists products without a page. Native installs keep a Products page
-that lists catalog products and adds one with a name and SKU. Name is the customer-facing title
+settings lists products without a page. Name is the customer-facing title
 (the product page H1 contract); this plugin does not render a storefront page.
-Opening a product shows Regular, Sale, the Manage stock slider, and In stock /
-Out of stock / On backorder when the product is unmanaged. On Registry
-installs it also shows an optional Shipping weight in ounces for each physical
-product or physical choice, which Ship will read for labels. Native admin keeps
-that slider in place after Regular/Sale. By default it is gray, disabled, and
-labeled Coming soon on the same row; keyboard and pointer cannot change it.
-Those three stock statuses stay hidden on managed products. New products stay
+Opening a product shows Regular, Sale, a Manage stock notice, and In stock /
+Out of stock / On backorder when the product is unmanaged. It also shows an optional Shipping weight in ounces for each physical
+product or physical choice, which Ship will read for labels. Manage stock is
+shown as Coming soon and cannot be changed. Those three stock statuses stay hidden on managed products. New products stay
 unmanaged and do not need Inventory. Existing managed products stay managed:
 clerks can edit prices, but omitted tracking fields preserve claims, bindings,
 and fail-closed sellability. A host enables synthetic local testing only with
@@ -219,8 +214,7 @@ exactly as before. The native entry keeps them all.
 The released CLI requires lowercase storage collection names. Fresh sandbox
 installs use snake_case names, preserving the kernel record shapes and actual
 unique-index checks. The legacy native API entry keeps its camelCase storage
-and retains its React Products and Store pages through the separate `./admin`
-compatibility export. **This is not a native-to-sandbox
+and serves the same Block Kit admin over it. **This is not a native-to-sandbox
 upgrade path:** do not replace a populated native installation with this
 artifact. Data migration and live Inventory service wiring are separate work.
 The Cloudflare development limitation above remains; proof uses a disposable
@@ -275,9 +269,7 @@ repository hygiene, and the official published EmDash 1.2.0 package with its
 recorded npm integrity. The full verifier additionally runs cross-process SQLite atomicity
 proof against EmDash's real 1.2.0 storage repository and a two-process local
 Wrangler/D1 expression-index proof, plus the real workerd + SQLite
-admin/browser flow (`npm run test:sandbox` to run that boundary alone) and the
-opted-in native local-stock browser (`npm run test:sandbox:native-local-stock`)
-after the standard sandbox suite. Install Chromium first with
+admin/browser flow (`npm run test:sandbox` to run that boundary alone). Install Chromium first with
 `npx playwright install chromium`. No live site or Registry publication is used.
 
 Under construction. MIT licensed.

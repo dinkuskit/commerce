@@ -1,4 +1,5 @@
 import { definePlugin, type PluginDescriptor, type PluginRoute, type ResolvedPlugin } from "emdash";
+import { commerceAdmin, productPanel } from "./admin/index.js";
 
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
@@ -132,7 +133,7 @@ export * from "./features/inventory-setup/index.js";
 
 export * from "./features/storefront-availability/index.js";
 
-import { MERCHANT_STORE_SETTINGS_ROUTE, createMerchantStoreSettingsRoute } from "./features/store-settings/index.js";
+import { MERCHANT_STORE_SETTINGS_ROUTE } from "./features/store-settings/index.js";
 export * from "./features/store-settings/index.js";
 
 export * from "./features/store-policies/index.js";
@@ -141,20 +142,18 @@ export * from "./features/structured-data/index.js";
 
 const COMMERCE_PLUGIN_VERSION = "0.2.0";
 
-const COMMERCE_ADMIN_ENTRY = "@dinkuskit/commerce/admin";
-// The development Products screen stays only for stores that run Commerce from source; Registry stores edit products in Content > Products.
-const COMMERCE_PRODUCTS_PAGE = {
-  path: "/products",
-  label: "Products",
-  icon: "storefront",
-  group: "Dinkus Commerce",
-} as const;
-const COMMERCE_STORE_PAGE = {
-  path: "/store",
-  label: "Store",
-  icon: "storefront",
-  group: "Dinkus Commerce",
-} as const;
+// Every install, native or Registry, gets the same Block Kit pages and product page panel (commerce-admin-block-kit-only-20261024).
+const COMMERCE_ADMIN_PAGES = [
+  { path: "/orders", label: "Orders", icon: "storefront", group: "Dinkus Commerce" },
+  { path: "/settings", label: "Commerce settings", icon: "settings", group: "Dinkus Commerce" },
+];
+const COMMERCE_EDITOR_PANELS = [{
+  id: "product",
+  title: "Dinkus Commerce",
+  route: "product-panel",
+  collections: ["products"],
+  draft: { read: { fields: ["title", "commerce_item_id"] }, patch: { fields: ["commerce_item_id"] } },
+}];
 
 export interface CommerceLocalDevelopmentOptions {
   /**
@@ -190,8 +189,8 @@ export function dinkusCommerce(
         ? { siteUrl: options.siteUrl.trim() }
         : {}),
     },
-    adminEntry: COMMERCE_ADMIN_ENTRY,
-    adminPages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
+    adminPages: COMMERCE_ADMIN_PAGES,
+    editorPanels: COMMERCE_EDITOR_PANELS,
   };
 }
 
@@ -250,6 +249,24 @@ function nativePublicContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
   };
 }
 
+/** Native storage names some collections in camelCase; the Block Kit admin reads them by their Registry (snake_case) names. */
+function nativeAdminContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
+  const storage: Record<string, unknown> = { ...ctx.storage };
+  for (const [name, collection] of Object.entries(ctx.storage)) storage[name.replace(/[A-Z]/g, letter => "_" + letter.toLowerCase())] ??= collection;
+  return { ...ctx, storage };
+}
+
+/** A private Block Kit route (admin pages or the product page panel), handed the same route shape the Registry build gets. */
+function nativeBlockKitRoute(handler: typeof commerceAdmin): PluginRoute {
+  return {
+    public: false,
+    permission: "content:edit_any",
+    methods: ["POST"],
+    handler: (ctx) => handler({ input: ctx.input, user: ctx.user, ui: ctx.ui,
+      request: { method: ctx.request.method, url: ctx.request.url, headers: {} } } as never, nativeAdminContext(ctx) as never),
+  };
+}
+
 const publicCatalogRoute = {
   public: true,
   methods: ["GET"],
@@ -302,7 +319,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
     // Product media reads alt text and dimensions live from the Media Library.
-    capabilities: ["media:read", "network:request", "email:send"],
+    capabilities: ["media:read", "network:request", "email:send", "admin.editor-draft:read", "admin.editor-draft:patch"],
     allowedHosts: ["payments.dinkuskit.com"],
     storage: {
       catalogItems: {
@@ -399,13 +416,14 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       },
     },
     admin: {
-      entry: COMMERCE_ADMIN_ENTRY,
-      pages: [COMMERCE_PRODUCTS_PAGE, COMMERCE_STORE_PAGE],
+      pages: COMMERCE_ADMIN_PAGES,
+      editorPanels: COMMERCE_EDITOR_PANELS,
     },
     routes: {
+      [MERCHANT_STORE_SETTINGS_ROUTE]: nativeBlockKitRoute(commerceAdmin),
+      "product-panel": nativeBlockKitRoute(productPanel),
       [PUBLIC_CATALOG_ROUTE]: publicCatalogRoute,
       [PUBLIC_CATALOG_ITEM_ROUTE]: publicCatalogItemRoute,
-      [MERCHANT_STORE_SETTINGS_ROUTE]: createMerchantStoreSettingsRoute(),
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
       [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
       [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:

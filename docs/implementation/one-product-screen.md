@@ -39,17 +39,27 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
 
 ## Products page removed
 
-The Registry build no longer mounts `/products`. Commerce settings has a
+Commerce no longer mounts `/products`. Commerce settings has a
 "Products without a page" section that lists up to 25 products no page sells.
 Each has a "Make a page" link to `content/products/new`. Archived products
 without a page are listed too, marked "(archived)", so they can be given a page
 and restored.
 
-Native installs keep their React Products and Store pages, which sit in the
-same sidebar group. EmDash 1.2.0 serves no Block Kit editor panel for a plugin
-that has a React admin entry (`getPluginEditorExtension` returns null when
-`admin.entry` is set), so the native build cannot carry the panel without
-moving its admin off React.
+## Block Kit only (commerce-admin-block-kit-only-20261024)
+
+Native installs (stores running Commerce from source, such as the playground)
+get the same admin as Registry stores: the Orders and Commerce settings pages
+and the product page panel, all Block Kit, so the sidebar reads the same
+everywhere. Commerce has no React admin entry any more (EmDash 1.2.0 serves no
+Block Kit editor panel for a plugin that has one). The native build serves the
+same Block Kit handlers over its own storage names (`catalogItems` is also
+reachable as `catalog_items`), through the `admin` and `product-panel` routes
+with `content:edit_any`.
+
+Removed with it: the React Products, Store and Coupons screens, the
+`@dinkuskit/commerce/admin` export, the `react` peer dependency, and the local
+Manage stock browser check. Coupon records stay in storage; coupons are built in
+dinkuskit/coupons. Local stock comes back with Inventory, in Block Kit.
 
 ## Product states
 
@@ -57,8 +67,7 @@ moving its admin off React.
 basket quotes and storefront availability treat it like an archived product.
 Products made before this flag existed have no `offSale`, so a product whose
 page is already published stays on sale. Restoring an archived product
-returns it as a Draft from the product page panel; the native Products screen, which has
-no page to publish, restores it straight onto the shop.
+returns it as a Draft from the product page panel.
 
 The store's publish check calls the private route `catalog-items/set-on-sale`
 (`content:publish_any`, POST) with:
@@ -111,7 +120,7 @@ for the same page):
   then moves elsewhere or is deleted, that product is not given back.
 
 In both cases the product keeps its page record, and another page asking for
-it is refused; archiving the product in its panel or the native screen takes it off the shop.
+it is refused; archiving the product in its panel takes it off the shop.
 Ordering checks by the page's version would close both, at the cost of a
 template change and bundle room this build does not have. Commerce never reads the CMS. The store template owns that call.
 

@@ -594,3 +594,5 @@
 {"action": "decision_verified", "at": "2026-10-23T21:33:54+00:00", "data": {"decision_id": "catalog-products-page-removed-20261023"}, "event_id": "eb8e4afa-2932-4037-8266-d839c1767578"}
 {"action": "decision_verified", "at": "2026-10-23T21:33:54+00:00", "data": {"decision_id": "catalog-product-states-20261023"}, "event_id": "8312d18d-d888-4eca-8adc-5df16d29280d"}
 {"action": "decision_verified", "at": "2026-10-23T21:33:55+00:00", "data": {"decision_id": "admin-sidebar-plugin-folders-20261023"}, "event_id": "6100e5dd-030e-43c9-b8cc-b48257e34793"}
+{"action": "decision_proposed", "at": "2026-10-24T14:10:56+00:00", "data": {"decision_id": "commerce-admin-block-kit-only-20261024"}, "event_id": "f970e2a1-5a10-4548-9a0b-eca6612cc4ea"}
+{"action": "decision_locked", "at": "2026-10-24T14:10:57+00:00", "data": {"decision_id": "commerce-admin-block-kit-only-20261024"}, "event_id": "0f2a9b83-faba-4c94-900e-f6941ab2c38a"}

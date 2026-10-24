@@ -94,7 +94,7 @@ for (const [subpath, declaration] of Object.entries(pkg.exports)) {
  assert(existsSync(resolve(packageRoot, target)));
  if (declaration.types) assert(existsSync(resolve(packageRoot, declaration.types)));
  entrypoints.push(subpath);
- if (!['./admin', './sandbox', './descriptor'].includes(subpath)) {
+ if (!['./sandbox', './descriptor'].includes(subpath)) {
   if (target.endsWith('.json')) await import(specifier, { with: { type: 'json' } });
   else await import(specifier);
  }
@@ -175,7 +175,7 @@ try {
  const context = await browser.newContext();
  page = await context.newPage();
  assert.equal((await context.request.get(origin + '/_emdash/api/setup/dev-bypass')).status(), 200);
- await page.goto(origin + '/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/store');
+ await page.goto(origin + '/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/settings');
  const store = page.getByRole('textbox', { name: 'Store country (ISO alpha-2 code)', exact: true });
  const welcome = page.getByRole('button', { name: 'Get Started', exact: true });
  await store.or(welcome).first().waitFor({ timeout: 60000 });

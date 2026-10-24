@@ -205,7 +205,7 @@ test("public catalog carries image and gallery ids, falls back to the placeholde
 
 test("native plugin declares media/network access, the media collections, and the save-media and placeholder routes", async () => {
   const plugin = createPlugin();
-  assert.deepEqual(plugin.capabilities, ["media:read", "network:request", "email:send"]);
+  assert.deepEqual(plugin.capabilities, ["media:read", "network:request", "email:send", "admin.editor-draft:read", "admin.editor-draft:patch"]);
   assert.deepEqual(plugin.allowedHosts, ["payments.dinkuskit.com"]);
   assert.ok(plugin.storage.catalogMedia && plugin.storage.storefrontPlaceholderImage);
   const catalogItems = collection([["hat", item]]);

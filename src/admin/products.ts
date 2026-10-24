@@ -23,6 +23,8 @@ const STOCK_OPTIONS = [
   { label: "Out of stock", value: "out-of-stock" },
   { label: "On backorder", value: "on-backorder" },
 ];
+// The catalog's unique index is named for the install's own collection: native installs keep catalogItems.
+const unique = (ctx: PluginContext) => ({ collection: "catalogItems" in ctx.storage ? "catalogItems" : "catalog_items", pluginId: ctx.plugin?.id });
 function storage(ctx: PluginContext) {
   return {
     catalog: ctx.storage["catalog_items"] as StorageCollection<CatalogStorageRecord>,
@@ -212,7 +214,7 @@ async function sell(ctx: PluginContext, entryId: string, fields: Record<string, 
     // New products start as a physical Draft: off the shop until this page is published.
     const title = typeof fields.title === "string" && fields.title.trim() ? fields.title.trim().slice(0, 160) : "New product";
     id = (await createCatalogItem(store.catalog, { commandId: "page:" + command, name: title, sku: sku.trim() || skuFrom(title, command), fulfillment: "physical" },
-      { collection: "catalog_items", pluginId: ctx.plugin?.id })).item.itemId;
+      unique(ctx))).item.itemId;
     await editProduct(store.catalog, id, item => ({ ...item, offSale: true }));
     toast = "Draft made. Save, then Publish to sell it.";
   }
@@ -341,7 +343,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
             { valueId: args[1], label: text(values.smallLabel), member: { catalogItemId: id, fulfillment: values.first as never } },
             { valueId: args[2], label: text(values.largeLabel), member: { commandId: args[3], name: selected.name, sku: text(values.sku), fulfillment: values.second as never } },
           ],
-        }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
+        }, unique(ctx));
         else if (operation === "option") {
           const byLabel = new Map<string, { valueId: string; label: string }>();
           const ensure = (rawLabel: unknown) => {
@@ -356,7 +358,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
           await addCatalogVariantOption(store, {
             productId: id, expectedRevision: args[0], optionId: args[1], optionLabel: text(values.optionLabel),
             values: [...byLabel.values()], members,
-          }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
+          }, unique(ctx));
         } else if (operation === "member") {
           const selections = (selected.variantProduct?.options ?? []).map((o, i) => {
             const l = text(values["choice:" + o.optionId]), k = l.toLowerCase();
@@ -367,7 +369,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
           await addCatalogVariantOption(store, {
             productId: id, expectedRevision: args[0], commandId: args[1], name: selected.name,
             sku: text(values.sku), fulfillment: values.fulfillment as never, selections,
-          }, { collection: "catalog_items", pluginId: ctx.plugin?.id });
+          }, unique(ctx));
         } else if (operation === "price") {
           const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]);
           if (!member) throw new Error("Member unavailable");

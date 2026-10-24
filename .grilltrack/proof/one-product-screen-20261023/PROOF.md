@@ -128,3 +128,25 @@ before its release leaves the pointer unmoved and the next check releases the
 old product). Unit 683 of 684 (the native-consumer teardown signal test),
 integration 105 of 105, Playwright 10 of 10. Registry backend 131070 bytes,
 2 bytes under the limit.
+
+## Block Kit only (commerce-admin-block-kit-only-20261024)
+
+Ronald, 24 Oct: remove the React admin and use Block Kit for dev and Registry
+stores alike. The native plugin now declares the same Orders and Commerce
+settings pages and the product page panel, with no admin entry and the two
+editor-draft capabilities, and serves them through the same Block Kit handlers
+over native storage (camelCase collections are also reachable by their
+Registry names; the panel proves catalog uniqueness against the install's own
+index). The React Products, Store and Coupons screens, the `./admin` export,
+the `react` peer dependency, the coupon admin sources and tests, and the local
+Manage stock browser check are removed; coupon records stay in storage.
+
+The native Playwright walk now seeds old native data, links a page saved
+before the panel existed by its SKU, edits price and stock in the panel, checks
+Commerce settings (seeded hide setting, "Products without a page" listing the
+managed blanket), and confirms storage keeps the native collection names. The
+native-variant walk builds choices in the panel, publishes the page through the
+set-on-sale route, and buys a variant on the native storefront. Unit 667 of 668
+(the native-consumer teardown signal test this container cannot run),
+integration 105 of 105, Playwright 10 of 10, merchant settings 2 of 2
+(registry and native). Registry backend 131025 bytes, 47 bytes under the limit.

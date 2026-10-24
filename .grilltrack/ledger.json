@@ -14382,6 +14382,49 @@
       "superseded_by": null,
       "updated_at": "2026-10-23T21:33:54+00:00",
       "verification_ref": ".grilltrack/proof/one-product-screen-20261023/PROOF.md; local unit and browser acceptance; Commerce half only: the store template's publish check wiring follows in template-store"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. Remove Commerce's React admin (Products, Store and Coupons screens and the ./admin entry). Every Commerce install, native or Registry, uses the same Block Kit pages and the Content > Products editor panel, so the sidebar matches everywhere. Coupons admin lives only in dinkuskit/coupons (unless Registry plugin size limits change); coupon data stays. The local Manage stock development test and its browser check are removed; Manage stock returns with Inventory, in Block Kit. Built inside commerce#180.",
+      "context_ref": null,
+      "created_at": "2026-10-24T14:10:56+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-one-product-screen-20261023"
+      ],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-24T14:10:57+00:00",
+          "choice": "No. Remove Commerce's React admin (Products, Store and Coupons screens and the ./admin entry). Every Commerce install, native or Registry, uses the same Block Kit pages and the Content > Products editor panel, so the sidebar matches everywhere. Coupons admin lives only in dinkuskit/coupons (unless Registry plugin size limits change); coupon data stays. The local Manage stock development test and its browser check are removed; Manage stock returns with Inventory, in Block Kit. Built inside commerce#180.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-admin-block-kit-only-20261024",
+      "implementation_ref": null,
+      "question": "Should Commerce keep its React admin screens for stores that run it from source?",
+      "rationale": "Owner said 'lock it' on 24 Oct 2026 after agreeing all three picks.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-24T14:10:57+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -14418,5 +14461,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-23T21:33:55+00:00"
+  "updated_at": "2026-10-24T14:10:57+00:00"
 }

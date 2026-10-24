@@ -4,13 +4,11 @@ import { buildPlugin } from '@emdash-cms/plugin-cli';
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { auditedCouponTransformFrom } from './coupon-build-transform.mjs';
-import { checkCouponCatalog } from './coupon-catalog.mjs';
 
 // Neutral resolution omits legacy package main fields. Prebundle supported
 // browser-compatible dependencies, then retain the official manifest/probe build.
 const stage = resolve('.tmp/sandbox-source');
 await mkdir(resolve(stage, 'src'), { recursive: true });
-await checkCouponCatalog(resolve('.'));
 const authTransform = await auditedCouponTransformFrom(resolve('.'));
 // Commerce reaches only Role/toRoleLevel from the audited auth
 // package; its passkey/OAuth closure imports pure @oslojs crypto and encoding

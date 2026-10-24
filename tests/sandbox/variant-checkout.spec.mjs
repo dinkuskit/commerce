@@ -5,7 +5,7 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { loadMerchantStoreSettings, saveMerchantStoreSettings } from '../../dist/features/store-settings/kernel/index.js';
-import { openPanel, openProductPage, saveEditor } from './product-page.mjs';
+import { openPanel, openProductPage, saveEditor, setOnSale } from './product-page.mjs';
 
 function proofDb() {
   const native = test.info().project.name === "native-variant";
@@ -251,50 +251,33 @@ test('merchant creates choices and edits independent and bulk prices through the
   let shopperContext, shopper, guestIds = [], guestCartIds = [], guestAttemptIds = [];
   const capture = async suffix => page.screenshot({ path: `${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-merchant-${native ? 'native' : 'sandbox'}-${suffix}.png`, fullPage:true });
   try {
-    // Native keeps its Products screen; the Registry build sells from the product page's Dinkus Commerce panel.
-    await page.goto('/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/' + (native ? 'products' : 'settings'));
+    // Native and Registry installs both sell from the product page's Dinkus Commerce panel.
+    await page.goto('/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/settings');
     const getStarted = page.getByRole('button',{name:'Get Started'});
-    const ready = native ? page.getByRole('textbox',{name:'SKU',exact:true}) : page.getByRole('heading',{name:'Commerce settings'});
+    const ready = page.getByRole('heading',{name:'Commerce settings'});
     await getStarted.or(ready).first().waitFor({state:'visible',timeout:60000});
     if (await getStarted.isVisible()) await getStarted.click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect.poll(() => db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(`uidx_plugin_dinkus-commerce_${catalog}_skuKey`), {timeout:90000}).toBeTruthy();
-    let ui = page;
-    if (native) {
-      await expect(page.locator('h1')).toHaveText('Products', {timeout:30000});
-      await page.getByRole('textbox',{name:'Name',exact:true}).fill(name);
-      await page.getByRole('textbox',{name:'SKU',exact:true}).fill('MERCHANT-PROOF-SMALL');
-      await page.getByRole('combobox',{name:'Fulfillment',exact:true}).selectOption('physical');
-      await page.getByRole('button',{name:'Add product',exact:true}).click();
-    } else {
-      ui = (await openProductPage(page, name)).panel;
-      await ui.getByRole('textbox',{name:'SKU (optional)',exact:true}).fill('MERCHANT-PROOF-SMALL');
-      await ui.getByRole('button',{name:'Add price and stock',exact:true}).click();
-      await page.getByRole('dialog',{name:'Review proposed changes'}).getByRole('button',{name:'Apply changes',exact:true}).click();
-      // The page keeps its product only once saved; an unsaved link is offered again on the next step.
-      await saveEditor(page);
-    }
+    const opened = await openProductPage(page, name), ui = opened.panel;
+    await ui.getByRole('textbox',{name:'SKU (optional)',exact:true}).fill('MERCHANT-PROOF-SMALL');
+    await ui.getByRole('button',{name:'Add price and stock',exact:true}).click();
+    await page.getByRole('dialog',{name:'Review proposed changes'}).getByRole('button',{name:'Apply changes',exact:true}).click();
+    // The page keeps its product only once saved; an unsaved link is offered again on the next step.
+    await saveEditor(page);
     await expect.poll(() => all(catalog).filter(r => r.name === name).length).toBe(1);
     const root = all(catalog).find(r => r.name === name);
     owned = [root.itemId];
+    // The native proof site buys it, so publish the page the way a store's publish check does.
+    if (native) await setOnSale(page.request, { catalogItemId: root.itemId, entryId: opened.id, onSale: true });
     expect(root.variantProduct.defaultMemberId).toBe(root.itemId);
     expect(root.variantProduct.options).toHaveLength(0);
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(1);
-    await ui.getByRole('textbox',{name:native ? 'New variant SKU' : 'Second SKU',exact:true}).fill('MERCHANT-PROOF-LARGE');
-    if (native) {
-      await ui.getByRole('combobox',{name:'First fulfillment'}).selectOption('physical');
-      await ui.getByRole('combobox',{name:'Second fulfillment'}).selectOption('digital');
-    } else {
-      await ui.locator('form').filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Physical',exact:true}).first().check();
-      await ui.locator('form').filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).last().check();
-    }
+    await ui.getByRole('textbox',{name:'Second SKU',exact:true}).fill('MERCHANT-PROOF-LARGE');
+    await ui.locator('form').filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Physical',exact:true}).first().check();
+    await ui.locator('form').filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).last().check();
     await ui.getByRole('button',{name:'Add choices',exact:true}).click();
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(2);
-    if (native) {
-      const switches = ui.getByRole('switch',{name:'Manage stock',exact:true});
-      await expect(switches).toHaveCount(2);
-      for (let i=0;i<2;i++) { await expect(switches.nth(i)).toBeDisabled(); await expect(switches.nth(i)).not.toBeChecked(); }
-    }
     const expanded = all(catalog).find(r => r.itemId === root.itemId).variantProduct;
     owned = expanded.members.map(m => m.catalogItemId);
     expect(expanded.defaultMemberId).toBe(root.itemId);
@@ -335,27 +318,20 @@ test('merchant creates choices and edits independent and bulk prices through the
       expect(checkout.variantSelections[0].selections[0].valueLabel).toBe('Large');
       expect(checkout.variantSelections[0].fulfillment).toBe('digital');
     }
-    if (native) {
-      await ui.getByRole('checkbox',{name:'Include in bulk price'}).first().check();
-      await ui.getByRole('textbox',{name:'Same Regular price',exact:true}).fill('22');
-      await ui.getByRole('button',{name:'Apply to selected variants'}).click();
-    } else {
-      // The product page panel has no bulk price form; each choice keeps its own Save.
-      await priceForms.nth(0).getByRole('textbox',{name:'Regular',exact:true}).fill('22');
-      await priceForms.nth(0).getByRole('button',{name:/^Save/}).click();
-    }
+    // The product page panel has no bulk price form; each choice keeps its own Save.
+    await priceForms.nth(0).getByRole('textbox',{name:'Regular',exact:true}).fill('22');
+    await priceForms.nth(0).getByRole('button',{name:/^Save/}).click();
     await expect.poll(() => all(prices).find(r => r.catalogItemId === owned[0]).regular.minor).toBe('2200');
     await expect(priceForms.nth(0).getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('22.00');
     await expect(ui.getByRole('button',{name:'Save choices',exact:true})).toBeEnabled();
     expect(all(prices).find(r => r.catalogItemId === owned[1]).regular.minor).toBe('2400');
-    await ui.getByRole('textbox',{name:native ? 'Value 2' : 'Value: Large',exact:true}).fill('Big');
-    if (native) await ui.getByRole('combobox',{name:'Large fulfillment',exact:true}).selectOption('physical');
-    else await ui.locator('form').filter({has:page.getByRole('button',{name:'Save choices'})}).getByRole('radio',{name:'Physical',exact:true}).last().check();
-    const detailResponse = !native ? page.waitForResponse(r => r.url().split('?')[0].endsWith('/panel/product') && r.request().method() === 'POST') : null;
+    await ui.getByRole('textbox',{name:'Value: Large',exact:true}).fill('Big');
+    await ui.locator('form').filter({has:page.getByRole('button',{name:'Save choices'})}).getByRole('radio',{name:'Physical',exact:true}).last().check();
+    const detailResponse = page.waitForResponse(r => r.url().split('?')[0].endsWith('/panel/product') && r.request().method() === 'POST');
     await ui.getByRole('button',{name:'Save choices',exact:true}).click();
-    if (detailResponse) { const r = await detailResponse; writeFileSync(`${process.env.COMMERCE_PROOF_ARTIFACTS}/merchant-details.json`, JSON.stringify({request:r.request().postDataJSON(),response:await r.json()},null,2)); }
+    { const r = await detailResponse; writeFileSync(`${process.env.COMMERCE_PROOF_ARTIFACTS}/merchant-details-${native ? 'native' : 'sandbox'}.json`, JSON.stringify({request:r.request().postDataJSON(),response:await r.json()},null,2)); }
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.options[0].values[1].label).toBe('Big');
-    await expect(ui.getByRole('textbox',{name:native ? 'Value 2' : 'Value: Big',exact:true})).toHaveValue('Big');
+    await expect(ui.getByRole('textbox',{name:'Value: Big',exact:true})).toHaveValue('Big');
     await expect(ui.getByRole('button',{name:'Save choices',exact:true})).toBeEnabled();
     const final = all(catalog).find(r => r.itemId === root.itemId).variantProduct;
     expect(final.members.map(m => m.catalogItemId)).toEqual(owned);
@@ -370,12 +346,7 @@ test('merchant creates choices and edits independent and bulk prices through the
     await staleForm.getByRole('button',{name:/^Save/}).click();
     await expect(staleForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('25');
     await expect.poll(() => all(prices).find(r => r.catalogItemId === owned[1]).regular.minor).toBe('2600');
-    if (native) {
-      await page.reload();
-      await page.getByRole('button',{name:name,exact:true}).click();
-    } else {
-      await page.reload(); await openPanel(page);
-    }
+    await page.reload(); await openPanel(page);
     const freshForm = priceForms.nth(1);
     await expect(freshForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('26.00');
     await freshForm.getByRole('radio',{name:'Out of stock',exact:true}).check();
@@ -402,8 +373,7 @@ test('merchant creates choices and edits independent and bulk prices through the
     await ui.getByRole('textbox',{name:'Choice: Size',exact:true}).fill('Medium');
     await ui.getByRole('textbox',{name:'Choice: Color',exact:true}).fill('Ink');
     await ui.getByRole('textbox',{name:'Variant SKU',exact:true}).fill('MERCHANT-PROOF-MEDIUM-INK');
-    if (native) await ui.getByRole('combobox',{name:'Variant fulfillment',exact:true}).selectOption('digital');
-    else await ui.locator('form').filter({has:page.getByRole('button',{name:'Add variant',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).check();
+    await ui.locator('form').filter({has:page.getByRole('button',{name:'Add variant',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).check();
     await ui.getByRole('button',{name:'Add variant',exact:true}).click();
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.length).toBe(3);
     owned = all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.map(m => m.catalogItemId);
