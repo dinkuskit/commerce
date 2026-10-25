@@ -180,13 +180,20 @@ jobs:
           ALREADY_PUBLISHED: ${{ steps.registry-check.outputs.already_published }}
           # The workflow run that published: release.yml at this version tag.
           EXPECTED_BUILDER: https://github.com/${{ github.workflow_ref }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           # A rebuild need not match the published archive byte for byte, so an
-          # already-listed version is checked against the record's provenance instead.
+          # already-listed version is checked by the published archive itself: the
+          # record must name release.yml at this tag, and the archive it points at
+          # must carry this repository's signed build attestation from this tag.
           if [ "$ALREADY_PUBLISHED" = "true" ]; then
+            published="$RUNNER_TEMP/published-release.tgz"
             node .github/scripts/verify-registry-release.mjs \
-              "$PUBLISHER_DID" "$EMDASH_RELEASE_SELECTOR" --listed "$EXPECTED_BUILDER"
+              "$PUBLISHER_DID" "$EMDASH_RELEASE_SELECTOR" --listed "$EXPECTED_BUILDER" "$published"
+            gh attestation verify "$published" --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/emdash-release.yml" \
+              --source-ref "$GITHUB_REF" --deny-self-hosted-runners
           else
             node .github/scripts/verify-registry-release.mjs \
               "$PUBLISHER_DID" "$EMDASH_RELEASE_SELECTOR" "$BUNDLE_FILE"

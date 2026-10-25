@@ -11,6 +11,7 @@ import {
 	computePackageChecksum,
 	parseSelector,
 	listedRecordMatches,
+	publishedArtifactMatches,
 	recordMatches,
 	resolvePdsEndpoint,
 } from "../../.github/scripts/verify-registry-release.mjs";
@@ -220,6 +221,15 @@ test("an already-listed version is verified by the record's provenance, not a re
 	assert.match(verifyStep, /EXPECTED_BUILDER: https:\/\/github\.com\/\$\{\{ github\.workflow_ref \}\}/);
 	assert.match(verifyStep, /--listed "\$EXPECTED_BUILDER"/);
 	assert.match(verifyStep, /"\$BUNDLE_FILE"/);
+	assert.match(verifyStep, /--listed "\$EXPECTED_BUILDER" "\$published"/);
+	assert.match(verifyStep, /gh attestation verify "\$published" --repo "\$GITHUB_REPOSITORY"/);
+	assert.match(verifyStep, /--signer-workflow "\$GITHUB_REPOSITORY\/\.github\/workflows\/emdash-release\.yml"/);
+	assert.match(verifyStep, /--source-ref "\$GITHUB_REF" --deny-self-hosted-runners/);
+	const bytes = Buffer.from("published archive");
+	const published = { artifacts: { package: { checksum: computePackageChecksum(bytes), blob: { size: bytes.length } } } };
+	assert.deepEqual(publishedArtifactMatches(published, bytes), { ok: true, reasons: [] });
+	assert.equal(publishedArtifactMatches(published, Buffer.from("altered archive!!")).ok, false);
+	assert.equal(publishedArtifactMatches({}, bytes).ok, false);
 	const publishStep = source.split("      - name: Publish plugin to EmDash Registry\n")[1]?.split("      - name:")[0];
 	assert.match(publishStep, /wait-for-approval: "true"/);
 });
