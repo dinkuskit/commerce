@@ -252,3 +252,38 @@ test('settings that stop naming this Ship mid-sync stop it before the next call 
     assert.deepEqual(await kept.get('o1'), before, at);
   }
 });
+
+
+test('a concurrent shipVersion write retries completion before acknowledging, and exhausted contention keeps the label pending', async () => {
+  const kept = await store(order('o1'));
+  const { state, connection } = ship([{ eventId: 'lbl_1', orderId: 'o1', version: 1, carrier: 'USPS', tracking: '9400' }]);
+  const compareAndSet = kept.compareAndSet;
+  let raced = false;
+  kept.compareAndSet = async (id, expected, value) => {
+    if (value.completed && !raced) {
+      raced = true;
+      const current = await kept.getVersioned(id);
+      await compareAndSet(id, current.revision, { ...current.value, shipVersion: 1 });
+    }
+    return compareAndSet(id, expected, value);
+  };
+  const fetch = connection.fetch;
+  connection.fetch = async (url, init) => {
+    if (new URL(url).pathname === '/v1/labels/ack') {
+      assert.equal((await kept.get('o1')).completed?.tracking, '9400');
+    }
+    return fetch(url, init);
+  };
+  await syncShip(kept, connection, item);
+  assert.equal(raced, true);
+  assert.deepEqual(state.acks, ['lbl_1']);
+  assert.equal((await kept.get('o1')).revision, 2);
+  assert.equal((await kept.get('o1')).completed?.tracking, '9400');
+
+  const busy = await store(order('o2'));
+  const second = ship([{ eventId: 'lbl_2', orderId: 'o2', version: 1, carrier: 'USPS', tracking: '9401' }]);
+  busy.compareAndSet = async () => ({ applied: false });
+  await assert.rejects(syncShip(busy, second.connection, item), /Order busy/);
+  assert.deepEqual(second.state.acks, []);
+  assert.equal((await busy.get('o2')).completed, undefined);
+});
