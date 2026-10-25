@@ -55,6 +55,21 @@ export function recordMatches(value, expected) {
 	return { ok: reasons.length === 0, reasons };
 }
 
+// A retry on a version tag whose release is already listed cannot compare a
+// rebuild (a fresh build has not matched the published bytes), so it checks the
+// record's own provenance instead: this repository's release workflow at this tag.
+export function listedRecordMatches(value, expected) {
+	const reasons = [];
+	if (!value || typeof value !== "object") return { ok: false, reasons: ["record is not an object"] };
+	if (value.package !== expected.slug) reasons.push(`package is ${JSON.stringify(value.package)}`);
+	if (value.version !== expected.version) reasons.push(`version is ${JSON.stringify(value.version)}`);
+	const artifact = value.artifacts?.package;
+	if (!artifact?.checksum || artifact.blob?.mimeType !== "application/gzip") reasons.push("package artifact is missing or not gzip");
+	const provenance = value.extensions?.["com.emdashcms.experimental.package.releaseExtension"]?.provenance;
+	if (provenance?.builderId !== expected.builder) reasons.push(`provenance builder is ${JSON.stringify(provenance?.builderId)}`);
+	return { ok: reasons.length === 0, reasons };
+}
+
 export async function resolvePdsEndpoint(publisherDid, fetchImpl = fetch) {
 	const url = publisherDid.startsWith("did:plc:")
 		? `https://plc.directory/${publisherDid}`
@@ -90,33 +105,32 @@ async function fetchReleaseRecord(pds, publisherDid, slug, version, fetchImpl) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-	const [publisherDid, selector, bundleFile] = process.argv.slice(2);
+	const [publisherDid, selector, bundleFile, builder] = process.argv.slice(2);
 	const parsed = parseSelector(selector);
-	if (!publisherDid || !parsed || !bundleFile) {
-		console.error("usage: verify-registry-release.mjs <publisher-did> <slug@version> <bundle-file>");
+	const listed = bundleFile === "--listed";
+	if (!publisherDid || !parsed || !bundleFile || (listed && !builder)) {
+		console.error("usage: verify-registry-release.mjs <publisher-did> <slug@version> <bundle-file | --listed <builder-id>>");
 		process.exit(2);
 	}
-	const bytes = await readFile(bundleFile);
-	const expected = {
-		slug: parsed.slug,
-		version: parsed.version,
-		checksum: computePackageChecksum(bytes),
-		size: bytes.byteLength,
-	};
+	const bytes = listed ? null : await readFile(bundleFile);
+	const expected = listed
+		? { slug: parsed.slug, version: parsed.version, builder }
+		: { slug: parsed.slug, version: parsed.version, checksum: computePackageChecksum(bytes), size: bytes.byteLength };
+	const matches = listed ? listedRecordMatches : recordMatches;
 	const pds = await resolvePdsEndpoint(publisherDid);
 	const deadline = Date.now() + 5 * 60_000;
 	for (;;) {
 		const record = await fetchReleaseRecord(pds, publisherDid, parsed.slug, parsed.version, fetch);
 		if (record) {
-			const result = recordMatches(record.value, expected);
+			const result = matches(record.value, expected);
 			if (result.ok) {
 				console.log(
-					`registry_release_verified=${parsed.slug}@${parsed.version} uri=${record.uri} cid=${record.cid} checksum=${expected.checksum}`,
+					`registry_release_verified=${parsed.slug}@${parsed.version} uri=${record.uri} cid=${record.cid} ${listed ? `builder=${builder}` : `checksum=${expected.checksum}`}`,
 				);
 				break;
 			}
 			console.error(
-				`::error::Registry record for ${parsed.slug}@${parsed.version} does not match the prepared bundle: ${result.reasons.join("; ")}`,
+				`::error::Registry record for ${parsed.slug}@${parsed.version} does not match ${listed ? "this tag's release" : "the prepared bundle"}: ${result.reasons.join("; ")}`,
 			);
 			process.exit(1);
 		}
