@@ -1,6 +1,7 @@
 import { GuestCheckoutError } from "./errors.js";
 import { randomSecret, sha256Hex, timingSafeEqual } from "../../shared/secret.js";
-import { canonicalizeHttpOrigin, presentSiteUrl, resolveTrustedSiteOrigin } from "./site-scope.js";
+import { headerValue } from "./origin-admission.js";
+import { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "./site-scope.js";
 import {
   GUEST_CAPABILITY_HEADER,
   type GuestCapabilityPresentation,
@@ -11,9 +12,8 @@ import {
 export const hashGuestCapabilitySecret = sha256Hex;
 
 function knownOriginsAgree(left: string, right: string): boolean {
-  const leftOrigin = canonicalizeHttpOrigin(presentSiteUrl(left));
-  const rightOrigin = canonicalizeHttpOrigin(presentSiteUrl(right));
-  return leftOrigin !== null && leftOrigin === rightOrigin;
+  const leftOrigin = canonicalizeHttpOrigin(left);
+  return leftOrigin !== null && leftOrigin === canonicalizeHttpOrigin(right);
 }
 
 function knownSiteSource(retained: string | undefined, hosted: string | undefined): string | undefined {
@@ -41,16 +41,7 @@ export function hostSiteBinding(siteUrl: string | undefined): string {
 export function readGuestCapabilityHeader(
   headers: Headers | Record<string, string> | undefined,
 ): string | undefined {
-  if (!headers) return undefined;
-  if (typeof (headers as Headers).get === "function") {
-    const value =
-      (headers as Headers).get(GUEST_CAPABILITY_HEADER) ??
-      (headers as Headers).get("X-Commerce-Guest-Capability");
-    return value?.trim() || undefined;
-  }
-  const record = headers as Record<string, string>;
-  const value = record[GUEST_CAPABILITY_HEADER] ?? record["X-Commerce-Guest-Capability"];
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+  return headerValue(headers, GUEST_CAPABILITY_HEADER);
 }
 
 function parsePresentedCapability(token: string): { capabilityId: string; secret: string } {

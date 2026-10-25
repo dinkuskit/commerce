@@ -60,6 +60,13 @@ function routeFail(code: string, message: string, status: number): never {
   throw new PluginRouteError(code, message, status);
 }
 
+function rethrowCatalogRouteError(error: unknown): never {
+  if (error instanceof CatalogError) {
+    routeFail(error.code, error.message, error.status);
+  }
+  throw error;
+}
+
 export {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
   CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
@@ -94,10 +101,7 @@ export function createCatalogItemRouteWithLocalStock(
           ),
         );
       } catch (error) {
-        if (error instanceof CatalogError) {
-          throw new PluginRouteError(error.code, error.message, error.status);
-        }
-        throw error;
+        rethrowCatalogRouteError(error);
       }
     },
   };
@@ -122,10 +126,7 @@ export const setCatalogItemBackordersRoute: PluginRoute = {
         ctx.input,
       );
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -147,10 +148,7 @@ export const setCatalogItemManualAvailabilityRoute: PluginRoute = {
         ctx.input,
       );
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -183,15 +181,12 @@ function catalogPriceRoute(
     permission: "content:edit_any",
     handler: async (ctx) => {
       if (ctx.request.method.toUpperCase() !== "POST") {
-        throw new PluginRouteError("METHOD_NOT_ALLOWED", methodMessage, 405);
+        routeFail("METHOD_NOT_ALLOWED", methodMessage, 405);
       }
       try {
         return await action(priceStorage(ctx), ctx.input);
       } catch (error) {
-        if (error instanceof CatalogError) {
-          throw new PluginRouteError(error.code, error.message, error.status);
-        }
-        throw error;
+        rethrowCatalogRouteError(error);
       }
     },
   };
@@ -234,10 +229,7 @@ export function createListCatalogProductsRouteWithLocalStock(
           ),
         };
       } catch (error) {
-        if (error instanceof CatalogError) {
-          throw new PluginRouteError(error.code, error.message, error.status);
-        }
-        throw error;
+        rethrowCatalogRouteError(error);
       }
     },
   };
@@ -277,10 +269,7 @@ export function createSaveCatalogProductPricesRouteWithLocalStock(
           ),
         );
       } catch (error) {
-        if (error instanceof CatalogError) {
-          throw new PluginRouteError(error.code, error.message, error.status);
-        }
-        throw error;
+        rethrowCatalogRouteError(error);
       }
     },
   };
@@ -302,10 +291,7 @@ export const bulkSaveCatalogProductPricesRoute: PluginRoute = {
         : undefined;
       return await bulkSaveCatalogProductPrices(productSaveStorage(ctx), input as never);
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -326,10 +312,7 @@ export const saveCatalogItemMediaRoute: PluginRoute = {
         ctx.input,
       );
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -343,8 +326,7 @@ function productEditRoute(edit: (catalog: StorageCollection<CatalogStorageRecord
       try {
         return { changed: await edit(ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>, (ctx.input ?? {}) as Record<string, unknown>) };
       } catch (error) {
-        if (error instanceof CatalogError) throw new PluginRouteError(error.code, error.message, error.status);
-        throw error;
+        rethrowCatalogRouteError(error);
       }
     },
   };
@@ -363,8 +345,7 @@ export const setProductPageOnSaleRoute: PluginRoute = {
       return await setProductPageOnSale({ catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
         pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, ctx.input);
     } catch (error) {
-      if (error instanceof CatalogError) throw new PluginRouteError(error.code, error.message, error.status);
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -382,10 +363,7 @@ export const setCatalogItemSkuRoute: PluginRoute = {
         ctx.input,
       );
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -395,7 +373,7 @@ export const setCatalogItemIdentifiersRoute: PluginRoute = {
   permission: "content:edit_any",
   handler: async (ctx) => {
     if (ctx.request.method.toUpperCase() !== "POST") {
-      throw new PluginRouteError("METHOD_NOT_ALLOWED", "identifier setting requires POST", 405);
+      routeFail("METHOD_NOT_ALLOWED", "identifier setting requires POST", 405);
     }
     try {
       return await setCatalogItemIdentifiers(
@@ -403,10 +381,7 @@ export const setCatalogItemIdentifiersRoute: PluginRoute = {
         ctx.input,
       );
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -423,10 +398,7 @@ export const addCatalogVariantOptionRoute: PluginRoute = {
         catalog: ctx.storage.catalogItems as never,
       }, ctx.input as never);
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };
@@ -443,10 +415,7 @@ export const updateCatalogVariantLabelsRoute: PluginRoute = {
         catalog: ctx.storage.catalogItems as never,
       }, ctx.input as never);
     } catch (error) {
-      if (error instanceof CatalogError) {
-        throw new PluginRouteError(error.code, error.message, error.status);
-      }
-      throw error;
+      rethrowCatalogRouteError(error);
     }
   },
 };

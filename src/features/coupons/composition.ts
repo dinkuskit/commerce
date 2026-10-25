@@ -9,6 +9,7 @@ import {
   type CouponQuote,
   type CouponQuoteSnapshot,
   type CouponRecord,
+  type CouponRedemptionOwnerPort,
 } from "./types.js";
 import { CouponRecordValidationError, validateCouponRecord, validateCouponQuoteSnapshot } from "./validation.js";
 import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
@@ -107,7 +108,7 @@ function storedRecord(value: unknown, id: string): CouponRecord {
   }
 }
 
-export interface CouponAttemptPort {
+export interface CouponAttemptPort extends CouponRedemptionOwnerPort {
   /** Trusted Commerce durable pre-payment phase fence; prevents a late reserve from acquiring a slot. */
   releaseUnstarted(input: {
     couponId: string;
@@ -115,18 +116,6 @@ export interface CouponAttemptPort {
     quote: CouponQuote;
     overallPayableTotal: { currency: "USD"; minor: string };
   }): Promise<CouponAttempt>;
-  reserve(input: {
-    couponId: string;
-    attemptId: string;
-    quote: CouponQuote;
-    overallPayableTotal: { currency: "USD"; minor: string };
-    now: string;
-  }): Promise<CouponAttempt>;
-  attachProviderSession(couponId: string, attemptId: string, providerSessionId: string): Promise<CouponAttempt>;
-  reconcile(couponId: string, attemptId: string, reconciliation: CouponProviderReconciliation): Promise<CouponAttempt>;
-  reconcileFreeOrder(input: { couponId: string; attemptId: string; proof: CouponFreeOrderProof }): Promise<CouponAttempt>;
-  get(couponId: string, attemptId: string): Promise<CouponAttempt | null>;
-  getCounts(couponId: string): Promise<{ couponId: string; cap: number; capacity: number; pending: number; consumed: number; released: number; remaining: number } | null>;
 }
 
 function countState(record: CouponRecord, state: CouponAttempt["state"]): number {
@@ -153,10 +142,10 @@ export function createCouponAttemptOwner(collection: CouponCollection): CouponAt
       const { stored, record } = await read(id);
       const next = fn(record);
       if (next === record) {
-        return detached(record);
+        return record;
       }
       if ((await collection.compareAndSet(id, stored.revision, next)).applied) {
-        return detached(next);
+        return next;
       }
     }
     throw new CouponRedemptionError("CONTENTION", contention);

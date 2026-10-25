@@ -38,7 +38,7 @@ export interface CouponRecord {
   readonly attempts: readonly CouponAttempt[];
 }
 
-export type CouponAttemptState = "pending" | "consumed" | "released";
+export type CouponAttemptState = CouponRedemptionState;
 export interface CouponAttempt {
   readonly attemptId: string;
   readonly couponId: string;
@@ -103,20 +103,7 @@ export interface CouponAdminPort {
   findByCode(code: string): Promise<CouponRecord | null>;
 }
 
-export interface CouponRedemptionAttempt {
-  readonly attemptId: string;
-  readonly couponId: string;
-  readonly ruleId: string;
-  readonly ruleVersion: number;
-  readonly quoteId: string;
-  readonly state: CouponRedemptionState;
-  readonly quote: CouponQuoteSnapshot;
-  readonly providerSessionId?: string;
-  readonly freeOrder?: {
-    readonly orderId: string;
-    readonly receiptId: string;
-  };
-}
+export type CouponRedemptionAttempt = CouponAttempt;
 
 export interface ReserveCouponRedemptionInput {
   readonly couponId: string;

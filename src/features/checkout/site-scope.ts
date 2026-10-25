@@ -41,59 +41,23 @@ export interface ResolveTrustedSiteOriginInput {
 export function resolveTrustedSiteOrigin(
   input: ResolveTrustedSiteOriginInput,
 ): { ok: true; origin: string } | { ok: false } {
-  let topOrigin: string | undefined;
-  if (input.topLevelSiteUrl !== undefined) {
-    const raw = presentSiteUrl(input.topLevelSiteUrl);
-    if (raw === undefined) return { ok: false };
-    const origin = canonicalizeHttpOrigin(raw);
-    if (origin === null) return { ok: false };
-    topOrigin = origin;
+  let configuredOrigin: string | undefined;
+  for (const candidate of [input.checkoutSiteUrl, input.topLevelSiteUrl, input.constructorSiteUrl]) {
+    if (candidate === undefined) continue;
+    const origin = canonicalizeHttpOrigin(candidate);
+    if (origin === null || (configuredOrigin !== undefined && configuredOrigin !== origin)) {
+      return { ok: false };
+    }
+    configuredOrigin = origin;
   }
 
-  let checkoutOrigin: string | undefined;
-  if (input.checkoutSiteUrl !== undefined) {
-    const raw = presentSiteUrl(input.checkoutSiteUrl);
-    if (raw === undefined) return { ok: false };
-    const origin = canonicalizeHttpOrigin(raw);
-    if (origin === null) return { ok: false };
-    checkoutOrigin = origin;
-  }
-
-  if (topOrigin !== undefined && checkoutOrigin !== undefined && topOrigin !== checkoutOrigin) {
-    return { ok: false };
-  }
-
-  let constructorOrigin: string | undefined;
-  if (input.constructorSiteUrl !== undefined) {
-    const raw = presentSiteUrl(input.constructorSiteUrl);
-    if (raw === undefined) return { ok: false };
-    const origin = canonicalizeHttpOrigin(raw);
-    if (origin === null) return { ok: false };
-    constructorOrigin = origin;
-  }
-
-  if (topOrigin !== undefined && constructorOrigin !== undefined && topOrigin !== constructorOrigin) {
-    return { ok: false };
-  }
-  if (checkoutOrigin !== undefined && constructorOrigin !== undefined && checkoutOrigin !== constructorOrigin) {
-    return { ok: false };
-  }
-
-  const configuredOrigin = checkoutOrigin ?? topOrigin ?? constructorOrigin;
-
-  const runtimeRaw = presentSiteUrl(input.runtimeSiteUrl);
-  if (runtimeRaw !== undefined) {
-    const runtimeOrigin = canonicalizeHttpOrigin(runtimeRaw);
-    if (runtimeOrigin === null) return { ok: false };
-    if (configuredOrigin !== undefined && configuredOrigin !== runtimeOrigin) {
+  if (presentSiteUrl(input.runtimeSiteUrl) !== undefined) {
+    const runtimeOrigin = canonicalizeHttpOrigin(input.runtimeSiteUrl);
+    if (runtimeOrigin === null || (configuredOrigin !== undefined && configuredOrigin !== runtimeOrigin)) {
       return { ok: false };
     }
     return { ok: true, origin: runtimeOrigin };
   }
 
-  if (configuredOrigin !== undefined) {
-    return { ok: true, origin: configuredOrigin };
-  }
-
-  return { ok: false };
+  return configuredOrigin !== undefined ? { ok: true, origin: configuredOrigin } : { ok: false };
 }
