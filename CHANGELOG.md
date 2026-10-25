@@ -1,5 +1,15 @@
 # @dinkuskit/commerce
 
+## 0.6.0
+
+### Minor Changes
+
+- [#180](https://github.com/dinkuskit/commerce/pull/180) [`63f3e17`](https://github.com/dinkuskit/commerce/commit/63f3e17ea78f1ebe276d05ce5e77d297921da87f) Thanks [@saariuslystoned](https://github.com/saariuslystoned)! - One product screen: each Content > Products page gets a Dinkus Commerce editor panel with price, sale price, SKU, sizes, stock, weight and photos, plus "Add price and stock", which makes a Draft product and links it to the page without saving the page. The Commerce Products page is gone; Commerce settings lists products without a page, each with Make a page. New products start as a Draft (off the shop) until the store's publish check calls the private `catalog-items/set-on-sale` route; restoring an archived product returns it to Draft. Commerce pages sit in a "Dinkus Commerce" sidebar folder, and Settings is labelled "Commerce settings". Admin is Block Kit only: native installs get the same Orders and Commerce settings pages and product page panel as Registry stores, and the React Products, Store and Coupons screens, the `@dinkuskit/commerce/admin` export and the `react` peer dependency are removed. Coupon records stay in storage.
+
+### Patch Changes
+
+- [#173](https://github.com/dinkuskit/commerce/pull/173) [`7632cab`](https://github.com/dinkuskit/commerce/commit/7632cab43389c78045aac62a719d1218cd271c54) Thanks [@smoky-agent](https://github.com/apps/smoky-agent)! - Allow products to hold up to three variant-defining options (such as `Size × Color`), up to fifty values per option, and up to fifty sparse or full variant members with explicit existing-member assignments when appending options, revision-fenced option/value label renaming across options, and native + Registry editor support.
+
 ## 0.5.0
 
 ### Minor Changes
