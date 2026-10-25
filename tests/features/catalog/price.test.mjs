@@ -22,8 +22,19 @@ class MemoryCollection {
     this.records = new Map(
       records.map((record) => [record.recordId ?? record.itemId, structuredClone(record)]),
     );
+    this.revisions = new Map(
+      [...this.records.keys()].map((id, index) => [id, `rev-${index + 1}`]),
+    );
+    this.nextRevision = this.revisions.size + 1;
     this.puts = [];
     this.deletes = [];
+    this.onGetVersioned = null;
+  }
+
+  bumpRevision(id) {
+    const revision = `rev-${this.nextRevision++}`;
+    this.revisions.set(id, revision);
+    return revision;
   }
 
   async get(id) {
@@ -31,13 +42,52 @@ class MemoryCollection {
     return record === undefined ? null : structuredClone(record);
   }
 
+  async getVersioned(id) {
+    const record = this.records.get(id);
+    const snapshot =
+      record === undefined
+        ? null
+        : {
+            value: structuredClone(record),
+            revision: this.revisions.get(id) ?? this.bumpRevision(id),
+          };
+    if (this.onGetVersioned) {
+      await this.onGetVersioned(id, snapshot);
+    }
+    return snapshot;
+  }
+
   async put(id, record) {
     this.records.set(id, structuredClone(record));
+    this.bumpRevision(id);
     this.puts.push({ id, record: structuredClone(record) });
+  }
+
+  async compareAndSet(id, expectedRevision, record) {
+    if (expectedRevision === null) {
+      if (this.records.has(id)) return { applied: false };
+    } else if (this.revisions.get(id) !== expectedRevision) {
+      return { applied: false };
+    }
+    this.records.set(id, structuredClone(record));
+    const revision = this.bumpRevision(id);
+    this.puts.push({ id, record: structuredClone(record) });
+    return { applied: true, revision };
+  }
+
+  async compareAndDelete(id, expectedRevision) {
+    if (!this.records.has(id) || this.revisions.get(id) !== expectedRevision) {
+      return { applied: false };
+    }
+    this.deletes.push(id);
+    this.records.delete(id);
+    this.revisions.delete(id);
+    return { applied: true };
   }
 
   async delete(id) {
     this.deletes.push(id);
+    this.revisions.delete(id);
     return this.records.delete(id);
   }
 }
@@ -306,3 +356,115 @@ test("price routes are private POST actions that do not rewrite the catalog row"
   assert.equal(catalog.puts.length, 0);
   assert.equal(prices.records.has("item-grill"), false);
 });
+
+function createTwoPartyBarrier() {
+  let arrived = 0;
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  return async () => {
+    arrived += 1;
+    if (arrived === 2) {
+      release();
+    }
+    if (arrived <= 2) {
+      await gate;
+    }
+  };
+}
+
+test("concurrent Regular and Sale edits retry on CAS contention, preserve sibling fields, and enforce invariants", async () => {
+  const compatible = storage();
+  await setCatalogItemRegularPrice(compatible, {
+    catalogItemId: "item-grill",
+    amount: usd("1200"),
+  });
+  compatible.prices.onGetVersioned = createTwoPartyBarrier();
+  const [raisedRegular, addedSale] = await Promise.all([
+    setCatalogItemRegularPrice(compatible, {
+      catalogItemId: "item-grill",
+      amount: usd("1500"),
+    }),
+    setCatalogItemSalePrice(compatible, {
+      catalogItemId: "item-grill",
+      amount: usd("1000"),
+    }),
+  ]);
+  compatible.prices.onGetVersioned = null;
+  assert.equal(raisedRegular.changed, true);
+  assert.equal(addedSale.changed, true);
+  assert.deepEqual(await resolveCatalogItemPrice(compatible.prices, "item-grill"), {
+    catalogItemId: "item-grill",
+    listable: true,
+    regular: usd("1500"),
+    sale: usd("1000"),
+    customerPays: usd("1000"),
+  });
+
+  const conflicting = storage();
+  await setCatalogItemRegularPrice(conflicting, {
+    catalogItemId: "item-grill",
+    amount: usd("1200"),
+  });
+  conflicting.prices.onGetVersioned = createTwoPartyBarrier();
+  const outcomes = await Promise.allSettled([
+    setCatalogItemRegularPrice(conflicting, {
+      catalogItemId: "item-grill",
+      amount: usd("900"),
+    }),
+    setCatalogItemSalePrice(conflicting, {
+      catalogItemId: "item-grill",
+      amount: usd("1000"),
+    }),
+  ]);
+  conflicting.prices.onGetVersioned = null;
+  const fulfilled = outcomes.filter((outcome) => outcome.status === "fulfilled");
+  const rejected = outcomes.filter((outcome) => outcome.status === "rejected");
+  assert.equal(fulfilled.length, 1);
+  assert.equal(rejected.length, 1);
+  assert.equal(rejected[0].reason instanceof CatalogError, true);
+  assert.equal(rejected[0].reason.code, "SALE_NOT_LOWER_THAN_REGULAR");
+  const resolvedConflict = await resolveCatalogItemPrice(conflicting.prices, "item-grill");
+  assert.equal(resolvedConflict.listable, true);
+  if (resolvedConflict.sale !== undefined) {
+    assert.deepEqual(resolvedConflict.regular, usd("1200"));
+    assert.deepEqual(resolvedConflict.sale, usd("1000"));
+  } else {
+    assert.deepEqual(resolvedConflict.regular, usd("900"));
+  }
+
+  const clearVsSale = storage();
+  await setCatalogItemRegularPrice(clearVsSale, {
+    catalogItemId: "item-grill",
+    amount: usd("1200"),
+  });
+  clearVsSale.prices.onGetVersioned = createTwoPartyBarrier();
+  const clearOutcomes = await Promise.allSettled([
+    clearCatalogItemRegularPrice(clearVsSale, { catalogItemId: "item-grill" }),
+    setCatalogItemSalePrice(clearVsSale, {
+      catalogItemId: "item-grill",
+      amount: usd("1000"),
+    }),
+  ]);
+  clearVsSale.prices.onGetVersioned = null;
+  const clearRejected = clearOutcomes.filter((outcome) => outcome.status === "rejected");
+  assert.equal(clearRejected.length, 1);
+  assert.equal(clearRejected[0].reason instanceof CatalogError, true);
+  assert.equal(
+    clearRejected[0].reason.code === "REGULAR_HAS_SALE" ||
+      clearRejected[0].reason.code === "SALE_REQUIRES_REGULAR",
+    true,
+  );
+
+  const contended = storage();
+  contended.prices.compareAndSet = async () => ({ applied: false });
+  await assert.rejects(
+    setCatalogItemRegularPrice(contended, {
+      catalogItemId: "item-grill",
+      amount: usd("1200"),
+    }),
+    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
+  );
+});
+

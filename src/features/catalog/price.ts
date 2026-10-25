@@ -46,22 +46,8 @@ function normalizeClearInput(value: unknown): ClearCatalogItemPriceInput {
   return { catalogItemId: requireCatalogItemId(value.catalogItemId) };
 }
 
-function assertCatalogItem(
-  value: Awaited<ReturnType<SetCatalogItemPriceStorage["catalog"]["get"]>>,
-  catalogItemId: string,
-): void {
-  if (value === null || value.recordKind !== "catalog-item") {
-    catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
-  }
-  if (value.itemId !== catalogItemId) {
-    catalogFail("STORAGE_UNAVAILABLE", "stored catalog item identity does not match its key",);
-  }
-}
-
-function storedPriceError(error: unknown): CatalogError {
-  return error instanceof CatalogError && error.code !== "INVALID_INPUT"
-    ? error
-    : new CatalogError("STORAGE_UNAVAILABLE", "stored catalog price is invalid", { cause: error });
+function invalidStoredPrice(cause?: unknown): never {
+  catalogFail("STORAGE_UNAVAILABLE", "stored catalog price is invalid", cause ? { cause } : undefined);
 }
 
 function normalizeStoredPrice(
@@ -74,40 +60,27 @@ function normalizeStoredPrice(
     value.recordId !== catalogItemId ||
     value.catalogItemId !== catalogItemId
   ) {
-    catalogFail("STORAGE_UNAVAILABLE", "stored catalog price is invalid");
+    invalidStoredPrice();
   }
   try {
     const regular = normalizeMoney(value.regular, "stored regular");
     const sale = Object.hasOwn(value, "sale") ? normalizeMoney(value.sale, "stored sale") : undefined;
-    if (sale && !saleIsStrictlyLower(sale, regular)) {
-      catalogFail("STORAGE_UNAVAILABLE", "stored catalog price is invalid");
-    }
+    if (sale && !saleIsStrictlyLower(sale, regular)) invalidStoredPrice();
     return catalogPriceRecord(catalogItemId, regular, sale);
   } catch (error) {
-    throw storedPriceError(error);
+    if (error instanceof CatalogError && error.code !== "INVALID_INPUT") throw error;
+    invalidStoredPrice(error);
   }
 }
 
 async function readPrice(
-  storage: CatalogPriceStorage,
+  storage: Pick<CatalogPriceStorage, "get">,
   catalogItemId: string,
 ): Promise<CatalogPriceRecord | null> {
-  const stored: CatalogPriceRecord | null = await catalogStorage(() => storage.get(catalogItemId), "catalog price lookup failed");
-  return normalizeStoredPrice(stored, catalogItemId);
-}
-
-async function writePrice(
-  storage: CatalogPriceStorage,
-  record: CatalogPriceRecord,
-): Promise<void> {
-  await catalogStorage(() => storage.put(record.recordId, record), "catalog price update failed");
-}
-
-async function deletePrice(
-  storage: CatalogPriceStorage,
-  catalogItemId: string,
-): Promise<void> {
-  await catalogStorage(() => storage.delete(catalogItemId), "catalog price delete failed");
+  return normalizeStoredPrice(
+    await catalogStorage(() => storage.get(catalogItemId), "catalog price lookup failed"),
+    catalogItemId,
+  );
 }
 
 async function requireCatalogItem(
@@ -115,23 +88,44 @@ async function requireCatalogItem(
   catalogItemId: string,
 ): Promise<void> {
   const item = await catalogStorage(() => storage.get(catalogItemId), "catalog item lookup failed");
-  assertCatalogItem(item, catalogItemId);
+  if (item === null || item.recordKind !== "catalog-item") {
+    catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
+  }
+  if (item.itemId !== catalogItemId) {
+    catalogFail("STORAGE_UNAVAILABLE", "stored catalog item identity does not match its key");
+  }
 }
 
-function toResolution(
+async function changePrice(
+  storage: SetCatalogItemPriceStorage,
   catalogItemId: string,
-  price: CatalogPriceRecord | null,
-): CatalogItemPriceResolution {
-  if (price === null) {
-    return { catalogItemId, listable: false };
+  decide: (existing: CatalogPriceRecord | null) => CatalogPriceRecord | null | undefined,
+): Promise<SetCatalogItemPriceResult> {
+  await requireCatalogItem(storage.catalog, catalogItemId);
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const stored = await catalogStorage(
+      () => storage.prices.getVersioned(catalogItemId),
+      "catalog price lookup failed",
+    );
+    const existing = normalizeStoredPrice(stored?.value ?? null, catalogItemId);
+    const next = decide(existing);
+    if (next === undefined) return { changed: false, price: existing };
+    if (
+      (next === null
+        ? await catalogStorage(
+            () => storage.prices.compareAndDelete(catalogItemId, stored!.revision),
+            "catalog price delete failed",
+          )
+        : await catalogStorage(
+            () => storage.prices.compareAndSet(catalogItemId, stored?.revision ?? null, next),
+            "catalog price update failed",
+          )
+      ).applied
+    ) {
+      return { changed: true, price: next };
+    }
   }
-  return {
-    catalogItemId,
-    listable: true,
-    regular: price.regular,
-    ...(price.sale === undefined ? {} : { sale: price.sale }),
-    customerPays: price.sale ?? price.regular,
-  };
+  return catalogFail("STORAGE_UNAVAILABLE", "catalog price update conflicted repeatedly");
 }
 
 export async function loadCatalogItemPrice(
@@ -145,11 +139,17 @@ export async function resolveCatalogItemPrice(
   storage: CatalogPriceStorage,
   catalogItemId: string,
 ): Promise<CatalogItemPriceResolution> {
-  if (typeof catalogItemId !== "string" || catalogItemId.trim().length === 0) {
-    catalogFail("INVALID_INPUT", "catalogItemId must be a non-empty string");
-  }
-  const price = await readPrice(storage, catalogItemId.trim());
-  return toResolution(catalogItemId.trim(), price);
+  const id = requireCatalogItemId(catalogItemId);
+  const price = await readPrice(storage, id);
+  return price === null
+    ? { catalogItemId: id, listable: false }
+    : {
+        catalogItemId: id,
+        listable: true,
+        regular: price.regular,
+        ...(price.sale ? { sale: price.sale } : {}),
+        customerPays: price.sale ?? price.regular,
+      };
 }
 
 export async function commitCatalogItemPrice(
@@ -157,34 +157,29 @@ export async function commitCatalogItemPrice(
   input: { catalogItemId: string; regular: Money | null; sale: Money | null },
 ): Promise<CatalogPriceRecord | null> {
   await requireCatalogItem(storage.catalog, input.catalogItemId);
-  if (input.sale !== null && input.regular === null) {
-    catalogFail("SALE_REQUIRES_REGULAR", "Sale cannot be set until Regular exists",);
-  }
-  if (
-    input.sale !== null &&
-    input.regular !== null &&
-    !saleIsStrictlyLower(input.sale, input.regular)
-  ) {
-    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
+  if (input.sale) {
+    if (!input.regular) {
+      catalogFail("SALE_REQUIRES_REGULAR", "Sale cannot be set until Regular exists");
+    }
+    if (!saleIsStrictlyLower(input.sale, input.regular)) {
+      catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular");
+    }
   }
   const existing = await readPrice(storage.prices, input.catalogItemId);
-  if (input.regular === null) {
-    if (existing === null) return null;
-    await deletePrice(storage.prices, input.catalogItemId);
+  if (!input.regular) {
+    if (!existing) return null;
+    await catalogStorage(() => storage.prices.delete(input.catalogItemId), "catalog price delete failed");
     return null;
   }
   const price = catalogPriceRecord(input.catalogItemId, input.regular, input.sale);
   if (
-    existing !== null &&
+    existing &&
     moneyEquals(existing.regular, price.regular) &&
-    ((existing.sale === undefined && price.sale === undefined) ||
-      (existing.sale !== undefined &&
-        price.sale !== undefined &&
-        moneyEquals(existing.sale, price.sale)))
+    (existing.sale ? Boolean(price.sale && moneyEquals(existing.sale, price.sale)) : !price.sale)
   ) {
     return existing;
   }
-  await writePrice(storage.prices, price);
+  await catalogStorage(() => storage.prices.put(price.recordId, price), "catalog price update failed");
   return price;
 }
 
@@ -193,17 +188,15 @@ export async function setCatalogItemRegularPrice(
   rawInput: unknown,
 ): Promise<SetCatalogItemPriceResult> {
   const input = normalizeSetInput(rawInput);
-  await requireCatalogItem(storage.catalog, input.catalogItemId);
-  const existing = await readPrice(storage.prices, input.catalogItemId);
-  if (existing?.sale !== undefined && !saleIsStrictlyLower(existing.sale, input.amount)) {
-    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
-  }
-  if (existing !== null && moneyEquals(existing.regular, input.amount)) {
-    return { changed: false, price: existing };
-  }
-  const price = catalogPriceRecord(input.catalogItemId, input.amount, existing?.sale);
-  await writePrice(storage.prices, price);
-  return { changed: true, price };
+  return changePrice(storage, input.catalogItemId, (existing) => {
+    if (existing?.sale !== undefined && !saleIsStrictlyLower(existing.sale, input.amount)) {
+      catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular");
+    }
+    if (existing !== null && moneyEquals(existing.regular, input.amount)) {
+      return undefined;
+    }
+    return catalogPriceRecord(input.catalogItemId, input.amount, existing?.sale);
+  });
 }
 
 export async function setCatalogItemSalePrice(
@@ -211,20 +204,18 @@ export async function setCatalogItemSalePrice(
   rawInput: unknown,
 ): Promise<SetCatalogItemPriceResult> {
   const input = normalizeSetInput(rawInput);
-  await requireCatalogItem(storage.catalog, input.catalogItemId);
-  const existing = await readPrice(storage.prices, input.catalogItemId);
-  if (existing === null) {
-    catalogFail("SALE_REQUIRES_REGULAR", "Sale cannot be set until Regular exists",);
-  }
-  if (!saleIsStrictlyLower(input.amount, existing.regular)) {
-    catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular",);
-  }
-  if (existing.sale !== undefined && moneyEquals(existing.sale, input.amount)) {
-    return { changed: false, price: existing };
-  }
-  const price = catalogPriceRecord(input.catalogItemId, existing.regular, input.amount);
-  await writePrice(storage.prices, price);
-  return { changed: true, price };
+  return changePrice(storage, input.catalogItemId, (existing) => {
+    if (existing === null) {
+      catalogFail("SALE_REQUIRES_REGULAR", "Sale cannot be set until Regular exists");
+    }
+    if (!saleIsStrictlyLower(input.amount, existing.regular)) {
+      catalogFail("SALE_NOT_LOWER_THAN_REGULAR", "Sale must be strictly lower than Regular");
+    }
+    if (existing.sale !== undefined && moneyEquals(existing.sale, input.amount)) {
+      return undefined;
+    }
+    return catalogPriceRecord(input.catalogItemId, existing.regular, input.amount);
+  });
 }
 
 export async function clearCatalogItemSalePrice(
@@ -232,14 +223,11 @@ export async function clearCatalogItemSalePrice(
   rawInput: unknown,
 ): Promise<SetCatalogItemPriceResult> {
   const input = normalizeClearInput(rawInput);
-  await requireCatalogItem(storage.catalog, input.catalogItemId);
-  const existing = await readPrice(storage.prices, input.catalogItemId);
-  if (existing === null || existing.sale === undefined) {
-    return { changed: false, price: existing };
-  }
-  const price = catalogPriceRecord(input.catalogItemId, existing.regular);
-  await writePrice(storage.prices, price);
-  return { changed: true, price };
+  return changePrice(storage, input.catalogItemId, (existing) =>
+    existing === null || existing.sale === undefined
+      ? undefined
+      : catalogPriceRecord(input.catalogItemId, existing.regular),
+  );
 }
 
 export async function clearCatalogItemRegularPrice(
@@ -247,14 +235,13 @@ export async function clearCatalogItemRegularPrice(
   rawInput: unknown,
 ): Promise<SetCatalogItemPriceResult> {
   const input = normalizeClearInput(rawInput);
-  await requireCatalogItem(storage.catalog, input.catalogItemId);
-  const existing = await readPrice(storage.prices, input.catalogItemId);
-  if (existing === null) {
-    return { changed: false, price: null };
-  }
-  if (existing.sale !== undefined) {
-    catalogFail("REGULAR_HAS_SALE", "Regular cannot be cleared while Sale exists",);
-  }
-  await deletePrice(storage.prices, input.catalogItemId);
-  return { changed: true, price: null };
+  return changePrice(storage, input.catalogItemId, (existing) => {
+    if (existing === null) {
+      return undefined;
+    }
+    if (existing.sale !== undefined) {
+      catalogFail("REGULAR_HAS_SALE", "Regular cannot be cleared while Sale exists");
+    }
+    return null;
+  });
 }
