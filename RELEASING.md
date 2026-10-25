@@ -128,7 +128,14 @@ committing onto the branch but before the tag, re-run it: it resumes from that
 commit. If a tag run fails, re-run that tag run, or press **Run workflow** with
 **Use workflow from** set to the tag and `action: retry-publish`: it creates a
 missing GitHub Release, publishes when the Registry still lacks the version,
-and verifies the record again when it is already listed.
+and verifies the record again when it is already listed. An already-listed
+version is checked by the published archive itself, because a rebuild does not
+reproduce it byte for byte: the record must name this repository's `release.yml`
+at the same tag, the archive it points at must match the record's checksum, and
+that archive must carry this repository's signed GitHub build attestation from
+`emdash-release.yml` at the same tag (`gh attestation verify`). A release that asks for new access waits for the owner's
+approval at releases.emdashcms.com; the publish step keeps polling for up to
+30 minutes, and after a longer wait Retry the publish finishes the run.
 
 ## A bug in a released version
 

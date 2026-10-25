@@ -10,6 +10,8 @@ import { betaManifest, effectiveSelector } from "../../scripts/beta-release.mjs"
 import {
 	computePackageChecksum,
 	parseSelector,
+	listedRecordMatches,
+	publishedArtifactMatches,
 	recordMatches,
 	resolvePdsEndpoint,
 } from "../../.github/scripts/verify-registry-release.mjs";
@@ -196,6 +198,40 @@ test("registry verifier accepts only the exact prepared bundle", () => {
 	);
 	assert.equal(recordMatches(null, expected).ok, false);
 	assert.equal(recordMatches({}, expected).ok, false);
+});
+
+test("an already-listed version is verified by the record's provenance, not a rebuild", async () => {
+	const builder = "https://github.com/dinkuskit/commerce/.github/workflows/release.yml@refs/tags/v0.6.0";
+	const expected = { slug: "dinkus-commerce", version: "0.6.0", builder };
+	const record = {
+		package: "dinkus-commerce",
+		version: "0.6.0",
+		artifacts: { package: { checksum: "bciqpublished", blob: { size: 51783, mimeType: "application/gzip" } } },
+		extensions: { "com.emdashcms.experimental.package.releaseExtension": { provenance: { builderId: builder } } },
+	};
+	assert.deepEqual(listedRecordMatches(record, expected), { ok: true, reasons: [] });
+	const otherBuilder = { ...record, extensions: { "com.emdashcms.experimental.package.releaseExtension": { provenance: { builderId: builder.replace("refs/tags/v0.6.0", "refs/heads/main") } } } };
+	assert.equal(listedRecordMatches(otherBuilder, expected).ok, false);
+	assert.equal(listedRecordMatches({ ...record, extensions: undefined }, expected).ok, false);
+	assert.equal(listedRecordMatches({ ...record, version: "0.6.1" }, expected).ok, false);
+	assert.equal(listedRecordMatches(null, expected).ok, false);
+	const source = await read("../../.github/workflows/emdash-release.yml");
+	const verifyStep = source.split("      - name: Verify release is indexed in EmDash Registry\n")[1]?.split("      - name:")[0];
+	assert.match(verifyStep, /ALREADY_PUBLISHED: \$\{\{ steps\.registry-check\.outputs\.already_published \}\}/);
+	assert.match(verifyStep, /EXPECTED_BUILDER: https:\/\/github\.com\/\$\{\{ github\.workflow_ref \}\}/);
+	assert.match(verifyStep, /--listed "\$EXPECTED_BUILDER"/);
+	assert.match(verifyStep, /"\$BUNDLE_FILE"/);
+	assert.match(verifyStep, /--listed "\$EXPECTED_BUILDER" "\$published"/);
+	assert.match(verifyStep, /gh attestation verify "\$published" --repo "\$GITHUB_REPOSITORY"/);
+	assert.match(verifyStep, /--signer-workflow "\$GITHUB_REPOSITORY\/\.github\/workflows\/emdash-release\.yml"/);
+	assert.match(verifyStep, /--source-ref "\$GITHUB_REF" --deny-self-hosted-runners/);
+	const bytes = Buffer.from("published archive");
+	const published = { artifacts: { package: { checksum: computePackageChecksum(bytes), blob: { size: bytes.length } } } };
+	assert.deepEqual(publishedArtifactMatches(published, bytes), { ok: true, reasons: [] });
+	assert.equal(publishedArtifactMatches(published, Buffer.from("altered archive!!")).ok, false);
+	assert.equal(publishedArtifactMatches({}, bytes).ok, false);
+	const publishStep = source.split("      - name: Publish plugin to EmDash Registry\n")[1]?.split("      - name:")[0];
+	assert.match(publishStep, /wait-for-approval: "true"/);
 });
 
 test("publish outcome is gated on registry verification, not the intent", async () => {
