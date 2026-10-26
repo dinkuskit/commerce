@@ -22,8 +22,11 @@ Commerce does not own physical stock truth. Managed products fail closed when
 their configured inventory provider is unavailable; there is no local quantity
 or silent fallback. DinkusKit Inventory is the default first-party provider.
 
-## Initial delivery boundary
+## Initial delivery boundary (historical)
 
-This repository begins at charter stage. The package manifest is private at
+This paragraph records the first commit, not current release status; see the
+[README status](../README.md#status) for the maintained description.
+
+This repository began at charter stage. The package manifest is private at
 `0.0.0`, and the first commit contains no installable commerce implementation.
 Implementation starts only after a focused product slice is grilled and locked.

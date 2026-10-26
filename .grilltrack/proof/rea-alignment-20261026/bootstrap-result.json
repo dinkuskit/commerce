@@ -1,0 +1,61 @@
+{
+  "repo": "dinkuskit/commerce",
+  "base_bundle_pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+  "emdash_commerce_pin": "23f2bb1208b3baa7aedaa87faec00395f9bdd061",
+  "verified_skills": {
+    "grilltrack": {
+      "pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+      "files": 24,
+      "tree_sha256": "3303d2644c3e9c0776e024e4367bdb0aac94696a05dcc5cc2296bc889234debe"
+    },
+    "emdash-sites": {
+      "pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+      "files": 13,
+      "tree_sha256": "5352bf203eb02e43c6c4d5c98b68dc921de1cf69892c7a5d3d57fe006b1e43be"
+    },
+    "building-emdash-site": {
+      "pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+      "files": 7,
+      "tree_sha256": "6dfe9299528c1bc91c00b9ff5c0fbeecb6b8d0aec0173aebc42d2a510a1d436f"
+    },
+    "creating-plugins": {
+      "pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+      "files": 15,
+      "tree_sha256": "88eb96870087d6c7005526c2e9534dec2b2835e0980d5ccd0be9655f7b31e1d5"
+    },
+    "emdash-cli": {
+      "pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+      "files": 4,
+      "tree_sha256": "17ec874727710e8b4ee0a0f0257fc726ee546ccf615b5936915b46289a0b080d"
+    },
+    "upgrading-emdash": {
+      "pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+      "files": 3,
+      "tree_sha256": "6c2f3db70af6b7615623fbb74885680b8aaf61de3d9d2195aaf2fc1437654af5"
+    },
+    "emdash-ci-deploy": {
+      "pin": "9c7585f34337621d42cc508aff2e3ff317aa4e9c",
+      "files": 5,
+      "tree_sha256": "8a6676a76d85e57a177a5b0dc8094020579dc13c31a793cf9535e65da909c8d0"
+    },
+    "emdash-commerce": {
+      "pin": "23f2bb1208b3baa7aedaa87faec00395f9bdd061",
+      "files": 4,
+      "tree_sha256": "b48c1570d196751fe1f51d1289d8453de2fc285463ca5e7f11a240352c99e940"
+    }
+  },
+  "reference_closure": [
+    "references/rea-strategy.md",
+    "references/source-map.md"
+  ],
+  "cold_install": "pass",
+  "warm_install": "pass",
+  "idempotence": "identical content",
+  "unrelated_target": "preserved",
+  "shellcheck": "no new findings",
+  "baseline_shellcheck_codes": [
+    1007,
+    2115
+  ],
+  "bash_syntax": "pass"
+}
