@@ -94,7 +94,6 @@ test('each product screen costs the same few storage calls however many products
       'product page': { type: 'block_action', action_id: 'open', value: 'p002' },
       'price save': submit('save:p002', { regular: '12.00', sale: '', stockStatus: 'in-stock' }),
       'weight save': submit('weight:p002', { 'w:p002': '8' }),
-      'rename': submit('rename:p002', { name: 'Renamed' }),
       'archive': { type: 'block_action', action_id: 'archive', value: { id: 'p002', a: true } },
       'product page with choices': { type: 'block_action', action_id: 'open', value: 'p001' },
       'choice weight save': submit('weight:p001', { 'w:p001': '4', 'w:p001-large': '6' }),

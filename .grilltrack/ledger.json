@@ -12982,6 +12982,20 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
+        },
+        {
+          "at": "2026-10-26T16:55:24+00:00",
+          "choice": "Yes. Both admins rename a product (same name rules as Add product). The name changes on the product and each of its choices, so the Shop card, cart, checkout and new orders use it; it stays the product page heading per block-admin-create-002. Paid orders keep the name stored on each order line when bought. The first creationPayload is kept.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:docs/implementation/product-rename-archive.md",
+          "note": "One product screen: the page title is the one name, set on publish; the panel's Rename is removed (Ronald, 26 Oct 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
         }
       ],
       "id": "catalog-product-rename-001",
@@ -12994,9 +13008,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-23T19:30:51+00:00",
+      "status": "superseded",
+      "superseded_by": "catalog-page-title-is-name-20261026",
+      "updated_at": "2026-10-26T16:55:24+00:00",
       "verification_ref": "file:tests/features/catalog/product-edit.test.mjs"
     },
     {
@@ -14425,6 +14439,47 @@
       "superseded_by": null,
       "updated_at": "2026-10-24T14:10:57+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "The product page's title is the product's one name. When a person publishes the page, the store's publish check sends the title with catalog-items/set-on-sale and Commerce saves it as the product name in the same write that puts the product on sale, so the shop, cart, checkout and new orders use it (paid orders keep the name stored on each order line). The Commerce panel drops its Name field and Rename button and says the name comes from the page title. Make this sellable still names a new product from the title. Commerce still never reads the CMS. Unpublish and trash never change the name.",
+      "context_ref": "https://github.com/dinkuskit/template-store/issues/157",
+      "created_at": "2026-10-26T16:55:23+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-26T16:55:23+00:00",
+          "choice": "The product page's title is the product's one name. When a person publishes the page, the store's publish check sends the title with catalog-items/set-on-sale and Commerce saves it as the product name in the same write that puts the product on sale, so the shop, cart, checkout and new orders use it (paid orders keep the name stored on each order line). The Commerce panel drops its Name field and Rename button and says the name comes from the page title. Make this sellable still names a new product from the title. Commerce still never reads the CMS. Unpublish and trash never change the name.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-page-title-is-name-20261026",
+      "implementation_ref": null,
+      "question": "Which name do shoppers see for a product now that Content > Products is the one product screen?",
+      "rationale": "Ronald chose 'Page title is the one name' on a decision card, 16:54 UTC 26 Oct 2026, after template-store#157: renaming a published page did not change the shop, because shoppers saw the Commerce panel's separate Name. Shopify and WooCommerce use one title.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-26T16:55:23+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -14461,5 +14516,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-24T14:10:57+00:00"
+  "updated_at": "2026-10-26T16:55:24+00:00"
 }

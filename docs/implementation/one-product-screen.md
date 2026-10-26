@@ -22,8 +22,9 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   owner to apply it, and the page keeps it only when they press Save.
 - A linked page shows the product's name, its state (Draft, On sale or
   Archived) and SKU, then the editor that used to live on the Products page:
-  rename, price and sale, stock status, choices, weight, images and Archive or
-  Restore.
+  price and sale, stock status, choices, weight, images and Archive or
+  Restore. It has no Name field: the page title is the product's one name
+  (`catalog-page-title-is-name-20261026`), set when the page is published.
 - The page's own `commerce_item_id` wins over `product_pages`. EmDash sends no
   draft on `panel_load`, so the panel opens from the stored link, and the next
   step the owner takes settles it: a page saved before `product_pages` existed
@@ -83,7 +84,11 @@ returns it as a Draft from the product page panel.
 The store's publish check calls the private route `catalog-items/set-on-sale`
 (`content:publish_any`, POST) with:
 
-- `{ catalogItemId, entryId, onSale: true }` when the product page is published;
+- `{ catalogItemId, entryId, onSale: true, name }` when the product page is
+  published, where `name` is the published page title (Add product's name
+  rules; a title that breaks them is refused and the product stays a Draft).
+  The name is saved in the same conditional write, keeping the first
+  `creationPayload`; a store that sends no `name` leaves it as it was;
 - `{ catalogItemId, entryId, onSale: false }` when it is unpublished;
 - `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
   which also drops the page's link.

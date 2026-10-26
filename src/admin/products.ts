@@ -6,7 +6,7 @@ import {
   linkProductPage, pageProduct, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
-  normalizeWeightOz, setCatalogItemWeight, renameCatalogProduct, setCatalogProductArchived,
+  normalizeWeightOz, setCatalogItemWeight, setCatalogProductArchived,
   addCatalogVariantOption, updateCatalogVariantLabels, normalizeIdentifierPatch,
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage,
@@ -147,10 +147,8 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const values = form ? { ...form, feedChannels: form.feedChannels ?? feedChannels } : { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
     header(selected.name),
-    note((selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish to sell it" : "On sale") + " \u00b7 SKU " + selected.sku),
+    note((selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish to sell it" : "On sale") + " \u00b7 SKU " + selected.sku + " \u00b7 Name comes from the page title"),
     ...(form?.message ? [alert(form.message)] : []),
-    { type: "form", block_id: "rename-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "name", label: "Name", initial_value: selected.name }],
-      submit: { label: "Rename", action_id: "rename:" + id } },
     manageStockNotice(values.manageStock),
     ...(!selected.variantProduct?.options.length ? [productForm(id, { ...values, stockStatus: values.stockStatus ?? status })] : []),
     ...variantEditor(id, selected.variantProduct),
@@ -318,11 +316,6 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         }
         return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, feedChannels: channels } : saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
       }
-      if (action.startsWith("rename:")) {
-        const id = action.slice(7);
-        await renameCatalogProduct(storage(ctx).catalog, { catalogItemId: id, name: values.name });
-        return await product(ctx, id, undefined, "Product renamed");
-      }
       if (action.startsWith("ids:")) {
         const id = action.slice(4);
         // The same checks as the identifiers route (GS1 check digit, 256 characters); an empty box clears its field.
@@ -416,7 +409,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
       } catch { /* fall through to the generic alert */ }
     }
     // A refused form keeps what the owner typed: the product comes back with the same form refilled.
-    if (input.type === "form_submit" && typeof input.action_id === "string" && /^(variant|weight|rename|save|ids):/.test(input.action_id)) {
+    if (input.type === "form_submit" && typeof input.action_id === "string" && /^(variant|weight|save|ids):/.test(input.action_id)) {
       try {
         const sent = input.action_id, args = sent.startsWith("variant:") ? JSON.parse(sent.slice(8)) : null;
         const back = await product(ctx, args ? args[1] : sent.replace(/^\w+:/, ""));

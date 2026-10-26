@@ -202,6 +202,30 @@ test('the publish check puts a product on sale and back to Draft, and a deleted 
   assert.equal(pages.records.size, 0);
 });
 
+test('publishing names the product from the page title, and only a publish does', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const storage = { catalog, pages };
+  await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Tee' } } }, ctx);
+  const id = await pageProduct(pages, 'page-1');
+  const shown = texts((await panel({ type: 'panel_load' }, ctx)).blocks);
+  assert.match(shown, /Name comes from the page title/);
+  assert.doesNotMatch(shown, /rename:|"Rename"/, 'the panel has no name of its own');
+  ctx.storage.catalog_prices = new Store();
+  await ctx.storage.catalog_prices.put(id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor: '1500' } });
+  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: true, name: '  Renamed Tee ' }), { changed: true });
+  assert.equal((await readPublicCatalogItem(ctx, id))?.name, 'Renamed Tee', 'the shop shows the published title');
+  assert.equal((await catalog.get(id)).creationPayload.name, 'Tee', 'the first creationPayload is kept');
+  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: true, name: 'Tee Two' }), { changed: false }, 'a rename alone is not a sale change');
+  assert.equal((await catalog.get(id)).name, 'Tee Two');
+  await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: false, name: 'Ignored' });
+  assert.equal((await catalog.get(id)).name, 'Tee Two', 'unpublishing never renames');
+  for (const name of ['', ' ', 'x'.repeat(161), 'a\u0007b', 42]) {
+    await assert.rejects(setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: true, name }), (error) => error.code === 'INVALID_INPUT');
+  }
+  assert.equal((await catalog.get(id)).name, 'Tee Two', 'a refused title changes nothing');
+  assert.equal((await catalog.get(id)).offSale, true, 'and leaves the product a Draft');
+});
+
 test('the page that sells a product can always take it off sale, whatever other pages name it', async () => {
   const { catalog, pages } = await shop();
   const storage = { catalog, pages };
