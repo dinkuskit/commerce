@@ -89,6 +89,10 @@ The store's publish check calls the private route `catalog-items/set-on-sale`
   rules; a title that breaks them is refused and the product stays a Draft).
   The name is saved in the same conditional write, keeping the first
   `creationPayload`; a store that sends no `name` leaves it as it was;
+- `{ catalogItemId, entryId, name }` (no `onSale`) when a published page's
+  title changed under an overlapping publish: it renames only the product
+  this page already sells and never changes its sale state or link, so a
+  late title fix cannot put a product back on sale;
 - `{ catalogItemId, entryId, onSale: false }` when it is unpublished;
 - `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
   which also drops the page's link.

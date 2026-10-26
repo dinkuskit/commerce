@@ -79,6 +79,12 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
   const catalogItemId = id(input.catalogItemId, "catalogItemId"), entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
   const { onSale, deleted } = input;
+  // A title-only write renames the product this page sells, and never changes its sale state or link.
+  if (onSale === undefined && deleted === undefined && input.name !== undefined) {
+    const name = normalizeProductName(input.name);
+    await editProduct(catalog, catalogItemId, item => item.pageId !== entryId || item.name === name ? null : named(item, name));
+    return { changed: false };
+  }
   if (typeof onSale !== "boolean" || (deleted !== undefined && (deleted !== true || onSale))) throw new CatalogError("INVALID_INPUT", "Invalid onSale");
   const name = onSale && input.name !== undefined ? normalizeProductName(input.name) : undefined;
   const mine = await pages.getVersioned(key), claim = crypto.randomUUID(), old = mine?.value;

@@ -224,6 +224,17 @@ test('publishing names the product from the page title, and only a publish does'
   }
   assert.equal((await catalog.get(id)).name, 'Tee Two', 'a refused title changes nothing');
   assert.equal((await catalog.get(id)).offSale, true, 'and leaves the product a Draft');
+  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', name: 'Tee Three' }), { changed: false });
+  assert.equal((await catalog.get(id)).name, 'Tee Three', 'a title-only write renames the page\'s product');
+  assert.equal((await catalog.get(id)).offSale, true, 'and never puts it on sale');
+  await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: true });
+  await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', name: 'Tee Four' });
+  assert.equal((await catalog.get(id)).offSale, undefined, 'nor takes it off');
+  assert.equal((await catalog.get(id)).pageId, 'page-1');
+  await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-2', name: 'Not mine' });
+  assert.equal((await catalog.get(id)).name, 'Tee Four', 'another page cannot rename it');
+  await assert.rejects(setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', name: '' }), (error) => error.code === 'INVALID_INPUT');
+  await assert.rejects(setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', name: 'x', deleted: true }), (error) => error.code === 'INVALID_INPUT');
 });
 
 test('the page that sells a product can always take it off sale, whatever other pages name it', async () => {
