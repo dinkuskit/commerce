@@ -6,7 +6,11 @@ ID from the product's admin page. Decisions: `catalog-product-rename-001`,
 
 ## Behavior
 
-- **Rename.** The product page in both admins has a Name field and Rename.
+- **Rename.** Superseded for the product page panel by
+  `catalog-page-title-is-name-20261026`: the panel has no Name field, and
+  publishing the page sets the name from its title (see
+  [one-product-screen.md](one-product-screen.md)). The native
+  `catalog-items/rename` route stays.
   The name lives on the product's own record, which speaks for each of its
   choices: the Shop card, the cart, checkout and new orders all read it from
   there, so one compare-and-set renames everything at once.

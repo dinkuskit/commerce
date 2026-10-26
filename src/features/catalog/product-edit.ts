@@ -29,11 +29,14 @@ export async function editProduct(catalog: Catalog, catalogItemId: unknown,
 /** Renames a product. Past orders keep the name the product had when it was bought. */
 export async function renameCatalogProduct(catalog: Catalog, input: { catalogItemId?: unknown; name?: unknown }): Promise<boolean> {
   const name = normalizeProductName(input.name);
-  return editProduct(catalog, input.catalogItemId, (item) => item.name === name ? null : {
-    ...item, name,
-    creationPayload: item.creationPayload ?? { kind: item.kind, name: item.name, sku: item.sku, skuKey: item.skuKey, manageStock: item.creationIntent?.manageStock ?? false },
-  });
+  return editProduct(catalog, input.catalogItemId, (item) => item.name === name ? null : named(item, name));
 }
+
+/** The product under a new name, keeping the first creationPayload. */
+export const named = (item: CatalogItemRecord, name: string): CatalogItemRecord => ({
+  ...item, name,
+  creationPayload: item.creationPayload ?? { kind: item.kind, name: item.name, sku: item.sku, skuKey: item.skuKey, manageStock: item.creationIntent?.manageStock ?? false },
+});
 
 /** Archives a product (off the shop, not for sale) or restores it as a Draft. Nothing is deleted. */
 /**

@@ -596,3 +596,8 @@
 {"action": "decision_verified", "at": "2026-10-23T21:33:55+00:00", "data": {"decision_id": "admin-sidebar-plugin-folders-20261023"}, "event_id": "6100e5dd-030e-43c9-b8cc-b48257e34793"}
 {"action": "decision_proposed", "at": "2026-10-24T14:10:56+00:00", "data": {"decision_id": "commerce-admin-block-kit-only-20261024"}, "event_id": "f970e2a1-5a10-4548-9a0b-eca6612cc4ea"}
 {"action": "decision_locked", "at": "2026-10-24T14:10:57+00:00", "data": {"decision_id": "commerce-admin-block-kit-only-20261024"}, "event_id": "0f2a9b83-faba-4c94-900e-f6941ab2c38a"}
+{"action": "decision_proposed", "at": "2026-10-26T16:55:23+00:00", "data": {"decision_id": "catalog-page-title-is-name-20261026"}, "event_id": "f41af3d4-21ef-48f5-994c-68d167aa6f07"}
+{"action": "decision_locked", "at": "2026-10-26T16:55:23+00:00", "data": {"decision_id": "catalog-page-title-is-name-20261026"}, "event_id": "0f0f99f5-4e11-4254-8484-2ff5b090d5b0"}
+{"action": "decision_superseded", "at": "2026-10-26T16:55:24+00:00", "data": {"affected": [], "decision_id": "catalog-product-rename-001", "replacement_id": "catalog-page-title-is-name-20261026"}, "event_id": "64d1c919-5f80-4704-8df3-f0365028e41a"}
+{"action": "decision_proposed", "at": "2026-10-26T17:17:52+00:00", "data": {"decision_id": "catalog-page-title-upgrade-order-20261026"}, "event_id": "c4169e45-d6d6-46a9-9c5e-e94d132a8ea2"}
+{"action": "decision_locked", "at": "2026-10-26T17:17:52+00:00", "data": {"decision_id": "catalog-page-title-upgrade-order-20261026"}, "event_id": "11e82f8b-5dd5-4b3d-808b-39e5ba2ac90d"}

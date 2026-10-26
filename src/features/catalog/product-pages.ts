@@ -1,7 +1,8 @@
 import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
-import { editProduct } from "./product-edit.js";
+import { normalizeProductName } from "./normalize.js";
+import { editProduct, named } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
@@ -70,13 +71,22 @@ export async function productPageLinks(pages: ProductPages): Promise<Set<string>
  * again keeps it and a check that stops halfway is finished by the next. The
  * page's own pointer then moves from the revision read before, so of two
  * overlapping checks for one page only one lands; the other gives its product
- * back and is refused.
+ * back and is refused. A publish may carry the page's title as `name`: the
+ * page title is the product's one name (catalog-page-title-is-name-20261026),
+ * saved in that same write.
  */
 export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages }, input: unknown): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
   const catalogItemId = id(input.catalogItemId, "catalogItemId"), entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
   const { onSale, deleted } = input;
+  // A title-only write renames the product this page sells, and never changes its sale state or link.
+  if (onSale === undefined && deleted === undefined && input.name !== undefined) {
+    const name = normalizeProductName(input.name);
+    await editProduct(catalog, catalogItemId, item => item.pageId !== entryId || item.name === name ? null : named(item, name));
+    return { changed: false };
+  }
   if (typeof onSale !== "boolean" || (deleted !== undefined && (deleted !== true || onSale))) throw new CatalogError("INVALID_INPUT", "Invalid onSale");
+  const name = onSale && input.name !== undefined ? normalizeProductName(input.name) : undefined;
   const mine = await pages.getVersioned(key), claim = crypto.randomUUID(), old = mine?.value;
   let changed = false;
   // Only while the claim that took it still holds: give a product back, off the shop with no page.
@@ -89,7 +99,7 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     if (item.pageId && item.pageId !== entryId) throw conflict();
     const { offSale: _off, pageId: _page, pageClaim: _claim, ...rest } = item;
     changed = !item.offSale !== onSale;
-    return { ...rest, ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
+    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
   });
   // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
   if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);

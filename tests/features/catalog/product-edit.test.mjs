@@ -103,20 +103,13 @@ test('native routes rename and archive with content:edit_any over POST', async (
   await assert.rejects(call(setCatalogProductArchivedRoute, {}, 'GET'), (error) => error.code === 'METHOD_NOT_ALLOWED');
 });
 
-test('the owner renames, archives and restores from the product page panel', async () => {
+test('the product page panel names the product from the page title, archives and restores it', async () => {
   const { catalog, ctx } = await shop();
   const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
   assert.equal(opened.blocks.some((block) => block.type === 'code'), false, 'nobody copies an id any more');
-  assert.ok(opened.blocks.some((block) => block.type === 'context' && block.text === 'On sale \u00b7 SKU MUG'));
-  const renameForm = opened.blocks.find((block) => block.type === 'form' && block.submit.action_id === 'rename:mug');
-  assert.equal(renameForm.fields[0].initial_value, 'Proof mug');
-  const refused = await commerceAdmin({ input: { type: 'form_submit', action_id: 'rename:mug', values: { name: '\u0007' } } }, ctx);
-  assert.equal(refused.toast.type, 'error');
-  assert.equal(refused.blocks.find((block) => block.type === 'form' && block.submit.action_id === 'rename:mug').fields[0].initial_value, '\u0007', 'typed name kept');
-  const renamed = await commerceAdmin({ input: { type: 'form_submit', action_id: 'rename:mug', values: { name: 'Proof cup' } } }, ctx);
-  assert.deepEqual(renamed.toast, { type: 'success', message: 'Product renamed' });
-  assert.equal(renamed.blocks[0].text, 'Proof cup');
-  const archive = renamed.blocks.flatMap((block) => block.type === 'actions' ? block.elements : []).find((element) => element.action_id === 'archive');
+  assert.ok(opened.blocks.some((block) => block.type === 'context' && block.text === 'On sale \u00b7 SKU MUG \u00b7 Name comes from the page title'));
+  assert.equal(opened.blocks.some((block) => block.type === 'form' && block.submit.action_id.startsWith('rename:')), false, 'the page title is the one name');
+  const archive = opened.blocks.flatMap((block) => block.type === 'actions' ? block.elements : []).find((element) => element.action_id === 'archive');
   assert.equal(archive.label, 'Archive product');
   assert.ok(archive.confirm, 'archiving asks first');
   const archived = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: archive.value } }, ctx);

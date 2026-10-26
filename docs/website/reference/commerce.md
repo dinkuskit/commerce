@@ -37,7 +37,8 @@ There is no separate Commerce Products page. Products are managed on the site's 
 **Content > Products** is the one place to manage a product. Each product page has a **Dinkus Commerce** panel beside the editor.
 
 - On a page with no product, press **Add price and stock**. It makes a Draft product named from the page title, with the SKU you type or one made from the title, and links it to the page. EmDash asks you to apply the link; the page keeps it when you press **Save**. The panel also lists products without a page, so one can be sold on this page instead.
-- On a linked page, the panel shows the product's state (Draft, On sale or Archived) and SKU, and edits its name, price and sale price, stock status, choices, weight, photos, and GTIN, MPN and Brand. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
+- On a linked page, the panel shows the product's state (Draft, On sale or Archived) and SKU, and edits its price and sale price, stock status, choices, weight, photos, and GTIN, MPN and Brand. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
+- The page title is the product's name. Publishing the page copies the title to the product, so the shop, cart, checkout and new orders show it. Paid orders keep the name they were bought under. To rename a product, change the page title and publish. A store must have the publish check that sends the title (DinkusKit Template Store from template-store#158) before it upgrades to this Commerce; until then products keep their current names.
 
 Publishing the page puts the product on sale, and unpublishing or deleting the page takes it off. A new product is a Draft, not buyable, until its page is published. The store's publish check makes this change through a private Commerce route; Commerce itself never reads the CMS.
 
