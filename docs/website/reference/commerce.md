@@ -15,7 +15,7 @@ This reference describes Commerce `{{version}}`, released on the EmDash Registry
 
 ## Connect to DinkusKit
 
-Commerce connects to DinkusKit.com with a button, and nothing is pasted. An Administrator opens **Dinkus Commerce > Commerce settings** and presses **Connect Commerce**. The business owner opens the link it shows, signs in at DinkusKit.com and presses **Approve**; anyone helping can send the owner the same link. Commerce then gets its own store key and keeps it, with the Store ID, in its encrypted DinkusKit connection setting.
+Commerce connects to DinkusKit.com with a button, and nothing is pasted. An Administrator opens **Dinkus Commerce > Commerce settings** and, under **Connect Commerce**, presses **Connect**. The business owner opens the link it shows, signs in at DinkusKit.com and presses **Approve**; anyone helping can send the owner the same link. Commerce then gets its own store key and keeps it, with the Store ID, in its encrypted DinkusKit connection setting.
 
 Commerce connects first: its Connect makes the store at DinkusKit.com, and Payments and Ship then join that store with their own Connect. After Connect, Commerce fetches its checkout settings from DinkusKit.com itself, when you press **Get checkout settings** and again on every background check. Choose shipping and TEST or live mode in **Set up Commerce** on DinkusKit.com. If DinkusKit.com no longer knows the store key, the page asks you to Connect again.
 
