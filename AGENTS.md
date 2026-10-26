@@ -61,6 +61,27 @@ access and an immutable public-safe commit pin.
 - Brand storefronts consume this package; this package never depends on a
   brand repository.
 
+## Reference article
+
+`docs/website/reference/commerce.md` is the Commerce article on dinkuskit.com/docs
+(GrillTrack decision `website-docs-from-plugin-releases-086` in
+dinkuskit/dinkuskit). Change it in the same PR as any behavior, screen, route
+or setup step it describes. Keep `version_scope: "Commerce {{version}}"` and the
+`{{version}}` and `{{release_date}}` placeholders: a stable release fills
+them in and publishes the article, so main may describe changes that are not
+released yet. Guides that span plugins live in dinkuskit/dinkuskit
+`docs/updates/`; link that PR under **Docs impact**.
+
+Reviewers, ClawSweeper included, record every PR's docs as one of:
+
+- **Docs: up to date**: the PR updates the article to match, or the article
+  already describes the change correctly.
+- **Docs: missing**: the PR changes something the article describes, or should
+  describe, without updating it. Report it as a P3 finding naming the section;
+  it does not block the merge.
+- **Docs: not applicable**: nothing an owner or developer sees changes (tests,
+  CI, internal refactors).
+
 ## Working rules
 
 - Product decisions flow through GrillTrack before implementation.

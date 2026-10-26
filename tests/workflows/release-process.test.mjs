@@ -87,6 +87,20 @@ test("release workflow carries Cut beta, Add fix to beta and Promote, tags merge
 	assert.ok(source.indexOf("run: npm test") < source.indexOf("actions/create-github-app-token@"));
 });
 
+test("a stable release presses Docs from a plugin release in dinkuskit/dinkuskit with its tag", async () => {
+	const source = await read("../../.github/workflows/release.yml");
+	const job = source.slice(source.indexOf("\n  website-docs:\n"));
+	assert.match(job, /needs: \[release-tag, publish-emdash\]\n\s+if: needs\.release-tag\.outputs\.release_mode == 'stable'\n/);
+	assert.match(job, /permissions: \{\}/);
+	assert.match(job, /repositories: dinkuskit\n\s+permission-actions: write\n/);
+	assert.match(job, /TAG: v\$\{\{ needs\.publish-emdash\.outputs\.version \}\}/);
+	assert.match(job, /gh workflow run docs-plugin-release\.yml --repo dinkuskit\/dinkuskit --ref main -f plugin=commerce -f tag="\$TAG"/);
+	// The article it publishes is kept here, with the placeholders the release fills in.
+	const article = await read("../../docs/website/reference/commerce.md");
+	assert.match(article, /^version_scope: "Commerce \{\{version\}\}"$/m);
+	assert.doesNotMatch(article, /^base:/m);
+});
+
 test("registry workflow is npm-based, pinned, call-only, and builds the version it publishes", async () => {
 	const source = await read("../../.github/workflows/emdash-release.yml");
 	assert.match(source, /apps\/release-action@[0-9a-f]{40}/);
