@@ -14480,6 +14480,49 @@
       "superseded_by": null,
       "updated_at": "2026-10-26T16:55:23+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Remove Rename now; the store updates first. A store's publish check must send the page title (template-store#158, harmless on Commerce 0.6.0) before it takes the Commerce release with catalog-page-title-is-name-20261026. The changeset and the reference article say so. A store that takes Commerce first keeps selling and keeps each product's current name until its store code is updated; nothing is lost. No temporary Rename is kept.",
+      "context_ref": "https://github.com/dinkuskit/commerce/pull/188",
+      "created_at": "2026-10-26T17:17:52+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-page-title-is-name-20261026"
+      ],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-26T17:17:52+00:00",
+          "choice": "Remove Rename now; the store updates first. A store's publish check must send the page title (template-store#158, harmless on Commerce 0.6.0) before it takes the Commerce release with catalog-page-title-is-name-20261026. The changeset and the reference article say so. A store that takes Commerce first keeps selling and keeps each product's current name until its store code is updated; nothing is lost. No temporary Rename is kept.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-page-title-upgrade-order-20261026",
+      "implementation_ref": null,
+      "question": "How do stores keep renaming when Commerce drops the panel's Rename before their store code sends the page title?",
+      "rationale": "Ronald chose 'Remove it now, store goes first' on a decision card, 17:17 UTC 26 Oct 2026, after ClawSweeper's P1 on commerce#188. Every store running Commerce today is his and gets template-store#158 first.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-26T17:17:52+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -14516,5 +14559,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-26T16:55:24+00:00"
+  "updated_at": "2026-10-26T17:17:52+00:00"
 }
