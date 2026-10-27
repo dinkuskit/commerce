@@ -4,7 +4,7 @@ import { writeFileSync } from "node:fs";
 import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 import { resolveStorefrontAvailability } from "../../dist/features/storefront-availability/index.js";
-import { openPanel, openProductPage, openProductPageTitled, readProductPage, saveEditor, setOnSale } from "./product-page.mjs";
+import { openMediaPanel, openPanel, openProductPage, openProductPageTitled, readProductPage, saveEditor, setOnSale } from "./product-page.mjs";
 
 // Primary owner for transport/rendering: real workerd, host authorization and SQLite.
 // Kernel unit tests cannot detect broken sandbox RPC, invalid Block Kit, or lost form state.
@@ -303,7 +303,7 @@ test("clerk sets product images from the Media Library and the storefront render
   const adminPath = "/_emdash/admin/plugins/dinkus-commerce/";
   const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
   let panel, panelEndpoint;
-  // Product images are chosen in the product page's Dinkus Commerce panel; the placeholder on Commerce settings.
+  // Product images are chosen in the product page's Product image & gallery panel; the placeholder on Commerce settings.
   const interact = async (name, scope = panel, url = panelEndpoint) => {
     const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(url) && r.request().method() === "POST");
     await scope.getByRole("button", { name, exact: true }).click();
@@ -333,6 +333,10 @@ test("clerk sets product images from the Media Library and the storefront render
     // The first spec leaves Hide out-of-stock on and Red hat out of stock; make it listable again.
     await panel.getByRole("radio", { name: "In stock", exact: true }).check();
     expect((await interact("Save")).toast.type).toBe("success");
+    // Pictures live in their own panel; the Dinkus Commerce panel has none.
+    await expect(panel.getByRole("button", { name: "Choose image", exact: true })).toHaveCount(0);
+    panel = await openMediaPanel(page);
+    panelEndpoint = panelEndpoint.replace(/\/panel\/product$/, "/panel/product-media");
     await expect(panel.getByText("No image", { exact: true })).toBeVisible();
     await expect(panel.getByText("Gallery (0 of 8)", { exact: true })).toBeVisible();
     expect((await interact("Choose image")).blocks[0].text).toBe("Choose an image");
@@ -365,7 +369,7 @@ test("clerk sets product images from the Media Library and the storefront render
     expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }]);
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1325" }, sale: { minor: "850" } });
     await page.reload();
-    panel = await openPanel(page);
+    panel = await openMediaPanel(page);
     await expect(panel.getByRole("img", { name: "Red hat, front" })).toBeVisible();
     await expect(panel.getByText("Gallery (1 of 8)", { exact: true })).toBeVisible();
 

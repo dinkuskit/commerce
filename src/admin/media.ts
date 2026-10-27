@@ -26,7 +26,7 @@ export async function library(ctx: PluginContext, t: Target, cursor?: string): P
   const blocks: Block[] = [
     header(t.t === "placeholder" ? "Choose a placeholder image" : t.t === "gallery" ? "Add to gallery" : "Choose an image"),
     ...(t.t === "placeholder" ? [navigation()] : []), note("Media Library images."),
-    { type: "actions", elements: [button("Cancel", t.t === "placeholder" ? "settings" : "open", t.id)] },
+    { type: "actions", elements: [button("Cancel", t.t === "placeholder" ? "settings" : "media.open", t.id)] },
   ];
   for (const item of page.items) {
     blocks.push({ type: "image", url: item.url, alt: item.alt || item.filename },

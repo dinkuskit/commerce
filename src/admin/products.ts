@@ -79,7 +79,8 @@ function weightForm(selected: CatalogProductListItem): Block[] {
     submit: { label: "Save weight", action_id: "weight:" + selected.catalogItemId } }] : [];
 }
 function variantEditor(id: string, variant: CatalogProductListItem["variantProduct"]): Block[] {
-  if (!variant?.options.length) return [{
+  // A product is simple until it has a choice; adding one makes it variable (catalog-simple-product-label-20261027).
+  if (!variant?.options.length) return [note("Simple product. Add a choice, like Size, to sell it in more than one version."), {
     type: "form", block_id: "variant-add-" + id, fields: [
       { type: "text_input", action_id: "optionLabel", label: "Option", initial_value: "Size" },
       { type: "text_input", action_id: "smallLabel", label: "First value", initial_value: "Small" },
@@ -119,8 +120,13 @@ function variantEditor(id: string, variant: CatalogProductListItem["variantProdu
     }] : []),
   ];
 }
-async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: CatalogMediaRecord): Promise<Block[]> {
-  const blocks: Block[] = [header("Images"), await preview(ctx, media.image, name), { type: "actions", elements: [
+/** The Product image & gallery panel (catalog-media-panel-20261027): Commerce's picture and gallery for this product. */
+async function mediaView(ctx: PluginContext, id: string, toast?: string): Promise<BlockResponse> {
+  const store = storage(ctx);
+  const selected = await loadCatalogProduct(store, id);
+  if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
+  const name = selected.name, media: CatalogMediaRecord = await loadCatalogItemMedia(store.media, id);
+  const blocks: Block[] = [header("Product image"), await preview(ctx, media.image, name), { type: "actions", elements: [
     button(media.image ? "Change image" : "Choose image", "media.pick", { t: "image", id }),
     ...(media.image ? [button("Remove image", "media.clear", { t: "image", id })] : []),
   ] }, note("Gallery (" + media.gallery.length + " of " + CATALOG_GALLERY_LIMIT + ")")];
@@ -133,7 +139,7 @@ async function mediaBlocks(ctx: PluginContext, id: string, name: string, media: 
   if (media.gallery.length < CATALOG_GALLERY_LIMIT) {
     blocks.push({ type: "actions", elements: [button("Add to gallery", "media.pick", { t: "gallery", id })] });
   }
-  return blocks;
+  return { blocks, ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm & { feedChannels?: readonly ProductFeedChannel[] }, toast?: string): Promise<BlockResponse> {
   const store = storage(ctx);
@@ -141,7 +147,6 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
   const dormant = await loadCatalogItemManualAvailability(store.availability, id);
   const status = dormant.status === "available-on-backorder" ? "on-backorder" : dormant.status;
-  const media = await loadCatalogItemMedia(store.media, id);
   const feeds = feedEligibility(ctx);
   const feedChannels = feeds ? await loadProductFeedEligibility(feeds, id) : undefined;
   const unpriced = selected.variantProduct?.options.length ? !selected.variantProduct.members.some(m => m.regular) : !selected.regular;
@@ -160,7 +165,6 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     { type: "form", block_id: "ids-" + crypto.randomUUID(), fields: IDENTIFIERS.map(([key, label]) =>
       ({ type: "text_input" as const, action_id: key, label, initial_value: selected[key] ?? "" })),
       submit: { label: "Save identifiers", action_id: "ids:" + id } },
-    ...await mediaBlocks(ctx, id, selected.name, media),
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
       : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
         text: "Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
@@ -170,7 +174,7 @@ async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: strin
   const store = storage(ctx);
   const current = await loadCatalogItemMedia(store.media, id);
   await saveCatalogItemMedia(store, { catalogItemId: id, gallery: edit(current.gallery.map((entry) => entry.mediaId)) });
-  return product(ctx, id, undefined, toast);
+  return mediaView(ctx, id, toast);
 }
 /** A value id from its label, made unique among the option's other values. */
 function valueIdFor(label: string, fallback: string, taken: readonly { valueId: string }[]): string {
@@ -257,6 +261,18 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
   }
   return productEdit(route, ctx);
 }
+/** The Product image & gallery panel on a product page; its picks and changes go through productEdit like the main panel's. */
+export async function productMediaPanel(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
+  const entryId = route.ui?.surface === "content-editor-panel" ? route.ui.entry.id : "";
+  if (!entryId) return failed("Invalid panel");
+  if (object(route.input).type !== "panel_load") return productEdit(route, ctx);
+  try {
+    const linked = await pageProduct(storage(ctx).pages, entryId);
+    return linked && await loadCatalogProduct(storage(ctx), linked) ? await mediaView(ctx, linked) : { blocks: [note("Add price and stock in the Dinkus Commerce panel first, then choose its pictures here.")] };
+  } catch (error) {
+    return failed(message(error));
+  }
+}
 async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
   let input: Record<string, unknown> = {};
   let values: Record<string, unknown> = {};
@@ -265,6 +281,8 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
     const action = text(input.action_id);
     if (input.type === "block_action") {
       if (action === "open") return await product(ctx, text(input.value));
+      // The image library's Cancel goes back to the Product image & gallery panel it was opened from.
+      if (action === "media.open") return await mediaView(ctx, text(input.value));
       if (action === "archive") {
         const v = object(input.value);
         await setCatalogProductArchived(storage(ctx).catalog, { catalogItemId: v.id, archived: v.a }, undefined, true);
@@ -280,7 +298,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         const mediaId = action === "media.use" ? text(v.m) : null;
         if (t.t === "image") {
           await saveCatalogItemMedia(storage(ctx), { catalogItemId: t.id, image: mediaId });
-          return await product(ctx, t.id, undefined, mediaId ? "Image saved" : "Image removed");
+          return await mediaView(ctx, t.id, mediaId ? "Image saved" : "Image removed");
         }
         return await saveGallery(ctx, t.id, (gallery) => [...gallery, mediaId as string], "Added to gallery");
       }
@@ -406,11 +424,11 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
     throw new Error("Unknown interaction");
   } catch (error) {
     const failure = message(error);
-    // A refused media choice returns the clerk to the product with the reason; stored values are unchanged.
+    // A refused media choice returns the clerk to the pictures (an archive, to the product) with the reason; stored values are unchanged.
     if (input.type === "block_action" && /^(media\.(use|clear|remove|up)|archive)$/.test(String(input.action_id))) {
       const v = input.value as { t?: unknown; id?: unknown } | null;
       try {
-        const back = typeof v?.id === "string" && v.id ? await product(ctx, v.id) : null;
+        const back = typeof v?.id === "string" && v.id ? await (input.action_id === "archive" ? product : mediaView)(ctx, v.id) : null;
         if (back) return refused(failure, [alert(failure), ...back.blocks]);
       } catch { /* fall through to the generic alert */ }
     }

@@ -34,10 +34,12 @@ There is no separate Commerce Products page. Products are managed on the site's 
 
 ## One product screen
 
-**Content > Products** is the one place to manage a product. Each product page has a **Dinkus Commerce** panel beside the editor.
+**Content > Products** is the one place to manage a product. Each product page has two panels beside the editor: **Dinkus Commerce** and **Product image & gallery**.
 
 - On a page with no product, press **Add price and stock**. It makes a Draft product named from the page title, with the SKU you type or one made from the title, and links it to the page. EmDash asks you to apply the link; the page keeps it when you press **Save**. The panel also lists products without a page, so one can be sold on this page instead.
-- On a linked page, the panel shows the product's state (Draft, On sale, Published: off the shop or Archived) and SKU, and edits its price and sale price, stock status, choices, weight, photos, and GTIN, MPN and Brand. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
+- On a linked page, the panel shows the product's state (Draft, On sale, Published: off the shop or Archived) and SKU, and edits its price and sale price, stock status, choices, weight, and GTIN, MPN and Brand. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
+- A product starts as a simple product, and the panel says so. To sell it in more than one version, add a choice such as Size; the product becomes variable and each choice gets its own price, SKU and stock.
+- **Product image & gallery** chooses the product's picture and up to eight gallery pictures from the Media Library, in order. It works once the page sells a product; until then it points to **Dinkus Commerce**.
 - A product with no Regular price is not for sale, so the panel says **Add a Regular price to sell it**, and a published page's product reads **Published: off the shop** until it has one. Saving with Regular empty answers with the same words instead of **Product saved**.
 - The page title is the product's name. Publishing the page copies the title to the product, so the shop, cart, checkout and new orders show it. Paid orders keep the name they were bought under. To rename a product, change the page title and publish. A store must have the publish check that sends the title (DinkusKit Template Store from template-store#158) before it upgrades to this Commerce; until then products keep their current names.
 

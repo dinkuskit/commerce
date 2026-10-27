@@ -22,8 +22,8 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   owner to apply it, and the page keeps it only when they press Save.
 - A linked page shows the product's name, its state (Draft, On sale or
   Archived) and SKU, then the editor that used to live on the Products page:
-  price and sale, stock status, choices, weight, images and Archive or
-  Restore. It has no Name field: the page title is the product's one name
+  price and sale, stock status, choices, weight and Archive or Restore. It
+  has no Name field: the page title is the product's one name
   (`catalog-page-title-is-name-20261026`), set when the page is published.
 - A product with no Regular price says "Add a Regular price to sell it" under
   its state line, and a published page's unpriced product reads "Published:
@@ -31,6 +31,16 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   the same words as an info notice instead of "Product saved"
   (`catalog-unpriced-product-warning-20261027`). A choice product is unpriced
   when none of its choices has a Regular price.
+- A product with no choices says "Simple product. Add a choice, like Size, to
+  sell it in more than one version." right above Add choices
+  (`catalog-simple-product-label-20261027`). The first choice makes it
+  variable, with the product itself as the first member.
+- Pictures have their own panel, "Product image & gallery"
+  (`product-media-panel`, `catalog-media-panel-20261027`). It opens from the
+  page's `product_pages` link and needs no draft access; picks, reorders and
+  removals go through the same handler as the Dinkus Commerce panel and answer
+  with the pictures again. The library's Cancel is `media.open`. A page with no
+  product points to the Dinkus Commerce panel.
 - The page's own `commerce_item_id` wins over `product_pages`. EmDash sends no
   draft on `panel_load`, so the panel opens from the stored link, and the next
   step the owner takes settles it: a page saved before `product_pages` existed

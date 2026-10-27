@@ -521,6 +521,11 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
       route: "product-panel",
       collections: ["products"],
       draft: { read: { fields: ["title", "commerce_item_id"] }, patch: { fields: ["commerce_item_id"] } },
+    }, {
+      id: "product-media",
+      title: "Product image & gallery",
+      route: "product-media-panel",
+      collections: ["products"],
     }],
     options: { enableLocalStockManagement: false },
   });

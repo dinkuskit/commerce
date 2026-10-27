@@ -1,5 +1,5 @@
 import { definePlugin, type PluginDescriptor, type PluginRoute, type ResolvedPlugin } from "emdash";
-import { commerceAdmin, productPanel } from "./admin/index.js";
+import { commerceAdmin, productMediaPanel, productPanel } from "./admin/index.js";
 
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
@@ -153,6 +153,12 @@ const COMMERCE_EDITOR_PANELS = [{
   route: "product-panel",
   collections: ["products"],
   draft: { read: { fields: ["title", "commerce_item_id"] }, patch: { fields: ["commerce_item_id"] } },
+}, {
+  // The product's Commerce picture and gallery, in their own sidebar card (catalog-media-panel-20261027).
+  id: "product-media",
+  title: "Product image & gallery",
+  route: "product-media-panel",
+  collections: ["products"],
 }];
 
 export interface CommerceLocalDevelopmentOptions {
@@ -439,6 +445,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
     routes: {
       [MERCHANT_STORE_SETTINGS_ROUTE]: nativeBlockKitRoute(commerceAdmin),
       "product-panel": nativeBlockKitRoute(productPanel),
+      "product-media-panel": nativeBlockKitRoute(productMediaPanel),
       [PUBLIC_CATALOG_ROUTE]: publicCatalogRoute,
       [PUBLIC_CATALOG_ITEM_ROUTE]: publicCatalogItemRoute,
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),

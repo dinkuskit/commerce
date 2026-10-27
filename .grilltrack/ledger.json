@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "frontier-batch",
     "confirmed": true,
-    "confirmed_at": "2026-10-23T19:30:30+00:00",
-    "domain": "One product screen, product states and plugin sidebar folders",
-    "started_at": "2026-10-23T19:30:29+00:00",
+    "confirmed_at": "2026-10-27T18:12:39+00:00",
+    "domain": "Grow Funky Beans migration issues (Commerce)",
+    "started_at": "2026-10-27T18:12:39+00:00",
     "status": "confirmed",
-    "summary": "Ronald said 'lock it' at 19:29 UTC 23 Oct 2026 in the playground thread after agreeing the one-tab design (18:54), picking per-plugin sidebar folders with his own page names (19:28) and reviewing product states; Ship's page named Shipments as offered."
+    "summary": "Ronald 27 Oct 2026: 16:52 'do all of these that we are keeping in a 7.x beta'; 16:57 'understood and agreed' to the byte-freeing pass; 17:15 on #191 'I think I like this ... it should be made clear in the admin dash that it's a simple product. If you want it to be a variable product, you just add an attribute'."
   },
   "decisions": [
     {
@@ -14564,6 +14564,88 @@
       "superseded_by": null,
       "updated_at": "2026-10-27T16:45:01+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Keep one product model: a product is simple until it has a choice, and adding a choice (up to 3 options) makes it variable, with the product itself as the first member. The Dinkus Commerce panel shows one context line right above Add choices on a product with no choices: 'Simple product. Add a choice, like Size, to sell it in more than one version.' Once it has a choice the line goes and the choices editor shows. No new state, field or route.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/191",
+      "created_at": "2026-10-27T18:12:39+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Grow Funky Beans migration issues (Commerce)",
+      "history": [
+        {
+          "at": "2026-10-27T18:12:39+00:00",
+          "choice": "Keep one product model: a product is simple until it has a choice, and adding a choice (up to 3 options) makes it variable, with the product itself as the first member. The Dinkus Commerce panel shows one context line right above Add choices on a product with no choices: 'Simple product. Add a choice, like Size, to sell it in more than one version.' Once it has a choice the line goes and the choices editor shows. No new state, field or route.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-simple-product-label-20261027",
+      "implementation_ref": null,
+      "question": "How does the product panel make the smart product clear?",
+      "rationale": "user accepted the scoped decision (17:15)",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-27T18:12:39+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "A second editor panel on Content > Products, 'Product image & gallery' (id product-media, route product-media-panel, content:edit_any, no draft access), shows Commerce's image and ordered gallery (up to 8) with the existing Media Library chooser, reorder and remove. The Dinkus Commerce panel no longer shows pictures. Media stays in catalog_media; no CMS field. A page that sells no product yet points to the Dinkus Commerce panel. Built for native and Registry installs.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/193",
+      "created_at": "2026-10-27T18:12:40+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Grow Funky Beans migration issues (Commerce)",
+      "history": [
+        {
+          "at": "2026-10-27T18:12:40+00:00",
+          "choice": "A second editor panel on Content > Products, 'Product image & gallery' (id product-media, route product-media-panel, content:edit_any, no draft access), shows Commerce's image and ordered gallery (up to 8) with the existing Media Library chooser, reorder and remove. The Dinkus Commerce panel no longer shows pictures. Media stays in catalog_media; no CMS field. A page that sells no product yet points to the Dinkus Commerce panel. Built for native and Registry installs.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-media-panel-20261027",
+      "implementation_ref": null,
+      "question": "Where does a product's picture and gallery live on the product page?",
+      "rationale": "user accepted the scoped decision (16:52 'do all of these that we are keeping')",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-27T18:12:40+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -14600,5 +14682,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-27T16:45:01+00:00"
+  "updated_at": "2026-10-27T18:12:40+00:00"
 }
