@@ -609,3 +609,5 @@
 {"action": "decision_locked", "at": "2026-10-27T18:12:39+00:00", "data": {"decision_id": "catalog-simple-product-label-20261027"}, "event_id": "23d928b5-bf98-4749-b8c4-b68aecf887ba"}
 {"action": "decision_proposed", "at": "2026-10-27T18:12:40+00:00", "data": {"decision_id": "catalog-media-panel-20261027"}, "event_id": "5822e273-0a30-4268-a3fc-e3f6c6ce3d0b"}
 {"action": "decision_locked", "at": "2026-10-27T18:12:40+00:00", "data": {"decision_id": "catalog-media-panel-20261027"}, "event_id": "3d0104d6-5fce-4ef8-97c7-d1d01e3f4131"}
+{"action": "decision_proposed", "at": "2026-10-27T18:38:52+00:00", "data": {"decision_id": "checkout-free-shipping-over-20261027"}, "event_id": "d6c3ea1c-f2c4-4b84-994d-c671d6aa40f6"}
+{"action": "decision_locked", "at": "2026-10-27T18:38:52+00:00", "data": {"decision_id": "checkout-free-shipping-over-20261027"}, "event_id": "74fb2af9-2d3b-48db-a53c-defadc4184cc"}

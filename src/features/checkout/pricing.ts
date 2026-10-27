@@ -40,7 +40,7 @@ function sameMoney(a: Money, b: Money): boolean {
   return a.currency === b.currency && a.minor === b.minor;
 }
 
-function shippingCharge(config: TrustedShippingConfiguration): Money {
+function shippingCharge(config: TrustedShippingConfiguration, goods: bigint): Money {
   if (typeof config.configurationId !== "string" || !config.configurationId.trim() ||
       !Number.isSafeInteger(config.revision) || config.revision < 1) {
     fail("Invalid shipping configuration");
@@ -56,7 +56,10 @@ function shippingCharge(config: TrustedShippingConfiguration): Money {
   if (amount.currency !== "USD" || parseMinorUnits(amount.minor) < 0n) {
     fail("Flat shipping must be non-negative USD");
   }
-  return amount;
+  // An amount the owner set at DinkusKit.com waives it (checkout-free-shipping-over-20261027).
+  const over = config.freeOver && normalizeMoney(config.freeOver);
+  if (over && (over.currency !== "USD" || parseMinorUnits(over.minor) < 1n)) fail("Invalid shipping configuration");
+  return over && goods >= BigInt(over.minor) ? usd(0n) : amount;
 }
 
 function quoteSnapshot(quote: CouponQuote, total: Money): CouponQuoteSnapshot {
@@ -157,7 +160,6 @@ export async function composeCheckoutPricing(
   if (!pricing) fail("Pricing composition is unavailable");
   const config = await pricing.resolveShippingConfiguration();
   if (!config) fail(couponCode ? "Shipping configuration unavailable" : "Pricing configuration unavailable");
-  const charge = shippingCharge(config);
   let quoted: QuotedCoupon | undefined;
   if (couponCode !== undefined) {
     const code = normalizeCouponCode(couponCode);
@@ -171,6 +173,7 @@ export async function composeCheckoutPricing(
   const merchandiseSubtotal = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n));
   const couponDiscount = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.discount.minor), 0n));
   const netMerchandise = usd(BigInt(merchandiseSubtotal.minor) - BigInt(couponDiscount.minor));
+  const charge = shippingCharge(config, BigInt(netMerchandise.minor));
   const finalTotal = usd(BigInt(netMerchandise.minor) + BigInt(charge.minor));
   const snapshot: CheckoutPricingSnapshot = Object.freeze({
     schema: CHECKOUT_PRICING_SCHEMA,
@@ -180,7 +183,7 @@ export async function composeCheckoutPricing(
     shipping: {
       configurationId: config.configurationId.trim(),
       revision: config.revision,
-      mode: config.mode,
+      mode: config.freeOver && charge.minor === "0" ? "free" : config.mode,
       charge,
     },
     finalTotal,

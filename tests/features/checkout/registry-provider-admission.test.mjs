@@ -128,3 +128,16 @@ test('captured Registry connection re-admits identity when settings switch Ship'
  const ctx={plugin:{id:'dinkus-commerce'},site:{url:SITE},settings:{getVersioned:async name=>({revision:'fixture',value:name==='connection'?JSON.stringify({siteId:current.siteId,storeKey:'dk_store_'+'f'.repeat(43)}):current})},http:{fetch:async()=>{calls++;throw new Error('unexpected network')}}};
  const old=await resolveRegistryShip(ctx);assert.equal(await old.current(),true);current=legacyStripe({ship:{origin:'https://ship.example.test',audience:'dinkus-ship'}});assert.equal(await old.current(),false);assert.equal(calls,0);
 });
+
+test("flat shipping may carry a free-shipping amount; free shipping and zero amounts may not", () => {
+  const flat = { configurationId: "ship", revision: 2, mode: "flat", amount: { currency: "USD", minor: "500" } };
+  const freeOver = { currency: "USD", minor: "7500" };
+  assert.deepEqual(admitRegistryCheckoutConfig(legacyStripe({ shipping: { ...flat, freeOver } }), SITE).shipping, { ...flat, freeOver });
+  rejects(legacyStripe({ shipping: { ...shipping, freeOver } }));
+  rejects(legacyStripe({ shipping: { ...flat, freeOver: { currency: "USD", minor: "0" } } }));
+  rejects(legacyStripe({ shipping: { ...flat, freeOver: { currency: "EUR", minor: "7500" } } }));
+  rejects(legacyStripe({ shipping: { ...flat, freeOver: "75" } }));
+  rejects(legacyStripe({ shipping: { ...flat, amount: { currency: "EUR", minor: "500" } } }));
+  rejects(legacyStripe({ shipping: { ...shipping, amount: { currency: "USD", minor: "1" } } }));
+  assert.equal(admitRegistryCheckoutConfig(legacyStripe({ shipping: { ...shipping, amount: { currency: "USD", minor: "0" } } }), SITE).shipping.mode, "free");
+});

@@ -256,6 +256,8 @@ export interface TrustedShippingConfiguration {
   revision: number;
   mode: "free" | "flat";
   amount?: Money;
+  /** Flat only: an order whose goods come to at least this ships free (checkout-free-shipping-over-20261027). */
+  freeOver?: Money;
 }
 
 export interface TrustedCheckoutPricing {

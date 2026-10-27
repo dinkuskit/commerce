@@ -160,7 +160,7 @@ export async function refreshCheckoutSettings(ctx: PluginContext, known?: { site
     const current = await ctx.settings!.getVersioned<unknown>(CHECKOUT_SETTING);
     const pass = await post(ctx, DINKUS + "/api/store-passes", { site_id: found.siteId, scope: "commerce:settings", audience: "dinkuskit" }, found.key);
     if (!pass.ok || !text(pass.body.access_token, 16384)) return typeof pass.body.error === "string" ? pass.body.error : "unavailable";
-    const response = await ctx.http!.fetch(DINKUS + "/api/commerce-settings", { cache: "no-store", redirect: "error",
+    const response = await ctx.http!.fetch(DINKUS + "/api/commerce-settings?shipping=free-over", { cache: "no-store", redirect: "error",
       headers: { accept: "application/json", authorization: "Bearer " + pass.body.access_token } });
     const settings = (await response.text()).slice(0, 16385);
     if (!response.ok) { try { return String(JSON.parse(settings).error); } catch { return "unavailable"; } }
