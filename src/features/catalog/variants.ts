@@ -1,3 +1,4 @@
+import { productData } from "./product-state.js";
 import { isRecord } from "../../shared/record.js";
 import { catalogFail } from "./errors.js";
 import { createCatalogItem } from "./create-catalog-item.js";
@@ -101,8 +102,16 @@ export async function resolveCatalogVariantMember(
 ): Promise<CatalogVariantResolution | null> {
   const raw = await catalog.get(catalogItemId);
   if (!raw || raw.recordKind !== "catalog-item" || raw.itemId !== catalogItemId) return null;
-  const item = raw as CatalogItemRecord;
+  let item = raw as CatalogItemRecord;
+  const weighted = (root: CatalogItemRecord) => {
+    const saved = productData(root).items[item.itemId];
+    if (saved && Object.hasOwn(saved, "weightOz")) {
+      const { weightOz: _old, ...rest } = item;
+      item = saved.weightOz === null ? rest : { ...rest, weightOz: saved.weightOz };
+    }
+  };
   if (!item.variantProductId) {
+    weighted(item);
     if (item.variantProduct) {
       const product = valid(item.variantProduct, item.itemId);
       const found = product.members.find(m => m.catalogItemId === item.itemId) ?? null;
@@ -114,6 +123,7 @@ export async function resolveCatalogVariantMember(
   const parent = await catalog.get(item.variantProductId);
   if (!parent || parent.recordKind !== "catalog-item" || parent.itemId !== item.variantProductId || !parent.variantProduct) return null;
   const product = valid(parent.variantProduct, item.variantProductId);
+  weighted(parent);
   const found = product.members.find(m => m.catalogItemId === item.itemId) ?? null;
   const own = item.variantSelections ?? [];
   return found && own.length > 0 && own.every(s => found.selections.some(f => f.optionId === s.optionId && f.valueId === s.valueId))

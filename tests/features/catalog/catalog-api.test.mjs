@@ -44,7 +44,7 @@ test('SKU, weight, identifiers, pictures, feeds, archive and link go through the
   const { ctx, call } = shop();
   const { catalogItemId } = await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG' });
   assert.deepEqual(await call({ op: 'weight', catalogItemId, weightOz: '12.5' }), { changed: true });
-  assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).weightOz, 12.5);
+  assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).catalogData.items[catalogItemId].weightOz, 12.5);
   await assert.rejects(call({ op: 'weight', catalogItemId, weightOz: '0' }), error => error.code === 'INVALID_INPUT');
 
   assert.deepEqual(await call({ op: 'identifiers', catalogItemId, gtin: '4006381333931', brand: 'Funky' }), { changed: true });
@@ -73,7 +73,7 @@ test('SKU, weight, identifiers, pictures, feeds, archive and link go through the
   const pictures = await call({ op: 'media', catalogItemId, image: '01HAT000000000000000000000', gallery: ['01SIDE00000000000000000000'] });
   assert.deepEqual([pictures.changed, pictures.media.image, pictures.media.gallery], [true, { mediaId: '01HAT000000000000000000000' }, [{ mediaId: '01SIDE00000000000000000000' }]]);
   await call({ op: 'feeds', catalogItemId, channels: ['google-merchant'] });
-  assert.deepEqual((await ctx.storage.product_feed_eligibility.get(catalogItemId)).channels, ['google-merchant']);
+  assert.deepEqual((await ctx.storage.catalog_items.get(catalogItemId)).catalogData.feedChannels, ['google-merchant']);
 
   assert.deepEqual(await call({ op: 'link', entryId: 'page-mug', catalogItemId }), { linked: true });
   assert.deepEqual(await call({ op: 'archive', catalogItemId, archived: true }), { changed: true });
@@ -99,12 +99,12 @@ test('a write carrying a preview code is saved only while the product still read
   assert.equal(record.sku, 'HAT');
   assert.equal((await call({ op: 'get', catalogItemId })).product.regular, '10.00');
   assert.deepEqual(await call({ op: 'sku', catalogItemId, sku: 'HAT-2', expected: await code() }), { changed: true });
-  // Feed channels are stored apart from the product, and a preview covers them too.
+  // Feed channels share the product save record, and a preview covers them too.
   const feeds = await code();
   await call({ op: 'feeds', catalogItemId, channels: ['google-merchant'] });
   assert.deepEqual((await call({ op: 'get', catalogItemId })).feeds, ['google-merchant']);
   await assert.rejects(call({ op: 'feeds', catalogItemId, channels: [], expected: feeds }), error => error.code === 'COMMAND_CONFLICT');
-  assert.deepEqual((await ctx.storage.product_feed_eligibility.get(catalogItemId)).channels, ['google-merchant'], 'the newer channels stay');
+  assert.deepEqual((await ctx.storage.catalog_items.get(catalogItemId)).catalogData.feedChannels, ['google-merchant'], 'the newer channels stay');
   const choice = await code();
   assert.equal((await call({ op: 'choice', productId: catalogItemId, optionId: 'size', optionLabel: 'Size', expected: choice, values: [
     { valueId: 's', label: 'S', member: { catalogItemId, fulfillment: 'physical' } },

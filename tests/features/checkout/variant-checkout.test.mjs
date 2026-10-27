@@ -45,7 +45,7 @@ test('merchant variant writes deny Small before Payments and freeze Large money,
   const frozen = structuredClone(started.payment);
   assert.equal(started.variantSelections[0].selections[0].valueLabel, 'Large');
   assert.equal(started.variantSelections[0].fulfillment, 'digital');
-  await saveCatalogProductPrices(writes, { catalogItemId: 'large', regular: '99', sale: '', stockStatus: 'out-of-stock', expectedRevision: (await prices.getVersioned('large')).revision });
+  await saveCatalogProductPrices(writes, { catalogItemId: 'large', regular: '99', sale: '', stockStatus: 'out-of-stock', expectedRevision: 'catalog:' + (await catalog.getVersioned('small')).revision });
   await updateCatalogVariantLabels(writes, { productId: 'small', expectedRevision: expanded.product.revision, optionLabel: 'Changed size', values: [{ valueId: 'l', label: 'Changed Large' }], members: [{ catalogItemId: 'large', fulfillment: 'physical' }] });
   f.setPayment('paid');
   const paid = await reconcileCheckout(f.execution, 'large-cart', started.attemptId);
@@ -108,7 +108,7 @@ test('two-option variant checkout freezes both Size and Color selections against
     ],
     members: [{ catalogItemId: 'medium-ink', fulfillment: 'physical' }],
   });
-  await saveCatalogProductPrices(writes, { catalogItemId: 'medium-ink', regular: '99', sale: '', stockStatus: 'out-of-stock', expectedRevision: (await prices.getVersioned('medium-ink')).revision });
+  await saveCatalogProductPrices(writes, { catalogItemId: 'medium-ink', regular: '99', sale: '', stockStatus: 'out-of-stock', expectedRevision: 'catalog:' + (await catalog.getVersioned('small')).revision });
 
   f.setPayment('paid');
   const paid = await reconcileCheckout(f.execution, 'medium-ink-cart', started.attemptId);

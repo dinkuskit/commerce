@@ -1,5 +1,6 @@
 import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 export type CatalogErrorCode =
+  | "SAVE_OUTCOME_UNKNOWN"
   | "CATALOG_ITEM_NOT_FOUND"
   | "COMMAND_CONFLICT"
   | "INVALID_INPUT"
@@ -15,6 +16,7 @@ export type CatalogErrorCode =
   | "STORAGE_UNAVAILABLE";
 
 const STATUS_BY_CODE: Record<CatalogErrorCode, number> = {
+  SAVE_OUTCOME_UNKNOWN: 503,
   CATALOG_ITEM_NOT_FOUND: 404,
   COMMAND_CONFLICT: 409,
   INVALID_INPUT: 400,

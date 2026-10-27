@@ -495,7 +495,7 @@ test("manual unmanaged availability survives EmDash storage reopen without Inven
     },
   );
 
-  const [persisted] = readCatalogManualAvailability(databasePath);
+  const persisted = (await catalog.storage.get(created.item.itemId)).catalogData.items[created.item.itemId].availability;
   assert.equal(persisted.status, "out-of-stock");
   assert.deepEqual(result, {
     schema: "dinkuskit.commerce.storefront-availability-result/v1",

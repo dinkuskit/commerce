@@ -177,7 +177,7 @@ test('the hosted port answers like the in-process owner', async t => {
   const storage = { catalog: f.execution.catalog.catalog, prices: f.execution.catalog.prices };
   const input = { quoteId: 'q', lines: [{ productId: 'one', quantity: 1 }], now: '2026-10-01T00:00:00Z' };
   await assert.rejects(port.quote('SAVE', storage, { ...input, lines: [{ productId: 'missing', quantity: 1 }] }),
-    /Product unpriced/);
+    /Product (unpriced|not found)/);
   assert.equal(f.service.calls.length, 0);
   assert.equal(await port.quote('NOPE', storage, input), null);
   // A coupon that no longer applies is an error, as it is in process, not a missing code.

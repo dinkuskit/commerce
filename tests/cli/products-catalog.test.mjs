@@ -134,7 +134,7 @@ test("weight, identifiers, pictures, feeds, link, archive and restore go through
   const id = (await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--json")).json().data.catalogItemId;
 
   assert.equal((await apply("products", "set-weight", id, "--oz", "12.5")).code, 0);
-  assert.equal((await ctx.storage.catalog_items.get(id)).weightOz, 12.5);
+  assert.equal((await ctx.storage.catalog_items.get(id)).catalogData.items[id].weightOz, 12.5);
   assert.equal((await apply("products", "set-identifiers", id, "--gtin", "4006381333931", "--brand", "Funky")).code, 0);
   assert.equal((await apply("products", "set-identifiers", id, "--brand", "")).code, 0, "an empty value clears it");
   const record = await ctx.storage.catalog_items.get(id);
@@ -151,7 +151,7 @@ test("weight, identifiers, pictures, feeds, link, archive and restore go through
   assert.deepEqual((await cli("products", "show", id, "--json")).json().data.media.gallery, []);
 
   assert.equal((await apply("products", "set-feeds", id, "--channel", "google-merchant")).code, 0);
-  assert.deepEqual((await ctx.storage.product_feed_eligibility.get(id)).channels, ["google-merchant"]);
+  assert.deepEqual((await ctx.storage.catalog_items.get(id)).catalogData.feedChannels, ["google-merchant"]);
   assert.equal((await apply("products", "link", id, "--page", "page-mug")).code, 0);
   assert.deepEqual(await ctx.storage.product_pages.get("e:page-mug"), { entryId: "page-mug", catalogItemId: id });
 

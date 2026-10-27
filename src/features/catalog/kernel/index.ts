@@ -183,3 +183,8 @@ export type {
   SetCatalogItemIdentifiersInput,
   SetCatalogItemIdentifiersResult,
 } from "../set-identifiers.js";
+
+export { setCatalogWeights } from "../weight.js";
+export { catalogRoot, catalogValue, productData, saveProductData } from "../product-state.js";
+export type { CatalogReader, CatalogWriter } from "../product-state.js";
+export { rememberReads } from "../remembered-reads.js";

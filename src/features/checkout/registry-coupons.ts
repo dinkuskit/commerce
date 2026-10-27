@@ -82,7 +82,7 @@ export function createHostedCouponPort(config: HostedCouponServiceConfig): Check
     async quote(code, storage, input) {
       const lines = [];
       for (const { productId, quantity } of input.lines) {
-        const price = await resolveCatalogItemPrice(storage.prices, productId);
+        const price = await resolveCatalogItemPrice(storage.prices, productId, storage.catalog);
         if (!price.listable) throw new Error("Product unpriced");
         lines.push({ productId, quantity, regular: price.regular, ...(price.sale ? { sale: price.sale } : {}) });
       }

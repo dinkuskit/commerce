@@ -321,7 +321,7 @@ async function unlistIfUnpriced(
   catalogItemId: string,
 ): Promise<StorefrontAvailabilityResult | null> {
   try {
-    const price = await resolveCatalogItemPrice(storage.prices, catalogItemId);
+    const price = await resolveCatalogItemPrice(storage.prices, catalogItemId, storage.catalog);
     if (!price.listable) return unavailable(catalogItemId, false);
     return null;
   } catch {
@@ -383,6 +383,7 @@ export async function resolveStorefrontAvailability(
     const availability = await loadCatalogItemManualAvailability(
       storage.manualAvailability,
       item.itemId,
+      storage.catalog,
     );
     return applyOutOfStockListing(
       storage,

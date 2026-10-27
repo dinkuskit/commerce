@@ -38,14 +38,19 @@ function facts(overrides = {}) {
 
 test("new products are not eligible until explicitly opted in", async () => {
   const records = new Map();
-  const catalog = { get: async () => ({ recordKind: "catalog-item" }) };
+  let item = { recordKind: "catalog-item", itemId: "item-hat" }, revision = "a";
+  const catalog = {
+    get: async () => structuredClone(item),
+    getVersioned: async () => ({ value: structuredClone(item), revision }),
+    compareAndSet: async (id, expected, next) => { if (expected !== revision) return { applied: false }; item = next; revision += "b"; return { applied: true, revision }; },
+  };
   const storage = {
     get: async (id) => records.get(id) ?? null,
     put: async (id, value) => records.set(id, value),
   };
-  assert.deepEqual(await loadProductFeedEligibility(storage, "item-hat"), []);
+  assert.deepEqual(await loadProductFeedEligibility(storage, "item-hat", catalog), []);
   await setProductFeedEligibility(storage, catalog, { catalogItemId: "item-hat", channels: [] });
-  assert.deepEqual(await loadProductFeedEligibility(storage, "item-hat"), []);
+  assert.deepEqual(await loadProductFeedEligibility(storage, "item-hat", catalog), []);
 });
 
 test("opt-in and opt-out are reflected in both deterministic feeds", async () => {

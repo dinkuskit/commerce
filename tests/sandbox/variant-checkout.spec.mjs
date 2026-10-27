@@ -289,10 +289,10 @@ test('merchant creates choices and edits independent and bulk prices through the
       await form.getByRole('button',{name:/^Save/}).click();
       await expect(form.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue(amount + '.00');
     }
-    expect(all(prices).find(r => r.catalogItemId === owned[0]).regular.minor).toBe('2000');
-    expect(all(prices).find(r => r.catalogItemId === owned[1]).regular.minor).toBe('2400');
-    expect(all(availability).find(r => r.catalogItemId === owned[0]).status).toBe('out-of-stock');
-    expect((all(availability).find(r => r.catalogItemId === owned[1])?.status ?? 'in-stock')).toBe('in-stock');
+    expect(all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[0]].price.regular.minor).toBe('2000');
+    expect(all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].price.regular.minor).toBe('2400');
+    expect(all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[0]].availability.status).toBe('out-of-stock');
+    expect((all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].availability?.status ?? 'in-stock')).toBe('in-stock');
     if (native) {
       shopperContext = await browser.newContext(); shopper = await shopperContext.newPage();
       await shopper.goto(new URL('/', test.info().project.use.baseURL).href);
@@ -321,10 +321,10 @@ test('merchant creates choices and edits independent and bulk prices through the
     // The product page panel has no bulk price form; each choice keeps its own Save.
     await priceForms.nth(0).getByRole('textbox',{name:'Regular',exact:true}).fill('22');
     await priceForms.nth(0).getByRole('button',{name:/^Save/}).click();
-    await expect.poll(() => all(prices).find(r => r.catalogItemId === owned[0]).regular.minor).toBe('2200');
+    await expect.poll(() => all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[0]].price.regular.minor).toBe('2200');
     await expect(priceForms.nth(0).getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('22.00');
     await expect(ui.getByRole('button',{name:'Save choices',exact:true})).toBeEnabled();
-    expect(all(prices).find(r => r.catalogItemId === owned[1]).regular.minor).toBe('2400');
+    expect(all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].price.regular.minor).toBe('2400');
     await ui.getByRole('textbox',{name:'Value: Large',exact:true}).fill('Big');
     await ui.locator('form').filter({has:page.getByRole('button',{name:'Save choices'})}).getByRole('radio',{name:'Physical',exact:true}).last().check();
     const detailResponse = page.waitForResponse(r => r.url().split('?')[0].endsWith('/panel/product') && r.request().method() === 'POST');
@@ -337,21 +337,21 @@ test('merchant creates choices and edits independent and bulk prices through the
     expect(final.members.map(m => m.catalogItemId)).toEqual(owned);
     expect(final.members[1].fulfillment).toBe('physical');
     // A concurrent price edit must refuse the stale form and retain the clerk's input.
-    const currentPrice = all(prices).find(r => r.catalogItemId === owned[1]);
-    const { id: priceId, ...editedPrice } = currentPrice;
-    editedPrice.regular.minor = '2600';
-    db.prepare('UPDATE _plugin_storage SET data=?,updated_at=? WHERE plugin_id=? AND collection=? AND id=?').run(JSON.stringify(editedPrice),new Date().toISOString(),'dinkus-commerce',prices,priceId);
+    const { id: productKey, ...concurrentProduct } = all(catalog).find(r => r.itemId === root.itemId);
+    concurrentProduct.catalogData.items[owned[1]].price.regular.minor = '2600';
+    db.prepare('UPDATE _plugin_storage SET data=?,revision=?,updated_at=? WHERE plugin_id=? AND collection=? AND id=?')
+      .run(JSON.stringify(concurrentProduct),crypto.randomUUID(),new Date().toISOString(),'dinkus-commerce',catalog,productKey);
     const staleForm = priceForms.nth(1);
     await staleForm.getByRole('textbox',{name:'Regular',exact:true}).fill('25');
     await staleForm.getByRole('button',{name:/^Save/}).click();
     await expect(staleForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('25');
-    await expect.poll(() => all(prices).find(r => r.catalogItemId === owned[1]).regular.minor).toBe('2600');
+    await expect.poll(() => all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].price.regular.minor).toBe('2600');
     await page.reload(); await openPanel(page);
     const freshForm = priceForms.nth(1);
     await expect(freshForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('26.00');
     await freshForm.getByRole('radio',{name:'Out of stock',exact:true}).check();
     await freshForm.getByRole('button',{name:/^Save/}).click();
-    await expect.poll(() => all(availability).find(r => r.catalogItemId === owned[1])?.status).toBe('out-of-stock');
+    await expect.poll(() => all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].availability?.status).toBe('out-of-stock');
     if (shopper) {
       await shopper.getByRole('button',{name:'Refresh payment status'}).click();
       await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "paid"');
@@ -382,7 +382,7 @@ test('merchant creates choices and edits independent and bulk prices through the
     await mediumForm.getByRole('radio',{name:'In stock',exact:true}).check();
     await mediumForm.getByRole('button',{name:/^Save/}).click();
     await expect(mediumForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('28.00');
-    expect(all(prices).find(r => r.catalogItemId === owned[2]).regular.minor).toBe('2800');
+    expect(all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[2]].price.regular.minor).toBe('2800');
 
     if (shopper) {
       await shopper.goto(new URL('/', test.info().project.use.baseURL).href);

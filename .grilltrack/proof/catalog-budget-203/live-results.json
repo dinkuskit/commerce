@@ -1,0 +1,93 @@
+{
+  "tested_source_base": "e4da1218bc429d469442e5e6a807c7f46856e65b",
+  "backend_sha256": "662a95f7cd711bbee92454cec24530cd3d49ecb14a9a420243d57aa074ea0a27",
+  "backend_bytes": 130993,
+  "emdash": "1.2.0",
+  "cloudflare_adapter": "1.2.0",
+  "node": "24.22.0",
+  "runtime": "deployed Cloudflare WorkerLoader with stock PluginBridge",
+  "limits": {
+    "10": "no override",
+    "32": "only subrequests override"
+  },
+  "matrix": [
+    {
+      "cap": 10,
+      "case": "open_product",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 10,
+      "case": "price_save",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 10,
+      "case": "weight_save",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 10,
+      "case": "choice_weight_save",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 10,
+      "case": "archive",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 32,
+      "case": "open_product",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 32,
+      "case": "price_save",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 32,
+      "case": "weight_save",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 32,
+      "case": "choice_weight_save",
+      "success": true,
+      "reopen_success": true
+    },
+    {
+      "cap": 32,
+      "case": "archive",
+      "success": true,
+      "reopen_success": true
+    }
+  ],
+  "recovery": "both weights persisted and all retries succeeded",
+  "choice_price": "15.00 persisted at both budgets",
+  "fifty_choices": "all 50 persisted and reopened at both budgets",
+  "concurrency": "one same-revision writer succeeds; one is refused",
+  "scope": "headless candidate backend loaded on existing synthetic Registry host; candidate not published as a Registry release",
+  "evidence_sha256": {
+    "candidate.txt": "662a95f7cd711bbee92454cec24530cd3d49ecb14a9a420243d57aa074ea0a27",
+    "candidate-manifest.json": "72721ffc357e58f4e76ed3c160e9c35c8a1b4c3a700db5f9b9e6586b4b25a8db",
+    "worker.ts": "b91162eebeeb621f876d14ced04ede68997f90b63f43310bbdc1140ea25cb4f6",
+    "fixture.json": "d1680f2bcec7d63312079895f16942a30749dc56b33a570e9baa26bff65bf354",
+    "fixture50.json": "f957a0f264124440f1ede0bb70b32a231a6dc4a508ad3923d4bd3359db4e5803",
+    "comparison.json": "efec6dcbeb068b7a906a0c3b6ff30b9c85115890a6555032f383e34d01c67630",
+    "recovery.json": "079d881c81e76a4ae70756e3169e6b5b1268c7839494eff14b0e251515fa4dea",
+    "extended.json": "994664b88cb3cdcdf5e873f9b1568d3065a05a201d392fccdb17d12e6d267ea8",
+    "identity.json": "0f9c1d5da9d87839c1594e12333213ba4138371f8325971fec0d39164bb3530b",
+    "crossfield.json": "cb5cf8436d6341715fe6b1ff5c0e7156e46100129fbf8bf9d7dfc461ca12507c"
+  },
+  "cross_field_save": "price, manual availability and feed choices persisted together at stock 10"
+}

@@ -61,7 +61,8 @@ test("native SQLite saves an explicit stock status and restores it when the next
     });
     assert.equal(restored.saved, true);
     assert.equal(restored.stockStatus, "out-of-stock");
-    assert.equal(readCatalogManualAvailability(filename)[0].status, "out-of-stock");
-    assert.deepEqual(readCatalogPrices(filename)[0].regular, { currency: "USD", minor: "4200" });
+    const persisted = (await listCatalogProducts(connection.storage)).products[0];
+    assert.equal(persisted.stockStatus, "out-of-stock");
+    assert.equal(persisted.regular, "42.00");
   } finally { await connection.close(); }
 });

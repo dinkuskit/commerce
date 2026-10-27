@@ -25,7 +25,7 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
   const { op, expected, ...input } = isRecord(route.input) ? route.input : {};
   const store = storage(ctx), feeds = feedEligibility(ctx), id = input.catalogItemId as string;
   const read = async (itemId: string) => ({ product: await loadCatalogProduct(store, itemId), media: await loadCatalogItemMedia(store.media, itemId),
-    feeds: feeds && await loadProductFeedEligibility(feeds, itemId) });
+    feeds: feeds && await loadProductFeedEligibility(feeds, itemId, store.catalog) });
   if (op === "list") return { products: await listCatalogProductSummaries(store.catalog) };
   if (op === "get") return read(id);
   if (op === "create") {

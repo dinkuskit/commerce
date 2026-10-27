@@ -617,3 +617,8 @@
 {"action": "decision_locked", "at": "2026-10-27T19:27:01+00:00", "data": {"decision_id": "catalog-api-20261027"}, "event_id": "9f1252a9-1e11-444a-8864-054f909c350b"}
 {"action": "decision_reopened", "at": "2026-10-27T20:07:13+00:00", "data": {"affected": [], "decision_id": "catalog-api-20261027", "reason": "Ronald 27 Oct 19:54 chose B: Commerce checks the CLI's preview code itself before it saves"}, "event_id": "0e9f1347-f3b2-491f-a124-ce22b1ec7dbe"}
 {"action": "decision_locked", "at": "2026-10-27T20:07:13+00:00", "data": {"decision_id": "catalog-api-20261027"}, "event_id": "72a9ff1a-82a8-469c-9da7-e6cbafb620aa"}
+{"action": "decision_proposed", "at": "2026-10-27T22:57:17+00:00", "data": {"decision_id": "catalog-atomic-saves-203"}, "event_id": "3580f5af-1a74-4b99-a997-3cbf76b21748"}
+{"action": "decision_locked", "at": "2026-10-27T22:57:17+00:00", "data": {"decision_id": "catalog-atomic-saves-203"}, "event_id": "2e78879d-2ea5-4f8c-aa06-44b68c02665b"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-27T22:57:17+00:00", "data": {"summary": "Implement owner-selected option A for issue 203: an atomic product catalog save value with safe legacy compatibility, current-revision guards and truthful outcomes at stock 10; prove both native and deployed Registry paths, then submit a reviewed PR without merge or release."}, "event_id": "295d8ce8-1cb2-4bab-832f-a33ba693c2fc"}
+{"action": "decision_implemented", "at": "2026-10-27T23:08:25+00:00", "data": {"decision_id": "catalog-atomic-saves-203"}, "event_id": "ff3f9b4b-19cf-4b6d-976b-4be0810a8a65"}
+{"action": "decision_verified", "at": "2026-10-27T23:08:25+00:00", "data": {"decision_id": "catalog-atomic-saves-203"}, "event_id": "226fa93f-0071-4e6b-9003-1b77d8ef36d1"}
