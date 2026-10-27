@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { commerceAdmin, productPanel } from "../dist/admin/index.js";
+import { commerceAdmin, productMediaPanel, productPanel } from "../dist/admin/index.js";
+import { linkProductPage } from "../dist/features/catalog/kernel/index.js";
 
 // Block Kit 1.2.0 renders no media_picker on plugin admin pages, so the sandbox
 // admin lists the Media Library itself through media:read. This exercises that
@@ -67,9 +68,12 @@ function context({ media = true, pageSize = 12 } = {}) {
 }
 
 const route = (input) => ({ input, user: { role: 50 }, ui: { surface: "admin-page", locale: "en", direction: "ltr" } });
-// Product images live in the Dinkus Commerce panel on the product page; the placeholder lives on Commerce settings.
-const panel = (input, ctx) => productPanel({ input, user: { role: 50 }, ui: { surface: "content-editor-panel", locale: "en", direction: "ltr",
-  extensionId: "product", entry: { collection: "products", id: "page-hat", locale: null, version: 1 } } }, ctx);
+// Product images live in the Product image & gallery panel on the product page (catalog-media-panel-20261027);
+// the placeholder lives on Commerce settings.
+const editor = (handler, extensionId) => (input, ctx) => handler({ input, user: { role: 50 }, ui: { surface: "content-editor-panel", locale: "en", direction: "ltr",
+  extensionId, entry: { collection: "products", id: "page-hat", locale: null, version: 1 } } }, ctx);
+const panel = editor(productMediaPanel, "product-media");
+const mainPanel = editor(productPanel, "product");
 const send = (input, ctx) => input.action_id === "settings" || input.value?.t === "placeholder" ? commerceAdmin(route(input), ctx) : panel(input, ctx);
 const labels = (response) => response.blocks.flatMap((block) => block.type === "actions" ? block.elements.filter((element) => element.type === "button").map((element) => element.label) : []);
 const texts = (response) => response.blocks.map((block) => block.text ?? block.title ?? block.url ?? "").filter(Boolean);
@@ -78,8 +82,13 @@ const act = (ctx, element) => send({ type: "block_action", action_id: element.ac
 
 test("a clerk chooses, reorders and removes product images from the Media Library page", async () => {
   const { ctx, storage, listCalls } = context();
-  let page = await panel({ type: "block_action", action_id: "open", value: "hat" }, ctx);
-  assert.ok(texts(page).includes("Images") && texts(page).includes("No image") && texts(page).includes("Gallery (0 of 8)"));
+  // The panel names the page's product once a page sells one.
+  assert.deepEqual(texts(await panel({ type: "panel_load" }, ctx)), ["Add price and stock in the Dinkus Commerce panel first, then choose its pictures here."]);
+  await linkProductPage({ catalog: storage.catalog_items, pages: storage.product_pages }, "page-hat", "hat");
+  let page = await panel({ type: "panel_load" }, ctx);
+  assert.ok(texts(page).includes("Product image") && texts(page).includes("No image") && texts(page).includes("Gallery (0 of 8)"));
+  // The Dinkus Commerce panel keeps prices and the rest, without the pictures.
+  assert.equal(labels(await mainPanel({ type: "panel_load" }, ctx)).some((label) => /image|gallery/i.test(label)), false);
   assert.deepEqual(labels(page).filter((label) => /image|gallery/i.test(label)), ["Choose image", "Add to gallery"]);
 
   const chooser = await act(ctx, button(page, "Choose image"));
@@ -95,7 +104,7 @@ test("a clerk chooses, reorders and removes product images from the Media Librar
 
   const before = JSON.stringify(storage.catalog_media.map.get("hat"));
   const back = await act(ctx, button(await act(ctx, button(page, "Change image")), "Cancel"));
-  assert.equal(back.blocks[0].text, "Red hat", "Cancel returns to the product");
+  assert.equal(back.blocks[0].text, "Product image", "Cancel returns to the pictures");
   assert.equal(JSON.stringify(storage.catalog_media.map.get("hat")), before, "Cancel writes nothing");
 
   for (const name of ["side.png", "back.png"]) {
@@ -110,7 +119,7 @@ test("a clerk chooses, reorders and removes product images from the Media Librar
   assert.equal(duplicate.toast.type, "error");
   assert.match(duplicate.toast.message, /already in the gallery/);
   assert.equal(duplicate.blocks[0].type, "banner");
-  assert.equal(duplicate.blocks[1].text, "Red hat", "a refused choice returns the clerk to the product");
+  assert.equal(duplicate.blocks[1].text, "Product image", "a refused choice returns the clerk to the pictures");
   assert.deepEqual(storage.catalog_media.map.get("hat").gallery, [{ mediaId: SIDE }, { mediaId: BACK }], "a refused choice changes nothing");
 
   page = await act(ctx, button(page, "Move image 2 up"));
@@ -126,7 +135,7 @@ test("a clerk chooses, reorders and removes product images from the Media Librar
   assert.equal(forged.toast.type, "error");
   const stale = await panel({ type: "block_action", action_id: "media.remove", value: { id: "hat", index: 0, m: BACK } }, ctx);
   assert.match(stale.toast.message, /gallery changed/);
-  assert.equal(stale.blocks[1].text, "Red hat", "a stale page returns to the product");
+  assert.equal(stale.blocks[1].text, "Product image", "a stale page returns to the pictures");
   assert.deepEqual(storage.catalog_media.map.get("hat").gallery, [{ mediaId: SIDE }], "a stale page never removes a different image");
 });
 
@@ -156,7 +165,7 @@ test("the library page paginates and the placeholder uses the same chooser", asy
 
 test("without media access the chooser refuses and previews degrade honestly", async () => {
   const { ctx } = context({ media: false });
-  const page = await panel({ type: "block_action", action_id: "open", value: "hat" }, ctx);
+  const page = await panel({ type: "block_action", action_id: "media.open", value: "hat" }, ctx);
   const refused = await act(ctx, button(page, "Choose image"));
   assert.equal(refused.toast.type, "error");
 });

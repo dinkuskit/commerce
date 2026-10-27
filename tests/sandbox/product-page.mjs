@@ -43,6 +43,18 @@ export async function openPanel(page) {
   return panel;
 }
 
+/** Opens the Product image & gallery panel beside the Dinkus Commerce one (catalog-media-panel-20261027). */
+export async function openMediaPanel(page) {
+  const trigger = page.getByLabel("Settings", { exact: true }).getByRole("button", { name: "Product image & gallery", exact: true });
+  const settings = page.getByRole("main").getByRole("button", { name: "Settings", exact: true });
+  await expect(trigger.or(settings).first()).toBeVisible({ timeout: 60000 });
+  if (!(await trigger.isVisible())) await settings.click();
+  await trigger.click({ timeout: 60000 });
+  const panel = trigger.locator("xpath=..");
+  await expect(panel.getByText(/^Product image$|Dinkus Commerce panel first/).first()).toBeVisible({ timeout: 30000 });
+  return panel;
+}
+
 export async function readProductPage(request, id) {
   const body = await ok(await request.get("/_emdash/api/content/products/" + id, { headers }));
   return body.item ?? body;

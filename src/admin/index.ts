@@ -44,4 +44,4 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
   return settingsAdmin(route, ctx);
 }
 
-export { productPanel } from "./products.js";
+export { productMediaPanel, productPanel } from "./products.js";

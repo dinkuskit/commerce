@@ -603,3 +603,9 @@
 {"action": "decision_locked", "at": "2026-10-26T17:17:52+00:00", "data": {"decision_id": "catalog-page-title-upgrade-order-20261026"}, "event_id": "11e82f8b-5dd5-4b3d-808b-39e5ba2ac90d"}
 {"action": "decision_proposed", "at": "2026-10-27T16:45:01+00:00", "data": {"decision_id": "catalog-unpriced-product-warning-20261027"}, "event_id": "4ac5ec27-2b3a-4c75-9806-f77d6c98d5d2"}
 {"action": "decision_locked", "at": "2026-10-27T16:45:01+00:00", "data": {"decision_id": "catalog-unpriced-product-warning-20261027"}, "event_id": "4e7458f0-3d66-4827-9740-2a62e9d660ac"}
+{"action": "focus_started", "at": "2026-10-27T18:12:39+00:00", "data": {"cadence": "frontier-batch", "domain": "Grow Funky Beans migration issues (Commerce)"}, "event_id": "99ccac44-0632-40d5-b025-a7635956c753"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-27T18:12:39+00:00", "data": {"summary": "Ronald 27 Oct 2026: 16:52 'do all of these that we are keeping in a 7.x beta'; 16:57 'understood and agreed' to the byte-freeing pass; 17:15 on #191 'I think I like this ... it should be made clear in the admin dash that it's a simple product. If you want it to be a variable product, you just add an attribute'."}, "event_id": "23b8fe1f-f1e1-48ee-9de2-9c2f60634850"}
+{"action": "decision_proposed", "at": "2026-10-27T18:12:39+00:00", "data": {"decision_id": "catalog-simple-product-label-20261027"}, "event_id": "8cd79f26-dafc-42ea-9a75-660f1d6562c5"}
+{"action": "decision_locked", "at": "2026-10-27T18:12:39+00:00", "data": {"decision_id": "catalog-simple-product-label-20261027"}, "event_id": "23d928b5-bf98-4749-b8c4-b68aecf887ba"}
+{"action": "decision_proposed", "at": "2026-10-27T18:12:40+00:00", "data": {"decision_id": "catalog-media-panel-20261027"}, "event_id": "5822e273-0a30-4268-a3fc-e3f6c6ce3d0b"}
+{"action": "decision_locked", "at": "2026-10-27T18:12:40+00:00", "data": {"decision_id": "catalog-media-panel-20261027"}, "event_id": "3d0104d6-5fce-4ef8-97c7-d1d01e3f4131"}

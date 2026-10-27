@@ -185,6 +185,19 @@ test('Save choices keeps option and value ids that contain a colon', async () =>
     [['size:small', 'Petite'], ['size:large', 'Large']]);
 });
 
+// catalog-simple-product-label-20261027: the panel says a product is simple until it has a choice.
+test('a simple product says so, and a product with choices does not', async () => {
+  const { ctx } = await shop();
+  const says = (out) => out.blocks.filter((block) => block.type === 'context').map((block) => block.text);
+  const simple = 'Simple product. Add a choice, like Size, to sell it in more than one version.';
+  const mug = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
+  assert.ok(says(mug).includes(simple));
+  const addChoices = mug.blocks.findIndex((block) => block.type === 'form' && block.submit.label === 'Add choices');
+  assert.equal(mug.blocks[addChoices - 1].text, simple, 'the line sits right above Add choices');
+  const shirt = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'shirt' } }, ctx);
+  assert.equal(says(shirt).includes(simple), false);
+});
+
 test('a product with no Regular price says so instead of Product saved or On sale', async () => {
   const { catalog, ctx } = await shop();
   const says = (out) => out.blocks.filter((block) => block.type === 'context').map((block) => block.text);
