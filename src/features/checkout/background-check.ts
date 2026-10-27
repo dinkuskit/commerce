@@ -19,15 +19,18 @@ let retryAt = 0;
  * never waiting longer than the budget. Switching Commerce on always writes the task,
  * since EmDash disables a switched-off plugin's tasks; a request only reads the
  * scheduler's list and writes when the task is missing. A late answer still counts:
- * success stops further attempts, and a failure is logged without its details.
+ * success stops further attempts, and a failure is logged without its details and changes nothing.
  */
 export async function ensureBackgroundCheck(ctx: PluginContext, activate = false): Promise<boolean> {
   const cron = ctx.cron;
   if (!cron || (!activate && (registered || Date.now() < retryAt))) return registered;
-  // Switching on is a one-off, so its failure leaves the next request free to try.
+  // Switching on is a one-off, so its failure leaves the next request free to try. It also forgets
+  // any earlier registration, since EmDash disables a switched-off plugin's tasks.
+  if (activate) registered = false;
   retryAt = activate ? 0 : Date.now() + BACKGROUND_CHECK_RETRY_MS;
+  // Tries can overlap once one hangs past the minute. Any success means the task is there; a late
+  // failure never undoes it.
   const attempt = register(cron, activate).then(() => (registered = true), () => {
-    registered = false;
     ctx.log.warn(NOT_REGISTERED, { reason: "failed" });
     return false;
   });

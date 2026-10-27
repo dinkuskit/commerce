@@ -144,3 +144,75 @@ test("a route keeps its own answer and failure whatever the scheduler does", asy
   const broken = withBackgroundCheck(async () => { throw new Error("route failure"); });
   await assert.rejects(broken({}, site.ctx), /route failure/);
 });
+
+// commerce#197 case A: a try still hanging when the minute is up. Each fake-clock step is explicit;
+// nothing here waits on real time.
+test("a try still hanging after the minute lets the next one run, and its late failure keeps the newer success", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const first = stall();
+  const site = scheduler(first.answer);
+  const a = ensureBackgroundCheck(site.ctx);
+  t.mock.timers.tick(BACKGROUND_CHECK_REGISTER_BUDGET_MS);
+  assert.equal(await a, false);
+  t.mock.timers.tick(BACKGROUND_CHECK_RETRY_MS);
+  assert.equal(await ensureBackgroundCheck(site.ctx), true);
+  assert.deepEqual(site.tasks, [TASK]);
+  // The first try's list call finally fails, after the second registered the check.
+  first.refuse(new Error("late"));
+  await settle();
+  t.mock.timers.tick(BACKGROUND_CHECK_RETRY_MS);
+  assert.equal(await ensureBackgroundCheck(site.ctx), true);
+  assert.deepEqual(site.calls, ["list", "list", "schedule"]);
+  assert.deepEqual(site.tasks, [TASK]);
+});
+
+test("an old try that succeeds late while a newer one hangs counts, and the newer one's late failure keeps it", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const first = stall(), second = stall();
+  const site = scheduler(first.answer, second.answer);
+  const a = ensureBackgroundCheck(site.ctx);
+  t.mock.timers.tick(BACKGROUND_CHECK_REGISTER_BUDGET_MS);
+  assert.equal(await a, false);
+  t.mock.timers.tick(BACKGROUND_CHECK_RETRY_MS);
+  const b = ensureBackgroundCheck(site.ctx);
+  t.mock.timers.tick(BACKGROUND_CHECK_REGISTER_BUDGET_MS);
+  assert.equal(await b, false);
+  first.release();
+  await settle();
+  second.refuse(new Error("late"));
+  await settle();
+  assert.deepEqual(site.tasks, [TASK]);
+  t.mock.timers.tick(BACKGROUND_CHECK_RETRY_MS);
+  assert.equal(await ensureBackgroundCheck(site.ctx), true);
+  assert.deepEqual(site.calls, ["list", "list", "schedule"]);
+});
+
+test("a scheduler that never answers costs at most one call a minute, and no request waits past the budget", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const never = () => new Promise(() => {});
+  const site = scheduler(...Array.from({ length: 10 }, () => never));
+  for (let minute = 0; minute < 10; minute++) {
+    for (let request = 0; request < 5; request++) {
+      const answer = ensureBackgroundCheck(site.ctx);
+      t.mock.timers.tick(BACKGROUND_CHECK_REGISTER_BUDGET_MS);
+      assert.equal(await answer, false);
+    }
+    t.mock.timers.tick(BACKGROUND_CHECK_RETRY_MS);
+  }
+  assert.equal(site.calls.length, 10);
+  assert.deepEqual(site.tasks, []);
+  // Once the scheduler answers again, the next try registers the check.
+  site.ctx.cron.list = async () => [];
+  assert.equal(await ensureBackgroundCheck(site.ctx), true);
+  assert.deepEqual(site.tasks, [TASK]);
+});
+
+
+test("switching on again forgets the earlier registration, so after a refused switch-on the next request checks", async () => {
+  const site = scheduler(async () => {}, fail);
+  assert.equal(await ensureBackgroundCheck(site.ctx, true), true);
+  assert.equal(await ensureBackgroundCheck(site.ctx, true), false);
+  assert.equal(await ensureBackgroundCheck(site.ctx), true);
+  assert.deepEqual(site.calls, ["schedule", "schedule", "list"]);
+  assert.deepEqual(site.tasks, [TASK]);
+});
