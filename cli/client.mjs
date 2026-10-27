@@ -8,13 +8,14 @@ export const TOKEN_ENV = "EMDASH_TOKEN";
 export const URL_ENV = "EMDASH_URL";
 export const DEFAULT_PLUGIN_ID = "dinkus-commerce";
 
-// Route ids mirror src/features/catalog (route-ids.ts and public.ts) and
-// src/features/orders/api.ts. A unit test compares them with the built package
+// Route ids mirror src/features/catalog (route-ids.ts and public.ts),
+// src/admin/catalog-api.ts and src/features/orders/api.ts. A unit test compares them with the built package
 // so they cannot drift silently.
 export const ROUTES = Object.freeze({
 	publicCatalog: "catalog/public",
 	publicCatalogItem: "catalog/public/item",
 	listProducts: "catalog-items/list",
+	catalog: "catalog",
 	orders: "orders",
 });
 
@@ -138,6 +139,27 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 		return data;
 	}
 
+	// The catalog API: one private POST per op, with the product page panels' own checks.
+	async function catalogCall(body, what) {
+		let data;
+		try {
+			data = unwrap(await adminRequest("POST", `/${ROUTES.catalog}`, { body }), what, {
+				onNotFound: routeMissing(ROUTES.catalog, "Check --url and --plugin-id. Commerce 0.7.0 or later serves it."),
+			});
+		} catch (error) {
+			// A Registry store answers a refusal as ROUTE_ERROR with Commerce's reason after the route name.
+			const reason = error instanceof CliError && error.code === "ROUTE_ERROR" ? /route catalog failed: (.+)$/s.exec(error.message)?.[1] : undefined;
+			// Commerce refused a write whose preview code no longer matches the product.
+			if (error instanceof CliError && /The product changed since that preview/.test(reason ?? error.message)) {
+				throw new CliError("outdated", "The product changed since that --dry-run. Nothing changed; run --dry-run again.", { exit: EXIT.failure });
+			}
+			if (reason) throw new CliError("refused", `${what}: ${reason}`, { exit: EXIT.failure });
+			throw error;
+		}
+		if (!isRecord(data)) throw contractError(what, "the response is not an object.");
+		return data;
+	}
+
 	const publicCatalogMissing = routeMissing(
 		ROUTES.publicCatalog,
 		"Check --url and --plugin-id. The public catalog is served by the Registry (sandboxed) build.",
@@ -176,6 +198,18 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 				if (!isRecord(product) || typeof product.catalogItemId !== "string" || typeof product.name !== "string") {
 					throw contractError(what, "a product is missing its catalogItemId or name.");
 				}
+			}
+			return data;
+		},
+
+		catalog: catalogCall,
+
+		async showProduct(catalogItemId) {
+			const what = "Reading the product";
+			const data = await catalogCall({ op: "get", catalogItemId }, what);
+			if (data.product === null) return null;
+			if (!isRecord(data.product) || typeof data.product.catalogItemId !== "string" || typeof data.product.sku !== "string" || !isRecord(data.media)) {
+				throw contractError(what, "the product is missing its catalogItemId, sku or pictures.");
 			}
 			return data;
 		},

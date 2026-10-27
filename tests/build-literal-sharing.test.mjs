@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {runInNewContext} from 'node:vm';
-import {shareLiterals} from '../scripts/share-literals.mjs';
+import {shareGlobals, shareLiterals} from '../scripts/share-literals.mjs';
 const result = code => runInNewContext(code);
 
 test('sharing preserves field names, prototype syntax, escaped text, directives and tagged templates', () => {
@@ -81,4 +81,37 @@ test('import attributes and legacy assertions retain grammar-only literals', () 
     assert.ok(shared.includes(declaration));
     assert.ok(shared.includes(exported));
   }
+});
+
+test('frequent globals and void 0 read through bindings with identical semantics', () => {
+  const source = `(() => {
+    const keys = Object.keys({a:1,b:2}), entries = Object.entries({c:3}), frozen = Object.isFrozen(Object.freeze({}));
+    const short = {Object, Error}, fail = () => { try { throw new Error('x'); } catch (error) { return error instanceof Error && error.message; } };
+    class Oops extends Error {}
+    const none = [void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0].every(value => value === undefined);
+    const labelled = () => { Error: for (;;) break Error; return Error.name; };
+    const clone = JSON.parse(JSON.stringify({d:[1,2]})), stamp = String(Number('42')) + String(Array.isArray([])) + String(Number.isSafeInteger(1));
+    return JSON.stringify([keys, entries, frozen, short.Object === Object, short.Error === Error, fail(), new Oops() instanceof Error,
+      none, labelled(), clone, stamp, Object.keys(short), Object.getOwnPropertyNames(Object.prototype).length > 0, Array.from('ab'), Error.name]);
+  })()`;
+  const shared = shareGlobals(source);
+  assert.notEqual(shared, source);
+  assert.equal(result(shared), result(source));
+  assert.match(shared, /\{Object:__commerceGlobal\d+, ?Error:__commerceGlobal\d+\}/, 'shorthand keys stay');
+  assert.match(shared, /__commerceGlobal\d+=globalThis\.undefined/);
+  assert.match(shared, /Error: for/, 'labels stay');
+  assert.match(shared, /break Error/);
+});
+
+test('globals the code declares, or checks with typeof, are left alone', () => {
+  const source = `(() => { const Object = {keys: () => ['own']}; const a = Object.keys(), b = Object.keys(), c = Object.keys(), d = Object.keys();
+    const e = typeof Promise, f = Promise.resolve, g = Promise.all, h = Promise.race, i = Promise.any;
+    return JSON.stringify([a, b, c, d, e, Error.name, Error.name, Error.name, Error.name]); })()`;
+  const shared = shareGlobals(source);
+  assert.equal(result(shared), result(source));
+  assert.match(shared, /const Object = \{keys/);
+  assert.match(shared, /Promise\.resolve/);
+  assert.match(shared, /typeof Promise/);
+  assert.throws(() => shareGlobals('function {'), /invalid JavaScript/);
+  assert.equal(shareGlobals('const x=1;'), 'const x=1;');
 });

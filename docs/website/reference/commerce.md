@@ -88,6 +88,22 @@ Checkout rereads authoritative prices and availability. Never send a browser-com
 
 Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins.
 
+Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:
+
+| `op` | Does |
+| --- | --- |
+| `list` | Lists products: id, name, SKU, and when it was archived. |
+| `get` | One product (`catalogItemId`) with its choices, prices and pictures. |
+| `create` | Makes a physical Draft from `name` and `sku`, and links it to the product page `entryId` when given. Send a `commandId` so a retry finds the same product. |
+| `link` | Links a product to the product page `entryId`. |
+| `prices`, `choice`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, choices and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |
+
+Publishing the page still puts the product on sale, so an agent sells a product by creating it, pricing it and publishing its page. Manage stock stays off, as in the panels. A refused write answers with the reason.
+
+A write may carry `expected`: the first 12 hex digits of the SHA-256 of the product's `get` answer as JSON (for a choice, of its product, named as `productId`). Commerce then saves only while the product still reads that way, so an agent never overwrites a change it did not see.
+
+The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-choice`, `link`, `archive` and `restore`. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
+
 ## US delivery addresses
 
 A new checkout that ships a physical order to the United States needs a supported US state or the District of Columbia. Commerce accepts the two-letter abbreviation or the full name. Destinations outside the United States that the merchant configured, saved addresses and checkouts already started are not affected.

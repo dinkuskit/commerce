@@ -55,6 +55,24 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   Registry's 128 KiB backend limit. Each choice keeps its own Save.
 - A refused Add price and stock keeps the typed SKU and its buttons.
 
+## Catalog API (catalog-api-20261027)
+
+The private `catalog` route (`content:edit_any`, POST) lets any agent or tool
+with an EmDash API token do what the product page panels do, one `op` per
+request: list, get, create, link, prices, choice, labels, sku, weight,
+identifiers, archive, media and feeds. It calls the same catalog functions as the panels, so
+it has their checks and answers. `create` makes a physical Draft and only takes
+`commandId`, `name` and `sku`; Manage stock stays off. `sku` changes the SKU through the same
+conditional write as the other product edits, keeping the first create
+command, and the store's unique index refuses a SKU another product has. The
+`dinkus-commerce` CLI wraps every op but `labels` (`docs/CLI-SPEC.md`). A write
+may carry `expected`, a preview's code (12 hex digits of SHA-256 over the
+`get` answer); the route rereads the product and refuses the write with
+`COMMAND_CONFLICT` when it no longer matches. Its room came from a
+build step that cuts nothing: after the literal-sharing step, repeated global
+names (`Object`, `Error`, `JSON` and others) and `void 0` are read once into
+short bindings, skipping any name the code declares or tests with `typeof`.
+
 ## Products page removed
 
 Commerce no longer mounts `/products`. Commerce settings has a

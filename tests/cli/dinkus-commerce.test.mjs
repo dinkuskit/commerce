@@ -13,12 +13,10 @@ import { spec } from "../../cli/spec.mjs";
 import {
   COMMERCE_PLUGIN_ID,
   LIST_CATALOG_PRODUCTS_ROUTE,
+  CATALOG_API_ROUTE,
   ORDERS_API_ROUTE,
   PUBLIC_CATALOG_ITEM_ROUTE,
   PUBLIC_CATALOG_ROUTE,
-  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
-  SET_CATALOG_ITEM_SKU_ROUTE,
 } from "../../dist/index.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -243,10 +241,15 @@ test("products list sends the bearer token on GET and passes the native payload 
   assert.deepEqual(document.context, { siteUrl: SITE, pluginId: "shop-commerce" });
 });
 
-test("products list explains a Registry install and a missing credential", async () => {
-  const registry = await run(["--url", SITE, "products", "list"], { env: { EMDASH_TOKEN: TOKEN } });
-  assert.equal(registry.code, 1);
-  assert.match(registry.stderr, /does not expose catalog-items\/list\. .*Registry build only has the Block Kit admin/);
+test("products list falls back to the catalog route on a Registry install and needs a credential", async () => {
+  const listed = { products: [{ catalogItemId: "item_a", name: "Demo", sku: "A-1" }, { catalogItemId: "item_b", name: "Old", sku: "B-1", archivedAt: "2026-10-01T00:00:00Z" }] };
+  const registry = await run(["--url", SITE, "products", "list", "--json"], { env: { EMDASH_TOKEN: TOKEN }, routes: { catalog: (body) => (assert.deepEqual(body, { op: "list" }), ok(listed)) } });
+  assert.equal(registry.code, 0, registry.stderr);
+  assert.deepEqual(singleJson(registry.stdout).data, listed);
+  assert.deepEqual(registry.calls.map((call) => [call.init.method, call.url.pathname.split("/").pop()]), [["GET", "list"], ["POST", "catalog"]]);
+  const old = await run(["--url", SITE, "products", "list"], { env: { EMDASH_TOKEN: TOKEN } });
+  assert.equal(old.code, 1);
+  assert.match(old.stderr, /does not expose catalog\. .*Commerce 0\.7\.0 or later/);
 
   const anonymous = await run(["--url", SITE, "products", "list", "--json"]);
   assert.equal(anonymous.code, 4);
@@ -424,9 +427,6 @@ test("the credential never appears in stdout or stderr", async () => {
 test("planned commands stay in help and fail closed without contacting the site", async () => {
   const plannedCommands = [
     ["settings", "show"],
-    ["products", "set-price", "item_demo", "--amount", "19.99"],
-    ["products", "set-sale-price", "item_demo", "--amount", "9.99"],
-    ["products", "set-sku", "item_demo", "--sku", "DEMO-2"],
   ];
   for (const argv of plannedCommands) {
     const result = await run(["--url", SITE, ...argv, "--json"], { env: { EMDASH_TOKEN: TOKEN } });
@@ -567,16 +567,18 @@ test("orders complete and reopen preview first and apply only at the confirmed v
   assert.equal(unknown.code, 2);
 });
 
-test("--no-input mutations fail closed: nothing is sent with or without --confirm", async () => {
-  for (const extra of [["--no-input"], ["--no-input", "--confirm", "confirm_demo"], ["--dry-run"]]) {
+test("--no-input product changes fail closed: nothing is sent without a well-formed --confirm", async () => {
+  for (const [extra, code] of [[["--no-input"], 4], [["--no-input", "--confirm", "confirm_demo"], 2], [["--dry-run", "--confirm", "0123456789ab"], 2]]) {
     const result = await run(["--url", SITE, "products", "set-price", "item_demo", "--amount", "19.99", ...extra], { env: { EMDASH_TOKEN: TOKEN } });
-    assert.equal(result.code, 1);
+    assert.equal(result.code, code, extra.join(" "));
     assert.equal(result.calls.length, 0);
     assert.equal(result.stdout, "");
   }
-  const missingAmount = await run(["--url", SITE, "products", "set-price", "item_demo", "--no-input"]);
-  assert.equal(missingAmount.code, 2);
-  assert.match(missingAmount.stderr, /requires --amount/);
+  for (const flags of [[], ["--amount", "19.99", "--clear"], ["--amount", "19.999"]]) {
+    const usage = await run(["--url", SITE, "products", "set-price", "item_demo", ...flags, "--no-input"], { env: { EMDASH_TOKEN: TOKEN } });
+    assert.equal(usage.code, 2, flags.join(" "));
+    assert.equal(usage.calls.length, 0);
+  }
 });
 
 test("a real HTTP round trip uses the EmDash plugin path and envelope", async () => {
@@ -607,13 +609,9 @@ test("CLI route ids and named routes match the built Commerce package", async ()
     publicCatalog: PUBLIC_CATALOG_ROUTE,
     publicCatalogItem: PUBLIC_CATALOG_ITEM_ROUTE,
     listProducts: LIST_CATALOG_PRODUCTS_ROUTE,
+    catalog: CATALOG_API_ROUTE,
     orders: ORDERS_API_ROUTE,
   });
-  // Planned mutations name the native routes they would wrap.
-  const specSource = await readFile(join(root, "cli", "spec.mjs"), "utf8");
-  for (const route of [SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE, SET_CATALOG_ITEM_SALE_PRICE_ROUTE, SET_CATALOG_ITEM_SKU_ROUTE]) {
-    assert.ok(specSource.includes(`"${route}"`), route);
-  }
 });
 
 test("the CLI stays outside the Registry bundle and the package source", async () => {

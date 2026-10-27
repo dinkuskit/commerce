@@ -1,7 +1,7 @@
 # `dinkus-commerce` CLI Specification
 
-Status: Locked for the scaffold slice (`commerce-cli-scaffold-001`). Write
-commands remain planned.
+Status: Locked for the scaffold slice (`commerce-cli-scaffold-001`). Product
+commands use the catalog API (`catalog-api-20261027`, commerce#190).
 
 An unpublished scaffold executable implements the read commands below against
 the HTTP routes Commerce already serves; see
@@ -69,9 +69,20 @@ dinkus-commerce catalog list [--cursor <cursor>] [--all]
 dinkus-commerce catalog show <item-id>
 
 dinkus-commerce products list
-dinkus-commerce products set-price <item-id> --amount <decimal>        (planned)
-dinkus-commerce products set-sale-price <item-id> --amount <decimal>   (planned)
-dinkus-commerce products set-sku <item-id> --sku <sku>                 (planned)
+dinkus-commerce products show <item-id>
+dinkus-commerce products create --name <name> --sku <sku> --command-id <id> [--page <entry-id>] [--dry-run]
+dinkus-commerce products set-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
+dinkus-commerce products set-sale-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
+dinkus-commerce products set-stock-status <item-id> --status <in-stock|out-of-stock|on-backorder> [--choice <item-id>] (--dry-run | --confirm <value>)
+dinkus-commerce products set-sku <item-id> --sku <sku> (--dry-run | --confirm <value>)
+dinkus-commerce products set-weight <item-id> (--oz <decimal> | --clear) (--dry-run | --confirm <value>)
+dinkus-commerce products set-identifiers <item-id> [--gtin <gtin>] [--mpn <mpn>] [--brand <brand>] (--dry-run | --confirm <value>)
+dinkus-commerce products save-media <item-id> [--image <media-id> | --clear-image] [--gallery <media-id> ... | --clear-gallery] (--dry-run | --confirm <value>)
+dinkus-commerce products set-feeds <item-id> (--channel <channel> ... | --none) (--dry-run | --confirm <value>)
+dinkus-commerce products add-choice <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)
+dinkus-commerce products link <item-id> --page <entry-id> (--dry-run | --confirm <value>)
+dinkus-commerce products archive <item-id> (--dry-run | --confirm <value>)
+dinkus-commerce products restore <item-id> (--dry-run | --confirm <value>)
 
 dinkus-commerce orders list [--status <processing|completed>] [--cursor <cursor>] [--all]
 dinkus-commerce orders show <order-id>
@@ -99,14 +110,54 @@ Every route is served at
   every product with Regular and Sale as dollar strings, Manage stock, the
   manual stock status for unmanaged products, and variant members. Only the
   native Commerce build mounts this route. On a Registry (sandboxed) install the
-  site answers `404` and the CLI exits `1` with `route_not_available`, because
-  that build only has the Block Kit admin.
+  site answers `404`, and the CLI sends `{ "op": "list" }` to `POST catalog`
+  instead, which lists each product's `catalogItemId`, `name`, `sku` and
+  `archivedAt`; `products show` has its prices. A Commerce older than 0.7.0
+  has neither and exits `1` with `route_not_available`.
+- `products show <item-id>` sends `{ "op": "get", "catalogItemId" }` to
+  `POST catalog`: the product as its page panel shows it (prices, stock,
+  state, weight, identifiers, choices and their versions) and its pictures.
 
 Both public routes are mounted by the Registry (sandboxed) build
 (`src/plugin.ts`) and the native build (`src/index.ts`), with the same request
 rules and response (GrillTrack `catalog-native-public-routes-001`). The
-`catalog` commands therefore work on either install; `products list` still
-works only on a native install.
+`catalog` commands therefore work on either install, and so do the `products`
+commands on Commerce 0.7.0 or later.
+
+### Product commands
+
+Every product command except `products list` sends one or more `POST catalog`
+calls with a JSON body and the credential. The route is private and needs
+`content:edit_any`, the permission the product page panels use; both builds
+mount it. Each body names one `op` and runs the panels' own checks:
+
+| CLI command | Body |
+| --- | --- |
+| `products show` | `{ op: "get", catalogItemId }` |
+| `products create` | `{ op: "create", commandId, name, sku, entryId? }`: a physical Draft with Manage stock off. The same `commandId` again answers with the same product. |
+| `products set-price`, `set-sale-price`, `set-stock-status` | `{ op: "prices", catalogItemId, regular, sale, stockStatus? }`, the panel's one Save, with the values the command does not change read from `get`. `--choice` names one version of a product sold in choices. |
+| `products set-sku` | `{ op: "sku", catalogItemId, sku }` |
+| `products set-weight` | `{ op: "weight", catalogItemId, weightOz }` (`""` clears it) |
+| `products set-identifiers` | `{ op: "identifiers", catalogItemId, gtin?, mpn?, brand? }` (`""` clears a field) |
+| `products save-media` | `{ op: "media", catalogItemId, image?, gallery? }` |
+| `products set-feeds` | `{ op: "feeds", catalogItemId, channels }` |
+| `products add-choice` | `{ op: "choice", productId, optionId, optionLabel, values }`: the product's first choice. The first value is the product itself; each other value makes a version with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. Later choices are added in the panel. |
+| `products link` | `{ op: "link", catalogItemId, entryId }` |
+| `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
+
+The route also has `labels` (rename a choice or its values), which the CLI
+does not wrap yet. A refused price save answers `{ saved: false, message }`,
+which the CLI reports as `refused` with Commerce's message. A Registry store
+answers other refusals as `400` with code `ROUTE_ERROR` and Commerce's reason
+after `route catalog failed: `; the CLI reports that as `refused` with the
+reason. A native store answers with Commerce's own error code
+(`SKU_CONFLICT`, `INVALID_INPUT` and so on), which the CLI keeps. Publishing the
+product's page is what puts it on sale; no CLI command does that.
+
+`products create` is additive and needs no confirmation: a retry with the same
+`--command-id` never makes a second product, and `--dry-run` prints the
+request and sends nothing. Every other write is a change to a product someone
+may be looking at, so it follows the confirm flow below.
 
 ### Orders commands
 
@@ -180,32 +231,31 @@ and a message naming the missing API. They never contact the site.
 
 | Command | Missing API |
 | --- | --- |
-| `products set-price` | A preview/confirm route for Regular price. Native `catalog-items/set-regular-price` applies immediately. |
-| `products set-sale-price` | A preview/confirm route for Sale price. Native `catalog-items/set-sale-price` applies immediately. |
-| `products set-sku` | A preview/confirm route for SKU changes. Native `catalog-items/set-sku` applies immediately. |
 | `settings show` | A read-only settings route. Native can read `settings/out-of-stock-listing` and `settings/placeholder-image` but not `settings/storefront-availability`; the Registry build has none. |
 
-### Mutations need Commerce preview/confirm routes first
+### Confirming a product change
 
-DinkusKit CLIs never send a mutation without a server-side preview. The
-intended flow matches Inventory:
+A product change is bound to what its preview read, and Commerce checks it
+(his call, 27 Oct):
 
-1. `--dry-run` asks Commerce for a preview of the exact normalized change. The
-   preview returns the current and proposed values, the record revision it is
-   bound to, and an opaque confirmation value with an expiry. Nothing changes.
-2. A real run shows that preview and asks the operator to type the
-   confirmation value, or, with `--no-input`, requires
-   `--confirm <value>` from a fresh dry run.
-3. Commerce applies the change only if the confirmation still matches the same
-   item, amount, and revision.
+1. `--dry-run` reads the product with `get`, prints the current and new
+   values, and prints a confirmation value: the first 12 hex digits of the
+   SHA-256 of that `get` answer as JSON. Nothing changes.
+2. A real run asks the operator to type that value, or, with `--no-input`,
+   requires `--confirm <value>` from a fresh dry run. Without either it exits
+   `4` with `confirmation_required` and sends nothing.
+3. The CLI reads the product again and stops with `outdated` if it no longer
+   matches, then sends the change with the value as `expected` (and, for a
+   choice, the product as `productId`). The catalog route reads the product
+   once more and saves only if it still hashes to `expected`; otherwise it
+   refuses with "The product changed since that preview", which the CLI
+   reports as `outdated`. Nothing changes either way.
 
-There is no generic `--force`. The native `catalog-items/set-*` routes apply
-immediately and return no confirmation binding, so the CLI cannot satisfy this
-flow yet. `orders complete` and `orders reopen` can, because the orders route
-applies a change only at the order version the preview showed. Commerce needs preview and confirm routes (names to be decided
-through GrillTrack) before any mutation is wired. Mounting new JSON admin
-routes in the Registry build would add bytes to `dist/sandbox/plugin.mjs`, so
-that decision must also respect the Registry file-size budget.
+Commerce's check runs inside the same request as the save, so the window a
+concurrent edit could slip through shrinks from a network round trip to the
+moment between that read and the write, and each write is still conditional.
+`orders complete` and `orders reopen` are bound on the server by the order
+version. There is no generic `--force`.
 
 ## Global flags
 
@@ -232,10 +282,19 @@ that decision must also respect the Registry file-size budget.
 | `--carrier <text>`, `--tracking <text>` | `orders complete` | Optional carrier and tracking number, at most 64 characters each. |
 | `--dry-run` | `orders complete`, `orders reopen` | Show the change and the version to confirm; send nothing. |
 | `--confirm <version>` | `orders complete`, `orders reopen` | Apply only if the order is still at this version. |
-| `--amount <decimal>` | `products set-price`, `products set-sale-price` (planned) | USD amount such as `19.99`. Required. |
-| `--sku <sku>` | `products set-sku` (planned) | New unique SKU. The permanent item id never changes. Required. |
-| `--dry-run` | planned product mutations | Preview only; send nothing. |
-| `--confirm <value>` | planned product mutations | Apply only if it matches a fresh preview. |
+| `--amount <decimal>` | `products set-price`, `products set-sale-price` | USD amount such as `19.99`; or `--clear`. |
+| `--clear` | `products set-price`, `set-sale-price`, `set-weight` | Clear the value instead. |
+| `--choice <item-id>` | `products set-price`, `set-sale-price`, `set-stock-status` | The version of a product sold in choices, from `products show`. Required for such a product. |
+| `--status <...>` | `products set-stock-status` | `in-stock`, `out-of-stock` or `on-backorder`. Refused when Inventory manages the stock. |
+| `--name <name>`, `--sku <sku>`, `--command-id <id>` | `products create` | Required. `--sku` is also `products set-sku`'s new SKU; the item id never changes. |
+| `--page <entry-id>` | `products create`, `products link` | The Products page entry that sells it. |
+| `--oz <decimal>` | `products set-weight` | Ounces, above 0 and up to 2400. |
+| `--gtin`, `--mpn`, `--brand` | `products set-identifiers` | An empty value clears it; a field left out stays. |
+| `--image <media-id>`, `--gallery <media-id>` (repeatable), `--clear-image`, `--clear-gallery` | `products save-media` | EmDash media ids; `--gallery` replaces the whole gallery. |
+| `--channel <channel>` (repeatable), `--none` | `products set-feeds` | Product feed channels, such as `google-merchant`. |
+| `--name <label>`, `--value <label>[=<sku>]` (repeatable) | `products add-choice` | 2 to 50 values; the first is the product itself (no SKU). |
+| `--dry-run` | product changes | Show the change and the confirmation value; send nothing. |
+| `--confirm <value>` | product changes | Commerce saves only while the product still matches that dry run. |
 
 ## Output contract
 
@@ -278,7 +337,9 @@ last page, `catalog show` is one product, and `products list` is the native
 `orders show` is one order, and a saved `orders complete` or `orders reopen`
 is the route's `{ result, order }`. A preview uses `outcome: "preview"`, with
 `data: { orderId, number, version, from, to, carrier?, tracking? }` and
-`confirmation` set to the version to pass to `--confirm`. A refused change
+`confirmation` set to the version to pass to `--confirm`; a product change's
+preview is `data: { catalogItemId, request }` with the 12-digit confirmation
+value, and a saved one is the catalog route's answer. A refused change
 keeps the route's answer in `data` beside `error`. A failure uses
 `outcome: "error"` and `error: { code, message }`, with `context` when the site
 was resolved:
@@ -362,8 +423,8 @@ The credential comes only from `EMDASH_TOKEN`, the variable the upstream
 `emdash` CLI uses. It is an EmDash personal access token sent as
 `Authorization: Bearer`. Private plugin routes require the `admin` scope,
 and `products list` requires a user with
-`content:edit_any`. Future non-GET admin calls also send `X-EmDash-Request: 1`
-(EmDash's CSRF header). There is no `--token` flag, no token in config, and no
+`content:edit_any`, as do the other `products` commands. Non-GET admin calls
+also send `X-EmDash-Request: 1` (EmDash's CSRF header). There is no `--token` flag, no token in config, and no
 printing of the token or the authorization header. Public `catalog` reads never
 send the token, even when it is set. Admin commands without it exit `4`, naming
 `EMDASH_TOKEN`.
@@ -408,8 +469,11 @@ EMDASH_URL=https://shop.example dinkus-commerce orders list --status processing
 EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --dry-run
 EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --confirm 1
 
-# Planned today: exits 1 with not_implemented and sends nothing.
-dinkus-commerce --url https://shop.example products set-price item_demo --amount 19.99 --dry-run
+# Migrate a product: a Draft for its page, a price, then a Size choice.
+EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --page 01J0PAGE --json
+EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --dry-run
+EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --confirm 3f9a0c1b2d4e
+EMDASH_URL=https://shop.example dinkus-commerce products add-choice item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run
 ```
 
 ## Non-goals
@@ -418,15 +482,17 @@ dinkus-commerce --url https://shop.example products set-price item_demo --amount
   `files` includes the `cli` support dependency closure for already declared
   `bin/dinkus-commerce.mjs`, while the CLI has no export-map entry and adds
   zero Registry/sandbox bundle bytes.
-- Any byte in the Registry bundle `dist/sandbox/plugin.mjs`.
+- Any byte in the Registry bundle `dist/sandbox/plugin.mjs` from the CLI
+  itself. The `catalog` route it calls is Commerce's own API for every agent.
 - Direct storage or database access, importing Commerce source, or
   reimplementing price, sellability, availability, or checkout rules.
-- Mutations without a Commerce preview/confirm route or a version-bound route
-  (`orders`), and a generic `--force`.
+- A generic `--force`, and any change that is not bound to its preview
+  (`products`) or to the order version (`orders`).
 - Shopper operations: guest checkout `prepare`/`start`/`status`, carts, coupons,
   and payments.
-- Media upload, product creation or deletion, and Inventory stock operations
-  (use `dinkus-inventory`).
+- Media upload (use `emdash media`), product deletion (archive instead),
+  publishing a product page, and Inventory stock operations (use
+  `dinkus-inventory`).
 - Shell completion, color, pagers, and progress output in the scaffold.
 
 ## Bundle budget
@@ -466,9 +532,11 @@ change, rebuild, and compare.
   because EmDash, not Commerce, authenticates plugin routes. Public reads never
   send it.
 - `context` is `{ siteUrl, pluginId }`.
-- Only order changes are wired. They are bound to the order version rather than
-  a command id, so a lost answer is resolved by reading the order again: there
-  is no `commandId`, receipt, unknown outcome, or pending-command store yet.
+- Order changes are bound to the order version and product changes to their
+  preview code rather than a command id, so a lost answer is resolved by reading again:
+  there is no receipt, unknown outcome, or pending-command store yet. Only
+  `products create` and `products add-choice` carry a command id, so a retry
+  finds what the first try made.
 - The kernel's `httpFailure` reads a top-level string `error`. EmDash returns
   `{ success: false, error: { code, message } }`, so the client unwraps that
   object before mapping the status.
@@ -479,8 +547,8 @@ change, rebuild, and compare.
 | --- | --- | --- |
 | `catalog list` | Wired | `GET catalog/public[?cursor=]` (both builds) |
 | `catalog show` | Wired | `GET catalog/public/item?itemId=` (both builds) |
-| `products list` | Wired | `GET catalog-items/list` with `EMDASH_TOKEN` (native build) |
-| `products set-price`, `set-sale-price`, `set-sku` | Planned | No preview/confirm route |
+| `products list` | Wired | `GET catalog-items/list` with `EMDASH_TOKEN` (native build), else `POST catalog` `{op: list}` (Commerce 0.7.0+) |
+| `products show`, `create` and every product change | Wired | `POST catalog` with `EMDASH_TOKEN` (both builds, Commerce 0.7.0+) |
 | `orders list`, `orders show` | Wired | `POST orders` with `EMDASH_TOKEN` (Registry build) |
 | `orders complete`, `orders reopen` | Wired | `POST orders` with `EMDASH_TOKEN`, bound to the confirmed order version (Registry build) |
 | `settings show` | Planned | No complete read-only settings route |
@@ -496,7 +564,14 @@ change, rebuild, and compare.
   is never sent to a site URL or plugin id from project config;
 - the exit-code mapping `0`-`5`, including EmDash 401/403/404/5xx envelopes;
 - required and validated `--url`, `--plugin-id`, and config precedence;
-- that planned mutations fail closed under `--no-input` and contact nothing;
+- that planned commands and unconfirmed product changes fail closed under
+  `--no-input` and contact nothing;
 - a real HTTP round trip on loopback;
 - that the CLI route ids match the built package's exported route constants;
 - the bundle boundary in [Bundle budget](#bundle-budget).
+
+`tests/cli/products-catalog.test.mjs` runs every product command against the
+real catalog API over in-memory storage, through EmDash's envelope: a
+migration by CLI alone (create and retry, prices, stock, a choice and its
+versions, SKU and its conflict), the stale-confirmation refusal, and weight,
+identifiers, pictures, feeds, link, archive and restore.
