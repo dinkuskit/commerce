@@ -62,7 +62,10 @@ with an EmDash API token do what the product page panels do, one `op` per
 request: list, get, create, link, prices, choice, labels, sku, weight,
 identifiers, archive, media and feeds. It calls the same catalog functions as the panels, so
 it has their checks and answers. `create` makes a physical Draft and only takes
-`commandId`, `name` and `sku`; Manage stock stays off. `sku` changes the SKU through the same
+`commandId`, `name` and `sku`; Manage stock stays off. `create` with `entryId` and `link`
+write only the panel's `e:` link row, never the page's `commerce_item_id`, which the
+publish check reads; an agent sets and saves that field through EmDash, as the panel's
+`sell()` patch does in the open editor. `sku` changes the SKU through the same
 conditional write as the other product edits, keeping the first create
 command, and, as `setCatalogItemSku`, only once the store proves its unique
 indexes are active; that index refuses a SKU another product has. The

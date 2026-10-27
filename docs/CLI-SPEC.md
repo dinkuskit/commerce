@@ -146,6 +146,12 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | `products link` | `{ op: "link", catalogItemId, entryId }` |
 | `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
+`products create --page` and `products link` record the link for the page's
+Dinkus Commerce panel only. The store's publish check reads the page's own
+`commerce_item_id` field, so before publishing, set that field to the
+product's `catalogItemId` and save the page through EmDash (its content API or
+MCP). The panel does this step itself when a person presses Save.
+
 The route also has `labels` (rename a choice or its values), which the CLI
 does not wrap yet. A refused price save answers `{ saved: false, message }`,
 which the CLI reports as `refused` with Commerce's message. A Registry store
