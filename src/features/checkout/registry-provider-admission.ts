@@ -40,17 +40,21 @@ function https(v: unknown, bare = true): v is string {
   } catch { return false; }
 }
 
+function usdAmount(value: unknown) {
+  let amount;
+  try { amount = normalizeMoney(value); } catch { fail(); }
+  if (amount.currency !== "USD") fail();
+  return amount.minor;
+}
+
 function admitShipping(shipping: Record<string, unknown>): void {
-  const hasAmount = shipping.amount !== undefined;
-  if (!keys(shipping, hasAmount ? "amount,configurationId,mode,revision" : "configurationId,mode,revision") ||
+  const hasAmount = shipping.amount !== undefined, freeOver = shipping.freeOver !== undefined;
+  if (!keys(shipping, (hasAmount ? "amount," : "") + "configurationId," + (freeOver ? "freeOver," : "") + "mode,revision") ||
       !text(shipping.configurationId) || !Number.isSafeInteger(shipping.revision) ||
       (shipping.revision as number) < 1 || (shipping.mode !== "free" && shipping.mode !== "flat") ||
-      (shipping.mode === "flat" && !hasAmount)) fail();
-  if (hasAmount) {
-    let amount;
-    try { amount = normalizeMoney(shipping.amount); } catch { fail(); }
-    if (amount.currency !== "USD" || (shipping.mode === "free" && amount.minor !== "0")) fail();
-  }
+      (shipping.mode === "flat" ? !hasAmount : freeOver)) fail();
+  if (hasAmount && usdAmount(shipping.amount) !== "0" && shipping.mode === "free") fail();
+  if (freeOver && usdAmount(shipping.freeOver) === "0") fail();
 }
 
 function keySet(providerId: RegistryCheckoutProviderId, optional: string[], merchant: boolean): string {

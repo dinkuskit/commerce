@@ -102,6 +102,39 @@ test("pricing composes real coupon evaluation, flat shipping, conservation, and 
   assert.equal(calls, 2);
 });
 
+// checkout-free-shipping-over-20261027: the owner's amount from DinkusKit.com waives flat shipping.
+test("flat shipping is free once the goods reach the owner's free-shipping amount", async (t) => {
+  const state = await setup();
+  t.after(() => state.opened.db.close());
+  let freeOver = "250";
+  state.execution.pricing = {
+    coupons: createCheckoutCouponPort(state.coupons),
+    resolveShippingConfiguration: async () => ({
+      configurationId: "ship-1", revision: 5, mode: "flat",
+      amount: { currency: "USD", minor: "50" }, freeOver: { currency: "USD", minor: freeOver },
+    }),
+    paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+  };
+  state.execution.resolvePayments = async () => ({
+    pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+    ensureSession: async (request) => ({
+      outcome: "open", attemptId: request.attemptId, total: request.total,
+      session: { sessionId: `session-${request.attemptId}`, redirectUrl: "https://pay.example/session", createdAt: 1000, expiresAt: 2800 },
+    }),
+    lookup: async () => ({ outcome: "unknown" }),
+  });
+  const reached = (await startCheckout(state.execution, "free-over", withSyntheticCheckoutContact({ lines: cart }))).payment.pricing;
+  assert.equal(reached.netMerchandise.minor, "250");
+  assert.deepEqual(reached.shipping, { configurationId: "ship-1", revision: 5, mode: "free", charge: { currency: "USD", minor: "0" } });
+  assert.equal(reached.finalTotal.minor, "250");
+  freeOver = "251";
+  const under = (await startCheckout(state.execution, "under-free-over", withSyntheticCheckoutContact({ lines: cart }))).payment.pricing;
+  assert.deepEqual(under.shipping, { configurationId: "ship-1", revision: 5, mode: "flat", charge: { currency: "USD", minor: "50" } });
+  assert.equal(under.finalTotal.minor, "300");
+  freeOver = "0";
+  await assert.rejects(() => startCheckout(state.execution, "zero-free-over", withSyntheticCheckoutContact({ lines: cart })), /Invalid shipping configuration/);
+});
+
 test("unsupported pricing schema fails before payment resolution", async (t) => {
   const state = await setup();
   t.after(() => state.opened.db.close());

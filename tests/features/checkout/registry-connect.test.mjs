@@ -118,7 +118,7 @@ test("checkout settings come from DinkusKit.com with a commerce:settings pass, n
   assert.equal(await refreshCheckoutSettings(h.ctx), null);
   assert.deepEqual(h.calls[0], { url: "https://dinkuskit.com/api/store-passes", method: "POST", authorization: "Bearer " + KEY,
     body: { site_id: SITE_ID, scope: "commerce:settings", audience: "dinkuskit" } });
-  assert.deepEqual([h.calls[1].url, h.calls[1].authorization], ["https://dinkuskit.com/api/commerce-settings", "Bearer pass.for.settings"]);
+  assert.deepEqual([h.calls[1].url, h.calls[1].authorization], ["https://dinkuskit.com/api/commerce-settings?shipping=free-over", "Bearer pass.for.settings"]);
   assert.equal(h.stored.get("installedCheckout").value, settings);
   const revision = h.stored.get("installedCheckout").revision;
   assert.equal(await refreshCheckoutSettings(h.ctx), null);
