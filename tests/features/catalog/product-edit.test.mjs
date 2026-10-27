@@ -28,6 +28,10 @@ class Catalog {
     if ((this.revisions.get(id) ?? null) !== revision) return { applied: false };
     await this.put(id, value); return { applied: true, revision: this.revisions.get(id) };
   }
+  async compareAndDelete(id, revision) {
+    if ((this.revisions.get(id) ?? null) !== revision) return { applied: false };
+    await this.delete(id); return { applied: true };
+  }
 }
 const price = (id, minor) => ({ recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor } });
 
@@ -179,4 +183,49 @@ test('Save choices keeps option and value ids that contain a colon', async () =>
   assert.notEqual(saved.toast?.type, 'error');
   assert.deepEqual((await catalog.get('cap')).variantProduct.options[0].values.map((value) => [value.valueId, value.label]),
     [['size:small', 'Petite'], ['size:large', 'Large']]);
+});
+
+test('a product with no Regular price says so instead of Product saved or On sale', async () => {
+  const { catalog, ctx } = await shop();
+  const says = (out) => out.blocks.filter((block) => block.type === 'context').map((block) => block.text);
+  const save = (regular) => commerceAdmin({ input: { type: 'form_submit', action_id: 'save:mug', values: { regular, sale: '' } } }, ctx);
+  const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
+  assert.equal(says(opened).includes('Add a Regular price to sell it'), false);
+  const cleared = await save('');
+  assert.deepEqual(cleared.toast, { type: 'info', message: 'Add a Regular price to sell it' });
+  assert.ok(says(cleared).includes('Published: off the shop · SKU MUG · Name comes from the page title'), says(cleared).join(' | '));
+  assert.ok(says(cleared).includes('Add a Regular price to sell it'));
+  assert.equal(await readPublicCatalogItem(ctx, 'mug'), null, 'a missing price still keeps it off the shop');
+  // A Draft keeps its state line and also names the missing price.
+  await setCatalogProductOnSale(catalog, { catalogItemId: 'mug', onSale: false });
+  const draft = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
+  assert.ok(says(draft).some((text) => /^Draft: publish to sell it/.test(text)));
+  assert.ok(says(draft).includes('Add a Regular price to sell it'));
+  await setCatalogProductOnSale(catalog, { catalogItemId: 'mug', onSale: true });
+  // An explicit zero is a price.
+  const zero = await save('0');
+  assert.deepEqual(zero.toast, { type: 'success', message: 'Product saved' });
+  assert.ok(says(zero).some((text) => /^On sale/.test(text)));
+  assert.equal(says(zero).includes('Add a Regular price to sell it'), false);
+  // A refused save still says why.
+  assert.equal((await save('abc')).toast.type, 'error');
+});
+
+test('a choice saved with no Regular price says so, and the product is unpriced only when no choice has one', async () => {
+  const { ctx } = await shop();
+  // Stored prices carry revisions, as real storage does, so each choice's form names the one it read.
+  for (const [id, row] of [...ctx.storage.catalog_prices.records]) await ctx.storage.catalog_prices.put(id, row);
+  const says = (out) => out.blocks.filter((block) => block.type === 'context').map((block) => block.text);
+  const clear = async (out, member) => {
+    const form = out.blocks.find((block) => block.type === 'form' && block.submit.action_id.startsWith('variant:') && JSON.parse(block.submit.action_id.slice(8))[2] === member);
+    return commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values: { regular: '', sale: '' } } }, ctx);
+  };
+  const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'shirt' } }, ctx);
+  const one = await clear(opened, 'shirt-large');
+  assert.deepEqual(one.toast, { type: 'info', message: 'Add a Regular price to sell it' });
+  assert.ok(says(one).some((text) => /^On sale/.test(text)), 'Small still has a price');
+  assert.equal(says(one).includes('Add a Regular price to sell it'), false);
+  const both = await clear(one, 'shirt');
+  assert.ok(says(both).some((text) => /^Published: off the shop/.test(text)));
+  assert.ok(says(both).includes('Add a Regular price to sell it'));
 });

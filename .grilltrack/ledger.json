@@ -14523,6 +14523,47 @@
       "superseded_by": null,
       "updated_at": "2026-10-26T17:17:52+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "A product with no Regular price shows 'Add a Regular price to sell it' in the Commerce panel under its state line, and its state line never says On sale: a published page's unpriced product reads 'Published: off the shop' (Draft and Archived read as before). A successful Save that leaves Regular empty answers 'Add a Regular price to sell it' as an info notice instead of 'Product saved'; saving a choice's price with Regular empty answers the same. A choice product counts as unpriced when none of its choices has a Regular price. Sellability does not change: a missing Regular price still keeps the product off the shop and never means free, and an explicit zero price is a price.",
+      "context_ref": "https://github.com/dinkuskit/live-journeys/pull/15",
+      "created_at": "2026-10-27T16:45:01+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "One product screen, product states and plugin sidebar folders",
+      "history": [
+        {
+          "at": "2026-10-27T16:45:01+00:00",
+          "choice": "A product with no Regular price shows 'Add a Regular price to sell it' in the Commerce panel under its state line, and its state line never says On sale: a published page's unpriced product reads 'Published: off the shop' (Draft and Archived read as before). A successful Save that leaves Regular empty answers 'Add a Regular price to sell it' as an info notice instead of 'Product saved'; saving a choice's price with Regular empty answers the same. A choice product counts as unpriced when none of its choices has a Regular price. Sellability does not change: a missing Regular price still keeps the product off the shop and never means free, and an explicit zero price is a price.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-unpriced-product-warning-20261027",
+      "implementation_ref": null,
+      "question": "What does the Commerce panel tell the owner when a product has no Regular price?",
+      "rationale": "Ronald answered 'agreed' 16:39 UTC 27 Oct 2026 in the Plan the next push thread. The Manage products journey hit an autosave redraw that saved an empty price; Commerce said 'Product saved' and 'On sale' while rightly keeping the unpriced product off the shop, so an owner could not see why it was missing. A non-technical owner must see a true status. The Draft and On sale words stay where they are true because the store's tests and journeys read them.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-27T16:45:01+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -14559,5 +14600,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-26T17:17:52+00:00"
+  "updated_at": "2026-10-27T16:45:01+00:00"
 }
