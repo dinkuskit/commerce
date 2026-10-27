@@ -116,7 +116,8 @@ Every route is served at
   has neither and exits `1` with `route_not_available`.
 - `products show <item-id>` sends `{ "op": "get", "catalogItemId" }` to
   `POST catalog`: the product as its page panel shows it (prices, stock,
-  state, weight, identifiers, choices and their versions) and its pictures.
+  state, weight, identifiers, choices and their versions), its pictures and its
+  feed channels.
 
 Both public routes are mounted by the Registry (sandboxed) build
 (`src/plugin.ts`) and the native build (`src/index.ts`), with the same request

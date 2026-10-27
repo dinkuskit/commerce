@@ -93,7 +93,7 @@ Agents and command-line tools manage products through the private `catalog` rout
 | `op` | Does |
 | --- | --- |
 | `list` | Lists products: id, name, SKU, and when it was archived. |
-| `get` | One product (`catalogItemId`) with its choices, prices and pictures. |
+| `get` | One product (`catalogItemId`) with its choices, prices, pictures and feed channels. |
 | `create` | Makes a physical Draft from `name` and `sku`, and links it to the product page `entryId` when given. Send a `commandId` so a retry finds the same product. |
 | `link` | Links a product to the product page `entryId`. |
 | `prices`, `choice`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, choices and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |

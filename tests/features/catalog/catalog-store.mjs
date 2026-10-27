@@ -2,12 +2,12 @@
 import { catalogApi } from '../../../dist/admin/index.js';
 
 export class Store {
-  records = new Map(); revisions = new Map();
+  records = new Map(); revisions = new Map(); unique = ['commandId', 'skuKey'];
   async get(id) { return structuredClone(this.records.get(id) ?? null); }
   async getMany(ids) { const found = new Map(); for (const id of ids) { const row = await this.get(id); if (row !== null) found.set(id, row); } return found; }
   async getVersioned(id) { const value = await this.get(id); return value ? { value, revision: this.revisions.get(id) } : null; }
   async put(id, row) {
-    for (const [key, other] of this.records) for (const field of ['commandId', 'skuKey']) {
+    for (const [key, other] of this.records) for (const field of this.unique) {
       if (key !== id && row[field] !== undefined && row[field] === other[field]) throw new Error(`UNIQUE constraint failed: index 'uidx_plugin_dinkus-commerce_catalog_items_${field}'`);
     }
     this.records.set(id, structuredClone(row)); this.revisions.set(id, String(Number(this.revisions.get(id) ?? 0) + 1));

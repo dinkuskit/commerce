@@ -64,10 +64,11 @@ identifiers, archive, media and feeds. It calls the same catalog functions as th
 it has their checks and answers. `create` makes a physical Draft and only takes
 `commandId`, `name` and `sku`; Manage stock stays off. `sku` changes the SKU through the same
 conditional write as the other product edits, keeping the first create
-command, and the store's unique index refuses a SKU another product has. The
+command, and, as `setCatalogItemSku`, only once the store proves its unique
+indexes are active; that index refuses a SKU another product has. The
 `dinkus-commerce` CLI wraps every op but `labels` (`docs/CLI-SPEC.md`). A write
 may carry `expected`, a preview's code (12 hex digits of SHA-256 over the
-`get` answer); the route rereads the product and refuses the write with
+`get` answer: product, pictures and feed channels); the route rereads the product and refuses the write with
 `COMMAND_CONFLICT` when it no longer matches. Its room came from a
 build step that cuts nothing: after the literal-sharing step, repeated global
 names (`Object`, `Error`, `JSON` and others) and `void 0` are read once into

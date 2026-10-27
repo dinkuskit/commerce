@@ -1,10 +1,10 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import {
-  addCatalogVariantOption, admitV1CatalogPriceSaveInput, CatalogError, createCatalogItem, editProduct, identifyConfirmedUniqueViolation, isManagedCatalogRecord,
+  addCatalogVariantOption, admitV1CatalogPriceSaveInput, assertCatalogStorageConstraints, CatalogError, createCatalogItem, editProduct, identifyConfirmedUniqueViolation, isManagedCatalogRecord,
   linkProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku,
   saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, setCatalogProductArchived, updateCatalogVariantLabels,
 } from "../features/catalog/kernel/index.js";
-import { setProductFeedEligibility } from "../features/feeds/kernel/index.js";
+import { loadProductFeedEligibility, setProductFeedEligibility } from "../features/feeds/kernel/index.js";
 import { isRecord } from "../shared/record.js";
 import { sha256Hex } from "../shared/secret.js";
 import { feedEligibility, storage, unique } from "./products.js";
@@ -17,13 +17,15 @@ export const CATALOG_API_ROUTE = "catalog";
  * `entryId` when given; `commandId` makes a retry find the same product), link, prices, choice, labels, sku,
  * weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels.
  * Writes return what the core functions return, so a refused write says why. A write may carry
- * `expected`, the code a preview printed: the first 12 hex digits of SHA-256 over the JSON `get` answers
+ * `expected`, the code a preview printed: the first 12 hex digits of SHA-256 over the JSON `get` answer
+ * (product, pictures and feed channels)
  * for `productId` (a choice's product), else `catalogItemId`.
  */
 export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContext): Promise<unknown> {
   const { op, expected, ...input } = isRecord(route.input) ? route.input : {};
-  const store = storage(ctx), id = input.catalogItemId as string;
-  const read = async (itemId: string) => ({ product: await loadCatalogProduct(store, itemId), media: await loadCatalogItemMedia(store.media, itemId) });
+  const store = storage(ctx), feeds = feedEligibility(ctx), id = input.catalogItemId as string;
+  const read = async (itemId: string) => ({ product: await loadCatalogProduct(store, itemId), media: await loadCatalogItemMedia(store.media, itemId),
+    feeds: feeds && await loadProductFeedEligibility(feeds, itemId) });
   if (op === "list") return { products: await listCatalogProductSummaries(store.catalog) };
   if (op === "get") return read(id);
   if (op === "create") {
@@ -40,8 +42,10 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
   if (op === "choice") return addCatalogVariantOption(store, input as never, unique(ctx));
   if (op === "labels") return updateCatalogVariantLabels(store, input as never);
   if (op === "sku") {
-    // The item id never changes; a SKU another product has is refused by the store's unique index.
+    // The item id never changes; a SKU another product has is refused by the store's unique index,
+    // which must be proven active first, as setCatalogItemSku does.
     const sku = normalizeSku(input.sku), { collection, pluginId } = unique(ctx);
+    await assertCatalogStorageConstraints(store.catalog, collection, pluginId);
     try {
       return { changed: await editProduct(store.catalog, id, item => item.sku === sku && item.skuKey === sku ? null : { ...named(item, item.name), sku, skuKey: sku }) };
     } catch (error) {
@@ -61,6 +65,6 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
   }
   if (op === "archive") return { changed: await setCatalogProductArchived(store.catalog, input, undefined, true) };
   if (op === "media") return saveCatalogItemMedia(store, input);
-  if (op === "feeds") return setProductFeedEligibility(feedEligibility(ctx)!, store.catalog, input as never);
+  if (op === "feeds") return setProductFeedEligibility(feeds!, store.catalog, input as never);
   throw new Error("Invalid catalog request");
 }

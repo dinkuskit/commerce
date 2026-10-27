@@ -64,6 +64,11 @@ test('SKU, weight, identifiers, pictures, feeds, archive and link go through the
   const cup = await call({ op: 'create', commandId: 'cup', name: 'Cup', sku: 'CUP' });
   await assert.rejects(call({ op: 'sku', catalogItemId: cup.catalogItemId, sku: 'MUG-2' }), error => error.code === 'SKU_CONFLICT');
   await assert.rejects(call({ op: 'sku', catalogItemId, sku: '' }), error => error.code === 'INVALID_INPUT');
+  // As setCatalogItemSku: no SKU change while the store cannot prove its SKU index is active.
+  ctx.storage.catalog_items.unique = ['commandId'];
+  await assert.rejects(call({ op: 'sku', catalogItemId: cup.catalogItemId, sku: 'MUG-2' }), error => error.code === 'STORAGE_CONSTRAINTS_UNAVAILABLE');
+  assert.equal((await ctx.storage.catalog_items.get(cup.catalogItemId)).sku, 'CUP');
+  ctx.storage.catalog_items.unique = ['commandId', 'skuKey'];
 
   const pictures = await call({ op: 'media', catalogItemId, image: '01HAT000000000000000000000', gallery: ['01SIDE00000000000000000000'] });
   assert.deepEqual([pictures.changed, pictures.media.image, pictures.media.gallery], [true, { mediaId: '01HAT000000000000000000000' }, [{ mediaId: '01SIDE00000000000000000000' }]]);
@@ -94,6 +99,12 @@ test('a write carrying a preview code is saved only while the product still read
   assert.equal(record.sku, 'HAT');
   assert.equal((await call({ op: 'get', catalogItemId })).product.regular, '10.00');
   assert.deepEqual(await call({ op: 'sku', catalogItemId, sku: 'HAT-2', expected: await code() }), { changed: true });
+  // Feed channels are stored apart from the product, and a preview covers them too.
+  const feeds = await code();
+  await call({ op: 'feeds', catalogItemId, channels: ['google-merchant'] });
+  assert.deepEqual((await call({ op: 'get', catalogItemId })).feeds, ['google-merchant']);
+  await assert.rejects(call({ op: 'feeds', catalogItemId, channels: [], expected: feeds }), error => error.code === 'COMMAND_CONFLICT');
+  assert.deepEqual((await ctx.storage.product_feed_eligibility.get(catalogItemId)).channels, ['google-merchant'], 'the newer channels stay');
   const choice = await code();
   assert.equal((await call({ op: 'choice', productId: catalogItemId, optionId: 'size', optionLabel: 'Size', expected: choice, values: [
     { valueId: 's', label: 'S', member: { catalogItemId, fulfillment: 'physical' } },
