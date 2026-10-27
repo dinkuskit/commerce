@@ -144,10 +144,13 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
   const media = await loadCatalogItemMedia(store.media, id);
   const feeds = feedEligibility(ctx);
   const feedChannels = feeds ? await loadProductFeedEligibility(feeds, id) : undefined;
+  const unpriced = selected.variantProduct?.options.length ? !selected.variantProduct.members.some(m => m.regular) : !selected.regular;
   const values = form ? { ...form, feedChannels: form.feedChannels ?? feedChannels } : { regular: selected.regular ?? "", sale: selected.sale ?? "", manageStock: selected.manageStock, stockStatus: selected.stockStatus, feedChannels };
   return { blocks: [
     header(selected.name),
-    note((selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish to sell it" : "On sale") + " \u00b7 SKU " + selected.sku + " \u00b7 Name comes from the page title"),
+    note((selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish to sell it" : unpriced ? "Published: off the shop" : "On sale") + " \u00b7 SKU " + selected.sku + " \u00b7 Name comes from the page title"),
+    // A missing Regular price keeps it off the shop whatever the page's state; it never means free.
+    ...(unpriced && !selected.archivedAt ? [note(NO_PRICE)] : []),
     ...(form?.message ? [alert(form.message)] : []),
     manageStockNotice(values.manageStock),
     ...(!selected.variantProduct?.options.length ? [productForm(id, { ...values, stockStatus: values.stockStatus ?? status })] : []),
@@ -161,7 +164,7 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
       : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
         text: "Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
-  ], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
+  ], ...(toast ? { toast: { type: toast === NO_PRICE ? "info" : "success", message: toast } } : {}) };
 }
 async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: string[]) => string[], toast: string): Promise<BlockResponse> {
   const store = storage(ctx);
@@ -181,6 +184,8 @@ function galleryIndex(value: unknown, mediaId: string, gallery: string[]): numbe
   return value;
 }
 type Draft = { fields?: Record<string, unknown> };
+/** What the panel says of a product with no Regular price, and what a Save that leaves Regular empty answers. */
+const NO_PRICE = "Add a Regular price to sell it";
 const command = (action: string) => /^sell:[\w-]{8,64}$/.test(action) ? action.slice(5) : crypto.randomUUID();
 /** Commerce products no product page sells yet, newest first, archived ones too so they can be restored; Commerce Settings lists them. */
 export async function productsWithoutPage(ctx: PluginContext) {
@@ -314,7 +319,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         if (saved.saved && feeds && feedSubmitted) {
           await setProductFeedEligibility(feeds, store.catalog, { catalogItemId: id, channels });
         }
-        return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, feedChannels: channels } : saved), toast: { type: saved.saved ? "success" : "error", message: saved.message ?? "Product saved" } };
+        return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, feedChannels: channels } : saved), toast: { type: !saved.saved ? "error" : saved.regular ? "success" : "info", message: saved.message ?? (saved.regular ? "Product saved" : NO_PRICE) } };
       }
       if (action.startsWith("ids:")) {
         const id = action.slice(4);
@@ -381,6 +386,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
           const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: args[1], regular: text(values.regular), sale: text(values.sale),
             ...(!member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {}) });
           if (!saved.saved) throw new Error(saved.message ?? "Could not save price");
+          if (!saved.regular) return product(ctx, id, undefined, NO_PRICE);
         } else if (operation === "details") await updateCatalogVariantLabels(store, {
           productId: id, expectedRevision: args[0],
           ...(values.optionLabel !== undefined ? { optionLabel: text(values.optionLabel) } : {}),

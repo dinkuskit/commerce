@@ -25,6 +25,12 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   price and sale, stock status, choices, weight, images and Archive or
   Restore. It has no Name field: the page title is the product's one name
   (`catalog-page-title-is-name-20261026`), set when the page is published.
+- A product with no Regular price says "Add a Regular price to sell it" under
+  its state line, and a published page's unpriced product reads "Published:
+  off the shop", never On sale. A Save that leaves Regular empty answers with
+  the same words as an info notice instead of "Product saved"
+  (`catalog-unpriced-product-warning-20261027`). A choice product is unpriced
+  when none of its choices has a Regular price.
 - The page's own `commerce_item_id` wins over `product_pages`. EmDash sends no
   draft on `panel_load`, so the panel opens from the stored link, and the next
   step the owner takes settles it: a page saved before `product_pages` existed

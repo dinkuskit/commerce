@@ -121,7 +121,9 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: true })).toEqual({ changed: true });
     await page.reload();
     panel = await openPanel(page);
-    await expect(panel.getByText(/^On sale/)).toBeVisible();
+    // Published but with no Regular price yet: off the shop, and the panel names the missing price.
+    await expect(panel.getByText(/^Published: off the shop · SKU RED-HAT/)).toBeVisible();
+    await expect(panel.getByText("Add a Regular price to sell it", { exact: true })).toBeVisible();
 
     await expect(panel.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
     await expect(panel.getByRole("switch", { name: /Manage stock/ })).toHaveCount(0);
@@ -138,6 +140,8 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await panel.getByRole("radio", { name: "Out of stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
     await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
+    await expect(panel.getByText(/^On sale · SKU RED-HAT/)).toBeVisible();
+    await expect(panel.getByText("Add a Regular price to sell it", { exact: true })).toHaveCount(0);
     expect(lastSave.values).not.toHaveProperty("manageStock");
     expect(raw("catalog_prices")[0]).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
     // Shipping weight in ounces sits on the catalog item; a refused weight keeps the typing and the stored value.
