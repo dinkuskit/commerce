@@ -12,16 +12,29 @@ write acknowledgement is reconciled once and otherwise reported as unknown.
 Base: `e4da1218bc429d469442e5e6a807c7f46856e65b`.
 See [the decision](../../../docs/decisions/catalog-atomic-saves.md) and
 [artifact identity](artifact-identity.json). The candidate backend is
-`befeb4ebe96410b95dad57a772ffd5cf2fade70ffb251c3738075588894a1127`,
-131,009 bytes of the 131,072-byte Registry limit (63 bytes remaining).
+`29e86beb6d40af0050ea8e2582113aa5dc65417d355c535ac765bab0ea1ecf68`,
+131,033 bytes of the 131,072-byte Registry limit (39 bytes remaining).
 The source fingerprint covers all TypeScript sources and named build inputs;
 it can be recomputed from the checked-out commit. No host limit was raised.
+After `npm ci` and `npm run build`, run:
+
+```sh
+python3 .grilltrack/proof/catalog-budget-203/fingerprint.py --check
+```
+
+[The script](fingerprint.py) reads Git-tracked TypeScript sources and the four
+named build inputs. It sorts full POSIX path strings lexicographically, hashes
+`path:lowercase-SHA256` lines joined by LF with no trailing LF, and checks both
+the source fingerprint and the rebuilt backend hash/size against the manifest.
+The earlier prose left path-component versus full-string sorting ambiguous;
+this executable recipe replaces that ambiguity. The source/bundle identity
+was checked before and after the final deployed run.
 
 ## Verification
 
 - Node 24.22.0; pinned EmDash and Cloudflare adapter 1.2.0.
 - Typecheck, Registry build/size gate and repository/feature audits pass.
-- All 705 unit tests pass on the candidate. The affected catalog/checkout
+- All 708 unit tests pass on the candidate. The affected catalog/checkout
   suite has 172 passing tests, including fault, stale-form, clear, retry and
   fifty-choice cases.
 - All 106 integration tests pass in the repair run, including a real SQLite
@@ -127,3 +140,21 @@ The retained screenshots were captured at initial candidate
 `b4b84fbb15cdf26a42f23580300adff486dbe630`; they show unchanged panel layout
 and messages. The final backend hash above is independently rechecked on the
 synthetic Cloudflare host; the native repair has fresh SQLite evidence.
+
+## Native tracking preservation
+
+The later native finding is repaired without retiring existing behavior.
+Non-default choice tracking is stored alongside its price in the root product
+value, so enabling or disabling it has one commit. Catalog listing, native
+admission, Inventory setup, storefront availability and checkout read that
+same value. A native-created managed choice remains unavailable in Registry
+without its provider; the Registry still cannot enable tracking. The shared
+record-object validator and item projection preserve the Registry size gate.
+
+The 215 focused tests cover local opt-in, default-host refusal, same-value
+serialized controls, both toggle directions, an atomic refused toggle/price,
+provider activation, unavailable managed choices, and separate SQLite
+connections. Jev classified the native tracking and fingerprint findings and
+their duplicate decision/checklist boxes as repairs under the existing lock.
+The final candidate was rebuilt and deployed again to the same synthetic
+proof host; the full 10/32, recovery, 50-choice and conflict matrix passed.

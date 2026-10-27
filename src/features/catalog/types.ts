@@ -87,6 +87,8 @@ export interface CatalogData {
     price?: CatalogPriceRecord | null;
     availability?: CatalogManualAvailabilityRecord;
     weightOz?: number | null;
+    /** Native non-default choice tracking; committed with its catalog values. */
+    stockManagement?: StockManagement;
   }>;
   feedChannels?: string[];
 }

@@ -1,4 +1,4 @@
-import { productData, saveProductData } from "./product-state.js";
+import { catalogItemState, productData, saveProductData } from "./product-state.js";
 import { normalizeProductFeedChannels } from "../feeds/kernel/index.js";
 import { isRecord } from "../../shared/record.js";
 import { REGISTRY_BUILD } from "../../shared/registry-build.js";
@@ -242,6 +242,7 @@ async function describeCatalogProducts(
   const products: CatalogProductListItem[] = [];
   for (const record of records) {
     const revision = revisionFor?.(record.itemId);
+    const weightOz = catalogItemState(record, record).weightOz;
     const price = await resolveCatalogItemPrice(prices, record.itemId, catalog);
     const itemManaged = managed(record);
     const stock = itemManaged
@@ -263,7 +264,7 @@ async function describeCatalogProducts(
       ...(record.mpn ? { mpn: record.mpn } : {}),
       ...(record.brand ? { brand: record.brand } : {}),
       fulfillment: record.fulfillment ?? "physical",
-      ...((productData(record).items[record.itemId]?.weightOz ?? (Object.hasOwn(productData(record).items[record.itemId] ?? {}, "weightOz") ? undefined : record.weightOz)) ? { weightOz: productData(record).items[record.itemId]?.weightOz ?? record.weightOz } : {}),
+      ...(weightOz ? { weightOz } : {}),
       ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
       ...(record.offSale ? { offSale: true as const } : {}),
     };
@@ -470,8 +471,9 @@ export async function saveCatalogProductPrices(
     if (targetSale && targetRegular && !saleIsStrictlyLower(targetSale, targetRegular))
       return refused(input, CLERK_SALE_LOWER_MESSAGE, nextManaged, managed ? null : status);
     if (nextManaged !== managed) {
-      if (REGISTRY_BUILD || root.itemId !== item.itemId) catalogFail("MANAGE_STOCK_UNAVAILABLE", MANAGE_STOCK_UNAVAILABLE_MESSAGE);
-      root.stockManagement = setManageStock(management, nextManaged);
+      if (REGISTRY_BUILD) catalogFail("MANAGE_STOCK_UNAVAILABLE", MANAGE_STOCK_UNAVAILABLE_MESSAGE);
+      if (root.itemId === item.itemId) root.stockManagement = setManageStock(management, nextManaged);
+      else current.stockManagement = setManageStock(management, nextManaged);
     }
 
     const nextStatus = nextManaged ? null : input.stockStatus as ClerkStockStatus | undefined ?? status;

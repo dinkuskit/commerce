@@ -1,3 +1,4 @@
+import { catalogRoot } from "../catalog/kernel/index.js";
 import { isRecord } from "../../shared/record.js";
 import {
   loadCatalogItemBackorderPolicy,
@@ -142,6 +143,8 @@ async function loadCatalogItemForAvailability(
   let stored: CatalogStorageRecord | null;
   try {
     stored = await storage.get(catalogItemId);
+    if (stored?.recordKind === "catalog-item" && stored.variantProductId)
+      stored = (await catalogRoot(storage, catalogItemId)).current;
   } catch {
     return null;
   }

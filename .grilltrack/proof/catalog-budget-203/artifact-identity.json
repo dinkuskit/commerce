@@ -1,11 +1,11 @@
 {
   "source_base": "e4da1218bc429d469442e5e6a807c7f46856e65b",
-  "source_fingerprint_sha256": "1230be8ce4818a705f1923189cff1b52bdf96079f7cff87d23afd74eeb15d5f9",
-  "fingerprint_scope": "sorted src/**/*.ts, package-lock.json, emdash-plugin.jsonc, scripts/build-sandbox.mjs, scripts/share-literals.mjs; path:SHA256 separated by newline",
-  "backend_sha256": "befeb4ebe96410b95dad57a772ffd5cf2fade70ffb251c3738075588894a1127",
-  "backend_bytes": 131009,
+  "source_fingerprint_sha256": "da021e74e52ee77836c3da2a71eb04b234032b827ee6064634f4dcda2b6cdda2",
+  "fingerprint_scope": "git-tracked src/**/*.ts plus package-lock.json, emdash-plugin.jsonc, scripts/build-sandbox.mjs and scripts/share-literals.mjs; full POSIX path strings sorted lexicographically; path:lowercase-SHA256 joined by LF without trailing LF",
+  "backend_sha256": "29e86beb6d40af0050ea8e2582113aa5dc65417d355c535ac765bab0ea1ecf68",
+  "backend_bytes": 131033,
   "registry_limit_bytes": 131072,
-  "headroom_bytes": 63,
+  "headroom_bytes": 39,
   "screenshots": [
     {
       "filename": "save-storage-refused.png",
@@ -21,5 +21,6 @@
       "redaction": "synthetic fixture only; visually inspected for selected saved/unknown panels",
       "captured_source_head": "b4b84fbb15cdf26a42f23580300adff486dbe630"
     }
-  ]
+  ],
+  "fingerprint_recipe": "python3 .grilltrack/proof/catalog-budget-203/fingerprint.py --check (after npm ci && npm run build)"
 }

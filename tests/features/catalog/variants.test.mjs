@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { addCatalogVariantMember, addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
-import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
+import { readPublicCatalog, readPublicCatalogItem, createSaveCatalogProductPricesRouteWithLocalStock } from '../../../dist/features/catalog/index.js';
 
 // Small isolated store retains the same unique indexes and revision fence as the catalog contract.
 class Catalog {
@@ -441,4 +441,41 @@ test('bulk cleanup happens after the whole product commit and cannot misreport a
   })));
   assert.deepEqual(cleaned, ['product', 'large-item']);
   assert.ok(outcomes.every(row => row.applied && row.message.includes('cleanup is pending')));
+});
+
+
+test('native choice tracking and price share one commit, preserve dormant status and refuse races', async () => {
+  const storage = await pricedChoices();
+  const before = await storage.catalog.getVersioned('product');
+  const enabled = await saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '28', sale: '', manageStock: true, expectedRevision: 'catalog:' + before.revision });
+  assert.equal(enabled.manageStock, true);
+  const visible = await readPublicCatalog(publicContext(storage.catalog, storage.prices));
+  assert.equal(visible.products[0].variants.members.find(member => member.catalogItemId === 'large-item').availability.sellable, false);
+  let choice = (await listCatalogProducts(storage)).products[0].variantProduct.members[1];
+  assert.equal(choice.manageStock, true);
+  assert.equal(choice.regular, '28.00');
+  assert.equal((await resolveCatalogVariantMember(storage.catalog, 'large-item')).item.stockManagement.status, 'setup-required');
+  const committed = await storage.catalog.getVersioned('product');
+  storage.catalog.rejectParent = true;
+  await assert.rejects(saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '99', sale: '', manageStock: false, expectedRevision: choice.priceRevision }), e => e.code === 'COMMAND_CONFLICT');
+  assert.deepEqual(await storage.catalog.getVersioned('product'), committed);
+  storage.catalog.rejectParent = false;
+  const disabled = await saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '29', sale: '', manageStock: false, expectedRevision: choice.priceRevision });
+  assert.equal(disabled.manageStock, false);
+  assert.equal(disabled.stockStatus, 'in-stock');
+  choice = (await listCatalogProducts(storage)).products[0].variantProduct.members[1];
+  assert.equal(choice.manageStock, false);
+  assert.equal(choice.regular, '29.00');
+});
+
+
+test('native route keeps trusted local choice tracking and default-host admission', async () => {
+  const storage = await pricedChoices();
+  const context = { storage: { catalogItems: storage.catalog, catalogPrices: storage.prices, catalogManualAvailability: storage.availability, managedSkuClaims: new Catalog() }, site: { url: 'http://127.0.0.1:4321' }, request: { method: 'POST', url: 'http://127.0.0.1:4321/save' }, input: { catalogItemId: 'large-item', regular: '26', sale: '', manageStock: true } };
+  const optedIn = createSaveCatalogProductPricesRouteWithLocalStock({ enableLocalStockManagement: true, siteUrl: 'http://127.0.0.1:4321' });
+  assert.equal((await optedIn.handler(context)).manageStock, true);
+  const defaultHost = createSaveCatalogProductPricesRouteWithLocalStock();
+  assert.equal((await defaultHost.handler(context)).manageStock, true, 'same-value serialized tracking keeps the authoritative state');
+  await assert.rejects(defaultHost.handler({ ...context, input: { ...context.input, manageStock: false } }), e => e.code === 'MANAGE_STOCK_UNAVAILABLE');
+  assert.equal((await resolveCatalogVariantMember(storage.catalog, 'large-item')).item.stockManagement.mode, 'managed');
 });

@@ -1,3 +1,4 @@
+import { isRecord } from "../../shared/record.js";
 import { catalogFail } from "./errors.js";
 import type { CatalogData, CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
@@ -9,10 +10,10 @@ export interface CatalogWriter extends CatalogReader {
 
 export function productData(item: CatalogItemRecord): CatalogData {
   const data = item.catalogData;
-  if (data !== undefined && (!data || data.version !== 1 || !data.items || typeof data.items !== "object" || Array.isArray(data.items) || Object.keys(data.items).length > 50))
+  if (data !== undefined && (!data || data.version !== 1 || !isRecord(data.items) || Object.keys(data.items).length > 50))
     catalogFail("STORAGE_UNAVAILABLE", "Stored product data is invalid");
   if (data) for (const value of Object.values(data.items)) {
-    if (!value || typeof value !== "object" || Array.isArray(value) ||
+    if (!isRecord(value) ||
       Object.hasOwn(value, "availability") && !value.availability ||
       value.weightOz !== undefined && value.weightOz !== null &&
         (typeof value.weightOz !== "number" || !(value.weightOz > 0 && value.weightOz <= 2400)))
@@ -27,13 +28,25 @@ function item(value: CatalogStorageRecord | null | undefined, id: string): Catal
   return value;
 }
 
+export function catalogItemState(current: CatalogItemRecord, root: CatalogItemRecord): CatalogItemRecord {
+  const saved = productData(root).items[current.itemId];
+  if (!saved) return current;
+  const result = { ...current };
+  if (Object.hasOwn(saved, "weightOz")) {
+    delete result.weightOz;
+    if (saved.weightOz !== null) result.weightOz = saved.weightOz;
+  }
+  if (saved.stockManagement) result.stockManagement = saved.stockManagement;
+  return result;
+}
+
 /** Only the product root owns saved values; a child cannot borrow another product's state. */
 export async function catalogRoot(catalog: CatalogReader, id: string) {
   const current = item(await catalog.get(id), id);
   const root = current.variantProductId ? item(await catalog.get(current.variantProductId), current.variantProductId) : current;
   if (root.variantProductId || (current !== root && !root.variantProduct?.members.some(m => m.catalogItemId === id)))
     catalogFail("CATALOG_ITEM_NOT_FOUND", "Product choice is unavailable");
-  return { current, root };
+  return { current: catalogItemState(current, root), root };
 }
 
 export async function catalogValue<K extends keyof CatalogData["items"][string]>(catalog: CatalogReader, id: string, key: K) {
@@ -49,13 +62,14 @@ export async function saveProductData<T>(catalog: CatalogWriter, id: string,
   expectedRevision?: string | null,
 ): Promise<T> {
   const selected = await catalog.getVersioned(id);
-  const current = item(selected?.value, id);
+  let current = item(selected?.value, id);
   const stored = current.variantProductId ? await catalog.getVersioned(current.variantProductId) : selected;
   const root = structuredClone(item(stored?.value, current.variantProductId ?? id));
   if (root.variantProductId || (current.variantProductId && !root.variantProduct?.members.some(m => m.catalogItemId === id)))
     catalogFail("CATALOG_ITEM_NOT_FOUND", "Product choice is unavailable");
   if (expectedRevision !== undefined && expectedRevision !== "catalog:" + stored!.revision)
     catalogFail("COMMAND_CONFLICT", "Product changed; reload before saving");
+  current = catalogItemState(current, root);
   const original = JSON.stringify(root);
   const before = productData(root), data = structuredClone(before);
   const result = await edit(data, current, root);

@@ -50,6 +50,7 @@ To show this panel, Commerce `0.6.0` asks for two new permissions when it is ins
 ## Saving and upgrading catalog data
 
 Price and stock-status saves, including submitted feed choices, commit together.
+Native local-stock hosts keep choice-level tracking changes in that same commit.
 Native catalog lists return the product revision for every choice. A native bulk
 price request validates sibling choices against that same snapshot and commits
 its valid rows together; invalid rows remain individually reported. A competing

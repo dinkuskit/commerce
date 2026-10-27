@@ -101,7 +101,10 @@ host-dependency proposal. Commerce does not track foreign EmDash source.
 `createCatalogItem`, `saveCatalogProductPrices`, `setManageStock`, provider
 binding, registration claims, Configure Inventory, and storefront resolution
 remain the future contracts. Direct kernel callers can still persist
-`manageStock: true`. Only mounted Block Kit and native plugin create/save apply
+`manageStock: true`. Non-default choice tracking is stored in the parent
+product's `catalogData` with its price and read by the catalog and Inventory
+setup APIs; direct reads of legacy choice rows are no longer authoritative.
+Only mounted Block Kit and native plugin create/save apply
 v1 admission.
 
 ## Reproducible verification

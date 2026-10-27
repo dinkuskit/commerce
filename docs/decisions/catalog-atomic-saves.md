@@ -4,7 +4,7 @@ Owner decision: keep the repair in Commerce (option A), accepted 2026-10-27.
 Base: e4da1218bc429d469442e5e6a807c7f46856e65b; EmDash 1.2.0.
 
 A product's catalog record holds a versioned `catalogData` value with per-member
-price, manual availability and shipping-weight overrides, plus product feed
+price, manual availability and shipping-weight overrides, native choice tracking, plus product feed
 eligibility. A save changes this value with one conditional write. Product,
 choice and SKU identities remain unchanged. Inventory remains stock authority.
 
@@ -15,7 +15,10 @@ not migrate anything. Legacy rows are retained, not dual-written or deleted.
 All shipped readers/writers must use the catalog-aware kernel. Old binaries
 must not run concurrently or be installed over the new version: they do not
 understand the new authority. A downgrade needs an explicit export/conversion,
-not an automatic fallback. Historic order snapshots remain unchanged.
+not an automatic fallback. Historic order snapshots remain unchanged. Native non-default choice tracking is
+read through the product value by catalog, availability and Inventory setup
+paths; enabling/disabling it shares the price commit. Registry admission remains
+disabled, and existing managed choices remain unavailable without their provider.
 
 Native lists return each root revision with its choices. Bulk price requests
 stage valid sibling rows against one root snapshot and commit once per product;

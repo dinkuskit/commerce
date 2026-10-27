@@ -116,5 +116,12 @@ test("native SQLite reopens migrated choices with usable revisions and atomicall
     const after = (await listCatalogProducts(other.storage)).products[0];
     assert.deepEqual(after.variantProduct.members.map(member => member.regular), ["25.00", "26.00"]);
     assert.equal(after.brand, "Concurrent editor");
+    connection.storage.catalog.compareAndSet = commit;
+    assert.equal((await saveCatalogProductPrices(connection.storage, { catalogItemId: "shirt-large", regular: "27", sale: "", manageStock: true, expectedRevision: after.variantProduct.members[1].priceRevision })).manageStock, true);
+    const tracked = (await listCatalogProducts(other.storage)).products[0].variantProduct.members[1];
+    assert.equal(tracked.manageStock, true);
+    assert.equal(tracked.regular, "27.00");
+    assert.equal((await saveCatalogProductPrices(other.storage, { catalogItemId: "shirt-large", regular: "28", sale: "", manageStock: false, expectedRevision: tracked.priceRevision })).manageStock, false);
+    assert.equal((await listCatalogProducts(connection.storage)).products[0].variantProduct.members[1].regular, "28.00");
   } finally { await Promise.all([connection.close(), other.close()]); }
 });

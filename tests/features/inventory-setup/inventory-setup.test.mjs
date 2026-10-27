@@ -7,6 +7,7 @@ import {
   STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
   InventorySetupError,
   configureCatalogItemInventory,
+  createCatalogItem, addCatalogVariantOption, resolveCatalogVariantMember, listCatalogProducts, catalogUniqueIndexName,
   createPlugin,
   createStoreInventoryConfiguration,
   saveCatalogProductPrices,
@@ -642,4 +643,26 @@ test("disable after setup-pending is refused so registration can still contact I
   assert.equal(providerCalls, 1);
   assert.equal(result.outcome, "inventory-active");
   assert.equal(catalog.records.get("item-grill").stockManagement.status, "active");
+});
+
+
+test('native non-default choice tracking remains the authority through provider setup and disable', async () => {
+  const catalog = new MemoryCollection({ commandId: catalogUniqueIndexName("commandId"), skuKey: catalogUniqueIndexName("skuKey") }), prices = new MemoryCollection(), availability = new MemoryCollection();
+  const configurations = configurationStorage(), claims = claimStorage();
+  await createCatalogItem(catalog, { commandId: 'shirt', name: 'Shirt', sku: 'SHIRT-S' }, { createId: () => 'shirt' });
+  await addCatalogVariantOption({ catalog }, { productId: 'shirt', optionId: 'size', optionLabel: 'Size', values: [
+    { valueId: 's', label: 'S', member: { catalogItemId: 'shirt', fulfillment: 'physical' } },
+    { valueId: 'l', label: 'L', member: { commandId: 'large', name: 'Shirt', sku: 'SHIRT-L', fulfillment: 'physical' } },
+  ] }, { createId: () => 'large' });
+  await saveCatalogProductPrices({ catalog, prices, availability }, { catalogItemId: 'large', regular: '20', sale: '', manageStock: true });
+  await configuredStore(configurations);
+  const result = await configureCatalogItemInventory({ catalog, configurations, claims }, { catalogItemId: 'large' }, setupExecution({
+    resolveProvider: async () => ({ registerManagedSku: async registration => ({ outcome: 'registered', inventorySku: { inventorySkuId: 'inv-large', sku: registration.request.sku, displayName: registration.request.displayNameIfNew } }) }),
+  }));
+  assert.equal(result.outcome, 'inventory-active');
+  assert.equal((await resolveCatalogVariantMember(catalog, 'large')).item.stockManagement.inventorySkuId, 'inv-large');
+  const selected = (await listCatalogProducts({ catalog, prices, availability })).products[0].variantProduct.members[1];
+  assert.equal(selected.manageStock, true);
+  assert.equal((await saveCatalogProductPrices({ catalog, prices, availability }, { catalogItemId: 'large', regular: '21', sale: '', manageStock: false, expectedRevision: selected.priceRevision })).manageStock, false);
+  await assert.rejects(configureCatalogItemInventory({ catalog, configurations, claims }, { catalogItemId: 'large' }), e => e.code === 'MANAGE_STOCK_REQUIRED');
 });
