@@ -50,6 +50,10 @@ To show this panel, Commerce `0.6.0` asks for two new permissions when it is ins
 ## Saving and upgrading catalog data
 
 Price and stock-status saves, including submitted feed choices, commit together.
+Native catalog lists return the product revision for every choice. A native bulk
+price request validates sibling choices against that same snapshot and commits
+its valid rows together; invalid rows remain individually reported. A competing
+product edit refuses the staged rows for that product without a partial save.
 A **Save weight** action commits all submitted choice weights together. These
 actions work within EmDash's default ten-subrequest sandbox limit. If another
 editor changes the product after a form opens, reload before saving again.

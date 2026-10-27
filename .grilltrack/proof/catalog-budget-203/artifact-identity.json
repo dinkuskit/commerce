@@ -1,23 +1,25 @@
 {
   "source_base": "e4da1218bc429d469442e5e6a807c7f46856e65b",
-  "source_fingerprint_sha256": "a07c45fa09f38b1d11bf5e6d3d3ad705332aa783c0112b3e4f27412a383d673c",
+  "source_fingerprint_sha256": "1230be8ce4818a705f1923189cff1b52bdf96079f7cff87d23afd74eeb15d5f9",
   "fingerprint_scope": "sorted src/**/*.ts, package-lock.json, emdash-plugin.jsonc, scripts/build-sandbox.mjs, scripts/share-literals.mjs; path:SHA256 separated by newline",
-  "backend_sha256": "662a95f7cd711bbee92454cec24530cd3d49ecb14a9a420243d57aa074ea0a27",
-  "backend_bytes": 130993,
+  "backend_sha256": "befeb4ebe96410b95dad57a772ffd5cf2fade70ffb251c3738075588894a1127",
+  "backend_bytes": 131009,
   "registry_limit_bytes": 131072,
-  "headroom_bytes": 79,
+  "headroom_bytes": 63,
   "screenshots": [
     {
       "filename": "save-storage-refused.png",
       "bytes": 114632,
       "sha256": "53ff49bd90ed4fd0a752ecd3c8f2b9f4c5eee339a0fda16071460434f65226c2",
-      "redaction": "synthetic fixture only; visually inspected for selected saved/unknown panels"
+      "redaction": "synthetic fixture only; visually inspected for selected saved/unknown panels",
+      "captured_source_head": "b4b84fbb15cdf26a42f23580300adff486dbe630"
     },
     {
       "filename": "price-stock-saved.png",
       "bytes": 100805,
       "sha256": "4d146e154c108139c64ea51c1e2b9cfe48b47157ccc5e433788f2fc3911aced0",
-      "redaction": "synthetic fixture only; visually inspected for selected saved/unknown panels"
+      "redaction": "synthetic fixture only; visually inspected for selected saved/unknown panels",
+      "captured_source_head": "b4b84fbb15cdf26a42f23580300adff486dbe630"
     }
   ]
 }

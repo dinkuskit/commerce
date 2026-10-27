@@ -1,7 +1,7 @@
 {
   "tested_source_base": "e4da1218bc429d469442e5e6a807c7f46856e65b",
-  "backend_sha256": "662a95f7cd711bbee92454cec24530cd3d49ecb14a9a420243d57aa074ea0a27",
-  "backend_bytes": 130993,
+  "backend_sha256": "befeb4ebe96410b95dad57a772ffd5cf2fade70ffb251c3738075588894a1127",
+  "backend_bytes": 131009,
   "emdash": "1.2.0",
   "cloudflare_adapter": "1.2.0",
   "node": "24.22.0",
@@ -78,16 +78,16 @@
   "concurrency": "one same-revision writer succeeds; one is refused",
   "scope": "headless candidate backend loaded on existing synthetic Registry host; candidate not published as a Registry release",
   "evidence_sha256": {
-    "candidate.txt": "662a95f7cd711bbee92454cec24530cd3d49ecb14a9a420243d57aa074ea0a27",
+    "candidate.txt": "befeb4ebe96410b95dad57a772ffd5cf2fade70ffb251c3738075588894a1127",
     "candidate-manifest.json": "72721ffc357e58f4e76ed3c160e9c35c8a1b4c3a700db5f9b9e6586b4b25a8db",
     "worker.ts": "b91162eebeeb621f876d14ced04ede68997f90b63f43310bbdc1140ea25cb4f6",
     "fixture.json": "d1680f2bcec7d63312079895f16942a30749dc56b33a570e9baa26bff65bf354",
     "fixture50.json": "f957a0f264124440f1ede0bb70b32a231a6dc4a508ad3923d4bd3359db4e5803",
-    "comparison.json": "efec6dcbeb068b7a906a0c3b6ff30b9c85115890a6555032f383e34d01c67630",
-    "recovery.json": "079d881c81e76a4ae70756e3169e6b5b1268c7839494eff14b0e251515fa4dea",
-    "extended.json": "994664b88cb3cdcdf5e873f9b1568d3065a05a201d392fccdb17d12e6d267ea8",
-    "identity.json": "0f9c1d5da9d87839c1594e12333213ba4138371f8325971fec0d39164bb3530b",
-    "crossfield.json": "cb5cf8436d6341715fe6b1ff5c0e7156e46100129fbf8bf9d7dfc461ca12507c"
+    "comparison.json": "4836eb2416bbe6832d6b6e37c96e43591a1da706297dfb2fae1beb59a5946e8e",
+    "recovery.json": "82d29d174c8f3ed18e0ff8fab936a88024ce1f7db85c9c615f2f17e7c539e9b9",
+    "extended.json": "ea60b8fc9c76b2ed400ec3df23be33d9a81885a4c41b2364ba3314b1851f1e8d",
+    "identity.json": "f8364ad43f3924f1911b940d1101e4b7c23518cbc12e6e1dd2f5cedc11f96ab6",
+    "crossfield.json": "03ef9a05361d82b01fa99d46f04b83a0fe332f4b24cef04d35f499dd0537b885"
   },
   "cross_field_save": "price, manual availability and feed choices persisted together at stock 10"
 }

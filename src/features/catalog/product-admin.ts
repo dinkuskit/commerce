@@ -223,7 +223,7 @@ async function describeCatalogProducts(
   storage: CatalogProductListStorage,
   records: readonly CatalogItemRecord[],
   catalog: Pick<CatalogProductListStorage["catalog"], "get">,
-  revision?: string,
+  revisionFor?: (id: string) => string | undefined,
 ): Promise<CatalogProductListItem[]> {
   const managed = (record: CatalogItemRecord) =>
     normalizeStoredStockManagement(record.stockManagement).mode === "managed";
@@ -241,6 +241,7 @@ async function describeCatalogProducts(
   const availability = { ...storage.availability, get: await readMany(storage.availability, unmanaged, "manual availability lookup failed") };
   const products: CatalogProductListItem[] = [];
   for (const record of records) {
+    const revision = revisionFor?.(record.itemId);
     const price = await resolveCatalogItemPrice(prices, record.itemId, catalog);
     const itemManaged = managed(record);
     const stock = itemManaged
@@ -271,7 +272,7 @@ async function describeCatalogProducts(
       for (const member of record.variantProduct.members) {
         const memberRecord = resolved.get(member.catalogItemId);
         if (!memberRecord?.member || !memberRecord.product) continue;
-        // A choice's price form saves against this revision, which only a read of its own returns.
+        // Every choice saves against the same product snapshot.
         const priceState = revision ? { value: await prices.get(member.catalogItemId), revision: "catalog:" + revision } : await storage.prices.getVersioned(member.catalogItemId);
         const memberPrice = await resolveCatalogItemPrice({ ...storage.prices, get: async () => priceState?.value ?? null }, member.catalogItemId, catalog);
         const memberManaged =
@@ -311,10 +312,24 @@ export async function listCatalogProducts(
     "catalog product list failed",
   );
   const byKey = new Map(rows.map((row) => [row.id, row.data]));
+  const revisions = new Map<string, string>();
+  const records: CatalogItemRecord[] = [];
+  for (const row of rows) {
+    if (!isListedProduct(row.data)) continue;
+    const current = storage.catalog.getVersioned
+      ? await catalogStorage(() => storage.catalog.getVersioned!(row.id), "catalog item lookup failed")
+      : undefined;
+    if (current === null) continue;
+    const record = current?.value ?? row.data;
+    if (!isListedProduct(record)) continue;
+    byKey.set(row.id, record);
+    if (current) revisions.set(row.id, current.revision);
+    records.push(record);
+  }
   const products = await describeCatalogProducts(
-    storage,
-    rows.map((row) => row.data).filter(isListedProduct),
-    { get: async (id) => byKey.get(id) ?? null },
+    storage, records,
+    { get: async (id) => byKey.get(id) ?? storage.catalog.get(id) },
+    (id) => revisions.get(id),
   );
   return { products: products.sort(byNameThenSku) };
 }
@@ -347,7 +362,7 @@ export async function loadCatalogProduct(
   const members = await readMany(storage.catalog, memberIds.filter((id) => id !== catalogItemId), "catalog item lookup failed");
   const [product] = await describeCatalogProducts(storage, [record], {
     get: async (id) => (id === catalogItemId ? record : members(id)),
-  }, versioned?.revision);
+  }, () => versioned?.revision);
   return product ?? null;
 }
 
@@ -493,28 +508,67 @@ export async function bulkSaveCatalogProductPrices(
   if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 100) {
     catalogFail("INVALID_INPUT", "bulk price input needs 1-100 rows");
   }
-  const outcomes: BulkCatalogProductPriceOutcome[] = [];
-  for (const input of inputs) {
+  const outcomes: BulkCatalogProductPriceOutcome[] = new Array(inputs.length);
+  const groups = new Map<string, number[]>();
+  const refuse = (index: number, error: unknown) => {
+    const code = error instanceof CatalogError && ["INVALID_INPUT", "CATALOG_ITEM_NOT_FOUND"].includes(error.code)
+      ? error.code as BulkCatalogProductPriceOutcome["code"]
+      : error instanceof CatalogError && error.code === "COMMAND_CONFLICT"
+        ? "CONFLICT" : "STORAGE_UNAVAILABLE";
+    outcomes[index] = { catalogItemId: inputs[index]?.catalogItemId ?? "", applied: false, code,
+      message: error instanceof Error ? error.message : "bulk price update failed" };
+  };
+  for (const [index, input] of inputs.entries()) {
     try {
-      if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision")) {
+      if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision"))
         catalogFail("INVALID_INPUT", "each bulk row needs its loaded price revision");
-      }
-      if (!(await resolveCatalogVariantMember(storage.catalog, input.catalogItemId))?.member) {
-        catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
-      }
-      if (Object.keys(input).some(key => !["catalogItemId", "regular", "sale", "expectedRevision"].includes(key))) {
+      if (Object.keys(input).some(key => !["catalogItemId", "regular", "sale", "expectedRevision"].includes(key)))
         catalogFail("INVALID_INPUT", "bulk edits accept price fields only");
+      const resolved = await resolveCatalogVariantMember(storage.catalog, input.catalogItemId);
+      if (!resolved?.member || !resolved.product)
+        catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
+      const id = resolved.product.productId;
+      groups.set(id, [...(groups.get(id) ?? []), index]);
+    } catch (error) { refuse(index, error); }
+  }
+  for (const [id, indices] of groups) {
+    const accepted = new Map<number, boolean>();
+    try {
+      // Stage siblings against one unchanged revision, then publish them with one CAS.
+      await saveProductData(storage.catalog, id, async (data, _item, root) => {
+        const snapshot = await storage.catalog.getVersioned(id);
+        if (!snapshot || JSON.stringify(snapshot.value) !== JSON.stringify(root))
+          catalogFail("COMMAND_CONFLICT", "Product changed; reload before saving");
+        let staged: CatalogStorageRecord = root;
+        const catalog: CatalogProductSaveCatalogStorage = {
+          get: async (key) => key === id ? staged : storage.catalog.get(key),
+          getVersioned: async (key) => key === id ? { value: staged, revision: snapshot.revision } : storage.catalog.getVersioned(key),
+          compareAndSet: async (key, revision, value) => {
+            if (key !== id || revision !== snapshot.revision) return { applied: false };
+            staged = value;
+            return { applied: true };
+          },
+        };
+        for (const index of indices) {
+          try {
+            const saved = await saveCatalogProductPrices({ ...storage, catalog, releaseRegistrationClaims: undefined }, inputs[index]);
+            if (!saved.saved) catalogFail("INVALID_INPUT", saved.message ?? "invalid price");
+            accepted.set(index, saved.manageStock);
+          } catch (error) { refuse(index, error); }
+        }
+        if (staged.recordKind === "catalog-item") Object.assign(data, productData(staged));
+      });
+      for (const [index, managed] of accepted) {
+        const catalogItemId = inputs[index].catalogItemId;
+        const outcome: BulkCatalogProductPriceOutcome = { catalogItemId, applied: true };
+        if (!managed && storage.releaseRegistrationClaims) {
+          try { await storage.releaseRegistrationClaims(catalogItemId); }
+          catch { outcome.message = "Product saved. Inventory claim cleanup is pending; save again to retry cleanup."; }
+        }
+        outcomes[index] = outcome;
       }
-      const saved = await saveCatalogProductPrices(storage, input);
-      if (!saved.saved) catalogFail("INVALID_INPUT", saved.message ?? "invalid price");
-      outcomes.push({ catalogItemId: input.catalogItemId, applied: true });
     } catch (error) {
-      const code = error instanceof CatalogError && ["INVALID_INPUT", "CATALOG_ITEM_NOT_FOUND"].includes(error.code)
-        ? error.code as BulkCatalogProductPriceOutcome["code"]
-        : error instanceof CatalogError && error.code === "COMMAND_CONFLICT"
-          ? "CONFLICT"
-          : "STORAGE_UNAVAILABLE";
-      outcomes.push({ catalogItemId: input?.catalogItemId ?? "", applied: false, code, message: error instanceof Error ? error.message : "bulk price update failed" });
+      for (const index of indices) if (!outcomes[index]) refuse(index, error);
     }
   }
   return { outcomes };

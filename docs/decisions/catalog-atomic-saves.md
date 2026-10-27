@@ -17,6 +17,11 @@ must not run concurrently or be installed over the new version: they do not
 understand the new authority. A downgrade needs an explicit export/conversion,
 not an automatic fallback. Historic order snapshots remain unchanged.
 
+Native lists return each root revision with its choices. Bulk price requests
+stage valid sibling rows against one root snapshot and commit once per product;
+invalid rows stay individually reported, and external conflicts refuse all staged
+rows for that product. Independent products retain independent outcomes.
+
 A form carries the product revision it displayed. Validation precedes a single
 compare-and-set; a conflict changes nothing and asks for a reload. Rendering
 failure after an acknowledged commit returns a truthful saved result with a

@@ -12,8 +12,8 @@ write acknowledgement is reconciled once and otherwise reported as unknown.
 Base: `e4da1218bc429d469442e5e6a807c7f46856e65b`.
 See [the decision](../../../docs/decisions/catalog-atomic-saves.md) and
 [artifact identity](artifact-identity.json). The candidate backend is
-`662a95f7cd711bbee92454cec24530cd3d49ecb14a9a420243d57aa074ea0a27`,
-130,993 bytes of the 131,072-byte Registry limit (79 bytes remaining).
+`befeb4ebe96410b95dad57a772ffd5cf2fade70ffb251c3738075588894a1127`,
+131,009 bytes of the 131,072-byte Registry limit (63 bytes remaining).
 The source fingerprint covers all TypeScript sources and named build inputs;
 it can be recomputed from the checked-out commit. No host limit was raised.
 
@@ -21,19 +21,22 @@ it can be recomputed from the checked-out commit. No host limit was raised.
 
 - Node 24.22.0; pinned EmDash and Cloudflare adapter 1.2.0.
 - Typecheck, Registry build/size gate and repository/feature audits pass.
-- All 701 unit tests pass on the candidate. The affected catalog/checkout
+- All 705 unit tests pass on the candidate. The affected catalog/checkout
   suite has 172 passing tests, including fault, stale-form, clear, retry and
   fifty-choice cases.
-- Integration suite: 104/105 passed in the concurrent run; the sole failure
-  was workerd failing its 10-second startup deadline. The same shopper-account
-  test passed in a serial retry. All 105 scenarios therefore have passing
-  current-artifact evidence. The migration/reopen repair subset also passed
-  all 88 cases.
+- All 106 integration tests pass in the repair run, including a real SQLite
+  legacy-price migration, connection reopen, list-to-save revision round trip,
+  sibling bulk save and external-writer conflict. The first candidate had a
+  workerd startup timeout that passed on isolated retry; the repair run has no
+  failures.
 - All 10 storefront/native browser tests pass, including real panel edits,
   stale forms, legacy-data editing and storage-failure recovery. Existing
   EmDash nested-form console warnings remain; the tested behavior passed.
 - All 3 extracted Registry package tests pass. The independently installed
   native npm consumer passes exports, admin and foreign-origin checks.
+- The Registry upgrade test passes from v0.5.0: the old release creates the
+  fixture through its own admin, and the new build preserves and edits it after
+  restart. Each phase skips only the other phase's test by design.
 - Settings validation is recorded in the PR checks and local run closeout.
 
 The legacy assertions that read retired per-field storage were updated to
@@ -101,3 +104,26 @@ the explicit unknown-outcome panel. Their sizes/hashes are in
 [artifact identity](artifact-identity.json). Retained media is linked from the
 PR's immutable Dinkus PR Assets evidence release; no binary media is committed
 here. Human merge remains the next promotion gate after clean checks/reviews.
+
+## Native revision repairs
+
+Native lists now read each product's current version and return that same
+revision for all its choices. Bulk prices are validated in a staged product
+snapshot and committed once per product; invalid rows keep individual outcomes.
+A real external update refuses all staged sibling writes. Registration-claim
+cleanup follows the commit; cleanup failure still reports that the price saved.
+The 39 focused tests include both in-memory fault injection and reopened
+EmDash SQLite repositories. The two native review findings were reproduced
+before repair. Their duplicate merge-risk checklist boxes refer to those same
+repairs; Jev 1.13.0 classified all four boxes as repair.
+
+The initial comprehensive review's weight-projection finding was rejected:
+`describeCatalogProducts` receives the weight-overlaid item from
+`resolveCatalogVariantMember`. Returned and reopened local and deployed forms
+contain the saved 4/6-ounce values. The final backend's deployed proof repeats
+those checks. Both review rails must still review the final commit.
+
+The retained screenshots were captured at initial candidate
+`b4b84fbb15cdf26a42f23580300adff486dbe630`; they show unchanged panel layout
+and messages. The final backend hash above is independently rechecked on the
+synthetic Cloudflare host; the native repair has fresh SQLite evidence.

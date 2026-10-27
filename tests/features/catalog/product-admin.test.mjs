@@ -176,6 +176,7 @@ test("a clerk can save Regular and Sale and see a refusal leave the price unchan
   assert.deepEqual(listed.products, [
     {
       catalogItemId: "item-bag",
+      revision: "catalog:" + (await stores.catalog.getVersioned("item-bag")).revision,
       name: "Bag",
       sku: "BAG-1",
       regular: "12.00",
