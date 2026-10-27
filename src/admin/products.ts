@@ -24,8 +24,8 @@ const STOCK_OPTIONS = [
   { label: "On backorder", value: "on-backorder" },
 ];
 // The catalog's unique index is named for the install's own collection: native installs keep catalogItems.
-const unique = (ctx: PluginContext) => ({ collection: "catalogItems" in ctx.storage ? "catalogItems" : "catalog_items", pluginId: ctx.plugin?.id });
-function storage(ctx: PluginContext) {
+export const unique = (ctx: PluginContext) => ({ collection: "catalogItems" in ctx.storage ? "catalogItems" : "catalog_items", pluginId: ctx.plugin?.id });
+export function storage(ctx: PluginContext) {
   return {
     catalog: ctx.storage["catalog_items"] as StorageCollection<CatalogStorageRecord>,
     prices: ctx.storage["catalog_prices"] as StorageCollection<CatalogPriceRecord>,
@@ -34,7 +34,7 @@ function storage(ctx: PluginContext) {
     pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages,
   };
 }
-function feedEligibility(ctx: PluginContext) {
+export function feedEligibility(ctx: PluginContext) {
   return ctx.storage["product_feed_eligibility"] as StorageCollection<ProductFeedEligibilityRecord> | undefined;
 }
 type ProductFields = {

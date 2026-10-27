@@ -611,3 +611,9 @@
 {"action": "decision_locked", "at": "2026-10-27T18:12:40+00:00", "data": {"decision_id": "catalog-media-panel-20261027"}, "event_id": "3d0104d6-5fce-4ef8-97c7-d1d01e3f4131"}
 {"action": "decision_proposed", "at": "2026-10-27T18:38:52+00:00", "data": {"decision_id": "checkout-free-shipping-over-20261027"}, "event_id": "d6c3ea1c-f2c4-4b84-994d-c671d6aa40f6"}
 {"action": "decision_locked", "at": "2026-10-27T18:38:52+00:00", "data": {"decision_id": "checkout-free-shipping-over-20261027"}, "event_id": "74fb2af9-2d3b-48db-a53c-defadc4184cc"}
+{"action": "decision_proposed", "at": "2026-10-27T19:14:24+00:00", "data": {"decision_id": "catalog-api-20261027"}, "event_id": "3f638a11-d70a-40d9-b9e7-67c052ae8442"}
+{"action": "decision_locked", "at": "2026-10-27T19:14:29+00:00", "data": {"decision_id": "catalog-api-20261027"}, "event_id": "de462cf6-15cd-4060-95f4-c0b5bc392547"}
+{"action": "decision_reopened", "at": "2026-10-27T19:27:00+00:00", "data": {"affected": [], "decision_id": "catalog-api-20261027", "reason": "Add the SKU op and the CLI product commands that #190 asks for, before the PR opens"}, "event_id": "86737dd1-3508-4194-9b83-af5fb547e5e3"}
+{"action": "decision_locked", "at": "2026-10-27T19:27:01+00:00", "data": {"decision_id": "catalog-api-20261027"}, "event_id": "9f1252a9-1e11-444a-8864-054f909c350b"}
+{"action": "decision_reopened", "at": "2026-10-27T20:07:13+00:00", "data": {"affected": [], "decision_id": "catalog-api-20261027", "reason": "Ronald 27 Oct 19:54 chose B: Commerce checks the CLI's preview code itself before it saves"}, "event_id": "0e9f1347-f3b2-491f-a124-ce22b1ec7dbe"}
+{"action": "decision_locked", "at": "2026-10-27T20:07:13+00:00", "data": {"decision_id": "catalog-api-20261027"}, "event_id": "72a9ff1a-82a8-469c-9da7-e6cbafb620aa"}

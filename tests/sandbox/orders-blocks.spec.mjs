@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import Database from 'better-sqlite3';
+import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Kysely, SqliteDialect } from 'kysely';
@@ -146,6 +147,34 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await expect(page.getByText('No missing orders', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: await inspect(paid.order), exact: true })).toBeVisible({ timeout: 60000 });
     await page.setViewportSize({ width: 1440, height: 1000 });
+    // The catalog API for agents and the CLI (catalog-api-20261027) in the installed runtime.
+    const catalogEndpoint = `/_emdash/api/plugins/${pluginId}/catalog`;
+    const catalog = async data => page.request.post(catalogEndpoint, { headers: { 'X-EmDash-Request': '1' }, data });
+    const made = await catalog({ op: 'create', commandId: 'proof-agent-mug', name: 'Agent Mug', sku: 'AGENT-MUG' });
+    expect(made.status()).toBe(200);
+    const mugId = (await made.json()).data.catalogItemId;
+    expect((await (await catalog({ op: 'prices', catalogItemId: mugId, regular: '12.00', sale: '' })).json()).data.saved).toBe(true);
+    expect((await (await catalog({ op: 'sku', catalogItemId: mugId, sku: 'AGENT-MUG-2' })).json()).data).toEqual({ changed: true });
+    const mug = (await (await catalog({ op: 'get', catalogItemId: mugId })).json()).data.product;
+    expect([mug.sku, mug.regular, mug.offSale]).toEqual(['AGENT-MUG-2', '12.00', true]);
+    const refused = await catalog({ op: 'weight', catalogItemId: mugId, weightOz: '0' });
+    writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'catalog-api-refusal.json'), JSON.stringify({ status: refused.status(), body: await refused.json() }, null, 2));
+    expect(refused.status()).toBe(400);
+    // The CLI reads the reason after "route catalog failed: " (cli/client.mjs).
+    expect((await refused.json()).error).toMatchObject({ code: 'ROUTE_ERROR', message: expect.stringMatching(/route catalog failed: Weight must be a number of ounces/) });
+    // A write carrying a preview code saves only while the product still reads the same.
+    const code = async () => createHash('sha256').update(JSON.stringify((await (await catalog({ op: 'get', catalogItemId: mugId })).json()).data)).digest('hex').slice(0, 12);
+    const seen = await code();
+    expect((await (await catalog({ op: 'prices', catalogItemId: mugId, regular: '13.00', sale: '', expected: seen })).json()).data.saved).toBe(true);
+    const stale = await catalog({ op: 'prices', catalogItemId: mugId, regular: '14.00', sale: '', expected: seen });
+    expect(stale.status()).toBe(400);
+    expect((await stale.json()).error.message).toMatch(/route catalog failed: The product changed since that preview/);
+    expect((await (await catalog({ op: 'get', catalogItemId: mugId })).json()).data.product.regular).toBe('13.00');
+    const anonymousCatalog = await browser.newContext();
+    const anonymous = await anonymousCatalog.request.post(new URL(catalogEndpoint, test.info().project.use.baseURL).href,
+      { headers: { 'X-EmDash-Request': '1' }, data: { op: 'list' } });
+    expect([401, 403]).toContain(anonymous.status());
+    await anonymousCatalog.close();
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'orders-canonical.json'), JSON.stringify({ paid: paid.order, free: free.order }, null, 2));
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'http-matrix.json'), JSON.stringify(matrix, null, 2));
   } finally { await db.destroy(); }
