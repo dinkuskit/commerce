@@ -47,6 +47,36 @@ Publishing the page puts the product on sale, and unpublishing or deleting the p
 
 To show this panel, Commerce `0.6.0` asks for two new permissions when it is installed or upgraded: `admin.editor-draft:read`, to read the page's title and product link, and `admin.editor-draft:patch`, to set only the page's `commerce_item_id` field.
 
+## Saving and upgrading catalog data
+
+Price and stock-status saves, including submitted feed choices, commit together.
+Native local-stock hosts keep choice-level tracking changes in that same commit.
+Native catalog lists return the product revision for every choice. A native bulk
+price request validates sibling choices against that same snapshot and commits
+its valid rows together; invalid rows remain individually reported. A competing
+product edit refuses the staged rows for that product without a partial save.
+A **Save weight** action commits all submitted choice weights together. These
+actions work within EmDash's default ten-subrequest sandbox limit. If another
+editor changes the product after a form opens, reload before saving again.
+
+If a save succeeds but the panel cannot refresh, Commerce says the changes were
+saved and offers **Reload product**. If the write outcome cannot be confirmed,
+it says **Save outcome unknown**; reload to check the values before submitting
+again. An error is not a reason to assume nothing was stored.
+
+Existing product IDs, SKUs and order snapshots remain unchanged. Old values are
+read until each field is saved in the new product record. Cleared values stay
+cleared. This transition retains old records but does not write changes back to
+them. Run one Commerce version at a time; downgrading after these saves requires
+an explicit data conversion. Do not run old and new binaries as concurrent writers.
+
+For direct kernel consumers, price, manual-availability and feed-eligibility
+readers now require the catalog reader as their third argument. Use these
+readers or the catalog API, rather than reading the legacy collections directly;
+raw legacy records may no longer be current. A product supports at most fifty
+choices, and saves exceeding the host's 1 MiB record limit are refused before
+writing.
+
 ## Product identity and pricing
 
 Use the permanent Commerce item ID to look up a product and submit a cart line. The merchant's SKU is a separate editable attribute; a page URL is a host-owned publishing decision.
@@ -87,6 +117,22 @@ The catalog accepts only its documented query keys. Continue pagination until no
 Checkout rereads authoritative prices and availability. Never send a browser-computed price, tenant, provider choice, or order status as authority. See [site integration](/docs/developers/integrate) for the purchase flow.
 
 Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins.
+
+Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:
+
+| `op` | Does |
+| --- | --- |
+| `list` | Lists products: id, name, SKU, and when it was archived. |
+| `get` | One product (`catalogItemId`) with its choices, prices, pictures and feed channels. |
+| `create` | Makes a physical Draft from `name` and `sku`, and links it to the product page `entryId` when given. Send a `commandId` so a retry finds the same product. |
+| `link` | Links a product to the product page `entryId`. |
+| `prices`, `choice`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, choices and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |
+
+Publishing the page still puts the product on sale, so an agent sells a product by creating it, pricing it and publishing its page. `create` with `entryId` and `link` only record the link for the Dinkus Commerce panel. The page's own **Commerce product** field (`commerce_item_id`) is what the store's publish check reads, so the agent also sets that field to the product's `catalogItemId` and saves the page through EmDash (its content API or MCP) before publishing. The panel does this step itself when a person presses Save. Manage stock stays off, as in the panels. A refused write answers with the reason.
+
+A write may carry `expected`: the first 12 hex digits of the SHA-256 of the product's `get` answer as JSON (for a choice, of its product, named as `productId`). Commerce then saves only while the product still reads that way, so an agent never overwrites a change it did not see.
+
+The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-choice`, `link`, `archive` and `restore`. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
 
 ## US delivery addresses
 

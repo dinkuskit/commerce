@@ -1,5 +1,6 @@
 import { PluginRouteError, type PluginRoute, type StorageCollection } from "emdash";
 
+import { catalogRoot } from "./product-state.js";
 import { createCatalogItem } from "./create-catalog-item.js";
 import { CatalogError } from "./errors.js";
 import { setCatalogItemManualAvailability } from "./manual-availability.js";
@@ -256,9 +257,7 @@ export function createSaveCatalogProductPricesRouteWithLocalStock(
         const catalogItemId =
           typeof input?.catalogItemId === "string" ? input.catalogItemId.trim() : "";
         const current = catalogItemId
-          ? await (
-              ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>
-            ).get(catalogItemId)
+          ? (await catalogRoot(ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>, catalogItemId)).current
           : null;
         return await saveCatalogProductPrices(
           productSaveStorage(ctx),

@@ -8,10 +8,14 @@ explicit contracts.
 ## Kit direction
 
 The canonical [vision](https://github.com/dinkuskit/.github/blob/main/VISION.md)
-and [roadmap](https://github.com/dinkuskit/.github/blob/main/ROADMAP.md) put a
-human-operable EmDash store first. Commerce and Inventory are crucial launch
-pieces and launch side by side. This repository's contracts and status below
-describe its own scope; the roadmap is not a claim of release readiness.
+and [scope and planning](https://github.com/dinkuskit/.github/blob/main/ROADMAP.md)
+set the direction of independently useful, connected tools. For the current
+[v1 store baseline](https://github.com/dinkuskit/.github/blob/main/ROADMAP.md#v1-store-baseline),
+Inventory and basic coupons are optional: a store can use manual availability
+and check out without a coupon code. Managed products still use exactly one
+inventory provider and fail closed when it is unavailable. This repository's
+contracts and status below describe current scope; the wider direction is not
+a release-readiness claim or an automatic restart of Inventory work.
 
 ## Install type
 

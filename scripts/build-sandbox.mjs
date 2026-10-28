@@ -1,5 +1,5 @@
 import { rolldown } from 'rolldown';
-import { shareLiterals } from './share-literals.mjs';
+import { shareGlobals, shareLiterals } from './share-literals.mjs';
 import { buildPlugin } from '@emdash-cms/plugin-cli';
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -40,7 +40,7 @@ const bundle = await rolldown({
 });
 try { await bundle.write({ file: resolve(stage, 'bundled/plugin.js'), format: 'esm', minify: true }); }
 finally { await bundle.close(); }
-const runtime = shareLiterals(await readFile(resolve(stage, 'bundled/plugin.js'), 'utf8'));
+const runtime = shareGlobals(shareLiterals(await readFile(resolve(stage, 'bundled/plugin.js'), 'utf8')));
 await writeFile(resolve(stage, 'src/plugin.ts'), '// @ts-nocheck -- generated dependency bundle; source is checked separately\n' + runtime);
 for (const file of ['emdash-plugin.jsonc', 'package.json']) {
   await copyFile(resolve(file), resolve(stage, file));

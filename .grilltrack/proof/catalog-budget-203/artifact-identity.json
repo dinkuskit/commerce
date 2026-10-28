@@ -1,0 +1,26 @@
+{
+  "source_base": "e4da1218bc429d469442e5e6a807c7f46856e65b",
+  "source_fingerprint_sha256": "da021e74e52ee77836c3da2a71eb04b234032b827ee6064634f4dcda2b6cdda2",
+  "fingerprint_scope": "git-tracked src/**/*.ts plus package-lock.json, emdash-plugin.jsonc, scripts/build-sandbox.mjs and scripts/share-literals.mjs; full POSIX path strings sorted lexicographically; path:lowercase-SHA256 joined by LF without trailing LF",
+  "backend_sha256": "29e86beb6d40af0050ea8e2582113aa5dc65417d355c535ac765bab0ea1ecf68",
+  "backend_bytes": 131033,
+  "registry_limit_bytes": 131072,
+  "headroom_bytes": 39,
+  "screenshots": [
+    {
+      "filename": "save-storage-refused.png",
+      "bytes": 114632,
+      "sha256": "53ff49bd90ed4fd0a752ecd3c8f2b9f4c5eee339a0fda16071460434f65226c2",
+      "redaction": "synthetic fixture only; visually inspected for selected saved/unknown panels",
+      "captured_source_head": "b4b84fbb15cdf26a42f23580300adff486dbe630"
+    },
+    {
+      "filename": "price-stock-saved.png",
+      "bytes": 100805,
+      "sha256": "4d146e154c108139c64ea51c1e2b9cfe48b47157ccc5e433788f2fc3911aced0",
+      "redaction": "synthetic fixture only; visually inspected for selected saved/unknown panels",
+      "captured_source_head": "b4b84fbb15cdf26a42f23580300adff486dbe630"
+    }
+  ],
+  "fingerprint_recipe": "python3 .grilltrack/proof/catalog-budget-203/fingerprint.py --check (after npm ci && npm run build)"
+}

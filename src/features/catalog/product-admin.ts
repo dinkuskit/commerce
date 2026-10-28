@@ -1,3 +1,5 @@
+import { catalogItemState, productData, saveProductData } from "./product-state.js";
+import { normalizeProductFeedChannels } from "../feeds/kernel/index.js";
 import { isRecord } from "../../shared/record.js";
 import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import {
@@ -26,7 +28,7 @@ import {
   setCatalogItemManualAvailability,
 } from "./manual-availability.js";
 import { moneyEquals, saleIsStrictlyLower } from "./money.js";
-import { catalogPriceRecord, commitCatalogItemPrice, resolveCatalogItemPrice } from "./price.js";
+import { catalogPriceRecord, resolveCatalogItemPrice } from "./price.js";
 import type {
   CatalogItemRecord,
   CatalogManualAvailabilityRecord,
@@ -60,6 +62,7 @@ interface ManyReader<T> {
 
 export interface CatalogProductListStorage {
   catalog: ManyReader<CatalogStorageRecord> & {
+    getVersioned?(id: string): Promise<{ value: CatalogStorageRecord; revision: string } | null>;
     get(id: string): Promise<CatalogStorageRecord | null>;
     query(options?: {
       limit?: number;
@@ -74,6 +77,7 @@ export interface CatalogProductListStorage {
 export type CatalogProductSummary = Pick<CatalogProductListItem, "catalogItemId" | "name" | "sku" | "archivedAt">;
 
 export interface CatalogProductListItem {
+  revision?: string;
   catalogItemId: string;
   name: string;
   sku: string;
@@ -117,6 +121,7 @@ export interface SaveCatalogProductPricesInput {
   manageStock?: boolean;
   stockStatus?: string;
   expectedRevision?: string | null;
+  feedChannels?: string[];
 }
 
 export interface CatalogProductPriceForm {
@@ -218,6 +223,7 @@ async function describeCatalogProducts(
   storage: CatalogProductListStorage,
   records: readonly CatalogItemRecord[],
   catalog: Pick<CatalogProductListStorage["catalog"], "get">,
+  revisionFor?: (id: string) => string | undefined,
 ): Promise<CatalogProductListItem[]> {
   const managed = (record: CatalogItemRecord) =>
     normalizeStoredStockManagement(record.stockManagement).mode === "managed";
@@ -231,17 +237,20 @@ async function describeCatalogProducts(
     ...records.filter((record) => !managed(record)).map((record) => record.itemId),
     ...[...resolved].filter(([, member]) => member?.item && !managed(member.item)).map(([id]) => id),
   ];
-  const prices = { ...storage.prices, get: await readMany(storage.prices, records.map((record) => record.itemId), "catalog price lookup failed") };
+  const prices = { ...storage.prices, get: await readMany(storage.prices, [...records.map((record) => record.itemId), ...resolved.keys()], "catalog price lookup failed") };
   const availability = { ...storage.availability, get: await readMany(storage.availability, unmanaged, "manual availability lookup failed") };
   const products: CatalogProductListItem[] = [];
   for (const record of records) {
-    const price = await resolveCatalogItemPrice(prices, record.itemId);
+    const revision = revisionFor?.(record.itemId);
+    const weightOz = catalogItemState(record, record).weightOz;
+    const price = await resolveCatalogItemPrice(prices, record.itemId, catalog);
     const itemManaged = managed(record);
     const stock = itemManaged
       ? null
-      : await loadCatalogItemManualAvailability(availability, record.itemId);
+      : await loadCatalogItemManualAvailability(availability, record.itemId, catalog);
     const product: CatalogProductListItem = {
       catalogItemId: record.itemId,
+      ...(revision ? { revision: "catalog:" + revision } : {}),
       name: record.name,
       sku: record.sku,
       regular:
@@ -255,7 +264,7 @@ async function describeCatalogProducts(
       ...(record.mpn ? { mpn: record.mpn } : {}),
       ...(record.brand ? { brand: record.brand } : {}),
       fulfillment: record.fulfillment ?? "physical",
-      ...(record.weightOz ? { weightOz: record.weightOz } : {}),
+      ...(weightOz ? { weightOz } : {}),
       ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
       ...(record.offSale ? { offSale: true as const } : {}),
     };
@@ -264,14 +273,14 @@ async function describeCatalogProducts(
       for (const member of record.variantProduct.members) {
         const memberRecord = resolved.get(member.catalogItemId);
         if (!memberRecord?.member || !memberRecord.product) continue;
-        // A choice's price form saves against this revision, which only a read of its own returns.
-        const priceState = await storage.prices.getVersioned(member.catalogItemId);
-        const memberPrice = await resolveCatalogItemPrice({ ...storage.prices, get: async () => priceState?.value ?? null }, member.catalogItemId);
+        // Every choice saves against the same product snapshot.
+        const priceState = revision ? { value: await prices.get(member.catalogItemId), revision: "catalog:" + revision } : await storage.prices.getVersioned(member.catalogItemId);
+        const memberPrice = await resolveCatalogItemPrice({ ...storage.prices, get: async () => priceState?.value ?? null }, member.catalogItemId, catalog);
         const memberManaged =
           memberRecord.item.stockManagement && managed(memberRecord.item);
         const memberAvailability = memberManaged
           ? null
-          : await loadCatalogItemManualAvailability(availability, member.catalogItemId);
+          : await loadCatalogItemManualAvailability(availability, member.catalogItemId, catalog);
         members.push({
           catalogItemId: member.catalogItemId,
           selections: variantSelections(memberRecord.product, memberRecord.member),
@@ -304,10 +313,24 @@ export async function listCatalogProducts(
     "catalog product list failed",
   );
   const byKey = new Map(rows.map((row) => [row.id, row.data]));
+  const revisions = new Map<string, string>();
+  const records: CatalogItemRecord[] = [];
+  for (const row of rows) {
+    if (!isListedProduct(row.data)) continue;
+    const current = storage.catalog.getVersioned
+      ? await catalogStorage(() => storage.catalog.getVersioned!(row.id), "catalog item lookup failed")
+      : undefined;
+    if (current === null) continue;
+    const record = current?.value ?? row.data;
+    if (!isListedProduct(record)) continue;
+    byKey.set(row.id, record);
+    if (current) revisions.set(row.id, current.revision);
+    records.push(record);
+  }
   const products = await describeCatalogProducts(
-    storage,
-    rows.map((row) => row.data).filter(isListedProduct),
-    { get: async (id) => byKey.get(id) ?? null },
+    storage, records,
+    { get: async (id) => byKey.get(id) ?? storage.catalog.get(id) },
+    (id) => revisions.get(id),
   );
   return { products: products.sort(byNameThenSku) };
 }
@@ -333,13 +356,14 @@ export async function loadCatalogProduct(
   storage: CatalogProductListStorage,
   catalogItemId: string,
 ): Promise<CatalogProductListItem | null> {
-  const record = await catalogStorage(() => storage.catalog.get(catalogItemId), "catalog item lookup failed");
+  const versioned = storage.catalog.getVersioned ? await catalogStorage(() => storage.catalog.getVersioned!(catalogItemId), "catalog item lookup failed") : undefined;
+  const record = versioned === undefined ? await catalogStorage(() => storage.catalog.get(catalogItemId), "catalog item lookup failed") : versioned?.value;
   if (!record || !isListedProduct(record) || record.itemId !== catalogItemId) return null;
   const memberIds = (record.variantProduct?.members ?? []).map((member) => member.catalogItemId);
   const members = await readMany(storage.catalog, memberIds.filter((id) => id !== catalogItemId), "catalog item lookup failed");
   const [product] = await describeCatalogProducts(storage, [record], {
     get: async (id) => (id === catalogItemId ? record : members(id)),
-  });
+  }, () => versioned?.revision);
   return product ?? null;
 }
 
@@ -409,6 +433,7 @@ function normalizeSaveInput(value: unknown): SaveCatalogProductPricesInput {
     manageStock: input.manageStock,
     stockStatus: input.stockStatus,
     expectedRevision: input.expectedRevision as string | null | undefined,
+    ...(input.feedChannels === undefined ? {} : { feedChannels: normalizeProductFeedChannels(input.feedChannels) }),
   };
 }
 
@@ -417,142 +442,51 @@ export async function saveCatalogProductPrices(
   rawInput: unknown,
 ): Promise<CatalogProductPriceForm> {
   const input = normalizeSaveInput(rawInput);
-  const catalogItemId = input.catalogItemId.trim();
-  const item = await storage.catalog.get(catalogItemId);
-  if (item === null || item.recordKind !== "catalog-item" || item.itemId !== catalogItemId) {
-    catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
-  }
-
-  const currentStockManagement = normalizeStoredStockManagement(item.stockManagement);
-  const managed = currentStockManagement.mode === "managed";
-  const nextManaged = input.manageStock ?? managed;
-  const dormantAvailability = await loadCatalogItemManualAvailability(
-    storage.availability,
-    catalogItemId,
-  );
-  const dormantStockStatus = toClerkStockStatus(dormantAvailability.status);
-  const currentStockStatus = managed ? null : dormantStockStatus;
-
-  let nextStockStatus = nextManaged ? null : dormantStockStatus;
-  if (
-    !nextManaged &&
-    currentStockManagement.mode === "managed" &&
-    currentStockManagement.status === "setup-pending"
-  ) {
-    return refused(input, MANAGE_STOCK_SETUP_PENDING_MESSAGE, true, null);
-  }
-  if (nextManaged && managed && input.stockStatus !== undefined) {
-    return refused(input, MANAGED_STOCK_STATUS_MESSAGE, true, null);
-  }
-  if (!nextManaged && input.stockStatus !== undefined) {
-    if (!isClerkStockStatus(input.stockStatus)) {
-      return refused(
-        input,
-        CLERK_STOCK_STATUS_MESSAGE,
-        nextManaged,
-        currentStockStatus,
-      );
+  const id = input.catalogItemId.trim();
+  const saved = await saveProductData(storage.catalog, id, async (data, item, root) => {
+    const management = normalizeStoredStockManagement(item.stockManagement);
+    const managed = management.mode === "managed", nextManaged = input.manageStock ?? managed;
+    const current = data.items[id] ?? {};
+    const snapshot = { get: async (key: string) => key === id ? item : key === root.itemId ? root : null };
+    const availability = await loadCatalogItemManualAvailability(storage.availability, id, snapshot);
+    const status = toClerkStockStatus(availability.status);
+    if (!nextManaged && management.mode === "managed" && management.status === "setup-pending")
+      return refused(input, MANAGE_STOCK_SETUP_PENDING_MESSAGE, true, null);
+    if (nextManaged && managed && input.stockStatus !== undefined)
+      return refused(input, MANAGED_STOCK_STATUS_MESSAGE, true, null);
+    if (!nextManaged && input.stockStatus !== undefined && !isClerkStockStatus(input.stockStatus))
+      return refused(input, CLERK_STOCK_STATUS_MESSAGE, nextManaged, managed ? null : status);
+    const regular = parseClerkDollar(input.regular), sale = parseClerkDollar(input.sale);
+    const invalid = invalidMessage(regular, sale);
+    if (invalid) return refused(input, invalid, nextManaged, managed ? null : status);
+    const targetRegular = regular.status === "amount" ? regular.amount : null;
+    const targetSale = sale.status === "amount" ? sale.amount : null;
+    const existing = await resolveCatalogItemPrice(storage.prices, id, snapshot);
+    if (input.expectedRevision !== undefined && !input.expectedRevision?.startsWith("catalog:")) {
+      if (Object.hasOwn(current, "price") || ((await storage.prices.getVersioned(id))?.revision ?? null) !== input.expectedRevision)
+        catalogFail("COMMAND_CONFLICT", "Price changed; reload before saving");
     }
-    nextStockStatus = input.stockStatus;
-  }
-
-  const regular = parseClerkDollar(input.regular);
-  const sale = parseClerkDollar(input.sale);
-  const invalid = invalidMessage(regular, sale);
-  if (invalid !== null) {
-    return refused(input, invalid, nextManaged, currentStockStatus);
-  }
-
-  const targetRegular = regular.status === "amount" ? regular.amount : null;
-  const targetSale = sale.status === "amount" ? sale.amount : null;
-  const versioned = input.expectedRevision === undefined ? undefined : await storage.prices.getVersioned(catalogItemId);
-  const current = await resolveCatalogItemPrice(versioned === undefined ? storage.prices : { ...storage.prices, get: async () => versioned?.value ?? null }, catalogItemId);
-  if (versioned !== undefined && (versioned?.revision ?? null) !== input.expectedRevision) {
-    catalogFail("COMMAND_CONFLICT", "Price changed; reload before saving");
-  }
-  const currentRegular = current.regular ?? null;
-  const currentSale = current.sale ?? null;
-
-  if (targetSale !== null && targetRegular === null) {
-    return refused(
-      input,
-      currentSale !== null || currentRegular !== null
-        ? CLERK_END_SALE_MESSAGE
-        : CLERK_SALE_NEEDS_REGULAR_MESSAGE,
-      nextManaged,
-      currentStockStatus,
-    );
-  }
-  if (
-    targetSale !== null &&
-    targetRegular !== null &&
-    !saleIsStrictlyLower(targetSale, targetRegular)
-  ) {
-    return refused(input, CLERK_SALE_LOWER_MESSAGE, nextManaged, currentStockStatus);
-  }
-  const priceUnchanged =
-    moneySame(currentRegular, targetRegular) && moneySame(currentSale, targetSale);
-  const manageUnchanged = nextManaged === managed;
-  const stockUnchanged = nextStockStatus === currentStockStatus;
-  if (priceUnchanged && stockUnchanged && manageUnchanged && nextManaged) {
-    return displayForm(targetRegular, targetSale, nextManaged, nextStockStatus);
-  }
-
-  let priceCommitted = false;
-  let committedRevision: string | undefined;
-  try {
-    if (!priceUnchanged) {
-      if (versioned !== undefined) {
-        const record = catalogPriceRecord(catalogItemId, targetRegular!, targetSale);
-        const applied = targetRegular === null
-          ? await storage.prices.compareAndDelete(catalogItemId, versioned!.revision)
-          : await storage.prices.compareAndSet(catalogItemId, versioned?.revision ?? null, record);
-        if (!applied.applied) catalogFail("COMMAND_CONFLICT", "Price changed; reload before saving");
-        if ("revision" in applied && typeof applied.revision === "string") committedRevision = applied.revision;
-      } else await commitCatalogItemPrice(storage, {
-        catalogItemId,
-        regular: targetRegular,
-        sale: targetSale,
-      });
-      priceCommitted = true;
-    }
-    if (!manageUnchanged) {
-      // v1 admission strips or refuses Manage stock changes before a Registry save gets here.
-      // An else, so the Registry build drops the native-only write path.
+    if (targetSale && !targetRegular)
+      return refused(input, existing?.regular ? CLERK_END_SALE_MESSAGE : CLERK_SALE_NEEDS_REGULAR_MESSAGE, nextManaged, managed ? null : status);
+    if (targetSale && targetRegular && !saleIsStrictlyLower(targetSale, targetRegular))
+      return refused(input, CLERK_SALE_LOWER_MESSAGE, nextManaged, managed ? null : status);
+    if (nextManaged !== managed) {
       if (REGISTRY_BUILD) catalogFail("MANAGE_STOCK_UNAVAILABLE", MANAGE_STOCK_UNAVAILABLE_MESSAGE);
-      else await persistManageStock(storage, item, nextManaged);
+      if (root.itemId === item.itemId) root.stockManagement = setManageStock(management, nextManaged);
+      else current.stockManagement = setManageStock(management, nextManaged);
     }
-    if (!REGISTRY_BUILD && !nextManaged && storage.releaseRegistrationClaims) {
-      await catalogStorage(() => storage.releaseRegistrationClaims!(catalogItemId), "managed SKU registration claim release failed");
-    }
-    if (!nextManaged && nextStockStatus !== null && !stockUnchanged) {
-      await setCatalogItemManualAvailability(
-        { catalog: storage.catalog, availability: storage.availability },
-        {
-          catalogItemId,
-          status: toStoredStockStatus(nextStockStatus),
-        },
-      );
-    }
-  } catch (error) {
-    if (priceCommitted) {
-      try {
-        await restoreCommittedPrice(
-          storage,
-          catalogItemId,
-          targetRegular,
-          targetSale,
-          currentRegular,
-          currentSale,
-          committedRevision,
-        );
-      } catch {
-        // Keep the original stock-write error.
-      }
-    }
-    throw error;
+
+    const nextStatus = nextManaged ? null : input.stockStatus as ClerkStockStatus | undefined ?? status;
+    data.items[id] = { ...current, price: targetRegular ? catalogPriceRecord(id, targetRegular, targetSale) : null,
+      availability: { ...availability, status: toStoredStockStatus(nextStatus ?? status) } };
+    if (input.feedChannels !== undefined) data.feedChannels = input.feedChannels;
+    return displayForm(targetRegular, targetSale, nextManaged, nextStatus);
+  }, input.expectedRevision?.startsWith("catalog:") ? input.expectedRevision : undefined);
+  if (!REGISTRY_BUILD && saved.saved && !saved.manageStock && storage.releaseRegistrationClaims) {
+    try { await storage.releaseRegistrationClaims(id); }
+    catch { return { ...saved, message: "Product saved. Inventory claim cleanup is pending; save again to retry cleanup." }; }
   }
-  return displayForm(targetRegular, targetSale, nextManaged, nextStockStatus);
+  return saved;
 }
 
 export interface BulkCatalogProductPriceInput {
@@ -576,93 +510,68 @@ export async function bulkSaveCatalogProductPrices(
   if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 100) {
     catalogFail("INVALID_INPUT", "bulk price input needs 1-100 rows");
   }
-  const outcomes: BulkCatalogProductPriceOutcome[] = [];
-  for (const input of inputs) {
+  const outcomes: BulkCatalogProductPriceOutcome[] = new Array(inputs.length);
+  const groups = new Map<string, number[]>();
+  const refuse = (index: number, error: unknown) => {
+    const code = error instanceof CatalogError && ["INVALID_INPUT", "CATALOG_ITEM_NOT_FOUND"].includes(error.code)
+      ? error.code as BulkCatalogProductPriceOutcome["code"]
+      : error instanceof CatalogError && error.code === "COMMAND_CONFLICT"
+        ? "CONFLICT" : "STORAGE_UNAVAILABLE";
+    outcomes[index] = { catalogItemId: inputs[index]?.catalogItemId ?? "", applied: false, code,
+      message: error instanceof Error ? error.message : "bulk price update failed" };
+  };
+  for (const [index, input] of inputs.entries()) {
     try {
-      if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision")) {
+      if (!input || typeof input !== "object" || !Object.hasOwn(input, "expectedRevision"))
         catalogFail("INVALID_INPUT", "each bulk row needs its loaded price revision");
-      }
-      if (!(await resolveCatalogVariantMember(storage.catalog, input.catalogItemId))?.member) {
-        catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
-      }
-      if (Object.keys(input).some(key => !["catalogItemId", "regular", "sale", "expectedRevision"].includes(key))) {
+      if (Object.keys(input).some(key => !["catalogItemId", "regular", "sale", "expectedRevision"].includes(key)))
         catalogFail("INVALID_INPUT", "bulk edits accept price fields only");
+      const resolved = await resolveCatalogVariantMember(storage.catalog, input.catalogItemId);
+      if (!resolved?.member || !resolved.product)
+        catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog member is unavailable");
+      const id = resolved.product.productId;
+      groups.set(id, [...(groups.get(id) ?? []), index]);
+    } catch (error) { refuse(index, error); }
+  }
+  for (const [id, indices] of groups) {
+    const accepted = new Map<number, boolean>();
+    try {
+      // Stage siblings against one unchanged revision, then publish them with one CAS.
+      await saveProductData(storage.catalog, id, async (data, _item, root) => {
+        const snapshot = await storage.catalog.getVersioned(id);
+        if (!snapshot || JSON.stringify(snapshot.value) !== JSON.stringify(root))
+          catalogFail("COMMAND_CONFLICT", "Product changed; reload before saving");
+        let staged: CatalogStorageRecord = root;
+        const catalog: CatalogProductSaveCatalogStorage = {
+          get: async (key) => key === id ? staged : storage.catalog.get(key),
+          getVersioned: async (key) => key === id ? { value: staged, revision: snapshot.revision } : storage.catalog.getVersioned(key),
+          compareAndSet: async (key, revision, value) => {
+            if (key !== id || revision !== snapshot.revision) return { applied: false };
+            staged = value;
+            return { applied: true };
+          },
+        };
+        for (const index of indices) {
+          try {
+            const saved = await saveCatalogProductPrices({ ...storage, catalog, releaseRegistrationClaims: undefined }, inputs[index]);
+            if (!saved.saved) catalogFail("INVALID_INPUT", saved.message ?? "invalid price");
+            accepted.set(index, saved.manageStock);
+          } catch (error) { refuse(index, error); }
+        }
+        if (staged.recordKind === "catalog-item") Object.assign(data, productData(staged));
+      });
+      for (const [index, managed] of accepted) {
+        const catalogItemId = inputs[index].catalogItemId;
+        const outcome: BulkCatalogProductPriceOutcome = { catalogItemId, applied: true };
+        if (!managed && storage.releaseRegistrationClaims) {
+          try { await storage.releaseRegistrationClaims(catalogItemId); }
+          catch { outcome.message = "Product saved. Inventory claim cleanup is pending; save again to retry cleanup."; }
+        }
+        outcomes[index] = outcome;
       }
-      const saved = await saveCatalogProductPrices(storage, input);
-      if (!saved.saved) catalogFail("INVALID_INPUT", saved.message ?? "invalid price");
-      outcomes.push({ catalogItemId: input.catalogItemId, applied: true });
     } catch (error) {
-      const code = error instanceof CatalogError && ["INVALID_INPUT", "CATALOG_ITEM_NOT_FOUND"].includes(error.code)
-        ? error.code as BulkCatalogProductPriceOutcome["code"]
-        : error instanceof CatalogError && error.code === "COMMAND_CONFLICT"
-          ? "CONFLICT"
-          : "STORAGE_UNAVAILABLE";
-      outcomes.push({ catalogItemId: input?.catalogItemId ?? "", applied: false, code, message: error instanceof Error ? error.message : "bulk price update failed" });
+      for (const index of indices) if (!outcomes[index]) refuse(index, error);
     }
   }
   return { outcomes };
-}
-
-async function persistManageStock(
-  storage: SaveStorage,
-  item: CatalogItemRecord,
-  manageStock: boolean,
-): Promise<void> {
-  const current = normalizeStoredStockManagement(item.stockManagement);
-  const nextStockManagement = setManageStock(current, manageStock);
-  if (JSON.stringify(current) === JSON.stringify(nextStockManagement)) return;
-  const latest = await catalogStorage(() => storage.catalog.getVersioned(item.itemId), "Manage Stock update failed");
-  if (latest === null || latest.value.recordKind !== "catalog-item") {
-    catalogFail("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
-  }
-  const latestState = normalizeStoredStockManagement(latest.value.stockManagement);
-  if (
-    !manageStock &&
-    latestState.mode === "managed" &&
-    latestState.status === "setup-pending"
-  ) {
-    catalogFail("MANAGE_STOCK_SETUP_PENDING", MANAGE_STOCK_SETUP_PENDING_MESSAGE,);
-  }
-  if (manageStock && latestState.mode === "managed") return;
-  const nextItem: CatalogItemRecord = {
-    ...latest.value,
-    stockManagement: nextStockManagement,
-  };
-  const applied = await catalogStorage(() => storage.catalog.compareAndSet(
-      item.itemId,
-      latest.revision,
-      nextItem,
-    ), "Manage Stock update failed");
-  if (!applied.applied) {
-    catalogFail("STORAGE_UNAVAILABLE", "Manage Stock lost to concurrent write",);
-  }
-}
-
-function moneySame(left: Money | null, right: Money | null): boolean {
-  if (left === null || right === null) return left === right;
-  return moneyEquals(left, right);
-}
-
-async function restoreCommittedPrice(
-  storage: SaveStorage,
-  catalogItemId: string,
-  committedRegular: Money | null,
-  committedSale: Money | null,
-  previousRegular: Money | null,
-  previousSale: Money | null,
-  committedRevision?: string,
-): Promise<void> {
-  const latest = await storage.prices.getVersioned(catalogItemId);
-  if (latest === null || (committedRevision !== undefined && latest.revision !== committedRevision)) return;
-  if (
-    !moneySame(latest.value.regular, committedRegular) ||
-    !moneySame(latest.value.sale ?? null, committedSale)
-  ) {
-    return;
-  }
-  if (previousRegular === null) {
-    await storage.prices.compareAndDelete(catalogItemId, latest.revision);
-    return;
-  }
-  await storage.prices.compareAndSet(catalogItemId, latest.revision, catalogPriceRecord(catalogItemId, previousRegular, previousSale));
 }

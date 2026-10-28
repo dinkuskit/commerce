@@ -231,7 +231,7 @@ test('EmDash 1.2 original storage shares admin prices, storefront helpers and ca
   }, { url: `${SITE}/_emdash/api/content/products/page-hat/plugin-extensions/${state.manifest.id}/panel/product`, method: 'POST', ui: productPanelUi('page-hat') });
   assert.equal(saved.toast.type, 'success');
   const c = state.collections;
-  const price = await resolveCatalogItemPrice(c.catalog_prices, 'hat');
+  const price = await resolveCatalogItemPrice(c.catalog_prices, 'hat', c.catalog_items);
   assert.deepEqual(price.customerPays, { currency: 'USD', minor: '300' });
   const availability = await resolveStorefrontAvailability({
     catalog: c.catalog_items, prices: c.catalog_prices,
@@ -285,7 +285,7 @@ test('public installed catalog reads an admin-created product, feed eligibility 
     } });
     assert.equal(saved.toast.type, 'success');
     const channels = enabled ? ['google-merchant', 'meta-catalog'] : [];
-    assert.deepEqual((await state.collections.product_feed_eligibility.get(id)).channels, channels);
+    assert.deepEqual((await state.collections.catalog_items.get(id)).catalogData.feedChannels, channels);
     assert.deepEqual(await publicList(), { products: [{ ...expectedProduct, feedChannels: channels }] });
     assert.deepEqual(await publicItem(), { ...expectedProduct, feedChannels: channels });
   }

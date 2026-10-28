@@ -475,7 +475,7 @@ test("omitted manageStock on a managed price save preserves claims, binding, and
   });
   assert.equal(saved.saved, true);
   assert.equal(saved.manageStock, true);
-  assert.deepEqual(store.catalog.records.get("item-bag"), catalogBefore);
+  assert.deepEqual(Object.fromEntries(Object.entries(store.catalog.records.get("item-bag")).filter(([key]) => key !== "catalogData")), catalogBefore);
   assert.deepEqual(store.claims.records.get("claim-1"), claimBefore);
   assert.deepEqual(store.configurations.records.get("active"), bindingBefore);
   const availability = await resolveStorefrontAvailability(
@@ -599,7 +599,7 @@ test("Block Kit save refuses enable and omitted tracking preserves a managed pro
     sandboxContext(managed),
   );
   assert.equal(saved.toast.type, "success");
-  assert.deepEqual(managed.catalog.records.get("item-bag"), catalogBefore);
+  assert.deepEqual(Object.fromEntries(Object.entries(managed.catalog.records.get("item-bag")).filter(([key]) => key !== "catalogData")), catalogBefore);
   assert.deepEqual(managed.claims.records.get("claim-1"), claimBefore);
   assert.ok(
     flatten(saved.blocks).some((text) => text.includes("This product stays managed")),
@@ -660,7 +660,7 @@ test("Block Kit refused save leaves feed eligibility unchanged and keeps the cle
     ctx,
   );
   assert.equal(saved.toast.type, "success");
-  assert.deepEqual([...feeds.records.values()].map((record) => record.channels), [["google-merchant"]]);
+  assert.deepEqual((await store.catalog.get("item-bag")).catalogData.feedChannels, ["google-merchant"]);
 });
 
 test("CatalogError still distinguishes admission from kernel INVALID_INPUT", () => {
@@ -984,7 +984,7 @@ test("Block Kit recovery after a storage read failure does not pretend managed i
   const store = stores([managedItem()]);
   store.claims = new MemoryCollection([claimRecord()]);
   const before = snapshot(store);
-  store.catalog.get = async () => {
+  store.catalog.get = store.catalog.getVersioned = async () => {
     throw new Error("catalog read failed");
   };
   const recovered = await commerceAdmin(

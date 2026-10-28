@@ -195,9 +195,9 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(storageRow("catalogItems", unmanagedProduct.itemId).brand).toBe("Heritage");
 
     // 7. Storage keeps the native collection names
-    await expect.poll(() => storageRow("catalogPrices", unmanagedProduct.itemId).regular).toEqual({ currency: "USD", minor: "19500" });
-    expect(storageRow("catalogPrices", unmanagedProduct.itemId).sale).toEqual({ currency: "USD", minor: "16000" });
-    expect(storageRow("catalogManualAvailability", unmanagedProduct.itemId).status).toBe("in-stock");
+    await expect.poll(() => storageRow("catalogItems", unmanagedProduct.itemId).catalogData.items[unmanagedProduct.itemId].price.regular).toEqual({ currency: "USD", minor: "19500" });
+    expect(storageRow("catalogItems", unmanagedProduct.itemId).catalogData.items[unmanagedProduct.itemId].price.sale).toEqual({ currency: "USD", minor: "16000" });
+    expect(storageRow("catalogItems", unmanagedProduct.itemId).catalogData.items[unmanagedProduct.itemId].availability.status).toBe("in-stock");
 
     const bootBeforeEnable = storageRow("catalogItems", unmanagedProduct.itemId);
     const bootPriceBeforeEnable = storageRow("catalogPrices", unmanagedProduct.itemId);

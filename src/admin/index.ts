@@ -45,3 +45,4 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
 }
 
 export { productMediaPanel, productPanel } from "./products.js";
+export { CATALOG_API_ROUTE, catalogApi } from "./catalog-api.js";

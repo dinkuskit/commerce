@@ -1,3 +1,4 @@
+import type { CatalogWriter } from "./product-state.js";
 import type { StorageCollection } from "emdash";
 
 import type { StockManagement } from "../inventory-provider/kernel/index.js";
@@ -76,6 +77,20 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   pageId?: string;
   /** The claim that check wrote; only that claim may give the product back. */
   pageClaim?: string;
+  /** Atomic product-scoped saved values. Missing fields still read legacy storage. */
+  catalogData?: CatalogData;
+}
+
+export interface CatalogData {
+  version: 1;
+  items: Record<string, {
+    price?: CatalogPriceRecord | null;
+    availability?: CatalogManualAvailabilityRecord;
+    weightOz?: number | null;
+    /** Native non-default choice tracking; committed with its catalog values. */
+    stockManagement?: StockManagement;
+  }>;
+  feedChannels?: string[];
 }
 
 export type CatalogFulfillment = "physical" | "digital";
@@ -182,7 +197,7 @@ export type CatalogManualAvailabilityStorage = Pick<
 >;
 
 export interface SetCatalogItemManualAvailabilityStorage {
-  catalog: CatalogItemReadStorage;
+  catalog: CatalogWriter;
   availability: CatalogManualAvailabilityStorage;
 }
 
@@ -215,7 +230,7 @@ export type CatalogPriceStorage = Pick<
 >;
 
 export interface SetCatalogItemPriceStorage {
-  catalog: CatalogItemReadStorage;
+  catalog: CatalogWriter;
   prices: CatalogPriceStorage;
 }
 

@@ -1,5 +1,5 @@
 import { pluginRoute, type SandboxedPlugin } from "emdash/plugin";
-import { commerceAdmin, productMediaPanel, productPanel, syncOrdersWithShip } from "./admin/index.js";
+import { CATALOG_API_ROUTE, catalogApi, commerceAdmin, productMediaPanel, productPanel, syncOrdersWithShip } from "./admin/index.js";
 import { PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
@@ -109,6 +109,8 @@ const plugin: SandboxedPlugin = {
     // The store's publish check: a published product page puts its product on sale (catalog-product-states-20261023).
     [PRODUCT_PAGE_ON_SALE_ROUTE]: privatePost("content:publish_any", (route, ctx) => setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never,
       pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, route.input)),
+    // Agents and the CLI manage products here with an EmDash API token (catalog-api-20261027).
+    [CATALOG_API_ROUTE]: privatePost("content:edit_any", catalogApi),
     // Agents and the CLI read and complete orders here with an EmDash API token.
     [ORDERS_API_ROUTE]: privatePost("plugins:manage", async (route, ctx) => {
       const answer = await ordersApi(route, ctx);

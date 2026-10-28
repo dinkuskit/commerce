@@ -63,3 +63,64 @@ export function shareLiterals(code) {
   const bindings = 'let ' + strings.map((value, index) => `${prefix}${index}=${JSON.stringify(value)}`).join(',') + ';';
   return output.slice(0, insertion) + (insertion ? ';' : '') + bindings + output.slice(insertion);
 }
+
+// Standard JavaScript and Workers globals the bundle names often. Each is read once into a module
+// binding at start-up, so every use still reaches the same object or function; nothing is replaced
+// later at runtime in a Worker. Names the bundle itself declares anywhere are left alone.
+const GLOBALS = ['Object', 'Error', 'TypeError', 'Number', 'Array', 'String', 'Boolean', 'JSON', 'Date', 'BigInt', 'Set', 'Map',
+  'Promise', 'Math', 'Reflect', 'URL', 'Uint8Array', 'Uint32Array', 'TextEncoder', 'TextDecoder', 'encodeURIComponent',
+  'decodeURIComponent', 'structuredClone', 'crypto'];
+
+/**
+ * Reads frequent globals and `void 0` through short module bindings (Object.keys -> G0.keys,
+ * void 0 -> an unassigned binding, which is undefined). A shorthand property keeps its key.
+ */
+export function shareGlobals(code) {
+  const ast = ts.createSourceFile('runtime.mjs', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  if (ast.parseDiagnostics.length) throw new Error('Cannot share globals in invalid JavaScript');
+  let prefix = '__commerceGlobal';
+  while (code.includes(prefix)) prefix += '_';
+  const declared = new Set(), uses = new Map();
+  const use = (name, edit) => uses.set(name, [...uses.get(name) ?? [], edit]);
+  function visit(node) {
+    const parent = node.parent;
+    if (ts.isIdentifier(node) && parent) {
+      const declaration = 'name' in parent && parent.name === node && !ts.isPropertyAccessExpression(parent) &&
+        !ts.isPropertyAssignment(parent) && !ts.isMethodDeclaration(parent) && !ts.isPropertyDeclaration(parent) &&
+        !ts.isGetAccessorDeclaration(parent) && !ts.isSetAccessorDeclaration(parent) && !ts.isShorthandPropertyAssignment(parent) &&
+        !ts.isExportSpecifier(parent) && !ts.isLabeledStatement(parent) && !ts.isPropertySignature(parent) && !ts.isJsxAttribute?.(parent);
+      // typeof tolerates a missing global and a start-up read would not, so such a name is left alone too.
+      if (declaration || ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent) ||
+          ts.isTypeOfExpression(parent)) declared.add(node.text);
+      const reference = GLOBALS.includes(node.text) && !declaration &&
+        !(ts.isPropertyAccessExpression(parent) && parent.name === node) && !(ts.isQualifiedName(parent) && parent.right === node) &&
+        !(ts.isBindingElement(parent) && parent.propertyName === node) && !(ts.isPropertyAssignment(parent) && parent.name === node) &&
+        !ts.isMethodDeclaration(parent) && !ts.isPropertyDeclaration(parent) && !ts.isGetAccessorDeclaration(parent) &&
+        !ts.isSetAccessorDeclaration(parent) && !ts.isExportSpecifier(parent) && !ts.isImportSpecifier(parent) &&
+        !ts.isLabeledStatement(parent) && !ts.isBreakOrContinueStatement(parent);
+      if (reference) use(node.text, { start: node.getStart(ast), end: node.end, shorthand: ts.isShorthandPropertyAssignment(parent) });
+    }
+    if (ts.isVoidExpression(node) && ts.isNumericLiteral(node.expression) && node.expression.text === '0') {
+      use('void 0', { start: node.getStart(ast), end: node.end, wrap: true });
+      return;
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(ast);
+  // A binding pays for itself once its uses outweigh its declaration (the final minifier gives it a short name).
+  const names = [...uses].filter(([name, list]) => !declared.has(name) && list.length * (name.length - 2) > name.length + 4).map(([name]) => name);
+  if (!names.length) return code;
+  const edits = names.flatMap((name, index) => uses.get(name).map(edit => ({
+    ...edit, text: edit.shorthand ? `${name}:${prefix}${index}` : edit.wrap ? `(${prefix}${index})` : `${prefix}${index}`,
+  }))).sort((a, b) => b.start - a.start);
+  let output = code;
+  for (const edit of edits) output = output.slice(0, edit.start) + edit.text + output.slice(edit.end);
+  let insertion = code.startsWith('#!') ? code.indexOf('\n') + 1 : 0;
+  for (const statement of ast.statements) {
+    if (!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)) break;
+    insertion = statement.end;
+  }
+  // undefined is read from the global object (a read-only undefined) so the final minifier keeps the binding.
+  const bindings = 'let ' + names.map((name, index) => `${prefix}${index}=${name === 'void 0' ? 'globalThis.undefined' : name}`).join(',') + ';';
+  return output.slice(0, insertion) + (insertion ? ';' : '') + bindings + output.slice(insertion);
+}

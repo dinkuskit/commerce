@@ -1,5 +1,6 @@
-import { definePlugin, type PluginDescriptor, type PluginRoute, type ResolvedPlugin } from "emdash";
-import { commerceAdmin, productMediaPanel, productPanel } from "./admin/index.js";
+import { definePlugin, PluginRouteError, type PluginDescriptor, type PluginRoute, type ResolvedPlugin } from "emdash";
+import { CATALOG_API_ROUTE, catalogApi, commerceAdmin, productMediaPanel, productPanel } from "./admin/index.js";
+import { CatalogError } from "./features/catalog/kernel/index.js";
 
 import {
   CATALOG_BACKORDER_POLICIES_COLLECTION,
@@ -222,7 +223,7 @@ function withFeedChannels(route: PluginRoute): PluginRoute {
       if (!eligibility) return listed;
       const products = [];
       for (const product of listed.products) {
-        products.push({ ...product, feedChannels: await loadProductFeedEligibility(eligibility, product.catalogItemId) });
+        products.push({ ...product, feedChannels: await loadProductFeedEligibility(eligibility, product.catalogItemId, ctx.storage.catalogItems as never) });
       }
       return { ...listed, products };
     },
@@ -446,6 +447,15 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [MERCHANT_STORE_SETTINGS_ROUTE]: nativeBlockKitRoute(commerceAdmin),
       "product-panel": nativeBlockKitRoute(productPanel),
       "product-media-panel": nativeBlockKitRoute(productMediaPanel),
+      // The Registry build's catalog API (catalog-api-20261027), so the CLI works on a native store too.
+      [CATALOG_API_ROUTE]: { public: false, permission: "content:edit_any", methods: ["POST"], handler: async (ctx) => {
+        try {
+          return await catalogApi({ input: ctx.input } as never, nativeAdminContext(ctx) as never);
+        } catch (error) {
+          if (error instanceof CatalogError) throw new PluginRouteError(error.code, error.message, error.status);
+          throw error;
+        }
+      } },
       [PUBLIC_CATALOG_ROUTE]: publicCatalogRoute,
       [PUBLIC_CATALOG_ITEM_ROUTE]: publicCatalogItemRoute,
       [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
@@ -496,6 +506,7 @@ export default createPlugin;
 export * from "./features/checkout/index.js";
 
 export * from "./features/orders/index.js";
+export { CATALOG_API_ROUTE } from "./admin/index.js";
 
 export * from "./features/customers/index.js";
 

@@ -1,3 +1,4 @@
+import { catalogValue, saveProductData, type CatalogReader } from "./product-state.js";
 import { isRecord } from "../../shared/record.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { CatalogError, catalogStorage } from "./errors.js";
@@ -73,8 +74,10 @@ function normalizeStoredAvailability(
 export async function loadCatalogItemManualAvailability(
   storage: SetCatalogItemManualAvailabilityStorage["availability"],
   catalogItemId: string,
+  catalog: CatalogReader,
 ): Promise<CatalogManualAvailabilityRecord> {
-  const stored: CatalogManualAvailabilityRecord | null = await catalogStorage(() => storage.get(catalogItemId), "manual availability lookup failed");
+  const saved = await catalogValue(catalog, catalogItemId, "availability");
+  const stored = saved !== undefined ? saved : await catalogStorage(() => storage.get(catalogItemId), "manual availability lookup failed");
   return normalizeStoredAvailability(stored, catalogItemId);
 }
 
@@ -83,34 +86,14 @@ export async function setCatalogItemManualAvailability(
   rawInput: unknown,
 ): Promise<SetCatalogItemManualAvailabilityResult> {
   const input = normalizeInput(rawInput);
-  const item = await catalogStorage(() => storage.catalog.get(input.catalogItemId), "catalog item lookup failed");
-  if (item === null || item.recordKind !== "catalog-item") {
-    throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
-  }
-  if (item.itemId !== input.catalogItemId) {
-    throw new CatalogError(
-      "STORAGE_UNAVAILABLE",
-      "stored catalog item identity does not match its key",
-    );
-  }
-  if (normalizeStoredStockManagement(item.stockManagement).mode === "managed") {
-    throw new CatalogError(
-      "MANAGE_STOCK_ENABLED",
-      "manual availability requires Manage Stock off",
-    );
-  }
-
-  const availability = await loadCatalogItemManualAvailability(
-    storage.availability,
-    input.catalogItemId,
-  );
-  if (availability.status === input.status) {
-    return { changed: false, availability };
-  }
-  const updated: CatalogManualAvailabilityRecord = {
-    ...availability,
-    status: input.status,
-  };
-  await catalogStorage(() => storage.availability.put(updated.recordId, updated), "manual availability update failed");
-  return { changed: true, availability: updated };
+  return saveProductData(storage.catalog, input.catalogItemId, async (data, item) => {
+    if (normalizeStoredStockManagement(item.stockManagement).mode === "managed")
+      throw new CatalogError("MANAGE_STOCK_ENABLED", "manual availability requires Manage Stock off");
+    const values = data.items[input.catalogItemId] ?? {};
+    const availability = values.availability ?? await loadCatalogItemManualAvailability(storage.availability, input.catalogItemId, storage.catalog);
+    if (availability.status === input.status) return { changed: false, availability };
+    const updated = { ...availability, status: input.status };
+    data.items[input.catalogItemId] = { ...values, availability: updated };
+    return { changed: true, availability: updated };
+  });
 }

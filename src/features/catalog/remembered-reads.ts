@@ -34,13 +34,53 @@ export function rememberReads(storage: Record<string, unknown>): RememberedReads
       let remembered = wrapped.get(name);
       if (!remembered) {
         const seen = known(name);
+        const versions = new Map<string, Promise<{ value: unknown; revision: string } | null>>();
         const get = (id: string) => {
           let read = seen.get(id);
           if (!read) seen.set(id, (read = collection.get(id)));
           return read;
         };
         remembered = new Proxy(collection, {
-          get: (inner, key, innerReceiver) => (key === "get" ? get : Reflect.get(inner, key, innerReceiver)),
+          get(inner, key, innerReceiver) {
+            if (key === "get") return get;
+            const method = Reflect.get(inner, key, innerReceiver);
+            if (typeof method !== "function") return method;
+            if (key === "getMany") return async (ids: string[]) => {
+              const missing = [...new Set(ids)].filter(id => !seen.has(id));
+              if (missing.length) {
+                const found = await method.call(inner, missing);
+                for (const id of missing) seen.set(id, Promise.resolve(found.get(id) ?? null));
+              }
+              const rows = await Promise.all(ids.map(async id => [id, await seen.get(id)] as const));
+              return new Map(rows.filter(([, value]) => value !== null));
+            };
+            if (key === "getVersioned") return (id: string) => {
+              let result = versions.get(id);
+              if (!result) {
+                result = method.call(inner, id);
+                versions.set(id, result!);
+                const value = result!.then(row => row?.value ?? null);
+                value.catch(() => {}); // The versioned caller observes the original failure.
+                seen.set(id, value);
+              }
+              return result;
+            };
+            if (key === "compareAndSet") return async (id: string, revision: string | null, value: unknown) => {
+              // Forget before issuing the write: even a rejected transport may have committed.
+              seen.delete(id); versions.delete(id);
+              const result = await method.call(inner, id, revision, value);
+              if (result.applied) {
+                seen.set(id, Promise.resolve(value));
+                if (result.revision) versions.set(id, Promise.resolve({ value, revision: result.revision }));
+              }
+              return result;
+            };
+            if (["put", "delete", "compareAndDelete", "updateIf"].includes(String(key))) return async (id: string, ...args: unknown[]) => {
+              seen.delete(id); versions.delete(id);
+              return method.call(inner, id, ...args);
+            };
+            return method.bind(inner);
+          },
         });
         wrapped.set(name, remembered);
       }

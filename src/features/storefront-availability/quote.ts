@@ -35,7 +35,7 @@ export async function quoteCatalogBasket(
     if (!(await resolveStorefrontAvailability(storage, { catalogItemId }, execution)).sellable) {
       return { ok: false, reason: "unavailable" };
     }
-    const unitPrice = (await resolveCatalogItemPrice(storage.prices, catalogItemId)).customerPays;
+    const unitPrice = (await resolveCatalogItemPrice(storage.prices, catalogItemId, storage.catalog)).customerPays;
     if (!unitPrice) return { ok: false, reason: "unpriced" };
     const fulfillment = member?.fulfillment ?? item.fulfillment ?? "physical";
     const line: CatalogQuoteLine = { catalogItemId, name: (parent ?? item).name, unitPrice, fulfillment, ...(variant ? { variant } : {}) };

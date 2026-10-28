@@ -49,7 +49,7 @@ export type {
   CatalogProductVariantListItem,
 } from "../product-admin.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "../normalize.js";
-export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct } from "../product-edit.js";
+export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct, named } from "../product-edit.js";
 export { PRODUCT_PAGES_COLLECTION, linkProductPage, pageProduct, productPageLinks, setProductPageOnSale } from "../product-pages.js";
 export type { ProductPageRecord, ProductPages } from "../product-pages.js";
 export {
@@ -183,3 +183,8 @@ export type {
   SetCatalogItemIdentifiersInput,
   SetCatalogItemIdentifiersResult,
 } from "../set-identifiers.js";
+
+export { setCatalogWeights } from "../weight.js";
+export { catalogRoot, catalogValue, productData, saveProductData } from "../product-state.js";
+export type { CatalogReader, CatalogWriter } from "../product-state.js";
+export { rememberReads } from "../remembered-reads.js";

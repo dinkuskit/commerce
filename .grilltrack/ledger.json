@@ -2,13 +2,13 @@
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
-    "cadence": "frontier-batch",
+    "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-27T18:12:39+00:00",
+    "confirmed_at": "2026-10-27T22:57:17+00:00",
     "domain": "Grow Funky Beans migration issues (Commerce)",
-    "started_at": "2026-10-27T18:12:39+00:00",
+    "started_at": "2026-10-27T20:07:13+00:00",
     "status": "confirmed",
-    "summary": "Ronald 27 Oct 2026: 16:52 'do all of these that we are keeping in a 7.x beta'; 16:57 'understood and agreed' to the byte-freeing pass; 17:15 on #191 'I think I like this ... it should be made clear in the admin dash that it's a simple product. If you want it to be a variable product, you just add an attribute'."
+    "summary": "Implement owner-selected option A for issue 203: an atomic product catalog save value with safe legacy compatibility, current-revision guards and truthful outcomes at stock 10; prove both native and deployed Registry paths, then submit a reviewed PR without merge or release."
   },
   "decisions": [
     {
@@ -14687,10 +14687,283 @@
       "superseded_by": null,
       "updated_at": "2026-10-27T18:38:52+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce gets one private JSON route, catalog (POST, content:edit_any, both builds), that an EmDash API token can call. One op per request runs the product panels' own checks: list, get, create (a physical Draft, linked to entryId when given; commandId makes a retry find the same product), link, prices (with stock status), choice, labels, sku, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels. Writes answer with what the core functions return, so a refused write says why. A write may carry expected, the first 12 hex digits of SHA-256 over the product's get answer as JSON (for a choice, its product named as productId); Commerce rereads the product and refuses with COMMAND_CONFLICT when it no longer matches, so the check happens inside the save request, not in the caller. The dinkus-commerce CLI wraps every op but labels as products commands: --dry-run prints that code, --confirm sends it as expected; create needs --command-id instead. Our CLI and any other agent use the same API.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/190",
+      "created_at": "2026-10-27T19:14:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Grow Funky Beans migration issues (Commerce)",
+      "history": [
+        {
+          "at": "2026-10-27T19:14:29+00:00",
+          "choice": "Commerce gets one private JSON route, catalog (POST, content:edit_any), that an EmDash API token can call. One op per request runs the product panels' own checks: list, get, create (a physical Draft, linked to entryId when given; commandId makes a retry find the same product), link, prices, choice, labels, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels. Writes answer with what the core functions return, so a refused write says why. Our CLI builds on the same route, so it is one API for every agent, ours or the owner's.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T19:27:00+00:00",
+          "choice": "Commerce gets one private JSON route, catalog (POST, content:edit_any), that an EmDash API token can call. One op per request runs the product panels' own checks: list, get, create (a physical Draft, linked to entryId when given; commandId makes a retry find the same product), link, prices, choice, labels, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels. Writes answer with what the core functions return, so a refused write says why. Our CLI builds on the same route, so it is one API for every agent, ours or the owner's.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Add the SKU op and the CLI product commands that #190 asks for, before the PR opens",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T19:27:01+00:00",
+          "choice": "Commerce gets one private JSON route, catalog (POST, content:edit_any), that an EmDash API token can call. One op per request runs the product panels' own checks: list, get, create (a physical Draft, linked to entryId when given; commandId makes a retry find the same product), link, prices, choice, labels, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels. Writes answer with what the core functions return, so a refused write says why. Our CLI builds on the same route, so it is one API for every agent, ours or the owner's.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T20:07:13+00:00",
+          "choice": "Commerce gets one private JSON route, catalog (POST, content:edit_any, both builds), that an EmDash API token can call. One op per request runs the product panels' own checks: list, get, create (a physical Draft, linked to entryId when given; commandId makes a retry find the same product), link, prices (with stock status), choice, labels, sku, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels. Writes answer with what the core functions return, so a refused write says why. The dinkus-commerce CLI wraps every op but labels as products commands. The route has no preview, so each CLI change is bound to a fresh read: --dry-run prints a 12-digit hash of the product it read, and --confirm sends only while a fresh read still hashes the same; create needs --command-id instead. Our CLI and any other agent use the same API.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "Ronald 27 Oct 19:54 chose B: Commerce checks the CLI's preview code itself before it saves",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T20:07:13+00:00",
+          "choice": "Commerce gets one private JSON route, catalog (POST, content:edit_any, both builds), that an EmDash API token can call. One op per request runs the product panels' own checks: list, get, create (a physical Draft, linked to entryId when given; commandId makes a retry find the same product), link, prices (with stock status), choice, labels, sku, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels. Writes answer with what the core functions return, so a refused write says why. The dinkus-commerce CLI wraps every op but labels as products commands. The route has no preview, so each CLI change is bound to a fresh read: --dry-run prints a 12-digit hash of the product it read, and --confirm sends only while a fresh read still hashes the same; create needs --command-id instead. Our CLI and any other agent use the same API.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-api-20261027",
+      "implementation_ref": null,
+      "question": "How do agents and tools other than our own manage products (commerce#190, with #194)?",
+      "rationale": "Ronald 27 Oct 18:19 chose a real catalog API (bring-your-own-agent and first-party agents), 18:20 asked for real savings before any deferral, and 19:54 chose the server-side preview check (option B) over a CLI-only check. The route and check cost about 1.1 KB; a build step that shares repeated global names freed about 2.6 KB with no feature cut.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-27T20:07:13+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:e4da1218bc429d469442e5e6a807c7f46856e65b",
+      "candidate_refs": [],
+      "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+      "context_ref": "docs/decisions/catalog-atomic-saves.md",
+      "created_at": "2026-10-27T22:57:17+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Grow Funky Beans migration issues (Commerce)",
+      "history": [
+        {
+          "at": "2026-10-27T22:57:17+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T23:08:25+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T23:08:25+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T23:17:25+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "verified",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:17:33+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "review_result": "findings",
+          "review_source_identity": "git:b4b84fbb15cdf26a42f23580300adff486dbe630",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:19:27+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:30:50+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "verified",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:30:50+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "review_result": "findings",
+          "review_source_identity": "git:4c57e19e3cf3b4e458ccc00fe1ff7986f15b15c2",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:32:50+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        }
+      ],
+      "id": "catalog-atomic-saves-203",
+      "implementation_ref": "src/features/catalog/product-state.ts",
+      "question": "How can catalog saves be atomic and truthful at the stock ten-subrequest limit?",
+      "rationale": "Owner selected option A on 2026-10-27 after the live default-limit failure and single-key sandbox boundary were explained.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "result": "findings",
+          "reviewed_at": "2026-10-27T23:17:25+00:00",
+          "source_identity": "git:b4b84fbb15cdf26a42f23580300adff486dbe630"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "result": "findings",
+          "reviewed_at": "2026-10-27T23:30:50+00:00",
+          "source_identity": "git:4c57e19e3cf3b4e458ccc00fe1ff7986f15b15c2"
+        }
+      ],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-27T23:32:50+00:00",
+      "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-22T13:36:01+00:00",
+    "at": "2026-10-27T20:07:13+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -14723,5 +14996,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-27T18:38:52+00:00"
+  "updated_at": "2026-10-27T23:32:50+00:00"
 }

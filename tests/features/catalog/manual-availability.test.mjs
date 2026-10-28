@@ -18,6 +18,7 @@ class MemoryCollection {
       records.map((record) => [record.recordId ?? record.itemId, structuredClone(record)]),
     );
     this.puts = [];
+    this.revisions = new Map([...this.records.keys()].map(id => [id, crypto.randomUUID()]));
   }
 
   async get(id) {
@@ -25,7 +26,17 @@ class MemoryCollection {
     return record === undefined ? null : structuredClone(record);
   }
 
+  async getVersioned(id) {
+    const value = await this.get(id);
+    return value === null ? null : { value, revision: this.revisions.get(id) };
+  }
+  async compareAndSet(id, expected, value) {
+    if ((this.revisions.get(id) ?? null) !== expected) return { applied: false };
+    await this.put(id, value);
+    return { applied: true, revision: this.revisions.get(id) };
+  }
   async put(id, record) {
+    this.revisions.set(id, crypto.randomUUID());
     this.records.set(id, structuredClone(record));
     this.puts.push({ id, record: structuredClone(record) });
   }
@@ -54,6 +65,7 @@ test("new and legacy unmanaged products normalize to In stock without a write", 
   const loaded = await loadCatalogItemManualAvailability(
     availability,
     "item-grill",
+    new MemoryCollection([catalogItem()]),
   );
 
   assert.equal(DEFAULT_CATALOG_MANUAL_AVAILABILITY, "in-stock");
@@ -87,8 +99,8 @@ test("an unmanaged product persists one strict manual status idempotently", asyn
   assert.equal(retry.changed, false);
   assert.equal(backorder.changed, true);
   assert.equal(backorder.availability.status, "available-on-backorder");
-  assert.equal(availability.puts.length, 2);
-  assert.equal(catalog.puts.length, 0);
+  assert.equal(availability.puts.length, 0);
+  assert.equal(catalog.puts.length, 2);
 });
 
 test("manual availability cannot be changed while Manage Stock is enabled", async () => {
@@ -120,7 +132,7 @@ test("manual availability cannot be changed while Manage Stock is enabled", asyn
       error instanceof CatalogError && error.code === "MANAGE_STOCK_ENABLED",
   );
   assert.equal(availability.puts.length, 0);
-  assert.equal(availability.records.get("item-grill").status, "out-of-stock");
+  assert.equal((await loadCatalogItemManualAvailability(availability, "item-grill", catalog)).status, "out-of-stock");
 });
 
 test("manual availability rejects malformed input and untrustworthy storage", async () => {
@@ -158,7 +170,7 @@ test("manual availability rejects malformed input and untrustworthy storage", as
     },
   ]);
   await assert.rejects(
-    loadCatalogItemManualAvailability(malformed, "item-grill"),
+    loadCatalogItemManualAvailability(malformed, "item-grill", new MemoryCollection([catalogItem()])),
     (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
   );
 
@@ -202,7 +214,7 @@ test("the plugin exposes one private permissioned manual-availability action", a
   });
 
   assert.equal(result.availability.status, "out-of-stock");
-  assert.equal(availability.records.get("item-grill").status, "out-of-stock");
+  assert.equal((await loadCatalogItemManualAvailability(availability, "item-grill", catalog)).status, "out-of-stock");
 
   catalog.records.set(
     "item-grill",
