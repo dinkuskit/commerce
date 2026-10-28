@@ -1,3 +1,4 @@
+import { catalogRoot } from "../catalog/kernel/index.js";
 import { isRecord } from "../../shared/record.js";
 import {
   loadCatalogItemBackorderPolicy,
@@ -142,6 +143,8 @@ async function loadCatalogItemForAvailability(
   let stored: CatalogStorageRecord | null;
   try {
     stored = await storage.get(catalogItemId);
+    if (stored?.recordKind === "catalog-item" && stored.variantProductId)
+      stored = (await catalogRoot(storage, catalogItemId)).current;
   } catch {
     return null;
   }
@@ -321,7 +324,7 @@ async function unlistIfUnpriced(
   catalogItemId: string,
 ): Promise<StorefrontAvailabilityResult | null> {
   try {
-    const price = await resolveCatalogItemPrice(storage.prices, catalogItemId);
+    const price = await resolveCatalogItemPrice(storage.prices, catalogItemId, storage.catalog);
     if (!price.listable) return unavailable(catalogItemId, false);
     return null;
   } catch {
@@ -383,6 +386,7 @@ export async function resolveStorefrontAvailability(
     const availability = await loadCatalogItemManualAvailability(
       storage.manualAvailability,
       item.itemId,
+      storage.catalog,
     );
     return applyOutOfStockListing(
       storage,

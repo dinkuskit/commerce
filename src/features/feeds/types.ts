@@ -1,3 +1,4 @@
+import type { CatalogWriter } from "../catalog/kernel/index.js";
 import type { PublicCatalogProduct } from "../catalog/index.js";
 
 export const PRODUCT_FEED_CHANNELS = ["google-merchant", "meta-catalog"] as const;
@@ -15,9 +16,7 @@ export interface ProductFeedEligibilityStorage {
   put(id: string, value: ProductFeedEligibilityRecord): Promise<unknown>;
 }
 
-export interface ProductFeedEligibilityCatalog {
-  get(id: string): Promise<unknown | null>;
-}
+export type ProductFeedEligibilityCatalog = CatalogWriter;
 
 export interface SetProductFeedEligibilityInput {
   catalogItemId: string;

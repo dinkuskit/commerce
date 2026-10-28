@@ -223,7 +223,7 @@ function withFeedChannels(route: PluginRoute): PluginRoute {
       if (!eligibility) return listed;
       const products = [];
       for (const product of listed.products) {
-        products.push({ ...product, feedChannels: await loadProductFeedEligibility(eligibility, product.catalogItemId) });
+        products.push({ ...product, feedChannels: await loadProductFeedEligibility(eligibility, product.catalogItemId, ctx.storage.catalogItems as never) });
       }
       return { ...listed, products };
     },

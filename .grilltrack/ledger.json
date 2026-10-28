@@ -3,11 +3,12 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": false,
+    "confirmed": true,
+    "confirmed_at": "2026-10-27T22:57:17+00:00",
     "domain": "Grow Funky Beans migration issues (Commerce)",
     "started_at": "2026-10-27T20:07:13+00:00",
-    "status": "grilling",
-    "summary": "Reopen catalog-api-20261027: Ronald 27 Oct 19:54 chose B: Commerce checks the CLI's preview code itself before it saves"
+    "status": "confirmed",
+    "summary": "Implement owner-selected option A for issue 203: an atomic product catalog save value with safe legacy compatibility, current-revision guards and truthful outcomes at stock 10; prove both native and deployed Registry paths, then submit a reviewed PR without merge or release."
   },
   "decisions": [
     {
@@ -14783,6 +14784,182 @@
       "superseded_by": null,
       "updated_at": "2026-10-27T20:07:13+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:e4da1218bc429d469442e5e6a807c7f46856e65b",
+      "candidate_refs": [],
+      "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+      "context_ref": "docs/decisions/catalog-atomic-saves.md",
+      "created_at": "2026-10-27T22:57:17+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Grow Funky Beans migration issues (Commerce)",
+      "history": [
+        {
+          "at": "2026-10-27T22:57:17+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T23:08:25+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T23:08:25+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-27T23:17:25+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "verified",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:17:33+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "review_result": "findings",
+          "review_source_identity": "git:b4b84fbb15cdf26a42f23580300adff486dbe630",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:19:27+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:30:50+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "verified",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "adjudicated review requires a fix",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:30:50+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "needs_reverification",
+          "implementation_ref": "src/features/catalog/product-admin.ts",
+          "note": "bounded implementation recorded",
+          "repair_required": true,
+          "review_classifications": [
+            "required_fix"
+          ],
+          "review_ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "review_result": "findings",
+          "review_source_identity": "git:4c57e19e3cf3b4e458ccc00fe1ff7986f15b15c2",
+          "to": "implemented",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        },
+        {
+          "at": "2026-10-27T23:32:50+00:00",
+          "choice": "Keep the repair in Commerce: one conditional product catalogData save value, legacy field read-through with explicit clears, shared authoritative readers and writers, revision-bound forms, no stock ownership or host-limit change.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-state.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
+        }
+      ],
+      "id": "catalog-atomic-saves-203",
+      "implementation_ref": "src/features/catalog/product-state.ts",
+      "question": "How can catalog saves be atomic and truthful at the stock ten-subrequest limit?",
+      "rationale": "Owner selected option A on 2026-10-27 after the live default-limit failure and single-key sandbox boundary were explained.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "result": "findings",
+          "reviewed_at": "2026-10-27T23:17:25+00:00",
+          "source_identity": "git:b4b84fbb15cdf26a42f23580300adff486dbe630"
+        },
+        {
+          "classifications": [
+            "required_fix"
+          ],
+          "ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635",
+          "result": "findings",
+          "reviewed_at": "2026-10-27T23:30:50+00:00",
+          "source_identity": "git:4c57e19e3cf3b4e458ccc00fe1ff7986f15b15c2"
+        }
+      ],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-27T23:32:50+00:00",
+      "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
     }
   ],
   "last_activation": {
@@ -14819,5 +14996,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-27T20:07:13+00:00"
+  "updated_at": "2026-10-27T23:32:50+00:00"
 }

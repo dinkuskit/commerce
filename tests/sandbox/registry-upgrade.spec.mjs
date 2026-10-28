@@ -130,7 +130,7 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   await priceForm.getByRole("button", { name: /^Save/ }).click();
   await expect(priceForm.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.00");
   await capture(page, "panel");
-  await expect.poll(() => rows("catalog_prices")[hat].regular).toEqual({ currency: "USD", minor: "1300" });
+  await expect.poll(() => rows("catalog_items")[hat].catalogData.items[hat].price.regular).toEqual({ currency: "USD", minor: "1300" });
 
   // 5. The page's next publish check claims its product; another page is refused; unpublishing takes it off the shop.
   // Already on sale from before the upgrade, so nothing changes for shoppers; the page is recorded as its seller.

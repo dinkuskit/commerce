@@ -92,7 +92,7 @@ async function projectPublicCatalogProduct(
   const variant = await resolveCatalogVariantMember(storage.catalog, item.itemId);
   if (variant === null) return null;
   const availability = await resolveStorefrontAvailability(storage, { catalogItemId: item.itemId });
-  const price = await resolveCatalogItemPrice(storage.prices, item.itemId);
+  const price = await resolveCatalogItemPrice(storage.prices, item.itemId, storage.catalog);
   const media = await loadCatalogItemMedia(mediaStorage, item.itemId);
   const image =
     (media.image && (await images.project(media.image, item.name))) ||
@@ -104,14 +104,14 @@ async function projectPublicCatalogProduct(
     if (projected) gallery.push(projected);
   }
   const feedChannels = eligibility
-    ? await loadProductFeedEligibility(eligibility, item.itemId)
+    ? await loadProductFeedEligibility(eligibility, item.itemId, storage.catalog)
     : undefined;
   if (variant.product) {
     const members = [];
     for (const member of variant.product.members) {
       const memberItem = await resolveCatalogVariantMember(storage.catalog, member.catalogItemId);
       if (!memberItem?.member || memberItem.product?.productId !== variant.product.productId) continue;
-      const memberPrice = await resolveCatalogItemPrice(storage.prices, member.catalogItemId);
+      const memberPrice = await resolveCatalogItemPrice(storage.prices, member.catalogItemId, storage.catalog);
       if (!memberPrice.listable || !memberPrice.customerPays) continue;
       const memberAvailability = await resolveStorefrontAvailability(storage, {
         catalogItemId: member.catalogItemId,

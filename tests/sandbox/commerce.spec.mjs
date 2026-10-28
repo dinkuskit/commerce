@@ -143,7 +143,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await expect(panel.getByText(/^On sale · SKU RED-HAT/)).toBeVisible();
     await expect(panel.getByText("Add a Regular price to sell it", { exact: true })).toHaveCount(0);
     expect(lastSave.values).not.toHaveProperty("manageStock");
-    expect(raw("catalog_prices")[0]).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
+    expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].price).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
     // Shipping weight in ounces sits on the catalog item; a refused weight keeps the typing and the stored value.
     const saveWeight = async () => {
       const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
@@ -153,11 +153,11 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
     expect((await saveWeight()).toast.message).toBe("Weight saved");
     await expect(panel.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("12.5");
-    expect(raw("catalog_items")[0].weightOz).toBe(12.5);
+    expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].weightOz).toBe(12.5);
     await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("heavy");
     expect((await saveWeight()).toast.type).toBe("error");
     await expect(panel.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("heavy");
-    expect(raw("catalog_items")[0].weightOz).toBe(12.5);
+    expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].weightOz).toBe(12.5);
     await capture("product-weight-refused");
     await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
     expect((await saveWeight()).toast.type).toBe("success");
@@ -193,14 +193,14 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
       const rejected = await save(); expect(rejected.toast.type).toBe("error"); expect(rejected.toast.message).toContain(error);
       await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue(regular);
       await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue(sale);
-      expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
+      expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].price).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
     }
     await capture("price-refused");
     await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("12.00");
     await panel.getByRole("textbox", { name: "Sale", exact: true }).fill("10.00");
     await panel.getByRole("radio", { name: "In stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
-    expect(raw("catalog_manual_availability")[0].status).toBe("in-stock");
+    expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].availability.status).toBe("in-stock");
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     const catalogBeforeEnable = JSON.stringify(raw("catalog_items"));
     const pricesBeforeEnable = JSON.stringify(raw("catalog_prices"));
@@ -222,11 +222,11 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await expect(panel.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
     await expect(panel.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
-    expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
+    expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].price).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
     expect(raw("managed_sku_claims")).toHaveLength(0);
     await panel.getByRole("radio", { name: "Out of stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
-    expect(raw("catalog_manual_availability")[0].status).toBe("out-of-stock");
+    expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].availability.status).toBe("out-of-stock");
 
     await page.goto(adminPath + "settings");
     await expect(page.getByRole("heading", { name: "Catalog", exact: true })).toBeVisible();
@@ -261,15 +261,17 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     };
     await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("13.25");
     await panel.getByRole("textbox", { name: "Sale", exact: true }).fill("8.50");
-    refuseWrites("catalog_prices");
+    refuseWrites("catalog_items");
     try {
-      expect((await save()).toast.message).toContain("catalog price update failed");
-      await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.25");
-      await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("8.50");
-      await expect(panel.getByRole("button", { name: "Save", exact: true })).toBeVisible();
-      expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
+      expect((await save()).toast.message).toContain("Save outcome unknown");
+      await expect(panel.getByRole("button", { name: "Save", exact: true })).toHaveCount(0);
+      expect(raw("catalog_items")[0].catalogData.items[id].price).toMatchObject({ regular: { minor: "1200" }, sale: { minor: "1000" } });
       await capture("save-storage-refused");
     } finally { allowWrites(); }
+    await page.reload();
+    panel = await openPanel(page);
+    await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("13.25");
+    await panel.getByRole("textbox", { name: "Sale", exact: true }).fill("8.50");
     expect((await save()).toast.type).toBe("success");
     await page.goto(adminPath + "settings");
     await page.getByRole("switch", { name: "Hide out-of-stock products", exact: true }).check();
@@ -367,7 +369,7 @@ test("clerk sets product images from the Media Library and the storefront render
     expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: back.id }, { mediaId: side.id }]);
     expect((await interact("Remove image 1")).toast.message).toBe("Image removed");
     expect(raw("catalog_media")[0].gallery).toEqual([{ mediaId: side.id }]);
-    expect(raw("catalog_prices")[0]).toMatchObject({ regular: { minor: "1325" }, sale: { minor: "850" } });
+    expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].price).toMatchObject({ regular: { minor: "1325" }, sale: { minor: "850" } });
     await page.reload();
     panel = await openMediaPanel(page);
     await expect(panel.getByRole("img", { name: "Red hat, front" })).toBeVisible();

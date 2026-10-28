@@ -47,6 +47,36 @@ Publishing the page puts the product on sale, and unpublishing or deleting the p
 
 To show this panel, Commerce `0.6.0` asks for two new permissions when it is installed or upgraded: `admin.editor-draft:read`, to read the page's title and product link, and `admin.editor-draft:patch`, to set only the page's `commerce_item_id` field.
 
+## Saving and upgrading catalog data
+
+Price and stock-status saves, including submitted feed choices, commit together.
+Native local-stock hosts keep choice-level tracking changes in that same commit.
+Native catalog lists return the product revision for every choice. A native bulk
+price request validates sibling choices against that same snapshot and commits
+its valid rows together; invalid rows remain individually reported. A competing
+product edit refuses the staged rows for that product without a partial save.
+A **Save weight** action commits all submitted choice weights together. These
+actions work within EmDash's default ten-subrequest sandbox limit. If another
+editor changes the product after a form opens, reload before saving again.
+
+If a save succeeds but the panel cannot refresh, Commerce says the changes were
+saved and offers **Reload product**. If the write outcome cannot be confirmed,
+it says **Save outcome unknown**; reload to check the values before submitting
+again. An error is not a reason to assume nothing was stored.
+
+Existing product IDs, SKUs and order snapshots remain unchanged. Old values are
+read until each field is saved in the new product record. Cleared values stay
+cleared. This transition retains old records but does not write changes back to
+them. Run one Commerce version at a time; downgrading after these saves requires
+an explicit data conversion. Do not run old and new binaries as concurrent writers.
+
+For direct kernel consumers, price, manual-availability and feed-eligibility
+readers now require the catalog reader as their third argument. Use these
+readers or the catalog API, rather than reading the legacy collections directly;
+raw legacy records may no longer be current. A product supports at most fifty
+choices, and saves exceeding the host's 1 MiB record limit are refused before
+writing.
+
 ## Product identity and pricing
 
 Use the permanent Commerce item ID to look up a product and submit a cart line. The merchant's SKU is a separate editable attribute; a page URL is a host-owned publishing decision.

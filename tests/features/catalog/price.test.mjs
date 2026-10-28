@@ -122,7 +122,7 @@ function storage(item = catalogItem(), prices = []) {
 
 test("missing Regular is not listable and is never treated as zero", async () => {
   const prices = new MemoryCollection();
-  const resolved = await resolveCatalogItemPrice(prices, "item-grill");
+  const resolved = await resolveCatalogItemPrice(prices, "item-grill", new MemoryCollection([catalogItem()]));
 
   assert.deepEqual(resolved, { catalogItemId: "item-grill", listable: false });
   assert.equal("customerPays" in resolved, false);
@@ -147,14 +147,14 @@ test("Regular persists as Money and zero is a free listable product", async () =
   assert.equal(twelve.changed, true);
   assert.equal(retry.changed, false);
   assert.equal(free.changed, true);
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill", stores.catalog), {
     catalogItemId: "item-grill",
     listable: true,
     regular: usd("0"),
     customerPays: usd("0"),
   });
-  assert.equal(stores.catalog.puts.length, 0);
-  assert.equal(stores.prices.puts.length, 2);
+  assert.equal(stores.catalog.puts.length, 2);
+  assert.equal(stores.prices.puts.length, 0);
 });
 
 test("Sale requires Regular, must be strictly lower, and can be cleared alone", async () => {
@@ -191,7 +191,7 @@ test("Sale requires Regular, must be strictly lower, and can be cleared alone", 
 
   assert.equal(sale.changed, true);
   assert.equal(saleRetry.changed, false);
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill", stores.catalog), {
     catalogItemId: "item-grill",
     listable: true,
     regular: usd("1200"),
@@ -203,7 +203,7 @@ test("Sale requires Regular, must be strictly lower, and can be cleared alone", 
     catalogItemId: "item-grill",
   });
   assert.equal(clearedSale.changed, true);
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill", stores.catalog), {
     catalogItemId: "item-grill",
     listable: true,
     regular: usd("1200"),
@@ -239,11 +239,11 @@ test("Regular cannot be cleared while Sale exists, then unpricing hides the prod
   assert.equal(cleared.changed, true);
   assert.equal(cleared.price, null);
   assert.equal(alreadyGone.changed, false);
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-grill", stores.catalog), {
     catalogItemId: "item-grill",
     listable: false,
   });
-  assert.equal(stores.prices.deletes.length, 1);
+  assert.equal(stores.prices.deletes.length, 0);
 });
 
 test("Sale cannot exist on a free Regular and lowering Regular below Sale is refused", async () => {
@@ -302,7 +302,7 @@ test("price writes reject malformed Money and unknown catalog items", async () =
   assert.equal(stores.prices.puts.length, 0);
 });
 
-test("price routes are private POST actions that do not rewrite the catalog row", async () => {
+test("price routes are private POST actions that preserve catalog identity", async () => {
   const plugin = createPlugin();
   const catalog = new MemoryCollection([catalogItem()]);
   const prices = new MemoryCollection();
@@ -353,7 +353,7 @@ test("price routes are private POST actions that do not rewrite the catalog row"
     request: new Request("https://example.test/clear-regular-price", { method: "POST" }),
   });
 
-  assert.equal(catalog.puts.length, 0);
+  assert.equal(catalog.puts.length, 4);
   assert.equal(prices.records.has("item-grill"), false);
 });
 
@@ -380,7 +380,7 @@ test("concurrent Regular and Sale edits retry on CAS contention, preserve siblin
     catalogItemId: "item-grill",
     amount: usd("1200"),
   });
-  compatible.prices.onGetVersioned = createTwoPartyBarrier();
+  compatible.catalog.onGetVersioned = createTwoPartyBarrier();
   const [raisedRegular, addedSale] = await Promise.all([
     setCatalogItemRegularPrice(compatible, {
       catalogItemId: "item-grill",
@@ -391,10 +391,10 @@ test("concurrent Regular and Sale edits retry on CAS contention, preserve siblin
       amount: usd("1000"),
     }),
   ]);
-  compatible.prices.onGetVersioned = null;
+  compatible.catalog.onGetVersioned = null;
   assert.equal(raisedRegular.changed, true);
   assert.equal(addedSale.changed, true);
-  assert.deepEqual(await resolveCatalogItemPrice(compatible.prices, "item-grill"), {
+  assert.deepEqual(await resolveCatalogItemPrice(compatible.prices, "item-grill", compatible.catalog), {
     catalogItemId: "item-grill",
     listable: true,
     regular: usd("1500"),
@@ -407,7 +407,7 @@ test("concurrent Regular and Sale edits retry on CAS contention, preserve siblin
     catalogItemId: "item-grill",
     amount: usd("1200"),
   });
-  conflicting.prices.onGetVersioned = createTwoPartyBarrier();
+  conflicting.catalog.onGetVersioned = createTwoPartyBarrier();
   const outcomes = await Promise.allSettled([
     setCatalogItemRegularPrice(conflicting, {
       catalogItemId: "item-grill",
@@ -418,14 +418,14 @@ test("concurrent Regular and Sale edits retry on CAS contention, preserve siblin
       amount: usd("1000"),
     }),
   ]);
-  conflicting.prices.onGetVersioned = null;
+  conflicting.catalog.onGetVersioned = null;
   const fulfilled = outcomes.filter((outcome) => outcome.status === "fulfilled");
   const rejected = outcomes.filter((outcome) => outcome.status === "rejected");
   assert.equal(fulfilled.length, 1);
   assert.equal(rejected.length, 1);
   assert.equal(rejected[0].reason instanceof CatalogError, true);
   assert.equal(rejected[0].reason.code, "SALE_NOT_LOWER_THAN_REGULAR");
-  const resolvedConflict = await resolveCatalogItemPrice(conflicting.prices, "item-grill");
+  const resolvedConflict = await resolveCatalogItemPrice(conflicting.prices, "item-grill", conflicting.catalog);
   assert.equal(resolvedConflict.listable, true);
   if (resolvedConflict.sale !== undefined) {
     assert.deepEqual(resolvedConflict.regular, usd("1200"));
@@ -439,7 +439,7 @@ test("concurrent Regular and Sale edits retry on CAS contention, preserve siblin
     catalogItemId: "item-grill",
     amount: usd("1200"),
   });
-  clearVsSale.prices.onGetVersioned = createTwoPartyBarrier();
+  clearVsSale.catalog.onGetVersioned = createTwoPartyBarrier();
   const clearOutcomes = await Promise.allSettled([
     clearCatalogItemRegularPrice(clearVsSale, { catalogItemId: "item-grill" }),
     setCatalogItemSalePrice(clearVsSale, {
@@ -447,7 +447,7 @@ test("concurrent Regular and Sale edits retry on CAS contention, preserve siblin
       amount: usd("1000"),
     }),
   ]);
-  clearVsSale.prices.onGetVersioned = null;
+  clearVsSale.catalog.onGetVersioned = null;
   const clearRejected = clearOutcomes.filter((outcome) => outcome.status === "rejected");
   assert.equal(clearRejected.length, 1);
   assert.equal(clearRejected[0].reason instanceof CatalogError, true);
@@ -458,13 +458,13 @@ test("concurrent Regular and Sale edits retry on CAS contention, preserve siblin
   );
 
   const contended = storage();
-  contended.prices.compareAndSet = async () => ({ applied: false });
+  contended.catalog.compareAndSet = async () => ({ applied: false });
   await assert.rejects(
     setCatalogItemRegularPrice(contended, {
       catalogItemId: "item-grill",
       amount: usd("1200"),
     }),
-    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
+    (error) => error instanceof CatalogError && error.code === "COMMAND_CONFLICT",
   );
 });
 

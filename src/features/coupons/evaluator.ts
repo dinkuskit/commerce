@@ -115,7 +115,7 @@ export async function evaluateCoupon(
     if (!item || item.recordKind !== "catalog-item" || item.itemId !== productId) {
       error(`catalog product was not found: ${productId}`);
     }
-    const price = await resolveCatalogItemPrice(storage.prices, productId);
+    const price = await resolveCatalogItemPrice(storage.prices, productId, storage.catalog);
     if (!price.listable || !price.customerPays) error(`catalog product has no price: ${productId}`);
     const unitPrice = price.customerPays;
     const subtotal = parseMinorUnits(unitPrice.minor) * BigInt(quantity);

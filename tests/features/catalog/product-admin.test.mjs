@@ -176,6 +176,7 @@ test("a clerk can save Regular and Sale and see a refusal leave the price unchan
   assert.deepEqual(listed.products, [
     {
       catalogItemId: "item-bag",
+      revision: "catalog:" + (await stores.catalog.getVersioned("item-bag")).revision,
       name: "Bag",
       sku: "BAG-1",
       regular: "12.00",
@@ -197,7 +198,7 @@ test("a clerk can save Regular and Sale and see a refusal leave the price unchan
   assert.match(refused.message, /Regular: Enter a dollar amount/);
   assert.match(refused.message, /Sale: Enter a dollar amount/);
   assert.equal(stores.prices.puts.length, pricePuts);
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog), {
     catalogItemId: "item-bag",
     listable: true,
     regular: { currency: "USD", minor: "1200" },
@@ -233,7 +234,7 @@ test("one decimal and a dollar sign save as cents, and a bad sale does not chang
   });
   assert.equal(cleared.saved, false);
   assert.equal(cleared.message, "End the sale before clearing Regular.");
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog), {
     catalogItemId: "item-bag",
     listable: true,
     regular: { currency: "USD", minor: "1250" },
@@ -249,16 +250,16 @@ test("lowering Regular below the current Sale stores the new lower Sale in one w
     regular: "20",
     sale: "12",
   });
-  const writesBefore = stores.prices.puts.length;
+  const writesBefore = stores.catalog.puts.length;
   const saved = await saveCatalogProductPrices(stores, {
     catalogItemId: "item-bag",
     regular: "11",
     sale: "10",
   });
-  assert.equal(stores.prices.puts.length, writesBefore + 1);
+  assert.equal(stores.catalog.puts.length, writesBefore + 1);
   assert.equal(stores.prices.deletes.length, 0);
   assert.deepEqual(saved, savedForm({ regular: "11.00", sale: "10.00" }));
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog), {
     catalogItemId: "item-bag",
     listable: true,
     regular: { currency: "USD", minor: "1100" },
@@ -274,7 +275,7 @@ test("a failed price write leaves the stored Regular and Sale unchanged", async 
     regular: "20",
     sale: "12",
   });
-  stores.prices.put = async () => {
+  stores.catalog.compareAndSet = async () => {
     throw new Error("disk full");
   };
   await assert.rejects(
@@ -283,9 +284,9 @@ test("a failed price write leaves the stored Regular and Sale unchanged", async 
       regular: "11",
       sale: "10",
     }),
-    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
+    (error) => error instanceof CatalogError && error.code === "SAVE_OUTCOME_UNKNOWN",
   );
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog), {
     catalogItemId: "item-bag",
     listable: true,
     regular: { currency: "USD", minor: "2000" },
@@ -316,7 +317,7 @@ test("blanking both fields ends the sale and unprices the product", async () => 
     sale: "",
   });
   assert.deepEqual(cleared, savedForm({ regular: "", sale: "" }));
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
+  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog), {
     catalogItemId: "item-bag",
     listable: false,
   });
@@ -409,114 +410,41 @@ test("one Save writes Out of stock and a refused status leaves the stored status
   assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
 });
 
-test("a failed stock write after a price change restores the stored Regular and Sale", async () => {
+test("price and stock commit together or neither changes", async () => {
   const stores = storage();
-  await saveCatalogProductPrices(stores, {
-    catalogItemId: "item-bag",
-    regular: "12",
-    sale: "10",
-    stockStatus: "in-stock",
-  });
-  stores.availability.put = async () => {
-    throw new Error("disk full");
-  };
-  await assert.rejects(
-    saveCatalogProductPrices(stores, {
-      catalogItemId: "item-bag",
-      regular: "20",
-      sale: "8",
-      stockStatus: "out-of-stock",
-    }),
-    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
-  );
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
-    catalogItemId: "item-bag",
-    listable: true,
-    regular: { currency: "USD", minor: "1200" },
-    sale: { currency: "USD", minor: "1000" },
-    customerPays: { currency: "USD", minor: "1000" },
-  });
+  await saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "12", sale: "10", stockStatus: "in-stock" });
+  stores.catalog.compareAndSet = async () => ({ applied: false });
+  await assert.rejects(saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "20", sale: "8", stockStatus: "out-of-stock" }), error => error.code === "COMMAND_CONFLICT");
+  assert.equal((await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog)).regular.minor, "1200");
   assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "in-stock");
 });
 
-test("a failed stock write does not restore over a later clerk price save", async () => {
+test("an atomic conflict preserves a later clerk's entire save", async () => {
   const stores = storage();
-  await saveCatalogProductPrices(stores, {
-    catalogItemId: "item-bag",
-    regular: "12",
-    sale: "10",
-    stockStatus: "in-stock",
-  });
-  const originalPut = stores.availability.put.bind(stores.availability);
-  stores.availability.put = async (id, record) => {
-    stores.availability.put = originalPut;
-    await saveCatalogProductPrices(stores, {
-      catalogItemId: "item-bag",
-      regular: "15",
-      sale: "9",
-      stockStatus: "in-stock",
-    });
-    throw new Error("disk full");
+  await saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "12", sale: "10", stockStatus: "in-stock" });
+  const original = stores.catalog.compareAndSet.bind(stores.catalog);
+  stores.catalog.compareAndSet = async (...args) => {
+    stores.catalog.compareAndSet = original;
+    await saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "15", sale: "9", stockStatus: "out-of-stock" });
+    return original(...args);
   };
-  await assert.rejects(
-    saveCatalogProductPrices(stores, {
-      catalogItemId: "item-bag",
-      regular: "20",
-      sale: "8",
-      stockStatus: "out-of-stock",
-    }),
-    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
-  );
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
-    catalogItemId: "item-bag",
-    listable: true,
-    regular: { currency: "USD", minor: "1500" },
-    sale: { currency: "USD", minor: "900" },
-    customerPays: { currency: "USD", minor: "900" },
-  });
-  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "in-stock");
+  await assert.rejects(saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "20", sale: "8", stockStatus: "in-stock" }), error => error.code === "COMMAND_CONFLICT");
+  assert.equal((await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog)).regular.minor, "1500");
+  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
 });
 
-test("a failed stock write does not restore after a later save between verify and restore", async () => {
+test("an unknown write outcome cannot roll back a subsequent save", async () => {
   const stores = storage();
-  await saveCatalogProductPrices(stores, {
-    catalogItemId: "item-bag",
-    regular: "12",
-    sale: "10",
-    stockStatus: "in-stock",
-  });
-  stores.availability.put = async () => {
-    throw new Error("disk full");
+  const original = stores.catalog.compareAndSet.bind(stores.catalog);
+  stores.catalog.compareAndSet = async (...args) => {
+    await original(...args);
+    stores.catalog.compareAndSet = original;
+    await saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "15", sale: "9", stockStatus: "out-of-stock" });
+    throw new Error("lost acknowledgement");
   };
-  const originalGetVersioned = stores.prices.getVersioned.bind(stores.prices);
-  stores.prices.getVersioned = async (id) => {
-    const latest = await originalGetVersioned(id);
-    stores.prices.getVersioned = originalGetVersioned;
-    await saveCatalogProductPrices(stores, {
-      catalogItemId: "item-bag",
-      regular: "15",
-      sale: "9",
-      stockStatus: "in-stock",
-    });
-    return latest;
-  };
-  await assert.rejects(
-    saveCatalogProductPrices(stores, {
-      catalogItemId: "item-bag",
-      regular: "20",
-      sale: "8",
-      stockStatus: "out-of-stock",
-    }),
-    (error) => error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
-  );
-  assert.deepEqual(await resolveCatalogItemPrice(stores.prices, "item-bag"), {
-    catalogItemId: "item-bag",
-    listable: true,
-    regular: { currency: "USD", minor: "1500" },
-    sale: { currency: "USD", minor: "900" },
-    customerPays: { currency: "USD", minor: "900" },
-  });
-  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "in-stock");
+  await assert.rejects(saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "20", sale: "8", stockStatus: "in-stock" }), error => error.code === "SAVE_OUTCOME_UNKNOWN");
+  assert.equal((await resolveCatalogItemPrice(stores.prices, "item-bag", stores.catalog)).regular.minor, "1500");
+  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
 });
 
 test("stock status is hidden and refused while Manage Stock is on", async () => {
@@ -629,7 +557,7 @@ test("unchecking Manage stock honors an explicit status over dormant availabilit
   assert.equal(saved.saved, true);
   assert.equal(saved.stockStatus, "out-of-stock");
   assert.equal(saved.manageStock, false);
-  assert.equal(stores.availability.records.get("item-bag").status, "out-of-stock");
+  assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
   assert.deepEqual(stores.catalog.records.get("item-bag").stockManagement, { mode: "unmanaged" });
   assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
 });
@@ -701,16 +629,9 @@ test("a refused disable does not drop a claim that became pending after the save
     stores.catalog.getVersioned = originalGetVersioned;
     return originalGetVersioned(id);
   };
-  await assert.rejects(
-    saveCatalogProductPrices(stores, {
-      catalogItemId: "item-bag",
-      regular: "",
-      sale: "",
-      manageStock: false,
-    }),
-    (error) =>
-      error instanceof CatalogError && error.code === "MANAGE_STOCK_SETUP_PENDING",
-  );
+  const refused = await saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "", sale: "", manageStock: false });
+  assert.equal(refused.saved, false);
+  assert.match(refused.message, /setup is still running/);
   assert.equal(stores.claims.records.size, 1);
   assert.equal(stores.catalog.records.get("item-bag").stockManagement.status, "setup-pending");
 });
@@ -741,16 +662,9 @@ test("a failed claim release after disable is cleaned up on the next unmanaged s
     }
     return originalDelete(id, revision);
   };
-  await assert.rejects(
-    saveCatalogProductPrices(stores, {
-      catalogItemId: "item-bag",
-      regular: "",
-      sale: "",
-      manageStock: false,
-    }),
-    (error) =>
-      error instanceof CatalogError && error.code === "STORAGE_UNAVAILABLE",
-  );
+  const savedWithCleanup = await saveCatalogProductPrices(stores, { catalogItemId: "item-bag", regular: "", sale: "", manageStock: false });
+  assert.equal(savedWithCleanup.saved, true);
+  assert.match(savedWithCleanup.message, /cleanup is pending/);
   assert.deepEqual(stores.catalog.records.get("item-bag").stockManagement, {
     mode: "unmanaged",
   });

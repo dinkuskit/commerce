@@ -4,7 +4,7 @@ import { productPanel } from "../../../dist/admin/index.js";
 
 // Product editing lives in the Dinkus Commerce panel on each Content > Products page.
 const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
-import { normalizeWeightOz, setCatalogItemWeight } from "../../../dist/features/catalog/index.js";
+import { normalizeWeightOz, setCatalogItemWeight, resolveCatalogVariantMember } from "../../../dist/features/catalog/index.js";
 
 class MemoryCollection {
   constructor(records = []) {
@@ -57,10 +57,12 @@ test("setting a weight changes only the weight, and clearing removes it", async 
   const catalog = new MemoryCollection([item("bag")]);
   const before = await catalog.get("bag");
   assert.equal(await setCatalogItemWeight(catalog, "bag", "12.5"), true);
-  assert.deepEqual(await catalog.get("bag"), { ...before, weightOz: 12.5 });
+  assert.equal((await resolveCatalogVariantMember(catalog, "bag")).item.weightOz, 12.5);
+  const { catalogData: _saved, ...unchanged } = await catalog.get("bag");
+  assert.deepEqual(unchanged, before);
   assert.equal(await setCatalogItemWeight(catalog, "bag", "12.50"), false);
   assert.equal(await setCatalogItemWeight(catalog, "bag", ""), true);
-  assert.deepEqual(await catalog.get("bag"), before);
+  assert.equal((await resolveCatalogVariantMember(catalog, "bag")).item.weightOz, undefined);
   await assert.rejects(setCatalogItemWeight(catalog, "missing", "1"), (error) => error.code === "CATALOG_ITEM_NOT_FOUND");
 });
 
@@ -72,7 +74,7 @@ test("the owner saves a product's shipping weight from its Products page", async
   const saved = await commerceAdmin({ input: { type: "form_submit", action_id: form.submit.action_id, values: { "w:bag": "12.5" } } }, ctx);
   assert.deepEqual(saved.toast, { type: "success", message: "Weight saved" });
   assert.equal(weightForm(saved).fields[0].initial_value, "12.5");
-  assert.equal((await catalog.get("bag")).weightOz, 12.5);
+  assert.equal((await resolveCatalogVariantMember(catalog, "bag")).item.weightOz, 12.5);
 });
 
 test("a refused weight saves nothing and keeps what the owner typed", async () => {
@@ -81,7 +83,7 @@ test("a refused weight saves nothing and keeps what the owner typed", async () =
   assert.equal(refused.toast.type, "error");
   assert.match(refused.toast.message, /ounces/);
   assert.equal(weightForm(refused).fields[0].initial_value, "heavy");
-  assert.equal((await catalog.get("bag")).weightOz, 4);
+  assert.equal((await resolveCatalogVariantMember(catalog, "bag")).item.weightOz, 4);
   assert.equal(catalog.puts.length, 0);
 });
 
@@ -115,5 +117,5 @@ test("each physical choice of a product with choices gets its own weight", async
   assert.equal(catalog.puts.length, 0);
   const saved = await commerceAdmin({ input: { type: "form_submit", action_id: form.submit.action_id, values: { "w:shirt": "6", "w:shirt-l": "7.5" } } }, ctx);
   assert.equal(saved.toast.message, "Weight saved");
-  assert.deepEqual([(await catalog.get("shirt")).weightOz, (await catalog.get("shirt-l")).weightOz, (await catalog.get("shirt-d")).weightOz], [6, 7.5, undefined]);
+  assert.deepEqual([(await resolveCatalogVariantMember(catalog, "shirt")).item.weightOz, (await resolveCatalogVariantMember(catalog, "shirt-l")).item.weightOz, (await resolveCatalogVariantMember(catalog, "shirt-d")).item.weightOz], [6, 7.5, undefined]);
 });

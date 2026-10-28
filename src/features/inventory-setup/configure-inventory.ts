@@ -1,3 +1,4 @@
+import { catalogRoot, saveProductData } from "../catalog/kernel/index.js";
 import { isRecord } from "../../shared/record.js";
 import type {
   CatalogItemRecord,
@@ -64,6 +65,7 @@ async function loadCatalogItem(
   if (stored.itemId !== catalogItemId) {
     setupError("STORAGE_UNAVAILABLE", "stored catalog item identity does not match its key");
   }
+  if (stored.variantProductId) stored = (await catalogRoot(storage, catalogItemId)).current;
   return {
     ...stored,
     creationIntent: stored.creationIntent ?? { manageStock: false },
@@ -107,6 +109,19 @@ async function persistManagedCatalogState(
   }
   if (latest === null || latest.value.recordKind !== "catalog-item") {
     setupError("CATALOG_ITEM_NOT_FOUND", "catalog item was not found");
+  }
+  if (latest.value.variantProductId) {
+    try {
+      return await saveProductData(storage, catalogItemId, (data, item) => {
+        if (normalizeStoredStockManagement(item.stockManagement).mode !== "managed")
+          setupError("MANAGE_STOCK_REQUIRED", "Manage Stock was disabled before Inventory setup finished");
+        data.items[catalogItemId] = { ...data.items[catalogItemId], stockManagement };
+        return { ...item, stockManagement };
+      });
+    } catch (error) {
+      if (error instanceof InventorySetupError) throw error;
+      setupError("STORAGE_UNAVAILABLE", error instanceof Error ? error.message : "catalog inventory state update failed", { cause: error });
+    }
   }
   if (normalizeStoredStockManagement(latest.value.stockManagement).mode !== "managed") {
     setupError("MANAGE_STOCK_REQUIRED", "Manage Stock was disabled before Inventory setup finished");

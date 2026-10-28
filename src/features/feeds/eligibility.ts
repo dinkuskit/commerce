@@ -1,3 +1,4 @@
+import { catalogRoot, productData, saveProductData, type CatalogReader } from "../catalog/kernel/index.js";
 import {
   PRODUCT_FEED_CHANNELS,
   type ProductFeedChannel,
@@ -21,7 +22,14 @@ export function normalizeProductFeedChannels(value: unknown): ProductFeedChannel
 export async function loadProductFeedEligibility(
   storage: Pick<ProductFeedEligibilityStorage, "get">,
   catalogItemId: string,
+  catalog: CatalogReader,
 ): Promise<readonly ProductFeedChannel[]> {
+  if (catalog) {
+    if (!await catalog.get(catalogItemId)) return [];
+    const { root } = await catalogRoot(catalog, catalogItemId);
+    const saved = productData(root).feedChannels;
+    if (saved !== undefined) return normalizeProductFeedChannels(saved);
+  }
   const record = await storage.get(catalogItemId);
   return record?.recordKind === "product-feed-eligibility"
     ? normalizeProductFeedChannels(record.channels)
@@ -33,15 +41,9 @@ export async function setProductFeedEligibility(
   catalog: ProductFeedEligibilityCatalog,
   input: SetProductFeedEligibilityInput,
 ): Promise<ProductFeedEligibilityRecord> {
-  if (!input.catalogItemId || (await catalog.get(input.catalogItemId)) === null) {
-    throw new Error("catalog item was not found");
-  }
-  const record: ProductFeedEligibilityRecord = {
-    recordKind: "product-feed-eligibility",
-    recordId: input.catalogItemId,
-    catalogItemId: input.catalogItemId,
-    channels: normalizeProductFeedChannels(input.channels),
-  };
-  await storage.put(record.recordId, record);
-  return record;
+  const channels = normalizeProductFeedChannels(input.channels);
+  return saveProductData(catalog, input.catalogItemId, data => {
+    data.feedChannels = channels;
+    return { recordKind: "product-feed-eligibility", recordId: input.catalogItemId, catalogItemId: input.catalogItemId, channels };
+  });
 }

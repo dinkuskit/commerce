@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addCatalogVariantMember, addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices } from '../../../dist/features/catalog/kernel/index.js';
-import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
+import { addCatalogVariantMember, addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
+import { readPublicCatalog, readPublicCatalogItem, createSaveCatalogProductPricesRouteWithLocalStock } from '../../../dist/features/catalog/index.js';
 
 // Small isolated store retains the same unique indexes and revision fence as the catalog contract.
 class Catalog {
@@ -124,17 +124,17 @@ test('bulk applies independent valid rows, reports stale and invalid rows, and p
   const storage = { catalog, prices, availability, claims: new Catalog() };
   await saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '20', sale: '', stockStatus: 'out-of-stock' });
   await saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '24', sale: '', stockStatus: 'in-stock' });
-  const revision = (await prices.getVersioned('product')).revision;
+  const revision = 'catalog:' + (await catalog.getVersioned('product')).revision;
   const result = await bulkSaveCatalogProductPrices(storage, [
+    { catalogItemId: 'large-item', regular: 'bad', sale: '', expectedRevision: revision },
     { catalogItemId: 'product', regular: '25', sale: '', expectedRevision: revision },
     { catalogItemId: 'large-item', regular: '25', sale: '', expectedRevision: 'stale' },
-    { catalogItemId: 'large-item', regular: 'bad', sale: '', expectedRevision: (await prices.getVersioned('large-item')).revision },
-    { catalogItemId: 'large-item', regular: '25', sale: '', manageStock: true, stockStatus: 'out-of-stock', expectedRevision: (await prices.getVersioned('large-item')).revision },
+    { catalogItemId: 'large-item', regular: '25', sale: '', manageStock: true, stockStatus: 'out-of-stock', expectedRevision: revision },
   ]);
-  assert.deepEqual(result.outcomes.map(r => [r.applied, r.code]), [[true, undefined], [false, 'CONFLICT'], [false, 'INVALID_INPUT'], [false, 'INVALID_INPUT']]);
-  assert.equal((await prices.get('product')).regular.minor, '2500');
-  assert.equal((await prices.get('large-item')).regular.minor, '2400');
-  assert.equal((await availability.get('product')).status, 'out-of-stock');
+  assert.deepEqual(result.outcomes.map(r => [r.applied, r.code]), [[false, 'INVALID_INPUT'], [true, undefined], [false, 'CONFLICT'], [false, 'INVALID_INPUT']]);
+  assert.equal((await catalog.get('product')).catalogData.items.product.price.regular.minor, '2500');
+  assert.equal((await catalog.get('product')).catalogData.items['large-item'].price.regular.minor, '2400');
+  assert.equal((await catalog.get('product')).catalogData.items.product.availability.status, 'out-of-stock');
 });
 
 test('variant bulk pricing refuses an ordinary product without changing its price or revision', async () => {
@@ -143,27 +143,23 @@ test('variant bulk pricing refuses an ordinary product without changing its pric
   prices.put = availability.put = async function(id, value) { this.records.set(id, structuredClone(value)); this.revisions.set(id, crypto.randomUUID()); };
   const storage = { catalog, prices, availability, claims: new Catalog() };
   await saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '20', sale: '' });
-  const before = await prices.getVersioned('product');
+  const before = await catalog.getVersioned('product');
   const result = await bulkSaveCatalogProductPrices(storage, [
-    { catalogItemId: 'product', regular: '25', sale: '', expectedRevision: before.revision },
+    { catalogItemId: 'product', regular: '25', sale: '', expectedRevision: 'catalog:' + before.revision },
   ]);
   assert.deepEqual(result.outcomes.map(r => [r.applied, r.code]), [[false, 'CATALOG_ITEM_NOT_FOUND']]);
-  assert.deepEqual(await prices.getVersioned('product'), before);
+  assert.deepEqual(await catalog.getVersioned('product'), before);
 });
 
-test('failed stock save cannot roll back a later identical price write', async () => {
+test('a conflicting product save cannot overwrite a later identical price save', async () => {
   const catalog = new Catalog(); await catalog.put('product', base);
   const prices = new Catalog(), availability = new Catalog();
-  prices.put = availability.put = async function(id, value) { this.records.set(id, structuredClone(value)); this.revisions.set(id, crypto.randomUUID()); };
-  const storage = { catalog, prices, availability, claims: new Catalog() };
+  const storage = { catalog, prices, availability };
   await saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '20', sale: '', stockStatus: 'out-of-stock' });
-  const revision = (await prices.getVersioned('product')).revision;
-  availability.put = async () => {
-    const later = await prices.get('product'); await prices.put('product', later);
-    throw Error('stock unavailable after another writer saved the same price');
-  };
-  await assert.rejects(saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '24', sale: '', stockStatus: 'in-stock', expectedRevision: revision }));
-  assert.equal((await prices.get('product')).regular.minor, '2400');
+  const revision = 'catalog:' + (await catalog.getVersioned('product')).revision;
+  await saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '24', sale: '', stockStatus: 'in-stock' });
+  await assert.rejects(saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '99', sale: '', expectedRevision: revision }), e => e.code === 'COMMAND_CONFLICT');
+  assert.equal((await catalog.get('product')).catalogData.items.product.price.regular.minor, '2400');
 });
 
 test('additional choices cannot adopt an unrelated existing catalog identity', async () => {
@@ -367,4 +363,119 @@ test('scoped value labels keep option/value pairs apart when ids contain colons'
     { optionId: 'a:b', valueId: 'c', label: 'C2' }, { optionId: 'a', valueId: 'b:c', label: 'BC2' },
   ] });
   assert.deepEqual(both.product.options.map(o => o.values[0].label), ['C2', 'BC2']);
+});
+
+async function pricedChoices() {
+  const catalog = new Catalog(); await catalog.put('product', base);
+  await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
+  const storage = { catalog, prices: new Catalog(), availability: new Catalog() };
+  await saveCatalogProductPrices(storage, { catalogItemId: 'product', regular: '20', sale: '' });
+  await saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '24', sale: '' });
+  return storage;
+}
+
+test('native list returns usable root revisions after catalog prices are saved', async () => {
+  const storage = await pricedChoices();
+  const { products } = await listCatalogProducts(storage);
+  for (const member of products[0].variantProduct.members) {
+    assert.equal(member.priceRevision, products[0].revision);
+    assert.match(member.priceRevision, /^catalog:/);
+  }
+  const member = products[0].variantProduct.members[1];
+  assert.equal((await saveCatalogProductPrices(storage, {
+    catalogItemId: member.catalogItemId, regular: '26', sale: '', expectedRevision: member.priceRevision,
+  })).saved, true);
+});
+
+test('bulk stages valid sibling prices in one root commit', async () => {
+  const storage = await pricedChoices();
+  const before = await storage.catalog.getVersioned('product');
+  const revision = 'catalog:' + before.revision;
+  let commits = 0;
+  const commit = storage.catalog.compareAndSet.bind(storage.catalog);
+  storage.catalog.compareAndSet = async (...args) => { commits++; return commit(...args); };
+  const { outcomes } = await bulkSaveCatalogProductPrices(storage, [
+    { catalogItemId: 'product', regular: '25', sale: '', expectedRevision: revision },
+    { catalogItemId: 'large-item', regular: 'bad', sale: '', expectedRevision: revision },
+    { catalogItemId: 'large-item', regular: '28', sale: '', expectedRevision: revision },
+  ]);
+  assert.deepEqual(outcomes.map(row => [row.applied, row.code]), [[true, undefined], [false, 'INVALID_INPUT'], [true, undefined]]);
+  assert.equal(commits, 1);
+  const saved = (await storage.catalog.get('product')).catalogData.items;
+  assert.equal(saved.product.price.regular.minor, '2500');
+  assert.equal(saved['large-item'].price.regular.minor, '2800');
+});
+
+test('external write refuses every staged sibling without partially saving', async () => {
+  const storage = await pricedChoices();
+  const before = await storage.catalog.getVersioned('product');
+  const commit = storage.catalog.compareAndSet.bind(storage.catalog);
+  storage.catalog.compareAndSet = async (...args) => {
+    const external = await storage.catalog.get('product'); external.brand = 'Other editor';
+    await storage.catalog.put('product', external);
+    return commit(...args);
+  };
+  const { outcomes } = await bulkSaveCatalogProductPrices(storage, ['product', 'large-item'].map(catalogItemId => ({
+    catalogItemId, regular: '30', sale: '', expectedRevision: 'catalog:' + before.revision,
+  })));
+  assert.deepEqual(outcomes.map(row => [row.applied, row.code]), [[false, 'CONFLICT'], [false, 'CONFLICT']]);
+  const after = await storage.catalog.get('product');
+  assert.deepEqual(after.catalogData, before.value.catalogData);
+  assert.equal(after.brand, 'Other editor');
+});
+
+
+test('bulk cleanup happens after the whole product commit and cannot misreport a saved price', async () => {
+  const storage = await pricedChoices();
+  const revision = 'catalog:' + (await storage.catalog.getVersioned('product')).revision;
+  const cleaned = [];
+  storage.releaseRegistrationClaims = async id => {
+    const values = (await storage.catalog.get('product')).catalogData.items;
+    assert.equal(values.product.price.regular.minor, '3000');
+    assert.equal(values['large-item'].price.regular.minor, '3000');
+    cleaned.push(id);
+    throw new Error('cleanup unavailable');
+  };
+  const { outcomes } = await bulkSaveCatalogProductPrices(storage, ['product', 'large-item'].map(catalogItemId => ({
+    catalogItemId, regular: '30', sale: '', expectedRevision: revision,
+  })));
+  assert.deepEqual(cleaned, ['product', 'large-item']);
+  assert.ok(outcomes.every(row => row.applied && row.message.includes('cleanup is pending')));
+});
+
+
+test('native choice tracking and price share one commit, preserve dormant status and refuse races', async () => {
+  const storage = await pricedChoices();
+  const before = await storage.catalog.getVersioned('product');
+  const enabled = await saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '28', sale: '', manageStock: true, expectedRevision: 'catalog:' + before.revision });
+  assert.equal(enabled.manageStock, true);
+  const visible = await readPublicCatalog(publicContext(storage.catalog, storage.prices));
+  assert.equal(visible.products[0].variants.members.find(member => member.catalogItemId === 'large-item').availability.sellable, false);
+  let choice = (await listCatalogProducts(storage)).products[0].variantProduct.members[1];
+  assert.equal(choice.manageStock, true);
+  assert.equal(choice.regular, '28.00');
+  assert.equal((await resolveCatalogVariantMember(storage.catalog, 'large-item')).item.stockManagement.status, 'setup-required');
+  const committed = await storage.catalog.getVersioned('product');
+  storage.catalog.rejectParent = true;
+  await assert.rejects(saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '99', sale: '', manageStock: false, expectedRevision: choice.priceRevision }), e => e.code === 'COMMAND_CONFLICT');
+  assert.deepEqual(await storage.catalog.getVersioned('product'), committed);
+  storage.catalog.rejectParent = false;
+  const disabled = await saveCatalogProductPrices(storage, { catalogItemId: 'large-item', regular: '29', sale: '', manageStock: false, expectedRevision: choice.priceRevision });
+  assert.equal(disabled.manageStock, false);
+  assert.equal(disabled.stockStatus, 'in-stock');
+  choice = (await listCatalogProducts(storage)).products[0].variantProduct.members[1];
+  assert.equal(choice.manageStock, false);
+  assert.equal(choice.regular, '29.00');
+});
+
+
+test('native route keeps trusted local choice tracking and default-host admission', async () => {
+  const storage = await pricedChoices();
+  const context = { storage: { catalogItems: storage.catalog, catalogPrices: storage.prices, catalogManualAvailability: storage.availability, managedSkuClaims: new Catalog() }, site: { url: 'http://127.0.0.1:4321' }, request: { method: 'POST', url: 'http://127.0.0.1:4321/save' }, input: { catalogItemId: 'large-item', regular: '26', sale: '', manageStock: true } };
+  const optedIn = createSaveCatalogProductPricesRouteWithLocalStock({ enableLocalStockManagement: true, siteUrl: 'http://127.0.0.1:4321' });
+  assert.equal((await optedIn.handler(context)).manageStock, true);
+  const defaultHost = createSaveCatalogProductPricesRouteWithLocalStock();
+  assert.equal((await defaultHost.handler(context)).manageStock, true, 'same-value serialized tracking keeps the authoritative state');
+  await assert.rejects(defaultHost.handler({ ...context, input: { ...context.input, manageStock: false } }), e => e.code === 'MANAGE_STOCK_UNAVAILABLE');
+  assert.equal((await resolveCatalogVariantMember(storage.catalog, 'large-item')).item.stockManagement.mode, 'managed');
 });
