@@ -22,11 +22,27 @@ Node 24: native modules such as better-sqlite3 built for Node 22 fail to load
 otherwise (the session hook reinstalls automatically because its stamp
 includes the Node version).
 
+## Direction and research
+
+Read the organization [vision](https://github.com/dinkuskit/.github/blob/main/VISION.md)
+and [scope and planning](https://github.com/dinkuskit/.github/blob/main/ROADMAP.md)
+with this repository's charter and current decisions. They describe direction
+and the store baseline; they do not reopen local locks or establish implemented
+capabilities.
+
+Use the installed `emdash-commerce` skill for material product or architecture
+questions and relevant grills. Its selective REA guidance distinguishes
+research, accepted design, active work and verified behavior. Reuse the owning
+issue or proposal for unresolved questions; research alone does not authorize
+implementation or expand an active release.
+
 ## Running GrillTrack
 
 Run `./scripts/agent-skills` before agent work to install the pinned
 SaariusSkills copy into ignored `.cursor/skills/`; use
 `./scripts/grilltrack --project . validate` (or `show`) for ledger reads.
+The bundle keeps its existing pin; `emdash-commerce` has a separate exact
+revision in that script, including its reference files.
 The wrapper uses an existing `~/.codex` install when available and never
 replaces the CLI-only ledger rule. SmokySkills remains gated on maintainer
 access and an immutable public-safe commit pin.
