@@ -92,14 +92,14 @@ test("opaque CAS revisions allow one concurrent winner and stale retries do not 
 
 const route = input => ({ input, user: { role: 40 }, ui: { surface: "admin-page", locale: "en-US", direction: "ltr" },
   request: { method: "POST", url: "https://shop.example.test/admin", headers: {} } });
-const values = (country = "", selling = "", shipping = "", phone = false) => ({
-  storeCountry: country, sellingCountries: selling, shippingCountries: shipping, requirePhoneNumber: phone,
+const values = (country = "", shipping = "", phone = false) => ({
+  storeCountry: country, shippingCountries: shipping, requirePhoneNumber: phone,
 });
 const form = response => response.blocks.find(block => block.type === "form");
 const submit = (revision, draft) => ({ type: "form_submit", action_id: "merchant-store-settings.save",
   block_id: "merchant-store-settings:" + (revision ?? "null"), values: draft });
 
-test("settings guidance distinguishes enforced physical shipping from unenforced customer countries", async t => {
+test("settings screen shows only enforced shipping destinations, no selling/customer box", async t => {
   for (const configured of [false, true]) {
     await t.test(configured ? "configured" : "unconfigured", async t => {
       const f = fixture(); t.after(() => f.db.destroy());
@@ -109,8 +109,9 @@ test("settings guidance distinguishes enforced physical shipping from unenforced
       const page = await merchantStoreSettingsBlocks(route({ type: "page_load", page: "/settings" }), { settings: f.settings });
       assert.equal(validateBlockResponse(page).valid, true);
       const guidance = page.blocks.filter(block => block.type === "context").map(block => block.text).join("\n");
-      assert.match(guidance, /Checkout checks physical shipping destinations; selling\/customer countries are not enforced\./);
-      assert.doesNotMatch(guidance, /Checkout does not enforce country eligibility/);
+      assert.match(guidance, /Checkout refuses a physical delivery outside your shipping destinations\./);
+      assert.doesNotMatch(guidance, /selling|customer countries|does not enforce/i);
+      assert.deepEqual(form(page).fields.map(field => field.action_id), ["storeCountry", "shippingCountries", "requirePhoneNumber"]);
     });
   }
 });
@@ -119,24 +120,25 @@ test("actual BlockKit forms default first country after phone-only save and pres
   const f = fixture(); t.after(() => f.db.destroy());
   const first = await merchantStoreSettingsBlocks(route({ type: "page_load", page: "/settings" }), { settings: f.settings });
   assert.equal(validateBlockResponse(first).valid, true);
-  const phone = await merchantStoreSettingsBlocks(route(submit(null, values("", "", "", true))), { settings: f.settings });
+  const phone = await merchantStoreSettingsBlocks(route(submit(null, values("", "", true))), { settings: f.settings });
   assert.equal(form(phone).fields.find(field => field.action_id === "requirePhoneNumber").initial_value, true);
-  const saved = await merchantStoreSettingsBlocks(route(submit((await loadMerchantStoreSettings(f.settings)).revision, values("nz", "", "", true))), { settings: f.settings });
+  const saved = await merchantStoreSettingsBlocks(route(submit((await loadMerchantStoreSettings(f.settings)).revision, values("nz", "", true))), { settings: f.settings });
   assert.equal(validateBlockResponse(saved).valid, true);
   const current = await loadMerchantStoreSettings(f.settings);
   assert.deepEqual(current.settings.sellingCountries, ["NZ"]);
   assert.deepEqual(current.settings.shippingCountries, ["NZ"]);
-  const edited = await merchantStoreSettingsBlocks(route(submit(current.revision, values("AU", "NZ, CA", "", true))), { settings: f.settings });
+  // A stale client that still posts the removed box changes nothing it holds.
+  const edited = await merchantStoreSettingsBlocks(route(submit(current.revision, { ...values("AU", "", true), sellingCountries: "MX" })), { settings: f.settings });
   assert.equal(validateBlockResponse(edited).valid, true);
   assert.deepEqual((await loadMerchantStoreSettings(f.settings)).settings.shippingCountries, []);
-  assert.deepEqual((await loadMerchantStoreSettings(f.settings)).settings.sellingCountries, ["NZ", "CA"]);
+  assert.deepEqual((await loadMerchantStoreSettings(f.settings)).settings.sellingCountries, ["NZ"]);
 });
 
 test("conflict UI retains old CAS token and draft through repeated retries, explicit reload gets current settings", async t => {
   const f = fixture(); t.after(() => f.db.destroy());
   const first = await saveMerchantStoreSettings(f.settings, { expectedRevision: null, storeCountry: "CA" });
   const latest = await saveMerchantStoreSettings(f.settings, { expectedRevision: first.revision, storeCountry: "NZ", requirePhoneNumber: true });
-  const input = submit(first.revision, values("AU", "AU", "AU", false));
+  const input = submit(first.revision, values("AU", "AU", false));
   for (let attempt = 0; attempt < 2; attempt++) {
     const refused = await merchantStoreSettingsBlocks(route(input), { settings: f.settings });
     assert.equal(validateBlockResponse(refused).valid, true);
@@ -171,7 +173,7 @@ test("settings access follows EmDash's own content:edit_any rule for every role"
 
 test("invalid admin entries preserve draft and never write; country lists require merchant country", async t => {
   const f = fixture(); t.after(() => f.db.destroy());
-  for (const draft of [values("ZZ"), values("", "CA"), values("CA", "", "", "true"), values("CA", "ZZ")]) {
+  for (const draft of [values("ZZ"), values("", "CA"), values("CA", "", "true"), values("CA", "ZZ")]) {
     const refused = await merchantStoreSettingsBlocks(route(submit(null, draft)), { settings: f.settings });
     assert.equal(refused.blocks.find(block => block.type === "banner").variant, "error");
     assert.equal(form(refused).block_id, "merchant-store-settings:null");
@@ -203,7 +205,7 @@ test("server rejects malformed input and extra countries must be explicitly reco
 test("read and write outages retain the draft and original revision without claiming success", async t => {
   const f = fixture(); t.after(() => f.db.destroy());
   const saved = await saveMerchantStoreSettings(f.settings, { expectedRevision: null, storeCountry: "CA", requirePhoneNumber: true });
-  const input = submit(saved.revision, values("NZ", "NZ", "AU", true));
+  const input = submit(saved.revision, values("NZ", "AU", true));
   for (const event of ["INSERT", "UPDATE"]) f.sqlite.exec(`CREATE TRIGGER refuse_${event} BEFORE ${event} ON options BEGIN SELECT RAISE(ABORT,'synthetic outage'); END`);
   const failed = await merchantStoreSettingsBlocks(route(input), { settings: f.settings });
   assert.equal(failed.blocks.find(b => b.type === "banner").variant, "error");

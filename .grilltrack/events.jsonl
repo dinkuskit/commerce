@@ -648,3 +648,6 @@
 {"action": "decision_verified", "at": "2026-10-29T21:25:24+00:00", "data": {"decision_id": "commerce-orders-api-001"}, "event_id": "bf3881ce-fb05-4c94-9d62-03dfc7f7a00c"}
 {"action": "decision_verified", "at": "2026-10-29T21:25:25+00:00", "data": {"decision_id": "commerce-ship-sync-001"}, "event_id": "220d7486-11ff-4ffc-a4d8-49f5d671ae0e"}
 {"action": "decision_verified", "at": "2026-10-29T21:25:25+00:00", "data": {"decision_id": "commerce-background-check-001"}, "event_id": "2216caf5-f1bb-43c4-bb9e-c306285dc3ea"}
+{"action": "decision_proposed", "at": "2026-10-29T21:41:53+00:00", "data": {"decision_id": "merchant-selling-countries-002"}, "event_id": "3cba2586-2d3a-4739-8b44-1a7a5b18b210"}
+{"action": "decision_locked", "at": "2026-10-29T21:41:53+00:00", "data": {"decision_id": "merchant-selling-countries-002"}, "event_id": "8965b273-0a61-4fa5-8115-e1a732ab8f2f"}
+{"action": "decision_superseded", "at": "2026-10-29T21:41:53+00:00", "data": {"affected": [], "decision_id": "merchant-country-settings-001", "replacement_id": "merchant-selling-countries-002"}, "event_id": "d4fcd997-7cc0-48e2-9238-088b2202e0fd"}

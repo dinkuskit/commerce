@@ -8681,6 +8681,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-29T21:41:53+00:00",
+          "choice": "Merchant-selected store country; independent allowed selling/customer countries and physical shipping destinations. Each list defaults to the selected store country on first country configuration only; extra countries enabled explicitly. Later store-country edits preserve persisted lists. No locale/IP/Ship-origin inference, no hardcoded country, no checkout country enforcement yet.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/store-settings/index.ts",
+          "note": "Owner removed the unenforced selling/customer box on 29 Oct 2026; the new decision restates store country and shipping destinations, which checkout enforces.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": "file:.grilltrack/proof/merchant-store-settings-20261008/PROOF.md"
         }
       ],
       "id": "merchant-country-settings-001",
@@ -8693,9 +8707,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-09T01:30:05+00:00",
+      "status": "superseded",
+      "superseded_by": "merchant-selling-countries-002",
+      "updated_at": "2026-10-29T21:41:53+00:00",
       "verification_ref": "file:.grilltrack/proof/merchant-store-settings-20261008/PROOF.md"
     },
     {
@@ -15342,6 +15356,49 @@
       "superseded_by": null,
       "updated_at": "2026-10-29T21:25:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:00fb693a118822f921c831564bc44ca0aa2ffd72",
+      "candidate_refs": [],
+      "choice": "Remove it. Commerce settings show the store country, the physical shipping destinations and the phone requirement. Shipping destinations are where the store sells physical goods (Shopify and BigCommerce shape); there is no separate selling/customer country list. Checkout keeps refusing a physical delivery outside the shipping destinations, and with none set a physical basket is refused before payment. Each list defaults to the store country on the first country save; later store-country edits preserve them. The stored sellingCountries list keeps its record shape and first-save default so older records and seeds still load, but no form edits it, nothing enforces it, and a submitted value is ignored. No locale/IP/Ship-origin inference and no hardcoded country.",
+      "context_ref": "https://github.com/dinkuskit/commerce/pull/211",
+      "created_at": "2026-10-29T21:41:53+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-delivery-address-001"
+      ],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-29T21:41:53+00:00",
+          "choice": "Remove it. Commerce settings show the store country, the physical shipping destinations and the phone requirement. Shipping destinations are where the store sells physical goods (Shopify and BigCommerce shape); there is no separate selling/customer country list. Checkout keeps refusing a physical delivery outside the shipping destinations, and with none set a physical basket is refused before payment. Each list defaults to the store country on the first country save; later store-country edits preserve them. The stored sellingCountries list keeps its record shape and first-save default so older records and seeds still load, but no form edits it, nothing enforces it, and a submitted value is ignored. No locale/IP/Ship-origin inference and no hardcoded country.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "merchant-selling-countries-002",
+      "implementation_ref": null,
+      "question": "What should the selling/customer countries box in Commerce settings do?",
+      "rationale": "Owner, 29 Oct 2026: nothing could ever read the list in v1 (billing is not limited by country), an editable field that does nothing is bad UX, and he prefers the Shopify/BigCommerce approach where shipping destinations define where you sell.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-29T21:41:53+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -15378,5 +15435,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-29T21:25:25+00:00"
+  "updated_at": "2026-10-29T21:41:53+00:00"
 }

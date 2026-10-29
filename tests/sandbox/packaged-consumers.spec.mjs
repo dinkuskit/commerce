@@ -26,20 +26,19 @@ test('extracted Registry settings persist and anonymous writes leave canonical s
   const endpoint = `/_emdash/api/plugins/${id}/admin`;
   await page.goto(`/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/${id}/settings`);
   const store = page.getByRole('textbox', { name: 'Store country (ISO alpha-2 code)', exact: true });
-  const selling = page.getByRole('textbox', { name: 'Allowed selling/customer countries (comma-separated codes)', exact: true });
+  const shipping = page.getByRole('textbox', { name: 'Allowed physical shipping destinations (comma-separated codes)', exact: true });
   const welcome = page.getByRole('button', { name: 'Get Started', exact: true });
   await store.or(welcome).first().waitFor({ timeout: 60000 });
   if (await welcome.isVisible()) await welcome.click();
   await expect(store).toBeVisible({ timeout: 60000 });
-  await store.fill('CA'); await selling.fill('CA, MX');
-  await page.getByRole('textbox', { name: 'Allowed physical shipping destinations (comma-separated codes)', exact: true }).fill('CA');
+  await store.fill('CA'); await shipping.fill('CA, MX');
   const saved = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Save merchant settings', exact: true }).click();
   const response = await saved;
   expect(response.status()).toBe(200);
   const input = response.request().postDataJSON();
   await page.reload();
-  await expect(store).toHaveValue('CA'); await expect(selling).toHaveValue('CA, MX');
+  await expect(store).toHaveValue('CA'); await expect(shipping).toHaveValue('CA, MX');
   const db = new Database(process.env.COMMERCE_PROOF_DB.slice(5));
   try {
     const snapshot = () => db.prepare('SELECT value, revision FROM options WHERE name=?').get(`plugin:${id}:settings:merchantStoreSettings`);
