@@ -245,12 +245,19 @@ async function readConfigFile(file) {
 	return parsed;
 }
 
-function selectProfile(file, profile) {
+function selectProfile(file, profile, path) {
 	if (!file) return { values: {}, found: false };
 	const { profiles, ...base } = file;
-	if (!profile) return { values: base, found: false };
-	const selected = profiles && typeof profiles === "object" ? profiles[profile] : undefined;
-	return { values: { ...base, ...(selected ?? {}) }, found: Boolean(selected) };
+	if (!profile || profiles === undefined) return { values: base, found: false };
+	if (!profiles || typeof profiles !== "object" || Array.isArray(profiles)) {
+		throw usageError(`Config ${path}: profiles must be a JSON object.`, "invalid_config");
+	}
+	if (!Object.hasOwn(profiles, profile)) return { values: base, found: false };
+	const selected = profiles[profile];
+	if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
+		throw usageError(`Config ${path}: profile "${profile}" must be a JSON object.`, "invalid_config");
+	}
+	return { values: { ...base, ...selected }, found: true };
 }
 
 export async function loadConfig(spec, { flags, env, cwd }) {
@@ -260,8 +267,8 @@ export async function loadConfig(spec, { flags, env, cwd }) {
 		project: join(cwd, ".dinkuskit", `${spec.configName}.json`),
 		user: join(configHome, "dinkuskit", spec.configName, "config.json"),
 	};
-	const project = selectProfile(await readConfigFile(files.project), profile);
-	const user = selectProfile(await readConfigFile(files.user), profile);
+	const project = selectProfile(await readConfigFile(files.project), profile, files.project);
+	const user = selectProfile(await readConfigFile(files.user), profile, files.user);
 	if (profile && !project.found && !user.found) {
 		throw usageError(`Profile "${profile}" was not found in ${files.project} or ${files.user}.`, "unknown_profile");
 	}
