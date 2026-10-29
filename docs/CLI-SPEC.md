@@ -423,6 +423,21 @@ Config files are JSON objects with optional `url`, `plugin-id`, and named
 }
 ```
 
+A requested profile must be an explicit entry in at least one config file's
+`profiles` object. An absent name exits `2` with `unknown_profile`; inherited
+JavaScript names such as `constructor` do not count as entries. Those names are
+still usable when explicitly defined in JSON. When a profile is requested,
+each present `profiles` map and every matching entry must be a JSON object
+(not null, an array, or a primitive); otherwise the CLI exits `2` with
+`invalid_config` before sending any HTTP request. A string such as
+`"staging": "https://staging.shop.example"` is not a profile override and
+must not silently select the base URL instead.
+
+A valid profile object overrides that file's base metadata; an empty object
+intentionally inherits it. Base configuration without a requested profile and
+unselected entries keep their existing behavior. Flag/environment precedence
+and the project-config credential restrictions below are unchanged.
+
 A config file containing a token, secret, password, authorization, credential,
 API key, or cookie key is rejected with exit `2`.
 
@@ -561,6 +576,15 @@ change, rebuild, and compare.
 | `settings show` | Planned | No complete read-only settings route |
 
 ## Acceptance checks
+
+`tests/cli/profile-selection.test.mjs`, also run by `npm run test:unit`, covers
+missing inherited names, malformed selected profiles/maps, flag and environment
+selection, all output modes, explicitly defined prototype-like names, valid
+overrides, and unchanged project-config credential restrictions. Two executable
+loopback cases use the real catalog handler with synthetic in-memory storage
+to verify that invalid requested profiles send no creation request and keep no
+Draft at the base site. This is local CLI/HTTP proof, not external EmDash host
+or deployment qualification.
 
 `tests/cli/dinkus-commerce.test.mjs`, run by `npm run test:unit`, proves:
 
