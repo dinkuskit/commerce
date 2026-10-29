@@ -25,11 +25,13 @@ import {
 } from "../feeds/kernel/index.js";
 
 function unavailable(): never { throw new Error("Catalog unavailable"); }
-function optionalIds(item: { gtin?: string; mpn?: string; brand?: string }) {
+/** Identifiers a product may have; each is left out when unset. `page` is the page that sells it (catalog-page-link-in-commerce-20261029). */
+function optionalIds(item: { gtin?: string; mpn?: string; brand?: string; pageId?: string }) {
   return {
     ...(item.gtin ? { gtin: item.gtin } : {}),
     ...(item.mpn ? { mpn: item.mpn } : {}),
     ...(item.brand ? { brand: item.brand } : {}),
+    ...(item.pageId ? { page: item.pageId } : {}),
   };
 }
 
@@ -50,6 +52,8 @@ export interface PublicCatalogProduct {
   readonly brand?: string;
   /** Merchant-approved public feed channels; absent on older storage adapters. */
   readonly feedChannels?: readonly ProductFeedChannel[];
+  /** The EmDash entry id of the page that sells it (catalog-page-link-in-commerce-20261029); absent until a page is published with it. */
+  readonly page?: string;
   readonly variants?: {
     readonly schema: "dinkuskit.commerce.product-variants/v1";
     readonly productId: string;
@@ -235,14 +239,22 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
 }
 
 /**
- * Resolve one authoritative Commerce product by its permanent itemId.
- * Publication, page selection, and CMS state belong to the host page resolver.
+ * Resolve one authoritative Commerce product by its permanent itemId, or with `page` the product the
+ * published page `itemId` sells, through that page's last publish check, so a storefront needs no product
+ * id on the page (catalog-page-link-in-commerce-20261029). Null when it is not on the shop, including a
+ * product another page has since taken. Publication and CMS state belong to the host page resolver.
  */
 export async function readPublicCatalogItem(
   ctx: PluginContext,
   itemId: string,
+  page?: boolean,
 ): Promise<PublicCatalogProduct | null> {
   assertItemId(itemId);
+  if (page) {
+    const sold = await ctx.storage.product_pages!.get("p:" + itemId) as { catalogItemId?: unknown } | null;
+    const product = typeof sold?.catalogItemId === "string" ? await readPublicCatalogItem(ctx, sold.catalogItemId) : null;
+    return product?.page === itemId ? product : null;
+  }
   const row = await ctx.storage.catalog_items!.get(itemId);
   if (!row) return null;
   let item = row as unknown as CatalogStorageRecord;

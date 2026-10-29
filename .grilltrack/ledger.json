@@ -4,9 +4,9 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-29T20:28:29+00:00",
+    "confirmed_at": "2026-10-29T21:25:23+00:00",
     "domain": "Checkout asks for a delivery address when the basket has a physical item",
-    "started_at": "2026-10-29T20:18:14+00:00",
+    "started_at": "2026-10-29T21:25:23+00:00",
     "status": "confirmed",
     "summary": "Build owner-locked commerce-billing-address-001 (billing required on every checkout, no fallback) and the amended commerce-delivery-address-001 in Commerce: checkout contact accepts and freezes billing, Orders detail shows Email, Phone, Ship to and Bill to, agents' API and CLI return billTo and billToMatchesShipTo; free Registry bundle room first; reviewed PR without merge or release. Template store follows after a Commerce beta."
   },
@@ -9789,7 +9789,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. No billing address is collected, and the delivery address is never used as one. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
           "from": "verified",
           "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
@@ -9803,7 +9803,7 @@
           "verification_ref": "file:.grilltrack/proof/delivery-address-20261010/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:07:44+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. No billing address is collected, and the delivery address is never used as one. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
           "from": "reopened",
           "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
@@ -9817,35 +9817,7 @@
           "verification_ref": "file:.grilltrack/proof/delivery-address-20261010/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:18:14+00:00",
-          "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. The billing address is recorded separately under commerce-billing-address-001; when a checkout with a delivery address sends no billing address, the delivery address is recorded as billing. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
-          "from": "locked",
-          "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
-          "note": "Drop the billing fallback sentence (owner 2026-10-29 20:17).",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": "file:.grilltrack/proof/delivery-address-20261010/PROOF.md"
-        },
-        {
-          "at": "2026-10-29T20:18:14+00:00",
-          "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. The billing address is recorded separately under commerce-billing-address-001; when a checkout with a delivery address sends no billing address, the delivery address is recorded as billing. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
-          "from": "reopened",
-          "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": "file:.grilltrack/proof/delivery-address-20261010/PROOF.md"
-        },
-        {
-          "at": "2026-10-29T20:28:29+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. The billing address is recorded separately under commerce-billing-address-001. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
           "from": "locked",
           "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
@@ -9859,7 +9831,7 @@
           "verification_ref": "file:.grilltrack/proof/delivery-address-20261010/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:28:29+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "Checkout asks for a delivery address whenever the basket holds at least one physical item; there is no store setting. A basket of only digital items carries no address. A catalog item with no fulfillment marked counts as physical. The address is what the shopper typed at checkout (not read from the payment provider): recipient name, address line 1, optional line 2, city, optional state or region, postal code, and country. The country must be one of the store settings' shipping destinations; with no destinations set, a physical basket is refused before payment. The billing address is recorded separately under commerce-billing-address-001. The address is frozen into the checkout contact snapshot at checkout start, rides in the paid-order record as an optional delivery field (present only for physical baskets; older paid orders have none), and is never changed after payment. Orders shows it on the order detail. Collecting it does not calculate shipping rates or tax and buys no label. Local pickup, if added later, is a shopper choice at checkout under a new decision.",
           "from": "implemented",
           "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
@@ -9885,7 +9857,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:29+00:00",
+      "updated_at": "2026-10-29T21:25:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -10030,7 +10002,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "Each kept order keeps Checkout's order id as its permanent id; it never changes. Orders also gives each order a short number for people, counting up from 1001 in the order Orders first keeps them. A number is never reused and may skip when two orders arrive at the same moment; orders kept before numbering get theirs, oldest paid first, the next time the Orders page opens. Each kept order has a version that starts at 1 and goes up by one on every owner change; any later handoff (Ship, emails) names the version it used, and Ship labels only the latest. The owner can correct the delivery address of an order that has one, on its Orders detail page. The correction is checked like a checkout address (required fields, a country the store ships to), sits beside Checkout's frozen copy, which never changes, raises the version, and is the address Orders shows and hands on from then on. An order ships whole; there are no partial shipments. The store ID is the canonical store ID the DinkusKit sign-in service already gives Payments; Commerce gets it when it connects to the Ship service, a later change, so this change stores none. Fulfillment status, marking shipped, tracking, test-order handling and shipped emails are separate decisions.",
           "from": "verified",
           "implementation_ref": "branch claude/project-thread-xphlol: src/features/orders/store.ts, admin/page.ts, admin/view.ts",
@@ -10044,7 +10016,7 @@
           "verification_ref": "bin/verify-commerce full passed (unit 495, integration 46, browser 12 incl. orders address correction); backend 123,535 bytes"
         },
         {
-          "at": "2026-10-29T20:28:35+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "Each kept order keeps Checkout's order id as its permanent id; it never changes. Orders also gives each order a short number for people, counting up from 1001 in the order Orders first keeps them. A number is never reused and may skip when two orders arrive at the same moment; orders kept before numbering get theirs, oldest paid first, the next time the Orders page opens. Each kept order has a version that starts at 1 and goes up by one on every owner change; any later handoff (Ship, emails) names the version it used, and Ship labels only the latest. The owner can correct the delivery address of an order that has one, on its Orders detail page. The correction is checked like a checkout address (required fields, a country the store ships to), sits beside Checkout's frozen copy, which never changes, raises the version, and is the address Orders shows and hands on from then on. An order ships whole; there are no partial shipments. The store ID is the canonical store ID the DinkusKit sign-in service already gives Payments; Commerce gets it when it connects to the Ship service, a later change, so this change stores none. Fulfillment status, marking shipped, tracking, test-order handling and shipped emails are separate decisions.",
           "from": "needs_reverification",
           "implementation_ref": "branch claude/project-thread-xphlol: src/features/orders/store.ts, admin/page.ts, admin/view.ts",
@@ -10070,7 +10042,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:35+00:00",
+      "updated_at": "2026-10-29T21:25:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -10198,7 +10170,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "An order is Processing from the moment Orders keeps it until it ships, then Completed. Completed means a label was bought (handed to the carrier) or the owner pressed Complete order on the order's Orders detail page; it never means delivered. Completing by hand takes an optional carrier and an optional tracking number (plain text, at most 64 characters each) and records when it happened. The owner can move a Completed order back to Processing by hand after confirming; that clears the carrier, tracking number and completion time. Cancelling a Ship label never moves an order back on its own; the owner does it. Each status change is an owner change and raises the order's version. The delivery address can be corrected only while the order is Processing; a Completed order's address is locked. The Orders list and detail show the status. Any order, including a test order, can be completed by hand. Product weight, marking test orders TEST, a Ship label completing an order, agents marking orders shipped, and the shipped email are separate decisions.",
           "from": "verified",
           "implementation_ref": "src/features/orders/store.ts (completeOrder, reopenOrder, Completed locks correctDelivery); src/features/orders/admin/page.ts and view.ts (Status, Complete order, Move back to Processing)",
@@ -10212,7 +10184,7 @@
           "verification_ref": ".grilltrack/proof/order-status-20261010/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:28:35+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "An order is Processing from the moment Orders keeps it until it ships, then Completed. Completed means a label was bought (handed to the carrier) or the owner pressed Complete order on the order's Orders detail page; it never means delivered. Completing by hand takes an optional carrier and an optional tracking number (plain text, at most 64 characters each) and records when it happened. The owner can move a Completed order back to Processing by hand after confirming; that clears the carrier, tracking number and completion time. Cancelling a Ship label never moves an order back on its own; the owner does it. Each status change is an owner change and raises the order's version. The delivery address can be corrected only while the order is Processing; a Completed order's address is locked. The Orders list and detail show the status. Any order, including a test order, can be completed by hand. Product weight, marking test orders TEST, a Ship label completing an order, agents marking orders shipped, and the shipped email are separate decisions.",
           "from": "needs_reverification",
           "implementation_ref": "src/features/orders/store.ts (completeOrder, reopenOrder, Completed locks correctDelivery); src/features/orders/admin/page.ts and view.ts (Status, Complete order, Move back to Processing)",
@@ -10238,7 +10210,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:35+00:00",
+      "updated_at": "2026-10-29T21:25:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -10297,7 +10269,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "Each physical product, and each physical choice of a product with choices, has an optional shipping weight in ounces, entered on the product's admin page under Shipping weight. A weight is a number above 0 and up to 2400 with at most 2 decimals; leaving the box blank clears it. It is stored as weightOz on the catalog item. It is not shown to shoppers or put in product feeds, and the paid-order copy is unchanged; Ship reads current product weights when it prepares a label and adds the chosen box's weight, and the owner can still change the label weight there. Ounces because v1 ships only in the US. Digital products have no weight.",
           "from": "verified",
           "implementation_ref": "src/features/catalog/weight.ts (normalizeWeightOz, setCatalogItemWeight); src/admin/products.ts (Shipping weight form); weightOz on CatalogItemRecord",
@@ -10311,7 +10283,7 @@
           "verification_ref": ".grilltrack/proof/product-weight-20261010/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:28:35+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "Each physical product, and each physical choice of a product with choices, has an optional shipping weight in ounces, entered on the product's admin page under Shipping weight. A weight is a number above 0 and up to 2400 with at most 2 decimals; leaving the box blank clears it. It is stored as weightOz on the catalog item. It is not shown to shoppers or put in product feeds, and the paid-order copy is unchanged; Ship reads current product weights when it prepares a label and adds the chosen box's weight, and the owner can still change the label weight there. Ounces because v1 ships only in the US. Digital products have no weight.",
           "from": "needs_reverification",
           "implementation_ref": "src/features/catalog/weight.ts (normalizeWeightOz, setCatalogItemWeight); src/admin/products.ts (Shipping weight form); weightOz on CatalogItemRecord",
@@ -10337,7 +10309,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:35+00:00",
+      "updated_at": "2026-10-29T21:25:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -10521,7 +10493,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "The Registry build mounts one private route, orders, that takes one JSON POST per action: list (optional status processing or completed and an offset; 50 orders a page by order number, with total and the next offset), show (by order id), complete (order id, version, optional carrier and tracking) and reopen (order id, version). EmDash requires plugins:manage and, for API tokens, the admin scope; the handler also requires an administrator, like the Orders page. Changes use the Orders page's owner-change rules at the named version and answer saved, outdated, invalid or not_found with the order as it now stands. Unknown actions or fields are refused. Each order is shown with its id, number, version, status, test mark, paid time, total, lines, option choices, where it ships to (the corrected address when there is one), the shopper's email and phone, and its completion. The dinkus-commerce CLI wires orders list, show, complete and reopen on it; complete and reopen show a preview first and send only with the version confirmed. Commerce sends no email. The native build does not mount it.",
           "from": "verified",
           "implementation_ref": "src/features/orders/api.ts (ordersApi); src/plugin.ts (private orders route, Registry build only); cli/spec.mjs and cli/client.mjs (dinkus-commerce orders list, show, complete, reopen); docs/CLI-SPEC.md; docs/implementation/orders-inspection.md",
@@ -10535,7 +10507,7 @@
           "verification_ref": ".grilltrack/proof/orders-api-20261010/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:28:35+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "The Registry build mounts one private route, orders, that takes one JSON POST per action: list (optional status processing or completed and an offset; 50 orders a page by order number, with total and the next offset), show (by order id), complete (order id, version, optional carrier and tracking) and reopen (order id, version). EmDash requires plugins:manage and, for API tokens, the admin scope; the handler also requires an administrator, like the Orders page. Changes use the Orders page's owner-change rules at the named version and answer saved, outdated, invalid or not_found with the order as it now stands. Unknown actions or fields are refused. Each order is shown with its id, number, version, status, test mark, paid time, total, lines, option choices, where it ships to (the corrected address when there is one), the shopper's email and phone, and its completion. The dinkus-commerce CLI wires orders list, show, complete and reopen on it; complete and reopen show a preview first and send only with the version confirmed. Commerce sends no email. The native build does not mount it.",
           "from": "needs_reverification",
           "implementation_ref": "src/features/orders/api.ts (ordersApi); src/plugin.ts (private orders route, Registry build only); cli/spec.mjs and cli/client.mjs (dinkus-commerce orders list, show, complete, reopen); docs/CLI-SPEC.md; docs/implementation/orders-inspection.md",
@@ -10561,7 +10533,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:35+00:00",
+      "updated_at": "2026-10-29T21:25:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -10863,7 +10835,7 @@
           "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, made one line as below, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). Text people typed goes as one line, as Ship's text rule requires: in the delivery address, each line's name, the completion's carrier and tracking number and storeName, each run of whitespace or control characters (C0, DEL and C1 controls, line breaks and the Unicode line and paragraph separators U+2028 and U+2029 included) becomes one space and the ends are trimmed, and an address field, carrier or tracking number with nothing left is left out. Only what is sent changes; the order keeps what was typed. No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
           "from": "verified",
           "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title; typed text sent as one line by oneLine); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
@@ -10877,7 +10849,7 @@
           "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md; .grilltrack/proof/ship-one-line-20261011/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:28:35+00:00",
+          "at": "2026-10-29T21:25:25+00:00",
           "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, made one line as below, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). Text people typed goes as one line, as Ship's text rule requires: in the delivery address, each line's name, the completion's carrier and tracking number and storeName, each run of whitespace or control characters (C0, DEL and C1 controls, line breaks and the Unicode line and paragraph separators U+2028 and U+2029 included) becomes one space and the ends are trimmed, and an address field, carrier or tracking number with nothing left is left out. Only what is sent changes; the order keeps what was typed. No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
           "from": "needs_reverification",
           "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title; typed text sent as one line by oneLine); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
@@ -10903,7 +10875,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:35+00:00",
+      "updated_at": "2026-10-29T21:25:25+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -11047,7 +11019,7 @@
           "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with the store name in .grilltrack/proof/ship-store-name-20261011/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
+          "at": "2026-10-29T21:25:23+00:00",
           "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
           "from": "verified",
           "implementation_ref": "src/plugin.ts (plugin:activate); docs/implementation/installed-checkout-context.md#background-check",
@@ -11061,7 +11033,7 @@
           "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
         },
         {
-          "at": "2026-10-29T20:28:35+00:00",
+          "at": "2026-10-29T21:25:25+00:00",
           "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
           "from": "needs_reverification",
           "implementation_ref": "src/plugin.ts (plugin:activate); docs/implementation/installed-checkout-context.md#background-check",
@@ -11087,7 +11059,7 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:35+00:00",
+      "updated_at": "2026-10-29T21:25:25+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -15214,21 +15186,23 @@
       "verification_ref": ".grilltrack/proof/catalog-budget-203/PROOF.md"
     },
     {
-      "baseline_ref": "git:d61d2d2",
+      "baseline_ref": "git:04dcf5e",
       "candidate_refs": [],
-      "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce refuses a checkout without a billing address (BILLING_INVALID); there is no fallback to the delivery address, since no store runs an older storefront (owner, 2026-10-29). Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
-      "context_ref": "docs/decisions/billing-address.md",
-      "created_at": "2026-10-29T20:07:35+00:00",
+      "choice": "Commerce holds it; the page has no Commerce product field. The panel's pick (product_pages e:<entryId>) and the publish check's sale (p:<entryId>, and pageId on the product) are the link. The catalog API's create or link with entryId is how an agent links a page; nobody sets a page field. set-on-sale takes entryId alone and finds the product from the panel's pick, else the page's last sale; it still accepts catalogItemId from older stores. The public catalog lists each on-sale product's page, and the public item route looks a product up by its page, so the storefront and agents read the link from Commerce. The panel stops patching the editor draft and drops admin.editor-draft:patch. Commerce still never reads the CMS. Room in the Registry bundle is freed first as an optimization, with no feature cut.",
+      "context_ref": "https://claude.ai/artifact/XQk8eJedD6MXhKR6wr6dAB",
+      "created_at": "2026-10-29T16:02:13+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "commerce-delivery-address-001"
+        "catalog-one-product-screen-20261023",
+        "catalog-api-20261027",
+        "catalog-page-title-is-name-20261026"
       ],
-      "domain": "Billing address on orders",
+      "domain": "Grow Funky Beans migration issues (Commerce)",
       "history": [
         {
-          "at": "2026-10-29T20:07:35+00:00",
-          "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce requires billing for a digital-only basket; when a checkout with a delivery address sends none, Commerce records the delivery address as billing so older storefronts keep working. Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
+          "at": "2026-10-29T16:02:14+00:00",
+          "choice": "Commerce holds it; the page has no Commerce product field. The panel's pick (product_pages e:<entryId>) and the publish check's sale (p:<entryId>, and pageId on the product) are the link. The catalog API's create or link with entryId is how an agent links a page; nobody sets a page field. set-on-sale takes entryId alone and finds the product from the panel's pick, else the page's last sale; it still accepts catalogItemId from older stores. The public catalog lists each on-sale product's page, and the public item route looks a product up by its page, so the storefront and agents read the link from Commerce. The panel stops patching the editor draft and drops admin.editor-draft:patch. Commerce still never reads the CMS. Room in the Registry bundle is freed first as an optimization, with no feature cut.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -15241,8 +15215,79 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:07:35+00:00",
-          "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce requires billing for a digital-only basket; when a checkout with a delivery address sends none, Commerce records the delivery address as billing so older storefronts keep working. Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
+          "at": "2026-10-29T16:30:30+00:00",
+          "choice": "Commerce holds it; the page has no Commerce product field. The panel's pick (product_pages e:<entryId>) and the publish check's sale (p:<entryId>, and pageId on the product) are the link. The catalog API's create or link with entryId is how an agent links a page; nobody sets a page field. set-on-sale takes entryId alone and finds the product from the panel's pick, else the page's last sale; it still accepts catalogItemId from older stores. The public catalog lists each on-sale product's page, and the public item route looks a product up by its page, so the storefront and agents read the link from Commerce. The panel stops patching the editor draft and drops admin.editor-draft:patch. Commerce still never reads the CMS. Room in the Registry bundle is freed first as an optimization, with no feature cut.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-29T16:34:50+00:00",
+          "choice": "Commerce holds it; the page has no Commerce product field. The panel's pick (product_pages e:<entryId>) and the publish check's sale (p:<entryId>, and pageId on the product) are the link. The catalog API's create or link with entryId is how an agent links a page; nobody sets a page field. set-on-sale takes entryId alone and finds the product from the panel's pick, else the page's last sale; it still accepts catalogItemId from older stores. The public catalog lists each on-sale product's page, and the public item route looks a product up by its page, so the storefront and agents read the link from Commerce. The panel stops patching the editor draft and drops admin.editor-draft:patch. Commerce still never reads the CMS. Room in the Registry bundle is freed first as an optimization, with no feature cut.",
+          "from": "implemented",
+          "implementation_ref": "src/features/catalog/product-pages.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-page-link-in-commerce-20261029",
+      "implementation_ref": "src/features/catalog/product-pages.ts",
+      "question": "Which system holds the link between a product page and the Commerce product it sells?",
+      "rationale": "Ronald 29 Oct 2026, 15:46-16:01 UTC: an editable product-page box people must not type into is bad UI/UX (his typed \"123\" hid Ryan Test Hat from the beta store); he chose option B and locked it on the card after the emdash-commerce research (Shopify, WooCommerce, Sanity Connect for Shopify, EmDash 1.2.0/1.4.0, rea-lab PR 9).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-29T16:34:50+00:00",
+      "verification_ref": ".grilltrack/proof/catalog-page-link-in-commerce-20261029/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:d61d2d2",
+      "candidate_refs": [],
+      "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce refuses a checkout without a billing address (BILLING_INVALID); there is no fallback to the delivery address, since no store runs an older storefront (owner, 2026-10-29). Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
+      "context_ref": "docs/decisions/billing-address.md",
+      "created_at": "2026-10-29T21:25:23+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-delivery-address-001"
+      ],
+      "domain": "Billing address on orders",
+      "history": [
+        {
+          "at": "2026-10-29T21:25:23+00:00",
+          "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce refuses a checkout without a billing address (BILLING_INVALID); there is no fallback to the delivery address, since no store runs an older storefront (owner, 2026-10-29). Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-29T21:25:23+00:00",
+          "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce refuses a checkout without a billing address (BILLING_INVALID); there is no fallback to the delivery address, since no store runs an older storefront (owner, 2026-10-29). Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
           "from": "locked",
           "implementation_ref": null,
           "note": "dependency commerce-delivery-address-001 changed: commerce-billing-address-001 replaces its 'No billing address is collected' sentence.",
@@ -15255,49 +15300,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:18:14+00:00",
-          "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce requires billing for a digital-only basket; when a checkout with a delivery address sends none, Commerce records the delivery address as billing so older storefronts keep working. Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
-          "from": "needs_reverification",
-          "implementation_ref": null,
-          "note": "Owner 2026-10-29 20:17: no real stores exist, so drop the older-storefront fallback and require billing on every checkout.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-29T20:18:14+00:00",
-          "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce requires billing for a digital-only basket; when a checkout with a delivery address sends none, Commerce records the delivery address as billing so older storefronts keep working. Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
-          "from": "reopened",
-          "implementation_ref": null,
-          "note": "user accepted the scoped decision",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "locked",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-29T20:18:14+00:00",
-          "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce refuses a checkout without a billing address (BILLING_INVALID); there is no fallback to the delivery address, since no store runs an older storefront (owner, 2026-10-29). Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "dependency commerce-delivery-address-001 changed: Drop the billing fallback sentence (owner 2026-10-29 20:17).",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "needs_reverification",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-10-29T20:28:29+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce refuses a checkout without a billing address (BILLING_INVALID); there is no fallback to the delivery address, since no store runs an older storefront (owner, 2026-10-29). Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
           "from": "needs_reverification",
           "implementation_ref": null,
@@ -15311,7 +15314,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-29T20:28:30+00:00",
+          "at": "2026-10-29T21:25:24+00:00",
           "choice": "Every checkout records a billing address in the delivery address's shape (name, line 1, optional line 2, city, optional state or region, postal code, two-letter country) on the store's own checkout. With a delivery address the storefront ticks 'Billing address same as delivery address' by default and sends a full copy; a digital-only basket shows the billing fields directly. Billing may be in any country; only delivery is checked against shipping destinations. Commerce refuses a checkout without a billing address (BILLING_INVALID); there is no fallback to the delivery address, since no store runs an older storefront (owner, 2026-10-29). Billing is frozen into the checkout contact snapshot at checkout start as a full copy, rides on the paid order, and is not editable after payment in v1. The Orders detail shows Email, Phone, Ship to and Bill to ('Same as delivery address' when equal to the current delivery address, 'Not recorded' on older orders). The agents' orders API returns billTo in shipTo's shape and billToMatchesShipTo. Payments, Stripe and Authorize.net are unchanged.",
           "from": "implemented",
           "implementation_ref": "file:docs/implementation/checkout-contact-v1.md",
@@ -15337,12 +15340,12 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-29T20:28:30+00:00",
+      "updated_at": "2026-10-29T21:25:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     }
   ],
   "last_activation": {
-    "at": "2026-10-29T20:18:14+00:00",
+    "at": "2026-10-29T21:25:23+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -15375,5 +15378,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-29T20:28:35+00:00"
+  "updated_at": "2026-10-29T21:25:25+00:00"
 }

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { openProductPage, readProductPage, saveEditor, setOnSale } from '../sandbox/product-page.mjs';
+import { openProductPage, setOnSale } from '../sandbox/product-page.mjs';
 test.afterEach(async ({ page }, info) => {
   if (info.status !== info.expectedStatus) await page.screenshot({ path: resolve(process.env.LOCAL_MERCHANT_DIRECTORY, 'failure.png'), fullPage: true });
 });
@@ -25,16 +25,13 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   const { id: pageId, panel } = await openProductPage(page, 'Fixture parcel ' + run);
   await panel.getByRole('textbox', { name: 'SKU (optional)', exact: true }).fill('FIXTURE-' + run);
   await panel.getByRole('button', { name: 'Add price and stock', exact: true }).click();
-  await page.getByRole('dialog', { name: 'Review proposed changes' }).getByRole('button', { name: 'Apply changes', exact: true }).click();
-  await saveEditor(page);
   const priceForm = panel.locator('form').filter({ has: page.getByRole('textbox', { name: 'Regular', exact: true }) });
   await priceForm.getByRole('textbox', { name: 'Regular', exact: true }).fill('12');
   await priceForm.getByRole('radio', { name: 'In stock', exact: true }).check();
   await priceForm.getByRole('button', { name: /^Save/ }).click();
   await expect(priceForm.getByRole('textbox', { name: 'Regular', exact: true })).toHaveValue('12.00');
-  const catalogItemId = (await readProductPage(page.request, pageId)).data?.commerce_item_id;
-  expect(catalogItemId).toBeTruthy();
-  await setOnSale(page.request, { catalogItemId, entryId: pageId, onSale: true });
+  // The publish check sends the page alone; Commerce holds its link.
+  expect(await setOnSale(page.request, { entryId: pageId, onSale: true })).toEqual({ changed: true });
   await capture('catalog');
   await page.goto('/_emdash/admin/plugins/r_3brsc2on3bu673rn/status');
   await expect(page.getByRole('heading', { name: 'Payment setup', exact: true })).toBeVisible();

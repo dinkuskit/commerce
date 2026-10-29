@@ -5,7 +5,7 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { loadMerchantStoreSettings, saveMerchantStoreSettings } from '../../dist/features/store-settings/kernel/index.js';
-import { openPanel, openProductPage, saveEditor, setOnSale } from './product-page.mjs';
+import { openPanel, openProductPage, setOnSale } from './product-page.mjs';
 
 function proofDb() {
   const native = test.info().project.name === "native-variant";
@@ -269,14 +269,12 @@ test('merchant creates choices and edits independent and bulk prices through the
     const opened = await openProductPage(page, name), ui = opened.panel;
     await ui.getByRole('textbox',{name:'SKU (optional)',exact:true}).fill('MERCHANT-PROOF-SMALL');
     await ui.getByRole('button',{name:'Add price and stock',exact:true}).click();
-    await page.getByRole('dialog',{name:'Review proposed changes'}).getByRole('button',{name:'Apply changes',exact:true}).click();
-    // The page keeps its product only once saved; an unsaved link is offered again on the next step.
-    await saveEditor(page);
+    // Commerce keeps the page's link; nothing waits on the page's Save.
     await expect.poll(() => all(catalog).filter(r => r.name === name).length).toBe(1);
     const root = all(catalog).find(r => r.name === name);
     owned = [root.itemId];
     // The native proof site buys it, so publish the page the way a store's publish check does.
-    if (native) await setOnSale(page.request, { catalogItemId: root.itemId, entryId: opened.id, onSale: true });
+    if (native) await setOnSale(page.request, { entryId: opened.id, onSale: true });
     expect(root.variantProduct.defaultMemberId).toBe(root.itemId);
     expect(root.variantProduct.options).toHaveLength(0);
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(1);

@@ -31,3 +31,7 @@ reverification. Their behavior is unchanged and their suites pass on this head:
 `tests/integration/registry-checkout-services.test.mjs`: the order sent to Ship
 carries no billing) and `commerce-background-check-001` (background-check unit and
 integration tests).
+
+## After merging main with #208, #210 and #211
+
+Main `add0bde` merged in (ledger: main's taken, then this change's decisions replayed through the CLI; `validate` passes and the needs-reverification set equals main's). `node scripts/build-sandbox.mjs`: backend 130,895 bytes, 177 free. `npm run typecheck` and `npm run audit:repo` pass; `npm test` 820 of 821 (the same cloud-only packaged-consumers teardown); `npm run test:integration` 110 of 110.
