@@ -85,7 +85,7 @@ Prices use USD integer minor units represented as strings. For example, USD 12.0
 
 The public catalog filters archived, Draft and nonlistable products. A product can have up to three options (such as Color and Size), up to fifty values per option, and up to fifty variant members. Product families with options expose variant members; they can omit the top-level price. Choose a sellable member and use its `catalogItemId` for checkout. Do not assume every catalog object has a price or that a family ID can be purchased without a choice.
 
-Public catalog list and item responses also carry the feed channels the merchant approved for each product, so a storefront host can build public product feeds without admin reads. A product with no approved channel is never included.
+Public catalog list and item responses also carry the feed channels the merchant approved for each product, so a storefront host can build public product feeds without admin reads. A product with no approved channel is never included. The host-side Google and Meta feed builders report `low-stock` products as in stock, not out of stock; Product JSON-LD retains its more specific `LimitedAvailability` value.
 
 ## Availability
 

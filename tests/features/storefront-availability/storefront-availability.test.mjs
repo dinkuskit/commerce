@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PluginRouteError } from "emdash";
+import { buildGoogleMerchantFeed, buildMetaCatalogFeed } from "../../../dist/features/feeds/index.js";
+import { buildProductJsonLd } from "../../../dist/features/structured-data/index.js";
 
 import {
   CatalogError,
@@ -246,6 +248,37 @@ test("exact and threshold policies expose quantity only when the policy permits 
     status: "in-stock",
     sellable: true,
     listable: true,
+  });
+});
+
+test("managed low-stock availability stays purchasable in feeds and limited in JSON-LD", async () => {
+  const { result, reads } = await resolve({
+    policy: { mode: "threshold", threshold: 5 },
+    read: (input) => foundStock("5", input),
+  });
+  assert.equal(reads.length, 1, 'stock comes from the configured synthetic provider');
+  assert.equal(result.status, 'low-stock');
+  assert.equal(result.sellable, true);
+  assert.equal(result.listable, true);
+  const item = catalogItem();
+  const product = {
+    id: item.itemId, name: item.name, sku: item.sku,
+    price: catalogPrice().regular,
+    availability: { status: result.status, sellable: result.sellable, listable: result.listable },
+    image: null, gallery: [],
+  };
+  const content = { canonicalUrl: 'https://shop.example.test/products/grill', title: item.name };
+  const rows = [{ product, content, eligibility: ['google-merchant', 'meta-catalog'] }];
+  const google = buildGoogleMerchantFeed(rows);
+  const meta = buildMetaCatalogFeed(rows);
+  const jsonLd = buildProductJsonLd({ product, page: { url: content.canonicalUrl } });
+  assert.deepEqual({
+    google: /<g:availability>([^<]+)<\/g:availability>/.exec(google)?.[1],
+    meta: meta.split('\n')[1]?.split(',')[4],
+    jsonLd: jsonLd.offers.availability,
+  }, {
+    google: 'in stock', meta: '"in stock"',
+    jsonLd: 'https://schema.org/LimitedAvailability',
   });
 });
 

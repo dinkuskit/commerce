@@ -27,8 +27,12 @@ condition, and the Meta CSV already sends `new`). When an item has neither a
 GTIN nor a brand plus MPN, it carries `g:identifier_exists` `no`, the channel's
 explicit no-identifier signal, instead of an invented identifier;
 `buildMetaCatalogFeed` emits deterministic CSV. Availability follows the
-JSON-LD mapping per channel: a backorder product is Google `backorder` and Meta
-`available for order` (never `preorder`, which means not yet released). The
+JSON-LD semantics per channel: `in-stock` and `low-stock` both emit `in stock`
+in Google and Meta, since low stock is still available to buy. JSON-LD keeps
+its more specific `LimitedAvailability` value for low stock; the feeds must
+not turn that into `out of stock`. A backorder product is Google `backorder`
+and Meta `available for order` (never `preorder`, which means not yet released).
+`out-of-stock` and `availability-unavailable` remain `out of stock`. The
 first image URL is the main image; the rest are sent as additional image links
 (up to 10 for Google, 20 for Meta, the channels' limits). `pageProductFeedRows` provides
 a bounded cursor contract for hosts that page their catalog reads. These

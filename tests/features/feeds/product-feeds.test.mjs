@@ -36,6 +36,48 @@ function facts(overrides = {}) {
   };
 }
 
+for (const [status, sellable, schemaAvailability, googleAvailability, metaAvailability] of [
+  ['in-stock', true, 'InStock', 'in stock', 'in stock'],
+  ['low-stock', true, 'LimitedAvailability', 'in stock', 'in stock'],
+  ['out-of-stock', false, 'OutOfStock', 'out of stock', 'out of stock'],
+  ['available-on-backorder', true, 'BackOrder', 'backorder', 'available for order'],
+  ['availability-unavailable', false, 'OutOfStock', 'out of stock', 'out of stock'],
+]) {
+  test(`feed availability matches canonical ${status} semantics`, () => {
+    const row = facts({ product: product({ availability: { status, sellable, listable: true } }) });
+    const original = structuredClone(row);
+    const jsonLd = buildProductJsonLd({ product: row.product, page: { url: row.content.canonicalUrl } });
+    const google = buildGoogleMerchantFeed([row]);
+    const meta = buildMetaCatalogFeed([row]);
+    assert.deepEqual({
+      jsonLd: jsonLd.offers.availability,
+      google: /<g:availability>([^<]+)<\/g:availability>/.exec(google)?.[1],
+      // The fixture's fields contain no commas or newlines; availability is column five.
+      meta: meta.split('\n')[1]?.split(',')[4],
+    }, {
+      jsonLd: `https://schema.org/${schemaAvailability}`,
+      google: googleAvailability,
+      meta: `"${metaAvailability}"`,
+    });
+    assert.deepEqual(row, original, 'serialization must not change the authoritative input');
+  });
+}
+
+test("low-stock feed rows still require opt-in and all existing publication gates", () => {
+  const row = facts({ product: product({ availability: { status: 'low-stock', sellable: true, listable: true } }) });
+  const rejected = [
+    { ...row, eligibility: [] },
+    { ...row, product: { ...row.product, price: undefined } },
+    { ...row, product: { ...row.product, availability: { ...row.product.availability, listable: false } } },
+    { ...row, content: { ...row.content, canonicalUrl: '' } },
+    { ...row, content: { ...row.content, title: '' } },
+  ];
+  for (const excluded of rejected) {
+    assert.equal(buildGoogleMerchantFeed([excluded]).includes('<item>'), false);
+    assert.equal(buildMetaCatalogFeed([excluded]).trim().split('\n').length, 1);
+  }
+});
+
 test("new products are not eligible until explicitly opted in", async () => {
   const records = new Map();
   let item = { recordKind: "catalog-item", itemId: "item-hat" }, revision = "a";

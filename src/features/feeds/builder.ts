@@ -43,6 +43,7 @@ function availability(product: ProductFeedFacts, channel: ProductFeedChannel): s
   const values = AVAILABILITY_VALUES[channel];
   switch (product.product.availability.status) {
     case "in-stock":
+    case "low-stock":
       return values.inStock;
     case "available-on-backorder":
       return values.backorder;
