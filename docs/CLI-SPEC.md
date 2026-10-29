@@ -196,7 +196,9 @@ changes (a misspelt `trackingNumber` is an error, not ignored). Each order is:
   "lines": [{ "catalogItemId": "item_demo", "quantity": 2, "name": "Demo Mug", "unitPrice": { "currency": "USD", "minor": "625" } }],
   "choices": [],
   "shipTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
-  "email": "shopper@example.test", "phone": null, "completed": null
+  "email": "shopper@example.test", "phone": null, "completed": null,
+  "billTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
+  "billToMatchesShipTo": true
 }
 ```
 
@@ -204,8 +206,11 @@ changes (a misspelt `trackingNumber` is an error, not ignored). Each order is:
 numbers it. `status` is `processing` until the order ships and `completed` once
 it shipped (never "delivered"). `test` is false only for an order taken in live
 mode. `shipTo` is the owner's corrected address when there is one, else the
-checkout address, or null for digital-only orders. `choices` are the frozen
-option choices. `completed` is `{ at, carrier?, tracking? }` once Completed.
+checkout address, or null for digital-only orders. `billTo` is the billing
+address frozen at checkout, always a full copy (null only for orders paid before
+billing was recorded); `billToMatchesShipTo` is true when it equals `shipTo`
+field for field. `choices` are the frozen option choices. `completed` is
+`{ at, carrier?, tracking? }` once Completed. `orders show` prints `bill to`.
 
 `complete` and `reopen` follow the Orders page's rules and apply only at the
 order `version` named, so a change made from a stale read changes nothing.

@@ -865,7 +865,7 @@ test("native public handlers reopen durable storage and reconcile one order per 
   const started = await invokeGuest(
     plugin.routes[GUEST_CHECKOUT_START_ROUTE],
     opened.storage,
-    { contact: { email: 'wake-fixture@example.test' }, lines: [{ catalogItemId: "hat", quantity: 1 }] },
+    { contact: { email: 'wake-fixture@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: "hat", quantity: 1 }] },
     { capability: token },
   );
   assert.equal(started.checkout.state, "pending");

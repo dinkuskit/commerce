@@ -5,6 +5,7 @@ import { startCheckout } from '../../../dist/features/checkout/index.js';
 import { openStore, fixture, cart, syntheticDelivery } from './fixture.mjs';
 
 const email = 'region-fixture@example.test';
+const billing = { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' };
 const requirements = (shippingCountries = ['US']) => async () => ({ requirePhoneNumber: false, shippingCountries, revision: 'regions-v1' });
 const deliveryWith = region => {
   const delivery = { ...syntheticDelivery };
@@ -12,7 +13,7 @@ const deliveryWith = region => {
   else delivery.region = region;
   return delivery;
 };
-const capture = (delivery, countries) => captureCheckoutContact({ email, delivery }, requirements(countries), true);
+const capture = (delivery, countries) => captureCheckoutContact({ email, delivery, billing }, requirements(countries), true);
 const states = [
   ['AL', 'Alabama'], ['AK', 'Alaska'], ['AZ', 'Arizona'], ['AR', 'Arkansas'], ['CA', 'California'],
   ['CO', 'Colorado'], ['CT', 'Connecticut'], ['DE', 'Delaware'], ['FL', 'Florida'], ['GA', 'Georgia'],
@@ -82,14 +83,14 @@ test('rejected physical, mixed and unmarked attempts cannot write, reserve stock
     f.execution.payments.ensureSession = async () => { payments++; throw Error('unexpected payment'); };
     f.execution.paymentAssociations = { async claim() { associations++; return true; } };
     for (const region of invalidRegions) {
-      await assert.rejects(startCheckout(f.execution, 'rejected', { lines: cart, contact: { email, delivery: deliveryWith(region) } }), { code: 'DELIVERY_INVALID' });
+      await assert.rejects(startCheckout(f.execution, 'rejected', { lines: cart, contact: { email, delivery: deliveryWith(region), billing } }), { code: 'DELIVERY_INVALID' });
       assert.equal(await f.execution.store.read('rejected'), null);
     }
     assert.deepEqual({ writes, payments, associations, reserves: f.counts().reserveCalls, holds: f.holds.size, sessions: f.sessions.size },
       { writes: 0, payments: 0, associations: 0, reserves: 0, holds: 0, sessions: 0 });
     // The same configured checkout still admits a supported US region.
     f.execution.payments.ensureSession = async () => ({ outcome: 'unknown' });
-    const accepted = await startCheckout(f.execution, 'accepted', { lines: cart, contact: { email, delivery: deliveryWith('AK') } });
+    const accepted = await startCheckout(f.execution, 'accepted', { lines: cart, contact: { email, delivery: deliveryWith('AK'), billing } });
     assert.equal(accepted.contactSnapshot.contact.delivery.region, 'AK');
     assert.ok(writes > 0);
     assert.equal(f.counts().reserveCalls, 1);
@@ -103,9 +104,9 @@ test('digital-only checkout discards malformed delivery and US ineligibility wit
   f.execution.loadCheckoutContactRequirements = requirements([]);
   f.setPayment('paid');
   for (const [i, delivery] of [null, 'bad address', { country: 'US', region: 'PR' }, { region: { invalid: true } }].entries()) {
-    const paid = await startCheckout(f.execution, `digital-${i}`, { lines: cart, contact: { email, delivery } });
+    const paid = await startCheckout(f.execution, `digital-${i}`, { lines: cart, contact: { email, delivery, billing } });
     assert.equal(paid.phase, 'paid');
-    assert.deepEqual(paid.order.contactSnapshot.contact, { email });
+    assert.deepEqual(paid.order.contactSnapshot.contact, { email, billing });
   }
 });
 
@@ -113,7 +114,7 @@ test('legacy active physical attempts replay without contact or reloading change
   for (const region of [undefined, 'PR']) {
     const opened = openStore(':memory:'); t.after(() => opened.db.close());
     const f = fixture(opened.store);
-    const first = await startCheckout(f.execution, 'active', { lines: cart, contact: { email, delivery: syntheticDelivery } });
+    const first = await startCheckout(f.execution, 'active', { lines: cart, contact: { email, delivery: syntheticDelivery, billing } });
     assert.equal(first.phase, 'paying');
     const stored = await f.execution.store.read('active');
     stored.record.attempts[0].contactSnapshot.contact.delivery = deliveryWith(region);

@@ -35,7 +35,6 @@ function revisionFrom(input: Record<string, unknown>): string | null {
 function valuesFor(settings: MerchantStoreSettings): Record<string, unknown> {
   return {
     storeCountry: settings.storeCountry ?? "",
-    sellingCountries: settings.sellingCountries.join(", "),
     shippingCountries: settings.shippingCountries.join(", "),
     requirePhoneNumber: settings.requirePhoneNumber,
   };
@@ -51,8 +50,8 @@ function response(settings: MerchantStoreSettings, revision: string | null, noti
   const values = draft ?? valuesFor(settings);
   const blocks: Block[] = [
     { type: "header", text: "Merchant store settings" },
-    { type: "context", text: "Checkout checks physical shipping destinations; selling/customer countries are not enforced." },
-    { type: "context", text: settings.storeCountry === null ? "Choose your store country. On the first country save, blank lists default to that country. Extra countries must be added explicitly. You can save the phone setting before choosing a country." : "Changing the store country preserves your lists. A blank list means no enabled countries or destinations." },
+    { type: "context", text: "Checkout refuses a physical delivery outside your shipping destinations." },
+    { type: "context", text: settings.storeCountry === null ? "Choose your store country. On the first country save, blank destinations default to that country. Extra destinations must be added explicitly. You can save the phone setting before choosing a country." : "Changing the store country preserves your destinations. A blank list means no enabled destinations." },
   ];
   if (notice) blocks.push({ type: "banner", title: notice.title, variant: notice.variant });
   blocks.push({
@@ -60,7 +59,6 @@ function response(settings: MerchantStoreSettings, revision: string | null, noti
     block_id: `${BLOCK_PREFIX}${revision ?? "null"}`,
     fields: [
       { type: "text_input", action_id: "storeCountry", label: "Store country (ISO alpha-2 code)", placeholder: "e.g. CA", initial_value: String(values.storeCountry ?? "") },
-      { type: "text_input", action_id: "sellingCountries", label: "Allowed selling/customer countries (comma-separated codes)", placeholder: "Leave empty for no enabled countries", initial_value: String(values.sellingCountries ?? "") },
       { type: "text_input", action_id: "shippingCountries", label: "Allowed physical shipping destinations (comma-separated codes)", placeholder: "Leave empty for no enabled destinations", initial_value: String(values.shippingCountries ?? "") },
       { type: "toggle", action_id: "requirePhoneNumber", label: "Require a phone number", description: "Require customers to include a phone number at checkout.", initial_value: values.requirePhoneNumber === true },
     ],
@@ -92,12 +90,10 @@ export async function merchantStoreSettingsBlocks(route: SandboxedRouteContext, 
     if (!countryValue && current.settings.storeCountry !== null) {
       throw new StoreSettingsError("INVALID_INPUT", "Store country is required");
     }
-    const selling = list(draft.sellingCountries, "sellingCountries");
     const shipping = list(draft.shippingCountries, "shippingCountries");
     const first = current.settings.storeCountry === null;
     const raw = {
       ...(countryValue ? { storeCountry: countryValue } : {}),
-      ...(!first || selling.length ? { sellingCountries: selling } : {}),
       ...(!first || shipping.length ? { shippingCountries: shipping } : {}),
       requirePhoneNumber: draft.requirePhoneNumber,
       expectedRevision: revision,

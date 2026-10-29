@@ -563,6 +563,7 @@ function orderHuman(order) {
 		["paid", order.paidAt ?? "-"],
 		["total", formatMoney(order.total)],
 		["ship to", shipTo(order.shipTo)],
+		["bill to", order.billToMatchesShipTo ? "same as ship to" : shipTo(order.billTo)],
 		["email", order.email ?? "-"],
 		["phone", order.phone ?? "-"],
 		...order.lines.map((line) => ["item", `${line.quantity} x ${line.name} (${line.catalogItemId}) at ${formatMoney(line.unitPrice)}`]),

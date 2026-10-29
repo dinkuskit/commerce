@@ -7,6 +7,7 @@ import { openStore, fixture, cart, syntheticDelivery } from './fixture.mjs';
 
 const requirements = (shippingCountries = ['US']) => async () => ({ requirePhoneNumber: false, shippingCountries, revision: 'r1' });
 const email = 'delivery-fixture@example.test';
+const billing = { name: 'Bill Payer', line1: '9 Billing Way', city: 'Toronto', region: 'ON', postalCode: 'M5V 1A1', country: 'CA' };
 
 function checkout(mark) {
   const opened = openStore(':memory:');
@@ -36,14 +37,14 @@ test('a physical basket needs an address in a shipping country; a digital one ke
     { code: 'DELIVERY_COUNTRY_UNAVAILABLE' });
   await assert.rejects(captureCheckoutContact({ email, delivery: syntheticDelivery }, requirements([]), true),
     { code: 'DELIVERY_COUNTRY_UNAVAILABLE' });
-  const physical = await captureCheckoutContact({ email, delivery: syntheticDelivery }, requirements(), true);
-  assert.deepEqual(physical.contact, { email, delivery: syntheticDelivery });
+  const physical = await captureCheckoutContact({ email, delivery: syntheticDelivery, billing }, requirements(), true);
+  assert.deepEqual(physical.contact, { email, delivery: syntheticDelivery, billing });
   assert.ok(Object.isFrozen(physical.contact.delivery));
-  const digital = await captureCheckoutContact({ email, delivery: syntheticDelivery }, requirements(), false);
-  assert.deepEqual(digital.contact, { email });
+  const digital = await captureCheckoutContact({ email, delivery: syntheticDelivery, billing }, requirements(), false);
+  assert.deepEqual(digital.contact, { email, billing });
   // A partial or malformed address on a digital-only basket is dropped, not refused.
   for (const delivery of [{ city: 'X' }, 'x', null, { ...syntheticDelivery, country: 'USA', note: 1 }])
-    assert.deepEqual((await captureCheckoutContact({ email, delivery }, requirements(), false)).contact, { email });
+    assert.deepEqual((await captureCheckoutContact({ email, delivery, billing }, requirements(), false)).contact, { email, billing });
 });
 
 test('unmarked and mixed baskets ask for an address before any attempt or payment', async t => {
@@ -59,16 +60,19 @@ test('unmarked and mixed baskets ask for an address before any attempt or paymen
 test('the address rides the paid order; a digital-only basket carries none', async t => {
   const physical = checkout(); t.after(physical.close);
   physical.f.execution.loadCheckoutContactRequirements = requirements();
-  const paid = await startCheckout(physical.f.execution, 'cart', { lines: cart, contact: { email, delivery: syntheticDelivery } });
+  const paid = await startCheckout(physical.f.execution, 'cart', { lines: cart, contact: { email, delivery: syntheticDelivery, billing } });
   assert.equal(paid.phase, 'paid');
   const order = paidOrderOf(paid.order);
   assert.deepEqual(order.contactSnapshot.contact.delivery, syntheticDelivery);
+  assert.deepEqual(order.contactSnapshot.contact.billing, billing);
   const detail = JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: order }] }, order.orderId));
   assert.ok(detail.includes('Fixture Shopper, 1 Example Way, Testville, CA, 00000, US'));
+  assert.ok(detail.includes('Bill to:\\nBill Payer, 9 Billing Way, Toronto, ON, M5V 1A1, CA'));
+  assert.ok(detail.includes('Email:\\ndelivery-fixture@example.test'));
 
   const digital = checkout(() => 'digital'); t.after(digital.close);
   digital.f.execution.loadCheckoutContactRequirements = requirements([]);
-  const download = await startCheckout(digital.f.execution, 'cart', { lines: cart, contact: { email, delivery: syntheticDelivery } });
+  const download = await startCheckout(digital.f.execution, 'cart', { lines: cart, contact: { email, delivery: syntheticDelivery, billing } });
   assert.equal(download.phase, 'paid');
   assert.equal(download.order.contactSnapshot.contact.delivery, undefined);
   assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: paidOrderOf(download.order) }] }, download.order.orderId)).includes('No address'));

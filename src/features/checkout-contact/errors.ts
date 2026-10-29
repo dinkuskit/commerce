@@ -6,6 +6,7 @@ export type CheckoutContactErrorCode =
   | "DELIVERY_REQUIRED"
   | "DELIVERY_INVALID"
   | "DELIVERY_COUNTRY_UNAVAILABLE"
+  | "BILLING_INVALID"
   | "REQUIREMENTS_UNAVAILABLE";
 
 const MESSAGE_BY_CODE: Record<CheckoutContactErrorCode, string> = {
@@ -16,6 +17,7 @@ const MESSAGE_BY_CODE: Record<CheckoutContactErrorCode, string> = {
   DELIVERY_REQUIRED: "Delivery address is required",
   DELIVERY_INVALID: "Delivery address is invalid",
   DELIVERY_COUNTRY_UNAVAILABLE: "The store does not ship to this country",
+  BILLING_INVALID: "Billing address is missing or invalid",
   REQUIREMENTS_UNAVAILABLE: "Checkout contact requirements are unavailable",
 };
 
