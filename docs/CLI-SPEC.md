@@ -394,7 +394,7 @@ JSON and plain field names are compatibility surfaces within
 Service error codes such as `INVALID_TOKEN` or `INSUFFICIENT_SCOPE` are passed
 through as `error.code`.
 
-Timeouts, cancellation and connection failures use exit `3` even if the server
+Timeouts and connection failures use exit `3` even if the server
 already sent its response headers. The CLI does not automatically retry them.
 For a write, a missing complete response does not prove nothing changed: read
 the product or order before deciding whether to submit again.

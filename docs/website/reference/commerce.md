@@ -134,7 +134,7 @@ A write may carry `expected`: the first 12 hex digits of the SHA-256 of the prod
 
 The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-choice`, `link`, `archive` and `restore`. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
 
-The CLI's `--timeout` covers each request through reading its response body. A timeout, interruption or dropped connection exits with code `3`, even after response headers arrive, and is not automatically retried. For a write, read the product or order before submitting again: an incomplete response does not prove nothing was saved.
+The CLI's `--timeout` covers each request through reading its response body. A timeout or dropped connection while receiving a response exits with code `3`, even after response headers arrive, and is not automatically retried. For a write, read the product or order before submitting again: an incomplete response does not prove nothing was saved.
 
 ## US delivery addresses
 
