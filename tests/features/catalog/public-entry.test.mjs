@@ -249,4 +249,20 @@ test("installed public catalog projects only priced listable products", async ()
     ),
   });
   assert.equal(nativeUnknownItem, null);
+
+  // By page: the page's last sale names the product, and the product names that page back.
+  const pages = { async get(id) { return id === "p:page-public" ? { entryId: "page-public", catalogItemId: "item-public" } : null; } };
+  const byPage = (query) => itemRoute.handler({
+    ...installedContext,
+    storage: { ...installedContext.storage, product_pages: pages },
+    request: new Request(`http://127.0.0.1/catalog/public/item?${query}`, { method: "GET" }),
+  });
+  assert.equal(await byPage("pageId=page-public"), null, "a product that names no page is no page's");
+  record.pageId = "page-public";
+  assert.deepEqual(await byPage("pageId=page-public"), { ...response.products[0], page: "page-public" });
+  assert.equal((await catalog.readPublicCatalog(installedContext)).products[0].page, "page-public");
+  assert.equal(await byPage("pageId=page-other"), null);
+  for (const query of ["pageId=page-public&itemId=item-public", "pageId=a&pageId=b", "itemId=a&itemId=b", ""]) {
+    await assert.rejects(byPage(query), /Invalid catalog item query/);
+  }
 });

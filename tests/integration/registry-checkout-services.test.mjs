@@ -64,7 +64,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
-  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'admin.editor-draft:patch', 'media:read', 'network:request', 'email:send']);
+  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'media:read', 'network:request', 'email:send']);
   assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
@@ -265,19 +265,23 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   const products = (await state.collections.catalog_items.query()).items.filter(row => row.data.recordKind === 'catalog-item');
   assert.equal(products.length, 1);
   const id = products[0].id;
-  assert.deepEqual(created.patch, { type: 'editor-draft-patch', operations: [{ op: 'set', field: 'commerce_item_id', value: id }] });
-  assert.deepEqual(await state.plugin.invokeRoute('catalog-items/set-on-sale', { catalogItemId: id, entryId: 'page-public-hat', onSale: true },
+  assert.equal(created.patch, undefined, 'the page is never patched; Commerce holds its link');
+  // The publish check sends the page alone, and Commerce finds the product it links.
+  assert.deepEqual(await state.plugin.invokeRoute('catalog-items/set-on-sale', { entryId: 'page-public-hat', onSale: true },
     { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog-items/set-on-sale`, method: 'POST' }), { changed: true });
   assert.equal((await admin({ type: 'form_submit', action_id: 'save:' + id, values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' } })).toast.type, 'success');
   const publicList = () => state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
-  const publicItem = () => state.plugin.invokeRoute('catalog/public/item', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public/item?itemId=${id}`, method: 'GET' });
+  const publicItem = (query = `itemId=${id}`) => state.plugin.invokeRoute('catalog/public/item', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public/item?${query}`, method: 'GET' });
   const catalog = await publicList();
   // Add price and stock makes a physical product, which carries its one-member variant group.
   const { variants } = catalog.products[0] ?? {};
   assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment]), [[id, 'physical']]);
-  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], variants };
+  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], page: 'page-public-hat', variants };
   assert.deepEqual(catalog, { products: [expectedProduct] });
   assert.deepEqual(await publicItem(), expectedProduct);
+  assert.deepEqual(await publicItem('pageId=page-public-hat'), expectedProduct, 'the storefront finds a product by its page');
+  assert.equal(await publicItem('pageId=page-other'), null);
+  await assert.rejects(publicItem(`pageId=page-public-hat&itemId=${id}`));
   for (const enabled of [true, false]) {
     const saved = await admin({ type: 'form_submit', action_id: 'save:' + id, values: {
       regular: '4.00', sale: '3.00', stockStatus: 'in-stock',
