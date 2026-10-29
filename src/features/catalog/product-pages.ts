@@ -34,11 +34,13 @@ function id(value: unknown, field: string): string {
   return value.trim();
 }
 const conflict = () => new CatalogError("PRODUCT_PAGE_CONFLICT", "Another page sells this product");
+/** Refuses a product that is gone; the panels answer with the same words. */
+export const productNotFound = (): never => { throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found."); };
 
-/** The product a page's panel picked, else the one its publish check sold. */
-export async function pageProduct(pages: ProductPages, entryId: string): Promise<string | undefined> {
+/** The product a page's panel picked, else the one its publish check sold; `sold` asks for the sold one first. */
+export async function pageProduct(pages: ProductPages, entryId: string, sold?: boolean): Promise<string | undefined> {
   const rows = (await pages.query({ where: { entryId }, limit: 10 })).items;
-  return (rows.find(row => row.id.startsWith("e:")) ?? rows[0])?.data.catalogItemId;
+  return (rows.find(row => row.id.startsWith(sold ? "p:" : "e:")) ?? rows[0])?.data.catalogItemId;
 }
 
 /** The panel notes the product an editor picked; a product another page sells is refused. */
@@ -77,8 +79,12 @@ export async function productPageLinks(pages: ProductPages): Promise<Set<string>
  */
 export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages }, input: unknown): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
-  const catalogItemId = id(input.catalogItemId, "catalogItemId"), entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
-  const { onSale, deleted } = input;
+  const { onSale, deleted } = input, entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
+  // Commerce holds the page's link (catalog-page-link-in-commerce-20261029): a publish sells the panel's pick, and
+  // every other change acts on what the page sold. An older store still names the product itself.
+  const catalogItemId = input.catalogItemId === undefined
+    ? await pageProduct(pages, entryId, onSale !== true) ?? productNotFound()
+    : id(input.catalogItemId, "catalogItemId");
   // A title-only write renames the product this page sells, and never changes its sale state or link.
   if (onSale === undefined && deleted === undefined && input.name !== undefined) {
     const name = normalizeProductName(input.name);

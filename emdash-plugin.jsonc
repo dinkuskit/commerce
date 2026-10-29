@@ -18,8 +18,7 @@
     "media:read",
     "network:request",
     "email:send",
-    "admin.editor-draft:read",
-    "admin.editor-draft:patch"
+    "admin.editor-draft:read"
   ],
   "allowedHosts": [
     "payments.dinkuskit.com",
@@ -157,8 +156,7 @@
         "route": "product-panel",
         "collections": ["products"],
         "draft": {
-          "read": { "fields": ["title", "commerce_item_id"] },
-          "patch": { "fields": ["commerce_item_id"] }
+          "read": { "fields": ["title"] }
         }
       },
       {

@@ -59,7 +59,7 @@ test('an unlinked page offers Add price and stock and the products without a pag
   assert.equal(out.patch, undefined, 'loading never touches the page');
 });
 
-test('Add price and stock makes an unmanaged Draft and patches the unsaved page', async () => {
+test('Add price and stock makes an unmanaged Draft and Commerce keeps the page\'s link', async () => {
   const { ctx, catalog, pages } = await shop();
   const writes = [], put = catalog.put.bind(catalog);
   catalog.put = async (id, row) => { writes.push(structuredClone(row)); return put(id, row); };
@@ -73,23 +73,26 @@ test('Add price and stock makes an unmanaged Draft and patches the unsaved page'
   assert.equal(made.fulfillment, 'physical');
   assert.equal(made.creationIntent?.manageStock ?? false, false);
   assert.match(made.sku, /^BLACK-HOODIE/);
-  assert.deepEqual(out.patch, { type: 'editor-draft-patch', operations: [{ op: 'set', field: 'commerce_item_id', value: made.itemId }] });
+  assert.equal(out.patch, undefined, 'the page has no product field to fill');
+  assert.equal(out.toast?.message, 'Draft made. Publish the page to sell it.');
   assert.equal(await pageProduct(pages, 'page-1'), made.itemId);
   assert.equal(await readPublicCatalogItem(ctx, made.itemId), null, 'a Draft is not on the shop');
   const again = await panel({ type: 'panel_load' }, ctx);
   assert.match(texts(again.blocks), /Draft: publish to sell it/);
 });
 
-test('picking a product without a page links it, and a page already holding that id gets no patch', async () => {
+test('picking a product without a page links it in Commerce alone', async () => {
   const { ctx, pages } = await shop();
   const linked = await panel({ type: 'form_submit', action_id: 'link', values: { product: 'mug' }, draft: { fields: { title: 'Mug' } } }, ctx);
   assert.notEqual(linked.toast?.type, 'error', JSON.stringify(linked));
-  assert.equal(linked.patch.operations[0].value, 'mug');
+  assert.equal(linked.toast?.message, 'Linked.');
+  assert.equal(linked.patch, undefined, 'the page is never patched');
   assert.equal(await pageProduct(pages, 'page-1'), 'mug');
-  const same = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx);
-  assert.equal(same.patch, undefined, 'a page already holding the id gets no patch');
+  const same = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug' } } }, ctx);
+  assert.match(texts(same.blocks), /SKU MUG/, 'Add price and stock on a linked page opens its product');
+  assert.equal(ctx.storage.catalog_items.records.size, 1, 'and makes nothing new');
   // One product has one page, decided only by the publish check. A panel link is a note, so another page may pick it too...
-  const moved = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx, 'page-2');
+  const moved = await panel({ type: 'form_submit', action_id: 'link', values: { product: 'mug' }, draft: { fields: { title: 'Mug' } } }, ctx, 'page-2');
   assert.notEqual(moved.toast?.type, 'error', JSON.stringify(moved.toast));
   assert.equal(await pageProduct(pages, 'page-2'), 'mug');
   assert.equal((await ctx.storage.catalog_items.get('mug')).pageId, undefined, 'no panel step decides who sells it');
@@ -97,7 +100,7 @@ test('picking a product without a page links it, and a page already holding that
   await setProductPageOnSale({ catalog: ctx.storage.catalog_items, pages }, { catalogItemId: 'mug', entryId: 'page-2', onSale: true });
   assert.equal((await ctx.storage.catalog_items.get('mug')).pageId, 'page-2');
   assert.equal((await pages.get('p:page-2')).catalogItemId, 'mug');
-  const typed = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx, 'page-3');
+  const typed = await panel({ type: 'form_submit', action_id: 'link', values: { sku: 'mug' }, draft: { fields: { title: 'Mug' } } }, ctx, 'page-3');
   assert.equal(typed.toast?.type, 'error');
   assert.match(typed.toast.message, /Another page sells this product/);
   assert.equal(await pageProduct(pages, 'page-3'), undefined);
@@ -145,22 +148,18 @@ test('a retried Add price and stock resumes the product its first try made', asy
   assert.equal(await pageProduct(pages, 'page-1'), caps[0].itemId);
 });
 
-test('the page editor\'s commerce_item_id settles the link on the next step', async () => {
+test('a page field naming another product changes nothing: Commerce holds the link', async () => {
   const { ctx, catalog, pages } = await shop();
   await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
-  // A page saved before the link list existed: Add price and stock opens its product and makes nothing new.
-  const old = await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Mug', commerce_item_id: 'mug' } } }, ctx);
-  assert.equal(old.patch, undefined);
-  assert.match(texts(old.blocks), /SKU MUG/);
-  assert.equal(catalog.records.size, 2);
-  // The page now names another product: the next step opens that one, never the old link.
-  const moved = await panel({ type: 'form_submit', action_id: 'save:mug', values: { regular: '9.00', sale: '' }, draft: { fields: { commerce_item_id: 'cap' } } }, ctx);
-  assert.equal(await pageProduct(pages, 'page-1'), 'cap');
-  assert.match(texts(moved.blocks), /SKU CAP/);
-  assert.equal((await ctx.storage.catalog_prices.get('mug')), null, 'the old product is not changed');
-  // A declined or unsaved link: the next step offers the link again.
-  const declined = await panel({ type: 'block_action', action_id: 'open', value: 'cap', draft: { fields: { title: 'Cap' } } }, ctx);
-  assert.deepEqual(declined.patch, { type: 'editor-draft-patch', operations: [{ op: 'set', field: 'commerce_item_id', value: 'cap' }] });
+  await panel({ type: 'form_submit', action_id: 'link', values: { product: 'mug' }, draft: { fields: {} } }, ctx);
+  // An older store's page still carries commerce_item_id; whatever it says, the panel acts on the linked product.
+  const saved = await panel({ type: 'form_submit', action_id: 'save:mug', values: { regular: '9.00', sale: '' }, draft: { fields: { commerce_item_id: 'cap' } } }, ctx);
+  assert.equal(await pageProduct(pages, 'page-1'), 'mug');
+  assert.match(texts(saved.blocks), /SKU MUG/);
+  assert.equal(saved.patch, undefined);
+  const loaded = await panel({ type: 'panel_load', draft: { fields: { commerce_item_id: 'cap' } } }, ctx);
+  assert.match(texts(loaded.blocks), /SKU MUG/);
+  assert.equal((await ctx.storage.catalog_prices.get('cap')), null, 'the named product is not changed');
 });
 
 test('archived products without a page stay listed so they can be restored', async () => {
@@ -200,6 +199,46 @@ test('the publish check puts a product on sale and back to Draft, and a deleted 
   await assert.rejects(setProductPageOnSale(storage, { catalogItemId: ' ', entryId: 'page-1', onSale: true }), (error) => error.code === 'INVALID_INPUT');
   await assert.rejects(setProductPageOnSale(storage, { catalogItemId: id, onSale: true }), (error) => error.code === 'INVALID_INPUT', 'the page is required');
   assert.equal(pages.records.size, 0);
+});
+
+test('the publish check finds the page\'s product in Commerce, and the shop finds a product by its page', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const storage = { catalog, pages };
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  ctx.storage.catalog_prices = new Store();
+  for (const id of ['mug', 'cap']) await ctx.storage.catalog_prices.put(id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor: '900' } });
+  // A page Commerce holds no link for sells nothing; the template publishes it as a plain page.
+  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: true }), (error) => error.code === 'CATALOG_ITEM_NOT_FOUND');
+  assert.equal(pages.records.size, 0);
+  await panel({ type: 'form_submit', action_id: 'link', values: { product: 'mug' }, draft: { fields: {} } }, ctx);
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: true, name: 'Blue mug' });
+  assert.equal((await catalog.get('mug')).pageId, 'page-1');
+  const shown = await readPublicCatalogItem(ctx, 'page-1', true);
+  assert.deepEqual([shown?.id, shown?.page, shown?.name], ['mug', 'page-1', 'Blue mug']);
+  assert.equal((await readPublicCatalogItem(ctx, 'mug'))?.page, 'page-1', 'an item read names its page too');
+  assert.equal((await readPublicCatalog(ctx)).products.find((p) => p.id === 'mug')?.page, 'page-1', 'the catalog lists each product\'s page');
+  assert.equal((await readPublicCatalog(ctx)).products.find((p) => p.id === 'cap')?.page, undefined, 'a product no page has sold names none');
+  assert.equal(await readPublicCatalogItem(ctx, 'page-2', true), null, 'a page that sells nothing');
+  // An unsaved pick of the cap: the shop still shows what was published, and unpublishing takes that off.
+  await panel({ type: 'form_submit', action_id: 'link', values: { product: 'cap' }, draft: { fields: {} } }, ctx);
+  assert.equal((await readPublicCatalogItem(ctx, 'page-1', true))?.id, 'mug');
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false });
+  assert.equal((await catalog.get('mug')).offSale, true);
+  assert.equal(await readPublicCatalogItem(ctx, 'page-1', true), null, 'a Draft is off the shop');
+  // Publishing again sells the panel's pick and gives the mug up.
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: true });
+  assert.equal((await readPublicCatalogItem(ctx, 'page-1', true))?.id, 'cap');
+  assert.equal((await catalog.get('mug')).pageId, undefined);
+  await setProductPageOnSale(storage, { entryId: 'page-1', name: 'Red cap' });
+  assert.equal((await catalog.get('cap')).name, 'Red cap', 'a title-only write renames what the page sells');
+  // A product the page's last sale no longer holds is not shown for that page.
+  await catalog.put('cap', { ...(await catalog.get('cap')), pageId: 'page-9' });
+  assert.equal(await readPublicCatalogItem(ctx, 'page-1', true), null);
+  await catalog.put('cap', { ...(await catalog.get('cap')), pageId: 'page-1' });
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true });
+  assert.equal(await pageProduct(pages, 'page-1'), undefined);
+  assert.equal(await readPublicCatalogItem(ctx, 'page-1', true), null);
+  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: true }), (error) => error.code === 'CATALOG_ITEM_NOT_FOUND', 'a deleted page names nothing');
 });
 
 test('publishing names the product from the page title, and only a publish does', async () => {
