@@ -98,11 +98,11 @@ function checkPublicProduct(product, what) {
 	return product;
 }
 
-export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginIdSource, token, timeoutMs, fetchImpl, signal }) {
+export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginIdSource, token, timeoutMs, fetchImpl, signal, lifecycle = {} }) {
 	const baseUrl = `${siteUrl}/_emdash/api/plugins/${pluginId}`;
 	// Public reads never carry the credential, even when one is set.
 	const publicHttp = createHttp({ baseUrl, timeoutMs, fetchImpl, signal });
-	const adminHttp = () => {
+	const adminHttp = (mutating) => {
 		if (!token) {
 			throw new CliError("credential_required", `This command needs an EmDash API token in ${TOKEN_ENV}.`, { exit: EXIT.blocked });
 		}
@@ -124,15 +124,24 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 				{ exit: EXIT.blocked },
 			);
 		}
-		return createHttp({ baseUrl, headers: { authorization: `Bearer ${token}` }, timeoutMs, fetchImpl, signal });
+		return createHttp({ baseUrl, headers: { authorization: `Bearer ${token}` }, timeoutMs, signal,
+			fetchImpl: mutating ? (url, init) => {
+				// Once dispatch starts, SIGINT cannot promise that nothing changed.
+				// Mark only after admission and before fetch can yield to the signal handler.
+				init.signal.throwIfAborted();
+				lifecycle.sending = true;
+				return fetchImpl(url, init);
+			} : fetchImpl,
+		});
 	};
 	// Non-GET admin calls will also need X-EmDash-Request: 1 (EmDash CSRF guard).
-	const adminRequest = (method, path, options = {}) =>
-		adminHttp()(method, path, method === "GET" ? options : { ...options, headers: { "x-emdash-request": "1", ...options.headers } });
+	// POST alone does not imply a mutation: catalog and orders also read with POST.
+	const adminRequest = (method, path, options = {}, mutating = false) =>
+		adminHttp(mutating)(method, path, method === "GET" ? options : { ...options, headers: { "x-emdash-request": "1", ...options.headers } });
 
 	// Every orders action is one private POST; EmDash checks the token before Commerce sees it.
 	async function ordersCall(body, what) {
-		const data = unwrap(await adminRequest("POST", `/${ROUTES.orders}`, { body }), what, {
+		const data = unwrap(await adminRequest("POST", `/${ROUTES.orders}`, { body }, body.action !== "list" && body.action !== "show"), what, {
 			onNotFound: routeMissing(ROUTES.orders, "Check --url and --plugin-id. The Registry (sandboxed) Commerce build serves it; the native build has no Orders."),
 		});
 		if (!isRecord(data)) throw contractError(what, "the response is not an object.");
@@ -143,7 +152,7 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 	async function catalogCall(body, what) {
 		let data;
 		try {
-			data = unwrap(await adminRequest("POST", `/${ROUTES.catalog}`, { body }), what, {
+			data = unwrap(await adminRequest("POST", `/${ROUTES.catalog}`, { body }, body.op !== "list" && body.op !== "get"), what, {
 				onNotFound: routeMissing(ROUTES.catalog, "Check --url and --plugin-id. Commerce 0.7.0 or later serves it."),
 			});
 		} catch (error) {

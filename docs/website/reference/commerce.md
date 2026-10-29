@@ -151,6 +151,8 @@ Select CLI configuration with `--profile <name>` or `DINKUS_COMMERCE_PROFILE`. A
 
 The CLI's `--timeout` covers each request through reading its response body. A timeout or dropped connection while receiving a response exits with code `3`, even after response headers arrive, and is not automatically retried. For a write, read the product or order before submitting again: an incomplete response does not prove nothing was saved.
 
+Ctrl-C before a change request starts dispatch exits with code `4`. After a catalog or order change starts dispatch, Ctrl-C exits with code `3` and reports that the outcome is unknown, rather than claiming nothing was sent. Read back the product or order before resubmitting; starting a request is not proof that it reached the store or was saved.
+
 ## Billing addresses
 
 Every checkout needs a billing address. The storefront asks for it with "Billing address same as delivery address" ticked by default and sends a full copy; a basket with only digital items asks for it directly. The billing address may be in any country, including when delivery is US only. It is kept with the order as the shopper gave it and cannot be changed after payment; **Correct address** on an order changes only the delivery address. Orders paid before billing addresses were recorded show **Not recorded**.
