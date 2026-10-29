@@ -557,3 +557,59 @@ test("WorkerdSandboxRunner fresh install under dinkus-commerce rejects replaced 
     await db.destroy();
   }
 });
+
+for (const [name, patch] of [
+  ["blank phone", { phone: "   " }],
+  ["malformed delivery", { delivery: { country: "US" } }],
+]) {
+  test(`compiled Registry account reads remain available after seeding from a legacy ${name}`, async () => {
+    const owner = COMMERCE_REGISTRY_RUNTIME_ID;
+    const { sqlite, db } = createSqliteHarness();
+    const manifest = { ...structuredClone(artifactManifest), id: owner };
+    const collections = mountCollections(sqlite, db, owner, manifest.storage);
+    const email = "legacy-account@example.test";
+    const paid = makePaidOrder({ orderId: "legacy-contact", email, paidAt: "2026-10-20T12:00:00.000Z" });
+    Object.assign(paid.contactSnapshot.contact, patch);
+    await assert.rejects(createPaidOrderReceiver(collections.orders).receive(paid), /Invalid paid order/);
+    const kept = { paidOrder: paid, revision: 1 };
+    // Simulate a copy kept before strict contact admission, using the real SDK repository.
+    await collections.orders.put(paid.orderId, kept);
+    const emails = [];
+    const runner = new WorkerdSandboxRunner({
+      db, siteInfo: { name: "Synthetic Legacy Store", url: SITE, locale: "en" },
+      emailSend: async message => { emails.push(message); }, limits: { wallTimeMs: 15000 },
+    });
+    try {
+      const plugin = await runner.load(manifest, backendSource);
+      const invoke = (route, input, session, method = "POST") => plugin.invokeRoute(route, input, {
+        url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method,
+        headers: { origin: SITE, "sec-fetch-site": "same-origin", ...(session ? { [CUSTOMER_SESSION_HEADER]: session } : {}) },
+      });
+      assert.equal((await invoke(SHOPPER_SIGN_IN_START_ROUTE, { email })).ok, true);
+      const verified = await invoke(SHOPPER_SIGN_IN_VERIFY_ROUTE, { email, code: extractSixDigitCode(emails[0].subject) });
+      assert.equal(verified.ok, true);
+      const session = verified.capability.session;
+      const read = await invoke(SHOPPER_ACCOUNT_PROFILE_ROUTE, undefined, session, "GET");
+      assert.equal(read.ok, true, "the saved seed must be readable on the very next request");
+      const expected = {
+        email,
+        phone: name === "blank phone" ? null : paid.contactSnapshot.contact.phone,
+        delivery: name === "malformed delivery" ? null : paid.contactSnapshot.contact.delivery,
+      };
+      assert.deepEqual(verified.profile, expected);
+      assert.deepEqual(read.profile, expected);
+      const history = await invoke(SHOPPER_ACCOUNT_ORDERS_ROUTE, undefined, session, "GET");
+      assert.equal(history.ok, true);
+      assert.equal(history.orders.length, 1);
+      assert.equal(history.orders[0].phone, expected.phone);
+      assert.deepEqual(history.orders[0].delivery, expected.delivery);
+      assert.equal((await invoke(SHOPPER_ACCOUNT_PROFILE_ROUTE, { phone: null, delivery: null }, session)).ok, true);
+      const cleared = await invoke(SHOPPER_ACCOUNT_PROFILE_ROUTE, undefined, session, "GET");
+      assert.deepEqual(cleared.profile, { email, phone: null, delivery: null });
+      assert.deepEqual(await collections.orders.get(paid.orderId), kept, "paid snapshot and order revision stay unchanged");
+    } finally {
+      await runner.terminateAll();
+      await db.destroy();
+    }
+  });
+}

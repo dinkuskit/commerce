@@ -824,3 +824,89 @@ test('historical US orders and saved profiles retain optional regions outside ne
   const stored = await storage.orders.get('legacy-without-region');
   assert.deepEqual(stored.paidOrder.contactSnapshot.contact.delivery, delivery);
 });
+
+const legacyDelivery = Object.freeze({
+  name: "Historical Shopper", line1: "1 Example Way", city: "Testville", postalCode: "00000", country: "US",
+});
+const legacyPhone = "+15550101";
+const legacyContactCases = [
+  { name: "empty phone", contact: { phone: "" }, expected: { phone: null } },
+  { name: "whitespace-only phone", contact: { phone: "   " }, expected: { phone: null } },
+  { name: "nontext phone", contact: { phone: 42 }, expected: { phone: null } },
+  { name: "control characters in phone", contact: { phone: "+1555\n0101" }, expected: { phone: null } },
+  { name: "oversized phone", contact: { phone: "1".repeat(65) }, expected: { phone: null } },
+  { name: "incomplete delivery", contact: { delivery: { country: "US" } }, expected: { delivery: null } },
+  { name: "nonobject delivery", contact: { delivery: "not an address" }, expected: { delivery: null } },
+  { name: "noncanonical contact", contact: { phone: " +15550101 ", delivery: { ...legacyDelivery, country: "us", city: " Testville " } } },
+  { name: "historical email formatting does not suppress a valid phone", contact: { email: "\tlegacy-contact@example.test\n" } },
+  { name: "corrected delivery overrides malformed checkout copy", contact: { delivery: { country: "US" } }, correction: legacyDelivery },
+  { name: "older usable contact fills unset defaults", contact: { phone: "", delivery: { country: "US" } }, expected: { phone: null, delivery: null }, older: true },
+];
+
+for (const scenario of legacyContactCases) {
+  test(`legacy order ${scenario.name} projects safe contact without poisoning saved defaults`, async () => {
+    const { ctx, storage, handlers } = createSandboxFixture();
+    const email = "legacy-contact@example.test";
+    const paid = makeOrder({ orderId: "legacy-contact", email, phone: legacyPhone, delivery: legacyDelivery });
+    Object.assign(paid.contactSnapshot.contact, scenario.contact);
+    // These are copies kept before strict contact admission, not new shopper input.
+    await assert.rejects(createPaidOrderReceiver(storage.orders).receive(paid), /Invalid paid order/);
+    if (scenario.older) {
+      await createPaidOrderReceiver(storage.orders).receive(makeOrder({
+        orderId: "older-usable", email, phone: legacyPhone, delivery: legacyDelivery, paidAt: "2026-10-19T12:00:00.000Z",
+      }));
+    }
+    const kept = { paidOrder: paid, revision: 1, ...(scenario.correction ? { delivery: scenario.correction } : {}) };
+    assert.equal((await storage.orders.compareAndSet(paid.orderId, null, kept)).applied, true);
+    const request = (route, session, method = "POST") => ({
+      url: `https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/${route}`,
+      method,
+      headers: { origin: "https://store.example.com", ...(session ? { [CUSTOMER_SESSION_HEADER]: session } : {}) },
+    });
+    assert.equal((await handlers.startSignIn({ input: { email }, request: request("sign-in/start") }, ctx)).ok, true);
+    const signedIn = await handlers.verifySignIn({ input: { email, code: "482910" }, request: request("sign-in/verify") }, ctx);
+    assert.equal(signedIn.ok, true);
+    const session = signedIn.capability.session;
+    const reread = await handlers.profile({ request: request("profile", session, "GET") }, ctx);
+    assert.equal(reread.ok, true, "sign-in must not persist a profile that its next read rejects");
+    const expectedOrder = { phone: legacyPhone, delivery: legacyDelivery, ...scenario.expected };
+    const expectedProfile = scenario.older ? { phone: legacyPhone, delivery: legacyDelivery } : expectedOrder;
+    assert.deepEqual(signedIn.profile, { email, ...expectedProfile });
+    assert.deepEqual(reread.profile, { email, ...expectedProfile });
+    const history = await handlers.orders({ request: request("orders", session, "GET") }, ctx);
+    assert.equal(history.ok, true);
+    const projected = history.orders.find(order => order.orderId === paid.orderId);
+    assert.deepEqual({ phone: projected.phone, delivery: projected.delivery }, expectedOrder);
+    // Explicit clearing remains durable even when an older usable order exists.
+    const cleared = await handlers.profile({ input: { phone: null, delivery: null }, request: request("profile", session) }, ctx);
+    assert.equal(cleared.ok, true);
+    const afterClear = await handlers.orders({ request: request("orders", session, "GET") }, ctx);
+    assert.equal(afterClear.ok, true);
+    assert.deepEqual(afterClear.profile, { email, phone: null, delivery: null });
+    assert.deepEqual(await storage.orders.get(paid.orderId), kept, "projection must not rewrite paid history or corrections");
+  });
+}
+
+test("an already malformed saved customer profile still fails closed without silent repair", async () => {
+  const { ctx, storage, handlers } = createSandboxFixture();
+  const email = "damaged-profile@example.test";
+  const request = (route, session, method = "POST") => ({
+    url: `https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/${route}`, method,
+    headers: { origin: "https://store.example.com", ...(session ? { [CUSTOMER_SESSION_HEADER]: session } : {}) },
+  });
+  assert.equal((await handlers.startSignIn({ input: { email }, request: request("sign-in/start") }, ctx)).ok, true);
+  const signedIn = await handlers.verifySignIn({ input: { email, code: "482910" }, request: request("sign-in/verify") }, ctx);
+  assert.equal(signedIn.ok, true);
+  const customer = await storage[CUSTOMERS_COLLECTION].getVersioned(email);
+  const damaged = { ...customer.value, phone: "   ", delivery: { country: "US" } };
+  assert.equal((await storage[CUSTOMERS_COLLECTION].compareAndSet(email, customer.revision, damaged)).applied, true);
+  for (const method of ["GET", "POST"]) {
+    const result = await handlers.profile({
+      ...(method === "POST" ? { input: { phone: null, delivery: null } } : {}),
+      request: request("profile", signedIn.capability.session, method),
+    }, ctx);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, "UNAVAILABLE");
+    assert.deepEqual(await storage[CUSTOMERS_COLLECTION].get(email), damaged);
+  }
+});

@@ -1,7 +1,7 @@
 import type { StorageCollection } from "emdash";
 import { scanAll } from "../../shared/scan.js";
 import { canonical, isRecord } from "../../shared/record.js";
-import { isCheckoutContactSnapshot, normalizeCheckoutDelivery, type CheckoutDeliveryAddress } from "../checkout-contact/index.js";
+import { isCheckoutContactSnapshot, normalizeCheckoutContactInput, normalizeCheckoutDelivery, type CheckoutDeliveryAddress } from "../checkout-contact/index.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
 import { PAID_ORDER_SCHEMA, type PaidOrder, type PaidOrderReceiver } from "../../handoffs/paid-order.js";
 
@@ -250,8 +250,14 @@ export interface ShopperOrderSummary {
 /** Projects one order record for its verified shopper; omits internal IDs, test flags and provider bindings. */
 export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
   const order = record.paidOrder;
-  const p = order.pricing, phone = order.contactSnapshot?.contact?.phone;
-  const { orderId, number, status, shipTo, completed } = orderFacts(record);
+  const p = order.pricing;
+  const { orderId, number, status, completed } = orderFacts(record);
+  // Kept copies can predate strict contact admission. Validate each field
+  // independently before it can become a saved default; never edit the copy.
+  let phone: string | undefined, delivery: CheckoutDeliveryAddress | undefined;
+  // The phone check must not depend on historical email formatting.
+  try { phone = normalizeCheckoutContactInput({ email: "check@example.com", phone: order.contactSnapshot?.contact?.phone }).phone; } catch {}
+  try { delivery = normalizeCheckoutDelivery(deliveryOf(record)); } catch {}
   return structuredClone({
     orderId,
     receiptId: order.receiptId,
@@ -270,8 +276,8 @@ export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
           finalTotal: p.finalTotal,
         }
       : null,
-    delivery: shipTo,
-    phone: typeof phone === "string" ? phone : null,
+    delivery: delivery ?? null,
+    phone: phone ?? null,
     completed,
   });
 }
