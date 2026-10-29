@@ -315,7 +315,7 @@ function createPaymentPort(
       throw new Error("Payments pricing schema unsupported");
     }
     const ready = await binding(create ? "/v1/checkout-binding" : "/v1/existing-binding");
-    if (create && ready.ready === false) throw new Error("Payments binding unavailable");
+    if (create && ready.ready !== undefined && ready.ready !== true) throw new Error("Payments binding unavailable");
     return outcome(await call("POST", create ? "/v1/checkout/session" : "/v1/checkout/lookup", exact));
   }
   async function verifyBinding(): Promise<PaymentBinding> {
