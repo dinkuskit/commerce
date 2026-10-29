@@ -34,16 +34,16 @@ There is no separate Commerce Products page. Products are managed on the site's 
 
 ## Merchant store settings
 
-In **Commerce settings**, choose the store country and the independent
-selling/customer and physical shipping-destination lists. On the first country
-save, blank lists default to that country. Later changes to the store country
-preserve the lists; a saved empty list enables no countries or destinations.
-The phone requirement can be saved before a country is chosen.
+In **Commerce settings**, choose the store country and the physical
+shipping destinations. On the first country save, blank destinations default
+to that country. Later changes to the store country preserve the destinations;
+a saved empty list enables none. The phone requirement can be saved before a
+country is chosen.
 
-Checkout checks the shipping-destination list for a new physical checkout.
-With no destinations enabled, a physical basket cannot proceed to payment.
-The selling/customer list is stored but is not enforced by checkout. These
-settings do not collect a billing address or determine taxes or currency.
+Checkout checks the shipping destinations for a new physical checkout. With no
+destinations enabled, a physical basket cannot proceed to payment. There is no
+separate selling/customer country list. These settings do not collect a
+billing address or determine taxes or currency.
 
 ## One product screen
 

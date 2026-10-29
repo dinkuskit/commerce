@@ -18,9 +18,11 @@ capturing contact; these settings do not verify phone ownership or send messages
 
 Checkout checks the shipping-destination list for a new physical checkout;
 with no destinations enabled, a physical basket is refused before payment.
-Selling/customer countries remain persisted but are not enforced. The admin
-form states that distinction rather than claiming no country checks exist.
-See [checkout contact](checkout-contact-v1.md) for address capture and the
+The admin form shows only the store country, shipping destinations and the
+phone requirement (`merchant-selling-countries-002`). The stored
+`sellingCountries` list keeps its record shape and first-save default so older
+records and seeds still load, but no form edits it and nothing enforces it;
+a submitted value is ignored. See [checkout contact](checkout-contact-v1.md) for address capture and the
 separate US region check. These settings do not infer a country from locale,
 IP, or shipping origin, collect a billing address, or determine taxes or currency.
 
