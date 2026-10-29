@@ -51,7 +51,7 @@ function response(settings: MerchantStoreSettings, revision: string | null, noti
   const values = draft ?? valuesFor(settings);
   const blocks: Block[] = [
     { type: "header", text: "Merchant store settings" },
-    { type: "context", text: "Checkout does not enforce country eligibility yet. Selling/customer countries and physical shipping destinations are independent." },
+    { type: "context", text: "Checkout checks physical shipping destinations; selling/customer countries are not enforced." },
     { type: "context", text: settings.storeCountry === null ? "Choose your store country. On the first country save, blank lists default to that country. Extra countries must be added explicitly. You can save the phone setting before choosing a country." : "Changing the store country preserves your lists. A blank list means no enabled countries or destinations." },
   ];
   if (notice) blocks.push({ type: "banner", title: notice.title, variant: notice.variant });
