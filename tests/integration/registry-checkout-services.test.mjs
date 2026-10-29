@@ -58,6 +58,30 @@ async function start(state, input = basket) {
   return { token, result: await state.invoke(START, input, token) };
 }
 
+for (const ready of [false, null, 'false', 'true']) {
+  test(`compiled Registry creation refuses ready=${JSON.stringify(ready)} before session POST`, async t => {
+    const state = await runtimeFixture();
+    t.after(() => state.close());
+    const config = configuration();
+    const calls = [];
+    state.setTransportOverride((path, init) => {
+      calls.push([path, init.method]);
+      if (path === '/v1/checkout-binding') return Response.json({
+        bindingRef: config.bindingRef, providerId: config.providerId,
+        stripeAccountId: config.stripeAccountId, mode: 'test', ready,
+      });
+      return Response.json({ outcome: 'not-created' });
+    });
+    await start(state);
+    assert.deepEqual(calls, [['/v1/checkout-binding', 'GET']]);
+    const attempts = (await state.cartRecords()).flatMap(cart => cart.attempts);
+    assert.equal(attempts.length, 1);
+    assert.equal(attempts[0].session, undefined);
+    assert.equal(attempts[0].order, undefined);
+    assert.equal((await state.collections.orders.query()).items.length, 0);
+  });
+}
+
 const productPanelUi = entryId => ({ surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: entryId, locale: null, version: 1 } });
 
 test('actual compiled default workerd profile preserves empty-grants/unconfigured admission', async t => {
