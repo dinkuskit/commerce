@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "9655633ed806e2fa81e8bae6cecadef692d296c6",
+  "sourceParent": "2e648bb513fb26df6384907a2c86c26d857ae07c",
+  "acceptedMain": "00fb693a118822f921c831564bc44ca0aa2ffd72",
+  "originalRepair": "31666da5fe9d288bbcf27cd21d31c78353fedaa6",
+  "preservedPreparation": "88289bd6d0076cd13dd929fec3bd2e0f88384684",
+  "scope": "Completed source gates. Final proof-only submission head qualification is separately reported in PR.",
+  "runtime": {
+    "node": "v24.22.0",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "baseline": {
+    "tests": 14,
+    "pass": 3,
+    "fail": 11,
+    "skipped": 0,
+    "expectedExit": 1,
+    "parent": "2e648bb513fb26df6384907a2c86c26d857ae07c"
+  },
+  "sourceValidation": {
+    "completedAt": "2026-10-29T21:08:56Z",
+    "unit": {
+      "pass": 828,
+      "fail": 0,
+      "skipped": 0
+    },
+    "integration": {
+      "pass": 110,
+      "fail": 0,
+      "skipped": 0
+    },
+    "focusedRepetitions": [
+      14,
+      14,
+      14
+    ],
+    "gates": [
+      "build",
+      "typecheck",
+      "audit:repo",
+      "ledger validate",
+      "diff/clean",
+      "backend dist/extracted equality/size/hash"
+    ]
+  },
+  "backend": {
+    "bytes": 131007,
+    "limit": 131072,
+    "headroom": 65,
+    "sha256": "ae50fc8beb73af5cc05d1f8f17be631b8251c0ed8cc5444e2abaf6034dd118fa"
+  },
+  "limitations": [
+    "POSIX child SIGINT proof; Windows process cases skip",
+    "Synthetic local HTTP protocol fixture, not an EmDash store",
+    "Fetch start is not receipt; receipt is not durable commit",
+    "Partial-response fixture does not establish child header-consumption timing",
+    "No Registry installation, real provider, browser or full release qualification"
+  ],
+  "files": [
+    {
+      "path": ".changeset/cli-sigint-outcome.md",
+      "bytes": 296,
+      "sha256": "434c0456082a1b9ba451fc0a50dd1d533056d8d11a7d2cc491646c3741129fa3"
+    },
+    {
+      "path": "cli/client.mjs",
+      "bytes": 11448,
+      "sha256": "b4e075fc1d9339207973296df52c1193984e70ba84adb14ab29b3d61f4bc5681"
+    },
+    {
+      "path": "cli/spec.mjs",
+      "bytes": 49075,
+      "sha256": "e5d9406c5192d23041a49f1fed71570a131cbc5c708a85b555e0042ef76d259e"
+    },
+    {
+      "path": "docs/CLI-SPEC.md",
+      "bytes": 35546,
+      "sha256": "01c4e347aa4e2310081c549e363ebc07643234ab16dc168fe1a99d31433cbbd9"
+    },
+    {
+      "path": "docs/website/reference/commerce.md",
+      "bytes": 19680,
+      "sha256": "863e6545026aca8c1a9e922522f9ceb7c71d02792f1f16ece78441fb752f0363"
+    },
+    {
+      "path": "tests/cli/sigint-outcome.test.mjs",
+      "bytes": 7916,
+      "sha256": "bac5985975b02b210781f58382af9fe64f9c55f8744fa09f2717065122b29886"
+    }
+  ]
+}

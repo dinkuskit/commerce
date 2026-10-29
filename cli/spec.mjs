@@ -25,6 +25,7 @@ function connect(ctx) {
 		timeoutMs: ctx.timeoutMs,
 		fetchImpl: ctx.fetchImpl,
 		signal: ctx.signal,
+		lifecycle: ctx.lifecycle,
 	});
 	return { client, context: { siteUrl, pluginId } };
 }
