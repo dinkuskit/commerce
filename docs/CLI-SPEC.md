@@ -387,8 +387,8 @@ JSON and plain field names are compatibility surfaces within
 | `0` | Successful read. |
 | `1` | Ordinary failure with no change: `not_found`, `route_not_available` (HTTP 404), `not_implemented`, a 4xx business error, or `page_limit`. |
 | `2` | Usage: unknown command or flag, missing argument, `--json` with `--plain`, invalid `--url`, `--plugin-id`, `--cursor`, `--timeout`, missing site URL, invalid or secret-bearing config. |
-| `3` | Site unreachable, timeout, interrupted, or HTTP 5xx. |
-| `4` | Credential missing (`credential_required`), rejected (401), or not permitted (403, including `INSUFFICIENT_SCOPE`), an admin command whose site URL or plugin id came from project config (`untrusted_site_url`, `untrusted_plugin_id`), or a confirmation gate. |
+| `3` | Site unreachable, timeout, request interrupted, Ctrl-C after a change request starts dispatch, or HTTP 5xx. |
+| `4` | Credential missing (`credential_required`), rejected (401), or not permitted (403, including `INSUFFICIENT_SCOPE`), an admin command whose site URL or plugin id came from project config (`untrusted_site_url`, `untrusted_plugin_id`), a confirmation gate, or Ctrl-C before a change request starts dispatch. |
 | `5` | The response is not the EmDash `{ success, data }` envelope or the payload breaks the documented shape. |
 
 Service error codes such as `INVALID_TOKEN` or `INSUFFICIENT_SCOPE` are passed
@@ -398,6 +398,14 @@ Timeouts and connection failures use exit `3` even if the server
 already sent its response headers. The CLI does not automatically retry them.
 For a write, a missing complete response does not prove nothing changed: read
 the product or order before deciding whether to submit again.
+
+Ctrl-C before a change request starts dispatch exits `4` and reports that no
+change was sent. Once a catalog or order change starts dispatch, Ctrl-C exits
+`3` and reports that the outcome is unknown, including while waiting for the
+response body. Starting fetch is not proof of server receipt or a durable save;
+read back the product or order before resubmitting. Read-only catalog/order POSTs
+do not mark a change, and credential/destination refusals or a signal already
+aborted before dispatch do not send one. There is no automatic retry.
 
 ## Configuration and authentication
 

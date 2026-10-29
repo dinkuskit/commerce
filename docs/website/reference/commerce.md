@@ -151,6 +151,8 @@ Select CLI configuration with `--profile <name>` or `DINKUS_COMMERCE_PROFILE`. A
 
 The CLI's `--timeout` covers each request through reading its response body. A timeout or dropped connection while receiving a response exits with code `3`, even after response headers arrive, and is not automatically retried. For a write, read the product or order before submitting again: an incomplete response does not prove nothing was saved.
 
+Ctrl-C before a change request starts dispatch exits with code `4`. After a catalog or order change starts dispatch, Ctrl-C exits with code `3` and reports that the outcome is unknown, rather than claiming nothing was sent. Read back the product or order before resubmitting; starting a request is not proof that it reached the store or was saved.
+
 ## US delivery addresses
 
 A new checkout that ships a physical order to the United States needs a supported US state or the District of Columbia. Commerce accepts the two-letter abbreviation or the full name. Destinations outside the United States that the merchant configured, saved addresses and checkouts already started are not affected.
