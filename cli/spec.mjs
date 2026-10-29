@@ -387,7 +387,7 @@ const PRODUCT_CHANGES = {
 		check: (ctx) => ctx.flags.page,
 		request: (product, entryId) => ({
 			body: { op: "link", catalogItemId: product.catalogItemId, entryId },
-			lines: [`Product page: ${entryId}`, "Set and save that page's commerce_item_id to this product's id through EmDash, then publish it to put the product on sale."],
+			lines: [`Product page: ${entryId}`, "Commerce keeps this link. Publish that page through EmDash to put the product on sale."],
 		}),
 	},
 	archive: {
@@ -722,7 +722,7 @@ export const spec = {
 						summary: "Make a Draft product, off the shop until its page is published.",
 						usage: "products create --name <name> --sku <sku> --command-id <id> [--page <entry-id>] [--dry-run]",
 						description:
-							"Sends {op: create} to POST catalog. The product is physical with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same product instead of making another. --page links it to that product page for its Commerce panel. Before publishing, also set and save that page's commerce_item_id field to this product's id through EmDash; publishing the page then puts it on sale.",
+							"Sends {op: create} to POST catalog. The product is physical with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same product instead of making another. --page links it to that product page; Commerce keeps the link, and publishing the page then puts it on sale.",
 						flags: {
 							name: { type: "string", value: "<name>", required: true, description: "Product name. Publishing its page later sets it to the page title." },
 							sku: { type: "string", value: "<sku>", required: true, description: "Unique SKU." },
@@ -817,7 +817,7 @@ export const spec = {
 					"link": {
 						summary: "Link a product to the product page that sells it.",
 						usage: "products link <item-id> --page <entry-id> (--dry-run | --confirm <value>)",
-						description: "Sends {op: link}, which links them for the page's Commerce panel. Before publishing, also set and save that page's commerce_item_id field to this product's id through EmDash; publishing the page then puts it on sale. " + CONFIRM_NOTE,
+						description: "Sends {op: link}. Commerce keeps the link, and publishing the page then puts the product on sale. " + CONFIRM_NOTE,
 						args: [{ name: "item-id" }],
 						flags: { page: { type: "string", value: "<entry-id>", required: true, description: "The Products page entry." }, "dry-run": dryRun, confirm },
 						examples: ["dinkus-commerce --url https://shop.example products link item_demo --page 01J0PAGE --dry-run"],

@@ -38,6 +38,10 @@ test('an agent makes a Draft product for a page, prices it, adds a choice and re
   assert.equal(got.product.variantProduct.members.length, 2);
   assert.deepEqual([got.media.image, got.media.gallery], [null, []]);
   assert.equal((await call({ op: 'get', catalogItemId: 'missing' })).product, null);
+  // catalog-page-link-in-commerce-20261029: Commerce holds the page's link, so an agent reads a page's product by its entry id.
+  assert.deepEqual(await call({ op: 'get', entryId: 'page-runtz' }), got);
+  assert.deepEqual(await call({ op: 'get', entryId: 'page-none' }), { product: null });
+  assert.deepEqual(await call({ op: 'get' }), { product: null });
 });
 
 test('SKU, weight, identifiers, pictures, feeds, archive and link go through the panels\' checks', async () => {

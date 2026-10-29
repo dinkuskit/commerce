@@ -1,7 +1,7 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import {
   addCatalogVariantOption, admitV1CatalogPriceSaveInput, assertCatalogStorageConstraints, CatalogError, createCatalogItem, editProduct, identifyConfirmedUniqueViolation, isManagedCatalogRecord,
-  linkProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku,
+  linkProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku, pageProduct,
   saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, setCatalogProductArchived, updateCatalogVariantLabels,
 } from "../features/catalog/kernel/index.js";
 import { loadProductFeedEligibility, setProductFeedEligibility } from "../features/feeds/kernel/index.js";
@@ -13,7 +13,7 @@ import { feedEligibility, storage, unique } from "./products.js";
 export const CATALOG_API_ROUTE = "catalog";
 
 /**
- * One `op` a request, with the panels' own checks: list, get, create (a physical Draft, linked to
+ * One `op` a request, with the panels' own checks: list, get (by `catalogItemId`, or by `entryId` for a page's product), create (a physical Draft, linked to
  * `entryId` when given; `commandId` makes a retry find the same product), link, prices, choice, labels, sku,
  * weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels.
  * Writes return what the core functions return, so a refused write says why. A write may carry
@@ -27,7 +27,11 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
   const read = async (itemId: string) => ({ product: await loadCatalogProduct(store, itemId), media: await loadCatalogItemMedia(store.media, itemId),
     feeds: feeds && await loadProductFeedEligibility(feeds, itemId, store.catalog) });
   if (op === "list") return { products: await listCatalogProductSummaries(store.catalog) };
-  if (op === "get") return read(id);
+  if (op === "get") {
+    // By page: the product its panel picked, else the one it last sold, as the page's next publish sells it (catalog-page-link-in-commerce-20261029).
+    const linked = input.entryId === undefined ? id : await pageProduct(store.pages, String(input.entryId));
+    return linked ? read(linked) : { product: null };
+  }
   if (op === "create") {
     const made = (await createCatalogItem(store.catalog,
       { commandId: input.commandId, name: input.name, sku: input.sku, fulfillment: "physical" }, { ...unique(ctx), offSale: true })).item.itemId;

@@ -146,11 +146,14 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | `products link` | `{ op: "link", catalogItemId, entryId }` |
 | `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
-`products create --page` and `products link` record the link for the page's
-Dinkus Commerce panel only. The store's publish check reads the page's own
-`commerce_item_id` field, so before publishing, set that field to the
-product's `catalogItemId` and save the page through EmDash (its content API or
-MCP). The panel does this step itself when a person presses Save.
+`products create --page` and `products link` record which page sells the
+product. Commerce keeps that link; the page has no product field to set
+(`catalog-page-link-in-commerce-20261029`). Publishing the page through EmDash
+(its content API or MCP) then puts the product on sale: the store's publish
+check sends Commerce only the page, and Commerce finds the product. A store
+whose template predates this still reads the page's own `commerce_item_id`
+field when it publishes; on such a store, set that field to the product's
+`catalogItemId` too, or update the store first.
 
 The route also has `labels` (rename a choice or its values), which the CLI
 does not wrap yet. A refused price save answers `{ saved: false, message }`,

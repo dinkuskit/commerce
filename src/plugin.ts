@@ -98,7 +98,11 @@ const plugin: SandboxedPlugin = {
   },
   routes: {
     [PUBLIC_CATALOG_ROUTE]: publicRead(async (route, ctx) => readPublicCatalog(ctx, queryValue(route.request.url, "cursor", "Invalid catalog query"))),
-    [PUBLIC_CATALOG_ITEM_ROUTE]: publicRead(async (route, ctx) => readPublicCatalogItem(ctx, queryValue(route.request.url, "itemId", "Invalid catalog item query", true)!)),
+    // Exactly one itemId, or exactly one pageId for the product a published page sells.
+    [PUBLIC_CATALOG_ITEM_ROUTE]: publicRead(async (route, ctx) => {
+      const page = new URL(route.request.url).searchParams.has("pageId");
+      return readPublicCatalogItem(ctx, queryValue(route.request.url, page ? "pageId" : "itemId", "Invalid catalog item query", true)!, page);
+    }),
     [PUBLIC_STORE_POLICIES_ROUTE]: publicRead(async (_route, ctx) => readSandboxPublicStorePolicies(ctx)),
     // DinkusKit.com reads a waiting Connect's receipt here, on the store's own web address.
     "store-proof": { public: true, methods: ["GET"], response: "raw", request: { body: "none" }, handler: (route, ctx) => storeProof(route.input, ctx) },

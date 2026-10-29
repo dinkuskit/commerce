@@ -520,7 +520,7 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
       title: "Dinkus Commerce",
       route: "product-panel",
       collections: ["products"],
-      draft: { read: { fields: ["title", "commerce_item_id"] }, patch: { fields: ["commerce_item_id"] } },
+      draft: { read: { fields: ["title"] } },
     }, {
       id: "product-media",
       title: "Product image & gallery",

@@ -4,7 +4,7 @@ import { writeFileSync } from "node:fs";
 import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 import { resolveStorefrontAvailability } from "../../dist/features/storefront-availability/index.js";
-import { openMediaPanel, openPanel, openProductPage, openProductPageTitled, readProductPage, saveEditor, setOnSale } from "./product-page.mjs";
+import { openMediaPanel, openPanel, openProductPage, openProductPageTitled, readProductPage, setOnSale } from "./product-page.mjs";
 
 // Primary owner for transport/rendering: real workerd, host authorization and SQLite.
 // Kernel unit tests cannot detect broken sandbox RPC, invalid Block Kit, or lost form state.
@@ -65,32 +65,30 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await panel.getByRole("button", { name: "Add price and stock", exact: true }).click();
     const createdResponse = await createResponse;
     const createdBody = (await createdResponse.json()).data;
-    expect(createdBody.toast.type).toBe("success");
-    // EmDash asks the owner to apply the panel's change to the open editor.
-    const review = page.getByRole("dialog", { name: "Review proposed changes" });
-    await expect(review.getByText("Commerce product", { exact: true })).toBeVisible();
-    await capture("product-page-apply-link");
-    await review.getByRole("button", { name: "Apply changes", exact: true }).click();
+    expect(createdBody.toast).toEqual({ type: "success", message: "Draft made. Publish the page to sell it." });
+    // Commerce keeps the link: the editor is never asked to change the page.
+    expect(createdBody.patch).toBeUndefined();
+    await expect(page.getByRole("dialog", { name: "Review proposed changes" })).toHaveCount(0);
     await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("");
     const created = raw("catalog_items").filter(row => row.recordKind === "catalog-item");
     expect(created).toHaveLength(1);
     expect(created[0]).toMatchObject({ name: "Red hat", sku: "RED-HAT", offSale: true, stockManagement: { mode: "unmanaged" } });
     const id = created[0].itemId;
-    expect(createdBody.patch).toEqual({ type: "editor-draft-patch", operations: [{ op: "set", field: "commerce_item_id", value: id }] });
-    // The link waits in the open editor until the owner presses Save.
-    await expect(page.getByRole("textbox", { name: "Commerce product (optional)" })).toHaveValue(id);
+    expect(raw("product_pages").find(row => row.entryId === pageId)?.catalogItemId).toBe(id);
     expect((await readProductPage(page.request, pageId)).data?.commerce_item_id ?? null).toBeNull();
-    await saveEditor(page);
-    await expect.poll(async () => (await readProductPage(page.request, pageId)).data?.commerce_item_id).toBe(id);
+    await expect(panel.getByText(/^Draft: publish to sell it/)).toBeVisible();
+    // A reload opens the product from Commerce's link, with nothing saved on the page.
+    await page.reload();
+    panel = await openPanel(page);
     await expect(panel.getByText(/^Draft: publish to sell it/)).toBeVisible();
     const availability = () => resolveStorefrontAvailability(store, { catalogItemId: id }, { resolveProvider: async () => { throw new Error("Inventory must not be needed"); } });
     expect((await availability()).listable).toBe(false);
     const replay = await page.request.post(createdResponse.request().url(), { data: createdResponse.request().postDataJSON(), headers: { "X-EmDash-Request": "1" } });
-    // EmDash refuses a replay against the saved page; either way no second product is made.
-    expect((await replay.json()).error?.code).toBe("EDITOR_DRAFT_STALE");
+    // A replay of the same press opens the same product; no second product is made.
+    expect((await replay.json()).data?.toast?.type).toBe("success");
     expect(raw("catalog_items").filter(row => row.recordKind === "catalog-item")).toHaveLength(1);
-    // The store's publish check puts the product on sale when its page is published.
-    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: true })).toEqual({ changed: true });
+    // The store's publish check sends the page alone; Commerce finds its product and puts it on sale.
+    expect(await setOnSale(page.request, { entryId: pageId, onSale: true })).toEqual({ changed: true });
     expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
     // Another page naming this product is refused before any write, whichever way it asks.
     for (const body of [{ onSale: false }, { onSale: true }, { onSale: false, deleted: true }]) {
@@ -387,11 +385,9 @@ test("clerk sets product images from the Media Library and the storefront render
     const bluePage = await openProductPage(page, "Blue hat");
     ({ panel, endpoint: panelEndpoint } = bluePage);
     await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("BLUE-HAT");
-    expect((await interact("Add price and stock")).toast.message).toBe("Draft made. Save, then Publish to sell it.");
-    await page.getByRole("dialog", { name: "Review proposed changes" }).getByRole("button", { name: "Apply changes", exact: true }).click();
-    await saveEditor(page);
+    expect((await interact("Add price and stock")).toast.message).toBe("Draft made. Publish the page to sell it.");
     const blueId = raw("catalog_items").find((row) => row.sku === "BLUE-HAT").itemId;
-    await expect.poll(async () => (await readProductPage(page.request, bluePage.id)).data?.commerce_item_id).toBe(blueId);
+    expect(raw("product_pages").find((row) => row.entryId === bluePage.id)?.catalogItemId).toBe(blueId);
     await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("5");
     expect((await interact("Save")).toast.type).toBe("success");
     // A Draft stays off the shop until the store's publish check puts it on sale.
