@@ -68,3 +68,21 @@ test('a Processing order with an address links to Ship\'s label page when the st
  // The list never links.
  assert.doesNotMatch(JSON.stringify(ordersView({ status: 'available', orders: [shipping] }, undefined, page)), /Create shipping label/);
 });
+test('the detail shows the customer and both addresses; billing reads Same when it matches', () => {
+ const delivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', region: 'NY', postalCode: '10001', country: 'US' };
+ const contact = (extra) => ({ ...paid, contactSnapshot: { schema: 'dinkuskit.commerce.checkout-contact/v1', requirePhoneNumber: false, revision: null,
+   contact: { email: 'shopper@example.test', delivery, ...extra } } });
+ const text = (order, record = {}) => {
+   const detail = ordersView({ status: 'available', orders: [{ ...record, paidOrder: order }] }, order.orderId);
+   assert.equal(validateBlocks(detail.blocks).valid, true);
+   return detail.blocks.find(block => block.type === 'section' && block.text.startsWith('Order:')).text;
+ };
+ const same = text(contact({ phone: '555 0101', billing: { ...delivery } }));
+ assert.match(same, /\nEmail:\nshopper@example\.test\nPhone:\n555 0101\nShip to:\nFixture Shopper, 1 Example Way, Testville, NY, 10001, US\nBill to:\nSame as delivery address$/);
+ const elsewhere = { name: 'Bill Payer', line1: '9 Billing Way', city: 'Toronto', region: 'ON', postalCode: 'M5V 1A1', country: 'CA' };
+ assert.match(text(contact({ billing: elsewhere })), /\nPhone:\nNot recorded\n.*\nBill to:\nBill Payer, 9 Billing Way, Toronto, ON, M5V 1A1, CA$/s);
+ // Once the owner corrects delivery, a billing copy of the old address is shown in full.
+ assert.match(text(contact({ billing: { ...delivery } }), { delivery: { ...delivery, line1: '2 Corrected Road' } }), /\(corrected\)\nBill to:\nFixture Shopper, 1 Example Way, /);
+ // Orders paid before billing was recorded.
+ assert.match(text(contact({})), /\nBill to:\nNot recorded$/);
+});

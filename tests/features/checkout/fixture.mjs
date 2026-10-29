@@ -27,7 +27,7 @@ const collection = records => ({
 export const syntheticDelivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', region: 'CA', postalCode: '00000', country: 'US' };
 /** Explicit synthetic shopper input for existing non-contact checkout scenarios. */
 export function withSyntheticCheckoutContact(input) {
-  const contact = { email: 'checkout-fixture@example.test', delivery: syntheticDelivery };
+  const contact = { email: 'checkout-fixture@example.test', delivery: syntheticDelivery, billing: syntheticDelivery };
   if (Array.isArray(input)) return { lines: input, contact };
   if (input && typeof input === 'object') return { ...input, contact };
   return input;

@@ -1,7 +1,9 @@
 import { expect } from "@playwright/test";
 
 // The Dinkus Commerce panel lives on each Content > Products page. Stores get
-// that collection from their template; the proof site makes it here.
+// that collection from their template; the proof site makes it here, with the
+// Commerce product field older templates had, so older pages can be made too.
+// Commerce never reads it (catalog-page-link-in-commerce-20261029).
 const headers = { "X-EmDash-Request": "1" };
 
 async function ok(response) {
@@ -72,11 +74,4 @@ export async function openProductPageTitled(page, title) {
   expect(found, title).toBeTruthy();
   await page.goto("/_emdash/admin/content/products/" + found.id);
   return { id: found.id, panel: await openPanel(page), endpoint: "/_emdash/api/content/products/" + found.id + "/plugin-extensions/dinkus-commerce/panel/product" };
-}
-
-/** Presses the editor's Save and waits for the open panel to reload against the saved page. */
-export async function saveEditor(page) {
-  const reloaded = page.waitForResponse((r) => r.url().includes("/plugin-extensions/dinkus-commerce/panel/product") && r.request().postDataJSON()?.type === "panel_load", { timeout: 15000 });
-  await page.locator(`button[aria-label="Save"]`).click();
-  await reloaded;
 }

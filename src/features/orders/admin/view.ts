@@ -1,7 +1,8 @@
 import { fields } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
-import { deliveryOf, type OrderRecord } from '../store.js';
+import { billingMatchesDelivery, billingOf, deliveryOf, type OrderRecord } from '../store.js';
+import type { CheckoutDeliveryAddress } from '../../checkout-contact/index.js';
 import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
 import type { Money } from '../../catalog/kernel/index.js';
 import { normalizeMoney } from '../../catalog/kernel/index.js';
@@ -26,11 +27,14 @@ function unavailable(title: string, description: string): Block {
 function header(): Block {
   return { type: 'header', text: 'Orders' };
 }
+function address(a: CheckoutDeliveryAddress): string {
+  return [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ');
+}
 // Digital-only orders and orders paid before addresses were collected have none;
 // copies kept before Orders checked the contact snapshot may lack its contact.
 function shipTo(record: OrderRecord): string {
   const a = deliveryOf(record);
-  return a ? [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ') + (record.delivery ? ' (corrected)' : '') : 'No address';
+  return a ? address(a) + (record.delivery ? ' (corrected)' : '') : 'No address';
 }
 /** People read the short number; orders kept before numbering show their ID until the page numbers them. Only live orders are real. */
 function label(record: OrderRecord): string {
@@ -83,13 +87,15 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     }
     const matches = input.orders.filter(record => record.paidOrder.orderId === selectedOrderId);
     if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
-    const record = matches[0], order = record.paidOrder, done = record.completed;
+    const record = matches[0], order = record.paidOrder, done = record.completed, contact = order.contactSnapshot?.contact, billing = billingOf(record);
     const id = encodeURIComponent(order.orderId), version = (record.revision ?? 1) + ':' + id;
     blocks.push(detailFields('Order', label(record), 'Order ID', order.orderId, 'Version', String(record.revision ?? 1), 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
       'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Status', status(record),
       ...(done ? ['Completed at', done.at, 'Carrier', done.carrier ?? notRecorded, 'Tracking number', done.tracking ?? notRecorded] : []),
-      'Ship to', shipTo(record)));
+      'Email', contact?.email ?? notRecorded, 'Phone', contact?.phone ?? notRecorded, 'Ship to', shipTo(record),
+      // Orders paid before billing was recorded have none.
+      'Bill to', billingMatchesDelivery(record) ? 'Same as delivery address' : billing ? address(billing) : notRecorded));
     // A Completed order's address is locked; moving it back to Processing unlocks it.
     // A Processing order with an address links to Ship's label page when the store has Ship.
     blocks.push({ type: 'actions', elements: done

@@ -14,7 +14,6 @@ test("merchant settings persist independently and reject stale or unauthorized w
   const getStarted = page.getByRole("button", { name: "Get Started", exact: true });
   await getStarted.click({ timeout: 90000 });
   const store = page.getByRole("textbox", { name: "Store country (ISO alpha-2 code)", exact: true });
-  const selling = page.getByRole("textbox", { name: "Allowed selling/customer countries (comma-separated codes)", exact: true });
   const shipping = page.getByRole("textbox", { name: "Allowed physical shipping destinations (comma-separated codes)", exact: true });
   const phone = page.getByRole("switch", { name: /Require a phone number/ });
   // A document reload can finish before the EmDash app and Block Kit form mount.
@@ -35,7 +34,8 @@ test("merchant settings persist independently and reject stale or unauthorized w
   const capture = name => page.screenshot({ path: process.env.COMMERCE_SETTINGS_ARTIFACTS + "/" + info.project.name + "-" + name + ".png", fullPage: true });
   await expect(store).toHaveValue("", { timeout: 60000 });
   await expect(phone).not.toBeChecked();
-  await expect(page.getByText("Checkout checks physical shipping destinations; selling/customer countries are not enforced.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Checkout refuses a physical delivery outside your shipping destinations.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: /selling/i })).toHaveCount(0);
   await capture("unconfigured");
   await phone.check();
   await save();
@@ -45,21 +45,18 @@ test("merchant settings persist independently and reject stale or unauthorized w
   await store.fill("ca");
   await save();
   await expect(store).toHaveValue("CA");
-  await expect(selling).toHaveValue("CA");
   await expect(shipping).toHaveValue("CA");
-  await selling.fill("CA, MX");
   await shipping.fill("GB");
   const stale = (await save()).input;
   await store.fill("GB");
   await save();
-  await expect(selling).toHaveValue("CA, MX");
   await expect(shipping).toHaveValue("GB");
   await phone.uncheck();
   await save();
   await reloadSettings();
   await expect(phone).not.toBeChecked();
   await expect(store).toHaveValue("GB");
-  await expect(selling).toHaveValue("CA, MX");
+  await expect(shipping).toHaveValue("GB");
   await capture("saved");
   const replay = await page.request.post(endpoint, { data: { ...stale, values: { ...stale.values, storeCountry: "AU", requirePhoneNumber: true } }, headers });
   const refusal = await replay.json();
