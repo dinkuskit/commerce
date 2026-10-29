@@ -99,6 +99,22 @@ const form = response => response.blocks.find(block => block.type === "form");
 const submit = (revision, draft) => ({ type: "form_submit", action_id: "merchant-store-settings.save",
   block_id: "merchant-store-settings:" + (revision ?? "null"), values: draft });
 
+test("settings guidance distinguishes enforced physical shipping from unenforced customer countries", async t => {
+  for (const configured of [false, true]) {
+    await t.test(configured ? "configured" : "unconfigured", async t => {
+      const f = fixture(); t.after(() => f.db.destroy());
+      if (configured) await saveMerchantStoreSettings(f.settings, {
+        expectedRevision: null, storeCountry: "CA", sellingCountries: ["MX"], shippingCountries: ["US"],
+      });
+      const page = await merchantStoreSettingsBlocks(route({ type: "page_load", page: "/settings" }), { settings: f.settings });
+      assert.equal(validateBlockResponse(page).valid, true);
+      const guidance = page.blocks.filter(block => block.type === "context").map(block => block.text).join("\n");
+      assert.match(guidance, /Checkout checks physical shipping destinations; selling\/customer countries are not enforced\./);
+      assert.doesNotMatch(guidance, /Checkout does not enforce country eligibility/);
+    });
+  }
+});
+
 test("actual BlockKit forms default first country after phone-only save and preserve independent edits", async t => {
   const f = fixture(); t.after(() => f.db.destroy());
   const first = await merchantStoreSettingsBlocks(route({ type: "page_load", page: "/settings" }), { settings: f.settings });
