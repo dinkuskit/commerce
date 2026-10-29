@@ -314,19 +314,21 @@ export function createHttp({ baseUrl, headers = {}, timeoutMs, fetchImpl, signal
 		const signals = [AbortSignal.timeout(timeoutMs)];
 		if (signal) signals.push(signal);
 		init.signal = AbortSignal.any(signals);
-		let response;
+		let response, text;
 		try {
 			response = await fetchImpl(url, init);
+			// fetch resolves at headers; the body can still time out or disconnect.
+			text = await response.text();
 		} catch (error) {
-			if (error?.name === "TimeoutError") {
+			const reason = init.signal.aborted ? init.signal.reason : error;
+			if (reason?.name === "TimeoutError") {
 				throw new CliError("timeout", `No response from ${url.origin} within ${timeoutMs}ms.`, { exit: EXIT.unavailable });
 			}
-			if (error?.name === "AbortError") {
+			if (init.signal.aborted || reason?.name === "AbortError") {
 				throw new CliError("interrupted", "Request interrupted.", { exit: EXIT.unavailable });
 			}
 			throw new CliError("service_unreachable", `Could not reach ${url.origin}.`, { exit: EXIT.unavailable });
 		}
-		const text = await response.text();
 		let json;
 		if (text.length > 0) {
 			try {
