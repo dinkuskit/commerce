@@ -66,6 +66,7 @@ export function pageProductFeedRows(
   const pageSize = Math.min(Math.max(options.pageSize ?? DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
   const cursor = options.cursor ?? 0;
   if (!Number.isSafeInteger(cursor) || cursor < 0) throw new RangeError("invalid feed cursor");
+  if (Number.isNaN(pageSize)) throw new RangeError("invalid feed page size");
   const rows = products.slice(cursor, cursor + pageSize);
   return {
     rows,

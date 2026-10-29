@@ -39,7 +39,9 @@ export interface ProductFeedFacts {
 }
 
 export interface ProductFeedBuildOptions {
+  /** Defaults to 100; clamped to 1–500 before slicing. NaN throws RangeError. */
   readonly pageSize?: number;
+  /** Nonnegative safe integer offset, defaulting to zero; invalid values throw RangeError. */
   readonly cursor?: number;
 }
 

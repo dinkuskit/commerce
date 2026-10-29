@@ -87,6 +87,20 @@ The public catalog filters archived, Draft and nonlistable products. A product c
 
 Public catalog list and item responses also carry the feed channels the merchant approved for each product, so a storefront host can build public product feeds without admin reads. A product with no approved channel is never included.
 
+## Host-side feed pagination
+
+The `pageProductFeedRows` export from `@dinkuskit/commerce/features/feeds`
+pages an already-loaded, ordered array for host-side feed generation. It does
+not fetch catalog data. Its numeric offset is separate from the opaque cursor
+returned by `catalog/public`; do not interchange them.
+
+Page size defaults to 100 and clamps to 1–500. `NaN` throws
+`RangeError("invalid feed page size")`, including for empty or exhausted input.
+The cursor defaults to zero and must be a nonnegative safe integer. Continue
+with the returned `nextCursor` until it is omitted; every successful
+nonterminal page advances the offset. Fix an invalid page size instead of
+retrying it unchanged.
+
 ## Availability
 
 Unmanaged products use Commerce's manual availability: `in-stock`, `out-of-stock`, or `available-on-backorder`. They do not require an Inventory connection or expose an invented quantity.

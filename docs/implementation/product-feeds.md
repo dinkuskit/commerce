@@ -30,9 +30,18 @@ explicit no-identifier signal, instead of an invented identifier;
 JSON-LD mapping per channel: a backorder product is Google `backorder` and Meta
 `available for order` (never `preorder`, which means not yet released). The
 first image URL is the main image; the rest are sent as additional image links
-(up to 10 for Google, 20 for Meta, the channels' limits). `pageProductFeedRows` provides
-a bounded cursor contract for hosts that page their catalog reads. These
-builders are host-side exports and are intentionally not imported by
+(up to 10 for Google, 20 for Meta, the channels' limits).
+
+`pageProductFeedRows` slices an already-loaded, ordered array without mutating
+it. Its numeric offset is distinct from the opaque `catalog/public` cursor;
+it does not fetch catalog pages. Page size defaults to 100 and clamps to 1–500,
+including infinite bounds. Finite fractional sizes retain `Array.slice`'s
+truncation. `NaN` throws `RangeError("invalid feed page size")`, even for empty
+or exhausted input, rather than returning an empty page that can repeat the
+same cursor. The cursor defaults to zero and must be a nonnegative safe integer;
+invalid cursors still throw `RangeError("invalid feed cursor")`. A successful
+nonterminal page advances `nextCursor` by its row count; exhausted pages omit it.
+These builders are host-side exports and are intentionally not imported by
 `src/plugin.ts`, keeping them outside the Registry backend size cap.
 
 A storefront host should read paged `catalog/public` data, join each item with
