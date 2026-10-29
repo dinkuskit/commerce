@@ -9,7 +9,7 @@ data.
 `normalizeCheckoutContactInput` accepts exactly:
 
 ```ts
-{ email: string; phone?: string; delivery?: CheckoutDeliveryAddress }
+{ email: string; phone?: string; delivery?: CheckoutDeliveryAddress; billing?: CheckoutDeliveryAddress }
 ```
 
 Email is required, trimmed, limited to ordinary bounded syntax and length, and
@@ -29,8 +29,15 @@ physical order goes, exactly as the shopper typed it:
 
 Each field is trimmed, at most 200 characters and free of control characters;
 `line2` and `region` may be empty or absent and are then omitted; `country` is
-a two-letter code stored upper case. Unknown fields are rejected. It is never
-a billing address and no billing address is collected.
+a two-letter code stored upper case. Unknown fields are rejected.
+
+`billing` (GrillTrack `commerce-billing-address-001`) has the same shape and the
+same field checks, refused as `BILLING_INVALID`. Capture requires it for every
+checkout, physical or digital, and does not check its country against shipping
+destinations. When the shopper ticks "same as delivery address", the storefront
+sends a full copy; Commerce never derives billing from delivery. The snapshot
+keeps it as a full copy (absent only in snapshots frozen before billing was
+recorded), and the paid order carries it unchanged.
 
 This shared normalization remains permissive for saved addresses and historical
 orders. New physical checkout capture additionally requires a recognized region
@@ -60,7 +67,7 @@ frozen snapshot:
 ```ts
 {
   schema: "dinkuskit.commerce.checkout-contact/v1",
-  contact: { email: string; phone?: string; delivery?: CheckoutDeliveryAddress },
+  contact: { email: string; phone?: string; delivery?: CheckoutDeliveryAddress; billing?: CheckoutDeliveryAddress },
   requirePhoneNumber: boolean,
   revision: string | null
 }

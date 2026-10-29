@@ -1,6 +1,6 @@
 import { isRecord as object } from "../../shared/record.js";
 import type { PluginContext } from "emdash";
-import { createTrustedTestPaymentsCheckoutHost, readBoundedPaymentsJson } from "./test-payments.js";
+import { createTrustedTestPaymentsCheckoutHost, fetchPayments, readBoundedPaymentsJson } from "./test-payments.js";
 import type { CommercePaymentWake, CommercePaymentWakePort } from "./wake.js";
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import { registryUnavailable as unavailable, registryText as text, exactKeys as keys } from "./registry-guards.js";
@@ -37,13 +37,7 @@ function wakePort(
   credential: () => Promise<string>,
 ): CommercePaymentWakePort {
   async function call(path: string, body?: CommercePaymentWake): Promise<unknown> {
-    const token = await credential();
-    const response = await fetch(`${new URL(config.paymentsOrigin).origin}${path}`, {
-      method: body ? "POST" : "GET", cache: "no-store", redirect: "error",
-      headers: { accept: "application/json", authorization: `Bearer ${token}`,
-        "x-dinkus-site": config.siteId, "content-type": "application/json" },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    });
+    const response = await fetchPayments(fetch, new URL(config.paymentsOrigin).origin + path, config.siteId, await credential(), body);
     if (!response.ok) throw new Error("Payments wake transport unavailable");
     return readBoundedPaymentsJson(response);
   }

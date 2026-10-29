@@ -27,7 +27,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 | Page | What it does |
 | --- | --- |
-| **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment and shipping. |
+| **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment, the customer's email and phone, and the Ship to and Bill to addresses. |
 | **Commerce settings** | Connect, checkout settings, catalog choices (hide out-of-stock products, a placeholder image for products without one), and **Products without a page**, each with **Make a page**. |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
@@ -129,7 +129,7 @@ The catalog accepts only its documented query keys. Continue pagination until no
 
 Checkout rereads authoritative prices and availability. Never send a browser-computed price, tenant, provider choice, or order status as authority. See [site integration](/docs/developers/integrate) for the purchase flow.
 
-Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins.
+Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins. Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same.
 
 Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:
 
@@ -150,6 +150,10 @@ The `dinkus-commerce` command-line tool wraps these as `products show`, `create`
 Select CLI configuration with `--profile <name>` or `DINKUS_COMMERCE_PROFILE`. A requested name must be explicitly defined in a config file's `profiles` object; inherited names do not count. A missing name or malformed selected profile stops with exit `2` before any HTTP request, rather than silently sending a change to the base site. Profile maps and matching entries must be JSON objects; an explicitly defined empty object still inherits that file's base metadata. Existing configuration precedence and restrictions on sending credentials to project-configured sites are unchanged. See the repository's [CLI specification](https://github.com/dinkuskit/commerce/blob/main/docs/CLI-SPEC.md#configuration-and-authentication) for paths and examples.
 
 The CLI's `--timeout` covers each request through reading its response body. A timeout or dropped connection while receiving a response exits with code `3`, even after response headers arrive, and is not automatically retried. For a write, read the product or order before submitting again: an incomplete response does not prove nothing was saved.
+
+## Billing addresses
+
+Every checkout needs a billing address. The storefront asks for it with "Billing address same as delivery address" ticked by default and sends a full copy; a basket with only digital items asks for it directly. The billing address may be in any country, including when delivery is US only. It is kept with the order as the shopper gave it and cannot be changed after payment; **Correct address** on an order changes only the delivery address. Orders paid before billing addresses were recorded show **Not recorded**.
 
 ## US delivery addresses
 

@@ -12,7 +12,7 @@ export interface CheckoutContactRequirements {
 
 export type CheckoutContactRequirementsLoader = () => Promise<CheckoutContactRequirements>;
 
-/** Where a physical order goes, as the shopper typed it at checkout. Never a billing address. */
+/** Where a physical order goes, as the shopper typed it at checkout. A billing address has the same shape. */
 export interface CheckoutDeliveryAddress {
   readonly name: string;
   readonly line1: string;
@@ -29,6 +29,8 @@ export interface NormalizedCheckoutContact {
   readonly phone?: string;
   /** Present only when the basket holds a physical item. */
   readonly delivery?: CheckoutDeliveryAddress;
+  /** A full copy, never a reference to the delivery address. Absent only on checkouts frozen before billing was recorded. */
+  readonly billing?: CheckoutDeliveryAddress;
 }
 
 export interface CheckoutContactSnapshot {

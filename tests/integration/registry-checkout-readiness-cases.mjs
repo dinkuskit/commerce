@@ -187,7 +187,7 @@ test('readiness: pending status revalidates binding after a supported read', asy
   const prepared = await state.invoke('checkout/guest/prepare');
   const token = prepared.capability.capability;
   const started = await state.invoke('checkout/guest/start', {
-    contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: 'hat', quantity: 1 }],
+    contact: { email: 'shopper@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: 'hat', quantity: 1 }],
   }, token);
   assert.equal(started.checkout.state, 'pending');
   state.setPaid();
@@ -381,7 +381,7 @@ test('readiness is advisory: subsequent start independently revalidates binding'
   // 4. Start must independently revalidate and fail session creation
   const started = await state.invoke(
     'checkout/guest/start',
-    { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: 'hat', quantity: 1 }] },
+    { contact: { email: 'shopper@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: 'hat', quantity: 1 }] },
     token,
   );
   assert.equal(started.ok, true);
@@ -587,7 +587,7 @@ test('readiness: genuine checkout start and status remain fresh and succeed even
 
   const started = await state.invoke(
     'checkout/guest/start',
-    { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: 'hat', quantity: 1 }] },
+    { contact: { email: 'shopper@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: 'hat', quantity: 1 }] },
     token,
   );
   assert.equal(started.ok, true);

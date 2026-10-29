@@ -105,8 +105,8 @@ function mapCheckoutError(error: unknown): never {
   if (error instanceof GuestCheckoutError) throw error;
   if (error instanceof CheckoutContactError) {
     if (error.code === "REQUIREMENTS_UNAVAILABLE") fail("UNAVAILABLE");
-    // Delivery problems say what to fix; other contact problems stay generic.
-    if (error.code.startsWith("DELIVERY_")) throw new GuestCheckoutError("INVALID_CART", error.message);
+    // Address problems say what to fix; other contact problems stay generic.
+    if (/^(DELIVERY|BILLING)_/.test(error.code)) throw new GuestCheckoutError("INVALID_CART", error.message);
     fail("INVALID_CART");
   }
   if (error instanceof CouponUnavailableError) {

@@ -1,6 +1,6 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import { isRecord } from "../../shared/record.js";
-import { completeOrder, listOrders, orderFacts, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
+import { billingMatchesDelivery, billingOf, completeOrder, listOrders, orderFacts, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
 
 /** Private JSON route for agents and the CLI: the Orders page's reads and owner changes. */
 export const ORDERS_API_ROUTE = "orders";
@@ -12,6 +12,7 @@ function apiOrder(record: OrderRecord) {
   return {
     ...orderFacts(record), paidAt: order.paidAt ?? null, total: order.total, lines: order.lines,
     choices: order.variantSelections ?? [], phone: order.contactSnapshot?.contact?.phone ?? null,
+    billTo: billingOf(record) ?? null, billToMatchesShipTo: billingMatchesDelivery(record),
   };
 }
 
