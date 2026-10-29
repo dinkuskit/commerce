@@ -131,6 +131,16 @@ for (const product of products) {
       <label>Postal code <input name="delivery-postalCode" autocomplete="shipping postal-code" maxlength="200" /></label>
       <label>Country <input name="delivery-country" autocomplete="shipping country" maxlength="2" /></label>
     </fieldset>
+    <label><input type="checkbox" name="billing-same" checked /> Billing address same as delivery address</label>
+    <fieldset data-billing>
+      <legend>Billing address</legend>
+      <label>Name <input name="billing-name" autocomplete="billing name" maxlength="200" /></label>
+      <label>Address line 1 <input name="billing-line1" autocomplete="billing address-line1" maxlength="200" /></label>
+      <label>City <input name="billing-city" autocomplete="billing address-level2" maxlength="200" /></label>
+      <label>State or region <input name="billing-region" autocomplete="billing address-level1" maxlength="200" /></label>
+      <label>Postal code <input name="billing-postalCode" autocomplete="billing postal-code" maxlength="200" /></label>
+      <label>Country <input name="billing-country" autocomplete="billing country" maxlength="2" /></label>
+    </fieldset>
     <button type="button" data-action="prepare">Prepare checkout</button>
     <button type="button" data-action="start" disabled>Start checkout</button>
     <button type="button" data-action="status" disabled>Refresh payment status</button>
@@ -150,13 +160,19 @@ for (const product of products) {
     let attemptId;
     const emailInput = checkout.querySelector('[name="checkout-email"]');
     const phoneInput = checkout.querySelector('[name="checkout-phone"]');
-    const delivery = () => {
+    const address = (kind) => {
       const fields = ["name", "line1", "city", "region", "postalCode", "country"];
-      const value = Object.fromEntries(fields.map((field) => [field, checkout.querySelector(`[name="delivery-${field}"]`).value]));
-      return value.line1.trim() ? { delivery: value } : {};
+      const value = Object.fromEntries(fields.map((field) => [field, checkout.querySelector(`[name="${kind}-${field}"]`).value]));
+      return value.line1.trim() ? value : undefined;
+    };
+    // Commerce needs a full billing copy; "same as delivery" sends the delivery address again.
+    const contactAddresses = () => {
+      const delivery = address("delivery");
+      const billing = delivery && checkout.querySelector('[name="billing-same"]').checked ? { ...delivery } : address("billing");
+      return { ...(delivery ? { delivery } : {}), ...(billing ? { billing } : {}) };
     };
     const selectedLine = () => ({
-      contact: { email: emailInput.value, phone: phoneInput.value, ...delivery() },
+      contact: { email: emailInput.value, phone: phoneInput.value, ...contactAddresses() },
       lines: [{
         catalogItemId: document.querySelector('input[name^="variant-"]:checked')?.value ?? "",
         quantity: 1,

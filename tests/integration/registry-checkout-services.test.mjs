@@ -42,7 +42,7 @@ import {
 } from '../../dist/features/checkout/index.js';
 
 const PREPARE = 'checkout/guest/prepare', START = 'checkout/guest/start', STATUS = 'checkout/guest/status';
-const basket = { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: 'hat', quantity: 1 }] };
+const basket = { contact: { email: 'shopper@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: 'hat', quantity: 1 }] };
 
 // Checkout schedules nothing of its own: the site scheduler holds only the 5-minute background
 // check, which the first request registers when switching on did not.
@@ -315,7 +315,7 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   }
   // An admin-created product has no fulfillment mark, so it counts as physical and needs a US address.
   await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
-  const input = { contact: { email: 'shopper@example.test', delivery: syntheticDelivery }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
+  const input = { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
   const { token, result } = await start(state, input);
   assert.equal(result.ok, true);
   assert.equal(state.requests[0].total.minor, '600');
@@ -676,7 +676,7 @@ test('when the scheduler refuses at switch-on, the next request registers the ba
   assertOnlyBackgroundCheck(state);
   // Later requests leave the scheduler alone.
   const scheduled = state.counts.scheduler;
-  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery },
+  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } },
     lines: [{ catalogItemId: 'hat', quantity: 1 }] }, prepared.capability.capability);
   assert.equal(started.ok, true);
   assert.equal(state.counts.scheduler, scheduled);
@@ -765,7 +765,7 @@ async function physicalShipOrder(state) {
   await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
   const prepared = await state.invoke(PREPARE);
   const token = prepared.capability.capability;
-  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery }, lines: [{ catalogItemId: 'hat', quantity: 2 }] }, token);
+  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: 'hat', quantity: 2 }] }, token);
   assert.equal(started.ok, true);
   state.setPaid();
   assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
@@ -860,7 +860,7 @@ test('Commerce trades its store key at DinkusKit.com once per call, only for the
     await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
     const hat = await state.collections.catalog_items.get('hat');
     await state.collections.catalog_items.put('hat', { ...hat, fulfillment: 'physical', weightOz: 4.5 });
-    assert.equal((await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery },
+    assert.equal((await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } },
       lines: [{ catalogItemId: 'hat', quantity: 1 }] }, token)).checkout.state, 'pending');
     assert.ok(state.counts.transport >= 2);
     assert.deepEqual(state.trades, [trade('payments:checkout')]);

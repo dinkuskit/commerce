@@ -50,8 +50,9 @@ function setup(t, { managed = false, inject = true, host } = {}) {
   return { ...opened, path, synth, plugin };
 }
 
+const billing = { name: 'Guest Fixture', line1: '2 Billing Road', city: 'Toronto', region: 'ON', postalCode: 'M5V 1A1', country: 'CA' };
 function lines(itemId = "hat", quantity = 1) {
-  return { contact: { email: 'guest-fixture@example.test' }, lines: [{ catalogItemId: itemId, quantity }] };
+  return { contact: { email: 'guest-fixture@example.test', billing }, lines: [{ catalogItemId: itemId, quantity }] };
 }
 
 function capabilityOf(result) {
@@ -960,7 +961,7 @@ test('native guest routes report US-region refusal before effects and recover on
   await f.storage.catalogItems.put('hat', { ...item, fulfillment: 'physical' });
   const prepared = await prepareGuest(f.plugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE], f.storage, { settings });
   const token = capabilityOf(prepared);
-  const input = region => ({ ...lines(), contact: { email: 'region-native@example.test', delivery: { ...syntheticDelivery, region } } });
+  const input = region => ({ ...lines(), contact: { email: 'region-native@example.test', delivery: { ...syntheticDelivery, region }, billing } });
   for (const region of [undefined, '', 'PR', 'AE', 'California City']) {
     await assert.rejects(() => invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, input(region), { capability: token, settings }),
       error => error instanceof PluginRouteError && error.code === 'INVALID_CART' && error.message === 'Delivery address is invalid');

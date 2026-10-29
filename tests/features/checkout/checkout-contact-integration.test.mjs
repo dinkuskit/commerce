@@ -8,8 +8,9 @@ import {
 } from "../../../dist/features/checkout/index.js";
 import { openStore, fixture } from "./fixture.mjs";
 
+const billing = { name: "Bill Payer", line1: "9 Billing Way", city: "Billtown", postalCode: "00009", country: "US" };
 function contact(email, phone = "555 0101") {
-  return { email, phone };
+  return { email, phone, billing };
 }
 
 function checkoutFixture() {
@@ -74,7 +75,7 @@ test("authoritative phone flag is reread for new checkout and forged client poli
   await assert.rejects(
     startCheckout(f.execution, "phone-cart", {
       lines: [{ catalogItemId: "one", quantity: 1 }],
-      contact: { email: "guest@example.test" },
+      contact: { email: "guest@example.test", billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } },
     }),
     (error) => error?.code === "PHONE_REQUIRED",
   );
@@ -92,7 +93,7 @@ test("authoritative phone flag is reread for new checkout and forged client poli
   });
   const optional = await startCheckout(f.execution, "phone-off-cart", {
     lines: [{ catalogItemId: "one", quantity: 1 }],
-    contact: { email: "guest@example.test" },
+    contact: { email: "guest@example.test", billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } },
   });
   assert.equal(optional.contactSnapshot.requirePhoneNumber, false);
 });
@@ -170,7 +171,7 @@ test("new attempt after a released legacy original requires contact authority wi
   assert.equal(f.sessions.size, 0);
   assert.deepEqual((await opened.store.read('legacy-cart')).record.attempts, [legacy]);
   f.execution.loadCheckoutContactRequirements = async () => ({ requirePhoneNumber: false, shippingCountries: ['US'], revision: null });
-  const retried = await startCheckout(f.execution, 'legacy-cart', { lines: legacy.cart, contact: { email: 'new@example.test' } }, 'legacy-attempt');
+  const retried = await startCheckout(f.execution, 'legacy-cart', { lines: legacy.cart, contact: { email: 'new@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } } }, 'legacy-attempt');
   assert.equal(retried.contactSnapshot.contact.email, 'new@example.test');
   assert.deepEqual((await opened.store.read('legacy-cart')).record.attempts[0], legacy);
 
@@ -207,7 +208,7 @@ test('native routes use real plugin settings, hint outside status schema, reread
   const token = prepared.capability.capability;
   const changed = await saveMerchantStoreSettings(f.settings, {expectedRevision:null,requirePhoneNumber:true});
   assert.deepEqual(await loadCheckoutContactRequirements(f.settings), {requirePhoneNumber:true,shippingCountries:[],revision:changed.revision});
-  const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'shopper@example.test'}};
+  const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'shopper@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}};
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, body, {capability:token,settings:f.settings}), e=>e.code==='INVALID_CART');
   assert.equal(f.synth.counts().paymentCreates,0);
   assert.deepEqual((await f.storage.checkoutCarts.query()).items, []);
@@ -216,14 +217,14 @@ test('native routes use real plugin settings, hint outside status schema, reread
   const snapshot=(await f.storage.checkoutCarts.query()).items[0].data.attempts[0].contactSnapshot;
   assert.equal(snapshot.requirePhoneNumber,true);
   assert.equal(snapshot.revision,changed.revision);
-  assert.deepEqual(snapshot.contact,{email:'shopper@example.test',phone:'555 0123'});
+  assert.deepEqual(snapshot.contact,{email:'shopper@example.test',phone:'555 0123',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}});
   assert.equal(JSON.stringify(result).includes('shopper@example.test'),false);
   const payment=f.synth.sessions.values().next().value.request;
   assert.equal('contactSnapshot' in payment,false);
   assert.equal(JSON.stringify(payment).includes('shopper@example.test'),false);
   await saveMerchantStoreSettings(f.settings,{expectedRevision:changed.revision,requirePhoneNumber:false});
   const brokenSettings={async getVersioned(){throw Error('PII vendor internal error shopper@example.test');}};
-  const replay=await invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{...body,contact:{email:'changed@example.test'}},{capability:token,settings:brokenSettings});
+  const replay=await invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{...body,contact:{email:'changed@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}},{capability:token,settings:brokenSettings});
   assert.equal(replay.checkout.attemptId,result.checkout.attemptId);
   f.synth.setPayment('paid');
   const paid=await invokeGuest(f.routes['checkout/guest/status'],f.storage,{}, {capability:token,settings:brokenSettings});
@@ -243,8 +244,8 @@ test('native guest contact denies missing email and cross-cart injection, corrup
   for(const contact of [undefined,{email:''},{email:'bad@'},{email:'a@example.test',requirePhoneNumber:false}]) {
     await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{lines:[{catalogItemId:'hat',quantity:1}],...(contact===undefined?{}:{contact})},{capability:token,settings:f.settings}),e=>e.code==='INVALID_CART');
   }
-  await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{cartId:'other-cart',lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test'}},{capability:token,settings:f.settings}),e=>e.code==='INVALID_CART');
-  await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test'}},{capability:'guessed.token',settings:f.settings}),e=>e.code==='CAPABILITY_DENIED');
+  await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{cartId:'other-cart',lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}},{capability:token,settings:f.settings}),e=>e.code==='INVALID_CART');
+  await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}},{capability:'guessed.token',settings:f.settings}),e=>e.code==='CAPABILITY_DENIED');
   assert.equal(f.synth.counts().paymentCreates,0);
   assert.deepEqual((await f.storage.checkoutCarts.query()).items,[]);
   await f.settings.set('merchantStoreSettings',{recordKind:'merchant-store-settings',requirePhoneNumber:'false'});
@@ -279,7 +280,7 @@ test('actual default workerd bindings enforce current SDK phone setting and keep
   assert.equal('contactRequirements' in optional.checkout,false);
   const token=optional.capability.capability;
   const saved=await saveMerchantStoreSettings(f.settings,{expectedRevision:null,requirePhoneNumber:true});
-  const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'workerd-shopper@example.test'}};
+  const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'workerd-shopper@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}};
   const denied=await f.invoke(start,body,token);
   assert.equal(denied.error.code,'INVALID_CART');
   assert.equal(f.counts.transport,0);
@@ -287,7 +288,7 @@ test('actual default workerd bindings enforce current SDK phone setting and keep
   const started=await f.invoke(start,{...body,contact:{...body.contact,phone:'555 0134'}},token);
   assert.equal(started.ok,true);
   const frozen=(await f.cartRecords())[0].attempts[0].contactSnapshot;
-  assert.deepEqual(frozen,{schema:'dinkuskit.commerce.checkout-contact/v1',contact:{email:'workerd-shopper@example.test',phone:'555 0134'},requirePhoneNumber:true,revision:saved.revision});
+  assert.deepEqual(frozen,{schema:'dinkuskit.commerce.checkout-contact/v1',contact:{email:'workerd-shopper@example.test',phone:'555 0134',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}},requirePhoneNumber:true,revision:saved.revision});
   assert.equal(JSON.stringify(f.requests).includes('workerd-shopper@example.test'),false);
   await saveMerchantStoreSettings(f.settings,{expectedRevision:saved.revision,requirePhoneNumber:false});
   f.setPaid();

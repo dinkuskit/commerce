@@ -82,22 +82,16 @@ function assertTestBinding(value: unknown, expected: TrustedTestPaymentsConfig):
     throw new Error("Payments binding unavailable");
   }
   const binding = value as Partial<PaymentBinding>;
+  // A Stripe binding names exactly the expected account; an Authorize.net one names no Stripe account
+  // and, when the store names a merchant, that merchant.
   if (binding.bindingRef !== expected.bindingRef ||
       binding.providerId !== expected.providerId ||
-      binding.mode !== expected.mode) {
+      binding.mode !== expected.mode ||
+      (expected.providerId === "stripe"
+        ? binding.authorizeNetMerchantId !== undefined || binding.stripeAccountId !== expected.stripeAccountId
+        : binding.stripeAccountId !== undefined ||
+          expected.authorizeNetMerchantId !== undefined && binding.authorizeNetMerchantId !== expected.authorizeNetMerchantId)) {
     throw new Error("Payments binding mismatch");
-  }
-  if (expected.providerId === "stripe") {
-    if (binding.authorizeNetMerchantId !== undefined ||
-        binding.stripeAccountId !== expected.stripeAccountId) {
-      throw new Error("Payments binding mismatch");
-    }
-  } else {
-    if (binding.stripeAccountId !== undefined) throw new Error("Payments binding mismatch");
-    if (expected.authorizeNetMerchantId !== undefined &&
-        binding.authorizeNetMerchantId !== expected.authorizeNetMerchantId) {
-      throw new Error("Payments binding mismatch");
-    }
   }
   return binding as PaymentBinding;
 }
@@ -238,12 +232,7 @@ export async function readBoundedPaymentsJson(response: Response): Promise<unkno
     while (true) {
       const result = await reader.read();
       if (result.done) break;
-      if (!(result.value instanceof Uint8Array)) {
-        try { await reader.cancel(); } catch { /* fail closed */ }
-        malformedResponse();
-      }
-      byteLength += result.value.byteLength;
-      if (byteLength > MAX_PAYMENT_RESPONSE_BYTES) {
+      if (!(result.value instanceof Uint8Array) || (byteLength += result.value.byteLength) > MAX_PAYMENT_RESPONSE_BYTES) {
         try { await reader.cancel(); } catch { /* fail closed */ }
         malformedResponse();
       }
@@ -253,17 +242,29 @@ export async function readBoundedPaymentsJson(response: Response): Promise<unkno
     reader.releaseLock();
   }
 
-  const bytes = new Uint8Array(byteLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
   try {
-    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(await new Blob(chunks as BlobPart[]).arrayBuffer()));
   } catch {
     malformedResponse();
   }
+}
+
+/** One authenticated JSON request to Payments: a GET, or a POST of `body`. */
+export function fetchPayments(
+  fetch: ScopedPaymentFetch, url: string, siteId: string, credential: string, body?: unknown,
+): Promise<Response> {
+  return fetch(url, {
+    method: body ? "POST" : "GET",
+    headers: {
+      accept: "application/json",
+      authorization: `Bearer ${credential}`,
+      "content-type": "application/json",
+      "x-dinkus-site": siteId,
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+    cache: "no-store",
+    redirect: "error",
+  });
 }
 
 function createPaymentPort(
@@ -273,27 +274,12 @@ function createPaymentPort(
     invalid("credentialResolver and fetch are required");
   }
 
-  async function call(
-    method: "GET" | "POST",
-    path: string,
-    body?: PaymentRequest,
-  ): Promise<unknown> {
+  async function call(path: string, body?: PaymentRequest): Promise<unknown> {
     const credential = await config.credentialResolver();
     if (typeof credential !== "string" || !credential.trim()) {
       throw new Error("Payments credential unavailable");
     }
-    const response = await config.fetch(`${config.paymentsOrigin}${path}`, {
-      method,
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${credential}`,
-        "content-type": "application/json",
-        "x-dinkus-site": config.siteId,
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-      cache: "no-store",
-      redirect: "error",
-    });
+    const response = await fetchPayments(config.fetch, config.paymentsOrigin + path, config.siteId, credential, body);
     if (!response.ok) throw new Error("Payments transport unavailable");
     try {
       return await readBoundedPaymentsJson(response);
@@ -304,7 +290,7 @@ function createPaymentPort(
 
   async function binding(path: "/v1/checkout-binding" | "/v1/existing-binding"): Promise<PaymentBinding> {
     return assertTestBinding(
-      await call("GET", `${path}?bindingRef=${encodeURIComponent(config.bindingRef)}`),
+      await call(`${path}?bindingRef=${encodeURIComponent(config.bindingRef)}`),
       config,
     );
   }
@@ -314,9 +300,8 @@ function createPaymentPort(
     if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
       throw new Error("Payments pricing schema unsupported");
     }
-    const ready = await binding(create ? "/v1/checkout-binding" : "/v1/existing-binding");
-    if (create && ready.ready !== undefined && ready.ready !== true) throw new Error("Payments binding unavailable");
-    return outcome(await call("POST", create ? "/v1/checkout/session" : "/v1/checkout/lookup", exact));
+    await (create ? verifyBinding() : binding("/v1/existing-binding"));
+    return outcome(await call(create ? "/v1/checkout/session" : "/v1/checkout/lookup", exact));
   }
   async function verifyBinding(): Promise<PaymentBinding> {
     const ready = await binding("/v1/checkout-binding");

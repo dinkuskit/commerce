@@ -200,7 +200,8 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       expect(attempt.order.variantSelections[0].selections[0].valueLabel).toBe("Large");
       expect(attempt.order.paymentId).toMatch(/^synthetic-payment:/);
       expect(attempt.contactSnapshot).toMatchObject({contact:{email:'variant-shopper@example.test',phone:'555 0142',
-        delivery:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',region:'nOrTh cArOlInA',postalCode:'00000',country:'US'}},requirePhoneNumber:true,revision:capturedRequirementRevision});
+        delivery:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',region:'nOrTh cArOlInA',postalCode:'00000',country:'US'},
+        billing:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',region:'nOrTh cArOlInA',postalCode:'00000',country:'US'}},requirePhoneNumber:true,revision:capturedRequirementRevision});
       expect(attempt.order.contactSnapshot).toEqual(attempt.contactSnapshot);
       expect(JSON.stringify(attempt.payment)).not.toContain('variant-shopper@example.test');
       expect(JSON.stringify(paidProjection)).not.toContain('variant-shopper@example.test');

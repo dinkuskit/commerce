@@ -39,7 +39,9 @@ test('show returns the order as agents see it, with its number, version, status 
   const { call, kept } = await store(order('o1'), live, order('o3', { mode: 'test' }));
   const shown = (await call({ action: 'show', orderId: 'o2' })).order;
   assert.deepEqual(shown, { orderId: 'o2', number: 1002, version: 1, status: 'processing', test: false, paidAt: '2026-10-10T01:00:00Z',
-    total: usd('100'), lines: live.lines, choices: live.variantSelections, shipTo: delivery, email: 'shopper@example.com', phone: null, completed: null });
+    total: usd('100'), lines: live.lines, choices: live.variantSelections, shipTo: delivery, email: 'shopper@example.com', phone: null, completed: null,
+    // Orders paid before billing was recorded carry none.
+    billTo: null, billToMatchesShipTo: false });
   assert.equal((await call({ action: 'show', orderId: 'o1' })).order.test, true);
   assert.equal((await call({ action: 'show', orderId: 'o3' })).order.test, true);
   assert.deepEqual(await call({ action: 'show', orderId: 'missing' }), { order: null });
@@ -48,6 +50,21 @@ test('show returns the order as agents see it, with its number, version, status 
   const corrected = (await call({ action: 'show', orderId: 'o1' })).order;
   assert.equal(corrected.shipTo.line1, '2 Corrected Road');
   assert.equal(corrected.version, 2);
+});
+
+test('agents get the billing copy and whether it matches where the order goes now', async () => {
+  const contact = billing => ({ contactSnapshot: { schema: 'dinkuskit.commerce.checkout-contact/v1', requirePhoneNumber: false, revision: null,
+    contact: { email: 'shopper@example.com', delivery, billing } } });
+  const elsewhere = { name: 'Bill Payer', line1: '9 Billing Way', city: 'Toronto', region: 'ON', postalCode: 'M5V 1A1', country: 'CA' };
+  const { call, kept } = await store(order('same', contact({ ...delivery })), order('other', contact(elsewhere)));
+  const same = (await call({ action: 'show', orderId: 'same' })).order;
+  assert.deepEqual([same.billTo, same.billToMatchesShipTo], [delivery, true]);
+  const other = (await call({ action: 'show', orderId: 'other' })).order;
+  assert.deepEqual([other.billTo, other.billToMatchesShipTo], [elsewhere, false]);
+  // Correcting the delivery address never changes billing, so the two no longer match.
+  assert.equal(await correctDelivery(kept, 'same', 1, { ...delivery, line1: '2 Corrected Road' }, ['US']), 'saved');
+  const corrected = (await call({ action: 'show', orderId: 'same' })).order;
+  assert.deepEqual([corrected.billTo, corrected.billToMatchesShipTo], [delivery, false]);
 });
 
 test('list pages by order number, 50 at a time, and filters by status', async () => {
