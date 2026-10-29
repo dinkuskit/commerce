@@ -17,6 +17,12 @@ test("merchant settings persist independently and reject stale or unauthorized w
   const selling = page.getByRole("textbox", { name: "Allowed selling/customer countries (comma-separated codes)", exact: true });
   const shipping = page.getByRole("textbox", { name: "Allowed physical shipping destinations (comma-separated codes)", exact: true });
   const phone = page.getByRole("switch", { name: /Require a phone number/ });
+  // A document reload can finish before the EmDash app and Block Kit form mount.
+  // Use the same bounded readiness window as the initial load, then assert saved values.
+  const reloadSettings = async () => {
+    await page.reload();
+    await expect(store).toBeVisible({ timeout: 60000 });
+  };
   const save = async () => {
     const wait = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
     await page.getByRole("button", { name: "Save merchant settings", exact: true }).click();
@@ -29,10 +35,11 @@ test("merchant settings persist independently and reject stale or unauthorized w
   const capture = name => page.screenshot({ path: process.env.COMMERCE_SETTINGS_ARTIFACTS + "/" + info.project.name + "-" + name + ".png", fullPage: true });
   await expect(store).toHaveValue("", { timeout: 60000 });
   await expect(phone).not.toBeChecked();
+  await expect(page.getByText("Checkout checks physical shipping destinations; selling/customer countries are not enforced.", { exact: true })).toBeVisible();
   await capture("unconfigured");
   await phone.check();
   await save();
-  await page.reload();
+  await reloadSettings();
   await expect(store).toHaveValue("");
   await expect(phone).toBeChecked();
   await store.fill("ca");
@@ -49,7 +56,7 @@ test("merchant settings persist independently and reject stale or unauthorized w
   await expect(shipping).toHaveValue("GB");
   await phone.uncheck();
   await save();
-  await page.reload();
+  await reloadSettings();
   await expect(phone).not.toBeChecked();
   await expect(store).toHaveValue("GB");
   await expect(selling).toHaveValue("CA, MX");
@@ -59,7 +66,7 @@ test("merchant settings persist independently and reject stale or unauthorized w
   expect(refusal.data.blocks.some(b => b.type === "banner" && b.variant === "error")).toBe(true);
   const retained = refusal.data.blocks.find(b => b.type === "form" && b.block_id.startsWith("merchant-store-settings:"));
   expect(retained.block_id).toBe(stale.block_id);
-  await page.reload();
+  await reloadSettings();
   await expect(store).toHaveValue("GB");
   await expect(phone).not.toBeChecked();
   await store.fill("ZZ");
@@ -71,7 +78,7 @@ test("merchant settings persist independently and reject stale or unauthorized w
   const denied = await anonymous.request.post(new URL(endpoint, info.project.use.baseURL).href, { data: stale, headers });
   expect([401, 403]).toContain(denied.status());
   await anonymous.close();
-  await page.reload();
+  await reloadSettings();
   await expect(store).toHaveValue("GB");
   if (process.env.COMMERCE_SETTINGS_CONTROLLED_FAILURE === "1") expect("synthetic controlled failure").toBe("pass");
   // Native and Registry installs show the same Commerce settings page.

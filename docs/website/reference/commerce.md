@@ -32,6 +32,19 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 
+## Merchant store settings
+
+In **Commerce settings**, choose the store country and the independent
+selling/customer and physical shipping-destination lists. On the first country
+save, blank lists default to that country. Later changes to the store country
+preserve the lists; a saved empty list enables no countries or destinations.
+The phone requirement can be saved before a country is chosen.
+
+Checkout checks the shipping-destination list for a new physical checkout.
+With no destinations enabled, a physical basket cannot proceed to payment.
+The selling/customer list is stored but is not enforced by checkout. These
+settings do not collect a billing address or determine taxes or currency.
+
 ## One product screen
 
 **Content > Products** is the one place to manage a product. Each product page has two panels beside the editor: **Dinkus Commerce** and **Product image & gallery**.
