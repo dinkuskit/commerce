@@ -146,11 +146,14 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | `products link` | `{ op: "link", catalogItemId, entryId }` |
 | `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
-`products create --page` and `products link` record the link for the page's
-Dinkus Commerce panel only. The store's publish check reads the page's own
-`commerce_item_id` field, so before publishing, set that field to the
-product's `catalogItemId` and save the page through EmDash (its content API or
-MCP). The panel does this step itself when a person presses Save.
+`products create --page` and `products link` record which page sells the
+product. Commerce keeps that link; the page has no product field to set
+(`catalog-page-link-in-commerce-20261029`). Publishing the page through EmDash
+(its content API or MCP) then puts the product on sale: the store's publish
+check sends Commerce only the page, and Commerce finds the product. A store
+whose template predates this still reads the page's own `commerce_item_id`
+field when it publishes; on such a store, set that field to the product's
+`catalogItemId` too, or update the store first.
 
 The route also has `labels` (rename a choice or its values), which the CLI
 does not wrap yet. A refused price save answers `{ saved: false, message }`,
@@ -193,7 +196,9 @@ changes (a misspelt `trackingNumber` is an error, not ignored). Each order is:
   "lines": [{ "catalogItemId": "item_demo", "quantity": 2, "name": "Demo Mug", "unitPrice": { "currency": "USD", "minor": "625" } }],
   "choices": [],
   "shipTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
-  "email": "shopper@example.test", "phone": null, "completed": null
+  "email": "shopper@example.test", "phone": null, "completed": null,
+  "billTo": { "name": "Demo Shopper", "line1": "1 Example Way", "city": "Testville", "region": "CA", "postalCode": "90000", "country": "US" },
+  "billToMatchesShipTo": true
 }
 ```
 
@@ -201,8 +206,11 @@ changes (a misspelt `trackingNumber` is an error, not ignored). Each order is:
 numbers it. `status` is `processing` until the order ships and `completed` once
 it shipped (never "delivered"). `test` is false only for an order taken in live
 mode. `shipTo` is the owner's corrected address when there is one, else the
-checkout address, or null for digital-only orders. `choices` are the frozen
-option choices. `completed` is `{ at, carrier?, tracking? }` once Completed.
+checkout address, or null for digital-only orders. `billTo` is the billing
+address frozen at checkout, always a full copy (null only for orders paid before
+billing was recorded); `billToMatchesShipTo` is true when it equals `shipTo`
+field for field. `choices` are the frozen option choices. `completed` is
+`{ at, carrier?, tracking? }` once Completed. `orders show` prints `bill to`.
 
 `complete` and `reopen` follow the Orders page's rules and apply only at the
 order `version` named, so a change made from a stale read changes nothing.

@@ -50,7 +50,7 @@ export type {
 } from "../product-admin.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "../normalize.js";
 export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct, named } from "../product-edit.js";
-export { PRODUCT_PAGES_COLLECTION, linkProductPage, pageProduct, productPageLinks, setProductPageOnSale } from "../product-pages.js";
+export { PRODUCT_PAGES_COLLECTION, linkProductPage, pageProduct, productNotFound, productPageLinks, setProductPageOnSale } from "../product-pages.js";
 export type { ProductPageRecord, ProductPages } from "../product-pages.js";
 export {
   CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,

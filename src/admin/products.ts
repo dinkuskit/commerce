@@ -4,7 +4,7 @@ import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
 import {
   CatalogError, createCatalogItem, listCatalogProductSummaries, loadCatalogProduct, editProduct,
-  linkProductPage, pageProduct, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
+  linkProductPage, pageProduct, productNotFound, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
   normalizeWeightOz, setCatalogItemWeight, setCatalogWeights, setCatalogProductArchived,
@@ -124,8 +124,7 @@ function variantEditor(id: string, variant: CatalogProductListItem["variantProdu
 /** The Product image & gallery panel (catalog-media-panel-20261027): Commerce's picture and gallery for this product. */
 async function mediaView(ctx: PluginContext, id: string, toast?: string): Promise<BlockResponse> {
   const store = storage(ctx);
-  const selected = await loadCatalogProduct(store, id);
-  if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
+  const selected = await loadCatalogProduct(store, id) ?? productNotFound();
   const name = selected.name, media: CatalogMediaRecord = await loadCatalogItemMedia(store.media, id);
   const blocks: Block[] = [header("Product image"), await preview(ctx, media.image, name), { type: "actions", elements: [
     button(media.image ? "Change image" : "Choose image", "media.pick", { t: "image", id }),
@@ -144,8 +143,7 @@ async function mediaView(ctx: PluginContext, id: string, toast?: string): Promis
 }
 async function product(ctx: PluginContext, id: string, form?: CatalogProductPriceForm & { feedChannels?: readonly ProductFeedChannel[] }, toast?: string): Promise<BlockResponse> {
   const store = storage(ctx);
-  const selected = await loadCatalogProduct(store, id);
-  if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
+  const selected = await loadCatalogProduct(store, id) ?? productNotFound();
   const dormant = await loadCatalogItemManualAvailability(store.availability, id, store.catalog);
   const status = dormant.status === "available-on-backorder" ? "on-backorder" : dormant.status;
   const feeds = feedEligibility(ctx);
@@ -192,6 +190,8 @@ type Draft = { fields?: Record<string, unknown> };
 /** What the panel says of a product with no Regular price, and what a Save that leaves Regular empty answers. */
 const NO_PRICE = "Add a Regular price to sell it";
 const command = (action: string) => /^sell:[\w-]{8,64}$/.test(action) ? action.slice(5) : crypto.randomUUID();
+/** An action id's tail: a JSON list, or the bare product id an older panel sent. */
+const tail = (rest: string): [string, string?] => rest.startsWith("[") ? JSON.parse(rest) : [rest];
 /** Commerce products no product page sells yet, newest first, archived ones too so they can be restored; Commerce Settings lists them. */
 export async function productsWithoutPage(ctx: PluginContext) {
   const store = storage(ctx);
@@ -214,27 +214,23 @@ async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.r
 }
 /** A SKU from the page title, made unique with a tail from its create command so a retry asks for the same SKU. */
 const skuFrom = (title: string, command: string) => (title.replace(/[^A-Za-z0-9]+/g, "-").slice(0, 40) + "-" + command.slice(0, 4)).toUpperCase().replace(/^-+/, "");
-/**
- * Links this page to a Commerce product and fills the page's commerce_item_id
- * in the open editor. The page keeps it only when the merchant presses Save.
- */
+/** Links this page to a Commerce product; Commerce keeps the link, the page has no field for it (catalog-page-link-in-commerce-20261029). */
 async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, chosen?: string, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const store = storage(ctx);
-  const typed = typeof fields.commerce_item_id === "string" ? fields.commerce_item_id.trim() : "";
-  let id = chosen ?? (typed && await loadCatalogProduct(store, typed) ? typed : await pageProduct(store.pages, entryId));
-  let toast = "Linked. Save to keep it.";
+  let id = chosen ?? await pageProduct(store.pages, entryId);
+  let toast = "Linked.";
   if (!id) {
     // New products start as a physical Draft: off the shop until this page is published.
     const title = typeof fields.title === "string" && fields.title.trim() ? fields.title.trim().slice(0, 160) : "New product";
     // Its first write is already a Draft, so a retry that finds the earlier try's product finds a Draft.
     id = (await createCatalogItem(store.catalog, { commandId: "page:" + command, name: title, sku: sku.trim() || skuFrom(title, command), fulfillment: "physical" },
       { ...unique(ctx), offSale: true })).item.itemId;
-    toast = "Draft made. Save, then Publish to sell it.";
+    toast = "Draft made. Publish the page to sell it.";
   }
   // The product view refuses a product that is gone, before anything is linked.
   const view = await product(ctx, id, undefined, toast);
   await linkProductPage(store, entryId, id);
-  return typed === id ? view : { ...view, patch: { type: "editor-draft-patch", operations: [{ op: "set", field: "commerce_item_id", value: id }] } };
+  return view;
 }
 /** The Dinkus Commerce panel on a product page: that page's price, sale, SKU, sizes, stock, weight and photos. */
 export async function productPanel(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
@@ -250,12 +246,10 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
       const v = object(input.values), sku = String(v.sku ?? "").trim().toUpperCase();
       return await sell(ctx, entryId, fields, sku ? (await listCatalogProductSummaries(storage(ctx).catalog)).find(p => p.sku.toUpperCase() === sku)?.catalogItemId ?? sku : text(v.product));
     }
-    const linked = await pageProduct(storage(ctx).pages, entryId);
-    if (input.type === "panel_load") return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
-    // The editor's commerce_item_id wins: a page saved before the link list existed, a changed id, or a declined
-    // or unsaved link is settled here, and the owner's next step acts on the product the page names.
-    const named = typeof fields.commerce_item_id === "string" ? fields.commerce_item_id.trim() : "";
-    if (draft && named !== (linked ?? "") && (linked || await loadCatalogProduct(storage(ctx), named))) return await sell(ctx, entryId, fields);
+    if (input.type === "panel_load") {
+      const linked = await pageProduct(storage(ctx).pages, entryId);
+      return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
+    }
   } catch (error) {
     // A refused sell keeps the typed SKU, its create command and the buttons so the owner can retry.
     const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? ""))).catch(() => ({ blocks: [] }));
@@ -321,7 +315,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
     if (input.type === "form_submit") {
       values = object(input.values);
       if (action.startsWith("save:")) {
-        const [id, expectedRevision] = action.slice(5).startsWith("[") ? JSON.parse(action.slice(5)) : [action.slice(5)];
+        const [id, expectedRevision] = tail(action.slice(5));
         const store = storage(ctx);
         const item = await store.catalog.get(id);
         const wasManaged = isManagedCatalogRecord(item);
@@ -348,7 +342,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         return await product(ctx, id, undefined, "Identifiers saved");
       }
       if (action.startsWith("weight:")) {
-        const [id, expectedRevision] = action.slice(7).startsWith("[") ? JSON.parse(action.slice(7)) : [action.slice(7)];
+        const [id, expectedRevision] = tail(action.slice(7));
         const typed = Object.entries(values).filter(([key]) => key.startsWith("w:")).map(([key, value]) => [key.slice(2), value] as const);
         await setCatalogWeights(storage(ctx).catalog, id, typed, expectedRevision);
         committed = { id, message: "Weight saved" };
@@ -357,8 +351,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
       if (action.startsWith("variant:")) {
         const [operation, id, ...args] = JSON.parse(action.slice(8));
         const store = storage(ctx);
-        const selected = await loadCatalogProduct(store, id);
-        if (!selected) throw new CatalogError("CATALOG_ITEM_NOT_FOUND", "Product not found.");
+        const selected = await loadCatalogProduct(store, id) ?? productNotFound();
         if (operation === "add") await addCatalogVariantOption(store, {
           productId: id, optionId: args[0], optionLabel: text(values.optionLabel), values: [
             { valueId: args[1], label: text(values.smallLabel), member: { catalogItemId: id, fulfillment: values.first as never } },
@@ -438,12 +431,12 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
       try {
         const sent = input.action_id, args = sent.startsWith("variant:") ? JSON.parse(sent.slice(8)) : null;
         const rawId = sent.replace(/^\w+:/, "");
-        const back = await product(ctx, args ? args[1] : rawId.startsWith("[") ? JSON.parse(rawId)[0] : rawId);
+        const back = await product(ctx, args ? args[1] : tail(rawId)[0]);
         for (const block of back.blocks) if (block.type === "form") {
           const next = args && block.submit.action_id.startsWith("variant:") ? JSON.parse(block.submit.action_id.slice(8)) : null;
           const key = (action: string) => {
             const raw = action.replace(/^\w+:/, "");
-            return action.split(":")[0] + ":" + (raw.startsWith("[") ? JSON.parse(raw)[0] : raw);
+            return action.split(":")[0] + ":" + tail(raw)[0];
           };
           const sameForm = key(block.submit.action_id) === key(sent);
           if (next ? next[0] !== args[0] || (args[0] === "price" && next[2] !== args[2]) : !sameForm) continue;

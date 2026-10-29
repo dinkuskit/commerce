@@ -35,6 +35,11 @@ function nowSeconds(runtime: ShopperAccountRuntime): number {
   return runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
 }
 
+/** Epoch seconds as an ISO timestamp. */
+function iso(seconds: number): string {
+  return new Date(seconds * 1000).toISOString();
+}
+
 export const hashCustomerSecret = sha256Hex;
 
 function randomSixDigitCode(): string {
@@ -166,7 +171,7 @@ async function ensureCustomerProfile(
   preferredEmail?: string,
   preloadedOrders?: Awaited<ReturnType<NonNullable<ShopperAccountRuntime["host"]["loadOrdersForEmail"]>>>,
 ): Promise<CustomerRecord> {
-  const nowIso = new Date(nowSeconds(runtime) * 1000).toISOString();
+  const nowIso = iso(nowSeconds(runtime));
   const existing = await runtime.customers.getVersioned(emailKey);
   if (existing && !isValidCustomerRecord(existing.value, emailKey)) {
     fail("UNAVAILABLE");
@@ -270,7 +275,7 @@ export async function startShopperSignIn(
     return {
       ok: true,
       email,
-      expiresAt: new Date(expiresAt * 1000).toISOString(),
+      expiresAt: iso(expiresAt),
     };
   } catch (error) {
     return safeResult(error);
@@ -335,7 +340,7 @@ export async function verifyShopperSignIn(
       session: `${sessionId}.${secret}`,
       retention: "json-body",
       header: CUSTOMER_SESSION_HEADER,
-      expiresAt: new Date(expiresAt * 1000).toISOString(),
+      expiresAt: iso(expiresAt),
     };
     return {
       ok: true,
@@ -455,7 +460,7 @@ export async function updateShopperAccountProfile(
     const authorized = await authorizeCustomerSession(runtime, headers);
     const requirements = await runtime.host.loadShippingCountries?.();
     const patch = normalizeProfilePatch(input, requirements);
-    const nowIso = new Date(nowSeconds(runtime) * 1000).toISOString();
+    const nowIso = iso(nowSeconds(runtime));
     await ensureCustomerProfile(runtime, authorized.emailKey);
     const freshVersion = await runtime.customers.getVersioned(authorized.emailKey);
     if (!freshVersion || !isValidCustomerRecord(freshVersion.value, authorized.emailKey)) {

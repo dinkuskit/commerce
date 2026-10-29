@@ -1,15 +1,20 @@
 # One product screen
 
 Locks: `catalog-one-product-screen-20261023`, `catalog-products-page-removed-20261023`,
-`catalog-product-states-20261023`, `admin-sidebar-plugin-folders-20261023`.
+`catalog-product-states-20261023`, `admin-sidebar-plugin-folders-20261023`,
+`catalog-page-link-in-commerce-20261029`.
 
 ## Product page panel (Registry build)
 
 `emdash-plugin.jsonc` declares one editor panel, `product`, on the `products`
 collection. It is titled "Dinkus Commerce" and served by the private `product-panel` route
-(`content:edit_any`, POST). The panel reads the draft fields `title` and
-`commerce_item_id` and may patch only `commerce_item_id`; that needs the
-`admin.editor-draft:read` and `admin.editor-draft:patch` capabilities.
+(`content:edit_any`, POST). The panel reads only the draft field `title`, to
+name a new product, and never changes the page; that needs the
+`admin.editor-draft:read` capability. Commerce holds the link between a page
+and its product (`catalog-page-link-in-commerce-20261029`): a product page has
+no Commerce product field, so there is nothing on the page to type into or
+save. Commerce 0.6.0 also asked for `admin.editor-draft:patch` to fill such a
+field; this build no longer does.
 
 - A page with no product shows "Add price and stock" with an optional SKU, and,
   when any exist, a list of products without a page ("Sell it here"). The
@@ -17,9 +22,8 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
 - Add price and stock creates a physical product named from the page title.
   The SKU is the one typed, or one made from the title. The product starts as
   a Draft (`offSale: true`) in its first write, so a stop before linking never
-  leaves it on the shop, and a retry finds that same Draft. The panel links the page in `product_pages` and
-  returns an `editor-draft-patch` setting `commerce_item_id`. EmDash asks the
-  owner to apply it, and the page keeps it only when they press Save.
+  leaves it on the shop, and a retry finds that same Draft. The panel links the page in `product_pages`;
+  nothing waits on the page's Save.
 - A linked page shows the product's name, its state (Draft, On sale or
   Archived) and SKU, then the editor that used to live on the Products page:
   price and sale, stock status, choices, weight and Archive or Restore. It
@@ -41,13 +45,10 @@ collection. It is titled "Dinkus Commerce" and served by the private `product-pa
   removals go through the same handler as the Dinkus Commerce panel and answer
   with the pictures again. The library's Cancel is `media.open`. A page with no
   product points to the Dinkus Commerce panel.
-- The page's own `commerce_item_id` wins over `product_pages`. EmDash sends no
-  draft on `panel_load`, so the panel opens from the stored link, and the next
-  step the owner takes settles it: a page saved before `product_pages` existed
-  gets its link, a page whose id was changed opens that product, and a page
-  whose link patch was declined or never saved is offered the patch again.
-  Add price and stock on a page that already names a product opens that
-  product. The publish check also writes the link.
+- The panel opens from the stored link alone. A `commerce_item_id` that an
+  older store's page still carries is never read, whatever it says. Add price
+  and stock on a linked page opens its product. The publish check also writes
+  the link (`p:`, below).
 - The sell form carries its create command in its action id (`sell:<uuid>`),
   and a made-up SKU takes its tail from that command. A retry after a partial
   failure resumes the product the first try made instead of making another.
@@ -63,9 +64,11 @@ request: list, get, create, link, prices, choice, labels, sku, weight,
 identifiers, archive, media and feeds. It calls the same catalog functions as the panels, so
 it has their checks and answers. `create` makes a physical Draft and only takes
 `commandId`, `name` and `sku`; Manage stock stays off. `create` with `entryId` and `link`
-write only the panel's `e:` link row, never the page's `commerce_item_id`, which the
-publish check reads; an agent sets and saves that field through EmDash, as the panel's
-`sell()` patch does in the open editor. `sku` changes the SKU through the same
+write the panel's `e:` link row, and the page's next publish sells that product, so an
+agent links a page exactly as the panel does and never sets a page field. `get` with
+`entryId` in place of `catalogItemId` answers that page's product (its `e:` pick, else its
+`p:` sale), or `product: null`; the store's publish check reads a page's product this way,
+Drafts included, where the public item route shows only products on the shop. `sku` changes the SKU through the same
 conditional write as the other product edits, keeping the first create
 command, and, as `setCatalogItemSku`, only once the store proves its unique
 indexes are active; that index refuses a SKU another product has. The
@@ -120,20 +123,28 @@ page is already published stays on sale. Restoring an archived product
 returns it as a Draft from the product page panel.
 
 The store's publish check calls the private route `catalog-items/set-on-sale`
-(`content:publish_any`, POST) with:
+(`content:publish_any`, POST) with the page alone; Commerce finds its product
+(`catalog-page-link-in-commerce-20261029`). A publish sells the panel's pick
+(`e:`), else the page's last sale (`p:`). An unpublish, a delete and a
+title-only write act on what the page last sold (`p:`), else the panel's pick,
+so an unsaved relink never moves what an unpublish takes off. A page Commerce
+holds no link for is refused with `CATALOG_ITEM_NOT_FOUND`, which the store
+reads as a plain page. A store whose template predates this still sends the
+`catalogItemId` it read from the page's own field, and Commerce acts on that
+product as before. The bodies:
 
-- `{ catalogItemId, entryId, onSale: true, name }` when the product page is
+- `{ entryId, onSale: true, name }` when the product page is
   published, where `name` is the published page title (Add product's name
   rules; a title that breaks them is refused and the product stays a Draft).
   The name is saved in the same conditional write, keeping the first
   `creationPayload`; a store that sends no `name` leaves it as it was;
-- `{ catalogItemId, entryId, name }` (no `onSale`) when a published page's
+- `{ entryId, name }` (no `onSale`) when a published page's
   title changed under an overlapping publish: it renames only the product
   this page already sells and never changes its sale state or link, so a
   late title fix cannot put a product back on sale;
-- `{ catalogItemId, entryId, onSale: false }` when it is unpublished;
-- `{ catalogItemId, entryId, onSale: false, deleted: true }` when it is deleted,
-  which also drops the page's link.
+- `{ entryId, onSale: false }` when it is unpublished;
+- `{ entryId, onSale: false, deleted: true }` when it is deleted, which also
+  drops the page's link.
 
 One product has one page, and only the publish check decides which. The
 product itself records the page that sells it (`pageId`), and the check
@@ -181,6 +192,17 @@ In both cases the product keeps its page record, and another page asking for
 it is refused; archiving the product in its panel takes it off the shop.
 Ordering checks by the page's version would close both, at the cost of a
 template change and bundle room this build does not have. Commerce never reads the CMS. The store template owns that call.
+
+## The link in the public catalog
+
+The storefront and agents read a page's product from Commerce, not from the
+page. Each product in `catalog/public` and `catalog/public/item` carries
+`page`, the entry id of the page that sells it (its `pageId`), once a publish
+check has recorded one. `catalog/public/item?pageId=<entryId>` answers the
+product that page's last publish check sold (`p:<entryId>`), and only while
+that product still names the page and is on the shop; otherwise `null`. A
+request names exactly one `itemId` or exactly one `pageId`. Commerce still
+never reads the CMS: the page id is the one its publish check sent.
 
 ## Sidebar folders
 

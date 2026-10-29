@@ -84,7 +84,7 @@ test('extracted Registry guest checkout prepares and fails closed without Paymen
       ['catalog_manual_availability', { recordKind: 'catalog-manual-availability', recordId: item, catalogItemId: item, status: 'in-stock' }],
     ]) insert.run(id, collection, item, JSON.stringify(data), now, now);
     const started = await request.post(endpoint + 'start', { headers: { ...sameOrigin, 'x-commerce-guest-capability': payload.capability.capability },
-      data: { contact: { email: 'consumer@example.test' }, lines: [{ catalogItemId: item, quantity: 1 }] } });
+      data: { contact: { email: 'consumer@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: item, quantity: 1 }] } });
     const result = await started.json();
     expect((result.data ?? result).error?.code).toBe('PAYMENTS_UNAVAILABLE');
     expect(started.headers()['set-cookie']).toBeUndefined();

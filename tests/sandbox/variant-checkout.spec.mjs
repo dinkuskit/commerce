@@ -5,13 +5,19 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { loadMerchantStoreSettings, saveMerchantStoreSettings } from '../../dist/features/store-settings/kernel/index.js';
-import { openPanel, openProductPage, saveEditor, setOnSale } from './product-page.mjs';
+import { openPanel, openProductPage, setOnSale } from './product-page.mjs';
 
 function proofDb() {
   const native = test.info().project.name === "native-variant";
   const url = native ? process.env.COMMERCE_NATIVE_VARIANT_DB : process.env.COMMERCE_PROOF_DB;
   if (!url) throw new Error("missing variant proof database");
   return { native, filename: url.replace(/^file:/, "") };
+}
+
+// A digital basket has no delivery address, so billing is typed in full.
+async function fillBilling(page) {
+  for (const [name, value] of [['Billing name', 'Guest Shopper'], ['Billing address line 1', '9 Billing Way'], ['Billing city', 'Toronto'], ['Billing postal code', 'M5V 1A1'], ['Billing country', 'CA']])
+    await page.getByRole('textbox', { name, exact: true }).fill(value);
 }
 
 test("same-origin storefront renders concrete grouped members", async ({ page, baseURL }) => {
@@ -124,11 +130,11 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       capturedRequirementRevision = shipping.revision;
       for (const [country, message] of [[null, 'Delivery address is required'], ['CA', 'The store does not ship to this country']]) {
         if (country) {
-          await page.getByRole('textbox', {name:'Recipient'}).fill('Variant Shopper');
-          await page.getByRole('textbox', {name:'Address line 1'}).fill('1 Proof Street');
-          await page.getByRole('textbox', {name:'City'}).fill('Proofville');
-          await page.getByRole('textbox', {name:'Postal code'}).fill('00000');
-          await page.getByRole('textbox', {name:'Country'}).fill(country);
+          await page.getByRole('textbox', {name:'Recipient', exact:true}).fill('Variant Shopper');
+          await page.getByRole('textbox', {name:'Address line 1', exact:true}).fill('1 Proof Street');
+          await page.getByRole('textbox', {name:'City', exact:true}).fill('Proofville');
+          await page.getByRole('textbox', {name:'Postal code', exact:true}).fill('00000');
+          await page.getByRole('textbox', {name:'Country', exact:true}).fill(country);
         }
         const addressDenied = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
         await page.getByRole("button", { name: "Start checkout" }).click();
@@ -136,11 +142,11 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
         await expect(page.locator('[data-checkout-result]')).toContainText(message);
         expect(db.prepare('SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection=?').get('dinkus-commerce', collections.carts).n).toBe(cartsBeforeDenial);
       }
-      await page.getByRole('textbox', {name:'Country'}).fill('us');
+      await page.getByRole('textbox', {name:'Country', exact:true}).fill('us');
       const cartsBeforeRegionDenials = db.prepare('SELECT id, data FROM _plugin_storage WHERE plugin_id=? AND collection=? ORDER BY id')
         .all('dinkus-commerce', collections.carts);
       for (const region of ['', 'PR', 'AE', 'Not a state']) {
-        await page.getByRole('textbox', {name:'State or region'}).fill(region);
+        await page.getByRole('textbox', {name:'State or region', exact:true}).fill(region);
         const regionDenied = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
         await page.getByRole('button', {name:'Start checkout'}).click();
         expect((await regionDenied).status()).toBe(400);
@@ -148,7 +154,7 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
         expect(db.prepare('SELECT id, data FROM _plugin_storage WHERE plugin_id=? AND collection=? ORDER BY id')
           .all('dinkus-commerce', collections.carts)).toEqual(cartsBeforeRegionDenials);
       }
-      await page.getByRole('textbox', {name:'State or region'}).fill(' nOrTh cArOlInA ');
+      await page.getByRole('textbox', {name:'State or region', exact:true}).fill(' nOrTh cArOlInA ');
       const checkoutStarted = page.waitForResponse(response => response.url().endsWith('/checkout/guest/start') && response.request().method() === 'POST');
       await page.getByRole("button", { name: "Start checkout" }).click();
       const startResponse = await checkoutStarted;
@@ -200,7 +206,8 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
       expect(attempt.order.variantSelections[0].selections[0].valueLabel).toBe("Large");
       expect(attempt.order.paymentId).toMatch(/^synthetic-payment:/);
       expect(attempt.contactSnapshot).toMatchObject({contact:{email:'variant-shopper@example.test',phone:'555 0142',
-        delivery:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',region:'nOrTh cArOlInA',postalCode:'00000',country:'US'}},requirePhoneNumber:true,revision:capturedRequirementRevision});
+        delivery:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',region:'nOrTh cArOlInA',postalCode:'00000',country:'US'},
+        billing:{name:'Variant Shopper',line1:'1 Proof Street',city:'Proofville',region:'nOrTh cArOlInA',postalCode:'00000',country:'US'}},requirePhoneNumber:true,revision:capturedRequirementRevision});
       expect(attempt.order.contactSnapshot).toEqual(attempt.contactSnapshot);
       expect(JSON.stringify(attempt.payment)).not.toContain('variant-shopper@example.test');
       expect(JSON.stringify(paidProjection)).not.toContain('variant-shopper@example.test');
@@ -262,14 +269,12 @@ test('merchant creates choices and edits independent and bulk prices through the
     const opened = await openProductPage(page, name), ui = opened.panel;
     await ui.getByRole('textbox',{name:'SKU (optional)',exact:true}).fill('MERCHANT-PROOF-SMALL');
     await ui.getByRole('button',{name:'Add price and stock',exact:true}).click();
-    await page.getByRole('dialog',{name:'Review proposed changes'}).getByRole('button',{name:'Apply changes',exact:true}).click();
-    // The page keeps its product only once saved; an unsaved link is offered again on the next step.
-    await saveEditor(page);
+    // Commerce keeps the page's link; nothing waits on the page's Save.
     await expect.poll(() => all(catalog).filter(r => r.name === name).length).toBe(1);
     const root = all(catalog).find(r => r.name === name);
     owned = [root.itemId];
     // The native proof site buys it, so publish the page the way a store's publish check does.
-    if (native) await setOnSale(page.request, { catalogItemId: root.itemId, entryId: opened.id, onSale: true });
+    if (native) await setOnSale(page.request, { entryId: opened.id, onSale: true });
     expect(root.variantProduct.defaultMemberId).toBe(root.itemId);
     expect(root.variantProduct.options).toHaveLength(0);
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(1);
@@ -307,6 +312,7 @@ test('merchant creates choices and edits independent and bulk prices through the
       const capability = all('checkoutGuestCapabilities').find(r => r.capabilityId === guestId);
       guestCartIds.push(capability.cartId);
       await shopper.getByRole('textbox',{name:'Email'}).fill('guest-shopper@example.test');
+      await fillBilling(shopper);
       await shopper.getByRole('button',{name:'Start checkout'}).click();
       await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "pending"');
       await expect(shopper.locator('[data-checkout-result]')).toContainText('\"minor\": \"2400\"');
@@ -398,6 +404,7 @@ test('merchant creates choices and edits independent and bulk prices through the
       const capability = all('checkoutGuestCapabilities').find(r => r.capabilityId === guestId);
       guestCartIds.push(capability.cartId);
       await shopper.getByRole('textbox',{name:'Email'}).fill('medium-ink-shopper@example.test');
+      await fillBilling(shopper);
       await shopper.getByRole('button',{name:'Start checkout'}).click();
       await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "pending"');
       await expect(shopper.locator('[data-frozen-order]')).toContainText('Medium / Ink');

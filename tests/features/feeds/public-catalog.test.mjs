@@ -15,6 +15,7 @@ const names = {
   catalog_media: 'catalogMedia',
   storefront_placeholder_image: 'storefrontPlaceholderImage',
   product_feed_eligibility: 'productFeedEligibility',
+  product_pages: 'product_pages',
 };
 
 function fixture({ nativeNames = false, declared = true } = {}) {
@@ -40,9 +41,10 @@ function fixture({ nativeNames = false, declared = true } = {}) {
     regular: { currency: 'USD', minor: '1250' },
   }])));
   storage.product_feed_eligibility = collection(records);
+  storage.product_pages = collection(new Map(['eligible', 'unset'].map((id) => ['p:page-' + id, { entryId: 'page-' + id, catalogItemId: id }])));
   if (!declared) delete storage.product_feed_eligibility;
   return {
-    records,
+    records, products,
     context(path) {
       return {
         storage: nativeNames ? Object.fromEntries(Object.entries(storage).map(([key, value]) => [names[key], value])) : storage,
@@ -114,6 +116,19 @@ for (const [surface, plugin, nativeNames] of [
     f.records.get('eligible').channels = [];
     assert.deepEqual((await invoke(item, f.context('catalog/public/item?itemId=eligible'))).feedChannels, []);
     assert.deepEqual((await invoke(list, f.context('catalog/public'))).products[0].feedChannels, []);
+  });
+
+  test(`${surface}: the item route finds a product by the page that sells it`, async () => {
+    const f = fixture({ nativeNames });
+    f.products.get('eligible').pageId = 'page-eligible';
+    const listed = (await invoke(list, f.context('catalog/public'))).products;
+    assert.deepEqual(listed.map((product) => product.page), ['page-eligible', undefined, undefined]);
+    assert.deepEqual(await invoke(item, f.context('catalog/public/item?pageId=page-eligible')), listed[0]);
+    assert.equal(await invoke(item, f.context('catalog/public/item?pageId=page-unset')), null, 'a product that names another page');
+    assert.equal(await invoke(item, f.context('catalog/public/item?pageId=page-none')), null);
+    for (const query of ['pageId=page-eligible&itemId=eligible', 'pageId=a&pageId=b', 'pageId=']) {
+      await assert.rejects(() => invoke(item, f.context(`catalog/public/item?${query}`)), /Invalid catalog item query|Catalog unavailable/);
+    }
   });
 
   test(`${surface}: older adapters without eligibility storage never opt in`, async () => {

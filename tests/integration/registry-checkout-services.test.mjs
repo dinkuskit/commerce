@@ -42,7 +42,7 @@ import {
 } from '../../dist/features/checkout/index.js';
 
 const PREPARE = 'checkout/guest/prepare', START = 'checkout/guest/start', STATUS = 'checkout/guest/status';
-const basket = { contact: { email: 'shopper@example.test' }, lines: [{ catalogItemId: 'hat', quantity: 1 }] };
+const basket = { contact: { email: 'shopper@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: 'hat', quantity: 1 }] };
 
 // Checkout schedules nothing of its own: the site scheduler holds only the 5-minute background
 // check, which the first request registers when switching on did not.
@@ -88,7 +88,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
-  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'admin.editor-draft:patch', 'media:read', 'network:request', 'email:send']);
+  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'media:read', 'network:request', 'email:send']);
   assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
@@ -289,19 +289,23 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   const products = (await state.collections.catalog_items.query()).items.filter(row => row.data.recordKind === 'catalog-item');
   assert.equal(products.length, 1);
   const id = products[0].id;
-  assert.deepEqual(created.patch, { type: 'editor-draft-patch', operations: [{ op: 'set', field: 'commerce_item_id', value: id }] });
-  assert.deepEqual(await state.plugin.invokeRoute('catalog-items/set-on-sale', { catalogItemId: id, entryId: 'page-public-hat', onSale: true },
+  assert.equal(created.patch, undefined, 'the page is never patched; Commerce holds its link');
+  // The publish check sends the page alone, and Commerce finds the product it links.
+  assert.deepEqual(await state.plugin.invokeRoute('catalog-items/set-on-sale', { entryId: 'page-public-hat', onSale: true },
     { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog-items/set-on-sale`, method: 'POST' }), { changed: true });
   assert.equal((await admin({ type: 'form_submit', action_id: 'save:' + id, values: { regular: '4.00', sale: '3.00', stockStatus: 'in-stock' } })).toast.type, 'success');
   const publicList = () => state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
-  const publicItem = () => state.plugin.invokeRoute('catalog/public/item', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public/item?itemId=${id}`, method: 'GET' });
+  const publicItem = (query = `itemId=${id}`) => state.plugin.invokeRoute('catalog/public/item', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public/item?${query}`, method: 'GET' });
   const catalog = await publicList();
   // Add price and stock makes a physical product, which carries its one-member variant group.
   const { variants } = catalog.products[0] ?? {};
   assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment]), [[id, 'physical']]);
-  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], variants };
+  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], page: 'page-public-hat', variants };
   assert.deepEqual(catalog, { products: [expectedProduct] });
   assert.deepEqual(await publicItem(), expectedProduct);
+  assert.deepEqual(await publicItem('pageId=page-public-hat'), expectedProduct, 'the storefront finds a product by its page');
+  assert.equal(await publicItem('pageId=page-other'), null);
+  await assert.rejects(publicItem(`pageId=page-public-hat&itemId=${id}`));
   for (const enabled of [true, false]) {
     const saved = await admin({ type: 'form_submit', action_id: 'save:' + id, values: {
       regular: '4.00', sale: '3.00', stockStatus: 'in-stock',
@@ -315,7 +319,7 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   }
   // An admin-created product has no fulfillment mark, so it counts as physical and needs a US address.
   await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
-  const input = { contact: { email: 'shopper@example.test', delivery: syntheticDelivery }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
+  const input = { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: catalog.products[0].id, quantity: 2 }] };
   const { token, result } = await start(state, input);
   assert.equal(result.ok, true);
   assert.equal(state.requests[0].total.minor, '600');
@@ -676,7 +680,7 @@ test('when the scheduler refuses at switch-on, the next request registers the ba
   assertOnlyBackgroundCheck(state);
   // Later requests leave the scheduler alone.
   const scheduled = state.counts.scheduler;
-  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery },
+  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } },
     lines: [{ catalogItemId: 'hat', quantity: 1 }] }, prepared.capability.capability);
   assert.equal(started.ok, true);
   assert.equal(state.counts.scheduler, scheduled);
@@ -765,7 +769,7 @@ async function physicalShipOrder(state) {
   await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
   const prepared = await state.invoke(PREPARE);
   const token = prepared.capability.capability;
-  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery }, lines: [{ catalogItemId: 'hat', quantity: 2 }] }, token);
+  const started = await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: 'hat', quantity: 2 }] }, token);
   assert.equal(started.ok, true);
   state.setPaid();
   assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
@@ -860,7 +864,7 @@ test('Commerce trades its store key at DinkusKit.com once per call, only for the
     await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
     const hat = await state.collections.catalog_items.get('hat');
     await state.collections.catalog_items.put('hat', { ...hat, fulfillment: 'physical', weightOz: 4.5 });
-    assert.equal((await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery },
+    assert.equal((await state.invoke(START, { contact: { email: 'shopper@example.test', delivery: syntheticDelivery, billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } },
       lines: [{ catalogItemId: 'hat', quantity: 1 }] }, token)).checkout.state, 'pending');
     assert.ok(state.counts.transport >= 2);
     assert.deepEqual(state.trades, [trade('payments:checkout')]);

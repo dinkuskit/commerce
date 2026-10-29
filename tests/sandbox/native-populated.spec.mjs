@@ -150,7 +150,7 @@ test.describe("Native populated-browser continuity fixture", () => {
     const bootPageId = (createdData.item ?? createdData).id;
     await page.goto("/_emdash/admin/content/products/" + bootPageId);
     let panel = await openPanel(page);
-    // A page saved before the panel existed is linked once, by the product's SKU; the page already names it, so nothing waits on Save.
+    // A page saved before the panel existed is linked once, by the product's SKU; Commerce keeps the link.
     await panel.getByRole("textbox", { name: "Or its SKU", exact: true }).fill("BOOT-01");
     await panel.getByRole("button", { name: "Sell it here", exact: true }).click();
 

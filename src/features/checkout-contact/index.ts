@@ -27,8 +27,10 @@ function invalid(code: CheckoutContactErrorCode): never {
 }
 
 
+const CONTACT_KEYS = ["email", "phone", "delivery", "billing"] as const;
+
 function hasOnlyContactKeys(value: Record<string, unknown>): boolean {
-  return Object.keys(value).every((key) => key === "email" || key === "phone" || key === "delivery");
+  return Object.keys(value).every((key) => CONTACT_KEYS.includes(key as never));
 }
 
 const ADDRESS_FIELD_MAX_LENGTH = 200;
@@ -50,19 +52,21 @@ function isEligibleUsRegion(region: string | undefined): boolean {
   return US_DELIVERY_REGIONS.has(region?.trim().toUpperCase() ?? "");
 }
 
-function normalizeDelivery(value: unknown): CheckoutDeliveryAddress {
-  if (!isObject(value) || !Object.keys(value).every((key) => ADDRESS_FIELDS.includes(key))) invalid("DELIVERY_INVALID");
+/** Delivery and billing addresses share one shape and one check; only the refusal names which one. */
+function normalizeDelivery(value: unknown, billing?: boolean): CheckoutDeliveryAddress {
+  const bad = billing ? "BILLING_INVALID" : "DELIVERY_INVALID";
+  if (!isObject(value) || !Object.keys(value).every((key) => ADDRESS_FIELDS.includes(key))) invalid(bad);
   const address: Record<string, string> = {};
   for (const field of ADDRESS_FIELDS) {
     const raw = value[field];
     if (raw === undefined && OPTIONAL_ADDRESS_FIELDS.has(field)) continue;
-    if (typeof raw !== "string" || CONTROL_CHARACTER.test(raw) || raw.length > ADDRESS_FIELD_MAX_LENGTH) invalid("DELIVERY_INVALID");
+    if (typeof raw !== "string" || CONTROL_CHARACTER.test(raw) || raw.length > ADDRESS_FIELD_MAX_LENGTH) invalid(bad);
     const text = raw.trim();
     if (text) address[field] = `${text}`;
-    else if (!OPTIONAL_ADDRESS_FIELDS.has(field)) invalid("DELIVERY_REQUIRED");
+    else if (!OPTIONAL_ADDRESS_FIELDS.has(field)) invalid(billing ? bad : "DELIVERY_REQUIRED");
   }
   address.country = address.country.toUpperCase();
-  if (!/^[A-Z]{2}$/.test(address.country)) invalid("DELIVERY_INVALID");
+  if (!/^[A-Z]{2}$/.test(address.country)) invalid(bad);
   return address as unknown as CheckoutDeliveryAddress;
 }
 
@@ -107,7 +111,8 @@ export function normalizeCheckoutContactInput(raw: unknown): NormalizedCheckoutC
   const email = normalizeEmail(raw.email);
   const phone = Object.hasOwn(raw, "phone") ? normalizePhone(raw.phone) : undefined;
   const delivery = Object.hasOwn(raw, "delivery") ? normalizeDelivery(raw.delivery) : undefined;
-  return { email, ...(phone === undefined ? {} : { phone }), ...(delivery ? { delivery } : {}) };
+  const billing = Object.hasOwn(raw, "billing") ? normalizeDelivery(raw.billing, true) : undefined;
+  return { email, ...(phone === undefined ? {} : { phone }), ...(delivery ? { delivery } : {}), ...(billing ? { billing } : {}) };
 }
 
 /**
@@ -146,14 +151,15 @@ function validateRequirements(value: unknown): CheckoutContactRequirements {
 /**
  * Freezes the shopper's contact. `needsDelivery` is true when the basket holds a
  * physical item: the address is then required and must go to a shipping country.
- * A digital-only basket keeps no address even when one was sent.
+ * A digital-only basket keeps no delivery address even when one was sent.
+ * Every checkout keeps a billing address (commerce-billing-address-001).
  */
 export async function captureCheckoutContact(
   raw: unknown,
   loadRequirements: CheckoutContactRequirementsLoader,
   needsDelivery = false,
 ): Promise<CheckoutContactSnapshot> {
-  // A digital-only basket is never asked for an address, so whatever was sent is dropped unread.
+  // A digital-only basket is never asked for a delivery address, so whatever was sent is dropped unread.
   if (!needsDelivery && isObject(raw) && Object.hasOwn(raw, "delivery")) {
     const { delivery: _ignored, ...rest } = raw;
     raw = rest;
@@ -177,16 +183,28 @@ export async function captureCheckoutContact(
     if (!requirements.shippingCountries.includes(contact.delivery.country)) invalid("DELIVERY_COUNTRY_UNAVAILABLE");
     if (contact.delivery.country === "US" && !isEligibleUsRegion(contact.delivery.region)) invalid("DELIVERY_INVALID");
   }
+  // Every checkout carries a billing address, in any country; the storefront sends a copy when it equals delivery.
+  if (!contact.billing) invalid("BILLING_INVALID");
 
-  const detachedContact: NormalizedCheckoutContact = {
-    email: `${contact.email}`,
-    ...(contact.phone === undefined ? {} : { phone: `${contact.phone}` }),
-    ...(needsDelivery ? { delivery: Object.freeze({ ...contact.delivery! }) } : {}),
-  };
-  return Object.freeze({
+  return freezeCheckoutContactSnapshot({
     schema: CHECKOUT_CONTACT_SNAPSHOT_SCHEMA,
-    contact: Object.freeze(detachedContact),
+    contact,
     requirePhoneNumber: requirements.requirePhoneNumber,
-    revision: requirements.revision === null ? null : `${requirements.revision}`,
+    revision: requirements.revision,
+  });
+}
+
+/** A frozen copy detached from its source, keeping only the v1 snapshot fields. */
+export function freezeCheckoutContactSnapshot(snapshot: CheckoutContactSnapshot): CheckoutContactSnapshot {
+  const contact: Record<string, unknown> = {};
+  for (const key of CONTACT_KEYS) {
+    const value = snapshot.contact[key];
+    if (value !== undefined) contact[key] = typeof value === "string" ? `${value}` : Object.freeze({ ...value });
+  }
+  return Object.freeze({
+    schema: snapshot.schema,
+    contact: Object.freeze(contact) as unknown as NormalizedCheckoutContact,
+    requirePhoneNumber: snapshot.requirePhoneNumber,
+    revision: snapshot.revision === null ? null : `${snapshot.revision}`,
   });
 }

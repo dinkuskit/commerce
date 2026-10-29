@@ -181,6 +181,17 @@ export function deliveryOf(record: OrderRecord): CheckoutDeliveryAddress | undef
   return record.delivery ?? record.paidOrder.contactSnapshot?.contact?.delivery;
 }
 
+/** The frozen billing copy; orders paid before billing was recorded have none. */
+export function billingOf(record: OrderRecord): CheckoutDeliveryAddress | undefined {
+  return record.paidOrder.contactSnapshot?.contact?.billing;
+}
+
+/** Billing equals the current delivery address, field for field. */
+export function billingMatchesDelivery(record: OrderRecord): boolean {
+  const billing = billingOf(record), delivery = deliveryOf(record);
+  return !!billing && !!delivery && canonical(billing) === canonical(delivery);
+}
+
 /** What agents and Ship both see of an order: who it is, its version and status, the test mark, where it goes and who to tell. */
 export function orderFacts(record: OrderRecord) {
   const order = record.paidOrder;
@@ -206,7 +217,12 @@ export async function listOrders(collection: Pick<OrdersCollection, "query">): P
     if (record.delivery !== undefined) normalizeCheckoutDelivery(record.delivery);
     orders.push(record);
   });
-  return orders.sort((a, b) => a.paidOrder.orderId < b.paidOrder.orderId ? -1 : a.paidOrder.orderId > b.paidOrder.orderId ? 1 : 0);
+  return orders.sort((a, b) => later(b.paidOrder.orderId, a.paidOrder.orderId));
+}
+
+/** Sorts the later of two strings first. */
+function later(a: string, b: string): number {
+  return a < b ? 1 : a > b ? -1 : 0;
 }
 
 /** Shopper-safe order summary for a verified customer email. */
@@ -234,12 +250,13 @@ export interface ShopperOrderSummary {
 /** Projects one order record for its verified shopper; omits internal IDs, test flags and provider bindings. */
 export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
   const order = record.paidOrder;
-  const p = order.pricing;
+  const p = order.pricing, phone = order.contactSnapshot?.contact?.phone;
+  const { orderId, number, status, shipTo, completed } = orderFacts(record);
   return structuredClone({
-    orderId: order.orderId,
+    orderId,
     receiptId: order.receiptId,
-    number: record.number ?? null,
-    status: (record.completed ? "completed" : "processing") as "completed" | "processing",
+    number,
+    status: status as "completed" | "processing",
     paidAt: order.paidAt ?? null,
     total: order.total,
     lines: order.lines,
@@ -253,19 +270,15 @@ export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
           finalTotal: p.finalTotal,
         }
       : null,
-    delivery: deliveryOf(record) ?? null,
-    phone:
-      typeof (order.contactSnapshot as { contact?: { phone?: unknown } } | undefined)?.contact?.phone === "string"
-        ? order.contactSnapshot!.contact.phone!
-        : null,
-    completed: record.completed ?? null,
+    delivery: shipTo,
+    phone: typeof phone === "string" ? phone : null,
+    completed,
   });
 }
 
 function paidAtMillis(paidAt: string | undefined): number {
-  if (!paidAt) return Number.NEGATIVE_INFINITY;
-  const parsed = Date.parse(paidAt);
-  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+  const parsed = Date.parse(paidAt ?? "");
+  return Number.isFinite(parsed) ? parsed : -Infinity;
 }
 
 /** Every kept order whose frozen checkout email matches the verified email (case-folded), newest first. */
@@ -281,18 +294,10 @@ export async function listOrdersForEmail(
       const rawEmail = (record.paidOrder.contactSnapshot as { contact?: { email?: unknown } } | undefined)?.contact?.email;
       return typeof rawEmail === "string" && rawEmail.trim().toLowerCase() === target;
     })
-    .sort((a, b) => {
-      const aTime = paidAtMillis(a.paidOrder.paidAt);
-      const bTime = paidAtMillis(b.paidOrder.paidAt);
-      if (aTime !== bTime) return bTime - aTime;
-      const aPaid = a.paidOrder.paidAt ?? "";
-      const bPaid = b.paidOrder.paidAt ?? "";
-      if (aPaid !== bPaid) return aPaid > bPaid ? -1 : 1;
-      const aNum = a.number ?? -1;
-      const bNum = b.number ?? -1;
-      if (aNum !== bNum) return bNum - aNum;
-      return a.paidOrder.orderId > b.paidOrder.orderId ? -1 : a.paidOrder.orderId < b.paidOrder.orderId ? 1 : 0;
-    })
+    // Newest paid first; two unparseable times compare as NaN and fall through to the next key.
+    .sort((a, b) => paidAtMillis(b.paidOrder.paidAt) - paidAtMillis(a.paidOrder.paidAt) ||
+      later(a.paidOrder.paidAt ?? "", b.paidOrder.paidAt ?? "") || (b.number ?? -1) - (a.number ?? -1) ||
+      later(a.paidOrder.orderId, b.paidOrder.orderId))
     .map(projectShopperOrder);
 }
 

@@ -153,7 +153,8 @@ const COMMERCE_EDITOR_PANELS = [{
   title: "Dinkus Commerce",
   route: "product-panel",
   collections: ["products"],
-  draft: { read: { fields: ["title", "commerce_item_id"] }, patch: { fields: ["commerce_item_id"] } },
+  // It reads only the title, to name a new product; the page-to-product link lives in Commerce.
+  draft: { read: { fields: ["title"] } },
 }, {
   // The product's Commerce picture and gallery, in their own sidebar card (catalog-media-panel-20261027).
   id: "product-media",
@@ -311,11 +312,12 @@ const publicCatalogItemRoute = {
   request: { body: "none" },
   cacheControl: "no-store",
   handler: async (ctx: Parameters<PluginRoute["handler"]>[0]) => {
-    const query = new URL(ctx.request.url).searchParams;
-    if ([...query.keys()].some(key => key !== "itemId") || query.getAll("itemId").length !== 1) {
+    // Exactly one itemId, or exactly one pageId for the product a published page sells.
+    const query = new URL(ctx.request.url).searchParams, key = query.has("pageId") ? "pageId" : "itemId";
+    if ([...query.keys()].some(name => name !== key) || query.getAll(key).length !== 1) {
       throw new Error("Invalid catalog item query");
     }
-    return readPublicCatalogItem(nativePublicContext(ctx), query.get("itemId")!);
+    return readPublicCatalogItem(nativePublicContext(ctx), query.get(key)!, key === "pageId");
   },
 } satisfies PluginRoute;
 
@@ -343,7 +345,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
     id: COMMERCE_PLUGIN_ID,
     version: COMMERCE_PLUGIN_VERSION,
     // Product media reads alt text and dimensions live from the Media Library.
-    capabilities: ["media:read", "network:request", "email:send", "admin.editor-draft:read", "admin.editor-draft:patch"],
+    capabilities: ["media:read", "network:request", "email:send", "admin.editor-draft:read"],
     allowedHosts: ["payments.dinkuskit.com"],
     storage: {
       catalogItems: {

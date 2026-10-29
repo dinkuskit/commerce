@@ -11,7 +11,7 @@ import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, Checko
 import {
   captureCheckoutContact,
   CheckoutContactError,
-  type CheckoutContactSnapshot,
+  freezeCheckoutContactSnapshot,
 } from "../checkout-contact/index.js";
 
 export class CheckoutError extends Error {}
@@ -158,21 +158,6 @@ function samePaymentSession(left: PaymentSession, right: PaymentSession): boolea
     left.createdAt === right.createdAt && left.expiresAt === right.expiresAt;
 }
 
-function freezeContactSnapshot(
-  snapshot: CheckoutContactSnapshot | undefined,
-): CheckoutContactSnapshot | undefined {
-  if (!snapshot) return undefined;
-  return Object.freeze({
-    schema: snapshot.schema,
-    contact: Object.freeze({
-      email: `${snapshot.contact.email}`,
-      ...(snapshot.contact.phone === undefined ? {} : { phone: `${snapshot.contact.phone}` }),
-      ...(snapshot.contact.delivery ? { delivery: Object.freeze({ ...snapshot.contact.delivery }) } : {}),
-    }),
-    requirePhoneNumber: snapshot.requirePhoneNumber,
-    revision: snapshot.revision === null ? null : `${snapshot.revision}`,
-  });
-}
 function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void {
   if (value.outcome === "unknown") return;
   if (value.attemptId !== attempt.attemptId) fail("Payment identity mismatch");
@@ -319,7 +304,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
     if (attempt.phase === "released") return attempt;
     const next = structuredClone(attempt);
     if (attempt.contactSnapshot) {
-      next.contactSnapshot = freezeContactSnapshot(attempt.contactSnapshot);
+      next.contactSnapshot = freezeCheckoutContactSnapshot(attempt.contactSnapshot);
     }
     if (attempt.phase === "reserving") {
       if (!REGISTRY_BUILD && attempt.stock) {

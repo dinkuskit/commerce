@@ -4,8 +4,9 @@ Commerce stores one plugin-scoped `merchantStoreSettings` record through
 EmDash `ctx.settings`. Writes use the record's opaque revision with
 `compareAndSet`; there are no unconditional writes or competing stores.
 
-The merchant may select a store country, an independent selling/customer
-country list, and an independent physical shipping-destination list. Country
+The merchant may select a store country and a physical shipping-destination
+list. The record also keeps a `sellingCountries` list for compatibility (see
+below). Country
 codes are recognized [ISO 3166-1 alpha-2](https://www.iso.org/iso-3166-country-codes.html) values, normalized to uppercase and
 deduplicated. On the first store-country save, an omitted list defaults to the
 selected country. Later store-country changes preserve omitted lists. Explicit

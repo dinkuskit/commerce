@@ -27,7 +27,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 | Page | What it does |
 | --- | --- |
-| **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment and shipping. |
+| **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment, the customer's email and phone, and the Ship to and Bill to addresses. |
 | **Commerce settings** | Connect, checkout settings, catalog choices (hide out-of-stock products, a placeholder image for products without one), and **Products without a page**, each with **Make a page**. |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
@@ -42,14 +42,14 @@ country is chosen.
 
 Checkout checks the shipping destinations for a new physical checkout. With no
 destinations enabled, a physical basket cannot proceed to payment. There is no
-separate selling/customer country list. These settings do not collect a
+separate selling/customer country list, and billing may be in any country. These settings do not collect a
 billing address or determine taxes or currency.
 
 ## One product screen
 
 **Content > Products** is the one place to manage a product. Each product page has two panels beside the editor: **Dinkus Commerce** and **Product image & gallery**.
 
-- On a page with no product, press **Add price and stock**. It makes a Draft product named from the page title, with the SKU you type or one made from the title, and links it to the page. EmDash asks you to apply the link; the page keeps it when you press **Save**. The panel also lists products without a page, so one can be sold on this page instead.
+- On a page with no product, press **Add price and stock**. It makes a Draft product named from the page title, with the SKU you type or one made from the title, and links it to the page. Commerce keeps the link, so there is no product box on the page to fill in or save. The panel also lists products without a page, so one can be sold on this page instead.
 - On a linked page, the panel shows the product's state (Draft, On sale, Published: off the shop or Archived) and SKU, and edits its price and sale price, stock status, choices, weight, and GTIN, MPN and Brand. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
 - A product starts as a simple product, and the panel says so. To sell it in more than one version, add a choice such as Size; the product becomes variable and each choice gets its own price, SKU and stock.
 - **Product image & gallery** chooses the product's picture and up to eight gallery pictures from the Media Library, in order. It works once the page sells a product; until then it points to **Dinkus Commerce**.
@@ -58,7 +58,7 @@ billing address or determine taxes or currency.
 
 Publishing the page puts the product on sale, and unpublishing or deleting the page takes it off. A new product is a Draft, not buyable, until its page is published. The store's publish check makes this change through a private Commerce route; Commerce itself never reads the CMS.
 
-To show this panel, Commerce `0.6.0` asks for two new permissions when it is installed or upgraded: `admin.editor-draft:read`, to read the page's title and product link, and `admin.editor-draft:patch`, to set only the page's `commerce_item_id` field.
+To show this panel, Commerce asks for the `admin.editor-draft:read` permission when it is installed or upgraded, to read the page's title. Commerce `0.6.0` also asked for `admin.editor-draft:patch`, to fill the page's **Commerce product** field; later versions keep the link themselves and no longer ask for it. Update the store's template along with Commerce: a template that still reads the page's **Commerce product** field when it publishes puts only pages with that field filled on sale, and new pages no longer get it.
 
 ## Saving and upgrading catalog data
 
@@ -112,8 +112,8 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 
 | Route | Method | Contract |
 | --- | --- | --- |
-| `catalog/public` | GET | A page of public products and an optional opaque cursor. |
-| `catalog/public/item?itemId=…` | GET | One projected product or `null`; no canonical page URL. |
+| `catalog/public` | GET | A page of public products and an optional opaque cursor. Each product carries `page`, the entry id of the page that sells it, once that page is published. |
+| `catalog/public/item?itemId=…` or `?pageId=…` | GET | One projected product or `null`; no canonical page URL. With `pageId`, the product that published page sells. |
 | `policies/public` | GET | The store's published policies. |
 | `checkout/guest/readiness` | GET | The installed checkout readiness response. |
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
@@ -129,19 +129,19 @@ The catalog accepts only its documented query keys. Continue pagination until no
 
 Checkout rereads authoritative prices and availability. Never send a browser-computed price, tenant, provider choice, or order status as authority. See [site integration](/docs/developers/integrate) for the purchase flow.
 
-Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins.
+Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins. Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same.
 
 Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:
 
 | `op` | Does |
 | --- | --- |
 | `list` | Lists products: id, name, SKU, and when it was archived. |
-| `get` | One product (`catalogItemId`) with its choices, prices, pictures and feed channels. |
+| `get` | One product (`catalogItemId`) with its choices, prices, pictures and feed channels. With `entryId` instead, the product that page sells: the one its panel picked, else the one it last sold; `product: null` when it sells none. |
 | `create` | Makes a physical Draft from `name` and `sku`, and links it to the product page `entryId` when given. Send a `commandId` so a retry finds the same product. |
 | `link` | Links a product to the product page `entryId`. |
 | `prices`, `choice`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, choices and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |
 
-Publishing the page still puts the product on sale, so an agent sells a product by creating it, pricing it and publishing its page. `create` with `entryId` and `link` only record the link for the Dinkus Commerce panel. The page's own **Commerce product** field (`commerce_item_id`) is what the store's publish check reads, so the agent also sets that field to the product's `catalogItemId` and saves the page through EmDash (its content API or MCP) before publishing. The panel does this step itself when a person presses Save. Manage stock stays off, as in the panels. A refused write answers with the reason.
+Publishing the page still puts the product on sale, so an agent sells a product by creating it with the page's `entryId` (or linking it), pricing it and publishing its page through EmDash. Commerce keeps the link, as it does for the panel, and the page has no product field to set. A store whose template predates this still reads the page's own **Commerce product** field (`commerce_item_id`) when it publishes; there, the agent also sets that field to the product's `catalogItemId`, or the store is updated first. Manage stock stays off, as in the panels. A refused write answers with the reason.
 
 A write may carry `expected`: the first 12 hex digits of the SHA-256 of the product's `get` answer as JSON (for a choice, of its product, named as `productId`). Commerce then saves only while the product still reads that way, so an agent never overwrites a change it did not see.
 
@@ -150,6 +150,10 @@ The `dinkus-commerce` command-line tool wraps these as `products show`, `create`
 Select CLI configuration with `--profile <name>` or `DINKUS_COMMERCE_PROFILE`. A requested name must be explicitly defined in a config file's `profiles` object; inherited names do not count. A missing name or malformed selected profile stops with exit `2` before any HTTP request, rather than silently sending a change to the base site. Profile maps and matching entries must be JSON objects; an explicitly defined empty object still inherits that file's base metadata. Existing configuration precedence and restrictions on sending credentials to project-configured sites are unchanged. See the repository's [CLI specification](https://github.com/dinkuskit/commerce/blob/main/docs/CLI-SPEC.md#configuration-and-authentication) for paths and examples.
 
 The CLI's `--timeout` covers each request through reading its response body. A timeout or dropped connection while receiving a response exits with code `3`, even after response headers arrive, and is not automatically retried. For a write, read the product or order before submitting again: an incomplete response does not prove nothing was saved.
+
+## Billing addresses
+
+Every checkout needs a billing address. The storefront asks for it with "Billing address same as delivery address" ticked by default and sends a full copy; a basket with only digital items asks for it directly. The billing address may be in any country, including when delivery is US only. It is kept with the order as the shopper gave it and cannot be changed after payment; **Correct address** on an order changes only the delivery address. Orders paid before billing addresses were recorded show **Not recorded**.
 
 ## US delivery addresses
 
