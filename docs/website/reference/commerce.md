@@ -150,7 +150,7 @@ Shopper accounts are stored by Commerce. They are not EmDash users and give no a
 
 ## Installed checkout and orders
 
-The Registry build trades its own store key at DinkusKit.com for short-lived scoped passes and calls hosted Payments and Ship with them. The key never goes to Payments, Ship or a store page. A store that is not connected, or whose checkout settings are missing or turned off, keeps checkout unavailable.
+The Registry build trades its own store key at DinkusKit.com for short-lived scoped passes and calls hosted Payments and Ship with them. The key never goes to Payments, Ship or a store page. A store that is not connected, or whose checkout settings are missing or turned off, keeps checkout unavailable. An explicit readiness flag from Payments other than the boolean `true` blocks creation of a new payment session. Historical payment lookups do not require current payment readiness.
 
 Commerce runs a background check every five minutes while it is switched on. It settles payments a shopper never returned from, refreshes the checkout settings, then brings Orders and Ship up to date. If the site's scheduler fails or stalls when Commerce is switched on, the next request to Commerce registers the check instead, so the plugin does not need switching off and on.
 
