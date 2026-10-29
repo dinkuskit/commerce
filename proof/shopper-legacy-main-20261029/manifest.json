@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "b75fe5a2297f211e963a33a194661b117944a527",
+  "parentCommit": "4e4ca758bb28edee691a948353c046e1a2357faf",
+  "originalRepair": "9801909abf7a671bc00ffd6a774cf37453dc86de",
+  "scope": "Completed source gates; final proof-only head qualification is separately reported in PR",
+  "sourceValidation": {
+    "completedAt": "2026-10-29T22:11:56Z",
+    "unit": {
+      "pass": 833,
+      "fail": 0,
+      "skipped": 0
+    },
+    "integration": {
+      "pass": 112,
+      "fail": 0,
+      "skipped": 0
+    },
+    "historicalProbeBefore": {
+      "cases": 2,
+      "expectedUnavailable": 2
+    },
+    "historicalProbeAfter": {
+      "cases": 2,
+      "profileReadsSucceeded": 2
+    },
+    "gates": [
+      "build",
+      "typecheck",
+      "audit:repo",
+      "ledger validate",
+      "diff/clean",
+      "dist/extracted backend equality/size/hash"
+    ]
+  },
+  "baseline": {
+    "customer": {
+      "pass": 10,
+      "fail": 8,
+      "expectedExit": 1
+    },
+    "compiledWorkerd": {
+      "pass": 2,
+      "fail": 2,
+      "expectedExit": 1
+    },
+    "completedAt": "2026-10-29T22:01:44Z"
+  },
+  "historicalProducer": {
+    "commit": "8823272c92a619463effbb4d339a910f1810e921",
+    "files": [
+      {
+        "path": "src/features/orders/store.ts",
+        "sha256": "54662dc2a75218c290f18956597c17f673f01179f225fcebd386659db8025e4b"
+      },
+      {
+        "path": "src/handoffs/paid-order.ts",
+        "sha256": "0b4e17521999c8ff6a69bbf511d6c4d8a3f1e5c43a44a09f00293fb8752dae6c"
+      }
+    ],
+    "compatibilityReaderCommit": "853f9a674eed518e39cc41b8a4186b1b07a4f899",
+    "limitations": "Source API execution, not official old Registry installation or proof of historical first-party checkout behavior"
+  },
+  "backend": {
+    "bytes": 130729,
+    "limit": 131072,
+    "headroom": 343,
+    "sha256": "e84273302ff37c769af1d73310b0ed1e1fbd245acec0e7186739e2ef8807735f",
+    "parentBytes": 130676,
+    "deltaBytes": 53
+  },
+  "files": [
+    {
+      "path": ".changeset/shopper-legacy-contact.md",
+      "bytes": 488,
+      "sha256": "264c079e3d4390b8f737fdbb7958c1c2a65534c044fd363e8d690482776e988f"
+    },
+    {
+      "path": "docs/implementation/shopper-profile-seeding.md",
+      "bytes": 2397,
+      "sha256": "dd1663e0038848c3f32f72a063ec188ff566f252d00799bb9691fe752688f1f1"
+    },
+    {
+      "path": "docs/website/reference/commerce.md",
+      "bytes": 20825,
+      "sha256": "55037ec03d3b9a7e27263e046a4e9989d18f53062e5a5dd70e35bc227a356b6b"
+    },
+    {
+      "path": "proof/shopper-legacy-main-20261029/legacy-writer-probe.mjs",
+      "bytes": 6398,
+      "sha256": "65e8e3a7dfd1cbdf1ffe0e2755724727fd039a50d8137375130f6160e2ba86f1"
+    },
+    {
+      "path": "src/features/orders/store.ts",
+      "bytes": 15181,
+      "sha256": "3d3696cb310efaded9f6465b8c829275dbaacc3bb214275f1dc471528627ac0e"
+    },
+    {
+      "path": "tests/features/customers/shopper-accounts.test.mjs",
+      "bytes": 33852,
+      "sha256": "6ed67cd616c8caf001b8a5325d640c7038f488828f1abe65ebaefd4a9a2dc748"
+    },
+    {
+      "path": "tests/integration/shopper-accounts-runtime-cases.mjs",
+      "bytes": 24550,
+      "sha256": "b4d3eec63d264585b5f3b805d0a923184f13dd8adcfa25efe1f3cc96c32bd35f"
+    }
+  ]
+}

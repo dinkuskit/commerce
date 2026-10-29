@@ -1,0 +1,26 @@
+{
+  "scope": "historical-source compatibility; real native EmDash SQLite repositories; not installed-release/payment/checkout proof",
+  "expected": "after",
+  "observations": [
+    {
+      "case": "blank-phone",
+      "historicalCommit": "8823272c92a619463effbb4d339a910f1810e921",
+      "historicalStored": true,
+      "currentReceiverRefused": true,
+      "currentKeptReaderAdmitted": true,
+      "signInSucceeded": true,
+      "nextProfileSucceeded": true,
+      "keptUnchanged": true
+    },
+    {
+      "case": "incomplete-delivery",
+      "historicalCommit": "8823272c92a619463effbb4d339a910f1810e921",
+      "historicalStored": true,
+      "currentReceiverRefused": true,
+      "currentKeptReaderAdmitted": true,
+      "signInSucceeded": true,
+      "nextProfileSucceeded": true,
+      "keptUnchanged": true
+    }
+  ]
+}
