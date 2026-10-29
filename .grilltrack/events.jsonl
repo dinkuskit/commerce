@@ -628,3 +628,5 @@
 {"action": "decision_reviewed", "at": "2026-10-27T23:30:50+00:00", "data": {"classifications": ["required_fix"], "decision_id": "catalog-atomic-saves-203", "ref": "https://github.com/dinkuskit/commerce/pull/204#issuecomment-6455919635", "result": "findings", "reviewed_at": "2026-10-27T23:30:50+00:00", "source_identity": "git:4c57e19e3cf3b4e458ccc00fe1ff7986f15b15c2"}, "event_id": "7e0524af-935b-48bb-a7a0-eb1a4f06b2fd"}
 {"action": "decision_implemented", "at": "2026-10-27T23:30:50+00:00", "data": {"decision_id": "catalog-atomic-saves-203"}, "event_id": "6c229d86-622b-4bdb-b8c2-070aa7443a20"}
 {"action": "decision_verified", "at": "2026-10-27T23:32:50+00:00", "data": {"decision_id": "catalog-atomic-saves-203"}, "event_id": "d15a3c66-7634-47df-9f25-d0fcd540acfa"}
+{"action": "decision_proposed", "at": "2026-10-29T16:02:13+00:00", "data": {"decision_id": "catalog-page-link-in-commerce-20261029"}, "event_id": "0efb3ae0-e37d-4002-b533-e303ebe34afe"}
+{"action": "decision_locked", "at": "2026-10-29T16:02:14+00:00", "data": {"decision_id": "catalog-page-link-in-commerce-20261029"}, "event_id": "c6db0cbd-1a20-47b8-a8b6-1f7e26971dc1"}
