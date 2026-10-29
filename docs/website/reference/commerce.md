@@ -32,6 +32,19 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 
+## Merchant store settings
+
+In **Commerce settings**, choose the store country and the independent
+selling/customer and physical shipping-destination lists. On the first country
+save, blank lists default to that country. Later changes to the store country
+preserve the lists; a saved empty list enables no countries or destinations.
+The phone requirement can be saved before a country is chosen.
+
+Checkout checks the shipping-destination list for a new physical checkout.
+With no destinations enabled, a physical basket cannot proceed to payment.
+The selling/customer list is stored but is not enforced by checkout. These
+settings do not collect a billing address or determine taxes or currency.
+
 ## One product screen
 
 **Content > Products** is the one place to manage a product. Each product page has two panels beside the editor: **Dinkus Commerce** and **Product image & gallery**.
@@ -135,6 +148,8 @@ A write may carry `expected`: the first 12 hex digits of the SHA-256 of the prod
 The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-choice`, `link`, `archive` and `restore`. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
 
 Select CLI configuration with `--profile <name>` or `DINKUS_COMMERCE_PROFILE`. A requested name must be explicitly defined in a config file's `profiles` object; inherited names do not count. A missing name or malformed selected profile stops with exit `2` before any HTTP request, rather than silently sending a change to the base site. Profile maps and matching entries must be JSON objects; an explicitly defined empty object still inherits that file's base metadata. Existing configuration precedence and restrictions on sending credentials to project-configured sites are unchanged. See the repository's [CLI specification](https://github.com/dinkuskit/commerce/blob/main/docs/CLI-SPEC.md#configuration-and-authentication) for paths and examples.
+
+The CLI's `--timeout` covers each request through reading its response body. A timeout or dropped connection while receiving a response exits with code `3`, even after response headers arrive, and is not automatically retried. For a write, read the product or order before submitting again: an incomplete response does not prove nothing was saved.
 
 ## Billing addresses
 

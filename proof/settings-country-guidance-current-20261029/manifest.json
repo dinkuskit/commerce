@@ -1,0 +1,149 @@
+{
+  "schema": "commerce.settings-guidance-current-proof/v1",
+  "baseCommit": "19b25b2878803f85db94c6c4853df1d7d1e4f448",
+  "sourceCommit": "2370818b0c5d6b50eb4160ad5cd2933e9b8f1dd4",
+  "originalSource": "11693367844de707d34a6bf450baa7f876e04f87",
+  "originalContribution": "9b0284dffa76461be17fbb29c218bf2ce920fa9c",
+  "independence": "Selected country-guidance diff only; no package/lock changes or dependency on the old DOMPurify parent.",
+  "sourceFiles": {
+    ".changeset/settings-country-guidance.md": "b3ead03006366aa0b1ec679f352ac8f38114df30947df78d47a329e3d00aa9b6",
+    "docs/implementation/merchant-store-settings.md": "47591f43b981d430472e873cb62af07cff58238bb1909392f5676002c328bcbf",
+    "docs/website/reference/commerce.md": "9c30ad6fe10271006288f7c36f1c62330ea33059c162ef4e2470168fe85c1379",
+    "src/features/store-settings/admin/index.ts": "0bc31b1dd4a941eff9b42fe668f32739bb10f4541dfb7518ec2db0eccf8c195e",
+    "tests/features/store-settings/store-settings.test.mjs": "532b408264f0fff674b53b976717270f32a04d4eae29d03ca743dfe510d7354c",
+    "tests/sandbox/merchant-settings.spec.mjs": "97599dea56f22caae3cfd6268450546c64b231bfdafb9cbfe3d3278ae0d5dbd7"
+  },
+  "environment": {
+    "node": "v24.22.0",
+    "platform": "linux",
+    "arch": "x64",
+    "packages": {
+      "emdash": "1.2.0",
+      "@emdash-cms/sandbox-workerd": "0.9.3",
+      "workerd": "1.20260826.1",
+      "@playwright/test": "1.61.1",
+      "dompurify": "3.4.16"
+    },
+    "browser": "149.0.7827.55",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    }
+  },
+  "baselineUnit": {
+    "base": "19b25b2",
+    "regressionFileFrom": "2370818b0c5d6b50eb4160ad5cd2933e9b8f1dd4",
+    "pass": 13,
+    "fail": 3,
+    "skipped": 0,
+    "exit": 1,
+    "note": "Parent plus configured/unconfigured children fail on old context text."
+  },
+  "sourceGates": {
+    "completedAt": "2026-10-29T19:16:59Z",
+    "unitWorkflow": {
+      "pass": 759,
+      "fail": 0,
+      "skipped": 0
+    },
+    "integration": {
+      "pass": 110,
+      "fail": 0,
+      "skipped": 0
+    },
+    "build": true,
+    "typecheck": true,
+    "repositoryAudit": true,
+    "ledgerValidation": true,
+    "cleanDiff": true
+  },
+  "backends": {
+    "base": {
+      "bytes": 131044,
+      "headroom": 28,
+      "sha256": "dd8e6018be154d4f65002d46340dee47fe521f85f029cee2f1571deaf46c38f9"
+    },
+    "proposed": {
+      "bytes": 131007,
+      "headroom": 65,
+      "sha256": "ae50fc8beb73af5cc05d1f8f17be631b8251c0ed8cc5444e2abaf6034dd118fa",
+      "extractedDistEqual": true
+    },
+    "official": {
+      "version": "0.6.0",
+      "bytes": 131050,
+      "sha256": "f292f09c1c360f828a0c96614fd69342327b23374150088c6c151ff1b61ed471",
+      "manifestSha256": "59a56e2b73af91f3521250a0a22767fa879d51ef2a9dc88cc00eea8666a2c228"
+    }
+  },
+  "baselineSetup": {
+    "sourceJourneySha256": "97599dea56f22caae3cfd6268450546c64b231bfdafb9cbfe3d3278ae0d5dbd7",
+    "copiedJourneySha256": "2115b47668d8559bbc73bb6bba4d768a059788ae75b868b65f88c507647c1d48",
+    "reproducedJourneyByteEqual": true,
+    "reproducedDescriptorObjectEqual": true
+  },
+  "lanes": [
+    {
+      "kind": "published",
+      "run": "settings-country-official-20261029-01",
+      "project": "registry",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 63438,
+      "retry": 0,
+      "capture": {
+        "path": "published-saved.png",
+        "bytes": 105882,
+        "width": 1440,
+        "height": 1100,
+        "sha256": "f59978dd091ea0f8674d9d67f49ab93cfc3f41ed35c3de2e0c58d551c5b80abc",
+        "reviewedSyntheticAdminOnly": true
+      }
+    },
+    {
+      "kind": "proposed-sandbox",
+      "run": "settings-country-proposed-registry-20261029-01",
+      "project": "registry",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 62287,
+      "retry": 0,
+      "capture": {
+        "path": "proposed-sandbox-saved.png",
+        "bytes": 105115,
+        "width": 1440,
+        "height": 1100,
+        "sha256": "1b4a8084047338799139c47f4faed3a42e2f80128d46e09f5a648bffaeccb551",
+        "reviewedSyntheticAdminOnly": true
+      }
+    },
+    {
+      "kind": "proposed-native",
+      "run": "settings-country-proposed-native-20261029-01",
+      "project": "native",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 57323,
+      "retry": 0,
+      "capture": {
+        "path": "proposed-native-saved.png",
+        "bytes": 97354,
+        "width": 1440,
+        "height": 1100,
+        "sha256": "5c97e551e2709c00cd854cc569cdbb29701513389115a61daa5b8126ed1fc6c0",
+        "reviewedSyntheticAdminOnly": true
+      }
+    }
+  ],
+  "proofFiles": {
+    "baseline-setup.mjs": "ffdcd760268bc6dbca776749e6bf23c4531dc2c4ac80903e2f01f3fc11e6a871",
+    "registry-selection.json": "2172b282818e3fe5699793f65bcb5fcaecb670dad9105a91f1f0ffeb4ff1cfd8"
+  },
+  "limitations": [
+    "Records are not signed runner attestation.",
+    "Browser runs exercise settings, not a paid checkout, real provider or full release journey.",
+    "Published mount bypasses Registry installer but preserves official manifest grants/routes/backend.",
+    "Proposed browser evidence is bound to source237; proof-only child identity is separate.",
+    "No production or maintainer store, external provider, touch/mobile or independent provenance certification."
+  ]
+}

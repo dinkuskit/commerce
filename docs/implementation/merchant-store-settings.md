@@ -13,13 +13,16 @@ empty lists mean that no countries are enabled.
 
 `requirePhoneNumber` defaults to `false` and can be saved before a store
 country exists. This feature records the requirement and exposes
-`loadCheckoutContactRequirements`; it does not collect, verify, send, or
-enforce phone contact data.
+`loadCheckoutContactRequirements`. Checkout consumes that requirement when
+capturing contact; these settings do not verify phone ownership or send messages.
 
-These country settings are not enforced by checkout yet. In particular, this
-slice does not enforce billing or shipping country eligibility, IP eligibility,
-address completeness, taxes, currency, consent, or fulfillment policy. It
-never infers a country from locale, IP, or shipping origin.
+Checkout checks the shipping-destination list for a new physical checkout;
+with no destinations enabled, a physical basket is refused before payment.
+Selling/customer countries remain persisted but are not enforced. The admin
+form states that distinction rather than claiming no country checks exist.
+See [checkout contact](checkout-contact-v1.md) for address capture and the
+separate US region check. These settings do not infer a country from locale,
+IP, or shipping origin, collect a billing address, or determine taxes or currency.
 
 
 Native Store and Registry Settings render the same BlockKit form. The native
@@ -30,7 +33,8 @@ retains the draft and its original revision; Reload saved settings is explicit.
 The existing catalog/placeholder settings are preserved.
 
 The server getter accepts only `settings.getVersioned` and returns
-`{ requirePhoneNumber: boolean, revision: string | null }`. A missing record returns
-false/null; a malformed or unreadable record throws `STORAGE_UNAVAILABLE`.
-This lets contact collection use the same authority without making country setup
-a new checkout prerequisite.
+`{ requirePhoneNumber: boolean, shippingCountries: readonly string[], revision: string | null }`.
+A missing record returns false/[]/null; a malformed or unreadable record throws
+`STORAGE_UNAVAILABLE`. Contact capture uses this same authority. Digital-only
+checkout does not require country setup; physical checkout needs an enabled
+shipping destination.

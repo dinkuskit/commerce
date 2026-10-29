@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-10-29T19:07:03.828Z",
+  "approvedListQuery": "https://registry.emdashcms.com/xrpc/com.emdashcms.experimental.aggregator.listReleases?did=did:plc:ekk4pjmkh3k3ql2kfoex3qt4&package=dinkus-commerce&limit=100",
+  "approvedVersions": [
+    "0.6.0",
+    "0.5.0",
+    "0.4.0",
+    "0.3.0",
+    "0.2.2",
+    "0.2.1",
+    "0.2.0",
+    "0.1.0"
+  ],
+  "approvedListTerminal": true,
+  "publisherScan": {
+    "checkedAt": "2026-10-29T19:04:23.594Z",
+    "pages": 2,
+    "scannedRecords": 47,
+    "terminal": true,
+    "versions": [
+      "0.1.0",
+      "0.2.0",
+      "0.2.1",
+      "0.2.2",
+      "0.3.0",
+      "0.4.0",
+      "0.5.0",
+      "0.6.0"
+    ],
+    "betaVersions": []
+  },
+  "selection": "No beta observed; use stable0.6.0 for this dated test.",
+  "release": {
+    "uri": "at://did:plc:ekk4pjmkh3k3ql2kfoex3qt4/com.emdashcms.experimental.package.release/dinkus-commerce:0.6.0",
+    "cid": "bafyreigfp6327jdw2sqotlojpz5a5tlzypyd6jpm4jtboeoa5tmc2pamuq",
+    "version": "0.6.0",
+    "checksum": "bciqo7cdoudt45lskhiute2dzswulk6h664tdzasuqtogohe55kay2da"
+  },
+  "download": {
+    "checkedAt": "2026-10-29T18:02:39.945Z",
+    "version": "0.6.0",
+    "releaseUri": "at://did:plc:ekk4pjmkh3k3ql2kfoex3qt4/com.emdashcms.experimental.package.release/dinkus-commerce:0.6.0",
+    "recordCid": "bafyreigfp6327jdw2sqotlojpz5a5tlzypyd6jpm4jtboeoa5tmc2pamuq",
+    "blobCid": "bafkreihprbxkbz6ovzfdukjsnb4zlkfvpd7pojr4qjkijxdhdso6vamnbq",
+    "checksum": "bciqo7cdoudt45lskhiute2dzswulk6h664tdzasuqtogohe55kay2da",
+    "downloadUrl": "https://cdn.em-da.sh/r/did:plc:ekk4pjmkh3k3ql2kfoex3qt4/com.emdashcms.experimental.package.release/dinkus-commerce:0.6.0/bafyreigfp6327jdw2sqotlojpz5a5tlzypyd6jpm4jtboeoa5tmc2pamuq/bafkreihprbxkbz6ovzfdukjsnb4zlkfvpd7pojr4qjkijxdhdso6vamnbq",
+    "bytes": 51783,
+    "sha256": "ef886ea0e7ceae4a3a2932687995a8b578fef7263c825484dc671c9dea818d0c",
+    "verificationScope": "Downloaded from official public approved-listing cache; size and multihash match observed release metadata. Not a full SDK Registry installation or independent provenance-signature verification."
+  },
+  "metadataRecheck": "Current release CID and release body equal the record used for the cached package download.",
+  "mountScope": "Untouched official manifest/backend explicitly mounted in actual EmDash SDK sandbox; not full Registry installer or independent provenance verification."
+}
