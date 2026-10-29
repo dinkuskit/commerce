@@ -34,9 +34,11 @@ Run locally on 29 Oct 2026 with Node 24.22.0 and EmDash 1.2.0, on this branch.
 
 ## Registry bundle
 
-`npm run build` gives `registry_bundle=pass backend_bytes=130952 headroom_bytes=120`,
-with `backend_sha256=a1e51872fa08c3a7924b4c97de04647a475cacb42c92ed5e56c6c18ef5adfba6`,
-on main `19b25b2` (which added #207's 11 bytes), and the same on main `a085bf7`, whose #209 and #212 leave the backend as it was. Main (`04dcf5e`) had 131,033 bytes, 39 free. Removing the draft patch paid for the new
+`npm run build` gives `registry_bundle=pass backend_bytes=130915 headroom_bytes=157`,
+with `backend_sha256=380a1d4c390f5d91b3e66252efccab7290a918a910f2bf975ba7cbba2e4b620d`,
+on main `75a79e7` (#211 freed 37 bytes). On main `19b25b2` (which added #207's 11 bytes) it was
+`backend_bytes=130952 headroom_bytes=120`, `backend_sha256=a1e51872fa08c3a7924b4c97de04647a475cacb42c92ed5e56c6c18ef5adfba6`,
+the build template-store#170's paired proof runs. Main (`04dcf5e`) had 131,033 bytes, 39 free. Removing the draft patch paid for the new
 reads, and three changes that cut nothing freed the rest:
 
 - one `productNotFound()` refusal shared by the panels' three not-found checks and
