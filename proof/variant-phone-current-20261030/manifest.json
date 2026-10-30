@@ -1,0 +1,75 @@
+{
+  "scope": "Source/parent evidence identity, not self-attestation or final-head browser replay",
+  "source": "da00829491fee439e94d3531d1aa380439a134ec",
+  "parent": "2a37c079c4fe86ad45fcdb4715a0f73322c931e7",
+  "sourceFiles": [
+    {
+      "path": "tests/sandbox/variant-checkout.spec.mjs",
+      "bytes": 36380,
+      "sha256": "414ffec3ade99423c7d6ced1c70e0ae9d366394d4c8d4f9ec9e8c02ce5647431"
+    },
+    {
+      "path": ".changeset/variant-phone-coverage.md",
+      "bytes": 8,
+      "sha256": "d487269d2de0655a9ed127c83b0d1006d724e600385b32f4f4b39893c1e0164b"
+    }
+  ],
+  "harness": {
+    "path": ".tmp/phone-current.playwright.config.mjs",
+    "sha256": "b9b22e4dfb0e4525364bb15a26fc97c8373297ce08ce87d884dc258a632a48cd",
+    "qualification": "ignored local diagnostic; selected effective config equality asserted"
+  },
+  "baseline": {
+    "completedAt": "2026-10-30T00:18:56Z",
+    "nativeVariant": 2,
+    "sandbox": 2,
+    "failed": 0
+  },
+  "sourceChecks": {
+    "completedAt": "2026-10-30T00:29:59Z",
+    "unit": 835,
+    "integration": 110,
+    "nativeVariant": 2,
+    "sandbox": 2,
+    "failed": 0,
+    "skipped": 0
+  },
+  "backend": {
+    "bytes": 130676,
+    "limit": 131072,
+    "headroom": 396,
+    "sha256": "a630ca239b3573cd5943cb430fb8e26702c946ba6d7c38438fcc86ac01c98f92",
+    "unchangedFromParent": true
+  },
+  "captures": [
+    {
+      "path": "native/baseline-phone.png",
+      "sourceHead": "2a37c079c4fe86ad45fcdb4715a0f73322c931e7",
+      "bytes": 39467,
+      "sha256": "faf184ae12180bc6e949adf2b11844fd3ea56718782ca908f07367c128ca531b",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "path": "native/phone.png",
+      "sourceHead": "da00829491fee439e94d3531d1aa380439a134ec",
+      "bytes": 34201,
+      "sha256": "abbe3195589526e6d9adf614e607826d8924d041e23c9db03d4f392aef9ea010",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "path": "sandbox/phone.png",
+      "sourceHead": "da00829491fee439e94d3531d1aa380439a134ec",
+      "bytes": 34201,
+      "sha256": "abbe3195589526e6d9adf614e607826d8924d041e23c9db03d4f392aef9ea010",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "limits": [
+    "phone-sized desktop Chromium/mouse not device/touch/Safari",
+    "local native/compiled sandbox not official Registry installation or real providers",
+    "no full canonical gate, security, performance or release qualification"
+  ]
+}
