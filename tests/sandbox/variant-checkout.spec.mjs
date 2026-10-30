@@ -245,7 +245,7 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
   }
 });
 
-test('merchant creates choices and edits independent and bulk prices through the mounted editor', async ({ page, request, browser }) => {
+test('merchant edits choices and independent prices on desktop and phone', async ({ page, request, browser }) => {
   const { native, filename } = proofDb();
   expect((await request.get('/_emdash/api/setup/dev-bypass')).status()).toBe(200);
   const db = new Database(filename);
@@ -432,7 +432,31 @@ test('merchant creates choices and edits independent and bulk prices through the
       await shopper.screenshot({path:`${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-journey-phone.png`,fullPage:true});
     }
     await capture('desktop');
-    await page.setViewportSize({width:390,height:844}); await capture('phone');
+    // Resizing alone can leave the Commerce panel collapsed in the phone sidebar.
+    // Open the mounted controls and prove an actual save, not just a screenshot.
+    await page.setViewportSize({width:390,height:844});
+    const phonePanel = await openPanel(page);
+    const phoneForm = phonePanel.locator('form').filter({has:page.getByRole('textbox',{name:'Regular',exact:true})}).nth(2);
+    await expect(phoneForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('28.00');
+    await phoneForm.getByRole('textbox',{name:'Regular',exact:true}).fill('29');
+    await phoneForm.getByRole('button',{name:/^Save/}).click();
+    await expect.poll(() => all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[2]].price.regular.minor).toBe('2900');
+    // The pinned host can close its phone sheet after a panel action. Reload
+    // and reopen for durable readback; do not resubmit the price mutation.
+    await page.reload();
+    await openPanel(page);
+    await expect(phoneForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('29.00');
+    await phoneForm.getByRole('textbox',{name:'Regular',exact:true}).scrollIntoViewIfNeeded();
+    if (shopper) {
+      await shopper.getByRole('button',{name:'Refresh payment status'}).click();
+      await expect(shopper.locator('[data-checkout-result]')).toContainText('"state": "paid"');
+      const refreshed = JSON.parse(await shopper.locator('[data-checkout-result]').textContent());
+      expect((refreshed.data ?? refreshed).checkout.order.total.minor).toBe('2800');
+      const persisted = all('checkoutCarts').find(r => r.id === guestCartIds.at(-1)).attempts.at(-1);
+      expect(persisted.order.total.minor).toBe('2800');
+      expect(persisted.payment.total.minor).toBe('2800');
+    }
+    await capture('phone');
   } finally {
     if (shopperContext) await shopperContext.close();
     for (const id of guestCartIds) db.prepare('DELETE FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').run('dinkus-commerce','checkoutCarts',id);
