@@ -17,7 +17,10 @@ The default is `quick`. Both modes resolve the repository from the script path,
 so an absolute invocation also works from another directory.
 
 `quick` runs typechecking, the build (including sandbox validation/bundle), unit and workflow tests, and repository/feature audits.
-`full` adds SQLite/D1 integration and the sandbox and installed-coupon browser profiles.
+`checks` adds SQLite/D1 integration to quick. `storefront` builds and runs the
+main three-project Playwright config; `packaged` builds and runs the orders
+browser config and native consumer check. `core` runs checks, storefront and
+packaged sequentially. `full` runs core, then the merchant-settings checks.
 Success exits 0 and prints `verify-commerce: <mode> passed`; unsupported modes
 exit 64. A failed child command stops the gate with a non-zero exit.
 
@@ -30,10 +33,19 @@ These checks use local or synthetic fixtures. They do not authorize publishing,
 deployment, live payment traffic, or production mutations, and do not establish
 an installed release's compatibility beyond the profiles actually exercised.
 
-If Vitest or the sandbox bundler reports a missing platform-native binding,
-repeat the locked install with a compatible npm and `--include=optional`.
-This task was verified with Node 22.23.2 and npm 10 after the host npm 11
-install omitted native runtime dependencies. Preserve the lockfile and pins.
+For a resource-constrained diagnostic, see the README's single-host browser
+instructions. `COMMERCE_BROWSER_PROOF_PROFILE=sandbox|native|native-variant`
+selects one project and its one host in the main config; unset/empty retains
+all three. Run direct Playwright with a fresh run id, never parallel to a build
+or another profile on the same artifacts. This does not qualify the other
+lanes or a full gate. Canonical storefront/core/full modes reject a nonempty
+override before any child gate; unset it for normal delivery verification.
+The separate settings and orders configs are unchanged.
+
+If the sandbox bundler reports a missing platform-native binding, repeat the
+locked install under the current pinned Node with a compatible npm and
+`--include=optional`. Older Node 22/npm 10 recovery observations are historical,
+not a replacement for the current Node contract. Preserve the lockfile and pins.
 
 The local D1 race harness retries busy or exact opaque Wrangler internal errors
 up to five times under the same idempotent fixture write. It still requires the

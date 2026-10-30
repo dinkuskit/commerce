@@ -7,6 +7,16 @@ cd "$repo_root"
 
 mode="${1:-quick}"
 
+# Diagnostic profile selection must never narrow a canonical browser gate.
+case "$mode" in
+  storefront|core|full)
+    if [ -n "${COMMERCE_BROWSER_PROOF_PROFILE:-}" ]; then
+      echo "COMMERCE_BROWSER_PROOF_PROFILE is diagnostic only; unset it for verify-commerce $mode. Use direct Playwright for single-host proof." >&2
+      exit 64
+    fi
+    ;;
+esac
+
 # core is checks, storefront and packaged in that order. CI runs those three as
 # parallel jobs; locally `core` still runs everything one after another.
 case "$mode" in

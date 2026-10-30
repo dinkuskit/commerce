@@ -1,0 +1,83 @@
+{
+  "scope": "Fresh source qualification, not self-attestation or a later-head test claim",
+  "source": "88f6cd375a6f9f77af7dcff9bb3e01e67b8841ea",
+  "parent": "4e4ca758bb28edee691a948353c046e1a2357faf",
+  "preservedOriginal": "071eab6690136300b2ae0efffae8c2efc9b9aa69",
+  "sourceFiles": [
+    {
+      "path": "README.md",
+      "bytes": 19863,
+      "sha256": "7e4abf8ec58cf5c5082357b9ea2fcf1fc9ad5548421acc1a9d9aba7d854a7ad6"
+    },
+    {
+      "path": "bin/verify-commerce",
+      "bytes": 1405,
+      "sha256": "16185e54aff9796abeddbfeb9315b13ded8d0863029234e2d92227b1af04d783"
+    },
+    {
+      "path": "playwright.config.mjs",
+      "bytes": 4096,
+      "sha256": "11629a52416bf703c0918388b1c5f25aa495fdf9175593f74dfd8c3c7492c6fc"
+    },
+    {
+      "path": "skills/commerce-verification/SKILL.md",
+      "bytes": 2752,
+      "sha256": "e354f7e69dd43b58a1e341fc4141e39ecf726e1d87cefa493eebbe958a08c946"
+    },
+    {
+      "path": "tests/workflows/browser-profiles.test.mjs",
+      "bytes": 6057,
+      "sha256": "6455f7211e1be5eb23741d52610b4ce2e0e9d519c5c5be699924b85a0f0baebf"
+    }
+  ],
+  "baseline": {
+    "tests": 17,
+    "pass": 4,
+    "fail": 13,
+    "skipped": 0,
+    "exit": 1
+  },
+  "sourceChecks": {
+    "completedAt": "2026-10-29T23:02:16Z",
+    "unit": 838,
+    "integration": 110,
+    "failed": 0,
+    "skipped": 0,
+    "focused": 17,
+    "browser": [
+      {
+        "profile": "sandbox",
+        "run": "browser-current-sandbox-20261029-01",
+        "passed": 1
+      },
+      {
+        "profile": "native",
+        "run": "browser-current-native-20261029-01",
+        "passed": 1
+      },
+      {
+        "profile": "native-variant",
+        "run": "browser-current-native-variant-20261029-01",
+        "passed": 2
+      }
+    ],
+    "listOnlyCounts": [
+      5,
+      3,
+      2
+    ],
+    "mismatchedProjectExit": 1
+  },
+  "backend": {
+    "bytes": 130676,
+    "limit": 131072,
+    "headroom": 396,
+    "sha256": "a630ca239b3573cd5943cb430fb8e26702c946ba6d7c38438fcc86ac01c98f92",
+    "unchangedFromAcceptedMain": true
+  },
+  "limits": [
+    "local synthetic source fixtures, not official Registry installation",
+    "no default three-host or canonical full gate execution",
+    "no real provider, device, security clearance, performance or combined-release qualification"
+  ]
+}

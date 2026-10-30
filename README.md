@@ -288,3 +288,33 @@ Under construction. MIT licensed.
 Run `bin/verify-commerce quick` during edits and `bin/verify-commerce full` before
 delivery. See [the project verification skill](skills/commerce-verification/SKILL.md)
 for prerequisites, checks, and proof limits.
+
+### Single-host browser diagnostics
+
+The main Playwright config normally starts **three** Astro hosts, even when
+`--project` selects one project's tests. For a constrained local machine, opt in
+to one matching project **and** host with `COMMERCE_BROWSER_PROOF_PROFILE`:
+
+```sh
+npm run build
+mkdir -p .tmp/astro-config
+ASTRO_TELEMETRY_DISABLED=1 XDG_CONFIG_HOME="$PWD/.tmp/astro-config" \
+  COMMERCE_BROWSER_PROOF_PROFILE=native \
+  COMMERCE_PROOF_RUN="native-diagnostic-$(date +%s)" \
+  npx playwright test tests/sandbox/guest-checkout.spec.mjs --project=native
+```
+
+Accepted names are `sandbox`, `native`, and `native-variant`; unset or empty
+retains all three. Invalid names fail before creating artifact directories.
+The selected lane retains its tests, ports, isolated database, host flags,
+viewport, timeouts, single worker, and refusal to reuse a running server.
+A conflicting `--project` is rejected by Playwright rather than starting an
+unselected host. Use a fresh run id and run profiles/builds sequentially.
+The local `sandbox` fixture is not an external Registry installation.
+
+This is **diagnostic proof only**, not full verification. The canonical
+`storefront`, `core`, and `full` verifier modes refuse a nonempty override with
+exit `64`, before any child gate; unset it to run those modes. `quick`/`checks`
+and the separate `packaged` browser config are not narrowed by this variable.
+Other Playwright configs, including merchant settings, keep their existing
+selection mechanisms. No reduced run should be reported as a full gate.

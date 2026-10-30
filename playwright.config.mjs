@@ -2,6 +2,15 @@ import { defineConfig } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
+// Project and host entries below share this order; diagnostic selection keeps
+// their existing configuration intact. Unset/empty retains all three lanes.
+const profiles = ["sandbox", "native", "native-variant"];
+const profile = process.env.COMMERCE_BROWSER_PROOF_PROFILE;
+if (profile && !profiles.includes(profile)) {
+  throw new Error("COMMERCE_BROWSER_PROOF_PROFILE must be sandbox, native or native-variant");
+}
+const selected = (_, index) => !profile || profiles[index] === profile;
+
 const run = process.env.COMMERCE_PROOF_RUN ?? Date.now().toString();
 process.env.COMMERCE_PROOF_RUN = run;
 const directory = resolve(".tmp/sandbox-proof", run);
@@ -47,7 +56,7 @@ export default defineConfig({
         viewport: { width: 1440, height: 1000 },
       },
     },
-  ],
+  ].filter(selected),
   webServer: [
     {
       command: "../../node_modules/.bin/astro dev --host 127.0.0.1 --port " + port,
@@ -96,5 +105,5 @@ export default defineConfig({
         no_proxy: "127.0.0.1,localhost,::1",
       },
     },
-  ],
+  ].filter(selected),
 });
