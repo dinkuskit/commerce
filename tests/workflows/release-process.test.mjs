@@ -163,7 +163,7 @@ test("beta routing sends only prereleases to the beta package", () => {
 	};
 	const beta = betaManifest(stable);
 	assert.equal(beta.slug, "dinkus-commerce-beta");
-	assert.equal(beta.name, "Commerce Beta");
+	assert.equal(beta.name, "Commerce (Beta)");
 	assert.equal(beta.version, stable.version);
 	assert.equal(beta.publisher, stable.publisher);
 	assert.deepEqual(beta.capabilities, stable.capabilities);
