@@ -3,12 +3,28 @@
   "slug": "dinkus-commerce",
   "version": "0.6.0",
   "publisher": "did:plc:ekk4pjmkh3k3ql2kfoex3qt4",
-  "name": "Commerce",
-  "description": "Manage products, prices and catalog settings in EmDash.",
+  "name": "DinkusKit Commerce",
+  "description": "Manage products, prices and orders in EmDash. Connect DinkusKit Payments for checkout and Ship for shipping-label workflows.",
+  "keywords": ["ecommerce", "products", "checkout", "orders", "catalog"],
+  "sections": {
+    "description": { "file": "./docs/registry/description.md" },
+    "installation": { "file": "./docs/registry/installation.md" },
+    "faq": { "file": "./docs/registry/faq.md" },
+    "changelog": { "file": "./docs/registry/changelog.md" }
+  },
+  "release": {
+    "artifacts": {
+      "icon": { "file": "./assets/listing/icon.webp" },
+      "screenshots": [
+        { "file": "./assets/listing/product-panel.png", "lang": "en" },
+        { "file": "./assets/listing/commerce-settings.png", "lang": "en" }
+      ]
+    }
+  },
   "license": "MIT",
   "author": {
     "name": "DinkusKit",
-    "url": "https://github.com/dinkuskit"
+    "url": "https://dinkuskit.com"
   },
   "security": {
     "url": "https://github.com/dinkuskit/commerce/security"

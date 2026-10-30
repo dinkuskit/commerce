@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 import { BETA_SLUG_SUFFIX, effectiveSelector } from '../../scripts/beta-release.mjs';
+import { stageRegistryListing } from '../../scripts/stage-registry-listing.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const script = join(root, 'scripts/prepare-emdash-release.mjs');
@@ -40,6 +41,7 @@ async function fixture(t, version = manifest.version) {
     }
   }
   await copyFile(join(root, '.tmp/sandbox-source/src/plugin.ts'), join(directory, '.tmp/sandbox-source/src/plugin.ts'));
+  await stageRegistryListing(join(root, '.tmp/sandbox-source'), join(directory, '.tmp/sandbox-source'));
   const output = join(directory, 'github-output');
   // The slug the release flow hands the helper: the beta listing for a prerelease.
   const selector = effectiveSelector(`${manifest.slug}@${version}`);
@@ -65,6 +67,10 @@ for (const release of releases) {
     assert.equal(fields['publisher-did'], manifest.publisher);
     assert.equal(fields['plugin-directory'], '.');
     assert.equal(fields['bundle-file'], join(f.directory, '.emdash-release', `${release.slug}-${release.version}.tar.gz`));
+    const mediaManifest = JSON.parse(await readFile(join(f.directory, '.emdash-release/emdash-plugin.jsonc'), 'utf8'));
+    assert.equal(mediaManifest.slug, release.slug);
+    assert.equal(mediaManifest.version, release.version);
+    assert.deepEqual(mediaManifest.release.artifacts, manifest.release.artifacts);
     const backend = execFileSync('tar', ['-xOf', fields['bundle-file'], 'backend.js']);
     assert.deepEqual(backend, await readFile(join(root, 'dist/sandbox/plugin.mjs')));
     const bundledManifest = JSON.parse(execFileSync('tar', ['-xOf', fields['bundle-file'], 'manifest.json'], { encoding: 'utf8' }));
