@@ -4,6 +4,7 @@ import { buildPlugin } from '@emdash-cms/plugin-cli';
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { auditedCouponTransformFrom } from './coupon-build-transform.mjs';
+import { stageRegistryListing } from './stage-registry-listing.mjs';
 
 // Neutral resolution omits legacy package main fields. Prebundle supported
 // browser-compatible dependencies, then retain the official manifest/probe build.
@@ -45,4 +46,5 @@ await writeFile(resolve(stage, 'src/plugin.ts'), '// @ts-nocheck -- generated de
 for (const file of ['emdash-plugin.jsonc', 'package.json']) {
   await copyFile(resolve(file), resolve(stage, file));
 }
+await stageRegistryListing(resolve('.'), stage);
 await buildPlugin({ dir: stage, outDir: resolve('dist/sandbox') });

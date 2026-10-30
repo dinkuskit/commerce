@@ -5,6 +5,7 @@ import { BETA_SLUG_SUFFIX, betaManifest, isPrereleaseVersion } from './beta-rele
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stageRegistryListing } from './stage-registry-listing.mjs';
 
 // Keep official release preparation, but give it Commerce's already audited
 // prebundle. A directory inside this Git checkout would be rediscovered from
@@ -47,6 +48,7 @@ try {
       await copyFile(join(staged, name), join(directory, name));
     }
   }
+  await stageRegistryListing(staged, directory);
   const receipt = join(directory, 'github-output');
   const cli = fileURLToPath(new URL('../node_modules/@emdash-cms/plugin-cli/dist/index.mjs', import.meta.url));
   execFileSync(process.execPath, [cli, 'release', 'prepare', selector, '--dir', directory, '--out-dir', '.emdash-release'], {

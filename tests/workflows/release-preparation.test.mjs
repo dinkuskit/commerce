@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 import { BETA_SLUG_SUFFIX, effectiveSelector } from '../../scripts/beta-release.mjs';
+import { stageRegistryListing } from '../../scripts/stage-registry-listing.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const script = join(root, 'scripts/prepare-emdash-release.mjs');
@@ -40,6 +41,7 @@ async function fixture(t, version = manifest.version) {
     }
   }
   await copyFile(join(root, '.tmp/sandbox-source/src/plugin.ts'), join(directory, '.tmp/sandbox-source/src/plugin.ts'));
+  await stageRegistryListing(join(root, '.tmp/sandbox-source'), join(directory, '.tmp/sandbox-source'));
   const output = join(directory, 'github-output');
   // The slug the release flow hands the helper: the beta listing for a prerelease.
   const selector = effectiveSelector(`${manifest.slug}@${version}`);

@@ -1152,6 +1152,8 @@ async function preparedBetaArtifact(t) {
     await writeFile(join(root, '.tmp/sandbox-source', file), source);
   }
   await copyFile(resolve('.tmp/sandbox-source/src/plugin.ts'), join(root, '.tmp/sandbox-source/src/plugin.ts'));
+  const { stageRegistryListing } = await import('../../scripts/stage-registry-listing.mjs');
+  await stageRegistryListing(resolve('.tmp/sandbox-source'), join(root, '.tmp/sandbox-source'));
   execFileSync(process.execPath, [resolve('scripts/prepare-emdash-release.mjs'), 'dinkus-commerce-beta@0.3.0-beta.0'], { cwd: root, stdio: 'pipe' });
   const archive = join(root, '.emdash-release/dinkus-commerce-beta-0.3.0-beta.0.tar.gz');
   const manifest = JSON.parse(execFileSync('tar', ['-xOf', archive, 'manifest.json'], { encoding: 'utf8' }));
