@@ -52,6 +52,7 @@ export function recordMatches(value, expected) {
 		if (artifact.blob?.size !== expected.size) reasons.push("package blob size differs");
 		if (artifact.blob?.mimeType !== "application/gzip") reasons.push("package blob is not gzip");
 	}
+	reasons.push(...listingMediaDifferences(value, expected.media));
 	return { ok: reasons.length === 0, reasons };
 }
 
@@ -69,7 +70,39 @@ export function listedRecordMatches(value, expected) {
 	if (!artifact?.checksum || artifact.blob?.mimeType !== "application/gzip") reasons.push("package artifact is missing or not gzip");
 	const provenance = value.extensions?.["com.emdashcms.experimental.package.releaseExtension"]?.provenance;
 	if (provenance?.builderId !== expected.builder) reasons.push(`provenance builder is ${JSON.stringify(provenance?.builderId)}`);
+	reasons.push(...listingMediaDifferences(value, expected.media));
 	return { ok: reasons.length === 0, reasons };
+}
+
+function listingMediaDifferences(value, media) {
+  const reasons = [];
+  if (!media) return reasons;
+  for (const [slot, images] of Object.entries(media)) {
+    const published = slot === "screenshots" ? value.artifacts?.screenshots ?? [] : value.artifacts?.[slot] ? [value.artifacts[slot]] : [];
+    if (published.length !== images.length) reasons.push(`${slot} count differs`);
+    for (let index = 0; index < images.length; index += 1) {
+      const actual = published[index];
+      const image = images[index];
+      if (!actual || actual.checksum !== image.checksum || actual.blob?.size !== image.size || actual.blob?.mimeType !== image.contentType) {
+        reasons.push(`${slot}[${index}] media differs`);
+      }
+    }
+  }
+  return reasons;
+}
+
+export async function expectedListingMedia(manifestPath) {
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const media = {};
+  for (const slot of ["icon", "banner", "screenshots"]) {
+    const entries = slot === "screenshots" ? manifest.release?.artifacts?.screenshots ?? [] : manifest.release?.artifacts?.[slot] ? [manifest.release.artifacts[slot]] : [];
+    media[slot] = await Promise.all(entries.map(async ({ file }) => {
+      const bytes = await readFile(file);
+      const contentType = /\.webp$/i.test(file) ? "image/webp" : /\.png$/i.test(file) ? "image/png" : "image/jpeg";
+      return { checksum: computePackageChecksum(bytes), size: bytes.length, contentType };
+    }));
+  }
+  return media;
 }
 
 export async function resolvePdsEndpoint(publisherDid, fetchImpl = fetch) {
@@ -128,6 +161,8 @@ async function fetchPublishedArtifact(pds, publisherDid, value, fetchImpl) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
 	const [publisherDid, selector, bundleFile, builder, publishedFile] = process.argv.slice(2);
+	const mediaIndex = process.argv.indexOf("--media-manifest");
+	const media = mediaIndex < 0 ? undefined : await expectedListingMedia(process.argv[mediaIndex + 1]);
 	const parsed = parseSelector(selector);
 	const listed = bundleFile === "--listed";
 	if (!publisherDid || !parsed || !bundleFile || (listed && (!builder || !publishedFile))) {
@@ -136,8 +171,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 	}
 	const bytes = listed ? null : await readFile(bundleFile);
 	const expected = listed
-		? { slug: parsed.slug, version: parsed.version, builder }
-		: { slug: parsed.slug, version: parsed.version, checksum: computePackageChecksum(bytes), size: bytes.byteLength };
+		? { slug: parsed.slug, version: parsed.version, builder, media }
+		: { slug: parsed.slug, version: parsed.version, checksum: computePackageChecksum(bytes), size: bytes.byteLength, media };
 	const matches = listed ? listedRecordMatches : recordMatches;
 	const pds = await resolvePdsEndpoint(publisherDid);
 	const deadline = Date.now() + 5 * 60_000;

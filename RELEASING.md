@@ -24,6 +24,29 @@ publishes. It pushes a version tag, and **that tag's run** publishes:
 `emdash-release.yml` has no button of its own; only `release.yml`'s tag run
 calls it, so the release service connects both listings through `release.yml`.
 
+## Registry listing media
+
+The publish job prepares a complete URL-source release record through
+`scripts/registry-release-media.mjs` and passes it as `release-file` to the
+existing pinned EmDash release action. The package and signed provenance are
+uploaded to the version tag's GitHub Release without replacement; existing
+assets must have identical bytes. A missing beta release is created as a
+prerelease after the tag is verified. A missing stable release is an error.
+Icons and screenshots use checksummed raw URLs pinned to the same source
+commit; EmDash imports those bytes into the publisher's PDS.
+
+Only the `publish-emdash` caller and reusable `publish` job gain
+`contents: write` for release assets, alongside existing OIDC and attestation
+permissions. No publisher credential or new secret is introduced. Tags and
+release branches remain under the existing release gate. Immutable releases
+that refuse uploads fail instead of being unlocked or recreated.
+
+The PDS verifier checks the package bytes and declared media counts,
+checksums, sizes and MIME types, including already-listed retry runs. This
+does not update package-profile copy: name, author URL, description, keywords
+and sections still require an approved `update-package`. Artwork belongs to a
+new release; this flow does not overwrite an existing version.
+
 ## When to cut a beta
 
 (`release-beta-cadence-078`.) Press Cut beta when a batch is worth giving a

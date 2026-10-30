@@ -67,6 +67,10 @@ for (const release of releases) {
     assert.equal(fields['publisher-did'], manifest.publisher);
     assert.equal(fields['plugin-directory'], '.');
     assert.equal(fields['bundle-file'], join(f.directory, '.emdash-release', `${release.slug}-${release.version}.tar.gz`));
+    const mediaManifest = JSON.parse(await readFile(join(f.directory, '.emdash-release/emdash-plugin.jsonc'), 'utf8'));
+    assert.equal(mediaManifest.slug, release.slug);
+    assert.equal(mediaManifest.version, release.version);
+    assert.deepEqual(mediaManifest.release.artifacts, manifest.release.artifacts);
     const backend = execFileSync('tar', ['-xOf', fields['bundle-file'], 'backend.js']);
     assert.deepEqual(backend, await readFile(join(root, 'dist/sandbox/plugin.mjs')));
     const bundledManifest = JSON.parse(execFileSync('tar', ['-xOf', fields['bundle-file'], 'manifest.json'], { encoding: 'utf8' }));

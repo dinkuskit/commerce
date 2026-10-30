@@ -76,22 +76,59 @@ Generated build and verifier logs are local-only under
 `.tmp/registry-growth-20261030/`; generated release archive is local-only under
 `.emdash-release/`. They are not source assets.
 
+## Delegated media release path
+
+The media helper and tests were adapted source-by-source from the public
+Payments pilot at `ce4855646c1e4b81e8392827a62d1ea9825155bf`. No history,
+credentials or unrelated product files were imported.
+
+- The prepared effective stable/beta manifest is retained next to the tarball.
+- `scripts/registry-release-media.mjs` validates the real bundle and local
+  inputs before GitHub mutation, reuses identical release assets, refuses
+  conflicts and never passes `--clobber`. A missing beta release can be
+  created as a prerelease after tag verification; missing stable releases fail.
+- The source record pins image URLs to the same source SHA and carries the
+  package/provenance checksums through the supported `release-file` input of
+  the existing pinned EmDash action. The service, OIDC identity, provenance
+  policy and approval path remain unchanged.
+- The PDS verifier checks expected image counts, checksums, byte sizes and
+  MIME types for both newly published and already-listed retry records.
+- Only the reusable publisher job and its caller gain `contents: write`,
+  required to upload the immutable release artifacts. This permission change
+  is part of the human merge decision; no workflow was run for this proof.
+
+Focused media/release/preparation checks passed 51 tests. A separate smoke
+used the real prepared Commerce tarball and official parser with mocked
+GitHub uploads: one icon and two screenshots were retained, with two mock
+uploads for package and provenance. The provenance document in that smoke
+was synthetic; it proves record construction, not a signed live release.
+Logs are `media-focused.log`, `media-prepare.log`, and `media-release.json` in
+the local run directory. The earlier full browser proof was at `ce921fe`; the
+media port changes no `src/` files or plugin runtime behavior.
+
+After the port, `bin/verify-commerce quick` passed again (862 tests,
+typecheck, build and public repository/feature audits), and
+`npm run proof:release-authority` passed all 15 synthetic release scenarios.
+The real-image expected-record check also passed for the icon and both
+screenshots. All GitHub release uploads in media tests were mocked; no
+workflow, tag, release, artifact upload, or PDS write was triggered.
+
 ## Publication boundary
 
 `update-package` is the separate publisher operation for name, description,
 author, keywords and sections. Existing profiles do not refresh merely because
 a new release is published. The pinned CLI's direct `publish` path uploads
-declared `release.artifacts`; its delegated `release prepare` path currently
-returns only a code bundle and does not upload those image blobs. Successful
-local preparation therefore does **not** prove the existing GitHub release
-action will publish this artwork.
+declared `release.artifacts`; its delegated `release prepare` path returns a
+code bundle. The new source-record step carries the declared images through
+the supported delegated action; successful local tests still do not prove a
+live image upload or public listing render.
 
 Artwork needs a separately approved, supported publication path and a new
 version: the CLI refuses replacement of existing release records by default.
-This change does not overwrite 0.6.0, broaden publishing credentials, change
-the release action, or treat a prepared bundle as published media. Stable and
-beta profiles require their own intentional update; this PR does not mutate
-either public listing.
+This change does not overwrite 0.6.0, add a publisher credential, replace the
+pinned release action, or treat a prepared bundle as published media. Stable
+and beta profiles require their own intentional update; this PR does not
+mutate either public listing.
 
 ## References
 

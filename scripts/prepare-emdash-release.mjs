@@ -69,6 +69,7 @@ try {
   const output = resolve(root, '.emdash-release', basename(bundle));
   await mkdir(resolve(root, '.emdash-release'), { recursive: true });
   await copyFile(join(directory, bundle), output);
+  await writeFile(resolve(root, '.emdash-release/emdash-plugin.jsonc'), `${JSON.stringify(effectiveManifest, null, 2)}\n`);
   fields['bundle-file'] = output;
   if (Object.values(fields).some(value => /[\r\n]/.test(value))) throw new Error('Invalid release output');
   if (process.env.GITHUB_OUTPUT) {
