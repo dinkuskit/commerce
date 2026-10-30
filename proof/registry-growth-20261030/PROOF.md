@@ -115,6 +115,22 @@ workflow, tag, release, artifact upload, or PDS write was triggered.
 
 ## Publication boundary
 
+[Native review](https://github.com/dinkuskit/commerce/pull/225#issuecomment-6528581958)
+identified a retry collision when a package had already been
+uploaded but the delegated publish timed out: a fresh archive could have
+different bytes under the same version filename. The regression reproduced
+`Release asset conflict` before the fix. Package asset names now include the
+archive SHA-256, as provenance names already did. The mocked same-tag retry
+test proves distinct package URLs for changed archive bytes, unchanged first
+upload bytes, and zero new uploads for an identical rerun. No-clobber and all
+tag, identity and approval gates remain unchanged.
+
+After this repair, the focused media/release/preparation suite passed 52 tests,
+the real-tarball media smoke passed with mocked uploads, and public
+repository/feature audits passed. Plugin runtime, manifest and image bytes
+did not change, so the existing runtime/browser proof is retained. Logs are
+`media-retry-before.log` and `media-retry-focused.log` in the local run root.
+
 `update-package` is the separate publisher operation for name, description,
 author, keywords and sections. Existing profiles do not refresh merely because
 a new release is published. The pinned CLI's direct `publish` path uploads
@@ -126,9 +142,11 @@ live image upload or public listing render.
 Artwork needs a separately approved, supported publication path and a new
 version: the CLI refuses replacement of existing release records by default.
 This change does not overwrite 0.6.0, add a publisher credential, replace the
-pinned release action, or treat a prepared bundle as published media. Stable
-and beta profiles require their own intentional update; this PR does not
-mutate either public listing.
+pinned release action, or treat a prepared bundle as published media. Profile
+updates are separate from release publication. The campaign coordinator
+reported applying and verifying the stable profile copy separately; this
+worker did not perform that publication. This source change prepares the
+artwork path for a separately approved beta release, not a stable rollout.
 
 ## References
 

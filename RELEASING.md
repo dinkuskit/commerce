@@ -30,7 +30,9 @@ The publish job prepares a complete URL-source release record through
 `scripts/registry-release-media.mjs` and passes it as `release-file` to the
 existing pinned EmDash release action. The package and signed provenance are
 uploaded to the version tag's GitHub Release without replacement; existing
-assets must have identical bytes. A missing beta release is created as a
+assets must have identical bytes. Both artifact filenames include their byte
+checksum, so a rebuilt archive after an interrupted publish gets a distinct
+URL while an identical rerun reuses the existing asset. A missing beta release is created as a
 prerelease after the tag is verified. A missing stable release is an error.
 Icons and screenshots use checksummed raw URLs pinned to the same source
 commit; EmDash imports those bytes into the publisher's PDS.

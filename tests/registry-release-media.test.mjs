@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -144,6 +145,56 @@ test("preparation binds all media to the source commit and checks input before u
     calls = 0;
     await assert.rejects(prepareMediaRelease({ ...options, ref: "refs/heads/main" }), /workflow identity|gated tag/);
     assert.equal(calls, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("same-tag retry after an interrupted publish keeps rebuilt package assets distinct and reuses identical bytes", async () => {
+  const root = await mkdtemp(join(tmpdir(), "commerce-media-retry-"));
+  try {
+    await mkdir(join(root, "out"));
+    await writeFile(join(root, "provenance.json"), "{}");
+    const slug = "dinkus-commerce-beta";
+    const version = "0.6.1-beta.1";
+    await writeFile(join(root, "manifest.json"), JSON.stringify({ slug, version, repo: `https://github.com/${repository}` }));
+    const assets = [];
+    const uploaded = new Map();
+    let uploads = 0;
+    const gh = (args) => {
+      assert.equal(args.includes("--clobber"), false);
+      if (args[1] === "upload") {
+        const name = basename(args[3]);
+        assert.equal(assets.some(asset => asset.name === name), false, "never replace a release asset");
+        const id = assets.length + 1;
+        uploaded.set(id, readFileSync(args[3]));
+        assets.push({ id, name, browser_download_url: `https://github.com/${repository}/releases/download/v${version}/${name}` });
+        uploads += 1;
+        return Buffer.alloc(0);
+      }
+      if (args[1].includes("/assets/")) return uploaded.get(Number(args[1].split("/").at(-1)));
+      return Buffer.from(JSON.stringify({ assets }));
+    };
+    const options = { root, bundleFile: "bundle.tar.gz", provenanceFile: "provenance.json", runnerTemp: root, manifestFile: "manifest.json", repository, sha: "a".repeat(40), ref: `refs/tags/v${version}`, workflowRef: `${repository}/.github/workflows/release.yml@refs/tags/v${version}`, outputFile: "out/release.json", gh, validateBundle: async () => ({ success: true, value: { manifest: { id: slug, version }, declaredAccess: {} } }) };
+    const firstBytes = Buffer.from("first valid archive representation");
+    await writeFile(join(root, "bundle.tar.gz"), firstBytes);
+    const first = await prepareMediaRelease(options);
+    // The downstream delegated publish times out before producing a release.
+    // The retry rebuilds the same source/version into different archive bytes.
+    const rebuiltBytes = Buffer.from("rebuilt valid archive representation");
+    await writeFile(join(root, "bundle.tar.gz"), rebuiltBytes);
+    const retry = await prepareMediaRelease(options);
+    assert.notEqual(retry.artifacts.package.url, first.artifacts.package.url);
+    for (const [record, archive] of [[first, firstBytes], [retry, rebuiltBytes]]) {
+      const digest = createHash("sha256").update(archive).digest("hex");
+      assert.ok(record.artifacts.package.url.endsWith(`-${digest}.tar.gz`));
+      assert.equal(record.artifacts.package.checksum, computePackageChecksum(archive));
+    }
+    assert.equal(uploads, 3, "two package representations and one unchanged provenance");
+    assert.deepEqual(uploaded.get(1), firstBytes, "the interrupted attempt's package remains intact");
+    const identical = await prepareMediaRelease(options);
+    assert.deepEqual(identical, retry);
+    assert.equal(uploads, 3, "an identical retry reuses the existing assets");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
