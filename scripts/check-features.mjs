@@ -229,8 +229,8 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/customers must resolve to the customers public entry",
     );
   }
-  if (manifest.devDependencies?.emdash !== "1.2.0") {
-    findings.push("catalog pilot must remain pinned to exact emdash 1.2.0");
+  if (manifest.devDependencies?.emdash !== "1.4.0") {
+    findings.push("catalog pilot must remain pinned to exact emdash 1.4.0");
   }
 
   // Every folder under src/features is a feature, so a new one is covered the day it lands.

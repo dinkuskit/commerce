@@ -92,9 +92,9 @@
   },
   "dinkuskit": {
     "emdashCompatibility": {
-      "apiPeer": "1.2.0",
+      "apiPeer": "1.4.0",
       "nodeEngine": ">=24.15.0 <25",
-      "packageIntegrity": "sha512-f9s7khWeuOxX5cRimlu9o224hn9TuKnYk/0Vsu1CS9oaVn78V1+MWyfEsZc2iDv8JYWrezEZFkpy/Q6pRgVgzg==",
+      "packageIntegrity": "sha512-dp56A8E5KCVSFVY6NSWbzgmgsUNWp7U1RX3f4qQKsY8WdB211pI3adAkLoG4R07KZ7zihxYz24DH9z5k4gLmhQ==",
       "mountedSitePilot": "private",
       "requiredSourceVisibility": "public",
       "requiredSourceRepository": "https://github.com/emdash-cms/emdash",
@@ -119,7 +119,7 @@
     }
   },
   "peerDependencies": {
-    "emdash": "1.2.0"
+    "emdash": "1.4.0"
   },
   "scripts": {
     "build": "node scripts/build.mjs && npm run build:sandbox",
@@ -148,18 +148,18 @@
     "@astrojs/react": "6.0.1",
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
-    "@emdash-cms/auth": "1.2.0",
-    "@emdash-cms/blocks": "1.2.0",
-    "@emdash-cms/plugin-cli": "0.13.3",
+    "@emdash-cms/auth": "1.4.0",
+    "@emdash-cms/blocks": "1.4.0",
+    "@emdash-cms/plugin-cli": "0.13.5",
     "@emdash-cms/plugin-types": "0.6.0",
-    "@emdash-cms/sandbox-workerd": "0.9.3",
+    "@emdash-cms/sandbox-workerd": "0.9.6",
     "@lingui/core": "5.9.5",
     "@lingui/message-utils": "5.9.5",
     "@playwright/test": "1.61.1",
     "@types/react": "19.3.0",
     "astro": "7.1.3",
     "better-sqlite3": "12.11.1",
-    "emdash": "1.2.0",
+    "emdash": "1.4.0",
     "kysely": "0.29.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",

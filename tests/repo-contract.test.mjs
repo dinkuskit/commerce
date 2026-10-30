@@ -36,13 +36,13 @@ const requiredPublicManifest = {
   },
   files: ["dist", "emdash-plugin.jsonc", "cli"],
   peerDependencies: {
-    emdash: "1.2.0",
+    emdash: "1.4.0",
   },
   dinkuskit: {
     emdashCompatibility: {
-      apiPeer: "1.2.0",
+      apiPeer: "1.4.0",
       nodeEngine: ">=24.15.0 <25",
-      packageIntegrity: "sha512-f9s7khWeuOxX5cRimlu9o224hn9TuKnYk/0Vsu1CS9oaVn78V1+MWyfEsZc2iDv8JYWrezEZFkpy/Q6pRgVgzg==",
+      packageIntegrity: "sha512-dp56A8E5KCVSFVY6NSWbzgmgsUNWp7U1RX3f4qQKsY8WdB211pI3adAkLoG4R07KZ7zihxYz24DH9z5k4gLmhQ==",
       mountedSitePilot: "private",
       requiredSourceVisibility: "public",
       requiredSourceRepository: "https://github.com/emdash-cms/emdash",

@@ -6,6 +6,10 @@ import { expect } from "@playwright/test";
 // Commerce never reads it (catalog-page-link-in-commerce-20261029).
 const headers = { "X-EmDash-Request": "1" };
 
+// EmDash 1.4 renders a Block Kit form block as a group of fields named after
+// its submit button, not an HTML <form> (emdash-cms/emdash#4183).
+export const BLOCK_FORM = '[role="group"]';
+
 async function ok(response) {
   const body = await response.json().catch(() => ({}));
   expect(response.ok(), JSON.stringify(body)).toBe(true);

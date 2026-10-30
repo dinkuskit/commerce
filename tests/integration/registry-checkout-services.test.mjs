@@ -101,7 +101,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   assert.deepEqual(await state.cartRecords(), []);
 });
 
-test('EmDash 1.2 SDK storage preserves checkout records across runtime restart without reseed', async t => {
+test('EmDash 1.4 SDK storage preserves checkout records across runtime restart without reseed', async t => {
   const directory = await mkdtemp('/tmp/commerce-emdash-1-2-restart-');
   const databasePath = join(directory, 'runtime.db');
   t.after(() => rm(directory, { recursive: true, force: true }));
@@ -242,7 +242,7 @@ test('compiled zero-priced merchandise with positive shipping still uses Payment
   assert.equal((await state.cartRecords())[0].attempts[0].order, undefined);
 });
 
-test('EmDash 1.2 original storage shares admin prices, storefront helpers and canonical checkout', async t => {
+test('EmDash 1.4 original storage shares admin prices, storefront helpers and canonical checkout', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
   const prepared = await state.invoke(PREPARE);

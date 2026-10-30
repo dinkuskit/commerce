@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { ensureProductsCollection, openPanel } from "./product-page.mjs";
+import { BLOCK_FORM, ensureProductsCollection, openPanel } from "./product-page.mjs";
 
 const grilltrackScreenshotsDir = resolve(".grilltrack/work/native-continuity/screenshots");
 mkdirSync(grilltrackScreenshotsDir, { recursive: true });
@@ -178,7 +178,7 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(storageRow("managedSkuClaims", managedClaim.recordId)).toEqual(claimBefore);
 
     // 6. Edit Heritage Boot in the panel: change price and set In stock
-    const priceForm = panel.locator("form").filter({ has: page.getByRole("textbox", { name: "Regular", exact: true }) });
+    const priceForm = panel.locator(BLOCK_FORM).filter({ has: page.getByRole("textbox", { name: "Regular", exact: true }) });
     await priceForm.getByRole("textbox", { name: "Regular", exact: true }).fill("195");
     await priceForm.getByRole("textbox", { name: "Sale", exact: true }).fill("160");
     await priceForm.getByRole("radio", { name: "In stock", exact: true }).check();
@@ -187,7 +187,7 @@ test.describe("Native populated-browser continuity fixture", () => {
     await expect(priceForm.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("160.00");
     await saveScreenshot(page, "native-products-edited.png", artifactsDir);
     // Native stores keep their GTIN, MPN and Brand form, now in the same panel as Registry stores.
-    const idsForm = panel.locator("form").filter({ has: page.getByRole("button", { name: "Save identifiers", exact: true }) });
+    const idsForm = panel.locator(BLOCK_FORM).filter({ has: page.getByRole("button", { name: "Save identifiers", exact: true }) });
     await idsForm.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333931");
     await idsForm.getByRole("textbox", { name: "Brand", exact: true }).fill("Heritage");
     await idsForm.getByRole("button", { name: "Save identifiers", exact: true }).click();
@@ -225,7 +225,7 @@ test.describe("Native populated-browser continuity fixture", () => {
 
     // 9. Edit the setting
     await hide.uncheck();
-    await page.locator("form").filter({ has: hide }).getByRole("button", { name: "Save", exact: true }).click();
+    await page.locator(BLOCK_FORM).filter({ has: hide }).getByRole("button", { name: "Save", exact: true }).click();
     await expect.poll(() => storageRow("storefrontOutOfStockListing", "active").hideOutOfStock).toBe(false);
     await page.reload();
     await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).not.toBeChecked({ timeout: 30000 });
