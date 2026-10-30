@@ -45,7 +45,7 @@ await buildPlugin({ dir: stage, outDir: paymentBuild });
 const hash = file => createHash('sha256').update(readFileSync(file)).digest('hex');
 const identities = { commerceHead: git(process.cwd(), 'rev-parse', 'HEAD'), paymentsHead: paymentHead,
   sourceDirty: Boolean(git(process.cwd(), 'status', '--porcelain', '--untracked-files=no')),
-  node: process.version, emdash: '1.2.0', runner: '@emdash-cms/sandbox-workerd@0.9.3 (WorkerdSandboxRunner)',
+  node: process.version, emdash: '1.4.0', runner: '@emdash-cms/sandbox-workerd@0.9.6 (WorkerdSandboxRunner)',
   playwright: JSON.parse(readFileSync('node_modules/@playwright/test/package.json')).version,
   commerceVersion: JSON.parse(readFileSync('package.json')).version, paymentsVersion: '0.2.8',
   commerceBackend: hash('dist/sandbox/plugin.mjs'), paymentsBackend: hash(resolve(paymentBuild, 'plugin.mjs')),

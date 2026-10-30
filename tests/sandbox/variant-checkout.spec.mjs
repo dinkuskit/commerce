@@ -5,7 +5,7 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { loadMerchantStoreSettings, saveMerchantStoreSettings } from '../../dist/features/store-settings/kernel/index.js';
-import { openPanel, openProductPage, setOnSale } from './product-page.mjs';
+import { BLOCK_FORM, openPanel, openProductPage, setOnSale } from './product-page.mjs';
 
 function proofDb() {
   const native = test.info().project.name === "native-variant";
@@ -279,14 +279,14 @@ test('merchant edits choices and independent prices on desktop and phone', async
     expect(root.variantProduct.options).toHaveLength(0);
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(1);
     await ui.getByRole('textbox',{name:'Second SKU',exact:true}).fill('MERCHANT-PROOF-LARGE');
-    await ui.locator('form').filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Physical',exact:true}).first().check();
-    await ui.locator('form').filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).last().check();
+    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Physical',exact:true}).first().check();
+    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).last().check();
     await ui.getByRole('button',{name:'Add choices',exact:true}).click();
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(2);
     const expanded = all(catalog).find(r => r.itemId === root.itemId).variantProduct;
     owned = expanded.members.map(m => m.catalogItemId);
     expect(expanded.defaultMemberId).toBe(root.itemId);
-    const priceForms = ui.locator('form').filter({has:page.getByRole('textbox',{name:'Regular',exact:true})});
+    const priceForms = ui.locator(BLOCK_FORM).filter({has:page.getByRole('textbox',{name:'Regular',exact:true})});
     for (const [i, amount, status] of [[0,'20','Out of stock'],[1,'24','In stock']]) {
       const form = priceForms.nth(i);
       await form.getByRole('textbox',{name:'Regular',exact:true}).fill(amount);
@@ -332,7 +332,7 @@ test('merchant edits choices and independent prices on desktop and phone', async
     await expect(ui.getByRole('button',{name:'Save choices',exact:true})).toBeEnabled();
     expect(all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].price.regular.minor).toBe('2400');
     await ui.getByRole('textbox',{name:'Value: Large',exact:true}).fill('Big');
-    await ui.locator('form').filter({has:page.getByRole('button',{name:'Save choices'})}).getByRole('radio',{name:'Physical',exact:true}).last().check();
+    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Save choices'})}).getByRole('radio',{name:'Physical',exact:true}).last().check();
     const detailResponse = page.waitForResponse(r => r.url().split('?')[0].endsWith('/panel/product') && r.request().method() === 'POST');
     await ui.getByRole('button',{name:'Save choices',exact:true}).click();
     { const r = await detailResponse; writeFileSync(`${process.env.COMMERCE_PROOF_ARTIFACTS}/merchant-details-${native ? 'native' : 'sandbox'}.json`, JSON.stringify({request:r.request().postDataJSON(),response:await r.json()},null,2)); }
@@ -379,7 +379,7 @@ test('merchant edits choices and independent prices on desktop and phone', async
     await ui.getByRole('textbox',{name:'Choice: Size',exact:true}).fill('Medium');
     await ui.getByRole('textbox',{name:'Choice: Color',exact:true}).fill('Ink');
     await ui.getByRole('textbox',{name:'Variant SKU',exact:true}).fill('MERCHANT-PROOF-MEDIUM-INK');
-    await ui.locator('form').filter({has:page.getByRole('button',{name:'Add variant',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).check();
+    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Add variant',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).check();
     await ui.getByRole('button',{name:'Add variant',exact:true}).click();
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.length).toBe(3);
     owned = all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.map(m => m.catalogItemId);
@@ -436,7 +436,7 @@ test('merchant edits choices and independent prices on desktop and phone', async
     // Open the mounted controls and prove an actual save, not just a screenshot.
     await page.setViewportSize({width:390,height:844});
     const phonePanel = await openPanel(page);
-    const phoneForm = phonePanel.locator('form').filter({has:page.getByRole('textbox',{name:'Regular',exact:true})}).nth(2);
+    const phoneForm = phonePanel.locator(BLOCK_FORM).filter({has:page.getByRole('textbox',{name:'Regular',exact:true})}).nth(2);
     await expect(phoneForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('28.00');
     await phoneForm.getByRole('textbox',{name:'Regular',exact:true}).fill('29');
     await phoneForm.getByRole('button',{name:/^Save/}).click();

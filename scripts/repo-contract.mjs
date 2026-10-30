@@ -109,14 +109,14 @@ export async function auditRepository(root = repositoryRoot) {
   if (manifest.repository?.url !== "git+https://github.com/dinkuskit/commerce.git") {
     findings.push("package repository must be dinkuskit/commerce");
   }
-  if (manifest.peerDependencies?.emdash !== "1.2.0") {
-    findings.push("runtime peer must pin exact emdash 1.2.0");
+  if (manifest.peerDependencies?.emdash !== "1.4.0") {
+    findings.push("runtime peer must pin exact emdash 1.4.0");
   }
   const compatibility = manifest.dinkuskit?.emdashCompatibility;
   const requiredCompatibility = {
-    apiPeer: "1.2.0",
+    apiPeer: "1.4.0",
     nodeEngine: ">=24.15.0 <25",
-    packageIntegrity: "sha512-f9s7khWeuOxX5cRimlu9o224hn9TuKnYk/0Vsu1CS9oaVn78V1+MWyfEsZc2iDv8JYWrezEZFkpy/Q6pRgVgzg==",
+    packageIntegrity: "sha512-dp56A8E5KCVSFVY6NSWbzgmgsUNWp7U1RX3f4qQKsY8WdB211pI3adAkLoG4R07KZ7zihxYz24DH9z5k4gLmhQ==",
     mountedSitePilot: "private",
     requiredSourceVisibility: "public",
     requiredSourceRepository: "https://github.com/emdash-cms/emdash",

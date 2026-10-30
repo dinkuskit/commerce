@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { openProductPage, setOnSale } from '../sandbox/product-page.mjs';
+import { BLOCK_FORM, openProductPage, setOnSale } from '../sandbox/product-page.mjs';
 test.afterEach(async ({ page }, info) => {
   if (info.status !== info.expectedStatus) await page.screenshot({ path: resolve(process.env.LOCAL_MERCHANT_DIRECTORY, 'failure.png'), fullPage: true });
 });
@@ -25,7 +25,7 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   const { id: pageId, panel } = await openProductPage(page, 'Fixture parcel ' + run);
   await panel.getByRole('textbox', { name: 'SKU (optional)', exact: true }).fill('FIXTURE-' + run);
   await panel.getByRole('button', { name: 'Add price and stock', exact: true }).click();
-  const priceForm = panel.locator('form').filter({ has: page.getByRole('textbox', { name: 'Regular', exact: true }) });
+  const priceForm = panel.locator(BLOCK_FORM).filter({ has: page.getByRole('textbox', { name: 'Regular', exact: true }) });
   await priceForm.getByRole('textbox', { name: 'Regular', exact: true }).fill('12');
   await priceForm.getByRole('radio', { name: 'In stock', exact: true }).check();
   await priceForm.getByRole('button', { name: /^Save/ }).click();

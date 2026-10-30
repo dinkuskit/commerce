@@ -3,9 +3,9 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript-api';
 import { resolve, relative } from 'node:path';
 
-const PACKAGE_SHA256 = '3dbc70b1a36726738305ec0b67767763afe45a4c55b5736891a6d6e7c7ebc8ea';
+const PACKAGE_SHA256 = '5c103d15977568612c521e197d99b82aa3c54ed286b7a166ecc0ab4fe4e13778';
 const SOURCES = new Map([
-  ['dist/index.mjs', '84669c4e284ffd4c6a24d76fd97f53b6512d71a5bd5db11f5a3289d031b107dc'],
+  ['dist/index.mjs', '8251646efc9135f1ac4135023294ee1fcafd12bb75dcc05d3e9de665483a4690'],
   ['dist/types-ndj-bYfi.mjs', '26b974a1ab7f8fdfe7fa2c7bf69ab5ac09be9b69f4df087ef97edfd92bc8c3a8'],
   ['dist/authenticate-DJrZRBu9.mjs', '9dc7b81142bc7753949bd6b9f702c5298758f23f67e39f081cbb33999b06a6b9'],
   ['dist/passkey/index.mjs', '6399e0e5d9c3897508a3ea920d757a72be28a641fb8cfb2373f0592dd4740425'],

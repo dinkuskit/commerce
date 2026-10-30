@@ -4,7 +4,7 @@ import test from "node:test";
 import { commerceAdmin, productMediaPanel, productPanel } from "../dist/admin/index.js";
 import { linkProductPage } from "../dist/features/catalog/kernel/index.js";
 
-// Block Kit 1.2.0 renders no media_picker on plugin admin pages, so the sandbox
+// Block Kit 1.4.0 renders no media_picker on plugin admin pages, so the sandbox
 // admin lists the Media Library itself through media:read. This exercises that
 // chooser against the real handler with in-memory storage and a fake media access.
 const HAT = "01HAT000000000000000000000";

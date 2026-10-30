@@ -11,7 +11,7 @@ version_scope: "Commerce {{version}}"
 
 Commerce adds products, prices, cart and checkout orchestration, receipts, orders and shopper accounts to an EmDash site. The storefront supplies the customer-facing pages; installing Commerce does not create those pages automatically. Commerce owns product identity and the amount a customer pays. [Payments](/docs/reference/payments) owns processor connections, [Ship](/docs/reference/ship) owns shipping labels, and [Inventory](/docs/reference/inventory) owns physical stock when a product is managed.
 
-This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It requires EmDash `1.2.0`. Changes merged after that release are not described here until they ship in a stable release.
+This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It requires EmDash `1.4.0`. Changes merged after that release are not described here until they ship in a stable release.
 
 ## Connect to DinkusKit
 
