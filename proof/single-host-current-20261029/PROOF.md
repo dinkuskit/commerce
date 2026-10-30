@@ -1,5 +1,12 @@
 # Single-host browser diagnostics on current main
 
+**Maintainer follow-up,2026-10-30:** the source results below remain bound to
+88f6cd3 and parent4e, not later heads. After the accepted Oracle-hook revert,
+the maintainer updated the PR to0b17d38 using GitHub Update branch. A following
+empty tooling changeset satisfies the per-PR changeset check without a version
+bump. Exact follow-up qualification is recorded separately in the PR; no old
+result is silently relabelled.
+
 ## Scope and provenance
 
 Source: **88f6cd375a6f9f77af7dcff9bb3e01e67b8841ea**.
@@ -23,7 +30,7 @@ with exit64 **before any child gate**, so a diagnostic cannot silently narrow
 those commands. Quick/checks and the separate packaged/settings configs are not
 narrowed. README and verification skill document direct diagnostic use and the
 normal full gate. Product article: **Docs: not applicable**; no owner-facing
-product behavior/setup, package version or release changeset changes.
+product behavior/setup, package version or version-bumping changeset changes.
 
 ## Fresh reproduction and qualification
 
