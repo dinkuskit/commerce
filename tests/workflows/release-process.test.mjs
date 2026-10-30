@@ -112,7 +112,7 @@ test("registry workflow is npm-based, pinned, call-only, and builds the version 
 	assert.match(source, /attestations: write/);
 	// Release-gate invariant: Registry publishing is reachable only as a reusable workflow that
 	// release.yml's version-tag run calls, and the dispatch gate runs before any Registry I/O. It
-	// holds no GitHub write token. A hand-picked package selector never reaches the publish job.
+	// has write scope only for release assets. A hand-picked package selector never reaches the publish job.
 	assert.doesNotMatch(source, /^ {2}workflow_dispatch:/m);
 	assert.match(source, /^ {2}workflow_call:/m);
 	assert.doesNotMatch(source, /inputs\.package/);
@@ -129,6 +129,12 @@ test("registry workflow is npm-based, pinned, call-only, and builds the version 
 	assert.ok(at("run: npm run build") < at("node scripts/prepare-emdash-release.mjs"));
 	assert.match(source, /node scripts\/prepare-emdash-release\.mjs "\$\{EMDASH_RELEASE_SELECTOR\}"/);
 	assert.doesNotMatch(source, /release prepare[^\n]*--dir \./);
+	assert.match(source, /contents: write # Required only for no-clobber release artifact uploads/);
+	assert.ok(at("actions/attest-build-provenance@") < at("node scripts/registry-release-media.mjs"));
+	assert.ok(at("node scripts/registry-release-media.mjs") < at("emdash-cms/emdash/apps/release-action@"));
+	const publish = source.split("      - name: Publish plugin to EmDash Registry\n")[1]?.split("      - name:")[0];
+	assert.match(publish, /release-file: \$\{\{ steps\.media\.outputs\.release-file \}\}/);
+	assert.doesNotMatch(publish, /bundle-file:|provenance-file:/);
 });
 
 test("beta routing sends only prereleases to the beta package", () => {
