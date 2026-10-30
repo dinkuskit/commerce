@@ -26,22 +26,19 @@ calls it, so the release service connects both listings through `release.yml`.
 
 ## Registry listing media
 
-The publish job prepares a complete URL-source release record through
-`scripts/registry-release-media.mjs` and passes it as `release-file` to the
-existing pinned EmDash release action. The package and signed provenance are
-uploaded to the version tag's GitHub Release without replacement; existing
-assets must have identical bytes. Both artifact filenames include their byte
-checksum, so a rebuilt archive after an interrupted publish gets a distinct
-URL while an identical rerun reuses the existing asset. A missing beta release is created as a
-prerelease after the tag is verified. A missing stable release is an error.
-Icons and screenshots use checksummed raw URLs pinned to the same source
-commit; EmDash imports those bytes into the publisher's PDS.
-
-Only the `publish-emdash` caller and reusable `publish` job gain
-`contents: write` for release assets, alongside existing OIDC and attestation
-permissions. No publisher credential or new secret is introduced. Tags and
-release branches remain under the existing release gate. Immutable releases
-that refuse uploads fail instead of being unlocked or recreated.
+The publish step uses the `emdash-cms/emdash/apps/release-action` pinned to
+[emdash-cms/emdash#4467](https://github.com/emdash-cms/emdash/pull/4467), the
+first one that uploads listing media; upstream `main` still drops it
+([emdash-cms/emdash#4464](https://github.com/emdash-cms/emdash/issues/4464)).
+`scripts/registry-release-media.mjs` checks that the prepared
+`.emdash-release/emdash-plugin.jsonc` names the gated tag's version and the
+expected listing slug, checks each icon and screenshot (PNG, JPEG or WebP, at
+most 1 MiB, at most eight screenshots), and copies them beside that manifest.
+The action then receives the bundle, the signed provenance and
+`plugin-directory: .emdash-release`, and uploads all of them to the release
+service, which stores the images as publisher PDS blobs. Nothing is written to
+the GitHub Release, so the publish jobs keep `contents: read`. Move the pin to
+a `main` commit once #4467 merges.
 
 The PDS verifier checks the package bytes and declared media counts,
 checksums, sizes and MIME types, including already-listed retry runs. This
@@ -119,8 +116,7 @@ workflow** with `action: add-fix`, `release_version: X.Y.Z`, and
 commit onto `release/X.Y.Z` (`git cherry-pick -x`, so the copy names its
 source) and tags the next `vX.Y.Z-beta.N`, whose run publishes it and starts
 the journeys again. It refuses a commit that isn't on `main`, one already on
-the branch, and one that doesn't copy cleanly; then nothing is pushed. A
-release-file fix is copied the same way, so the branch runs it too.
+the branch, and one that doesn't copy cleanly; then nothing is pushed.
 
 ## 4. Promote
 

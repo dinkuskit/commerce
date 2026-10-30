@@ -129,12 +129,16 @@ test("registry workflow is npm-based, pinned, call-only, and builds the version 
 	assert.ok(at("run: npm run build") < at("node scripts/prepare-emdash-release.mjs"));
 	assert.match(source, /node scripts\/prepare-emdash-release\.mjs "\$\{EMDASH_RELEASE_SELECTOR\}"/);
 	assert.doesNotMatch(source, /release prepare[^\n]*--dir \./);
-	assert.match(source, /contents: write # Required only for no-clobber release artifact uploads/);
+	assert.doesNotMatch(source, /contents: write/);
 	assert.ok(at("actions/attest-build-provenance@") < at("node scripts/registry-release-media.mjs"));
 	assert.ok(at("node scripts/registry-release-media.mjs") < at("emdash-cms/emdash/apps/release-action@"));
 	const publish = source.split("      - name: Publish plugin to EmDash Registry\n")[1]?.split("      - name:")[0];
-	assert.match(publish, /release-file: \$\{\{ steps\.media\.outputs\.release-file \}\}/);
-	assert.doesNotMatch(publish, /bundle-file:|provenance-file:/);
+	// emdash-cms/emdash#4467's action uploads the listing images named beside the prepared manifest.
+	assert.match(source, /apps\/release-action@45b542c016d35c7a88a590dce8e600e2384c13a9/);
+	assert.match(publish, /bundle-file: \$\{\{ steps\.prepare\.outputs\.bundle-file \}\}/);
+	assert.match(publish, /provenance-file: \$\{\{ steps\.attest\.outputs\.bundle-path \}\}/);
+	assert.match(publish, /plugin-directory: \$\{\{ steps\.media\.outputs\.plugin-directory \}\}/);
+	assert.doesNotMatch(publish, /release-file:/);
 });
 
 test("beta routing sends only prereleases to the beta package", () => {

@@ -1,96 +1,25 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { join } from "node:path";
 import test from "node:test";
-import { createSourceRelease, ensureReleaseAsset, ensureGithubRelease, prepareMediaRelease } from "../scripts/registry-release-media.mjs";
+import { prepareListingMedia } from "../scripts/registry-release-media.mjs";
 import { computePackageChecksum, recordMatches, listedRecordMatches } from "../.github/scripts/verify-registry-release.mjs";
 
-const repository = "dinkuskit/commerce";
-const tag = "v0.5.0-beta.1";
 const bytes = Buffer.from("verified artifact");
 const checksum = computePackageChecksum(bytes);
-const asset = { id: 42, name: "package.tar.gz", browser_download_url: `https://github.com/${repository}/releases/download/${tag}/package.tar.gz` };
+const jpeg = Buffer.from([255, 216, 255, 0]);
 
-test("matching existing release asset is downloaded and reused without upload", async () => {
-  const calls = [];
-  const gh = (args) => {
-    calls.push(args);
-    return args[1].includes("/assets/") ? bytes : Buffer.from(JSON.stringify({ assets: [asset] }));
-  };
-  const result = await ensureReleaseAsset({ repository, tag, name: asset.name, bytes, gh });
-  assert.equal(result.checksum, checksum);
-  assert.equal(calls.length, 2);
-  assert.equal(calls.some((args) => args.includes("upload")), false);
-});
+async function fixture(config) {
+  const root = await mkdtemp(join(tmpdir(), "commerce-listing-media-"));
+  await mkdir(join(root, ".emdash-release"));
+  await mkdir(join(root, "assets/registry"), { recursive: true });
+  await writeFile(join(root, "assets/registry/demo.jpg"), jpeg);
+  await writeFile(join(root, ".emdash-release/emdash-plugin.jsonc"), JSON.stringify(config));
+  return root;
+}
 
-test("existing different bytes fail closed and are never replaced", async () => {
-  const calls = [];
-  const gh = (args) => {
-    calls.push(args);
-    return args[1].includes("/assets/") ? Buffer.from("different") : Buffer.from(JSON.stringify({ assets: [asset] }));
-  };
-  await assert.rejects(ensureReleaseAsset({ repository, tag, name: asset.name, bytes, gh }), /conflict/);
-  assert.equal(calls.some((args) => args.includes("upload")), false);
-});
-
-test("new artifact upload uses verified bytes and exact basename without clobber", async () => {
-  let uploaded = false;
-  const gh = (args) => {
-    assert.equal(args.includes("--clobber"), false);
-    if (args[1] === "upload") {
-      assert.equal(basename(args[3]), asset.name);
-      assert.deepEqual(readFileSync(args[3]), bytes);
-      uploaded = true;
-      return Buffer.alloc(0);
-    }
-    return args[1].includes("/assets/") ? bytes : Buffer.from(JSON.stringify({ assets: uploaded ? [asset] : [] }));
-  };
-  await ensureReleaseAsset({ repository, tag, name: asset.name, bytes, gh });
-  assert.equal(uploaded, true);
-});
-
-test("concurrent matching upload may be reused but a conflicting upload fails", async () => {
-  for (const same of [true, false]) {
-    let raced = false;
-    const gh = (args) => {
-      if (args[1] === "upload") { raced = true; throw new Error("duplicate upload"); }
-      return args[1].includes("/assets/") ? (same ? bytes : Buffer.from("other")) : Buffer.from(JSON.stringify({ assets: raced ? [asset] : [] }));
-    };
-    const attempt = ensureReleaseAsset({ repository, tag, name: asset.name, bytes, gh });
-    if (same) await attempt;
-    else await assert.rejects(attempt, /conflict/);
-  }
-});
-
-test("missing beta release is created as prerelease; stable absence or non-404 fails", () => {
-  let created = false;
-  const gh = (args) => {
-    if (args[1] === "create") { assert.ok(args.includes("--prerelease")); assert.ok(args.includes("--verify-tag")); created = true; return Buffer.alloc(0); }
-    if (!created) throw Object.assign(new Error("missing"), { stderr: Buffer.from("HTTP 404") });
-    return Buffer.from("{}");
-  };
-  ensureGithubRelease({ repository, tag, beta: true, gh });
-  assert.equal(created, true);
-  assert.throws(() => ensureGithubRelease({ repository, tag: "v0.5.0", beta: false, gh: () => { throw Object.assign(new Error(), { stderr: "HTTP 404" }); } }), /must exist/);
-  assert.throws(() => ensureGithubRelease({ repository, tag, beta: true, gh: () => { throw Object.assign(new Error(), { stderr: "HTTP 403" }); } }), /Could not read/);
-});
-
-test("source release parser retains media and mandatory provenance", () => {
-  const result = createSourceRelease({
-    slug: "dinkus-commerce", version: "0.5.0", repository,
-    workflowRef: `${repository}/.github/workflows/release.yml@refs/tags/v0.5.0`,
-    packageArtifact: { url: "https://example.com/plugin.tar.gz", checksum, contentType: "application/gzip" },
-    provenanceArtifact: { url: "https://example.com/provenance.json", checksum },
-    declaredAccess: { network: { request: { allowedHosts: ["dinkuskit.com", "payments.dinkuskit.com"] } } },
-    images: { icon: { url: "https://example.com/icon.webp", checksum, contentType: "image/webp" }, screenshots: [{ url: "https://example.com/screen.jpg", checksum, contentType: "image/jpeg", lang: "en" }] },
-  });
-  assert.equal(result.artifacts.screenshots.length, 1);
-  assert.equal(result.extensions["com.emdashcms.experimental.package.releaseExtension"].provenance.predicateType, "https://slsa.dev/provenance/v1");
-  assert.throws(() => createSourceRelease({ slug: "dinkus-commerce", version: "0.5.0", repository, workflowRef: "bad", packageArtifact: {}, provenanceArtifact: {}, declaredAccess: {}, images: {} }), /Invalid delegated/);
-});
+const beta = { slug: "dinkus-commerce-beta", version: "0.7.0-beta.6", release: { artifacts: { icon: { file: "./assets/registry/demo.jpg" }, screenshots: [{ file: "./assets/registry/demo.jpg", lang: "en" }] } } };
 
 test("PDS verification rejects missing or changed listing images", () => {
   const expected = { slug: "dinkus-commerce", version: "0.5.0", checksum, size: bytes.length, media: { icon: [{ checksum, size: bytes.length, contentType: "image/webp" }], screenshots: [], banner: [] } };
@@ -110,91 +39,34 @@ test("already-listed retries also verify the expected artwork", () => {
   assert.equal(listedRecordMatches(record, expected).ok, true);
 });
 
-test("preparation binds all media to the source commit and checks input before uploads", async () => {
-  const root = await mkdtemp(join(tmpdir(), "commerce-media-preparation-"));
+test("listing images are copied beside the prepared manifest for the release-action", async () => {
+  const root = await fixture(beta);
   try {
-    await mkdir(join(root, "out"));
-    await writeFile(join(root, "bundle.tar.gz"), bytes);
-    await writeFile(join(root, "provenance.json"), "{}");
-    const image = Buffer.from([255, 216, 255, 0]);
-    await writeFile(join(root, "demo.jpg"), image);
-    const config = { slug: "dinkus-commerce", version: "0.5.0", repo: `https://github.com/${repository}`, release: { artifacts: { icon: { file: "demo.jpg" }, screenshots: [{ file: "demo.jpg", lang: "en" }] } } };
-    await writeFile(join(root, "manifest.json"), JSON.stringify(config));
-    const assets = [];
-    const uploaded = new Map();
-    let calls = 0;
-    const gh = (args) => {
-      calls += 1;
-      if (args[1] === "upload") {
-        const name = basename(args[3]);
-        const id = assets.length + 1;
-        uploaded.set(id, readFileSync(args[3]));
-        assets.push({ id, name, browser_download_url: `https://github.com/${repository}/releases/download/v0.5.0/${name}` });
-        return Buffer.alloc(0);
-      }
-      if (args[1].includes("/assets/")) return uploaded.get(Number(args[1].split("/").at(-1)));
-      return Buffer.from(JSON.stringify({ assets }));
-    };
-    const options = { root, bundleFile: "bundle.tar.gz", provenanceFile: "provenance.json", runnerTemp: root, manifestFile: "manifest.json", repository, sha: "a".repeat(40), ref: "refs/tags/v0.5.0", workflowRef: `${repository}/.github/workflows/release.yml@refs/tags/v0.5.0`, outputFile: "out/release.json", gh, validateBundle: async () => ({ success: true, value: { manifest: { id: "dinkus-commerce", version: "0.5.0" }, declaredAccess: {} } }) };
-    const record = await prepareMediaRelease(options);
-    assert.equal(record.artifacts.icon.url, `https://raw.githubusercontent.com/${repository}/${options.sha}/demo.jpg`);
-    assert.equal(record.artifacts.screenshots[0].lang, "en");
-    assert.equal(assets.length, 2);
-    assert.match(assets[1].name, /provenance-[a-f0-9]{64}\.json$/);
-    assert.deepEqual(JSON.parse(await readFile(join(root, options.outputFile))), record);
-    calls = 0;
-    await assert.rejects(prepareMediaRelease({ ...options, ref: "refs/heads/main" }), /workflow identity|gated tag/);
-    assert.equal(calls, 0);
+    const output = join(root, "github-output");
+    const result = await prepareListingMedia({ root, manifestFile: ".emdash-release/emdash-plugin.jsonc", ref: "refs/tags/v0.7.0-beta.6", githubOutput: output });
+    assert.equal(result.pluginDirectory, ".emdash-release");
+    assert.deepEqual(await readFile(join(root, ".emdash-release/assets/registry/demo.jpg")), jpeg);
+    assert.equal(await readFile(output, "utf8"), "plugin-directory=.emdash-release\n");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test("same-tag retry after an interrupted publish keeps rebuilt package assets distinct and reuses identical bytes", async () => {
-  const root = await mkdtemp(join(tmpdir(), "commerce-media-retry-"));
+test("listing preparation refuses another tag, slug, unsafe path or non-image before copying", async () => {
+  const root = await fixture(beta);
   try {
-    await mkdir(join(root, "out"));
-    await writeFile(join(root, "provenance.json"), "{}");
-    const slug = "dinkus-commerce-beta";
-    const version = "0.6.1-beta.1";
-    await writeFile(join(root, "manifest.json"), JSON.stringify({ slug, version, repo: `https://github.com/${repository}` }));
-    const assets = [];
-    const uploaded = new Map();
-    let uploads = 0;
-    const gh = (args) => {
-      assert.equal(args.includes("--clobber"), false);
-      if (args[1] === "upload") {
-        const name = basename(args[3]);
-        assert.equal(assets.some(asset => asset.name === name), false, "never replace a release asset");
-        const id = assets.length + 1;
-        uploaded.set(id, readFileSync(args[3]));
-        assets.push({ id, name, browser_download_url: `https://github.com/${repository}/releases/download/v${version}/${name}` });
-        uploads += 1;
-        return Buffer.alloc(0);
-      }
-      if (args[1].includes("/assets/")) return uploaded.get(Number(args[1].split("/").at(-1)));
-      return Buffer.from(JSON.stringify({ assets }));
-    };
-    const options = { root, bundleFile: "bundle.tar.gz", provenanceFile: "provenance.json", runnerTemp: root, manifestFile: "manifest.json", repository, sha: "a".repeat(40), ref: `refs/tags/v${version}`, workflowRef: `${repository}/.github/workflows/release.yml@refs/tags/v${version}`, outputFile: "out/release.json", gh, validateBundle: async () => ({ success: true, value: { manifest: { id: slug, version }, declaredAccess: {} } }) };
-    const firstBytes = Buffer.from("first valid archive representation");
-    await writeFile(join(root, "bundle.tar.gz"), firstBytes);
-    const first = await prepareMediaRelease(options);
-    // The downstream delegated publish times out before producing a release.
-    // The retry rebuilds the same source/version into different archive bytes.
-    const rebuiltBytes = Buffer.from("rebuilt valid archive representation");
-    await writeFile(join(root, "bundle.tar.gz"), rebuiltBytes);
-    const retry = await prepareMediaRelease(options);
-    assert.notEqual(retry.artifacts.package.url, first.artifacts.package.url);
-    for (const [record, archive] of [[first, firstBytes], [retry, rebuiltBytes]]) {
-      const digest = createHash("sha256").update(archive).digest("hex");
-      assert.ok(record.artifacts.package.url.endsWith(`-${digest}.tar.gz`));
-      assert.equal(record.artifacts.package.checksum, computePackageChecksum(archive));
+    await writeFile(join(root, "notes.txt"), "not an image");
+    const manifestFile = ".emdash-release/emdash-plugin.jsonc";
+    await assert.rejects(prepareListingMedia({ root, manifestFile, ref: "refs/heads/main" }), /gated tag/);
+    for (const [config, error] of [
+      [{ ...beta, slug: "dinkus-commerce" }, /listing identity/],
+      [{ ...beta, release: { artifacts: { icon: { file: "../outside.jpg" } } } }, /ENOENT|leaves/],
+      [{ ...beta, release: { artifacts: { icon: { file: "./assets/registry/demo.jpg" }, banner: { file: "./notes.txt" } } } }, /Unsupported image/],
+    ]) {
+      await writeFile(join(root, manifestFile), JSON.stringify(config));
+      await assert.rejects(prepareListingMedia({ root, manifestFile, ref: "refs/tags/v0.7.0-beta.6" }), error);
     }
-    assert.equal(uploads, 3, "two package representations and one unchanged provenance");
-    assert.deepEqual(uploaded.get(1), firstBytes, "the interrupted attempt's package remains intact");
-    const identical = await prepareMediaRelease(options);
-    assert.deepEqual(identical, retry);
-    assert.equal(uploads, 3, "an identical retry reuses the existing assets");
+    await assert.rejects(readFile(join(root, ".emdash-release/assets/registry/demo.jpg")), /ENOENT/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
