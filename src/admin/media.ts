@@ -5,7 +5,7 @@ import { navigation } from "../shared/admin-blocks.js";
 import { button, header, note, object } from "./common.js";
 
 const LIBRARY_PAGE = 12;
-// Images reference the EmDash Media Library by id. Block Kit 1.2.0 renders no
+// Images reference the EmDash Media Library by id. Block Kit 1.4.0 renders no
 // media_picker on plugin admin pages, so Commerce lists the library itself
 // through media:read; the admin preview uses the host's media item URL.
 export type Target = { t: "image" | "gallery" | "placeholder"; id: string };

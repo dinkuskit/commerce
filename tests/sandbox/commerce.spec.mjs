@@ -291,7 +291,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
 });
 
 // Product media: a clerk chooses images from the Media Library through the
-// Commerce-rendered chooser (Block Kit 1.2.0 renders no media_picker on plugin
+// Commerce-rendered chooser (Block Kit 1.4.0 renders no media_picker on plugin
 // pages); the public catalog carries media ids and alt read live; the
 // server-rendered storefront resolves public URLs and srcset through EmDash.
 test("clerk sets product images from the Media Library and the storefront renders them", async ({ page, request, browser }) => {

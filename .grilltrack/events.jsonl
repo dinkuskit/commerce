@@ -651,3 +651,7 @@
 {"action": "decision_proposed", "at": "2026-10-29T21:41:53+00:00", "data": {"decision_id": "merchant-selling-countries-002"}, "event_id": "3cba2586-2d3a-4739-8b44-1a7a5b18b210"}
 {"action": "decision_locked", "at": "2026-10-29T21:41:53+00:00", "data": {"decision_id": "merchant-selling-countries-002"}, "event_id": "8965b273-0a61-4fa5-8115-e1a732ab8f2f"}
 {"action": "decision_superseded", "at": "2026-10-29T21:41:53+00:00", "data": {"affected": [], "decision_id": "merchant-country-settings-001", "replacement_id": "merchant-selling-countries-002"}, "event_id": "d4fcd997-7cc0-48e2-9238-088b2202e0fd"}
+{"action": "decision_proposed", "at": "2026-10-30T12:35:02+00:00", "data": {"decision_id": "emdash-1-4-compatibility-20261030"}, "event_id": "9e9b72bd-0df1-4d33-a3b0-7adaf42a654d"}
+{"action": "decision_locked", "at": "2026-10-30T12:35:02+00:00", "data": {"decision_id": "emdash-1-4-compatibility-20261030"}, "event_id": "05231a42-bb48-42b2-b70c-75e379815c3a"}
+{"action": "decision_implemented", "at": "2026-10-30T12:59:57+00:00", "data": {"decision_id": "emdash-1-4-compatibility-20261030"}, "event_id": "5b0dc402-e95c-4acd-a288-450b64829be2"}
+{"action": "decision_verified", "at": "2026-10-30T12:59:57+00:00", "data": {"decision_id": "emdash-1-4-compatibility-20261030"}, "event_id": "250453f6-a5d1-4703-ae01-59350c092c8d"}

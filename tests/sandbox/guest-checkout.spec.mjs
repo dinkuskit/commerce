@@ -125,7 +125,7 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
     });
     const preparedBody = await prepared.json();
     const payload = preparedBody.data ?? preparedBody;
-    // EmDash 1.2 supplies the configured site URL to both host formats.
+    // EmDash 1.4 supplies the configured site URL to both host formats.
     // Prepare only mints a capability; no configured Payments means start fails.
     expect(payload.ok, JSON.stringify(preparedBody)).toBeTruthy();
     expect(payload.capability?.capability, JSON.stringify(preparedBody)).toMatch(

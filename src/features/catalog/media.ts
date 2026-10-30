@@ -10,7 +10,7 @@ const MEDIA_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 /**
  * A reference into the EmDash Media Library by media id. Commerce stores no
- * file, URL, alt or size copy: EmDash 1.2.0 exposes no plugin-visible mapping
+ * file, URL, alt or size copy: EmDash 1.4.0 exposes no plugin-visible mapping
  * from a media id to its public file URL, so the storefront host resolves it.
  */
 export interface MediaReference {

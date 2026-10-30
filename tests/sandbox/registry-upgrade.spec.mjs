@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { ensureProductsCollection, openPanel, setOnSale } from "./product-page.mjs";
+import { BLOCK_FORM, ensureProductsCollection, openPanel, setOnSale } from "./product-page.mjs";
 
 // Run by scripts/registry-upgrade-proof.mjs. The "old" phase runs an earlier
 // release's Registry build and stocks the store through that release's own
@@ -125,7 +125,7 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   await expect(panel.getByText(/^On sale · SKU RED-HAT/)).toBeVisible();
   expect(rows("catalog_items")[hat]).not.toHaveProperty("offSale");
   // Edited in the panel, the new price reaches the shop.
-  const priceForm = panel.locator("form").filter({ has: page.getByRole("textbox", { name: "Regular", exact: true }) });
+  const priceForm = panel.locator(BLOCK_FORM).filter({ has: page.getByRole("textbox", { name: "Regular", exact: true }) });
   await priceForm.getByRole("textbox", { name: "Regular", exact: true }).fill("13");
   await priceForm.getByRole("button", { name: /^Save/ }).click();
   await expect(priceForm.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("13.00");

@@ -7,7 +7,7 @@ transport, or public release is included.
 
 ## Delivery
 
-- Exact EmDash 1.2.0; plugin CLI 0.13.3; Block Kit types 1.2.0.
+- Exact EmDash 1.4.0; plugin CLI 0.13.5; Block Kit types 1.4.0.
 - `npm run build` creates the library and dist/sandbox artifact. The sandbox
   descriptor is exported at @dinkuskit/commerce/descriptor and code at
   @dinkuskit/commerce/sandbox. Both are local artifacts until publication.
@@ -60,7 +60,7 @@ popups. Managed availability without setup remains unavailable, not zero.
 2. npm run test:sandbox. Override COMMERCE_PROOF_PORT if 64525 is occupied.
 3. The verifier makes a fresh SQLite DB per run under .tmp/sandbox-proof,
    configures the built descriptor under sandboxed (never plugins), and runs
-   @emdash-cms/sandbox-workerd 0.9.3 on a disposable EmDash 1.2.0 site.
+   @emdash-cms/sandbox-workerd 0.9.6 on a disposable EmDash 1.4.0 site.
 4. Host provisioning must create the catalog unique indexes before clerk create.
    The browser exercises creation and command replay, price refusal, stock
    toggles, reload persistence, settings and duplicate SKU rejection. Scoped
