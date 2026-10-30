@@ -61,8 +61,8 @@ Press **Run workflow** on **Release** with `action: cut-beta`. Leave
   in the same atomic push (its beta tags stay) and cuts the new one. It stops
   with nothing pushed when nothing new has merged since that beta, when the
   branch holds a commit that is neither on `main` nor an Add fix copy, or while
-  a `ci: release` PR for that release is open. Released branches are never
-  touched.
+  a `ci: release` PR for that release is open, or merged with `vX.Y.Z` not
+  tagged yet. Released branches are never touched.
 - `main` keeps taking merges from here on. They wait for the next release.
 
 ## 2. The tag run publishes the beta and starts the journeys
