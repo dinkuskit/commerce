@@ -31,8 +31,9 @@ store: a finished feature, or a fix a store owner would notice. There is no
 calendar. Ordinary PRs merge to `main` with their changesets and ship nothing
 on their own. Docs, tests and CI-only changes never get a beta, and Cut beta
 refuses when nothing version-bumping has merged since the last release. One
-release is on test at a time: Cut beta refuses while an earlier
-`release/X.Y.Z` has no `vX.Y.Z` tag yet, and so does Add fix to beta when it would start a patch branch.
+release is on test at a time. Pressing Cut beta while a `release/X.Y.Z` with no
+`vX.Y.Z` tag is on test re-cuts it (see Cut beta below), and Add fix to beta
+refuses to start a patch branch until that release is promoted.
 
 ## Every pull request adds a changeset
 
@@ -52,6 +53,16 @@ Press **Run workflow** on **Release** with `action: cut-beta`. Leave
   record on the publisher's PDS (every page, fail-closed on lookup errors).
 - It runs the unit tests and typecheck, creates `release/X.Y.Z` at `main`'s
   newest commit, and tags `vX.Y.Z-beta.N` there with the release GitHub App.
+- A beta already on test is re-cut, never deleted by hand
+  (`release-branch-recut-20261030`). If `main` still makes the same `X.Y.Z`,
+  the App moves `release/X.Y.Z` forward to `main`'s newest commit (copies made
+  by Add fix to beta are already on `main`) and tags the next beta there. If
+  `main` now makes a new version, the App deletes the older unpromoted branch
+  in the same atomic push (its beta tags stay) and cuts the new one. It stops
+  with nothing pushed when nothing new has merged since that beta, when the
+  branch holds a commit that is neither on `main` nor an Add fix copy, or while
+  a `ci: release` PR for that release is open. Released branches are never
+  touched.
 - `main` keeps taking merges from here on. They wait for the next release.
 
 ## 2. The tag run publishes the beta and starts the journeys
