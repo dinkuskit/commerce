@@ -11,7 +11,6 @@ import { connectState, type ConnectState } from "../features/checkout/kernel/ind
 import { connectBlocks, finishedConnect } from "./connect.js";
 import { alert, bool, button, failed, header, message, note, object, refused, text } from "./common.js";
 import { library, preview, target } from "./media.js";
-import { productLabel, productsWithoutPage } from "./products.js";
 
 function placeholderStorage(ctx: PluginContext) {
   return ctx.storage["storefront_placeholder_image"] as StorefrontPlaceholderImageStorage;
@@ -39,15 +38,6 @@ function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockRespo
     ], submit: { label: "Save", action_id: "settings.save" } },
   ] };
 }
-/** Commerce products no product page sells, each with a button that starts a page for it. */
-async function orphanBlocks(ctx: PluginContext): Promise<Block[]> {
-  const orphans = await productsWithoutPage(ctx);
-  if (!orphans.length) return [];
-  return [header("Products without a page"),
-    note("Pick it in a page's Dinkus Commerce panel."),
-    ...orphans.slice(0, 25).map((p): Block => ({ type: "section", text: productLabel(p),
-      accessory: { type: "link", label: "Make a page", target: { kind: "content", collection: "products", id: "new" } } }))];
-}
 export async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse): Promise<BlockResponse> {
   const listing = await loadOutOfStockListing(listingStorage(ctx));
   const response = settingsResponse(listing.hideOutOfStock);
@@ -56,7 +46,7 @@ export async function settings(ctx: PluginContext, route: SandboxedRouteContext,
   // Connect finished on this load: fetch the checkout settings now and answer with the DinkusKit section alone, as its buttons do.
   if (state.state === "connected" && state.finished) return finishedConnect(ctx, state, adminAuthorized(route));
   const dinkus = connectBlocks(state, adminAuthorized(route));
-  return { blocks: [...response.blocks.slice(0, 2), ...dinkus, ...response.blocks.slice(2), ...await orphanBlocks(ctx).catch(() => []), ...await placeholderBlocks(ctx), ...(merchant ?? await merchantStoreSettingsBlocks({ ...route, input: { type: "page_load", page: "/settings" } }, ctx)).blocks], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
+  return { blocks: [...response.blocks.slice(0, 2), ...dinkus, ...response.blocks.slice(2), ...await placeholderBlocks(ctx), ...(merchant ?? await merchantStoreSettingsBlocks({ ...route, input: { type: "page_load", page: "/settings" } }, ctx)).blocks], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 
 export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {

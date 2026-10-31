@@ -137,8 +137,8 @@ refused rather than silently cleared. `resolveStorefrontAvailability` returns
 
 Each Content > Products page has a Dinkus Commerce editor
 panel; Add price and stock makes a Draft catalog product for the page and links
-it, and the product goes on sale when the store publishes the page. Commerce
-settings lists products without a page. Name is the customer-facing title
+it, and the product goes on sale when the store publishes the page. Every
+product is made for its page; there are no products without one. Name is the customer-facing title
 (the product page H1 contract); this plugin does not render a storefront page.
 Opening a product shows Regular, Sale, a Manage stock notice, and In stock /
 Out of stock / On backorder when the product is unmanaged. It also shows an optional Shipping weight in ounces for each physical

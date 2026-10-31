@@ -15585,6 +15585,51 @@
       "superseded_by": null,
       "updated_at": "2026-10-31T12:32:24+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. Every product is made for its page, as on Shopify (productCreate gives the product its page) and WooCommerce (a product is a post). The catalog API's create requires entryId and refuses a page that already sells another product (the same commandId again answers with the same product). The panel keeps only Add price and stock: the 'Or one without a page' picker, 'Or its SKU' box and 'Sell it here' leave it, Commerce settings drops its Products without a page list, and the catalog API's link op and the CLI's products link go. Agents and the CLI make the page through EmDash first; the CLI's products create does both steps in one command (makes or reuses the Content > Products page by slug, then the product for it). Commerce still never writes the CMS and gains no permission.",
+      "context_ref": null,
+      "created_at": "2026-10-31T13:13:48+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-api-20261027",
+        "catalog-page-link-in-commerce-20261029",
+        "catalog-products-page-removed-20261023"
+      ],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-31T13:13:48+00:00",
+          "choice": "No. Every product is made for its page, as on Shopify (productCreate gives the product its page) and WooCommerce (a product is a post). The catalog API's create requires entryId and refuses a page that already sells another product (the same commandId again answers with the same product). The panel keeps only Add price and stock: the 'Or one without a page' picker, 'Or its SKU' box and 'Sell it here' leave it, Commerce settings drops its Products without a page list, and the catalog API's link op and the CLI's products link go. Agents and the CLI make the page through EmDash first; the CLI's products create does both steps in one command (makes or reuses the Content > Products page by slug, then the product for it). Commerce still never writes the CMS and gains no permission.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-product-needs-page-20261031",
+      "implementation_ref": null,
+      "question": "Can a Commerce product exist without a product page? (Dad's commerce#237 fixed the panel's attach-a-product-without-a-page box.)",
+      "rationale": "Locked on Ronald's words and his decision-card pick, 31 Oct 2026 13:10-13:12 UTC.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T13:13:48+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -15621,5 +15666,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T12:32:24+00:00"
+  "updated_at": "2026-10-31T13:13:48+00:00"
 }
