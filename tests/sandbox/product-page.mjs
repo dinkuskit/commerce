@@ -45,7 +45,7 @@ export async function openPanel(page) {
   if (!(await trigger.isVisible())) await settings.click();
   await trigger.click({ timeout: 60000 });
   const panel = trigger.locator("xpath=..");
-  await expect(panel.getByText(/Save makes the product|Pricing & stock|^Archived: off the shop$/).first()).toBeVisible({ timeout: 30000 });
+  await expect(panel.getByText(/Save makes the product|Pricing & stock|^Variants|^Archived: off the shop$/).first()).toBeVisible({ timeout: 30000 });
   return panel;
 }
 
