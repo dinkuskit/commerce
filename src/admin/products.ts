@@ -200,15 +200,15 @@ export async function productsWithoutPage(ctx: PluginContext) {
 }
 export const productLabel = (p: { name: string; sku: string; archivedAt?: string | null }) => p.name + " \u2014 " + p.sku + (p.archivedAt ? " (archived)" : "");
 /** The sell form carries its create command, so a retry after a partial failure resumes the same product. */
-async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
+async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.randomUUID(), linking = false): Promise<BlockResponse> {
   const orphans = await productsWithoutPage(ctx);
   return { blocks: [
     note("Not a product yet. Add price and stock to sell it."),
-    { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
+    { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: linking ? "" : sku }],
       submit: { label: "Add price and stock", action_id: "sell:" + command } },
-    ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
-      label: "Or one without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
-      { type: "text_input" as const, action_id: "sku", label: "Or its SKU" }],
+    ...(orphans.length || linking ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [...(orphans.length ? [{ type: "select" as const, action_id: "product",
+      label: "Or one without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) }] : []),
+      { type: "text_input" as const, action_id: "sku", label: "Or its SKU", initial_value: linking ? sku : "" }],
       submit: { label: "Sell it here", action_id: "link" } }] : []),
   ] };
 }
@@ -251,8 +251,8 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
       return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
     }
   } catch (error) {
-    // A refused sell keeps the typed SKU, its create command and the buttons so the owner can retry.
-    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? ""))).catch(() => ({ blocks: [] }));
+    // Keep a refused SKU in the form that submitted it; a link must never refill the new-product form.
+    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? "")), input.action_id === "link").catch(() => ({ blocks: [] }));
     return refused(message(error), [alert(message(error)), ...again.blocks]);
   }
   return productEdit(route, ctx);

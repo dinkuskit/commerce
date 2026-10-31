@@ -103,6 +103,9 @@ test('picking a product without a page links it in Commerce alone', async () => 
   const typed = await panel({ type: 'form_submit', action_id: 'link', values: { sku: 'mug' }, draft: { fields: { title: 'Mug' } } }, ctx, 'page-3');
   assert.equal(typed.toast?.type, 'error');
   assert.match(typed.toast.message, /Another page sells this product/);
+  assert.equal(validateBlockResponse(typed).valid, true, 'the SKU-only retry form is valid when no orphan remains');
+  assert.equal(typed.blocks.find(b => b.type === 'form' && b.submit.action_id === 'link')?.fields.find(f => f.action_id === 'sku')?.initial_value, 'mug');
+  assert.equal(typed.blocks.find(b => b.type === 'form' && b.submit.action_id.startsWith('sell:')).fields[0].initial_value, '');
   assert.equal(await pageProduct(pages, 'page-3'), undefined);
   // page-1's own publish check is refused too, and page-2 keeps the product.
   await assert.rejects(setProductPageOnSale({ catalog: ctx.storage.catalog_items, pages }, { catalogItemId: 'mug', entryId: 'page-1', onSale: false }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
@@ -124,12 +127,31 @@ test('a typed SKU sells a product the list does not show', async () => {
   assert.equal(await pageProduct(pages, 'page-2'), undefined);
 });
 
+test('a refused existing-product SKU stays in its link form, not the new-product form', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const typed = ' no-such-sku ';
+  const out = await panel({ type: 'form_submit', action_id: 'link', values: { sku: typed }, draft: { fields: { title: 'Mug page' } } }, ctx);
+  assert.equal(out.toast?.type, 'error');
+  assert.equal(validateBlockResponse(out).valid, true);
+  const link = out.blocks.find(b => b.type === 'form' && b.submit.action_id === 'link');
+  const create = out.blocks.find(b => b.type === 'form' && b.submit.action_id.startsWith('sell:'));
+  assert.equal(link.fields.find(f => f.action_id === 'sku').initial_value, typed);
+  assert.equal(create.fields.find(f => f.action_id === 'sku').initial_value, '');
+  assert.equal(await pageProduct(pages, 'page-1'), undefined);
+  assert.equal(catalog.records.size, 1, 'the refusal creates no product');
+  const repaired = await panel({ type: 'form_submit', action_id: 'link', values: { sku: ' mug ' }, draft: { fields: {} } }, ctx);
+  assert.notEqual(repaired.toast?.type, 'error');
+  assert.equal(await pageProduct(pages, 'page-1'), 'mug');
+  assert.equal(catalog.records.size, 1, 'correcting the SKU links the original product');
+});
+
 test('a refused Add price and stock keeps the typed SKU', async () => {
   const { ctx } = await shop();
   const out = await panel({ type: 'form_submit', action_id: 'sell', values: { sku: 'MUG' }, draft: { fields: { title: 'Second mug' } } }, ctx);
   assert.equal(out.toast?.type, 'error');
   assert.equal(validateBlockResponse(out).valid, true);
-  assert.match(texts(out.blocks), /"initial_value":"MUG"/);
+  assert.equal(out.blocks.find(b => b.type === 'form' && b.submit.action_id.startsWith('sell:')).fields[0].initial_value, 'MUG');
+  assert.equal(out.blocks.find(b => b.type === 'form' && b.submit.action_id === 'link').fields.find(f => f.action_id === 'sku').initial_value ?? '', '');
 });
 
 test('a retried Add price and stock resumes the product its first try made', async () => {
