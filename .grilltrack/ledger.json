@@ -15669,10 +15669,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T15:23:28+00:00",
+          "choice": "No. Commerce runs ONE build, the Registry (sandboxed) one, everywhere. The Template Store's local dev (pnpm dev:fresh), its public demo and playground, and its CI browser tests move off Commerce's native copy (src/index.ts, DINKUS_CATALOG_PROFILE=native-development) onto the Registry build: sandboxed: [...] plus the workerd runner, which astro dev runs in Miniflare, EmDash's documented loop (build the plugin, pnpm dev in the site). Afterwards Commerce drops the native copy's extra routes (the 24 routes the Registry build lacks), or the native copy itself. The Registry build keeps its own routes (guest checkout readiness, orders, public store policies, store-proof) and its snake_case storage; native camelCase data gets no migration.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T15:23:28+00:00",
+          "choice": "No. Commerce runs ONE build, the Registry (sandboxed) one, everywhere. The Template Store's local dev (pnpm dev:fresh), its public demo and playground, and its CI browser tests move off Commerce's native copy (src/index.ts, DINKUS_CATALOG_PROFILE=native-development) onto the Registry build: sandboxed: [...] plus the workerd runner, which astro dev runs in Miniflare, EmDash's documented loop (build the plugin, pnpm dev in the site). Afterwards Commerce drops the native copy's extra routes (the 24 routes the Registry build lacks), or the native copy itself. The Registry build keeps its own routes (guest checkout readiness, orders, public store policies, store-proof) and its snake_case storage; native camelCase data gets no migration.",
+          "from": "implemented",
+          "implementation_ref": "pr:dinkuskit/commerce#243;file:.grilltrack/proof/commerce-one-build-registry-20261031/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "commerce-one-build-registry-20261031",
-      "implementation_ref": null,
+      "implementation_ref": "pr:dinkuskit/commerce#243;file:.grilltrack/proof/commerce-one-build-registry-20261031/PROOF.md",
       "question": "Does Commerce keep a native (in-process) copy beside the Registry (sandboxed) build?",
       "rationale": "Ronald: 'lock it', 31 Oct 2026.",
       "repair_required": false,
@@ -15681,10 +15709,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-31T14:46:19+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-31T15:23:28+00:00",
+      "verification_ref": "pr:dinkuskit/commerce#243;file:.grilltrack/proof/commerce-one-build-registry-20261031/PROOF.md"
     }
   ],
   "last_activation": {
@@ -15721,5 +15749,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T14:46:19+00:00"
+  "updated_at": "2026-10-31T15:23:28+00:00"
 }
