@@ -47,6 +47,15 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   whatever it typed, and only a price refused after its fence held keeps the
   fresh action id; a derived variant SKU that would equal the product's own
   is cut one character shorter.
+- After the fifth review: the panel's SKU change reads once for another
+  item holding that SKU instead of proving the unique indexes on every Save
+  (eight storage calls), so a SKU-and-price Save fits EmDash's default ten;
+  the unique index, which every product creation proves, still refuses a
+  racing duplicate, and the catalog API's `sku` op still proves it first.
+  `createProductForPage` refuses a digital product's weight before writing.
+- Main merged in after #243 (one build, the native-only routes removed):
+  main's ledger and events taken and this PR's two decisions and the
+  supersession replayed through the CLI; `validate` passes.
 
 ## Verification on this head
 
@@ -59,7 +68,7 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   kernel function with price, stock, fulfillment, weight, retries and
   refusals; the panel's first Save; Add options from comma-separated values;
   per-variant and product SKU changes and their refusals).
-- Registry bundle: `registry_bundle=pass backend_bytes=131030 headroom_bytes=42`
+- Registry bundle: `registry_bundle=pass backend_bytes=131042 headroom_bytes=30`
   (main: 130246, headroom 826).
 - On the head with the third review's fixes: typecheck and audits clean; the
   unit suite 874 passed, 1 failed (the pre-existing `packaged-consumers`
@@ -75,6 +84,12 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   on a stale form, a derived SKU that would equal the parent); all three
   Playwright lanes against that build, 11 passed (sandbox 6 in 2.8m, native 3,
   native-variant 2).
+- On the merged head (main after #243, with the fifth review's fixes):
+  typecheck and audits clean; the unit suite 850 passed, 1 failed (the
+  pre-existing `packaged-consumers` teardown SIGKILL; #243 removed the
+  native routes' tests); the budget test now changes the SKU in its product
+  and variant price saves under the ten-call adapter; all three Playwright
+  lanes, 11 passed (sandbox 6 in 2.9m, native 3, native-variant 2).
 - Installed Registry build in real workerd (`COMMERCE_BROWSER_PROOF_PROFILE=sandbox`
   Playwright project, Chromium build 1243 aliased for the pinned 1228):
   6 passed (2.8m) on `8ab920f`, after four spec-only fixes for the new
