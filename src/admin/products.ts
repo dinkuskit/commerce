@@ -54,7 +54,7 @@ const card = (label: string, blocks: Block[], open = false): Block => ({ type: "
 const forms = (blocks: Block[]): Form[] => blocks.flatMap(b => b.type === "form" ? [b] : b.type === "accordion" ? forms(b.blocks) : []);
 /** Regular, Sale, SKU, stock status and the feed channels save together in one press (feeds-facts-consistency-060). */
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
-  return { type: "form", block_id: "product-" + crypto.randomUUID(), fields: [
+  return { type: "form", block_id: "p" + crypto.randomUUID(), fields: [
       { type: "text_input", action_id: "regular", label: "Regular", initial_value: values.regular },
       { type: "text_input", action_id: "sale", label: "Sale", initial_value: values.sale },
       ...(values.sku === undefined ? [] : [{ type: "text_input" as const, action_id: "sku", label: "SKU", initial_value: values.sku }]),
@@ -82,7 +82,7 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
     : [[selected, "Weight (oz)"] as const];
   const fields = items.filter(([item]) => item.fulfillment === "physical").map(([item, l]) =>
     ({ type: "text_input" as const, action_id: "w:" + item.catalogItemId, label: l, initial_value: item.weightOz === undefined ? "" : String(item.weightOz) }));
-  return fields.length ? [card("Shipping", [{ type: "form", block_id: "weight-" + crypto.randomUUID(), fields,
+  return fields.length ? [card("Shipping", [{ type: "form", block_id: "w" + crypto.randomUUID(), fields,
     submit: { label: "Save weight", action_id: "weight:" + JSON.stringify([selected.catalogItemId, selected.revision]) } }], open)] : [];
 }
 /**
@@ -93,8 +93,8 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
 function variantsCard(id: string, selected: CatalogProductListItem, focus?: string): Block {
   const variant = selected.variantProduct;
   if (!variant?.options.length) return card("Variants · none", [
-    note("This product becomes the first variant and keeps its SKU and price."),
-    { type: "form", block_id: "variant-add-" + id, fields: [
+    note("The product itself is the first variant."),
+    { type: "form", block_id: "a" + id, fields: [
       { type: "text_input", action_id: "optionLabel", label: "Option name", initial_value: "Size" },
       { type: "text_input", action_id: "values", label: "Option values", placeholder: "Small, Medium, Large" },
     ], submit: { label: "Add options", action_id: "variant:" + JSON.stringify(["add", id, crypto.randomUUID()]) } },
@@ -105,19 +105,19 @@ function variantsCard(id: string, selected: CatalogProductListItem, focus?: stri
       manageStockNotice(m.manageStock),
       productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" }, "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision])),
     ], focus === m.catalogItemId || !i && !variant.members.some(x => x.catalogItemId === focus))),
-    card("Edit options", [{ type: "form", block_id: "variant-details-" + crypto.randomUUID(), fields: [
+    card("Edit options", [{ type: "form", block_id: "d" + crypto.randomUUID(), fields: [
       ...variant.options.flatMap((o, i) => [
         { type: "text_input" as const, action_id: i ? "option:" + o.optionId : "optionLabel", label: "Option: " + o.label, initial_value: o.label },
         ...o.values.map(v => ({ type: "text_input" as const, action_id: "label:" + JSON.stringify([o.optionId, v.valueId]), label: "Value: " + v.label, initial_value: v.label })),
       ]),
       ...variant.members.map(m => ({ type: "radio" as const, action_id: "fulfillment:" + m.catalogItemId, label: label(m) + " fulfillment", options: FULFILLMENT, initial_value: m.fulfillment })),
     ], submit: { label: "Save options", action_id: "variant:" + JSON.stringify(["details", id, variant.revision]) } }], focus === "details"),
-    ...(variant.options.length < 3 ? [card("Add another option", [{ type: "form" as const, block_id: "variant-option-" + crypto.randomUUID(), fields: [
-      { type: "text_input" as const, action_id: "optionLabel", label: "Option name", initial_value: variant.options.length === 1 ? "Color" : "Material" },
+    ...(variant.options.length < 3 ? [card("Add another option", [{ type: "form" as const, block_id: "o" + crypto.randomUUID(), fields: [
+      { type: "text_input" as const, action_id: "optionLabel", label: "Option name", initial_value: ["Color", "Material"][variant.options.length - 1] },
       { type: "text_input" as const, action_id: "values", label: "Option values" },
       ...variant.members.map(m => ({ type: "text_input" as const, action_id: "member:" + m.catalogItemId, label: "Value for " + label(m) })),
     ], submit: { label: "Add option", action_id: "variant:" + JSON.stringify(["option", id, variant.revision]) } }], focus === "option")] : []),
-    ...(variant.members.length < 50 ? [card("Add a variant", [{ type: "form" as const, block_id: "variant-member-" + crypto.randomUUID(), fields: [
+    ...(variant.members.length < 50 ? [card("Add a variant", [{ type: "form" as const, block_id: "m" + crypto.randomUUID(), fields: [
       ...variant.options.map(o => ({ type: "text_input" as const, action_id: "value:" + o.optionId, label: o.label })),
       { type: "text_input" as const, action_id: "sku", label: "SKU" },
       { type: "radio" as const, action_id: "fulfillment", label: "Fulfillment", options: FULFILLMENT, initial_value: selected.fulfillment },
@@ -166,7 +166,7 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
     variantsCard(id, selected, focus),
     ...shippingCard(selected, focus === "weight"),
     // Barcode and brand for shopping feeds and the product page's structured data; empty clears one.
-    card("Identifiers", [{ type: "form", block_id: "ids-" + crypto.randomUUID(), fields: IDENTIFIERS.map(([key, l]) =>
+    card("Identifiers", [{ type: "form", block_id: "i" + crypto.randomUUID(), fields: IDENTIFIERS.map(([key, l]) =>
         ({ type: "text_input" as const, action_id: key, label: l, initial_value: selected[key] ?? "" })),
         submit: { label: "Save identifiers", action_id: "ids:" + id } }], focus === "ids"),
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
@@ -182,8 +182,10 @@ async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: strin
 }
 /** A value id from its label, made unique among the option's other values. */
 function valueIdFor(label: string, fallback: string, taken: readonly { valueId: string }[]): string {
-  const base = label.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || fallback;
-  return taken.some(v => v.valueId === base) ? `${base}-${taken.length + 1}` : base;
+  const base = label.replace(/[^a-z0-9]+/g, "-").slice(0, 48).replace(/^-|-$/g, "") || fallback;
+  let id = base;
+  for (let n = 2; taken.some(v => v.valueId === id); n++) id = base + "-" + n;
+  return id;
 }
 /** Option values as typed, comma-separated: trimmed, distinct, two or more. */
 function valueLabels(raw: unknown): string[] {
@@ -192,13 +194,13 @@ function valueLabels(raw: unknown): string[] {
   if (labels.length < 2) throw new CatalogError("INVALID_INPUT", "Give two or more values.");
   return labels;
 }
-/** A new variant's SKU: the product's SKU plus the value's id, which is distinct within the option; the suffix always fits, and the owner can change it after. */
-const variantSku = (base: string, valueId: string) => (base.slice(0, 63 - valueId.length) + "-" + valueId).toUpperCase();
+/** A new variant's SKU: the product's SKU, cut on a segment boundary so the value's id fits after it; the owner can change it after. */
+const variantSku = (base: string, valueId: string) => (base.slice(0, 63 - valueId.length).replace(/-+$/, "") + "-" + valueId).toUpperCase();
 // A stale page must never act on a different image than its label named.
 function galleryIndex(value: unknown, mediaId: string, gallery: string[]): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= gallery.length) throw new Error("Invalid gallery image");
-  if (gallery[value] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed since this page loaded. Reload and try again.");
-  return value;
+  if (!Number.isInteger(value) || (value as number) < 0 || (value as number) >= gallery.length) throw new Error("Invalid image");
+  if (gallery[value as number] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed. Reload and try again.");
+  return value as number;
 }
 type Draft = { fields?: Record<string, unknown> };
 /** What the panel says of a product with no Regular price, and what a Save that leaves Regular empty answers. */
@@ -215,7 +217,7 @@ function unlinked(values: Record<string, unknown> = {}, command: string = crypto
   const v = (key: string, fallback = "") => typeof values[key] === "string" ? values[key] as string : fallback;
   return { blocks: [
     note("Save makes the product as a Draft."),
-    { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [
+    { type: "form", block_id: "s" + crypto.randomUUID(), fields: [
       { type: "text_input", action_id: "regular", label: "Regular", initial_value: v("regular") },
       { type: "text_input", action_id: "sale", label: "Sale", initial_value: v("sale") },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: v("sku") },
@@ -265,7 +267,7 @@ export async function productMediaPanel(route: SandboxedRouteContext, ctx: Plugi
   if (object(route.input).type !== "panel_load") return productEdit(route, ctx);
   try {
     const linked = await pageProduct(storage(ctx).pages, entryId);
-    return linked && await loadCatalogProduct(storage(ctx), linked) ? await mediaView(ctx, linked) : { blocks: [note("Save a price in the Dinkus Commerce panel first, then choose its pictures here.")] };
+    return linked && await loadCatalogProduct(storage(ctx), linked) ? await mediaView(ctx, linked) : { blocks: [note("Save the product in the Dinkus Commerce panel first.")] };
   } catch (error) {
     return failed(message(error));
   }
@@ -274,6 +276,8 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
   let committed: { id: string; message: string } | undefined;
   let input: Record<string, unknown> = {};
   let values: Record<string, unknown> = {};
+  /** The feed toggles as submitted, when the form had them: the channels switched on. */
+  const feeds = () => "feed:google-merchant" in values ? FEEDS.map(([c]) => c).filter(c => values["feed:" + c] === true) : undefined;
   try {
     input = object(route.input);
     const action = text(input.action_id);
@@ -316,30 +320,27 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
     if (input.type === "form_submit") {
       values = object(input.values);
       const store = storage(ctx);
-      // A typed SKU that differs is changed first: one another product has is refused before anything is saved, so the
-      // refilled form keeps a revision that still holds. A changed SKU moves the product's revision, so the price save
-      // that follows it is bound to the record this request just read instead of the one the form read.
-      const resku = async (id: string, current: string) =>
-        values.sku !== undefined && text(values.sku).trim().toUpperCase() !== current && await changeCatalogItemSku(store.catalog, id, values.sku, unique(ctx));
+      // A typed SKU that differs is changed first, fenced on the revision the form read: a stale form is refused whole, and
+      // a SKU another product has is refused before anything is saved, so the refilled form's revision still holds. A changed
+      // SKU moves the fence on, so the price save that follows is bound to the record this request just wrote.
+      const fenceOf = (revision: unknown) => typeof revision === "string" ? { revision } : undefined;
+      const resku = (id: string, current: string, fence?: { revision: string }) =>
+        values.sku !== undefined && text(values.sku).trim().toUpperCase() !== current && changeCatalogItemSku(store.catalog, id, values.sku, unique(ctx), fence);
       if (action.startsWith("save:")) {
-        const [id, expectedRevision] = tail(action.slice(5));
+        const [id, revision] = tail(action.slice(5)), fence = fenceOf(revision);
         const item = await store.catalog.get(id);
         const wasManaged = isManagedCatalogRecord(item);
-        const payload: Record<string, unknown> = {
-          catalogItemId: id,
-          regular: text(values.regular),
-          sale: text(values.sale),
-          expectedRevision: await resku(id, (item as { sku?: string } | null)?.sku ?? "") ? undefined : expectedRevision,
-        };
+        const payload: Record<string, unknown> = { catalogItemId: id, regular: text(values.regular), sale: text(values.sale) };
         if (Object.hasOwn(values, "manageStock")) payload.manageStock = values.manageStock;
         if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus);
-        const feedSubmitted = FEEDS.some(([channel]) => Object.hasOwn(values, "feed:" + channel));
-        const channels = FEEDS.map(([channel]) => channel).filter(channel => values["feed:" + channel] === true);
-        if (feedSubmitted) payload.feedChannels = channels;
+        const channels = feeds();
+        if (channels) payload.feedChannels = channels;
+        await resku(id, (item as { sku?: string } | null)?.sku ?? "", fence);
+        payload.expectedRevision = fence?.revision ?? revision;
         const saved = await saveCatalogProductPrices(store, admitV1CatalogPriceSaveInput(payload, wasManaged));
         if (saved.saved) committed = { id, message: saved.regular ? "Product saved" : NO_PRICE };
         const typed = values.sku === undefined ? {} : { sku: text(values.sku) };
-        return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, ...typed, feedChannels: channels } : { ...saved, ...typed }), toast: { type: !saved.saved ? "error" : saved.regular ? "success" : "info", message: saved.message ?? (saved.regular ? "Product saved" : NO_PRICE) } };
+        return { ...await product(ctx, id, { ...saved, ...typed, ...(!saved.saved && channels ? { feedChannels: channels } : {}) }), toast: { type: !saved.saved ? "error" : saved.regular ? "success" : "info", message: saved.message ?? (saved.regular ? "Product saved" : NO_PRICE) } };
       }
       if (action.startsWith("ids:")) {
         const id = action.slice(4);
@@ -396,9 +397,12 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         } else if (operation === "price") {
           const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]);
           if (!member) throw new Error("Variant unavailable");
-          const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: await resku(args[0], member.sku) ? undefined : args[1], regular: text(values.regular), sale: text(values.sale),
-            ...(!member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {}) });
-          if (!saved.saved) throw new Error(saved.message ?? "Could not save price");
+          const fence = fenceOf(args[1]), regular = text(values.regular), sale = text(values.sale);
+          const stock = !member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {};
+          await resku(args[0], member.sku, fence);
+          const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: fence?.revision ?? args[1], regular, sale, ...stock });
+          // A refused price is this request's own doing: the typing comes back on a form that reads the product as it now is.
+          if (!saved.saved) throw new CatalogError("INVALID_INPUT", saved.message ?? NO_PRICE);
           committed = { id, message: saved.regular ? "Changes saved" : NO_PRICE };
           if (!saved.regular) return await product(ctx, id, undefined, NO_PRICE, args[0]);
         } else if (operation === "details") await updateCatalogVariantLabels(store, {
@@ -413,14 +417,14 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
           }),
           members: Object.entries(values).filter(([k]) => k.startsWith("fulfillment:")).map(([k, v]) => ({ catalogItemId: k.slice(12), fulfillment: v as never })),
         });
-        else throw new Error("Unknown variant action");
+        else throw new Error("Unknown action");
         return await product(ctx, id, undefined, "Changes saved", operation === "price" ? args[0] : operation);
       }
     }
-    throw new Error("Unknown interaction");
+    throw new Error("Unknown action");
   } catch (error) {
     if (committed) return { toast: { type: committed.message === NO_PRICE ? "info" : "success", message: committed.message }, blocks: [
-      note("Your changes were saved. Reload the product to refresh this panel."),
+      note("Saved. Reload the product."),
       { type: "actions", elements: [button("Reload product", "open", committed.id)] },
     ] };
     if (error instanceof CatalogError && error.code === "SAVE_OUTCOME_UNKNOWN") return {
@@ -445,7 +449,10 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         for (const block of forms(back.blocks)) {
           const [o, , m] = named(block.submit.action_id);
           if (o !== op || (op === "price" && m !== member)) continue;
-          block.submit.action_id = sent;
+          // A price form whose values were refused keeps the fresh id, which reads the product after this request's own
+          // writes, such as its SKU; every other form keeps the sent one, so a stale form stays refused until the owner
+          // reloads and a retry resumes the same command.
+          if (!(error instanceof CatalogError && error.code === "INVALID_INPUT" && /^(save|price)$/.test(op))) block.submit.action_id = sent;
           for (const field of block.fields) if (Object.hasOwn(values, field.action_id)) Object.assign(field, { initial_value: values[field.action_id] });
         }
         return refused(failure, [alert(failure), ...back.blocks]);
@@ -454,7 +461,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
     // Even a storage outage must not erase the typing: the price form comes back as typed, claiming nothing about stock.
     const { regular, sale, sku } = values, sent = String(input.action_id);
     if (sent.startsWith("save:") && typeof regular === "string" && typeof sale === "string")
-      return refused(failure, [alert(failure), productForm(sent.slice(5), { regular, sale, ...(typeof sku === "string" ? { sku } : {}), manageStock: null, stockStatus: null })]);
+      return refused(failure, [alert(failure), productForm(sent.slice(5), { regular, sale, ...(typeof sku === "string" ? { sku } : {}), manageStock: null, stockStatus: null, feedChannels: feeds() })]);
     return failed(failure);
   }
 }

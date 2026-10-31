@@ -2,6 +2,9 @@ import { isRecord } from "../../shared/record.js";
 import { catalogFail } from "./errors.js";
 import type { CatalogData, CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
+/** What a save answers when the product moved since the form read it. */
+export const PRODUCT_MOVED = "Product changed; reload before saving";
+
 export interface CatalogReader { get(id: string): Promise<CatalogStorageRecord | null> }
 export interface CatalogWriter extends CatalogReader {
   getVersioned(id: string): Promise<{ value: CatalogStorageRecord; revision: string } | null>;
@@ -68,7 +71,7 @@ export async function saveProductData<T>(catalog: CatalogWriter, id: string,
   if (root.variantProductId || (current.variantProductId && !root.variantProduct?.members.some(m => m.catalogItemId === id)))
     catalogFail("CATALOG_ITEM_NOT_FOUND", "Variant is unavailable");
   if (expectedRevision !== undefined && expectedRevision !== "catalog:" + stored!.revision)
-    catalogFail("COMMAND_CONFLICT", "Product changed; reload before saving");
+    catalogFail("COMMAND_CONFLICT", PRODUCT_MOVED);
   current = catalogItemState(current, root);
   const original = JSON.stringify(root);
   const before = productData(root), data = structuredClone(before);
@@ -88,6 +91,6 @@ export async function saveProductData<T>(catalog: CatalogWriter, id: string,
     catalogFail("SAVE_OUTCOME_UNKNOWN", "Save outcome unknown. Reload the product to check before saving again.");
   }
   if (!applied.applied)
-    catalogFail("COMMAND_CONFLICT", "Product changed; reload before saving");
+    catalogFail("COMMAND_CONFLICT", PRODUCT_MOVED);
   return result;
 }

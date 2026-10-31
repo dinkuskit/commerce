@@ -83,7 +83,7 @@ const act = (ctx, element) => send({ type: "block_action", action_id: element.ac
 test("a clerk chooses, reorders and removes product images from the Media Library page", async () => {
   const { ctx, storage, listCalls } = context();
   // The panel names the page's product once a page sells one.
-  assert.deepEqual(texts(await panel({ type: "panel_load" }, ctx)), ["Save a price in the Dinkus Commerce panel first, then choose its pictures here."]);
+  assert.deepEqual(texts(await panel({ type: "panel_load" }, ctx)), ["Save the product in the Dinkus Commerce panel first."]);
   await linkProductPage({ catalog: storage.catalog_items, pages: storage.product_pages }, "page-hat", "hat");
   let page = await panel({ type: "panel_load" }, ctx);
   assert.ok(texts(page).includes("Product image") && texts(page).includes("No image") && texts(page).includes("Gallery (0 of 8)"));

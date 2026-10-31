@@ -992,7 +992,7 @@ test("Block Kit recovery after a storage read failure does not pretend managed i
       input: {
         type: "form_submit",
         action_id: "save:item-bag",
-        values: { regular: "20", sale: "15" },
+        values: { regular: "20", sale: "15", "feed:google-merchant": true, "feed:meta-catalog": false },
       },
     },
     sandboxContext(store),
@@ -1004,5 +1004,7 @@ test("Block Kit recovery after a storage read failure does not pretend managed i
   assert.ok(form);
   assert.deepEqual(form.fields.filter((field) => ["regular", "sale"].includes(field.action_id)).map((field) => field.initial_value), ["20", "15"]);
   assert.equal(form.fields.some((field) => field.action_id === "stockStatus"), false);
+  assert.deepEqual(form.fields.filter((field) => field.action_id.startsWith("feed:")).map((field) => [field.action_id, field.initial_value]),
+    [["feed:google-merchant", true], ["feed:meta-catalog", false]], "the feed choices come back as submitted");
   assert.deepEqual(snapshot(store), before);
 });

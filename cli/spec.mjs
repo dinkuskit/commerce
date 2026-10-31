@@ -273,10 +273,13 @@ async function productsCreate(ctx) {
 		if (made) body.entryId = made.entryId;
 		const data = await client.catalog(body, "Creating the product");
 		if (typeof data.catalogItemId !== "string") throw new CliError("malformed_response", "Creating the product: catalogItemId is missing.", { exit: EXIT.contract });
+		const result = { ...data, entryId: body.entryId, ...(made ? { pageMade: made.made } : {}) };
+		// A refused price still made the linked Draft, so the failure carries it: the same command again with the price corrected, or set-price, prices it.
+		if (data.price && !data.price.saved) throw new CliError("price_refused", visible(`Product ${data.catalogItemId} is a Draft on page ${body.entryId}, but its price was refused: ${data.price.message} Correct the price and run this command again, or use products set-price.`), { exit: EXIT.failure, details: { document: { data: result } } });
 		return {
 			context,
-			data: { ...data, entryId: body.entryId, ...(made ? { pageMade: made.made } : {}) },
-			human: visible(data.price && !data.price.saved ? `Product ${data.catalogItemId} is a Draft on page ${body.entryId}, but its price was refused: ${data.price.message}` : `Product ${data.catalogItemId} is a Draft on page ${body.entryId}. ${body.regular ? "Publish its page to put it on sale." : "Price it, then publish its page to put it on sale."}`),
+			data: result,
+			human: visible(`Product ${data.catalogItemId} is a Draft on page ${body.entryId}. ${body.regular ? "Publish its page to put it on sale." : "Price it, then publish its page to put it on sale."}`),
 		};
 	});
 }

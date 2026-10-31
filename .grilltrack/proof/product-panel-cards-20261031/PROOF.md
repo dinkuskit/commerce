@@ -27,6 +27,18 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   the product's fulfillment; a refused first price shows the generated SKU
   when none was typed; a storage read failure during a Save returns the
   typing in a price form that claims no stock status.
+- After the third review: a typed SKU is changed first, fenced on the
+  revision the form read (`editProduct` refuses a moved product, never
+  retries a lost compare-and-set under a fence, and moves the fence on to the
+  revision EmDash returns from a write to the product's own record), and the
+  price save that follows is bound to it, so no stale form changes a SKU,
+  price, stock status or feed. A variant's refused price carries Commerce's
+  reason, and a price form whose values were refused comes back with a fresh
+  action id, so a corrected retry after this request's own SKU write saves;
+  every other refusal keeps the sent id. Derived variant SKUs are cut on a
+  segment boundary; value ids take the first free numbered suffix; the
+  read-failure fallback keeps the feed toggles; `products create` exits 1
+  with `price_refused` when Commerce refuses the price.
 
 ## Verification on this head
 
@@ -39,8 +51,15 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   kernel function with price, stock, fulfillment, weight, retries and
   refusals; the panel's first Save; Add options from comma-separated values;
   per-variant and product SKU changes and their refusals).
-- Registry bundle: `registry_bundle=pass backend_bytes=130989 headroom_bytes=83`
+- Registry bundle: `registry_bundle=pass backend_bytes=130984 headroom_bytes=88`
   (main: 130246, headroom 826).
+- On the head with the third review's fixes: typecheck and audits clean; the
+  unit suite 874 passed, 1 failed (the pre-existing `packaged-consumers`
+  teardown SIGKILL); five regression tests added (stale forms for a product
+  and a variant, a corrected retry after a committed SKU change, segmented
+  and colliding derived ids, feed toggles through a read outage, the CLI's
+  `price_refused`); all three Playwright lanes against that build, 11 passed (sandbox 6 in 2.9m,
+  native 3, native-variant 2).
 - Installed Registry build in real workerd (`COMMERCE_BROWSER_PROOF_PROFILE=sandbox`
   Playwright project, Chromium build 1243 aliased for the pinned 1228):
   6 passed (2.8m) on `8ab920f`, after four spec-only fixes for the new

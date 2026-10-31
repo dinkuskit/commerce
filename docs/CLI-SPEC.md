@@ -169,7 +169,10 @@ product's page is what puts it on sale; no CLI command does that.
 
 `products create` is additive and needs no confirmation: a retry with the same
 `--command-id` and slug finds the same page and never makes a second product, and `--dry-run` prints the
-request and sends nothing. Every other write is a change to a product someone
+request and sends nothing. A price Commerce refuses (a bad amount, or `--sale` not below
+`--regular`) still makes the linked Draft: the command exits `1` with
+`price_refused` and the product in `data`, and the same command again with the
+price corrected, or `products set-price`, prices it. Every other write is a change to a product someone
 may be looking at, so it follows the confirm flow below.
 
 ### Orders commands
@@ -415,7 +418,7 @@ JSON and plain field names are compatibility surfaces within
 | Code | Meaning in `dinkus-commerce` |
 | --- | --- |
 | `0` | Successful read. |
-| `1` | Ordinary failure with no change: `not_found`, `route_not_available` (HTTP 404), `not_implemented`, a 4xx business error, or `page_limit`. |
+| `1` | Ordinary failure with no change: `not_found`, `route_not_available` (HTTP 404), `not_implemented`, a 4xx business error, or `page_limit`; and `price_refused`, where `products create` made the product and its page but Commerce refused the price, with both in `data`. |
 | `2` | Usage: unknown command or flag, missing argument, `--json` with `--plain`, invalid `--url`, `--plugin-id`, `--cursor`, `--timeout`, missing site URL, invalid or secret-bearing config. |
 | `3` | Site unreachable, timeout, request interrupted, Ctrl-C after a change request starts dispatch, or HTTP 5xx. |
 | `4` | Credential missing (`credential_required`), rejected (401), or not permitted (403, including `INSUFFICIENT_SCOPE`), an admin command whose site URL or plugin id came from project config (`untrusted_site_url`, `untrusted_plugin_id`), a confirmation gate, or Ctrl-C before a change request starts dispatch. |

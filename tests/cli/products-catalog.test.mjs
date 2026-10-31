@@ -160,6 +160,22 @@ test("a digital product stays digital when the CLI adds its first option", async
   assert.deepEqual(members.map((member) => member.fulfillment), ["digital", "digital"], "the product's fulfillment carries to each variant");
 });
 
+test("products create reports a refused price as a failure that still names the Draft it made", async () => {
+  const { cli } = store();
+  const refused = await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--regular", "10", "--sale", "12", "--json");
+  assert.equal(refused.code, 1, "automation must not read a refused price as success");
+  const doc = refused.json();
+  assert.deepEqual([doc.outcome, doc.error.code], ["error", "price_refused"]);
+  assert.match(doc.error.message, /Sale must be lower/);
+  assert.equal(typeof doc.data.catalogItemId, "string", "the Draft it made is in the answer");
+  assert.deepEqual([doc.data.entryId, doc.data.price.saved], ["page-mug", false]);
+  assert.match(refused.stderr, /price was refused/);
+  // The same command again with the price corrected finds that Draft and prices it.
+  const fixed = await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--regular", "10", "--sale", "8", "--json");
+  assert.equal(fixed.code, 0, fixed.stderr);
+  assert.deepEqual([fixed.json().data.catalogItemId, fixed.json().data.created, fixed.json().data.price.saved], [doc.data.catalogItemId, false, true]);
+});
+
 test("weight, identifiers, pictures, feeds, archive and restore go through the CLI", async () => {
   const { ctx, cli, apply } = store();
   const id = (await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--json")).json().data.catalogItemId;

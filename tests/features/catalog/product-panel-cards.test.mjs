@@ -154,7 +154,72 @@ test('Add options makes a variant for each comma-separated value, and each varia
   assert.equal(resku.blocks[0].fields.find((f) => f.label === 'SKU').value, 'CAP-2');
 });
 
-test('derived variant SKUs stay distinct for look-alike values and long product SKUs', async () => {
+test('a stale form is refused whole, SKU included, for a product and for a variant; a reloaded form saves', async () => {
+  const { ctx, store } = shop();
+  await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-777777777777', values: { regular: '5', sale: '', sku: 'CAP', stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Cap' } } } }, ctx);
+  const id = await pageProduct(store.pages, 'page-1');
+  const load = async () => commerceAdmin({ input: { type: 'panel_load' } }, ctx);
+  const saveForm = (out) => forms(out).find((f) => f.submit.action_id.startsWith('save:'));
+  const stale = saveForm(await load());
+  // Another editor saves a newer price and stock status from their own form.
+  const theirs = await commerceAdmin({ input: { type: 'form_submit', action_id: saveForm(await load()).submit.action_id, values: { regular: '6', sale: '', sku: 'CAP', stockStatus: 'out-of-stock' } } }, ctx);
+  assert.equal(theirs.toast.type, 'success', JSON.stringify(theirs.toast));
+  const refused = await commerceAdmin({ input: { type: 'form_submit', action_id: stale.submit.action_id, values: { regular: '5', sale: '', sku: 'CAP-OLD', stockStatus: 'in-stock' } } }, ctx);
+  assert.equal(refused.toast.type, 'error');
+  assert.match(refused.toast.message, /Product changed; reload/);
+  const cap = await product(store, id);
+  assert.deepEqual([cap.sku, cap.regular, cap.stockStatus], ['CAP', '6.00', 'out-of-stock'], 'nothing of the stale form was written, the SKU included');
+  const refilled = saveForm(refused);
+  assert.equal(refilled.submit.action_id, stale.submit.action_id, 'the refilled form still carries the revision it read, so it stays refused');
+  assert.equal(refilled.fields.find((f) => f.action_id === 'sku').initial_value, 'CAP-OLD', 'with the typing kept');
+  // The reloaded product gives a form that saves.
+  const fresh = saveForm(await load());
+  assert.notEqual(fresh.submit.action_id, stale.submit.action_id);
+  const saved = await commerceAdmin({ input: { type: 'form_submit', action_id: fresh.submit.action_id, values: { regular: '7', sale: '', sku: 'CAP-NEW', stockStatus: 'in-stock' } } }, ctx);
+  assert.equal(saved.toast.type, 'success', JSON.stringify(saved.toast));
+  assert.deepEqual([(await product(store, id)).sku, (await product(store, id)).regular], ['CAP-NEW', '7.00']);
+  // A variant's card is fenced the same way, through the product's revision.
+  const add = forms(await load()).find((f) => f.submit.label === 'Add options');
+  await commerceAdmin({ input: { type: 'form_submit', action_id: add.submit.action_id, values: { optionLabel: 'Size', values: 'S, L' } } }, ctx);
+  const large = (await product(store, id)).variantProduct.members[1];
+  const variantForm = (out) => forms(out).find((f) => f.submit.action_id.startsWith('variant:["price"') && JSON.parse(f.submit.action_id.slice(8))[2] === large.catalogItemId);
+  const staleVariant = variantForm(await load());
+  const theirVariant = await commerceAdmin({ input: { type: 'form_submit', action_id: variantForm(await load()).submit.action_id, values: { regular: '9', sale: '', sku: large.sku, stockStatus: 'in-stock' } } }, ctx);
+  assert.equal(theirVariant.toast.type, 'success', JSON.stringify(theirVariant.toast));
+  const refusedVariant = await commerceAdmin({ input: { type: 'form_submit', action_id: staleVariant.submit.action_id, values: { regular: '8', sale: '', sku: 'CAP-NEW-XL', stockStatus: 'out-of-stock' } } }, ctx);
+  assert.equal(refusedVariant.toast.type, 'error');
+  assert.match(refusedVariant.toast.message, /Product changed; reload/);
+  const after = (await product(store, id)).variantProduct.members[1];
+  assert.deepEqual([after.sku, after.regular, after.stockStatus], [large.sku, '9.00', 'in-stock']);
+  assert.equal(variantForm(refusedVariant).submit.action_id, staleVariant.submit.action_id);
+});
+
+test("a variant whose SKU was changed and price refused in one Save comes back on a form that saves the corrected price", async () => {
+  const { ctx, store } = shop();
+  await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-888888888888', values: { regular: '20', sale: '', sku: 'TEE', stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Tee' } } } }, ctx);
+  const id = await pageProduct(store.pages, 'page-1');
+  const add = forms(await commerceAdmin({ input: { type: 'panel_load' } }, ctx)).find((f) => f.submit.label === 'Add options');
+  await commerceAdmin({ input: { type: 'form_submit', action_id: add.submit.action_id, values: { optionLabel: 'Size', values: 'S, L' } } }, ctx);
+  // The first variant is the product itself, so its SKU change moves the product's revision.
+  const rootForm = (out) => forms(out).find((f) => f.submit.action_id.startsWith('variant:["price"') && JSON.parse(f.submit.action_id.slice(8))[2] === id);
+  const form = rootForm(await commerceAdmin({ input: { type: 'panel_load' } }, ctx));
+  const refused = await commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values: { regular: 'abc', sale: '', sku: 'TEE-S', stockStatus: 'in-stock' } } }, ctx);
+  assert.equal(refused.toast.type, 'error');
+  assert.match(refused.toast.message, /dollar amount/, "Commerce's reason, not a generic one");
+  assert.equal((await product(store, id)).sku, 'TEE-S', 'the SKU was changed before the price was refused');
+  const refilled = rootForm(refused);
+  assert.notEqual(refilled.submit.action_id, form.submit.action_id, 'the refilled form reads the product as it is after the SKU change');
+  assert.deepEqual(refilled.fields.filter((f) => ['regular', 'sku'].includes(f.action_id)).map((f) => f.initial_value), ['abc', 'TEE-S']);
+  const fixed = await commerceAdmin({ input: { type: 'form_submit', action_id: refilled.submit.action_id, values: { regular: '21', sale: '', sku: 'TEE-S', stockStatus: 'in-stock' } } }, ctx);
+  assert.deepEqual(fixed.toast, { type: 'success', message: 'Changes saved' });
+  assert.equal((await product(store, id)).variantProduct.members[0].regular, '21.00');
+  // The old form, loaded before the SKU change, stays refused.
+  const old = await commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values: { regular: '22', sale: '', sku: 'TEE-S', stockStatus: 'in-stock' } } }, ctx);
+  assert.match(old.toast.message, /Product changed; reload/);
+  assert.equal((await product(store, id)).variantProduct.members[0].regular, '21.00');
+});
+
+test('derived variant SKUs stay valid and distinct for look-alike values, long and segmented product SKUs', async () => {
   const { ctx, store } = shop();
   const long = 'L'.repeat(64);
   await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-555555555555', values: { regular: '9', sale: '', sku: long, stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Long' } } } }, ctx);
@@ -166,6 +231,23 @@ test('derived variant SKUs stay distinct for look-alike values and long product 
   assert.equal(skus[0], long);
   assert.deepEqual(skus.slice(1), [long.slice(0, 63 - 'a-b-2'.length) + '-A-B-2', long.slice(0, 63 - 'plain'.length) + '-PLAIN'], 'the suffix always fits, and look-alike values get distinct ids');
   assert.equal(new Set(skus).size, 3);
+  // A product SKU cut on a segment boundary never leaves a double hyphen.
+  const segmented = 'A'.repeat(57) + '-' + 'B'.repeat(6);
+  const { ctx: c2, store: s2 } = shop();
+  await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-999999999999', values: { regular: '9', sale: '', sku: segmented, stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Segmented' } } } }, c2);
+  const add2 = forms(await commerceAdmin({ input: { type: 'panel_load' } }, c2)).find((f) => f.submit.label === 'Add options');
+  const added2 = await commerceAdmin({ input: { type: 'form_submit', action_id: add2.submit.action_id, values: { optionLabel: 'Size', values: 'Small, Large' } } }, c2);
+  assert.notEqual(added2.toast?.type, 'error', JSON.stringify(added2.toast));
+  assert.deepEqual((await product(s2, await pageProduct(s2.pages, 'page-1'))).variantProduct.members.map((m) => m.sku), [segmented, 'A'.repeat(57) + '-LARGE']);
+  // Values whose numbered ids would collide take the next free number.
+  const { ctx: c3, store: s3 } = shop();
+  await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-aaaaaaaaaaaa', values: { regular: '9', sale: '', sku: 'FIT', stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Fit' } } } }, c3);
+  const add3 = forms(await commerceAdmin({ input: { type: 'panel_load' } }, c3)).find((f) => f.submit.label === 'Add options');
+  const added3 = await commerceAdmin({ input: { type: 'form_submit', action_id: add3.submit.action_id, values: { optionLabel: 'Fit', values: 'A B, A-B-3, A-B' } } }, c3);
+  assert.notEqual(added3.toast?.type, 'error', JSON.stringify(added3.toast));
+  const fit = await product(s3, await pageProduct(s3.pages, 'page-1'));
+  assert.deepEqual(fit.variantProduct.options[0].values.map((v) => v.valueId), ['a-b', 'a-b-3', 'a-b-2']);
+  assert.deepEqual(fit.variantProduct.members.map((m) => m.sku), ['FIT', 'FIT-A-B-3', 'FIT-A-B-2']);
 });
 
 test('a blank SKU with a refused first price keeps the generated SKU, so fixing the price alone saves', async () => {
