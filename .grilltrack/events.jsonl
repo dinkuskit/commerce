@@ -672,8 +672,15 @@
 {"action": "decision_locked", "at": "2026-10-31T19:07:44+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "418df0e2-3ca7-4300-96bc-296b88bdf85a"}
 {"action": "decision_implemented", "at": "2026-10-31T19:18:11+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "ec91dcf1-b5b7-4a25-80cd-3eb805041120"}
 {"action": "decision_verified", "at": "2026-10-31T19:18:11+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "f3434269-40af-4c71-989c-fbf3bedc3d12"}
-{"action": "focus_started", "at": "2026-10-31T19:34:14+00:00", "data": {"cadence": "sequential", "domain": "Checkout totals"}, "event_id": "8c4238c8-4020-490e-b8f2-8af3145669f0"}
-{"action": "decision_proposed", "at": "2026-10-31T19:34:14+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "fa897222-8bf6-45cf-99a8-6f38f7c0a786"}
-{"action": "decision_locked", "at": "2026-10-31T19:34:14+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "57748e65-14b4-4962-93fd-69bf14d47fe1"}
-{"action": "shared_understanding_confirmed", "at": "2026-10-31T19:42:54+00:00", "data": {"summary": "Ronald, 31 Oct 2026 19:33 UTC, answered 'agreed' to '#235: a PDF-only order still pays flat shipping. Fix it.': a checkout with only digital items pays no shipping; any physical item keeps the free/flat charge and Free shipping over."}, "event_id": "0d098bc9-5e57-4143-9ccd-fbbd0c1c48da"}
-{"action": "decision_implemented", "at": "2026-10-31T19:42:55+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "942bc20c-af4c-4a7b-ba65-ee83d419e5a8"}
+{"action": "decision_proposed", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "b8ac3c5f-1b6e-4d62-bc80-14ddcff49105"}
+{"action": "decision_locked", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "a9bf229f-544d-48d9-b86f-828240c381fb"}
+{"action": "decision_implemented", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "c65197ca-476b-4409-b899-0eef84086897"}
+{"action": "decision_proposed", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "def68878-e3c8-4b5e-ad4f-0decfbc0c8a6"}
+{"action": "decision_locked", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "66d88367-bf1d-4f9f-a6c8-d96d3622022c"}
+{"action": "decision_implemented", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "3ad3f37e-ec1e-4142-9403-7f58f51115ed"}
+{"action": "decision_superseded", "at": "2026-10-31T19:34:34+00:00", "data": {"affected": [], "decision_id": "catalog-simple-product-label-20261027", "replacement_id": "catalog-panel-cards-20261031"}, "event_id": "38d72c26-716a-48d7-b190-d8ffb5285fd5"}
+{"action": "focus_started", "at": "2026-10-31T19:56:18+00:00", "data": {"cadence": "sequential", "domain": "Checkout totals"}, "event_id": "730791ce-6018-4b02-a58e-a32c54779f04"}
+{"action": "decision_proposed", "at": "2026-10-31T19:56:18+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "5002db3b-dc09-4cce-93c5-728d884be022"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-31T19:56:19+00:00", "data": {"summary": "Ronald, 31 Oct 2026 19:33 UTC, answered 'agreed' to '#235: a PDF-only order still pays flat shipping. Fix it.': a checkout with only digital items pays no shipping; any physical item keeps the free/flat charge and Free shipping over."}, "event_id": "1064ce92-c703-46b6-beda-8ead3ab30b33"}
+{"action": "decision_locked", "at": "2026-10-31T19:56:19+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "9806edc8-deb2-4480-8347-e3b86fd23049"}
+{"action": "decision_implemented", "at": "2026-10-31T19:56:19+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "bd3c9a7b-3b25-44d1-8511-509d83a9bab9"}

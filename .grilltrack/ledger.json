@@ -4,9 +4,9 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-31T19:42:54+00:00",
+    "confirmed_at": "2026-10-31T19:56:19+00:00",
     "domain": "Checkout totals",
-    "started_at": "2026-10-31T19:34:13+00:00",
+    "started_at": "2026-10-31T19:56:18+00:00",
     "status": "confirmed",
     "summary": "Ronald, 31 Oct 2026 19:33 UTC, answered 'agreed' to '#235: a PDF-only order still pays flat shipping. Fix it.': a checkout with only digital items pays no shipping; any physical item keeps the free/flat charge and Free shipping over."
   },
@@ -14827,6 +14827,20 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T19:34:34+00:00",
+          "choice": "Keep one product model: a product is simple until it has a choice, and adding a choice (up to 3 options) makes it variable, with the product itself as the first member. The Dinkus Commerce panel shows one context line right above Add choices on a product with no choices: 'Simple product. Add a choice, like Size, to sell it in more than one version.' Once it has a choice the line goes and the choices editor shows. No new state, field or route.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "The 'Simple product. Add a choice...' context line and the always-open Add choices form are replaced by the collapsed Variants card of catalog-panel-cards-20261031; the one product model it protected is unchanged.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
         }
       ],
       "id": "catalog-simple-product-label-20261027",
@@ -14839,9 +14853,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
-      "superseded_by": null,
-      "updated_at": "2026-10-27T18:12:39+00:00",
+      "status": "superseded",
+      "superseded_by": "catalog-panel-cards-20261031",
+      "updated_at": "2026-10-31T19:34:34+00:00",
       "verification_ref": null
     },
     {
@@ -15784,11 +15798,133 @@
       "verification_ref": "pr:dinkuskit/commerce#245;file:.grilltrack/proof/registry-headroom-20261031/PROOF.md"
     },
     {
+      "baseline_ref": "git:e4824441154eb8e72bf5984ee62afece2bae1902",
+      "candidate_refs": [
+        "dinkuskit/commerce#244"
+      ],
+      "choice": "A status grid (Status, SKU, Name from the page title), then cards like a Shopify product form: Pricing & stock open (Regular, Sale, SKU, Stock status and the feed channels, one Save), and Variants, Shipping and Identifiers as Block Kit accordions, collapsed until opened. A product is simple until it has an option: its Variants card is collapsed and asks for an Option name and comma-separated Option values; Add options makes it variable with the product itself as the first variant and a new variant per value, whose SKU is the product's SKU plus the value's id and whose fulfillment is the product's. A product with options opens its Variants card: one card per variant with Regular, Sale, SKU and Stock status and its own Save, then Edit options (labels and each variant's fulfillment), Add another option (up to three) and Add a variant (up to fifty). After a save or a refusal the card it concerned is the open one. The SKU is editable in the panel for the product and each variant, changed before the price so a SKU another product has is refused before anything is saved. The words are options, values and variants, as on Shopify and in UCP: 'choice' and 'version' leave merchant-facing copy, docs and refusal messages; the catalog API's op is option and the CLI's command add-option with --variant, with no aliases. No product type field, state or route is added; opening a card is client-side.",
+      "context_ref": "dinkuskit/commerce#244",
+      "created_at": "2026-10-31T19:34:34+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-model-20261008",
+        "catalog-one-product-screen-20261023",
+        "catalog-product-needs-page-20261031"
+      ],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-31T19:34:34+00:00",
+          "choice": "A status grid (Status, SKU, Name from the page title), then cards like a Shopify product form: Pricing & stock open (Regular, Sale, SKU, Stock status and the feed channels, one Save), and Variants, Shipping and Identifiers as Block Kit accordions, collapsed until opened. A product is simple until it has an option: its Variants card is collapsed and asks for an Option name and comma-separated Option values; Add options makes it variable with the product itself as the first variant and a new variant per value, whose SKU is the product's SKU plus the value's id and whose fulfillment is the product's. A product with options opens its Variants card: one card per variant with Regular, Sale, SKU and Stock status and its own Save, then Edit options (labels and each variant's fulfillment), Add another option (up to three) and Add a variant (up to fifty). After a save or a refusal the card it concerned is the open one. The SKU is editable in the panel for the product and each variant, changed before the price so a SKU another product has is refused before anything is saved. The words are options, values and variants, as on Shopify and in UCP: 'choice' and 'version' leave merchant-facing copy, docs and refusal messages; the catalog API's op is option and the CLI's command add-option with --variant, with no aliases. No product type field, state or route is added; opening a card is client-side.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T19:34:34+00:00",
+          "choice": "A status grid (Status, SKU, Name from the page title), then cards like a Shopify product form: Pricing & stock open (Regular, Sale, SKU, Stock status and the feed channels, one Save), and Variants, Shipping and Identifiers as Block Kit accordions, collapsed until opened. A product is simple until it has an option: its Variants card is collapsed and asks for an Option name and comma-separated Option values; Add options makes it variable with the product itself as the first variant and a new variant per value, whose SKU is the product's SKU plus the value's id and whose fulfillment is the product's. A product with options opens its Variants card: one card per variant with Regular, Sale, SKU and Stock status and its own Save, then Edit options (labels and each variant's fulfillment), Add another option (up to three) and Add a variant (up to fifty). After a save or a refusal the card it concerned is the open one. The SKU is editable in the panel for the product and each variant, changed before the price so a SKU another product has is refused before anything is saved. The words are options, values and variants, as on Shopify and in UCP: 'choice' and 'version' leave merchant-facing copy, docs and refusal messages; the catalog API's op is option and the CLI's command add-option with --variant, with no aliases. No product type field, state or route is added; opening a card is client-side.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-panel-cards-20261031",
+      "implementation_ref": "dinkuskit/commerce#244",
+      "question": "How does the Dinkus Commerce panel present a product's price, stock, variants, shipping and identifiers, and what are they called?",
+      "rationale": "Locked on the owner's words in the 31 Oct 2026 panel-redesign thread: 'I like this setup' (the Shopify Variants card), 'this is the shape I want' (one product model, no type field), 'agreed' to options, values and variants with no aliases, and 'proceed'.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T19:34:34+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:e4824441154eb8e72bf5984ee62afece2bae1902",
+      "candidate_refs": [
+        "dinkuskit/commerce#244"
+      ],
+      "choice": "The panel opens straight onto the price form: Regular, Sale, an optional SKU (made from the title if blank), Stock status with In stock preselected, a Physical switch and, for a physical product, Weight (oz), with one Save. Save creates the Draft named from the page title, claims the page, and writes the price, stock status, fulfillment and weight, through createProductForPage, the one kernel function the panel, the catalog API's create (which takes fulfillment, regular, sale, stockStatus and weightOz and answers with created and the price form) and the CLI's products create (--regular, --sale, --stock-status, --digital, --weight-oz) all call. The create command is kept so a retry resumes the same product; a weight is checked before anything is written; a price Commerce refuses leaves the Draft made and linked and comes back with the reason and the typing. There is no Add price and stock button.",
+      "context_ref": "dinkuskit/commerce#244",
+      "created_at": "2026-10-31T19:34:34+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-product-needs-page-20261031",
+        "catalog-one-product-screen-20261023",
+        "catalog-page-link-in-commerce-20261029"
+      ],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-31T19:34:34+00:00",
+          "choice": "The panel opens straight onto the price form: Regular, Sale, an optional SKU (made from the title if blank), Stock status with In stock preselected, a Physical switch and, for a physical product, Weight (oz), with one Save. Save creates the Draft named from the page title, claims the page, and writes the price, stock status, fulfillment and weight, through createProductForPage, the one kernel function the panel, the catalog API's create (which takes fulfillment, regular, sale, stockStatus and weightOz and answers with created and the price form) and the CLI's products create (--regular, --sale, --stock-status, --digital, --weight-oz) all call. The create command is kept so a retry resumes the same product; a weight is checked before anything is written; a price Commerce refuses leaves the Draft made and linked and comes back with the reason and the typing. There is no Add price and stock button.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T19:34:34+00:00",
+          "choice": "The panel opens straight onto the price form: Regular, Sale, an optional SKU (made from the title if blank), Stock status with In stock preselected, a Physical switch and, for a physical product, Weight (oz), with one Save. Save creates the Draft named from the page title, claims the page, and writes the price, stock status, fulfillment and weight, through createProductForPage, the one kernel function the panel, the catalog API's create (which takes fulfillment, regular, sale, stockStatus and weightOz and answers with created and the price form) and the CLI's products create (--regular, --sale, --stock-status, --digital, --weight-oz) all call. The create command is kept so a retry resumes the same product; a weight is checked before anything is written; a price Commerce refuses leaves the Draft made and linked and comes back with the reason and the typing. There is no Add price and stock button.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-first-save-creates-20261031",
+      "implementation_ref": "dinkuskit/commerce#244",
+      "question": "How does a Content > Products page with no product get one?",
+      "rationale": "Locked on the owner's words in the 31 Oct 2026 panel-redesign thread: 'much better design' and 'proceed'.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T19:34:34+00:00",
+      "verification_ref": null
+    },
+    {
       "baseline_ref": null,
       "candidate_refs": [],
       "choice": "No. A checkout whose lines are all digital charges 0 shipping and records the shipping as free, whatever the flat charge or Free shipping over amount. A basket with at least one physical item (an item with no fulfillment marked counts as physical, as in commerce-delivery-address-001) keeps the existing free or flat charge, once per checkout, and Free shipping over still applies. Payments charges the frozen snapshot unchanged, so a 0 charge adds no Shipping line. Checkouts already started keep their frozen totals.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/235",
-      "created_at": "2026-10-31T19:34:14+00:00",
+      "created_at": "2026-10-31T19:56:18+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -15798,7 +15934,7 @@
       "domain": "Checkout totals",
       "history": [
         {
-          "at": "2026-10-31T19:34:14+00:00",
+          "at": "2026-10-31T19:56:19+00:00",
           "choice": "No. A checkout whose lines are all digital charges 0 shipping and records the shipping as free, whatever the flat charge or Free shipping over amount. A basket with at least one physical item (an item with no fulfillment marked counts as physical, as in commerce-delivery-address-001) keeps the existing free or flat charge, once per checkout, and Free shipping over still applies. Payments charges the frozen snapshot unchanged, so a 0 charge adds no Shipping line. Checkouts already started keep their frozen totals.",
           "from": "proposed",
           "implementation_ref": null,
@@ -15812,7 +15948,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-31T19:42:55+00:00",
+          "at": "2026-10-31T19:56:19+00:00",
           "choice": "No. A checkout whose lines are all digital charges 0 shipping and records the shipping as free, whatever the flat charge or Free shipping over amount. A basket with at least one physical item (an item with no fulfillment marked counts as physical, as in commerce-delivery-address-001) keeps the existing free or flat charge, once per checkout, and Free shipping over still applies. Payments charges the frozen snapshot unchanged, so a 0 charge adds no Shipping line. Checkouts already started keep their frozen totals.",
           "from": "locked",
           "implementation_ref": null,
@@ -15838,7 +15974,7 @@
       "review_source_identity": null,
       "status": "implemented",
       "superseded_by": null,
-      "updated_at": "2026-10-31T19:42:55+00:00",
+      "updated_at": "2026-10-31T19:56:19+00:00",
       "verification_ref": null
     }
   ],
@@ -15876,5 +16012,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T19:42:55+00:00"
+  "updated_at": "2026-10-31T19:56:19+00:00"
 }

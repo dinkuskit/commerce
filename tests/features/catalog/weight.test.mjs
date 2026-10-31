@@ -40,7 +40,9 @@ function context(records) {
   for (const name of ["catalog_prices", "catalog_manual_availability", "managed_sku_claims", "storefront_out_of_stock_listing", "catalog_media", "storefront_placeholder_image", "product_pages"]) storage[name] = new MemoryCollection();
   return { catalog, ctx: { storage } };
 }
-const weightForm = (response) => response.blocks.find((block) => block.type === "form" && block.submit.action_id.startsWith("weight:"));
+// The weight form sits inside the Shipping card.
+const blocksOf = (blocks) => blocks.flatMap((block) => block.type === "accordion" ? blocksOf(block.blocks) : [block]);
+const weightForm = (response) => blocksOf(response.blocks).find((block) => block.type === "form" && block.submit.action_id.startsWith("weight:"));
 
 test("a weight is ounces above 0 and up to 2400 with at most 2 decimals; blank clears it", () => {
   assert.equal(normalizeWeightOz("12.5"), 12.5);
@@ -98,7 +100,7 @@ test("a weight form cannot set another product's weight or a digital product's",
   assert.equal(weightForm(digital), undefined);
 });
 
-test("each physical choice of a product with choices gets its own weight", async () => {
+test("each physical variant of a product with options gets its own weight", async () => {
   const selections = (valueId) => [{ optionId: "size", valueId }];
   const variantProduct = { schema: "dinkuskit.commerce.product-variants/v1", productId: "shirt", revision: 1, defaultMemberId: "shirt",
     options: [{ optionId: "size", label: "Size", values: [{ valueId: "s", label: "Small" }, { valueId: "l", label: "Large" }, { valueId: "d", label: "Download" }] }],

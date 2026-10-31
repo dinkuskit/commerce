@@ -411,21 +411,19 @@ test("Block Kit recovery after a storage read failure does not pretend managed i
       input: {
         type: "form_submit",
         action_id: "save:item-bag",
-        values: { regular: "20", sale: "15" },
+        values: { regular: "20", sale: "15", "feed:google-merchant": true, "feed:meta-catalog": false },
       },
     },
     sandboxContext(store),
   );
   assert.equal(recovered.toast.type, "error");
-  const texts = flatten(recovered.blocks);
-  assert.ok(texts.some((text) => text.includes("Coming soon")));
-  assert.ok(texts.some((text) => text.includes("Stock status hidden")));
+  // With the product unreadable, the typing comes back in a price form that claims no stock status.
   assert.equal(hasWorkingManageStock(recovered.blocks), false);
   const form = recovered.blocks.find((block) => block.type === "form");
   assert.ok(form);
-  assert.equal(
-    form.fields.some((field) => field.action_id === "stockStatus"),
-    false,
-  );
+  assert.deepEqual(form.fields.filter((field) => ["regular", "sale"].includes(field.action_id)).map((field) => field.initial_value), ["20", "15"]);
+  assert.equal(form.fields.some((field) => field.action_id === "stockStatus"), false);
+  assert.deepEqual(form.fields.filter((field) => field.action_id.startsWith("feed:")).map((field) => [field.action_id, field.initial_value]),
+    [["feed:google-merchant", true], ["feed:meta-catalog", false]], "the feed choices come back as submitted");
   assert.deepEqual(snapshot(store), before);
 });

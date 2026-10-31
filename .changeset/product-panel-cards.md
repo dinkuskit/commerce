@@ -1,0 +1,5 @@
+---
+"@dinkuskit/commerce": minor
+---
+
+The Dinkus Commerce panel is laid out like a Shopify product form. A page with no product opens on its price form (Regular, Sale, SKU, Stock status, a Physical product switch and Weight), and its first Save makes the product with those values; the "Add price and stock" button is gone. A linked page shows a status grid and cards: Pricing & stock, Variants, Shipping and Identifiers. The Variants card stays collapsed on a simple product and asks for an option name and comma-separated values; each variant is then its own card with Regular, Sale, SKU and Stock status. The SKU is editable in the panel. The words are options, values and variants: the catalog API's `choice` op is now `option`, `create` takes `fulfillment`, `regular`, `sale`, `stockStatus` and `weightOz` and answers with `created` and the price form, and the CLI's `add-choice` is `add-option`, its `--choice` flag `--variant`, and `products create` takes `--regular`, `--sale`, `--stock-status`, `--digital` and `--weight-oz`. All three ways of making a product call one kernel function, `createProductForPage`.

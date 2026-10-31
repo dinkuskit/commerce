@@ -104,6 +104,7 @@ export interface CatalogProductListItem {
 
 export interface CatalogProductVariantListItem {
   catalogItemId: string;
+  sku: string;
   selections: ReturnType<typeof variantSelections>;
   regular: string | null;
   sale: string | null;
@@ -283,6 +284,7 @@ async function describeCatalogProducts(
           : await loadCatalogItemManualAvailability(availability, member.catalogItemId, catalog);
         members.push({
           catalogItemId: member.catalogItemId,
+          sku: memberRecord.item.sku,
           selections: variantSelections(memberRecord.product, memberRecord.member),
           regular: memberPrice.regular ? formatClerkDollar(memberPrice.regular) : null,
           sale: memberPrice.sale ? formatClerkDollar(memberPrice.sale) : null,
