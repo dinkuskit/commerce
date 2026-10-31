@@ -32,29 +32,6 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 
-## Completing and correcting an order
-
-Open **Orders**, then **Inspect #N**. New orders are **Processing**;
-**Completed** means shipped, not delivered. Test orders stay in the normal list
-and are marked **TEST**; do not use them for real fulfillment or postage.
-
-- Before shipment, use **Correct address** on a Processing order that has a
-  delivery address. The corrected country must be one of the store's shipping
-  destinations. This changes where the order goes, not its frozen checkout or
-  billing address.
-- Without Ship, use **Complete order** to record shipment by hand. Carrier and
-  tracking number are optional, at most 64 characters each. Commerce records the
-  completion time and shows the order as Completed; this does not buy a label or
-  send a shipping email. Signed-in shoppers can see the status, carrier and
-  tracking number in their order history when the storefront provides it.
-- A Completed order's address is locked. To correct a mistake, choose **Move back
-  to Processing** and confirm. This clears the completion time, carrier and
-  tracking number, but keeps any corrected delivery address. It does not cancel
-  a shipping label. Correct the order and complete it again as appropriate.
-
-If an order changed after you opened its form, the stale save changes nothing.
-Open the order again and check its current details before retrying.
-
 ## Merchant store settings
 
 In **Commerce settings**, choose the store country and the physical
@@ -201,6 +178,29 @@ Commerce runs a background check every five minutes while it is switched on. It 
 Reconciliation requires a persisted paid checkout order before acknowledging its payment notice. The separate handoff to the Orders module catches receiver failures so it can be retried; acknowledgement alone is therefore not independent proof that the Orders screen displays the order. A browser return cannot establish payment success. Use the [test-order checks](/docs/store-owners/test-order) and confirm the order in Commerce's Orders screen.
 
 Coupon codes are refused at checkout on Registry stores in this release.
+
+## Completing and correcting an order
+
+Open **Orders**, then **Inspect #N**. New orders are **Processing**;
+**Completed** means shipped, not delivered. Test orders stay in the normal list
+and are marked **TEST**; do not use them for real fulfillment or postage.
+
+- Before shipment, use **Correct address** on a Processing order that has a
+  delivery address. The corrected country must be one of the store's shipping
+  destinations. This changes where the order goes, not its frozen checkout or
+  billing address.
+- Without Ship, use **Complete order** to record shipment by hand. Carrier and
+  tracking number are optional, at most 64 characters each. Commerce records the
+  completion time and shows the order as Completed; this does not buy a label or
+  send a shipping email. Signed-in shoppers can see the status, carrier and
+  tracking number in their order history when the storefront provides it.
+- A Completed order's address is locked. To correct a mistake, choose **Move back
+  to Processing** and confirm. This clears the completion time, carrier and
+  tracking number, but keeps any corrected delivery address. It does not cancel
+  a shipping label. Correct the order and complete it again as appropriate.
+
+If an order changed after you opened its form, the stale save changes nothing.
+Open the order again and check its current details before retrying.
 
 ## Next steps
 
