@@ -19,10 +19,13 @@ boundary, not an implemented route or storage change in this decision slice.
      access.
    - **Store clerk / shop manager (`shop_manager`)**: Maps to EmDash's existing
      `Role.EDITOR (40)` tier (`permission: "content:edit_any"` on the Commerce
-     Block Kit `admin` route) for day-to-day catalog and order operations.
+     Block Kit `admin` route) for day-to-day catalog operations and merchant
+     store settings. This does not grant access to Orders.
    - **Store owner / administrator**: Maps to EmDash's `Role.ADMIN (50)` tier
-     (`permission: "plugins:manage"`) for plugin settings (`installedCheckout`,
-     `storeKey`) and the `orders` API token surface.
+     (`permission: "plugins:manage"`) for plugin connection/checkout settings,
+     the Orders page, and the `orders` API token surface. The Orders page and
+     API require an administrator even though the shared Block Kit `admin`
+     route admits editors; see [Installed Orders inspection](../implementation/orders-inspection.md).
    - EmDash `1.2.0` and `1.3.1` keep a closed 5-tier numeric `Role` enum
      (`SUBSCRIBER: 10`, `CONTRIBUTOR: 20`, `AUTHOR: 30`, `EDITOR: 40`,
      `ADMIN: 50`) and read-only `users:read` plugin capability; plugins do not

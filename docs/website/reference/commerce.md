@@ -32,6 +32,8 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 
+An EmDash **Editor** can manage products and merchant store settings. **Orders** requires an **Administrator**, as do the DinkusKit connection and checkout setup. Giving someone the Editor role does not give them access to the Orders page or the private `orders` API.
+
 ## Merchant store settings
 
 In **Commerce settings**, choose the store country and the physical
