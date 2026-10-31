@@ -155,6 +155,7 @@ export async function composeCheckoutPricing(
   attemptId: string,
   couponCode: string | undefined,
   execution: CheckoutExecution,
+  shipsGoods = true,
 ): Promise<ComposedPricing> {
   const pricing = execution.pricing;
   if (!pricing) fail("Pricing composition is unavailable");
@@ -173,7 +174,10 @@ export async function composeCheckoutPricing(
   const merchandiseSubtotal = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n));
   const couponDiscount = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.discount.minor), 0n));
   const netMerchandise = usd(BigInt(merchandiseSubtotal.minor) - BigInt(couponDiscount.minor));
-  const charge = shippingCharge(config, BigInt(netMerchandise.minor));
+  // A checkout with nothing physical ships nothing, so it pays no shipping
+  // (checkout-digital-only-no-shipping-20261031); the configuration is still checked.
+  const owed = shippingCharge(config, BigInt(netMerchandise.minor));
+  const charge = shipsGoods ? owed : usd(0n);
   const finalTotal = usd(BigInt(netMerchandise.minor) + BigInt(charge.minor));
   const snapshot: CheckoutPricingSnapshot = Object.freeze({
     schema: CHECKOUT_PRICING_SCHEMA,
@@ -183,7 +187,7 @@ export async function composeCheckoutPricing(
     shipping: {
       configurationId: config.configurationId.trim(),
       revision: config.revision,
-      mode: config.freeOver && charge.minor === "0" ? "free" : config.mode,
+      mode: !shipsGoods || config.freeOver && charge.minor === "0" ? "free" : config.mode,
       charge,
     },
     finalTotal,

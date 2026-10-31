@@ -45,7 +45,7 @@ export async function openPanel(page) {
   if (!(await trigger.isVisible())) await settings.click();
   await trigger.click({ timeout: 60000 });
   const panel = trigger.locator("xpath=..");
-  await expect(panel.getByText(/Not for sale yet|SKU /).first()).toBeVisible({ timeout: 30000 });
+  await expect(panel.getByText(/Save makes the product|Pricing & stock|^Variants|^Archived: off the shop$/).first()).toBeVisible({ timeout: 30000 });
   return panel;
 }
 
@@ -78,4 +78,17 @@ export async function openProductPageTitled(page, title) {
   expect(found, title).toBeTruthy();
   await page.goto("/_emdash/admin/content/products/" + found.id);
   return { id: found.id, panel: await openPanel(page), endpoint: "/_emdash/api/content/products/" + found.id + "/plugin-extensions/dinkus-commerce/panel/product" };
+}
+
+/**
+ * Opens one of the panel's cards (a Block Kit accordion: Variants, Shipping, Identifiers, Edit options, a variant's
+ * card and so on) when it is collapsed, and returns it. `label` is the card's label, or a pattern for a label that
+ * carries a count or a price. A panel redraw after any save collapses the cards again.
+ */
+export async function openCard(panel, label) {
+  const trigger = panel.getByRole("button", { name: label, exact: typeof label === "string" }).first();
+  await expect(trigger).toBeVisible({ timeout: 30000 });
+  if (await trigger.getAttribute("aria-expanded") !== "true") await trigger.click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  return trigger;
 }

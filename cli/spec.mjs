@@ -204,7 +204,7 @@ const STOCK_STATUSES = ["in-stock", "out-of-stock", "on-backorder"];
 
 async function loadProduct(client, itemId) {
 	const current = await client.showProduct(itemId);
-	if (current === null) throw new CliError("not_found", `No product has id ${visible(itemId)}. A choice is changed through its product with --choice.`, { exit: EXIT.failure });
+	if (current === null) throw new CliError("not_found", `No product has id ${visible(itemId)}. A variant is changed through its product with --variant.`, { exit: EXIT.failure });
 	return current;
 }
 
@@ -224,10 +224,10 @@ function productHuman({ product, media }) {
 		["image", media.image?.mediaId ?? "-"],
 		["gallery", `${media.gallery?.length ?? 0} pictures`],
 	];
-	for (const option of product.variantProduct?.options ?? []) lines.push(["choice", `${option.label}: ${option.values.map((value) => value.label).join(", ")}`]);
+	for (const option of product.variantProduct?.options ?? []) lines.push(["option", `${option.label}: ${option.values.map((value) => value.label).join(", ")}`]);
 	for (const member of product.variantProduct?.members ?? []) {
 		const picks = member.selections.map((pick) => pick.valueLabel ?? pick.valueId).join(" / ");
-		lines.push(["version", `${member.catalogItemId}  ${picks || "-"}  regular ${member.regular ?? "-"}  sale ${member.sale ?? "-"}  stock ${member.manageStock ? "managed" : member.stockStatus ?? "-"}`]);
+		lines.push(["variant", `${member.catalogItemId}  ${picks || "-"}  regular ${member.regular ?? "-"}  sale ${member.sale ?? "-"}  stock ${member.manageStock ? "managed" : member.stockStatus ?? "-"}`]);
 	}
 	const width = Math.max(...lines.map(([key]) => key.length));
 	return lines.map(([key, value]) => `${key.padEnd(width)}  ${visible(value)}`).join("\n");
@@ -249,34 +249,43 @@ async function productsCreate(ctx) {
 	if (ctx.flags.page !== undefined && ctx.flags.slug !== undefined) throw usageError("Give --page or --slug, not both.", "invalid_argument");
 	const slugFlag = ctx.flags.slug === undefined ? undefined : slug(ctx.flags.slug, "--slug");
 	const pageSlug = ctx.flags.page === undefined ? slugFlag ?? slug(ctx.flags.name, "--name") : undefined;
-	const body = { op: "create", commandId: ctx.flags["command-id"], name: ctx.flags.name, sku: ctx.flags.sku, entryId: ctx.flags.page };
+	const f = ctx.flags;
+	for (const [flag, value] of [["--regular", f.regular], ["--sale", f.sale]]) if (value !== undefined && !DOLLARS.test(value)) throw usageError(`${flag} must be dollars such as 19.99.`, "invalid_amount");
+	if (f["stock-status"] !== undefined && !["in-stock", "out-of-stock", "on-backorder"].includes(f["stock-status"])) throw usageError("--stock-status must be in-stock, out-of-stock or on-backorder.", "invalid_argument");
+	const body = { op: "create", commandId: f["command-id"], name: f.name, sku: f.sku, entryId: f.page,
+		...(f.digital ? { fulfillment: "digital" } : {}),
+		...(f.regular !== undefined || f.sale !== undefined || f["stock-status"] !== undefined ? { regular: f.regular ?? "", sale: f.sale ?? "", ...(f["stock-status"] === undefined ? {} : { stockStatus: f["stock-status"] }) } : {}),
+		...(f["weight-oz"] === undefined ? {} : { weightOz: f["weight-oz"] }) };
 	const page = pageSlug === undefined ? `page ${body.entryId}` : `the Products page ${pageSlug} (made as a Draft if it does not exist)`;
-	const human = visible(`New Draft product ${body.name} (${body.sku}), command ${body.commandId}, for ${page}.`);
+	const human = visible(`New Draft product ${body.name} (${body.sku}), command ${body.commandId}, for ${page}${body.regular ? `, Regular ${body.regular}` : ""}${body.fulfillment === "digital" ? ", digital" : ""}.`);
 	if (ctx.flags["dry-run"]) return { outcome: "preview", context, data: { request: body, ...(pageSlug === undefined ? {} : { pageSlug }) }, human: `${human}\nNothing was sent.` };
 	return withContext(context, async () => {
 		const made = pageSlug === undefined ? null : await client.productPage(pageSlug, body.name);
 		if (made) body.entryId = made.entryId;
 		const data = await client.catalog(body, "Creating the product");
 		if (typeof data.catalogItemId !== "string") throw new CliError("malformed_response", "Creating the product: catalogItemId is missing.", { exit: EXIT.contract });
+		const result = { ...data, entryId: body.entryId, ...(made ? { pageMade: made.made } : {}) };
+		// A refused price still made the linked Draft, so the failure carries it: the same command again with the price corrected, or set-price, prices it.
+		if (data.price && !data.price.saved) throw new CliError("price_refused", visible(`Product ${data.catalogItemId} is a Draft on page ${body.entryId}, but its price was refused: ${data.price.message} Correct the price and run this command again, or use products set-price.`), { exit: EXIT.failure, details: { document: { data: result } } });
 		return {
 			context,
-			data: { ...data, entryId: body.entryId, ...(made ? { pageMade: made.made } : {}) },
-			human: visible(`Product ${data.catalogItemId} is a Draft on page ${body.entryId}. Price it, then publish its page to put it on sale.`),
+			data: result,
+			human: visible(`Product ${data.catalogItemId} is a Draft on page ${body.entryId}. ${body.regular ? "Publish its page to put it on sale." : "Price it, then publish its page to put it on sale."}`),
 		};
 	});
 }
 
-// The version of a product a price or stock change applies to: the product
-// itself, or one of its choices named with --choice.
-function priceTarget(product, choice) {
-	if (choice === undefined) {
+// The variant a price or stock change applies to: the product itself, or one
+// of its variants named with --variant.
+function priceTarget(product, variant) {
+	if (variant === undefined) {
 		if (product.variantProduct && product.variantProduct.members.length > 1) {
-			throw usageError("This product sells in choices; name one with --choice <item-id> (see products show).", "choice_required");
+			throw usageError("This product has variants; name one with --variant <item-id> (see products show).", "variant_required");
 		}
 		return { catalogItemId: product.catalogItemId, regular: product.regular, sale: product.sale, stockStatus: product.stockStatus, manageStock: product.manageStock };
 	}
-	const member = product.variantProduct?.members.find((candidate) => candidate.catalogItemId === choice);
-	if (!member) throw new CliError("not_found", `This product has no choice ${visible(choice)} (see products show).`, { exit: EXIT.failure });
+	const member = product.variantProduct?.members.find((candidate) => candidate.catalogItemId === variant);
+	if (!member) throw new CliError("not_found", `This product has no variant ${visible(variant)} (see products show).`, { exit: EXIT.failure });
 	return member;
 }
 
@@ -301,14 +310,14 @@ const PRODUCT_CHANGES = {
 	"set-price": {
 		check: amountFlag,
 		request: (product, amount, ctx) => {
-			const target = priceTarget(product, ctx.flags.choice);
+			const target = priceTarget(product, ctx.flags.variant);
 			return { body: pricesBody(target, { regular: amount }, product), lines: [`Regular: ${shown(target.regular)} -> ${shown(amount)}`] };
 		},
 	},
 	"set-sale-price": {
 		check: amountFlag,
 		request: (product, amount, ctx) => {
-			const target = priceTarget(product, ctx.flags.choice);
+			const target = priceTarget(product, ctx.flags.variant);
 			return { body: pricesBody(target, { sale: amount }, product), lines: [`Sale: ${shown(target.sale)} -> ${shown(amount)}`] };
 		},
 	},
@@ -318,7 +327,7 @@ const PRODUCT_CHANGES = {
 			return ctx.flags.status;
 		},
 		request: (product, status, ctx) => {
-			const target = priceTarget(product, ctx.flags.choice);
+			const target = priceTarget(product, ctx.flags.variant);
 			if (target.manageStock) throw new CliError("stock_managed", "Inventory manages this product's stock; Commerce does not set its status.", { exit: EXIT.failure });
 			return { body: pricesBody(target, { stockStatus: status }, product), lines: [`Stock: ${shown(target.stockStatus)} -> ${status}`] };
 		},
@@ -385,27 +394,27 @@ const PRODUCT_CHANGES = {
 		check: () => false,
 		request: (product) => ({ body: { op: "archive", catalogItemId: product.catalogItemId, archived: false }, lines: [`${stateWord(product)} -> Draft (publish its page to sell it)`] }),
 	},
-	"add-choice": {
+	"add-option": {
 		check: (ctx) => {
 			const values = (ctx.flags.value ?? []).map((text) => {
 				const split = text.lastIndexOf("=");
 				return split < 0 ? { label: text.trim() } : { label: text.slice(0, split).trim(), sku: text.slice(split + 1).trim() };
 			});
-			if (values.length < 2 || values.length > 50) throw usageError("A choice needs 2 to 50 --value flags.", "invalid_choice");
+			if (values.length < 2 || values.length > 50) throw usageError("An option needs 2 to 50 --value flags.", "invalid_option");
 			if (values[0].sku !== undefined || values.slice(1).some((value) => !value.sku)) {
-				throw usageError("The first --value is this product itself (no SKU); every other --value is <label>=<sku> for a new version.", "invalid_choice");
+				throw usageError("The first --value is this product itself (no SKU); every other --value is <label>=<sku> for a new variant.", "invalid_option");
 			}
 			return values;
 		},
 		request: (product, values, ctx) => {
 			if (product.variantProduct?.options.length) {
-				throw new CliError("has_choices", "This product already has a choice. The CLI adds a product's first choice; add more in the Dinkus Commerce panel.", { exit: EXIT.failure });
+				throw new CliError("has_options", "This product already has an option. The CLI adds a product's first option; add more in the Dinkus Commerce panel.", { exit: EXIT.failure });
 			}
 			const optionId = slug(ctx.flags.name, "--name");
 			const seen = new Set();
 			const entries = values.map((value) => {
 				const valueId = slug(value.label, "--value");
-				if (seen.has(valueId)) throw usageError(`Two values make the same id "${valueId}".`, "invalid_choice");
+				if (seen.has(valueId)) throw usageError(`Two values make the same id "${valueId}".`, "invalid_option");
 				seen.add(valueId);
 				return { valueId, ...value };
 			});
@@ -413,7 +422,7 @@ const PRODUCT_CHANGES = {
 			const tag = createHash("sha256").update(`${product.catalogItemId}\n${optionId}`).digest("hex").slice(0, 12);
 			return {
 				body: {
-					op: "choice",
+					op: "option",
 					productId: product.catalogItemId,
 					optionId,
 					optionLabel: ctx.flags.name,
@@ -421,14 +430,14 @@ const PRODUCT_CHANGES = {
 						valueId: entry.valueId,
 						label: entry.label,
 						member: index === 0
-							? { catalogItemId: product.catalogItemId, fulfillment: "physical" }
-							: { commandId: `choice-${tag}-${entry.valueId}`.slice(0, 160), name: product.name, sku: entry.sku, fulfillment: "physical" },
+							? { catalogItemId: product.catalogItemId, fulfillment: product.fulfillment ?? "physical" }
+							: { commandId: `option-${tag}-${entry.valueId}`.slice(0, 160), name: product.name, sku: entry.sku, fulfillment: product.fulfillment ?? "physical" },
 					})),
 				},
 				lines: [
-					`Choice ${ctx.flags.name}: ${entries.map((entry) => entry.label).join(", ")}`,
+					`Option ${ctx.flags.name}: ${entries.map((entry) => entry.label).join(", ")}`,
 					`${entries[0].label} is this product (${product.sku}); ${entries.slice(1).map((entry) => `${entry.label} is new SKU ${entry.sku}`).join("; ")}.`,
-					"New versions start with no price.",
+					`New variants start with no price and are ${product.fulfillment ?? "physical"}, like the product.`,
 				],
 			};
 		},
@@ -437,7 +446,7 @@ const PRODUCT_CHANGES = {
 
 function slug(text, flag) {
 	const id = String(text ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
-	if (!id) throw usageError(`${flag} needs letters or digits.`, "invalid_choice");
+	if (!id) throw usageError(`${flag} needs letters or digits.`, "invalid_option");
 	return id;
 }
 
@@ -653,7 +662,7 @@ const dryRun = { type: "boolean", description: "Show the change and the value to
 const confirm = { type: "string", value: "<value>", description: "Apply only if the product still matches that --dry-run." };
 const amount = (what) => ({ type: "string", value: "<decimal>", description: `${what} in USD, such as 19.99.` });
 const clear = { type: "boolean", description: "Clear it instead." };
-const choice = { type: "string", value: "<item-id>", description: "The choice (version) to change, from products show. Required for a product sold in choices." };
+const variant = { type: "string", value: "<item-id>", description: "The variant to change, from products show. Required for a product with variants." };
 const CONFIRM_NOTE = "--dry-run reads the product and prints a confirmation value; with --confirm, Commerce saves the change only while the product still matches it.";
 
 export const spec = {
@@ -720,7 +729,7 @@ export const spec = {
 						run: productsList,
 					},
 					show: {
-						summary: "Show one product with its prices, stock, choices and pictures.",
+						summary: "Show one product with its prices, stock, variants and pictures.",
 						usage: "products show <item-id>",
 						description: "Sends {op: get} to POST catalog (Commerce 0.7.0+). Exits 1 when no product has that id.",
 						args: [{ name: "item-id" }],
@@ -729,44 +738,49 @@ export const spec = {
 					},
 					create: {
 						summary: "Make a product and its page: a Draft, off the shop until the page is published.",
-						usage: "products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--dry-run]",
+						usage: "products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--regular <decimal>] [--sale <decimal>] [--stock-status <in-stock|out-of-stock|on-backorder>] [--digital] [--weight-oz <decimal>] [--dry-run]",
 						description:
-							"Every product has its page. Without --page, finds the Content > Products page with --slug (default: from --name) through EmDash's content API, or makes it as a Draft titled --name, then sends {op: create, entryId} to POST catalog. The product is physical with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same page and product instead of making others; Commerce refuses a page that already sells another product. Publishing the page then puts the product on sale.",
+							"Every product has its page. Without --page, finds the Content > Products page with --slug (default: from --name) through EmDash's content API, or makes it as a Draft titled --name, then sends {op: create, entryId} to POST catalog, the same function as the panel's first Save: with --regular, --sale, --stock-status and --weight-oz the price, stock status and weight are saved in the same command. The product is physical unless --digital, with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same page and product instead of making others; Commerce refuses a page that already sells another product. Publishing the page then puts the product on sale.",
 						flags: {
 							name: { type: "string", value: "<name>", required: true, description: "Product name. Publishing its page later sets it to the page title." },
 							sku: { type: "string", value: "<sku>", required: true, description: "Unique SKU." },
 							"command-id": { type: "string", value: "<id>", required: true, description: "Your id for this create, such as gfb-runtz, so a retry finds the same product." },
 							slug: { type: "string", value: "<slug>", description: "The Products page slug to find or make (default: from --name)." },
 							page: { type: "string", value: "<entry-id>", description: "An existing Products page entry that sells it, instead of --slug." },
+							regular: { type: "string", value: "<decimal>", description: "Regular price in dollars, such as 19.99; without one the product is off the shop." },
+							sale: { type: "string", value: "<decimal>", description: "Sale price, lower than Regular." },
+							"stock-status": { type: "string", value: "<in-stock|out-of-stock|on-backorder>", description: "The stock status shoppers see (default in-stock)." },
+							digital: { type: "boolean", description: "A digital product: nothing to ship, no weight." },
+							"weight-oz": { type: "string", value: "<decimal>", description: "Shipping weight in ounces for Ship's labels." },
 							"dry-run": { type: "boolean", description: "Print the request; send nothing." },
 						},
-						examples: ["dinkus-commerce --url https://shop.example products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz"],
+						examples: ["dinkus-commerce --url https://shop.example products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --regular 19.99"],
 						run: productsCreate,
 					},
 					"set-price": {
 						summary: "Set or clear a product's Regular price.",
-						usage: "products set-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)",
+						usage: "products set-price <item-id> (--amount <decimal> | --clear) [--variant <item-id>] (--dry-run | --confirm <value>)",
 						description: "Sends {op: prices} with the current Sale and stock kept. A product with no Regular price is not for sale. " + CONFIRM_NOTE,
 						args: [{ name: "item-id" }],
-						flags: { amount: amount("Regular price"), clear, choice, "dry-run": dryRun, confirm },
+						flags: { amount: amount("Regular price"), clear, variant, "dry-run": dryRun, confirm },
 						examples: ["dinkus-commerce --url https://shop.example products set-price item_demo --amount 22.00 --dry-run"],
 						run: productChange("set-price"),
 					},
 					"set-sale-price": {
 						summary: "Set or clear a product's Sale price.",
-						usage: "products set-sale-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)",
+						usage: "products set-sale-price <item-id> (--amount <decimal> | --clear) [--variant <item-id>] (--dry-run | --confirm <value>)",
 						description: "Sends {op: prices} with the current Regular and stock kept. Commerce refuses a Sale that is not lower than Regular. " + CONFIRM_NOTE,
 						args: [{ name: "item-id" }],
-						flags: { amount: amount("Sale price, lower than Regular,"), clear, choice, "dry-run": dryRun, confirm },
+						flags: { amount: amount("Sale price, lower than Regular,"), clear, variant, "dry-run": dryRun, confirm },
 						examples: ["dinkus-commerce --url https://shop.example products set-sale-price item_demo --amount 19.00 --dry-run"],
 						run: productChange("set-sale-price"),
 					},
 					"set-stock-status": {
 						summary: "Set an unmanaged product's stock status.",
-						usage: "products set-stock-status <item-id> --status <in-stock|out-of-stock|on-backorder> [--choice <item-id>] (--dry-run | --confirm <value>)",
+						usage: "products set-stock-status <item-id> --status <in-stock|out-of-stock|on-backorder> [--variant <item-id>] (--dry-run | --confirm <value>)",
 						description: "Sends {op: prices} with the current prices kept. Products whose stock Inventory manages are refused. " + CONFIRM_NOTE,
 						args: [{ name: "item-id" }],
-						flags: { status: { type: "string", value: "<in-stock|out-of-stock|on-backorder>", required: true, description: "The stock status shoppers see." }, choice, "dry-run": dryRun, confirm },
+						flags: { status: { type: "string", value: "<in-stock|out-of-stock|on-backorder>", required: true, description: "The stock status shoppers see." }, variant, "dry-run": dryRun, confirm },
 						examples: ["dinkus-commerce --url https://shop.example products set-stock-status item_demo --status out-of-stock --dry-run"],
 						run: productChange("set-stock-status"),
 					},
@@ -815,14 +829,14 @@ export const spec = {
 						examples: ["dinkus-commerce --url https://shop.example products set-feeds item_demo --channel google-merchant --dry-run"],
 						run: productChange("set-feeds"),
 					},
-					"add-choice": {
-						summary: "Add a product's first choice, such as Size, with a new SKU for each other value.",
-						usage: "products add-choice <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)",
-						description: "Sends {op: choice}. The product becomes the first version; the others start with no price. A retry resumes instead of making more. Later choices are added in the Dinkus Commerce panel. " + CONFIRM_NOTE,
+					"add-option": {
+						summary: "Add a product's first option, such as Size, with a new SKU for each other value.",
+						usage: "products add-option <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)",
+						description: "Sends {op: option}. The product becomes the first variant; the others start with no price. A retry resumes instead of making more. Later options are added in the Dinkus Commerce panel. " + CONFIRM_NOTE,
 						args: [{ name: "item-id" }],
-						flags: { name: { type: "string", value: "<label>", required: true, description: "The choice, such as Size." }, value: { type: "string", value: "<label>[=<sku>]", multiple: true, description: "The first value is this product itself (no SKU); each other value is a new version with its SKU." }, "dry-run": dryRun, confirm },
-						examples: ["dinkus-commerce --url https://shop.example products add-choice item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run"],
-						run: productChange("add-choice"),
+						flags: { name: { type: "string", value: "<label>", required: true, description: "The option, such as Size." }, value: { type: "string", value: "<label>[=<sku>]", multiple: true, description: "The first value is this product itself (no SKU); each other value is a new version with its SKU." }, "dry-run": dryRun, confirm },
+						examples: ["dinkus-commerce --url https://shop.example products add-option item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run"],
+						run: productChange("add-option"),
 					},
 					"archive": {
 						summary: "Archive a product: off the shop, with Restore.",

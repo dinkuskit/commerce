@@ -111,7 +111,7 @@ function client({ lifecycle = { sending: false }, fetchImpl, ...options } = {}) 
 
 // POST is not a sufficient mutation classifier: both APIs also read with POST.
 for (const [route, inputs] of [
-  ["catalog", ["get", "list", "create", "prices", "choice", "labels", "sku", "weight", "identifiers", "archive", "media", "feeds"]],
+  ["catalog", ["get", "list", "create", "prices", "option", "labels", "sku", "weight", "identifiers", "archive", "media", "feeds"]],
   ["orders", ["show", "list", "complete", "reopen"]],
 ]) {
   test(`${route}: only a dispatched mutation marks the shared lifecycle`, async () => {

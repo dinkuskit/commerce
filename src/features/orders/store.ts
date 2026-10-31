@@ -57,7 +57,8 @@ function pricing(v: unknown): boolean {
     optional(v.coupon, c => isRecord(c) && text(c.code));
 }
 /**
- * Everything Orders shows or packs from must be well formed before a copy is kept for good.\n * A copy already kept before the contact check keeps any object there; the detail shows "No address".
+ * Everything Orders shows or packs from must be well formed before a copy is kept for good.
+ * A copy already kept before the contact check keeps any object there; the detail shows "No address".
  */
 function admit(order: PaidOrder, kept = false): PaidOrder {
   const o = order as unknown;

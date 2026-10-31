@@ -23,8 +23,8 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   await expect(page.getByRole('textbox', { name: 'Store country (ISO alpha-2 code)', exact: true })).toHaveValue('US');
   // Products are sold from a product page's Dinkus Commerce panel, then published by the store's publish check.
   const { id: pageId, panel } = await openProductPage(page, 'Fixture parcel ' + run);
-  await panel.getByRole('textbox', { name: 'SKU (optional)', exact: true }).fill('FIXTURE-' + run);
-  await panel.getByRole('button', { name: 'Add price and stock', exact: true }).click();
+  await panel.getByRole('textbox', { name: 'SKU', exact: true }).fill('FIXTURE-' + run);
+  await panel.getByRole('button', { name: 'Save', exact: true }).click();
   const priceForm = panel.locator(BLOCK_FORM).filter({ has: page.getByRole('textbox', { name: 'Regular', exact: true }) });
   await priceForm.getByRole('textbox', { name: 'Regular', exact: true }).fill('12');
   await priceForm.getByRole('radio', { name: 'In stock', exact: true }).check();
