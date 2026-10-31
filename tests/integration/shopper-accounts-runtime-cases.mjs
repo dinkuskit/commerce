@@ -153,6 +153,7 @@ test("WorkerdSandboxRunner + SQLite proves existing-install upgrade compatibilit
   delete preUpgradeStorage.customers;
   delete preUpgradeStorage.customer_login_codes;
   delete preUpgradeStorage.customer_sessions;
+  preUpgradeStorage.orders.indexes = [];
   const preCollections = mountCollections(sqlite, db, owner, preUpgradeStorage);
 
   await preCollections.catalog_items.put("hat", {
@@ -217,6 +218,11 @@ test("WorkerdSandboxRunner + SQLite proves existing-install upgrade compatibilit
       },
     }),
   );
+  // Strip emailKey from ord_older_retried so it represents a true pre-upgrade row stored before emailKey indexing.
+  const olderPreUpgradeRow = await preCollections.orders.get("ord_older_retried");
+  delete olderPreUpgradeRow.emailKey;
+  await preCollections.orders.put("ord_older_retried", olderPreUpgradeRow);
+
   await receiver.receive(
     makePaidOrder({
       orderId: "ord_other_shopper",
@@ -433,7 +439,7 @@ test("WorkerdSandboxRunner + SQLite proves existing-install upgrade compatibilit
 
 test("WorkerdSandboxRunner fresh install under dinkus-commerce rejects replaced OTP codes before session persistence", async () => {
   const owner = INSTALLED_COMMERCE_PLUGIN_ID;
-  const { sqlite, db } = createSqliteHarness();
+  const { sqlite, db, collectionQueries } = createSqliteHarness();
   const manifest = structuredClone(artifactManifest);
   manifest.id = owner;
   const collections = mountCollections(sqlite, db, owner, manifest.storage);
@@ -552,6 +558,57 @@ test("WorkerdSandboxRunner fresh install under dinkus-commerce rejects replaced 
     const allSessions = (await collections.customer_sessions.query()).items;
     const concurrentSessions = allSessions.filter((s) => s.data.emailKey === "concurrent@example.test");
     assert.equal(concurrentSessions.length, 1, "only 1 session row may be persisted for concurrent@example.test");
+
+    // Store-wide order volume scaling (#229): with 600 orders across other shoppers, sign-in verification
+    // and account/orders reads query by emailKey index and stay within the 10-storage-call budget.
+    const receiver = createPaidOrderReceiver(collections.orders, collections.order_numbers);
+    for (let i = 0; i < 600; i += 1) {
+      await receiver.receive(
+        makePaidOrder({
+          orderId: `ord_scale_other_${String(i).padStart(4, "0")}`,
+          email: `buyer-${i}@example.test`,
+          paidAt: "2026-10-15T12:00:00.000Z",
+        }),
+      );
+    }
+    await receiver.receive(
+      makePaidOrder({
+        orderId: "ord_scale_target",
+        email: "Scale.Shopper@Example.test",
+        paidAt: "2026-10-20T18:00:00.000Z",
+        phone: "+16175550188",
+      }),
+    );
+
+    const scaleStart = await invokeRoute(SHOPPER_SIGN_IN_START_ROUTE, {
+      input: { email: "scale.shopper@example.test" },
+      headers: { origin: SITE, "sec-fetch-site": "same-origin" },
+    });
+    assert.equal(scaleStart.ok, true);
+    const scaleCode = extractSixDigitCode(deliveredEmails[3].message.subject);
+
+    collectionQueries.length = 0;
+    const scaleVerify = await invokeRoute(SHOPPER_SIGN_IN_VERIFY_ROUTE, {
+      input: { email: "scale.shopper@example.test", code: scaleCode },
+      headers: { origin: SITE, "sec-fetch-site": "same-origin" },
+    });
+    assert.equal(scaleVerify.ok, true);
+    assert.equal(scaleVerify.profile.phone, "+16175550188");
+    const verifyOrderQueries = collectionQueries.filter((q) => q.parameters[1] === "orders");
+    assert.equal(verifyOrderQueries.length, 2, "verifySignIn must issue only the 2 bounded orders queries (emailKey + legacy null)");
+
+    collectionQueries.length = 0;
+    const scaleOrders = await invokeRoute(SHOPPER_ACCOUNT_ORDERS_ROUTE, {
+      method: "GET",
+      headers: { [CUSTOMER_SESSION_HEADER]: scaleVerify.capability.session },
+    });
+    assert.equal(scaleOrders.ok, true);
+    assert.deepEqual(
+      scaleOrders.orders.map((o) => o.orderId),
+      ["ord_scale_target"],
+    );
+    const readOrderQueries = collectionQueries.filter((q) => q.parameters[1] === "orders");
+    assert.equal(readOrderQueries.length, 2, "account/orders must issue only the 2 bounded orders queries (emailKey + legacy null)");
   } finally {
     await runner.terminateAll();
     await db.destroy();

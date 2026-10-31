@@ -114,7 +114,9 @@
       "uniqueIndexes": []
     },
     "orders": {
-      "indexes": [],
+      "indexes": [
+        "emailKey"
+      ],
       "uniqueIndexes": []
     },
     "order_numbers": {
