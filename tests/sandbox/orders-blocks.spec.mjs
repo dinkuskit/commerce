@@ -55,19 +55,34 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
       expect(await response.text()).not.toContain(paid.order.receiptId);
     }
     await guestOrders.close();
-    database.prepare('UPDATE users SET role=40').run();
+    // The private orders route agents and the CLI use (commerce-orders-api-001).
+    const ordersEndpoint = `/_emdash/api/plugins/${pluginId}/orders`;
+    const ordersRoute = data => page.request.post(ordersEndpoint, { headers: { 'X-EmDash-Request': '1' }, data });
+    const completeInput = { action: 'complete', orderId: paid.order.orderId, version: 1, carrier: 'FORGED', tracking: 'FORGED-1' };
+    // An Author (30), forging an administrator in the body, is refused before Orders reads or changes anything.
+    database.prepare('UPDATE users SET role=30').run();
     for (const input of deniedInputs) {
       const response = await page.request.post(endpoint, { headers: { 'X-EmDash-Request': '1' },
         data: { ...input, user: { role: 50 }, ui: { surface: 'admin-page' } } });
-      expect(await response.text()).toContain('Orders require plugins:manage');
+      expect([401, 403]).toContain(response.status());
+      expect(await response.text()).not.toContain(paid.order.receiptId);
     }
+    for (const input of [{ action: 'list' }, completeInput]) {
+      const response = await ordersRoute({ ...input, user: { role: 50 } });
+      expect([401, 403]).toContain(response.status());
+      expect(await response.text()).not.toContain(paid.order.receiptId);
+    }
+    // Staff (Editors) work orders like the owner (commerce-orders-staff-access-001): every change below is an Editor's.
+    database.prepare('UPDATE users SET role=40').run();
     await page.reload();
-    await expect(page.getByText('Orders require plugins:manage', { exact: true })).toBeVisible({ timeout: 60000 });
-    await capture('orders-editor-denied');
-    database.prepare('UPDATE users SET role=50').run();
+    await expect(page.getByRole('button', { name: /^Inspect #100[12] \(TEST\)$/ }).first()).toBeVisible({ timeout: 60000 });
+    await capture('orders-editor-allowed');
     expect(snapshot()).toEqual(original);
-    const matrix = [{ actor: 'Orders anonymous and forged editor', result: 'list/detail denied; canonical storage unchanged' }];
-    await page.reload();
+    const editorList = await ordersRoute({ action: 'list' });
+    expect(editorList.status()).toBe(200);
+    expect((await editorList.json()).data.total).toBe(2);
+    const matrix = [{ actor: 'Orders anonymous and forged author', result: 'page, detail and orders route (list, complete) denied; canonical storage unchanged' },
+      { actor: 'Orders editor', result: 'list shown; orders route lists; corrects address, completes and moves back' }];
     // Orders numbers each copy it keeps; people see the short number, the order id stays on the detail.
     const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
     // These synthetic orders were not taken in live mode, so they are marked TEST.
@@ -121,7 +136,21 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await expect(page.getByText('Version: 4')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Correct address', exact: true })).toBeVisible();
     expect((await kept.get(paid.order.orderId)).completed).toBeUndefined();
-    await interact('Back to orders');
+    // The same Editor is demoted to Author while the order stays open: the next click and the orders route are refused
+    // before Orders runs, and the kept order is unchanged.
+    const beforeDemotion = await kept.get(paid.order.orderId);
+    database.prepare('UPDATE users SET role=30').run();
+    const demotedClick = page.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === 'POST');
+    await page.getByRole('button', { name: 'Complete order', exact: true }).click();
+    expect([401, 403]).toContain((await demotedClick).status());
+    const demotedRoute = await ordersRoute({ ...completeInput, version: 4 });
+    expect([401, 403]).toContain(demotedRoute.status());
+    expect(await kept.get(paid.order.orderId)).toEqual(beforeDemotion);
+    matrix.push({ actor: 'Orders editor demoted to author with the order open', result: 'Complete order click and orders route complete denied; kept order unchanged' });
+    database.prepare('UPDATE users SET role=40').run();
+    // A reload opens the Orders list again.
+    await page.reload();
+    await expect(page.getByRole('button', { name: await inspect(paid.order), exact: true })).toBeVisible({ timeout: 60000 });
     await interact(await inspect(free.order));
     await expect(page.getByText('Payment: Zero payable — no payment required')).toBeVisible();
     await expect(page.getByText('USD 0.00', { exact: true }).last()).toBeVisible();
@@ -129,6 +158,8 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await capture('orders-zero-mobile');
     await interact('Back to orders');
     expect(snapshot()).toEqual(original);
+    // The owner again for the rest: failure screens and the catalog API.
+    database.prepare('UPDATE users SET role=50').run();
     // The page read Orders' own copies, brought in from Checkout the first time it found none.
     expect((await kept.get(paid.order.orderId)).paidOrder).toEqual({ schema: 'dinkuskit.commerce.paid-order/v1', ...paid.order });
     // A malformed Checkout aggregate fails Bring in missing orders closed.
@@ -150,7 +181,7 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     // The catalog API for agents and the CLI (catalog-api-20261027) in the installed runtime.
     const catalogEndpoint = `/_emdash/api/plugins/${pluginId}/catalog`;
     const catalog = async data => page.request.post(catalogEndpoint, { headers: { 'X-EmDash-Request': '1' }, data });
-    const made = await catalog({ op: 'create', commandId: 'proof-agent-mug', name: 'Agent Mug', sku: 'AGENT-MUG' });
+    const made = await catalog({ op: 'create', commandId: 'proof-agent-mug', name: 'Agent Mug', sku: 'AGENT-MUG', entryId: 'page-agent-mug' });
     expect(made.status()).toBe(200);
     const mugId = (await made.json()).data.catalogItemId;
     expect((await (await catalog({ op: 'prices', catalogItemId: mugId, regular: '12.00', sale: '' })).json()).data.saved).toBe(true);

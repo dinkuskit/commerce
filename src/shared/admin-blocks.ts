@@ -1,8 +1,10 @@
 import type { Block } from '@emdash-cms/blocks/server';
 import type { SandboxedRouteContext } from 'emdash/plugin';
 
-export function adminAuthorized(route: SandboxedRouteContext): boolean {
-  return route.ui?.surface === "admin-page" && route.user?.role === 50;
+/** A trusted admin page opened by an Administrator, or by an Editor (40) where the screen allows staff. */
+export function adminAuthorized(route: SandboxedRouteContext, role = 50): boolean {
+  const level = route.user?.role;
+  return route.ui?.surface === "admin-page" && typeof level === "number" && level >= role;
 }
 export function pageOffset(offset: number, count: number): number {
   return Math.min(offset, Math.max(0, Math.floor((count - 1) / 25) * 25));

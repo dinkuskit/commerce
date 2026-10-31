@@ -16,9 +16,12 @@ no Commerce product field, so there is nothing on the page to type into or
 save. Commerce 0.6.0 also asked for `admin.editor-draft:patch` to fill such a
 field; this build no longer does.
 
-- A page with no product shows "Add price and stock" with an optional SKU, and,
-  when any exist, a list of products without a page ("Sell it here"). The
-  list shows 50; typing a product's SKU there reaches every product.
+- A page with no product shows "Add price and stock" with an optional SKU.
+  Every product is made for its page (`catalog-product-needs-page-20261031`),
+  so there is no list of products without a page to pick from: the catalog
+  API's `create` requires the page's `entryId` and refuses a page that already
+  sells a product, and the CLI's `products create` finds or makes the page
+  first.
 - Add price and stock creates a physical product named from the page title.
   The SKU is the one typed, or one made from the title. The product starts as
   a Draft (`offSale: true`) in its first write, so a stop before linking never
@@ -82,11 +85,9 @@ short bindings, skipping any name the code declares or tests with `typeof`.
 
 ## Products page removed
 
-Commerce no longer mounts `/products`. Commerce settings has a
-"Products without a page" section that lists up to 25 products no page sells.
-Each has a "Make a page" link to `content/products/new`. Archived products
-without a page are listed too, marked "(archived)", so they can be given a page
-and restored.
+Commerce no longer mounts `/products`. Its "Products without a page" section
+in Commerce settings is gone too: every product is made for its page
+(`catalog-product-needs-page-20261031`), so there are none to list.
 
 ## Block Kit only (commerce-admin-block-kit-only-20261024)
 
@@ -157,9 +158,7 @@ change it again.
 `product_pages` holds two kinds of row:
 
 - `e:<entryId>`: the panel's note of the product an editor picked. It reopens
-  the panel and keeps the product off "Products without a page", and never
-  decides who sells it. An unsaved relink changes only this note, and the
-  panel refuses a product another page sells.
+  the panel and never decides who sells it.
 - `p:<entryId>`: the product the page's last publish check sold, and the
   claim that check wrote on it. Each check moves it with one conditional
   write from the revision it read before claiming, so of two overlapping

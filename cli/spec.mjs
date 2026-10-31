@@ -251,24 +251,26 @@ async function productsShow(ctx) {
 	});
 }
 
+// Every product is made for its page (catalog-product-needs-page-20261031): without --page, this finds or makes the
+// Content > Products page first (EmDash's content API), then the product for it. A retry finds both again.
 async function productsCreate(ctx) {
 	const { client, context } = connect(ctx);
-	const body = {
-		op: "create",
-		commandId: ctx.flags["command-id"],
-		name: ctx.flags.name,
-		sku: ctx.flags.sku,
-		...(ctx.flags.page === undefined ? {} : { entryId: ctx.flags.page }),
-	};
-	const human = visible(`New Draft product ${body.name} (${body.sku}), command ${body.commandId}${body.entryId === undefined ? "" : `, for page ${body.entryId}`}.`);
-	if (ctx.flags["dry-run"]) return { outcome: "preview", context, data: { request: body }, human: `${human}\nNothing was sent.` };
+	if (ctx.flags.page !== undefined && ctx.flags.slug !== undefined) throw usageError("Give --page or --slug, not both.", "invalid_argument");
+	const slugFlag = ctx.flags.slug === undefined ? undefined : slug(ctx.flags.slug, "--slug");
+	const pageSlug = ctx.flags.page === undefined ? slugFlag ?? slug(ctx.flags.name, "--name") : undefined;
+	const body = { op: "create", commandId: ctx.flags["command-id"], name: ctx.flags.name, sku: ctx.flags.sku, entryId: ctx.flags.page };
+	const page = pageSlug === undefined ? `page ${body.entryId}` : `the Products page ${pageSlug} (made as a Draft if it does not exist)`;
+	const human = visible(`New Draft product ${body.name} (${body.sku}), command ${body.commandId}, for ${page}.`);
+	if (ctx.flags["dry-run"]) return { outcome: "preview", context, data: { request: body, ...(pageSlug === undefined ? {} : { pageSlug }) }, human: `${human}\nNothing was sent.` };
 	return withContext(context, async () => {
+		const made = pageSlug === undefined ? null : await client.productPage(pageSlug, body.name);
+		if (made) body.entryId = made.entryId;
 		const data = await client.catalog(body, "Creating the product");
 		if (typeof data.catalogItemId !== "string") throw new CliError("malformed_response", "Creating the product: catalogItemId is missing.", { exit: EXIT.contract });
 		return {
 			context,
-			data,
-			human: visible(`Product ${data.catalogItemId} is a Draft. Price it, then publish its page to put it on sale.`),
+			data: { ...data, entryId: body.entryId, ...(made ? { pageMade: made.made } : {}) },
+			human: visible(`Product ${data.catalogItemId} is a Draft on page ${body.entryId}. Price it, then publish its page to put it on sale.`),
 		};
 	});
 }
@@ -382,13 +384,6 @@ const PRODUCT_CHANGES = {
 		request: (product, channels) => ({
 			body: { op: "feeds", catalogItemId: product.catalogItemId, channels },
 			lines: [`Product feeds: ${channels.length ? channels.join(", ") : "none"}`],
-		}),
-	},
-	link: {
-		check: (ctx) => ctx.flags.page,
-		request: (product, entryId) => ({
-			body: { op: "link", catalogItemId: product.catalogItemId, entryId },
-			lines: [`Product page: ${entryId}`, "Commerce keeps this link. Publish that page through EmDash to put the product on sale."],
 		}),
 	},
 	archive: {
@@ -742,18 +737,19 @@ export const spec = {
 						run: productsShow,
 					},
 					create: {
-						summary: "Make a Draft product, off the shop until its page is published.",
-						usage: "products create --name <name> --sku <sku> --command-id <id> [--page <entry-id>] [--dry-run]",
+						summary: "Make a product and its page: a Draft, off the shop until the page is published.",
+						usage: "products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--dry-run]",
 						description:
-							"Sends {op: create} to POST catalog. The product is physical with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same product instead of making another. --page links it to that product page; Commerce keeps the link, and publishing the page then puts it on sale.",
+							"Every product has its page. Without --page, finds the Content > Products page with --slug (default: from --name) through EmDash's content API, or makes it as a Draft titled --name, then sends {op: create, entryId} to POST catalog. The product is physical with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same page and product instead of making others; Commerce refuses a page that already sells another product. Publishing the page then puts the product on sale.",
 						flags: {
 							name: { type: "string", value: "<name>", required: true, description: "Product name. Publishing its page later sets it to the page title." },
 							sku: { type: "string", value: "<sku>", required: true, description: "Unique SKU." },
 							"command-id": { type: "string", value: "<id>", required: true, description: "Your id for this create, such as gfb-runtz, so a retry finds the same product." },
-							page: { type: "string", value: "<entry-id>", description: "The Products page entry that sells it." },
+							slug: { type: "string", value: "<slug>", description: "The Products page slug to find or make (default: from --name)." },
+							page: { type: "string", value: "<entry-id>", description: "An existing Products page entry that sells it, instead of --slug." },
 							"dry-run": { type: "boolean", description: "Print the request; send nothing." },
 						},
-						examples: ["dinkus-commerce --url https://shop.example products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --page 01J0PAGE"],
+						examples: ["dinkus-commerce --url https://shop.example products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz"],
 						run: productsCreate,
 					},
 					"set-price": {
@@ -837,15 +833,6 @@ export const spec = {
 						examples: ["dinkus-commerce --url https://shop.example products add-choice item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run"],
 						run: productChange("add-choice"),
 					},
-					"link": {
-						summary: "Link a product to the product page that sells it.",
-						usage: "products link <item-id> --page <entry-id> (--dry-run | --confirm <value>)",
-						description: "Sends {op: link}. Commerce keeps the link, and publishing the page then puts the product on sale. " + CONFIRM_NOTE,
-						args: [{ name: "item-id" }],
-						flags: { page: { type: "string", value: "<entry-id>", required: true, description: "The Products page entry." }, "dry-run": dryRun, confirm },
-						examples: ["dinkus-commerce --url https://shop.example products link item_demo --page 01J0PAGE --dry-run"],
-						run: productChange("link"),
-					},
 					"archive": {
 						summary: "Archive a product: off the shop, with Restore.",
 						usage: "products archive <item-id> (--dry-run | --confirm <value>)",
@@ -867,7 +854,7 @@ export const spec = {
 				},
 			},
 			orders: {
-				summary: `Read orders, mark them shipped and correct their addresses. Needs ${TOKEN_ENV} for an administrator.`,
+				summary: `Read orders, mark them shipped and correct their addresses. Needs ${TOKEN_ENV} for an Editor or Administrator.`,
 				commands: {
 					list: {
 						summary: "List paid orders by order number, 50 a page or --all.",

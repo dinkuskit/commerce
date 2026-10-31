@@ -37,7 +37,7 @@ This map is the repository contract for bounded Commerce feature work. A feature
 
 - Build: `npm run build`; authoring manifest `emdash-plugin.jsonc`, entry `src/plugin.ts`.
 - Runtime UI: Block Kit JSON on the private `admin` route; no `adminEntry`, no plugin React.
-- Reach: the Dinkus Commerce editor panel on each Content > Products page (`admin.editorPanels`, route `product-panel`); Commerce settings (`/settings`), Catalog and Products without a page sections. Pages sit in the "Dinkus Commerce" sidebar group.
+- Reach: the Dinkus Commerce editor panel on each Content > Products page (`admin.editorPanels`, route `product-panel`); Commerce settings (`/settings`) and its Catalog section. Pages sit in the "Dinkus Commerce" sidebar group.
 - Action: Make this sellable (a Draft product linked to the page, patched into the unsaved editor), save Regular/Sale/manual status, observe Manage stock Coming soon as unavailable, save Hide out-of-stock products.
 - Observe: SQLite persistence after reload, refused prices retained, unmanaged availability without Inventory, omitted tracking fields preserve existing managed state, malicious enable refused, anonymous writes denied.
 - Registry disabled slider: `NEEDS_HOST_SUPPORT`. Installed `@emdash-cms/blocks` 1.4.0 `ToggleElement` has no `disabled` field and `ToggleElementComponent` never forwards `disabled` to Kumo Switch. Commerce does not emit an unsupported live toggle.

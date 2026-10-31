@@ -3,8 +3,8 @@ import type { Block, BlockResponse } from "@emdash-cms/blocks";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
 import {
-  CatalogError, createCatalogItem, listCatalogProductSummaries, loadCatalogProduct, editProduct,
-  linkProductPage, pageProduct, productNotFound, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
+  CatalogError, createCatalogItem, loadCatalogProduct, editProduct,
+  linkProductPage, pageProduct, productNotFound, PRODUCT_PAGES_COLLECTION, type ProductPages,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
   normalizeWeightOz, setCatalogItemWeight, setCatalogWeights, setCatalogProductArchived,
@@ -192,32 +192,20 @@ const NO_PRICE = "Add a Regular price to sell it";
 const command = (action: string) => /^sell:[\w-]{8,64}$/.test(action) ? action.slice(5) : crypto.randomUUID();
 /** An action id's tail: a JSON list, or the bare product id an older panel sent. */
 const tail = (rest: string): [string, string?] => rest.startsWith("[") ? JSON.parse(rest) : [rest];
-/** Commerce products no product page sells yet, newest first, archived ones too so they can be restored; Commerce Settings lists them. */
-export async function productsWithoutPage(ctx: PluginContext) {
-  const store = storage(ctx);
-  const linked = await productPageLinks(store.pages);
-  return (await listCatalogProductSummaries(store.catalog)).filter(p => !linked.has(p.catalogItemId));
-}
-export const productLabel = (p: { name: string; sku: string; archivedAt?: string | null }) => p.name + " \u2014 " + p.sku + (p.archivedAt ? " (archived)" : "");
-/** The sell form carries its create command, so a retry after a partial failure resumes the same product. */
-async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
-  const orphans = await productsWithoutPage(ctx);
+/** The sell form carries its create command, so a retry after a partial failure resumes the same product. Every product is made for its page (catalog-product-needs-page-20261031). */
+function unlinked(sku = "", command: string = crypto.randomUUID()): BlockResponse {
   return { blocks: [
     note("Not a product yet. Add price and stock to sell it."),
     { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
       submit: { label: "Add price and stock", action_id: "sell:" + command } },
-    ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
-      label: "Or one without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
-      { type: "text_input" as const, action_id: "sku", label: "Or its SKU" }],
-      submit: { label: "Sell it here", action_id: "link" } }] : []),
   ] };
 }
 /** A SKU from the page title, made unique with a tail from its create command so a retry asks for the same SKU. */
 const skuFrom = (title: string, command: string) => (title.replace(/[^A-Za-z0-9]+/g, "-").slice(0, 40) + "-" + command.slice(0, 4)).toUpperCase().replace(/^-+/, "");
 /** Links this page to a Commerce product; Commerce keeps the link, the page has no field for it (catalog-page-link-in-commerce-20261029). */
-async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, chosen?: string, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
+async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const store = storage(ctx);
-  let id = chosen ?? await pageProduct(store.pages, entryId);
+  let id = await pageProduct(store.pages, entryId);
   let toast = "Linked.";
   if (!id) {
     // New products start as a physical Draft: off the shop until this page is published.
@@ -240,19 +228,14 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
   const input = route.input as Record<string, unknown>;
   try {
     const draft = input.draft as Draft | undefined, fields = draft?.fields ?? {}, action = String(input.action_id ?? "");
-    if (action.startsWith("sell")) return await sell(ctx, entryId, fields, undefined, text(object(input.values).sku ?? ""), command(action));
-    if (action === "link") {
-      // A typed SKU reaches every product, past the 50 the list shows.
-      const v = object(input.values), sku = String(v.sku ?? "").trim().toUpperCase();
-      return await sell(ctx, entryId, fields, sku ? (await listCatalogProductSummaries(storage(ctx).catalog)).find(p => p.sku.toUpperCase() === sku)?.catalogItemId ?? sku : text(v.product));
-    }
+    if (action.startsWith("sell")) return await sell(ctx, entryId, fields, text(object(input.values).sku ?? ""), command(action));
     if (input.type === "panel_load") {
       const linked = await pageProduct(storage(ctx).pages, entryId);
-      return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
+      return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : unlinked();
     }
   } catch (error) {
     // A refused sell keeps the typed SKU, its create command and the buttons so the owner can retry.
-    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? ""))).catch(() => ({ blocks: [] }));
+    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = unlinked(String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? "")));
     return refused(message(error), [alert(message(error)), ...again.blocks]);
   }
   return productEdit(route, ctx);
