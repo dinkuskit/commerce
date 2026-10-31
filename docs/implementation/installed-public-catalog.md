@@ -111,9 +111,11 @@ Installation prerequisites are the original runtime plugin identity and
 declared Commerce storage namespace, a configured product and authoritative
 price, and the existing storefront availability configuration. Registry
 identity, installation flags, native aliases, and test overrides do not imply
-readiness. The shipped capabilities are `media:read` only and allowed hosts
-remain empty, so this route does not activate Payments or make external
-checkout available.
+readiness. A public catalog read does not activate Payments or establish
+checkout readiness, regardless of the installed plugin's other capabilities or
+network allowlist. See [installed-checkout-context.md](./installed-checkout-context.md)
+and [installed-checkout-services.md](./installed-checkout-services.md) for the
+separate checkout requirements.
 
 The compiled package exports `readPublicCatalog(ctx, cursor?)` and
 `PUBLIC_CATALOG_ROUTE` from `@dinkuskit/commerce/features/catalog`. Call the reader
@@ -131,13 +133,15 @@ Commerce does not read CMS content or decide a canonical slug. Managed products
 have `availability-unavailable` and `sellable: false` with the currently absent
 Inventory read boundary; no local-stock fallback is introduced.
 
-The installed HTTP/browser fixture proves authenticated admin creation/pricing,
-anonymous catalog/cart selection and canonical prepare. With the shipped empty
-grants and unconfigured Payments, start returns `PAYMENTS_UNAVAILABLE` and writes
-no checkout/order aggregate. The compiled workerd/SDK fixture separately exercises
-canonical coupon-adjusted payment/order/receipt behavior with synthetic intercepted
-issuer/provider transport. Neither fixture proves a signed Registry release,
-hosted identity, real Stripe TEST readiness, shipping checkout or scheduler.
+The original installed HTTP/browser fixture covers authenticated admin
+creation/pricing, anonymous catalog/cart selection and canonical prepare. In its
+unconfigured Payments setup, start returns `PAYMENTS_UNAVAILABLE` and writes no
+checkout/order aggregate; that is a fixture result, not the capability manifest
+of every current release. The compiled workerd/SDK fixture separately exercises
+canonical coupon-adjusted payment/order/receipt behavior with synthetic
+intercepted issuer/provider transport. Neither fixture proves a signed Registry
+release, hosted identity, real Stripe TEST readiness, shipping checkout or
+scheduler.
 
 ## Single-item identity lookup
 
