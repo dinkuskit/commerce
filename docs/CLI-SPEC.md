@@ -175,8 +175,9 @@ may be looking at, so it follows the confirm flow below.
 Every `orders` command sends one `POST orders` with a JSON body and the
 credential (GrillTrack `commerce-orders-api-001`; `address` is
 `commerce-orders-api-address-001`). The route is private: EmDash
-requires `plugins:manage` (an administrator) and, for API tokens, the `admin`
-scope, and Commerce checks the administrator again, like its Orders page. Only
+requires `content:edit_any` (an Editor or Administrator,
+`commerce-orders-staff-access-001`) and, for API tokens, the `admin` scope, and
+Commerce checks the role again, like its Orders page. Only
 the Registry (sandboxed) build mounts it; on a native install the site answers
 `404` and the CLI exits `1` with `route_not_available`.
 

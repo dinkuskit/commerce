@@ -15527,6 +15527,64 @@
       "superseded_by": null,
       "updated_at": "2026-10-31T03:10:18+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:34e05b8",
+      "candidate_refs": [],
+      "choice": "Editors (EmDash role 40) and Administrators work Orders: the Orders page (list, inspect, bring in, Complete order, Move back to Processing, Correct address) and the private orders route for agents and the CLI, which now declares content:edit_any instead of plugins:manage; the API token still needs EmDash's admin scope. Both handlers check the role again (an Editor or above; a forged body changes nothing). Connecting DinkusKit and checkout setup stay Administrator-only. Orders still has no refund, cancel or payment action. The reference tells owners Editors see customers' email, phone and addresses.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanNF3JDSWdqfMTPan74ksApj",
+      "created_at": "2026-10-31T12:32:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-orders-api-001",
+        "shopper-accounts-v1-20261020"
+      ],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-31T12:32:24+00:00",
+          "choice": "Editors (EmDash role 40) and Administrators work Orders: the Orders page (list, inspect, bring in, Complete order, Move back to Processing, Correct address) and the private orders route for agents and the CLI, which now declares content:edit_any instead of plugins:manage; the API token still needs EmDash's admin scope. Both handlers check the role again (an Editor or above; a forged body changes nothing). Connecting DinkusKit and checkout setup stay Administrator-only. Orders still has no refund, cancel or payment action. The reference tells owners Editors see customers' email, phone and addresses.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T12:32:24+00:00",
+          "choice": "Editors (EmDash role 40) and Administrators work Orders: the Orders page (list, inspect, bring in, Complete order, Move back to Processing, Correct address) and the private orders route for agents and the CLI, which now declares content:edit_any instead of plugins:manage; the API token still needs EmDash's admin scope. Both handlers check the role again (an Editor or above; a forged body changes nothing). Connecting DinkusKit and checkout setup stay Administrator-only. Orders still has no refund, cancel or payment action. The reference tells owners Editors see customers' email, phone and addresses.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-orders-staff-access-001",
+      "implementation_ref": "file:src/plugin.ts file:src/features/orders/api.ts file:src/features/orders/admin/page.ts file:src/shared/admin-blocks.ts file:docs/website/reference/commerce.md",
+      "question": "Can staff with the EmDash Editor role work orders, or only Administrators?",
+      "rationale": "Ronald chose Open Orders to Editors on the decision card, 31 Oct 2026",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T12:32:24+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -15563,5 +15621,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T03:10:18+00:00"
+  "updated_at": "2026-10-31T12:32:24+00:00"
 }

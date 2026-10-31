@@ -28,8 +28,9 @@ function invalid(): never {
  * Orders page's forms, so a stale change does nothing.
  */
 export async function ordersApi(route: SandboxedRouteContext, ctx: PluginContext): Promise<unknown> {
-  // EmDash already requires plugins:manage, and the admin scope for API tokens; this is the Orders page's own check.
-  if (route.user?.role !== 50) throw new Error("Orders require plugins:manage");
+  // EmDash already requires content:edit_any, and the admin scope for API tokens; this is the Orders page's own check.
+  const role = route.user?.role;
+  if (typeof role !== "number" || role < 40) throw new Error("Orders require an Editor or Administrator");
   const input = route.input;
   if (!isRecord(input)) invalid();
   const allowed = { list: "action,status,offset", show: "action,orderId", complete: "action,orderId,version,carrier,tracking", reopen: "action,orderId,version", address: "action,orderId,version,address" }[String(input.action)];

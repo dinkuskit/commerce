@@ -38,11 +38,13 @@ async function store(...orders) {
   return { kept, shop, call: (input, role = 50) => ordersApi({ user: { id: 'agent', role }, input }, { storage: { orders: kept, order_numbers: numbers }, settings: shop }) };
 }
 
-test('only administrators reach the orders route, which keeps its route id', async () => {
+test('only Editors and Administrators reach the orders route, which keeps its route id', async () => {
   assert.equal(ORDERS_API_ROUTE, 'orders');
   const { call } = await store(order('o1'));
-  for (const role of [40, 30, null, '50']) await assert.rejects(call({ action: 'list' }, role), /Orders require plugins:manage/);
-  await assert.rejects(ordersApi({ input: { action: 'list' } }, { storage: {} }), /Orders require plugins:manage/);
+  for (const role of [30, 20, null, '50']) await assert.rejects(call({ action: 'list' }, role), /Orders require an Editor or Administrator/);
+  await assert.rejects(ordersApi({ input: { action: 'list' } }, { storage: {} }), /Orders require an Editor or Administrator/);
+  // Staff work orders too (commerce-orders-staff-access-001).
+  assert.equal((await call({ action: 'list' }, 40)).total, 1);
 });
 
 test('show returns the order as agents see it, with its number, version, status and test mark', async () => {

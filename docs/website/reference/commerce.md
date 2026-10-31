@@ -32,6 +32,8 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 
+Staff with the EmDash **Editor** role can manage products and merchant store settings and work **Orders**: inspect, Complete order, Move back to Processing and Correct address. Connecting DinkusKit and checkout setup need an **Administrator**. Orders shows each customer's email, phone and addresses, so give the Editor role only to people you trust with them.
+
 ## Merchant store settings
 
 In **Commerce settings**, choose the store country and the physical
@@ -129,7 +131,7 @@ The catalog accepts only its documented query keys. Continue pagination until no
 
 Checkout rereads authoritative prices and availability. Never send a browser-computed price, tenant, provider choice, or order status as authority. See [site integration](/docs/developers/integrate) for the purchase flow.
 
-Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins. Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same. The `address` action is the Orders page's Correct address: it replaces `shipTo` on a Processing order at the order version it read, with the same checks as checkout and only to a country the store ships to, and never changes billing. Move a Completed order back to Processing first.
+Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token of an Editor or Administrator (EmDash still requires the token's `admin` scope). Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same. The `address` action is the Orders page's Correct address: it replaces `shipTo` on a Processing order at the order version it read, with the same checks as checkout and only to a country the store ships to, and never changes billing. Move a Completed order back to Processing first.
 
 Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:
 
