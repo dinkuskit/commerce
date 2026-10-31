@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { catalogApi, CATALOG_API_ROUTE } from '../../../dist/admin/index.js';
 import { readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
+import { setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
 import { shop } from './catalog-store.mjs';
 
 // catalog-api-20261027: agents and the CLI manage products with the panels' own checks, as JSON.
@@ -87,6 +88,40 @@ test('SKU, weight, identifiers, pictures, feeds, archive and link go through the
   for (const input of [{}, { op: 'delete', catalogItemId }, null, 'list']) {
     await assert.rejects(catalogApi({ input }, ctx), /Invalid catalog request/);
   }
+});
+
+test('link refuses missing products and choice IDs without replacing a page\'s pick', async () => {
+  const { ctx, call } = shop();
+  const { catalogItemId } = await call({ op: 'create', commandId: 'linked-mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' });
+  await call({ op: 'prices', catalogItemId, regular: '12.00', sale: '', stockStatus: 'in-stock' });
+  const storage = { catalog: ctx.storage.catalog_items, pages: ctx.storage.product_pages };
+  await setProductPageOnSale(storage, { entryId: 'page-mug', onSale: true });
+  const picked = await call({ op: 'get', entryId: 'page-mug' });
+  const published = await readPublicCatalogItem(ctx, 'page-mug', true);
+  assert.equal(published.id, catalogItemId);
+
+  // A choice is a real catalog row, but not a product that a page can sell directly.
+  const other = await call({ op: 'create', commandId: 'other-mug', name: 'Other mug', sku: 'OTHER-MUG' });
+  const choice = await call({ op: 'choice', productId: other.catalogItemId, optionId: 'size', optionLabel: 'Size', values: [
+    { valueId: 's', label: 'Small', member: { catalogItemId: other.catalogItemId, fulfillment: 'physical' } },
+    { valueId: 'l', label: 'Large', member: { commandId: 'other-mug-l', name: 'Other mug', sku: 'OTHER-MUG-L', fulfillment: 'physical' } },
+  ] });
+  const memberId = choice.product.members.find(member => member.catalogItemId !== other.catalogItemId).catalogItemId;
+  assert.ok(await storage.catalog.get(memberId), 'the member exists but is not a standalone product');
+  const catalogBefore = structuredClone(storage.catalog.records);
+  const pagesBefore = structuredClone(storage.pages.records);
+  for (const invalidId of ['missing-product', memberId]) {
+    for (const entryId of ['page-mug', 'page-empty']) {
+      await assert.rejects(call({ op: 'link', entryId, catalogItemId: invalidId }),
+        error => error.code === 'CATALOG_ITEM_NOT_FOUND');
+      assert.deepEqual(storage.pages.records, pagesBefore, 'a refused link neither replaces nor adds a pick');
+      assert.deepEqual(storage.catalog.records, catalogBefore, 'no catalog write');
+    }
+  }
+  assert.deepEqual(await call({ op: 'get', entryId: 'page-mug' }), picked);
+  assert.deepEqual(await readPublicCatalogItem(ctx, 'page-mug', true), published);
+  await setProductPageOnSale(storage, { entryId: 'page-mug', onSale: true });
+  assert.deepEqual(await readPublicCatalogItem(ctx, 'page-mug', true), published, 'next publish still sells the original product');
 });
 
 test('a write carrying a preview code is saved only while the product still reads the same', async () => {

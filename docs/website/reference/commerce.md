@@ -138,7 +138,7 @@ Agents and command-line tools manage products through the private `catalog` rout
 | `list` | Lists products: id, name, SKU, and when it was archived. |
 | `get` | One product (`catalogItemId`) with its choices, prices, pictures and feed channels. With `entryId` instead, the product that page sells: the one its panel picked, else the one it last sold; `product: null` when it sells none. |
 | `create` | Makes a physical Draft from `name` and `sku`, and links it to the product page `entryId` when given. Send a `commandId` so a retry finds the same product. |
-| `link` | Links a product to the product page `entryId`. |
+| `link` | Links an existing product to the product page `entryId`. A missing product or a choice ID is refused without changing the page's current selection. |
 | `prices`, `choice`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, choices and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |
 
 Publishing the page still puts the product on sale, so an agent sells a product by creating it with the page's `entryId` (or linking it), pricing it and publishing its page through EmDash. Commerce keeps the link, as it does for the panel, and the page has no product field to set. A store whose template predates this still reads the page's own **Commerce product** field (`commerce_item_id`) when it publishes; there, the agent also sets that field to the product's `catalogItemId`, or the store is updated first. Manage stock stays off, as in the panels. A refused write answers with the reason.
