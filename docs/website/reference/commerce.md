@@ -107,7 +107,7 @@ Inventory is planned after v1, and the Registry build has no Manage stock switch
 
 ## Public storefront routes
 
-Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn` and the beta package's is `r_fjzjvld3ssb4j63o`. Commerce runs one build, the Registry build; `dinkus-commerce` identifies the native development entry only the Template Store's playground still registers, which serves these same routes.
+Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn` and the beta package's is `r_fjzjvld3ssb4j63o`. Commerce runs one build, the Registry build; `dinkus-commerce` identifies the native development entry only the Template Store's playground still registers. It serves these routes except `policies/public` and `checkout/guest/readiness`, which the Registry build alone registers.
 
 | Route | Method | Contract |
 | --- | --- | --- |

@@ -37,7 +37,9 @@ Commerce's Registry build comes from `emdash-plugin.jsonc` and `src/plugin.ts`
 native entry. Both builds serve the same Block Kit admin (no React admin
 screens; `commerce-admin-block-kit-only-20261024`) and the same routes: the
 product panels, the private `catalog` route, the store's publish check, the
-public reads, checkout and shopper accounts. Commerce runs one build everywhere
+public catalog reads, checkout and shopper accounts; only the Registry build
+registers `store-proof`, `orders`, `checkout/guest/readiness` and
+`policies/public`. Commerce runs one build everywhere
 (`commerce-one-build-registry-20261031`, Ronald, 31 Oct 2026): the Template
 Store's local dev, demo and browser tests mount the Registry build, and the
 native entry's 24 extra routes (`catalog-items/*` writes and lists,

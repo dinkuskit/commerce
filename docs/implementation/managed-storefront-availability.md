@@ -18,7 +18,7 @@ type StorefrontAvailabilityDisplayPolicy =
 ```
 
 `status` is the new-store and legacy-record default. `threshold` requires a
-positive integer. The authenticated `settings/storefront-availability` action (native only, now gone with the native extras, `commerce-one-build-registry-20261031`; the setting lives on the Commerce settings page)
+positive integer. The authenticated `settings/storefront-availability` action (native only, gone with the native extras, `commerce-one-build-registry-20261031`; no admin control writes this policy today, so stores keep the `status` default, and the kernel's `setStorefrontAvailabilityPolicy` stays for hosts)
 changes only this singleton policy record.
 
 Each product may have one record in the dedicated `catalogBackorderPolicies`
