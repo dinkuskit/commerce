@@ -9,7 +9,7 @@ import { merchantStoreSettingsBlocks } from "../features/store-settings/kernel/i
 import { adminAuthorized, navigation } from "../shared/admin-blocks.js";
 import { connectState, type ConnectState } from "../features/checkout/kernel/index.js";
 import { connectBlocks, finishedConnect } from "./connect.js";
-import { alert, bool, button, failed, header, message, note, object, refused, text } from "./common.js";
+import { alert, bool, button, failed, fresh, header, message, note, object, refused, submit, text } from "./common.js";
 import { library, preview, target } from "./media.js";
 
 function placeholderStorage(ctx: PluginContext) {
@@ -33,9 +33,9 @@ function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockRespo
   return { blocks: [
     header("Commerce settings"), navigation(), header("Catalog"),
     ...(failure ? [alert(failure), note("Save not confirmed; choice kept.")] : []),
-    { type: "form", block_id: "catalog-settings-" + crypto.randomUUID(), fields: [
+    { type: "form", block_id: fresh("catalog-settings-"), fields: [
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
-    ], submit: { label: "Save", action_id: "settings.save" } },
+    ], submit: submit("Save", "settings.save") },
   ] };
 }
 export async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse): Promise<BlockResponse> {
