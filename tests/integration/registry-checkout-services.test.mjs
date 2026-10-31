@@ -456,7 +456,7 @@ test('agents read and complete orders through the private orders route of the co
   const state = await runtimeFixture();
   t.after(() => state.close());
   const route = state.manifest.routes.find(entry => entry.name === 'orders');
-  assert.deepEqual(route, { name: 'orders', methods: ['POST'], public: false, permission: 'plugins:manage' });
+  assert.deepEqual(route, { name: 'orders', methods: ['POST'], public: false, permission: 'content:edit_any' });
   const { token } = await start(state);
   state.setPaid();
   assert.equal((await state.invoke(STATUS, {}, token)).checkout.state, 'paid');
@@ -471,9 +471,10 @@ test('agents read and complete orders through the private orders route of the co
   assert.deepEqual(done.order.completed.tracking, 'SYNTHETIC-1');
   assert.equal((await orders({ action: 'show', orderId: order.orderId })).order.status, 'completed');
   assert.equal((await orders({ action: 'list', status: 'processing' })).total, 0);
-  // Without an administrator the route refuses, whatever the request says.
+  // An Editor works orders too; anyone below refuses, whatever the request says.
+  assert.equal((await orders({ action: 'list' }, { id: 'editor', role: 40 })).total, 1);
   await assert.rejects(orders({ action: 'list' }, null));
-  await assert.rejects(orders({ action: 'list' }, { id: 'editor', role: 40 }));
+  await assert.rejects(orders({ action: 'list' }, { id: 'author', role: 30 }));
 });
 
 test('malformed or copied configuration is rejected before encrypted credential/transport', async t => {

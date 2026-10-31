@@ -55,18 +55,23 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
       expect(await response.text()).not.toContain(paid.order.receiptId);
     }
     await guestOrders.close();
-    database.prepare('UPDATE users SET role=40').run();
+    // An Author (30), forging an administrator in the body, is refused before Orders reads anything.
+    database.prepare('UPDATE users SET role=30').run();
     for (const input of deniedInputs) {
       const response = await page.request.post(endpoint, { headers: { 'X-EmDash-Request': '1' },
         data: { ...input, user: { role: 50 }, ui: { surface: 'admin-page' } } });
-      expect(await response.text()).toContain('Orders require plugins:manage');
+      expect([401, 403]).toContain(response.status());
+      expect(await response.text()).not.toContain(paid.order.receiptId);
     }
+    // Staff (Editors) work orders like the owner (commerce-orders-staff-access-001).
+    database.prepare('UPDATE users SET role=40').run();
     await page.reload();
-    await expect(page.getByText('Orders require plugins:manage', { exact: true })).toBeVisible({ timeout: 60000 });
-    await capture('orders-editor-denied');
+    await expect(page.getByRole('button', { name: /^Inspect #100[12] \(TEST\)$/ }).first()).toBeVisible({ timeout: 60000 });
+    await capture('orders-editor-allowed');
     database.prepare('UPDATE users SET role=50').run();
     expect(snapshot()).toEqual(original);
-    const matrix = [{ actor: 'Orders anonymous and forged editor', result: 'list/detail denied; canonical storage unchanged' }];
+    const matrix = [{ actor: 'Orders anonymous and forged author', result: 'list/detail denied; canonical storage unchanged' },
+      { actor: 'Orders editor', result: 'list shown' }];
     await page.reload();
     // Orders numbers each copy it keeps; people see the short number, the order id stays on the detail.
     const kept = new PluginStorageRepository(db, pluginId, 'orders', []);

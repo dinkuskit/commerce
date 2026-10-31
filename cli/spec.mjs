@@ -867,7 +867,7 @@ export const spec = {
 				},
 			},
 			orders: {
-				summary: `Read orders, mark them shipped and correct their addresses. Needs ${TOKEN_ENV} for an administrator.`,
+				summary: `Read orders, mark them shipped and correct their addresses. Needs ${TOKEN_ENV} for an Editor or Administrator.`,
 				commands: {
 					list: {
 						summary: "List paid orders by order number, 50 a page or --all.",
