@@ -111,8 +111,11 @@ Every route is served at
   every product with Regular and Sale as dollar strings, Manage stock, the
   manual stock status for unmanaged products, and variant members. Only the
   native Commerce build mounts this route. On a Registry (sandboxed) install the
-  site answers `404`, and the CLI sends `{ "op": "list" }` to `POST catalog`
-  instead, which lists each product's `catalogItemId`, `name`, `sku` and
+  site answers `404` or EmDash's `400 ROUTE_ERROR` specifically identifying
+  `catalog-items/list` as a missing sandbox route, and the CLI sends
+  `{ "op": "list" }` to `POST catalog` instead. Other errors, including
+  authentication, permission and server failures, do not trigger that fallback.
+  The catalog route lists each product's `catalogItemId`, `name`, `sku` and
   `archivedAt`; `products show` has its prices. A Commerce older than 0.7.0
   has neither and exits `1` with `route_not_available`.
 - `products show <item-id>` sends `{ "op": "get", "catalogItemId" }` to
@@ -641,6 +644,11 @@ or deployment qualification.
 - a real HTTP round trip on loopback;
 - that the CLI route ids match the built package's exported route constants;
 - the bundle boundary in [Bundle budget](#bundle-budget).
+
+`tests/cli/dinkus-commerce.test.mjs` also verifies the Registry product-list
+fallback for both a missing-route `404` and EmDash's specific sandbox
+`400 ROUTE_ERROR` envelope, without falling back on auth, server or unrelated
+route errors.
 
 `tests/cli/products-catalog.test.mjs` runs every product command against the
 real catalog API over in-memory storage, through EmDash's envelope: a

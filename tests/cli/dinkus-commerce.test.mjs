@@ -258,6 +258,37 @@ test("products list falls back to the catalog route on a Registry install and ne
   assert.match(anonymous.stderr, /EMDASH_TOKEN/);
 });
 
+test("products list recognizes EmDash's missing sandbox-route envelope without hiding other failures", async () => {
+  const missing = "Plugin r_gshdrqaldna3r7sn:0.7.0-beta.6 route catalog-items/list failed: Route not found: catalog-items/list";
+  const listed = { products: [{ catalogItemId: "item_a", name: "Demo", sku: "A-1" }] };
+  const registry = await run(["--url", SITE, "products", "list", "--json"], {
+    env: { EMDASH_TOKEN: TOKEN },
+    routes: { "catalog-items/list": fail(400, "ROUTE_ERROR", missing), catalog: (body) => (assert.deepEqual(body, { op: "list" }), ok(listed)) },
+  });
+  assert.equal(registry.code, 0, registry.stderr);
+  assert.deepEqual(singleJson(registry.stdout).data, listed);
+  assert.deepEqual(registry.calls.map((call) => call.init.method), ["GET", "POST"]);
+  assert.equal(registry.calls[1].init.headers.authorization, `Bearer ${TOKEN}`);
+  assert.equal(registry.calls[1].init.headers["x-emdash-request"], "1");
+  assert.ok(!registry.stdout.includes(TOKEN) && !registry.stderr.includes(TOKEN));
+
+  for (const [status, code, message, exit] of [
+    [400, "ROUTE_ERROR", "Plugin commerce:0.7.0 route catalog-items/list failed: Storage unavailable", 1],
+    [400, "ROUTE_ERROR", missing.replaceAll("catalog-items/list", "another-route"), 1],
+    [400, "INVALID_INPUT", missing, 1],
+    [401, "INVALID_TOKEN", missing, 4],
+    [403, "INSUFFICIENT_SCOPE", missing, 4],
+    [500, "ROUTE_ERROR", missing, 3],
+  ]) {
+    const result = await run(["--url", SITE, "products", "list", "--json"], {
+      env: { EMDASH_TOKEN: TOKEN }, routes: { "catalog-items/list": fail(status, code, message), catalog: ok(listed) },
+    });
+    assert.equal(result.code, exit, result.stderr);
+    assert.equal(singleJson(result.stdout).error.code, code);
+    assert.equal(result.calls.length, 1, "an unrelated failure must not trigger the fallback");
+  }
+});
+
 test("exit codes follow the shared 0-5 contract", async () => {
   const cases = [
     [0, ["catalog", "list"], { "catalog/public": ok({ products: [] }) }],

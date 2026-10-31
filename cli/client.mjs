@@ -196,12 +196,20 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 
 		async listProducts() {
 			const what = "Listing products";
-			const data = unwrap(await adminRequest("GET", `/${ROUTES.listProducts}`), what, {
-				onNotFound: routeMissing(
-					ROUTES.listProducts,
-					"It is mounted only by the native Commerce build; the Registry build only has the Block Kit admin.",
-				),
-			});
+			const missing = routeMissing(
+				ROUTES.listProducts,
+				"It is mounted only by the native Commerce build; the Registry build only has the Block Kit admin.",
+			);
+			const response = await adminRequest("GET", `/${ROUTES.listProducts}`);
+			// EmDash 1.4 dispatches an unknown sandbox route and wraps its refusal as
+			// 400 ROUTE_ERROR, not 404. Recognize only this exact missing route;
+			// auth, transport and unrelated route failures must not trigger fallback.
+			if (response.status === 400 && response.json?.error?.code === "ROUTE_ERROR" &&
+				typeof response.json.error.message === "string" &&
+				/^Plugin \S+ route catalog-items\/list failed: Route not found: catalog-items\/list$/.test(response.json.error.message)) {
+				throw missing();
+			}
+			const data = unwrap(response, what, { onNotFound: missing });
 			if (!isRecord(data) || !Array.isArray(data.products)) throw contractError(what, "products is not a list.");
 			for (const product of data.products) {
 				if (!isRecord(product) || typeof product.catalogItemId !== "string" || typeof product.name !== "string") {
