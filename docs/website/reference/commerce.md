@@ -129,7 +129,7 @@ The catalog accepts only its documented query keys. Continue pagination until no
 
 Checkout rereads authoritative prices and availability. Never send a browser-computed price, tenant, provider choice, or order status as authority. See [site integration](/docs/developers/integrate) for the purchase flow.
 
-Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins. Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same.
+Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins. Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same. The `address` action is the Orders page's Correct address: it replaces `shipTo` on a Processing order at the order version it read, with the same checks as checkout and only to a country the store ships to, and never changes billing. Move a Completed order back to Processing first.
 
 Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:
 
