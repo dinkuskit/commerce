@@ -11,10 +11,6 @@ export {
 export {
   PRODUCT_FEED_CHANNELS,
 } from "./types.js";
-export {
-  SET_PRODUCT_FEED_ELIGIBILITY_ROUTE,
-  setProductFeedEligibilityRoute,
-} from "./route.js";
 export type {
   ProductFeedBuildOptions,
   ProductFeedChannel,

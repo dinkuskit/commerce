@@ -132,12 +132,13 @@ for (const [route, inputs] of [
   });
 }
 
-test("public and native GET reads never mark a mutation", async () => {
+test("public GET reads and the catalog route's list never mark a mutation", async () => {
   const lifecycle = { sending: false };
   let calls = 0;
-  const api = client({ lifecycle, fetchImpl: async (_url, init) => {
+  const api = client({ lifecycle, fetchImpl: async (url, init) => {
     calls += 1;
-    assert.equal(init.method, "GET");
+    // The product list is a read through the catalog route's list op (the native GET list route is gone).
+    assert.equal(init.method, new URL(url).pathname.endsWith("/catalog") ? "POST" : "GET");
     assert.equal(lifecycle.sending, false);
     return new Response(JSON.stringify({ success: true, data: { products: [] } }));
   } });

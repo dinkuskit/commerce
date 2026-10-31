@@ -35,7 +35,19 @@ the work that closes them. The project owner set this rule on 2026-10-08.
 Commerce's Registry build comes from `emdash-plugin.jsonc` and `src/plugin.ts`
 (see Sandbox distribution below). The package root is the
 native entry. Both builds serve the same Block Kit admin (no React admin
-screens; `commerce-admin-block-kit-only-20261024`). Native-only gaps:
+screens; `commerce-admin-block-kit-only-20261024`) and the same routes: the
+product panels, the private `catalog` route, the store's publish check, the
+public catalog reads, checkout and shopper accounts; only the Registry build
+registers `store-proof`, `orders`, `checkout/guest/readiness` and
+`policies/public`. Commerce runs one build everywhere
+(`commerce-one-build-registry-20261031`, Ronald, 31 Oct 2026): the Template
+Store's local dev, demo and browser tests mount the Registry build, and the
+native entry's 24 extra routes (`catalog-items/*` writes and lists,
+`settings/*`, `configure-inventory`) and its local Manage stock test aid are
+gone. Only the Template Store's playground still registers the native entry,
+until its own switch to the Registry build; then the native entry goes too.
+Native camelCase storage gets no migration to the Registry build's snake_case.
+Native-only gaps:
 
 - Coupons: native installs keep coupon storage and coupon codes at checkout,
   with no coupon admin screen (coupons are built in dinkuskit/coupons). The Registry build leaves coupon storage and admin out to
@@ -48,13 +60,13 @@ screens; `commerce-admin-block-kit-only-20261024`). Native-only gaps:
   This closes when coupons can also be created for a Registry store, through the
   Coupons admin plugin or CLI in `dinkuskit/coupons`; the native coupon path is
   then removed.
-- Host-wired checkout: Template Store wires checkout through the native entry's
+- Host-wired checkout: the playground wires checkout through the native entry's
   host options. Registry installs use the installed checkout services instead,
-  and Template Store has to move to them to follow this rule.
-
-The local Manage stock switch (`enableLocalStockManagement`) is a
-developer-only test aid, not a product feature. Native installations get no
-data migration path to the Registry build.
+  and the playground moves to them with its switch to the Registry build.
+- Store policies: the native `settings/shipping-policy` and
+  `settings/return-policy` writes went with the native-only routes and the
+  Registry build never had a write, so `policies/public` answers unset until
+  Commerce decides how a store sets its policies.
 
 ## Status
 
@@ -121,8 +133,9 @@ treated as zero stock or a backorder. The package stores no fallback quantity.
 Products with Manage Stock disabled use a separate Commerce-owned manual
 availability value: `in-stock`, `out-of-stock`, or
 `available-on-backorder`. A missing value defaults to `in-stock` for new and
-legacy products. The private `catalog-items/set-manual-availability` action
-can change it only while the product is unmanaged. The value remains dormant
+legacy products. The product panel's price form (the private `catalog` route's
+`prices` op, with its stock status) can change it only while the product is
+unmanaged. The value remains dormant
 while Inventory manages the product and returns if management is later
 disabled. `resolveStorefrontAvailability` selects the managed or unmanaged
 authority and always returns the same structured storefront contract;

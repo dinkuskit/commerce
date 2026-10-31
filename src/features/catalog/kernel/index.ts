@@ -52,25 +52,7 @@ export { normalizeCreateCatalogItemInput, normalizeSku } from "../normalize.js";
 export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct, named } from "../product-edit.js";
 export { PRODUCT_PAGES_COLLECTION, claimProductPage, linkProductPage, pageProduct, productNotFound, setProductPageOnSale } from "../product-pages.js";
 export type { ProductPageRecord, ProductPages } from "../product-pages.js";
-export {
-  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
-  CREATE_CATALOG_ITEM_ROUTE,
-  LIST_CATALOG_PRODUCTS_ROUTE,
-  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
-  SET_CATALOG_ITEM_BACKORDERS_ROUTE,
-  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
-  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
-  SET_CATALOG_ITEM_SKU_ROUTE,
-  SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
-  RENAME_CATALOG_PRODUCT_ROUTE,
-  ARCHIVE_CATALOG_PRODUCT_ROUTE,
-  PRODUCT_PAGE_ON_SALE_ROUTE,
-  ADD_CATALOG_VARIANT_OPTION_ROUTE,
-  UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
-  BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
-} from "../route-ids.js";
+export { PRODUCT_PAGE_ON_SALE_ROUTE } from "../route-ids.js";
 export {
   addCatalogVariantMember,
   addCatalogVariantOption,
@@ -170,7 +152,6 @@ export type {
   ProductMediaReader,
   PublicCatalogImage,
 } from "../media-projector.js";
-export { SAVE_CATALOG_ITEM_MEDIA_ROUTE } from "../route-ids.js";
 export {
   normalizeGtin,
   normalizeIdentifierPatch,

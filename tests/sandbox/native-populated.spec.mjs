@@ -165,11 +165,11 @@ test.describe("Native populated-browser continuity fixture", () => {
       "SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?",
     ).get("dinkus-commerce", collection, id).data);
 
-    // 5. Managed setup cannot be switched off through the native JSON route.
+    // 5. Managed setup cannot be switched off through the catalog route, the one JSON route both builds have.
     const managedBefore = storageRow("catalogItems", managedProduct.itemId);
     const claimBefore = storageRow("managedSkuClaims", managedClaim.recordId);
-    const disableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
-      data: { catalogItemId: managedProduct.itemId, regular: "42.00", sale: "35.00", manageStock: false },
+    const disableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog", {
+      data: { op: "prices", catalogItemId: managedProduct.itemId, regular: "42.00", sale: "35.00", manageStock: false },
       headers: { "X-EmDash-Request": "1" },
     });
     expect([400, 409]).toContain(disableAttempt.status());
@@ -201,8 +201,8 @@ test.describe("Native populated-browser continuity fixture", () => {
 
     const bootBeforeEnable = storageRow("catalogItems", unmanagedProduct.itemId);
     const bootPriceBeforeEnable = storageRow("catalogPrices", unmanagedProduct.itemId);
-    const enableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
-      data: { catalogItemId: unmanagedProduct.itemId, regular: "195.00", sale: "160.00", manageStock: true },
+    const enableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog", {
+      data: { op: "prices", catalogItemId: unmanagedProduct.itemId, regular: "195.00", sale: "160.00", manageStock: true },
       headers: { "X-EmDash-Request": "1" },
     });
     expect([400, 409]).toContain(enableAttempt.status());
@@ -259,8 +259,8 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(anonPage.url()).not.toContain("/_emdash/admin/plugins/dinkus-commerce/settings");
 
     // Verify unauthenticated API POST fails closed
-    const apiResponse = await request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
-      data: { catalogItemId: "item-heritage-boot", regular: "200.00" },
+    const apiResponse = await request.post("/_emdash/api/plugins/dinkus-commerce/catalog", {
+      data: { op: "prices", catalogItemId: "item-heritage-boot", regular: "200.00", sale: "" },
     });
     expect([401, 403]).toContain(apiResponse.status());
 

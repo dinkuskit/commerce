@@ -8,44 +8,10 @@ import {
   CATALOG_MEDIA_COLLECTION,
   CATALOG_PRICES_COLLECTION,
   CATALOG_UNIQUE_INDEXES,
-  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
   COMMERCE_PLUGIN_ID,
-  CREATE_CATALOG_ITEM_ROUTE,
-  LIST_CATALOG_PRODUCTS_ROUTE,
-  SAVE_CATALOG_ITEM_MEDIA_ROUTE,
-  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
-  SET_CATALOG_ITEM_SKU_ROUTE,
-  SET_CATALOG_ITEM_IDENTIFIERS_ROUTE,
-  RENAME_CATALOG_PRODUCT_ROUTE,
-  ARCHIVE_CATALOG_PRODUCT_ROUTE,
   PRODUCT_PAGE_ON_SALE_ROUTE,
   PRODUCT_PAGES_COLLECTION,
   setProductPageOnSaleRoute,
-  ADD_CATALOG_VARIANT_OPTION_ROUTE,
-  BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
-  UPDATE_CATALOG_VARIANT_LABELS_ROUTE,
-  SET_CATALOG_ITEM_BACKORDERS_ROUTE,
-  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
-  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
-  clearCatalogItemRegularPriceRoute,
-  clearCatalogItemSalePriceRoute,
-  createCatalogItemRouteWithLocalStock,
-  createListCatalogProductsRouteWithLocalStock,
-  createSaveCatalogProductPricesRouteWithLocalStock,
-  saveCatalogItemMediaRoute,
-  setCatalogItemSkuRoute,
-  setCatalogItemIdentifiersRoute,
-  renameCatalogProductRoute,
-  setCatalogProductArchivedRoute,
-  setCatalogItemBackordersRoute,
-  setCatalogItemManualAvailabilityRoute,
-  setCatalogItemRegularPriceRoute,
-  setCatalogItemSalePriceRoute,
-  addCatalogVariantOptionRoute,
-  updateCatalogVariantLabelsRoute,
-  bulkSaveCatalogProductPricesRoute,
 } from "./features/catalog/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
@@ -54,34 +20,21 @@ import {
   readPublicCatalogItem,
 } from "./features/catalog/storefront/index.js";
 import {
-  SET_STORE_RETURN_POLICY_ROUTE,
-  SET_STORE_SHIPPING_POLICY_ROUTE,
   STORE_RETURN_POLICY_COLLECTION,
   STORE_SHIPPING_POLICY_COLLECTION,
-  setStoreReturnPolicyRoute,
-  setStoreShippingPolicyRoute,
 } from "./features/store-policies/index.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES,
 } from "./features/inventory-provider/index.js";
 import {
-  CONFIGURE_INVENTORY_ROUTE,
   STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
   STORE_INVENTORY_CONFIGURATION_UNIQUE_INDEXES,
-  createConfigureInventoryRoute,
-  type ConfigureInventoryExecution,
 } from "./features/inventory-setup/index.js";
 import {
-  OUT_OF_STOCK_LISTING_ROUTE,
-  PLACEHOLDER_IMAGE_ROUTE,
-  SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
   STOREFRONT_AVAILABILITY_SETTINGS_COLLECTION,
   STOREFRONT_OUT_OF_STOCK_LISTING_COLLECTION,
   STOREFRONT_PLACEHOLDER_IMAGE_COLLECTION,
-  outOfStockListingRoute,
-  placeholderImageRoute,
-  setStorefrontAvailabilityPolicyRoute,
 } from "./features/storefront-availability/index.js";
 import {
   CHECKOUT_COLLECTION,
@@ -99,13 +52,6 @@ import { COUPONS_COLLECTION } from "./features/coupons/index.js";
 import {
   PRODUCT_FEED_ELIGIBILITY_COLLECTION,
 } from "./features/catalog/index.js";
-import {
-  SET_PRODUCT_FEED_ELIGIBILITY_ROUTE,
-  loadProductFeedEligibility,
-  setProductFeedEligibilityRoute,
-  type ProductFeedEligibilityStorage,
-} from "./features/feeds/index.js";
-import type { CatalogProductListItem } from "./features/catalog/index.js";
 import { ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, createPaidOrderReceiver, listOrdersForEmail, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
 import {
   NATIVE_CUSTOMERS_COLLECTION,
@@ -163,16 +109,13 @@ const COMMERCE_EDITOR_PANELS = [{
   collections: ["products"],
 }];
 
+/**
+ * Options a site passes the native entry. The native entry is a development setup for the one place that
+ * still runs it, the Template Store's playground; every other store runs the Registry build
+ * (commerce-one-build-registry-20261031), and the two serve the same routes. The local Manage stock test
+ * aid (`enableLocalStockManagement`) is gone with the native-only routes; a leftover option is ignored.
+ */
 export interface CommerceLocalDevelopmentOptions {
-  /**
-   * Host-owned local-development opt-in for synthetic Manage stock testing.
-   * Default false. Not a merchant setting, URL query, or browser override.
-   * Admission also requires a trusted loopback request URL and every present
-   * trusted site URL to be loopback. A local constructor URL cannot mask a
-   * known public or malformed runtime site URL. Missing, blank, or malformed
-   * site URL fails closed.
-   */
-  enableLocalStockManagement?: boolean;
   /**
    * Host-owned configured public site origin. Pass the same loopback URL the
    * host set as EmDash `siteUrl` / `EMDASH_SITE_URL`. Plugin `ctx.site.url` may
@@ -192,7 +135,6 @@ export function dinkusCommerce(
     format: "native",
     entrypoint: "@dinkuskit/commerce",
     options: {
-      enableLocalStockManagement: options.enableLocalStockManagement === true,
       ...(typeof options.siteUrl === "string" && options.siteUrl.trim() !== ""
         ? { siteUrl: options.siteUrl.trim() }
         : {}),
@@ -203,7 +145,6 @@ export function dinkusCommerce(
 }
 
 export interface CommercePluginOptions extends CommerceLocalDevelopmentOptions {
-  inventorySetup?: ConfigureInventoryExecution;
   checkout?: GuestCheckoutHostOptions;
   customers?: ShopperAccountHostOptions;
 }
@@ -213,23 +154,6 @@ const paidOrders = (storage: Record<string, unknown>) =>
   createPaidOrderReceiver(storage[ORDERS_COLLECTION] as OrdersCollection, storage[ORDER_NUMBERS_COLLECTION] as OrderNumbers);
 const nativeOrdersForEmail = (storage: Record<string, unknown>, emailKey: string) =>
   listOrdersForEmail(storage[ORDERS_COLLECTION] as OrdersCollection, emailKey);
-
-/** Products list for the native admin, with each product's feed choices from Feeds. */
-function withFeedChannels(route: PluginRoute): PluginRoute {
-  return {
-    ...route,
-    handler: async (ctx) => {
-      const listed = await route.handler(ctx) as { products: CatalogProductListItem[] };
-      const eligibility = ctx.storage[PRODUCT_FEED_ELIGIBILITY_COLLECTION] as ProductFeedEligibilityStorage | undefined;
-      if (!eligibility) return listed;
-      const products = [];
-      for (const product of listed.products) {
-        products.push({ ...product, feedChannels: await loadProductFeedEligibility(eligibility, product.catalogItemId, ctx.storage.catalogItems as never) });
-      }
-      return { ...listed, products };
-    },
-  };
-}
 
 function nativePublicContext(ctx: Parameters<PluginRoute["handler"]>[0]) {
   return {
@@ -322,12 +246,6 @@ const publicCatalogItemRoute = {
 } satisfies PluginRoute;
 
 export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugin {
-  const localStock = {
-    enableLocalStockManagement: options.enableLocalStockManagement === true,
-    ...(typeof options.siteUrl === "string" && options.siteUrl.trim() !== ""
-      ? { siteUrl: options.siteUrl.trim() }
-      : {}),
-  };
   const topLevelSiteUrl = options.siteUrl;
   const checkoutSiteUrl = options.checkout?.siteUrl;
   const checkoutHost: GuestCheckoutHostOptions = Object.freeze({
@@ -460,37 +378,10 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       } },
       [PUBLIC_CATALOG_ROUTE]: publicCatalogRoute,
       [PUBLIC_CATALOG_ITEM_ROUTE]: publicCatalogItemRoute,
-      [CREATE_CATALOG_ITEM_ROUTE]: createCatalogItemRouteWithLocalStock(localStock),
-      [SET_CATALOG_ITEM_BACKORDERS_ROUTE]: setCatalogItemBackordersRoute,
-      [SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE]:
-        setCatalogItemManualAvailabilityRoute,
-      [SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE]: setCatalogItemRegularPriceRoute,
-      [SET_CATALOG_ITEM_SALE_PRICE_ROUTE]: setCatalogItemSalePriceRoute,
-      [SET_PRODUCT_FEED_ELIGIBILITY_ROUTE]: setProductFeedEligibilityRoute,
-      [CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE]: clearCatalogItemSalePriceRoute,
-      [CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE]:
-        clearCatalogItemRegularPriceRoute,
-      [LIST_CATALOG_PRODUCTS_ROUTE]: withFeedChannels(createListCatalogProductsRouteWithLocalStock(localStock)),
-      [SAVE_CATALOG_PRODUCT_PRICES_ROUTE]:
-        createSaveCatalogProductPricesRouteWithLocalStock(localStock),
-      [SAVE_CATALOG_ITEM_MEDIA_ROUTE]: saveCatalogItemMediaRoute,
-      [SET_CATALOG_ITEM_SKU_ROUTE]: setCatalogItemSkuRoute,
-      [SET_CATALOG_ITEM_IDENTIFIERS_ROUTE]: setCatalogItemIdentifiersRoute,
-      [RENAME_CATALOG_PRODUCT_ROUTE]: renameCatalogProductRoute,
-      [ARCHIVE_CATALOG_PRODUCT_ROUTE]: setCatalogProductArchivedRoute,
+      // The store's publish check, as on the Registry build. The native-only catalog, settings and policy
+      // routes are gone (commerce-one-build-registry-20261031): products are managed through the product
+      // panels and the catalog route on both builds.
       [PRODUCT_PAGE_ON_SALE_ROUTE]: setProductPageOnSaleRoute,
-      [ADD_CATALOG_VARIANT_OPTION_ROUTE]: addCatalogVariantOptionRoute,
-      [UPDATE_CATALOG_VARIANT_LABELS_ROUTE]: updateCatalogVariantLabelsRoute,
-      [BULK_SAVE_CATALOG_PRODUCT_PRICES_ROUTE]: bulkSaveCatalogProductPricesRoute,
-      [CONFIGURE_INVENTORY_ROUTE]: createConfigureInventoryRoute(
-        options.inventorySetup,
-      ),
-      [SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE]:
-        setStorefrontAvailabilityPolicyRoute,
-      [OUT_OF_STOCK_LISTING_ROUTE]: outOfStockListingRoute,
-      [PLACEHOLDER_IMAGE_ROUTE]: placeholderImageRoute,
-      [SET_STORE_SHIPPING_POLICY_ROUTE]: setStoreShippingPolicyRoute,
-      [SET_STORE_RETURN_POLICY_ROUTE]: setStoreReturnPolicyRoute,
       [GUEST_CHECKOUT_PREPARE_ROUTE]: createGuestCheckoutPrepareRoute(checkoutHost),
       [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(checkoutHost, paidOrders),
       [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(checkoutHost, paidOrders),

@@ -65,12 +65,9 @@ To show this panel, Commerce asks for the `admin.editor-draft:read` permission w
 ## Saving and upgrading catalog data
 
 Price and stock-status saves, including submitted feed choices, commit together.
-Native local-stock hosts keep choice-level tracking changes in that same commit.
-Native catalog lists return the product revision for every choice. A native bulk
-price request validates sibling choices against that same snapshot and commits
-its valid rows together; invalid rows remain individually reported. A competing
-product edit refuses the staged rows for that product without a partial save.
-A **Save weight** action commits all submitted choice weights together. These
+A competing product edit refuses the staged rows for that product without a
+partial save. A **Save weight** action commits all submitted choice weights
+together. These
 actions work within EmDash's default ten-subrequest sandbox limit. If another
 editor changes the product after a form opens, reload before saving again.
 
@@ -110,7 +107,7 @@ Inventory is planned after v1, and the Registry build has no Manage stock switch
 
 ## Public storefront routes
 
-Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn`, while `dinkus-commerce` identifies the native development entry.
+Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn` and the beta package's is `r_fjzjvld3ssb4j63o`. Commerce runs one build, the Registry build; `dinkus-commerce` identifies the native development entry only the Template Store's playground still registers. It serves these routes except `policies/public` and `checkout/guest/readiness`, which the Registry build alone registers.
 
 | Route | Method | Contract |
 | --- | --- | --- |

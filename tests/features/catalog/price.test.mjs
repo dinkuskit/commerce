@@ -4,11 +4,7 @@ import { PluginRouteError } from "emdash";
 
 import {
   CATALOG_PRICES_COLLECTION,
-  CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-  CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE,
   CatalogError,
-  SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-  SET_CATALOG_ITEM_SALE_PRICE_ROUTE,
   clearCatalogItemRegularPrice,
   clearCatalogItemSalePrice,
   createPlugin,
@@ -300,61 +296,6 @@ test("price writes reject malformed Money and unknown catalog items", async () =
     (error) => error instanceof CatalogError && error.code === "CATALOG_ITEM_NOT_FOUND",
   );
   assert.equal(stores.prices.puts.length, 0);
-});
-
-test("price routes are private POST actions that preserve catalog identity", async () => {
-  const plugin = createPlugin();
-  const catalog = new MemoryCollection([catalogItem()]);
-  const prices = new MemoryCollection();
-  const context = {
-    storage: { catalogItems: catalog, catalogPrices: prices },
-  };
-
-  assert.equal(plugin.storage[CATALOG_PRICES_COLLECTION].uniqueIndexes.length, 0);
-  for (const [path, route] of [
-    [SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE, plugin.routes[SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE]],
-    [SET_CATALOG_ITEM_SALE_PRICE_ROUTE, plugin.routes[SET_CATALOG_ITEM_SALE_PRICE_ROUTE]],
-    [CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE, plugin.routes[CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE]],
-    [
-      CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE,
-      plugin.routes[CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE],
-    ],
-  ]) {
-    assert.equal(route.public, false);
-    assert.equal(route.permission, "content:edit_any");
-    await assert.rejects(
-      route.handler({
-        ...context,
-        input: { catalogItemId: "item-grill", amount: usd("1200") },
-        request: new Request(`https://example.test/${path}`, { method: "GET" }),
-      }),
-      (error) => error instanceof PluginRouteError && error.status === 405,
-    );
-  }
-
-  await plugin.routes[SET_CATALOG_ITEM_REGULAR_PRICE_ROUTE].handler({
-    ...context,
-    input: { catalogItemId: "item-grill", amount: usd("1200") },
-    request: new Request("https://example.test/set-regular-price", { method: "POST" }),
-  });
-  await plugin.routes[SET_CATALOG_ITEM_SALE_PRICE_ROUTE].handler({
-    ...context,
-    input: { catalogItemId: "item-grill", amount: usd("1000") },
-    request: new Request("https://example.test/set-sale-price", { method: "POST" }),
-  });
-  await plugin.routes[CLEAR_CATALOG_ITEM_SALE_PRICE_ROUTE].handler({
-    ...context,
-    input: { catalogItemId: "item-grill" },
-    request: new Request("https://example.test/clear-sale-price", { method: "POST" }),
-  });
-  await plugin.routes[CLEAR_CATALOG_ITEM_REGULAR_PRICE_ROUTE].handler({
-    ...context,
-    input: { catalogItemId: "item-grill" },
-    request: new Request("https://example.test/clear-regular-price", { method: "POST" }),
-  });
-
-  assert.equal(catalog.puts.length, 4);
-  assert.equal(prices.records.has("item-grill"), false);
 });
 
 function createTwoPartyBarrier() {

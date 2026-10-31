@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { addCatalogVariantMember, addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
-import { readPublicCatalog, readPublicCatalogItem, createSaveCatalogProductPricesRouteWithLocalStock } from '../../../dist/features/catalog/index.js';
+import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
 // Small isolated store retains the same unique indexes and revision fence as the catalog contract.
 class Catalog {
@@ -478,16 +478,4 @@ test('native choice tracking and price share one commit, preserve dormant status
   choice = (await listCatalogProducts(storage)).products[0].variantProduct.members[1];
   assert.equal(choice.manageStock, false);
   assert.equal(choice.regular, '29.00');
-});
-
-
-test('native route keeps trusted local choice tracking and default-host admission', async () => {
-  const storage = await pricedChoices();
-  const context = { storage: { catalogItems: storage.catalog, catalogPrices: storage.prices, catalogManualAvailability: storage.availability, managedSkuClaims: new Catalog() }, site: { url: 'http://127.0.0.1:4321' }, request: { method: 'POST', url: 'http://127.0.0.1:4321/save' }, input: { catalogItemId: 'large-item', regular: '26', sale: '', manageStock: true } };
-  const optedIn = createSaveCatalogProductPricesRouteWithLocalStock({ enableLocalStockManagement: true, siteUrl: 'http://127.0.0.1:4321' });
-  assert.equal((await optedIn.handler(context)).manageStock, true);
-  const defaultHost = createSaveCatalogProductPricesRouteWithLocalStock();
-  assert.equal((await defaultHost.handler(context)).manageStock, true, 'same-value serialized tracking keeps the authoritative state');
-  await assert.rejects(defaultHost.handler({ ...context, input: { ...context.input, manageStock: false } }), e => e.code === 'MANAGE_STOCK_UNAVAILABLE');
-  assert.equal((await resolveCatalogVariantMember(storage.catalog, 'large-item')).item.stockManagement.mode, 'managed');
 });

@@ -6,8 +6,6 @@ import {
   COMMERCE_IMAGE_PRESETS,
   COMMERCE_IMAGE_SIZES,
   CatalogError,
-  PLACEHOLDER_IMAGE_ROUTE,
-  SAVE_CATALOG_ITEM_MEDIA_ROUTE,
   commerceImageSrcset,
   commerceImageTransformUrl,
   createPlugin,
@@ -203,25 +201,13 @@ test("public catalog carries image and gallery ids, falls back to the placeholde
   assert.deepEqual([noAccess.image, noAccess.gallery], [null, []], "without media:read nothing is invented");
 });
 
-test("native plugin declares media/network access, the media collections, and the save-media and placeholder routes", async () => {
+test("native plugin declares media/network access and the media collections; pictures are saved through the catalog route", () => {
   const plugin = createPlugin();
   assert.deepEqual(plugin.capabilities, ["media:read", "network:request", "email:send", "admin.editor-draft:read"]);
   assert.deepEqual(plugin.allowedHosts, ["payments.dinkuskit.com"]);
   assert.ok(plugin.storage.catalogMedia && plugin.storage.storefrontPlaceholderImage);
-  const catalogItems = collection([["hat", item]]);
-  const catalogMedia = collection();
-  const storefrontPlaceholderImage = collection();
-  const ctx = (method, input) => ({ request: new Request("https://shop.example.test/x", { method }), input, storage: { catalogItems, catalogMedia, storefrontPlaceholderImage } });
-  const save = plugin.routes[SAVE_CATALOG_ITEM_MEDIA_ROUTE];
-  assert.equal(save.permission, "content:edit_any");
-  const saved = await save.handler(ctx("POST", { catalogItemId: "hat", image: HAT, gallery: [SIDE] }));
-  assert.deepEqual(saved.media.gallery, [{ mediaId: SIDE }]);
-  await assert.rejects(() => save.handler(ctx("GET", {})), /POST/);
-  await assert.rejects(() => save.handler(ctx("POST", { catalogItemId: "hat", image: "no id" })), (error) => error.code === "INVALID_INPUT" && error.status === 400);
-  const placeholder = plugin.routes[PLACEHOLDER_IMAGE_ROUTE];
-  assert.equal(placeholder.permission, "content:edit_any");
-  assert.equal((await placeholder.handler(ctx("GET", undefined))).image, null);
-  assert.deepEqual((await placeholder.handler(ctx("POST", { image: HAT }))).placeholder.image, { mediaId: HAT });
-  await assert.rejects(() => placeholder.handler(ctx("POST", { image: "no id" })), (error) => error.status === 400);
-  await assert.rejects(() => placeholder.handler(ctx("PUT", {})), /GET or POST/);
+  // The native-only save-media and placeholder routes are gone (commerce-one-build-registry-20261031).
+  assert.equal(plugin.routes["catalog-items/save-media"], undefined);
+  assert.equal(plugin.routes["settings/placeholder-image"], undefined);
+  assert.equal(plugin.routes.catalog.permission, "content:edit_any");
 });
