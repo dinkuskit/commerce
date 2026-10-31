@@ -17,6 +17,7 @@ function publicPricing(pricing: CheckoutPricingSnapshot) {
     couponDiscount: pricing.couponDiscount,
     netMerchandise: pricing.netMerchandise,
     shipping: { mode: pricing.shipping.mode, charge: pricing.shipping.charge },
+    tax: { currency: "USD" as const, minor: "0" },
     finalTotal: pricing.finalTotal,
   });
 }

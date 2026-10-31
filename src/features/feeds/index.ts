@@ -1,6 +1,10 @@
 export {
+  buildAgentCatalogFeed,
   buildGoogleMerchantFeed,
   buildMetaCatalogFeed,
+  buildStorefrontAgentsMd,
+  buildStorefrontLlmsFullTxt,
+  buildStorefrontLlmsTxt,
   pageProductFeedRows,
 } from "./builder.js";
 export {
@@ -12,6 +16,9 @@ export {
   PRODUCT_FEED_CHANNELS,
 } from "./types.js";
 export type {
+  AgentCatalogFeed,
+  AgentCatalogProductEntry,
+  ProductAiProjection,
   ProductFeedBuildOptions,
   ProductFeedChannel,
   ProductFeedContent,
@@ -21,4 +28,7 @@ export type {
   ProductFeedFacts,
   ProductFeedPage,
   SetProductFeedEligibilityInput,
+  StorefrontAgentFeedOptions,
+  StorefrontPolicySummary,
+  StorefrontShippingQuoteInput,
 } from "./types.js";

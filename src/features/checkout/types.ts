@@ -323,6 +323,7 @@ export interface GuestCheckoutPricingSummary {
   couponDiscount: Money;
   netMerchandise: Money;
   shipping: { mode: "free" | "flat"; charge: Money };
+  tax: Money;
   finalTotal: Money;
 }
 

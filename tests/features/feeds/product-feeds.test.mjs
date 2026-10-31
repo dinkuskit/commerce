@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildAgentCatalogFeed,
   buildGoogleMerchantFeed,
   buildMetaCatalogFeed,
+  buildStorefrontAgentsMd,
+  buildStorefrontLlmsFullTxt,
+  buildStorefrontLlmsTxt,
   loadProductFeedEligibility,
   pageProductFeedRows,
   setProductFeedEligibility,
@@ -161,4 +165,71 @@ test("feed paging is bounded and deterministic", () => {
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1 }), { rows: [rows[0]], nextCursor: 1 });
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1, cursor: 1 }), { rows: [rows[1]] });
   assert.equal(pageProductFeedRows(rows, { pageSize: 9999 }).rows.length, 2);
+});
+
+test("storefront agent feeds project aiProjection, policies, and virtual-card minor-unit sizing deterministically", () => {
+  const row = facts({
+    product: product({ id: "item-hat", sku: "HAT-1", fulfillment: "physical", brand: "Dinkus" }),
+    content: {
+      canonicalUrl: "https://shop.example.test/products/hat",
+      title: "A wool hat",
+      description: "Warm and useful",
+      imageUrls: ["https://cdn.example.test/hat.jpg"],
+      aiProjection: {
+        summary: "Merino wool watch cap for cold weather.",
+        highlights: ["100% merino wool", "Made in USA"],
+        specs: { Material: "Merino wool", Weight: "95g" },
+        shippingSummary: "Ships in 1-2 business days.",
+        returnPolicySummary: "30-day returns on unworn items.",
+      },
+    },
+  });
+  const unlisted = facts({
+    product: product({ id: "item-hidden", availability: { status: "out-of-stock", sellable: false, listable: false } }),
+  });
+  const options = {
+    storeName: "Example Store",
+    siteOrigin: "https://shop.example.test/",
+    description: "Curated outdoor essentials.",
+    products: [row, unlisted],
+    shipping: {
+      mode: "flat",
+      amount: { currency: "USD", minor: "700" },
+      freeOver: { currency: "USD", minor: "5000" },
+    },
+    policies: [
+      {
+        slug: "refund-policy",
+        title: "Refund & Return Policy",
+        url: "https://shop.example.test/policies/refund-policy",
+        body: "Unworn items may be returned within 30 days.",
+      },
+    ],
+  };
+
+  const agentFeed = buildAgentCatalogFeed(options);
+  assert.equal(agentFeed.schema, "dinkuskit.commerce.agent-catalog-feed/v1");
+  assert.equal(agentFeed.siteOrigin, "https://shop.example.test");
+  assert.equal(agentFeed.products.length, 1);
+  assert.equal(agentFeed.products[0].price.minor, "1999");
+  assert.equal(agentFeed.products[0].price.formatted, "$19.99 USD");
+  assert.deepEqual(agentFeed.products[0].aiProjection?.highlights, ["100% merino wool", "Made in USA"]);
+  assert.equal(agentFeed.virtualCardSizing.taxMinor, "0");
+
+  const llmsTxt = buildStorefrontLlmsTxt(options);
+  assert.match(llmsTxt, /# Example Store/);
+  assert.match(llmsTxt, /\[A wool hat\]\(https:\/\/shop\.example\.test\/products\/hat\): \$19\.99 USD \(1999 minor units, in-stock, SKU `HAT-1`, physical\) — Merino wool watch cap for cold weather\./);
+  assert.match(llmsTxt, /Tax: `0` minor units/);
+
+  const llmsFullTxt = buildStorefrontLlmsFullTxt(options);
+  assert.match(llmsFullTxt, /## Detailed Product Projections/);
+  assert.match(llmsFullTxt, /- Highlights: 100% merino wool; Made in USA/);
+  assert.match(llmsFullTxt, /- Specs: Material: Merino wool, Weight: 95g/);
+  assert.match(llmsFullTxt, /### Refund & Return Policy/);
+  assert.match(llmsFullTxt, /Unworn items may be returned within 30 days\./);
+
+  const agentsMd = buildStorefrontAgentsMd(options);
+  assert.match(agentsMd, /data-checkout-total-minor/);
+  assert.match(agentsMd, /tax: \{ currency: "USD", minor: "0" \}/);
+  assert.match(agentsMd, /\/_emdash\/api\/plugins\/dinkus-commerce\/checkout\/start/);
 });

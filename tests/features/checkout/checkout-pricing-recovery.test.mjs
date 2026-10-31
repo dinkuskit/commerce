@@ -159,6 +159,7 @@ test('canonical order stores exact pricing; guest projection excludes internal q
   assert.deepEqual(paid.order.pricing, a.payment.pricing);
   const guest = projectGuestCheckout(paid);
   assert.deepEqual(guest.order.pricing, guest.pricing);
+  assert.deepEqual(guest.pricing.tax, { currency: 'USD', minor: '0' });
   assert.equal(guest.pricing.finalTotal.minor, '200');
   const json = JSON.stringify(guest);
   for (const internal of ['configurationId', 'quoteId', 'ruleId', 'ruleVersion', 'couponId', 'overallPayableTotal']) assert.equal(json.includes(internal), false, internal);

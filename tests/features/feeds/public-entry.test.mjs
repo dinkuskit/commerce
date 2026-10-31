@@ -7,8 +7,12 @@ import * as feeds from "../../../dist/features/feeds/index.js";
 test("the package root and feature entry expose the same product-feeds contract", () => {
   for (const name of [
     "PRODUCT_FEED_CHANNELS",
+    "buildAgentCatalogFeed",
     "buildGoogleMerchantFeed",
     "buildMetaCatalogFeed",
+    "buildStorefrontAgentsMd",
+    "buildStorefrontLlmsFullTxt",
+    "buildStorefrontLlmsTxt",
     "loadProductFeedEligibility",
     "normalizeProductFeedChannels",
     "pageProductFeedRows",
