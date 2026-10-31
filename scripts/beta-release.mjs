@@ -44,6 +44,6 @@ export function betaManifest(manifest) {
   return {
     ...manifest,
     slug: `${manifest.slug}${BETA_SLUG_SUFFIX}`,
-    ...(typeof manifest.name === "string" ? { name: `${manifest.name} Beta` } : {}),
+    ...(typeof manifest.name === "string" ? { name: `${manifest.name} (Beta)` } : {}),
   };
 }

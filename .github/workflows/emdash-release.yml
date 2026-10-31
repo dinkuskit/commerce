@@ -152,6 +152,11 @@ jobs:
         with:
           subject-path: ${{ steps.prepare.outputs.bundle-file }}
 
+      - name: Prepare listing media beside the release manifest
+        id: media
+        if: steps.registry-check.outputs.already_published != 'true'
+        run: node scripts/registry-release-media.mjs
+
       # The release service currently ends successful publishes in
       # RELEASE_CONFLICT (emdash-cms/emdash#4159), so this step's
       # outcome is not the gate. The verify step below is: the job
@@ -161,12 +166,15 @@ jobs:
         id: publish
         if: steps.registry-check.outputs.already_published != 'true'
         continue-on-error: true
-        uses: emdash-cms/emdash/apps/release-action@06f911b54f387a1284c767187042d7e11f6044fc # emdash main at generation time; bump deliberately
+        # emdash-cms/emdash#4467 (open): the first release-action that uploads listing
+        # media (emdash-cms/emdash#4464). Move back to an emdash main commit once it merges.
+        uses: emdash-cms/emdash/apps/release-action@45b542c016d35c7a88a590dce8e600e2384c13a9
         with:
           service-url: https://releases.emdashcms.com
           publisher-did: ${{ steps.prepare.outputs.publisher-did }}
           bundle-file: ${{ steps.prepare.outputs.bundle-file }}
           provenance-file: ${{ steps.attest.outputs.bundle-path }}
+          plugin-directory: ${{ steps.media.outputs.plugin-directory }}
           # A release that asks for new access waits for the owner's approval at
           # releases.emdashcms.com; keep polling through it (up to the action's 30 minutes).
           wait-for-approval: "true"
@@ -190,13 +198,15 @@ jobs:
           if [ "$ALREADY_PUBLISHED" = "true" ]; then
             published="$RUNNER_TEMP/published-release.tgz"
             node .github/scripts/verify-registry-release.mjs \
-              "$PUBLISHER_DID" "$EMDASH_RELEASE_SELECTOR" --listed "$EXPECTED_BUILDER" "$published"
+              "$PUBLISHER_DID" "$EMDASH_RELEASE_SELECTOR" --listed "$EXPECTED_BUILDER" "$published" \
+              --media-manifest .emdash-release/emdash-plugin.jsonc
             gh attestation verify "$published" --repo "$GITHUB_REPOSITORY" \
               --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/emdash-release.yml" \
               --source-ref "$GITHUB_REF" --deny-self-hosted-runners
           else
             node .github/scripts/verify-registry-release.mjs \
-              "$PUBLISHER_DID" "$EMDASH_RELEASE_SELECTOR" "$BUNDLE_FILE"
+              "$PUBLISHER_DID" "$EMDASH_RELEASE_SELECTOR" "$BUNDLE_FILE" \
+              --media-manifest .emdash-release/emdash-plugin.jsonc
           fi
 
       - name: Note intent outcome

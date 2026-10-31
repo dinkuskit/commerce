@@ -24,6 +24,28 @@ publishes. It pushes a version tag, and **that tag's run** publishes:
 `emdash-release.yml` has no button of its own; only `release.yml`'s tag run
 calls it, so the release service connects both listings through `release.yml`.
 
+## Registry listing media
+
+The publish step uses the `emdash-cms/emdash/apps/release-action` pinned to
+[emdash-cms/emdash#4467](https://github.com/emdash-cms/emdash/pull/4467), the
+first one that uploads listing media; upstream `main` still drops it
+([emdash-cms/emdash#4464](https://github.com/emdash-cms/emdash/issues/4464)).
+`scripts/registry-release-media.mjs` checks that the prepared
+`.emdash-release/emdash-plugin.jsonc` names the gated tag's version and the
+expected listing slug, checks each icon and screenshot (PNG, JPEG or WebP, at
+most 1 MiB, at most eight screenshots), and copies them beside that manifest.
+The action then receives the bundle, the signed provenance and
+`plugin-directory: .emdash-release`, and uploads all of them to the release
+service, which stores the images as publisher PDS blobs. Nothing is written to
+the GitHub Release, so the publish jobs keep `contents: read`. Move the pin to
+a `main` commit once #4467 merges.
+
+The PDS verifier checks the package bytes and declared media counts,
+checksums, sizes and MIME types, including already-listed retry runs. This
+does not update package-profile copy: name, author URL, description, keywords
+and sections still require an approved `update-package`. Artwork belongs to a
+new release; this flow does not overwrite an existing version.
+
 ## When to cut a beta
 
 (`release-beta-cadence-078`.) Press Cut beta when a batch is worth giving a
@@ -31,8 +53,9 @@ store: a finished feature, or a fix a store owner would notice. There is no
 calendar. Ordinary PRs merge to `main` with their changesets and ship nothing
 on their own. Docs, tests and CI-only changes never get a beta, and Cut beta
 refuses when nothing version-bumping has merged since the last release. One
-release is on test at a time: Cut beta refuses while an earlier
-`release/X.Y.Z` has no `vX.Y.Z` tag yet, and so does Add fix to beta when it would start a patch branch.
+release is on test at a time. Pressing Cut beta while a `release/X.Y.Z` with no
+`vX.Y.Z` tag is on test re-cuts it (see Cut beta below), and Add fix to beta
+refuses to start a patch branch until that release is promoted.
 
 ## Every pull request adds a changeset
 
@@ -52,6 +75,16 @@ Press **Run workflow** on **Release** with `action: cut-beta`. Leave
   record on the publisher's PDS (every page, fail-closed on lookup errors).
 - It runs the unit tests and typecheck, creates `release/X.Y.Z` at `main`'s
   newest commit, and tags `vX.Y.Z-beta.N` there with the release GitHub App.
+- A beta already on test is re-cut, never deleted by hand
+  (`release-branch-recut-20261030`). If `main` still makes the same `X.Y.Z`,
+  the App moves `release/X.Y.Z` forward to `main`'s newest commit (copies made
+  by Add fix to beta are already on `main`) and tags the next beta there. If
+  `main` now makes a new version, the App deletes the older unpromoted branch
+  in the same atomic push (its beta tags stay) and cuts the new one. It stops
+  with nothing pushed when nothing new has merged since that beta, when the
+  branch holds a commit that is neither on `main` nor an Add fix copy, or while
+  a `ci: release` PR for that release is open, or merged with `vX.Y.Z` not
+  tagged yet. Released branches are never touched.
 - `main` keeps taking merges from here on. They wait for the next release.
 
 ## 2. The tag run publishes the beta and starts the journeys
@@ -83,8 +116,7 @@ workflow** with `action: add-fix`, `release_version: X.Y.Z`, and
 commit onto `release/X.Y.Z` (`git cherry-pick -x`, so the copy names its
 source) and tags the next `vX.Y.Z-beta.N`, whose run publishes it and starts
 the journeys again. It refuses a commit that isn't on `main`, one already on
-the branch, and one that doesn't copy cleanly; then nothing is pushed. A
-release-file fix is copied the same way, so the branch runs it too.
+the branch, and one that doesn't copy cleanly; then nothing is pushed.
 
 ## 4. Promote
 

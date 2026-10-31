@@ -112,7 +112,7 @@ test("registry workflow is npm-based, pinned, call-only, and builds the version 
 	assert.match(source, /attestations: write/);
 	// Release-gate invariant: Registry publishing is reachable only as a reusable workflow that
 	// release.yml's version-tag run calls, and the dispatch gate runs before any Registry I/O. It
-	// holds no GitHub write token. A hand-picked package selector never reaches the publish job.
+	// has write scope only for release assets. A hand-picked package selector never reaches the publish job.
 	assert.doesNotMatch(source, /^ {2}workflow_dispatch:/m);
 	assert.match(source, /^ {2}workflow_call:/m);
 	assert.doesNotMatch(source, /inputs\.package/);
@@ -129,6 +129,16 @@ test("registry workflow is npm-based, pinned, call-only, and builds the version 
 	assert.ok(at("run: npm run build") < at("node scripts/prepare-emdash-release.mjs"));
 	assert.match(source, /node scripts\/prepare-emdash-release\.mjs "\$\{EMDASH_RELEASE_SELECTOR\}"/);
 	assert.doesNotMatch(source, /release prepare[^\n]*--dir \./);
+	assert.doesNotMatch(source, /contents: write/);
+	assert.ok(at("actions/attest-build-provenance@") < at("node scripts/registry-release-media.mjs"));
+	assert.ok(at("node scripts/registry-release-media.mjs") < at("emdash-cms/emdash/apps/release-action@"));
+	const publish = source.split("      - name: Publish plugin to EmDash Registry\n")[1]?.split("      - name:")[0];
+	// emdash-cms/emdash#4467's action uploads the listing images named beside the prepared manifest.
+	assert.match(source, /apps\/release-action@45b542c016d35c7a88a590dce8e600e2384c13a9/);
+	assert.match(publish, /bundle-file: \$\{\{ steps\.prepare\.outputs\.bundle-file \}\}/);
+	assert.match(publish, /provenance-file: \$\{\{ steps\.attest\.outputs\.bundle-path \}\}/);
+	assert.match(publish, /plugin-directory: \$\{\{ steps\.media\.outputs\.plugin-directory \}\}/);
+	assert.doesNotMatch(publish, /release-file:/);
 });
 
 test("beta routing sends only prereleases to the beta package", () => {
@@ -153,7 +163,7 @@ test("beta routing sends only prereleases to the beta package", () => {
 	};
 	const beta = betaManifest(stable);
 	assert.equal(beta.slug, "dinkus-commerce-beta");
-	assert.equal(beta.name, "Commerce Beta");
+	assert.equal(beta.name, "Commerce (Beta)");
 	assert.equal(beta.version, stable.version);
 	assert.equal(beta.publisher, stable.publisher);
 	assert.deepEqual(beta.capabilities, stable.capabilities);
