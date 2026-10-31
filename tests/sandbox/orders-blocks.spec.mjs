@@ -181,7 +181,7 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     // The catalog API for agents and the CLI (catalog-api-20261027) in the installed runtime.
     const catalogEndpoint = `/_emdash/api/plugins/${pluginId}/catalog`;
     const catalog = async data => page.request.post(catalogEndpoint, { headers: { 'X-EmDash-Request': '1' }, data });
-    const made = await catalog({ op: 'create', commandId: 'proof-agent-mug', name: 'Agent Mug', sku: 'AGENT-MUG' });
+    const made = await catalog({ op: 'create', commandId: 'proof-agent-mug', name: 'Agent Mug', sku: 'AGENT-MUG', entryId: 'page-agent-mug' });
     expect(made.status()).toBe(200);
     const mugId = (await made.json()).data.catalogItemId;
     expect((await (await catalog({ op: 'prices', catalogItemId: mugId, regular: '12.00', sale: '' })).json()).data.saved).toBe(true);
