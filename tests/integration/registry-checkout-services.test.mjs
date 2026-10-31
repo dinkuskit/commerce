@@ -51,6 +51,13 @@ function assertOnlyBackgroundCheck(state) {
   assert.deepEqual(state.cronTasks().map(row => Object.values(row)), [BACKGROUND_CHECK]);
 }
 
+/** The seeded hat is digital; these make it physical and send the delivery address it then needs. */
+const physicalBasket = { ...basket, contact: { ...basket.contact, delivery: syntheticDelivery } };
+async function shipHat(state) {
+  const hat = await state.collections.catalog_items.get('hat');
+  await state.collections.catalog_items.put('hat', { ...hat, fulfillment: 'physical' });
+  await saveMerchantStoreSettings(state.settings, { expectedRevision: null, storeCountry: 'US' });
+}
 async function start(state, input = basket) {
   const prepared = await state.invoke(PREPARE);
   assert.equal(prepared.ok, true);
@@ -233,13 +240,28 @@ test('compiled zero-priced merchandise with positive shipping still uses Payment
     mode: 'flat', amount: { currency: 'USD', minor: '50' } }) });
   t.after(() => state.close());
   await state.collections.catalog_prices.put('hat', zeroPrice);
-  const { result } = await start(state);
+  await shipHat(state);
+  const { result } = await start(state, physicalBasket);
   assert.equal(result.ok, true);
   assert.equal(result.checkout.pricing.netMerchandise.minor, '0');
   assert.equal(result.checkout.total.minor, '50');
   assert.equal(state.requests.length, 1);
   assert.equal(state.requests[0].total.minor, '50');
   assert.equal((await state.cartRecords())[0].attempts[0].order, undefined);
+});
+
+// checkout-digital-only-no-shipping-20261031 (issue 235).
+test('compiled digital-only basket pays no flat shipping and Payments gets no shipping charge', async t => {
+  const state = await runtimeFixture({ config: configuration({ configurationId: 'ship-flat', revision: 2,
+    mode: 'flat', amount: { currency: 'USD', minor: '600' } }) });
+  t.after(() => state.close());
+  const { result } = await start(state);
+  assert.equal(result.ok, true);
+  assert.equal(result.checkout.total.minor, '250');
+  assert.equal(state.requests.length, 1);
+  assert.equal(state.requests[0].total.minor, '250');
+  assert.deepEqual(state.requests[0].pricing.shipping, { configurationId: 'ship-flat', revision: 2, mode: 'free',
+    charge: { currency: 'USD', minor: '0' } });
 });
 
 test('EmDash 1.4 original storage shares admin prices, storefront helpers and canonical checkout', async t => {
@@ -599,7 +621,8 @@ for (const mode of ['free', 'flat']) test(`compiled default workerd ${mode} ship
     ...(mode === 'flat' ? { amount: { currency: 'USD', minor: '50' } } : {}) };
   const state = await runtimeFixture({ config: configuration(shipping) });
   t.after(() => state.close());
-  const { token, result } = await start(state);
+  await shipHat(state);
+  const { token, result } = await start(state, physicalBasket);
   assert.equal(result.ok, true);
   assert.equal(state.requests.length, 1);
   const original = structuredClone(state.requests[0]);

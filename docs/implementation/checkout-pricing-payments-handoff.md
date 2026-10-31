@@ -16,7 +16,7 @@ catalog `lines` (identity, name, quantity, unit price), canonical `total`, and:
 | `merchandiseSubtotal` | Sum of original unit price × quantity |
 | `couponDiscount` | Existing evaluator's discount, capped and allocated by its settled rules |
 | `netMerchandise` | Subtotal minus discount |
-| `shipping` | Frozen configuration ID, revision, free/flat mode and USD `charge` |
+| `shipping` | Frozen configuration ID, revision, free/flat mode and USD `charge`; a checkout with no physical item records `free` and a zero charge |
 | `finalTotal` | Net merchandise plus shipping, equal to request `total` |
 | `lines` | Original identity/quantity/unit price, `lineSubtotal`, allocated `discount`, exact `netAmount` |
 | optional `coupon` | Normalized selection and original evaluator quote snapshot |
