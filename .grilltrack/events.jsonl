@@ -668,3 +668,7 @@
 {"action": "decision_locked", "at": "2026-10-31T14:46:19+00:00", "data": {"decision_id": "commerce-one-build-registry-20261031"}, "event_id": "b33de2e1-85bb-4023-90fc-fe75dbbfc437"}
 {"action": "decision_implemented", "at": "2026-10-31T15:23:28+00:00", "data": {"decision_id": "commerce-one-build-registry-20261031"}, "event_id": "f4d7846c-d8b0-4d39-9b64-fda5270bdc71"}
 {"action": "decision_verified", "at": "2026-10-31T15:23:28+00:00", "data": {"decision_id": "commerce-one-build-registry-20261031"}, "event_id": "de7ce444-1619-4ad8-93ff-3cd057cb25f5"}
+{"action": "decision_proposed", "at": "2026-10-31T19:07:44+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "00f8ac53-0782-4bf5-b803-4516665d80fa"}
+{"action": "decision_locked", "at": "2026-10-31T19:07:44+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "418df0e2-3ca7-4300-96bc-296b88bdf85a"}
+{"action": "decision_implemented", "at": "2026-10-31T19:18:11+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "ec91dcf1-b5b7-4a25-80cd-3eb805041120"}
+{"action": "decision_verified", "at": "2026-10-31T19:18:11+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "f3434269-40af-4c71-989c-fbf3bedc3d12"}

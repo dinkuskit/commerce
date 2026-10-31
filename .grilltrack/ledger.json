@@ -15713,6 +15713,75 @@
       "superseded_by": null,
       "updated_at": "2026-10-31T15:23:28+00:00",
       "verification_ref": "pr:dinkuskit/commerce#243;file:.grilltrack/proof/commerce-one-build-registry-20261031/PROOF.md"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+      "context_ref": "decision:commerce-one-build-registry-20261031",
+      "created_at": "2026-10-31T19:07:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-31T19:07:44+00:00",
+          "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T19:18:11+00:00",
+          "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T19:18:11+00:00",
+          "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+          "from": "implemented",
+          "implementation_ref": "pr:dinkuskit/commerce#245;file:.grilltrack/proof/registry-headroom-20261031/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "registry-headroom-20261031",
+      "implementation_ref": "pr:dinkuskit/commerce#245;file:.grilltrack/proof/registry-headroom-20261031/PROOF.md",
+      "question": "How does the Registry backend get room back for merchant features such as store policy editing, when it sits 826 bytes under the 131,072-byte per-file cap?",
+      "rationale": "Ronald, 31 Oct 2026: 'agreed lets do this' (the shaves land first, as their own PR).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T19:18:11+00:00",
+      "verification_ref": "pr:dinkuskit/commerce#245;file:.grilltrack/proof/registry-headroom-20261031/PROOF.md"
     }
   ],
   "last_activation": {
@@ -15749,5 +15818,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T15:23:28+00:00"
+  "updated_at": "2026-10-31T19:18:11+00:00"
 }
