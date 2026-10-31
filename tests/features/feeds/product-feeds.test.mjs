@@ -187,11 +187,53 @@ test("storefront agent feeds project aiProjection, policies, and virtual-card mi
   const unlisted = facts({
     product: product({ id: "item-hidden", availability: { status: "out-of-stock", sellable: false, listable: false } }),
   });
+  const optedOut = facts({
+    product: product({ id: "item-opted-out", sku: "OPT-OUT" }),
+    eligibility: [],
+  });
+  const variantFamily = facts({
+    product: {
+      id: "family-hoodie",
+      name: "Hoodie",
+      sku: "HOODIE",
+      availability: { status: "in-stock", sellable: false, listable: true },
+      image: null,
+      gallery: [],
+      variants: {
+        schema: "dinkuskit.commerce.product-variants/v1",
+        productId: "family-hoodie",
+        options: [{ optionId: "size", label: "Size", values: [{ valueId: "s", label: "Small" }] }],
+        members: [
+          {
+            catalogItemId: "member-hoodie-s",
+            selections: [{ optionId: "size", optionLabel: "Size", valueId: "s", valueLabel: "Small" }],
+            price: { currency: "USD", minor: "4500" },
+            availability: { status: "in-stock", sellable: true, listable: true },
+            fulfillment: "digital",
+          },
+        ],
+      },
+    },
+    content: {
+      canonicalUrl: "https://shop.example.test/products/hoodie",
+      title: "Digital Pattern Hoodie",
+    },
+    eligibility: ["google-merchant"],
+  });
+  const unfulfilledSimple = facts({
+    product: product({ id: "item-no-fulfillment", sku: "PLAIN-1" }),
+    content: {
+      canonicalUrl: "https://shop.example.test/products/plain",
+      title: "Plain Item",
+    },
+    eligibility: ["meta-catalog"],
+  });
   const options = {
     storeName: "Example Store",
     siteOrigin: "https://shop.example.test/",
     description: "Curated outdoor essentials.",
-    products: [row, unlisted],
+    pluginId: "r_gshdrqaldna3r7sn",
+    products: [row, unlisted, optedOut, variantFamily, unfulfilledSimple],
     shipping: {
       mode: "flat",
       amount: { currency: "USD", minor: "700" },
@@ -210,26 +252,45 @@ test("storefront agent feeds project aiProjection, policies, and virtual-card mi
   const agentFeed = buildAgentCatalogFeed(options);
   assert.equal(agentFeed.schema, "dinkuskit.commerce.agent-catalog-feed/v1");
   assert.equal(agentFeed.siteOrigin, "https://shop.example.test");
-  assert.equal(agentFeed.products.length, 1);
+  assert.deepEqual(
+    agentFeed.products.map((item) => item.id),
+    ["item-hat", "family-hoodie", "item-no-fulfillment"],
+  );
   assert.equal(agentFeed.products[0].price.minor, "1999");
   assert.equal(agentFeed.products[0].price.formatted, "$19.99 USD");
+  assert.equal(agentFeed.products[0].fulfillment, "physical");
   assert.deepEqual(agentFeed.products[0].aiProjection?.highlights, ["100% merino wool", "Made in USA"]);
+  assert.equal(agentFeed.products[1].price, undefined);
+  assert.equal(agentFeed.products[1].fulfillment, "digital");
+  assert.equal(agentFeed.products[1].variants?.members[0]?.catalogItemId, "member-hoodie-s");
+  assert.equal(agentFeed.products[1].variants?.members[0]?.price.minor, "4500");
+  assert.equal(agentFeed.products[2].fulfillment, undefined);
   assert.equal(agentFeed.virtualCardSizing.taxMinor, "0");
 
   const llmsTxt = buildStorefrontLlmsTxt(options);
   assert.match(llmsTxt, /# Example Store/);
-  assert.match(llmsTxt, /\[A wool hat\]\(https:\/\/shop\.example\.test\/products\/hat\): \$19\.99 USD \(1999 minor units, in-stock, SKU `HAT-1`, physical\) — Merino wool watch cap for cold weather\./);
+  assert.match(llmsTxt, /\[A wool hat\]\(https:\/\/shop\.example\.test\/products\/hat\): \$19\.99 USD \(1999 minor units\), in-stock, SKU `HAT-1`, physical — Merino wool watch cap for cold weather\./);
+  assert.match(llmsTxt, /\[Digital Pattern Hoodie\]\(https:\/\/shop\.example\.test\/products\/hoodie\): from \$45\.00 USD \(1 variants\), in-stock, SKU `HOODIE`, digital/);
+  assert.equal(llmsTxt.includes("OPT-OUT"), false);
   assert.match(llmsTxt, /Tax: `0` minor units/);
+  assert.match(llmsTxt, />= 5000 minor units, inclusive, after coupon discounts/);
 
   const llmsFullTxt = buildStorefrontLlmsFullTxt(options);
   assert.match(llmsFullTxt, /## Detailed Product Projections/);
   assert.match(llmsFullTxt, /- Highlights: 100% merino wool; Made in USA/);
   assert.match(llmsFullTxt, /- Specs: Material: Merino wool, Weight: 95g/);
+  assert.match(llmsFullTxt, /catalogItemId: "member-hoodie-s"/);
   assert.match(llmsFullTxt, /### Refund & Return Policy/);
   assert.match(llmsFullTxt, /Unworn items may be returned within 30 days\./);
 
   const agentsMd = buildStorefrontAgentsMd(options);
   assert.match(agentsMd, /data-checkout-total-minor/);
   assert.match(agentsMd, /tax: \{ currency: "USD", minor: "0" \}/);
-  assert.match(agentsMd, /\/_emdash\/api\/plugins\/dinkus-commerce\/checkout\/start/);
+  assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/catalog\/public/);
+  assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/prepare/);
+  assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/start/);
+  assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/status/);
+  assert.match(agentsMd, /data\.capability\.capability/);
+  assert.match(agentsMd, /data\.checkout\.pricing\.finalTotal\.minor/);
+  assert.match(agentsMd, /`billing`: required on every checkout/);
 });

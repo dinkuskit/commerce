@@ -64,6 +64,7 @@ export interface StorefrontAgentFeedOptions {
   readonly storeName: string;
   readonly siteOrigin: string;
   readonly description?: string;
+  readonly pluginId?: string;
   readonly products: readonly ProductFeedFacts[];
   readonly policies?: readonly StorefrontPolicySummary[];
   readonly shipping?: StorefrontShippingQuoteInput | null;
@@ -76,7 +77,7 @@ export interface AgentCatalogProductEntry {
   readonly canonicalUrl: string;
   readonly description?: string;
   readonly imageUrls: readonly string[];
-  readonly price: {
+  readonly price?: {
     readonly currency: "USD";
     readonly minor: string;
     readonly formatted: string;
@@ -85,7 +86,25 @@ export interface AgentCatalogProductEntry {
     readonly status: PublicCatalogProduct["availability"]["status"];
     readonly sellable: boolean;
   };
-  readonly fulfillment: "physical" | "digital";
+  readonly fulfillment?: "physical" | "digital";
+  readonly variants?: {
+    readonly productId: string;
+    readonly options: NonNullable<PublicCatalogProduct["variants"]>["options"];
+    readonly members: readonly {
+      readonly catalogItemId: string;
+      readonly selections: NonNullable<PublicCatalogProduct["variants"]>["members"][number]["selections"];
+      readonly price: {
+        readonly currency: "USD";
+        readonly minor: string;
+        readonly formatted: string;
+      };
+      readonly availability: {
+        readonly status: PublicCatalogProduct["availability"]["status"];
+        readonly sellable: boolean;
+      };
+      readonly fulfillment: "physical" | "digital";
+    }[];
+  };
   readonly brand?: string;
   readonly gtin?: string;
   readonly mpn?: string;
