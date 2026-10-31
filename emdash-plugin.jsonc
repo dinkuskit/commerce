@@ -123,14 +123,6 @@
       "indexes": [],
       "uniqueIndexes": []
     },
-    "store_shipping_policy": {
-      "indexes": [],
-      "uniqueIndexes": []
-    },
-    "store_return_policy": {
-      "indexes": [],
-      "uniqueIndexes": []
-    },
     "customers": {
       "indexes": [],
       "uniqueIndexes": []

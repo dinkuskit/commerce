@@ -1,17 +1,7 @@
 import { isRecord } from "../../shared/record.js";
 import type { ProductJsonLd } from "./types.js";
 
-const SCHEMA_TYPES = new Set([
-  "Product",
-  "Offer",
-  "Brand",
-  "OfferShippingDetails",
-  "MonetaryAmount",
-  "DefinedRegion",
-  "ShippingDeliveryTime",
-  "QuantitativeValue",
-  "MerchantReturnPolicy",
-]);
+const SCHEMA_TYPES = new Set(["Product", "Offer", "Brand"]);
 
 function assertType(node: unknown, expected: string, path: string): asserts node is Record<string, unknown> {
   if (!isRecord(node)) {
@@ -64,30 +54,9 @@ export function assertProductJsonLdShape(value: unknown): asserts value is Produ
     if (typeof offer.availability !== "string" || !offer.availability.startsWith("https://schema.org/")) {
       throw new Error("Offer.availability must be a schema.org URL");
     }
-    if (offer.shippingDetails !== undefined) {
-      assertType(offer.shippingDetails, "OfferShippingDetails", "Offer.shippingDetails");
-      const shipping = offer.shippingDetails;
-      if (shipping.shippingRate !== undefined) {
-        assertType(shipping.shippingRate, "MonetaryAmount", "shippingRate");
-      }
-      if (shipping.shippingDestination !== undefined) {
-        const destinations = Array.isArray(shipping.shippingDestination)
-          ? shipping.shippingDestination
-          : [shipping.shippingDestination];
-        for (const [index, destination] of destinations.entries()) {
-          assertType(destination, "DefinedRegion", `shippingDestination[${index}]`);
-        }
-      }
-      if (shipping.deliveryTime !== undefined) {
-        assertType(shipping.deliveryTime, "ShippingDeliveryTime", "deliveryTime");
-      }
-    }
-    if (offer.hasMerchantReturnPolicy !== undefined) {
-      assertType(
-        offer.hasMerchantReturnPolicy,
-        "MerchantReturnPolicy",
-        "Offer.hasMerchantReturnPolicy",
-      );
+    // A store's policies are its EmDash pages: the Offer carries no shipping or return terms.
+    if (offer.shippingDetails !== undefined || offer.hasMerchantReturnPolicy !== undefined) {
+      throw new Error("Offer must not carry shipping or return terms");
     }
   }
 }

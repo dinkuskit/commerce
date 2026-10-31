@@ -14,7 +14,6 @@ const { createPlugin } = await import("../dist/index.js");
 const SANDBOX_PUBLIC = [
   "catalog/public GET",
   "catalog/public/item GET",
-  "policies/public GET",
   "store-proof GET",
   "checkout/guest/prepare POST",
   "checkout/guest/start POST",
@@ -27,7 +26,7 @@ const SANDBOX_PUBLIC = [
   "account/profile GET,POST",
 ];
 // Connect is a Registry install's only: the native entry has no store-proof route.
-const NATIVE_PUBLIC = SANDBOX_PUBLIC.filter((route) => !route.startsWith("policies/") && !route.includes("/readiness") && !route.startsWith("store-proof"));
+const NATIVE_PUBLIC = SANDBOX_PUBLIC.filter((route) => !route.includes("/readiness") && !route.startsWith("store-proof"));
 
 function publicSet(routes) {
   return Object.entries(routes)

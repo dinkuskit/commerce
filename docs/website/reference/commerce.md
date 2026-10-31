@@ -107,13 +107,12 @@ Inventory is planned after v1, and the Registry build has no Manage stock switch
 
 ## Public storefront routes
 
-Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn` and the beta package's is `r_fjzjvld3ssb4j63o`. Commerce runs one build, the Registry build; `dinkus-commerce` identifies the native development entry only the Template Store's playground still registers. It serves these routes except `policies/public` and `checkout/guest/readiness`, which the Registry build alone registers.
+Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn` and the beta package's is `r_fjzjvld3ssb4j63o`. Commerce runs one build, the Registry build; `dinkus-commerce` identifies the native development entry only the Template Store's playground still registers. It serves these routes except `checkout/guest/readiness`, which the Registry build alone registers.
 
 | Route | Method | Contract |
 | --- | --- | --- |
 | `catalog/public` | GET | A page of public products and an optional opaque cursor. Each product carries `page`, the entry id of the page that sells it, once that page is published. |
 | `catalog/public/item?itemId=…` or `?pageId=…` | GET | One projected product or `null`; no canonical page URL. With `pageId`, the product that published page sells. |
-| `policies/public` | GET | The store's published policies. |
 | `checkout/guest/readiness` | GET | The installed checkout readiness response. |
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
 | `checkout/guest/start` | POST | Cart lines and required contact details, authorized by that capability. |
@@ -123,6 +122,8 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 | `account/sign-out` | POST | Ends the shopper session. |
 | `account/orders` | GET | The signed-in shopper's orders. |
 | `account/profile` | GET, POST | The signed-in shopper's saved delivery address and phone. |
+
+A store's shipping and returns policies are its own EmDash pages; Commerce keeps no policy records and has no policy route.
 
 The catalog accepts only its documented query keys. Continue pagination until no cursor remains, including pages whose filtered product list is empty. Media entries carry EmDash media IDs; the host resolves public image URLs.
 

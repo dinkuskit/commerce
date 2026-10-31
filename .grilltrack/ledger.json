@@ -8584,10 +8584,38 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T21:47:49+00:00",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Sandbox backend / plugin.ts graph; (B) Host-side package export @dinkuskit/commerce/features/structured-data with pure buildProductJsonLd({ product, page, policies }) returning a schema.org Product graph (no network, no storage). Tradeoffs: (A) colocates with public catalog but main is already ~130243/131072 backend bytes after #67 \u2014 builder logic would risk the Registry cap; (B) matches media-projection host helpers, keeps Template Store as the page assembler, and leaves only thin policy public-read + identifier projection in the sandbox. Recommendation: B.",
+          "from": "needs_reverification",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T21:47:49+00:00",
+          "choice": "PROVISIONAL (pending Ryan lock). Options: (A) Sandbox backend / plugin.ts graph; (B) Host-side package export @dinkuskit/commerce/features/structured-data with pure buildProductJsonLd({ product, page, policies }) returning a schema.org Product graph (no network, no storage). Tradeoffs: (A) colocates with public catalog but main is already ~130243/131072 backend bytes after #67 \u2014 builder logic would risk the Registry cap; (B) matches media-projection host helpers, keeps Template Store as the page assembler, and leaves only thin policy public-read + identifier projection in the sandbox. Recommendation: B.",
+          "from": "implemented",
+          "implementation_ref": "branch:dinkuskit/commerce@claude/adoring-clarke-m3xl6u;file:src/features/structured-data/builder.ts",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "jsonld-builder-export-059",
-      "implementation_ref": null,
+      "implementation_ref": "branch:dinkuskit/commerce@claude/adoring-clarke-m3xl6u;file:src/features/structured-data/builder.ts",
       "question": "Where does the Product/Offer JSON-LD builder live and what is its export shape?",
       "rationale": "Maintainer partial lock on PR #73 comment 6067853218: host-side export @dinkuskit/commerce/features/structured-data as recommended; keep it out of the sandbox backend.",
       "repair_required": false,
@@ -8596,10 +8624,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-31T21:03:59+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-31T21:47:49+00:00",
+      "verification_ref": "file:.grilltrack/proof/policy-pages-are-content-20261031/PROOF.md"
     },
     {
       "baseline_ref": null,
@@ -16043,10 +16071,38 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T21:47:41+00:00",
+          "choice": "A store's shipping and returns policies are its EmDash pages, written and published by the merchant, and they always show their own text. Commerce keeps no policy records: the dedicated store_shipping_policy and store_return_policy collections and the public policies/public read are retired (nothing has written them since #243, and the shipping record repeats the charge and free-over held in the DinkusKit checkout settings and the destinations held by merchant-selling-countries-002). Commerce later removes policies/public and the two collections, measured on backend.js. Structured shipping and return terms are deferred: when they come, shipping markup derives from the checkout settings and the shipping destinations, not from a separate record. When UCP checkout is built, its required policy links (shipping_policy, refund_policy and the rest) carry the store's EmDash policy page URLs. The Product JSON-LD builder (jsonld-builder-export-059) stays, without policy input. The storefront's own markup (a link-only store-wide return policy on the published returns page) is the Template Store's.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T21:47:41+00:00",
+          "choice": "A store's shipping and returns policies are its EmDash pages, written and published by the merchant, and they always show their own text. Commerce keeps no policy records: the dedicated store_shipping_policy and store_return_policy collections and the public policies/public read are retired (nothing has written them since #243, and the shipping record repeats the charge and free-over held in the DinkusKit checkout settings and the destinations held by merchant-selling-countries-002). Commerce later removes policies/public and the two collections, measured on backend.js. Structured shipping and return terms are deferred: when they come, shipping markup derives from the checkout settings and the shipping destinations, not from a separate record. When UCP checkout is built, its required policy links (shipping_policy, refund_policy and the rest) carry the store's EmDash policy page URLs. The Product JSON-LD builder (jsonld-builder-export-059) stays, without policy input. The storefront's own markup (a link-only store-wide return policy on the published returns page) is the Template Store's.",
+          "from": "implemented",
+          "implementation_ref": "branch:dinkuskit/commerce@claude/adoring-clarke-m3xl6u",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "policy-pages-are-content-20261031",
-      "implementation_ref": null,
+      "implementation_ref": "branch:dinkuskit/commerce@claude/adoring-clarke-m3xl6u",
       "question": "Who owns a store's shipping and returns policies, and what does Commerce keep for them?",
       "rationale": "Ronald, 31 Oct 2026, on the recommendation: \"What I recommend \u2014 agreed\"; earlier the same day: \"The page would always show its EmDash text \u2014 I think this was my intended design.\" Public evidence checked 31 Oct 2026: Shopify, WooCommerce and BigCommerce keep store policies as merchant-written pages; Google accepts a store-wide MerchantReturnPolicy given only by merchantReturnLink, and Search Console and Merchant Center settings take precedence over markup; UCP's 2026-08-25 checkout requires policy links by type.",
       "repair_required": false,
@@ -16055,10 +16111,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-10-31T21:03:59+00:00",
-      "verification_ref": null
+      "updated_at": "2026-10-31T21:47:41+00:00",
+      "verification_ref": "file:.grilltrack/proof/policy-pages-are-content-20261031/PROOF.md"
     }
   ],
   "last_activation": {
@@ -16095,5 +16151,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T21:03:59+00:00"
+  "updated_at": "2026-10-31T21:47:49+00:00"
 }
