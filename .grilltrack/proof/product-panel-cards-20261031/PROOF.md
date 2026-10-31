@@ -39,6 +39,14 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   segment boundary; value ids take the first free numbered suffix; the
   read-failure fallback keeps the feed toggles; `products create` exits 1
   with `price_refused` when Commerce refuses the price.
+- After the fourth review: a variant's card carries the SKU it showed beside
+  the product's revision, and `changeCatalogItemSku` refuses a write when the
+  stored SKU is not that one, so a SKU committed on a variant's own record
+  before a refused price is safe from other open cards; the fence is checked
+  before the typed SKU is normalized, so a stale form is refused as stale
+  whatever it typed, and only a price refused after its fence held keeps the
+  fresh action id; a derived variant SKU that would equal the product's own
+  is cut one character shorter.
 
 ## Verification on this head
 
@@ -51,7 +59,7 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   kernel function with price, stock, fulfillment, weight, retries and
   refusals; the panel's first Save; Add options from comma-separated values;
   per-variant and product SKU changes and their refusals).
-- Registry bundle: `registry_bundle=pass backend_bytes=130984 headroom_bytes=88`
+- Registry bundle: `registry_bundle=pass backend_bytes=131030 headroom_bytes=42`
   (main: 130246, headroom 826).
 - On the head with the third review's fixes: typecheck and audits clean; the
   unit suite 874 passed, 1 failed (the pre-existing `packaged-consumers`
@@ -60,6 +68,13 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   and colliding derived ids, feed toggles through a read outage, the CLI's
   `price_refused`); all three Playwright lanes against that build, 11 passed (sandbox 6 in 2.9m,
   native 3, native-variant 2).
+- On the head with the fourth review's fixes: typecheck and audits clean; the
+  unit suite 876 passed, 1 failed (the pre-existing `packaged-consumers`
+  teardown SIGKILL); three regression tests added (a variant's SKU
+  committed before a refused price against other open cards, an invalid SKU
+  on a stale form, a derived SKU that would equal the parent); all three
+  Playwright lanes against that build, 11 passed (sandbox 6 in 2.8m, native 3,
+  native-variant 2).
 - Installed Registry build in real workerd (`COMMERCE_BROWSER_PROOF_PROFILE=sandbox`
   Playwright project, Chromium build 1243 aliased for the pinned 1228):
   6 passed (2.8m) on `8ab920f`, after four spec-only fixes for the new

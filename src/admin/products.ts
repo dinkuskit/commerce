@@ -103,7 +103,7 @@ function variantsCard(id: string, selected: CatalogProductListItem, focus?: stri
     // The variant just saved or refused stays open; otherwise the first one is.
     ...variant.members.map((m, i) => card(label(m) + (m.regular ? " · $" + m.regular : ""), [
       manageStockNotice(m.manageStock),
-      productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" }, "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision])),
+      productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" }, "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision, m.sku])),
     ], focus === m.catalogItemId || !i && !variant.members.some(x => x.catalogItemId === focus))),
     card("Edit options", [{ type: "form", block_id: "d" + crypto.randomUUID(), fields: [
       ...variant.options.flatMap((o, i) => [
@@ -194,8 +194,11 @@ function valueLabels(raw: unknown): string[] {
   if (labels.length < 2) throw new CatalogError("INVALID_INPUT", "Give two or more values.");
   return labels;
 }
-/** A new variant's SKU: the product's SKU, cut on a segment boundary so the value's id fits after it; the owner can change it after. */
-const variantSku = (base: string, valueId: string) => (base.slice(0, 63 - valueId.length).replace(/-+$/, "") + "-" + valueId).toUpperCase();
+/** A new variant's SKU: the product's SKU, cut on a segment boundary so the value's id fits after it and never its own SKU; the owner can change it after. */
+const variantSku = (base: string, valueId: string, cut = 63): string => {
+  const sku = (base.slice(0, cut - valueId.length).replace(/-+$/, "") + "-" + valueId).toUpperCase();
+  return sku === base ? variantSku(base, valueId, 62) : sku;
+};
 // A stale page must never act on a different image than its label named.
 function galleryIndex(value: unknown, mediaId: string, gallery: string[]): number {
   if (!Number.isInteger(value) || (value as number) < 0 || (value as number) >= gallery.length) throw new Error("Invalid image");
@@ -320,10 +323,11 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
     if (input.type === "form_submit") {
       values = object(input.values);
       const store = storage(ctx);
-      // A typed SKU that differs is changed first, fenced on the revision the form read: a stale form is refused whole, and
-      // a SKU another product has is refused before anything is saved, so the refilled form's revision still holds. A changed
-      // SKU moves the fence on, so the price save that follows is bound to the record this request just wrote.
-      const fenceOf = (revision: unknown) => typeof revision === "string" ? { revision } : undefined;
+      // A typed SKU that differs from the one the form showed is changed first, fenced on what the form read (the product's
+      // revision and, for a variant, its SKU): a stale form is refused whole, and a SKU another product has is refused
+      // before anything is saved, so the refilled form's revision still holds. A changed SKU moves the fence on, so the
+      // price save that follows is bound to the record this request just wrote.
+      const fenceOf = (revision: unknown, sku?: string) => typeof revision === "string" ? { revision, sku } : undefined;
       const resku = (id: string, current: string, fence?: { revision: string }) =>
         values.sku !== undefined && text(values.sku).trim().toUpperCase() !== current && changeCatalogItemSku(store.catalog, id, values.sku, unique(ctx), fence);
       if (action.startsWith("save:")) {
@@ -395,14 +399,13 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
             sku: text(values.sku), fulfillment: values.fulfillment as never, selections,
           }, unique(ctx));
         } else if (operation === "price") {
-          const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]);
-          if (!member) throw new Error("Variant unavailable");
-          const fence = fenceOf(args[1]), regular = text(values.regular), sale = text(values.sale);
+          const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]) ?? productNotFound();
+          const shown = args[2] ?? member.sku, fence = fenceOf(args[1], shown), regular = text(values.regular), sale = text(values.sale);
           const stock = !member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {};
-          await resku(args[0], member.sku, fence);
+          await resku(args[0], shown, fence);
           const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: fence?.revision ?? args[1], regular, sale, ...stock });
-          // A refused price is this request's own doing: the typing comes back on a form that reads the product as it now is.
-          if (!saved.saved) throw new CatalogError("INVALID_INPUT", saved.message ?? NO_PRICE);
+          // A price refused after the fence held is this request's own doing: the typing comes back on a form that reads the product as it now is.
+          if (!saved.saved) throw Object.assign(new CatalogError("INVALID_INPUT", saved.message ?? NO_PRICE), { fresh: true });
           committed = { id, message: saved.regular ? "Changes saved" : NO_PRICE };
           if (!saved.regular) return await product(ctx, id, undefined, NO_PRICE, args[0]);
         } else if (operation === "details") await updateCatalogVariantLabels(store, {
@@ -449,10 +452,10 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         for (const block of forms(back.blocks)) {
           const [o, , m] = named(block.submit.action_id);
           if (o !== op || (op === "price" && m !== member)) continue;
-          // A price form whose values were refused keeps the fresh id, which reads the product after this request's own
+          // A price refused after its fence held keeps the fresh id, which reads the product after this request's own
           // writes, such as its SKU; every other form keeps the sent one, so a stale form stays refused until the owner
           // reloads and a retry resumes the same command.
-          if (!(error instanceof CatalogError && error.code === "INVALID_INPUT" && /^(save|price)$/.test(op))) block.submit.action_id = sent;
+          if (!(error as { fresh?: true } | null)?.fresh) block.submit.action_id = sent;
           for (const field of block.fields) if (Object.hasOwn(values, field.action_id)) Object.assign(field, { initial_value: values[field.action_id] });
         }
         return refused(failure, [alert(failure), ...back.blocks]);

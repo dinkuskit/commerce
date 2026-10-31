@@ -7,8 +7,11 @@ import type { CatalogItemRecord, CatalogStorage, CatalogStorageRecord } from "./
 
 type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet">;
 
-/** The product revision a form read (`catalog:N`, the root's), moved on by a write to the root so a save that follows binds to it. */
-export type ProductFence = { revision: string };
+/**
+ * What a form read: the product's revision (`catalog:N`, the root's) and, for a variant's own record, its SKU, the one
+ * fact that record changes. A write to the root moves the revision on, so a save that follows binds to it.
+ */
+export type ProductFence = { revision: string; sku?: string };
 const moved = () => catalogFail("COMMAND_CONFLICT", PRODUCT_MOVED);
 
 /**
@@ -59,7 +62,7 @@ export const named = (item: CatalogItemRecord, name: string): CatalogItemRecord 
  * check to put back on sale; the native Products screen, which has no page, restores it straight onto the shop.
  */
 export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date(), toDraft = false): Promise<boolean> {
-  if (typeof input.archived !== "boolean") catalogFail("INVALID_INPUT", "archived must be true or false");
+  if (typeof input.archived !== "boolean") catalogFail("INVALID_INPUT", "archived must be boolean");
   const archivedAt = now().toISOString();
   return editProduct(catalog, input.catalogItemId, (item) => {
     if (Boolean(item.archivedAt) === input.archived) return null;
@@ -70,7 +73,7 @@ export async function setCatalogProductArchived(catalog: Catalog, input: { catal
 
 /** Puts a product on sale or takes it back to Draft. Only the store's publish check calls this; Commerce never reads the page. */
 export async function setCatalogProductOnSale(catalog: Catalog, input: { catalogItemId?: unknown; onSale?: unknown }): Promise<boolean> {
-  if (typeof input.onSale !== "boolean") catalogFail("INVALID_INPUT", "onSale must be true or false");
+  if (typeof input.onSale !== "boolean") catalogFail("INVALID_INPUT", "onSale must be boolean");
   return editProduct(catalog, input.catalogItemId, (item) => {
     if (!item.offSale === input.onSale) return null;
     const { offSale: _old, ...rest } = item;
@@ -90,10 +93,14 @@ export function offShop(item: { archivedAt?: string; offSale?: true } | null | u
  */
 export async function changeCatalogItemSku(catalog: Catalog & CatalogStorage, catalogItemId: unknown, raw: unknown,
   options: { collection?: string; pluginId?: string } = {}, fence?: ProductFence): Promise<boolean> {
-  const sku = normalizeSku(raw);
   await assertCatalogStorageConstraints(catalog, options.collection, options.pluginId);
   try {
-    return await editProduct(catalog, catalogItemId, item => item.sku === sku && item.skuKey === sku ? null : { ...named(item, item.name), sku, skuKey: sku }, true, fence);
+    // The fence is checked before the typed SKU, so a stale form is refused as stale whatever it typed.
+    return await editProduct(catalog, catalogItemId, item => {
+      if (fence?.sku !== undefined && item.sku !== fence.sku) moved();
+      const sku = normalizeSku(raw);
+      return item.sku === sku && item.skuKey === sku ? null : { ...named(item, item.name), sku, skuKey: sku };
+    }, true, fence);
   } catch (error) {
     if (identifyConfirmedUniqueViolation(error, options.collection, options.pluginId) === "skuKey") catalogFail("SKU_CONFLICT", "sku is already assigned to another catalog item");
     throw error;
