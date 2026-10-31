@@ -12,6 +12,8 @@ export const FIRST_ORDER_NUMBER = 1001;
 /** Orders' own record. Later order facts sit beside the copy, never inside it. */
 export interface OrderRecord {
   paidOrder: PaidOrder;
+  /** Case-folded checkout email (`""` when absent) so shopper order reads query by index. */
+  emailKey?: string;
   /** Short number for people; absent until numbered. */
   number?: number;
   /** Starts at 1 (absent means 1) and goes up by one on every owner change. */
@@ -71,6 +73,10 @@ function admit(order: PaidOrder, kept = false): PaidOrder {
 function same(kept: OrderRecord | null, order: PaidOrder) {
   return kept && canonical(kept.paidOrder) === canonical(order) ? "duplicate" : "conflict";
 }
+function emailKeyOf(order: PaidOrder): string {
+  const raw = (order.contactSnapshot as { contact?: { email?: unknown } } | undefined)?.contact?.email;
+  return typeof raw === "string" ? raw.trim().toLowerCase() : "";
+}
 
 /** Orders' receiving side of the Checkout to Orders handoff. The first copy is kept for good. */
 export function createPaidOrderReceiver(collection: Pick<OrdersCollection, "get" | "compareAndSet">, numbers?: OrderNumbers): PaidOrderReceiver {
@@ -81,7 +87,7 @@ export function createPaidOrderReceiver(collection: Pick<OrdersCollection, "get"
       if (kept) return same(kept, order);
       // A number taken for an order that lost the race is skipped, never reused.
       const number = numbers ? { number: await takeOrderNumber(numbers) } : {};
-      if ((await collection.compareAndSet(order.orderId, null, { paidOrder: structuredClone(order), ...number, revision: 1 })).applied) return "stored";
+      if ((await collection.compareAndSet(order.orderId, null, { paidOrder: structuredClone(order), emailKey: emailKeyOf(order), ...number, revision: 1 })).applied) return "stored";
       return same(await collection.get(order.orderId), order);
     },
   };
@@ -105,7 +111,7 @@ export async function numberOrders(collection: Pick<OrdersCollection, "getVersio
   for (const record of kept.filter(r => r.number === undefined).sort((a, b) => key(a) < key(b) ? -1 : 1)) {
     const current = await collection.getVersioned(record.paidOrder.orderId);
     if (!current || current.value.number !== undefined) continue;
-    const update = { ...current.value, number: await takeOrderNumber(numbers) };
+    const update = { ...current.value, emailKey: emailKeyOf(current.value.paidOrder), number: await takeOrderNumber(numbers) };
     if ((await collection.compareAndSet(record.paidOrder.orderId, current.revision, update)).applied) numbered++;
   }
   return numbered;
@@ -124,7 +130,7 @@ async function change(
     if ((current.value.revision ?? 1) !== revision) return "outdated";
     const next = edit(current.value);
     if (typeof next === "string") return next;
-    if ((await collection.compareAndSet(orderId, current.revision, { ...next, revision: revision + 1 })).applied) return "saved";
+    if ((await collection.compareAndSet(orderId, current.revision, { ...next, emailKey: emailKeyOf(next.paidOrder), revision: revision + 1 })).applied) return "saved";
   }
   throw new Error("Order busy");
 }
@@ -206,17 +212,19 @@ export function orderFacts(record: OrderRecord) {
 const count = (v: unknown, min: number) => v === undefined || (Number.isSafeInteger(v) && (v as number) >= min);
 const completion = (v: unknown) => isRecord(v) && text(v.at) && optional(v.carrier, c => note(c) === c) && optional(v.tracking, t => note(t) === t);
 
+function checkOrder(item: { id: string; data: OrderRecord }): OrderRecord {
+  const record = item.data;
+  const order = admit(record?.paidOrder, true);
+  if (order.orderId !== item.id || !count(record.number, FIRST_ORDER_NUMBER) || !count(record.revision, 1) ||
+      !optional(record.completed, completion) || !optional(record.emailKey, v => typeof v === "string")) throw new Error("Invalid order");
+  if (record.delivery !== undefined) normalizeCheckoutDelivery(record.delivery);
+  return record;
+}
+
 /** Every kept order in order-id order. Scans at most 100 pages of 100 and fails closed on a malformed record. */
 export async function listOrders(collection: Pick<OrdersCollection, "query">): Promise<OrderRecord[]> {
   const orders: OrderRecord[] = [];
-  await scanAll(collection, item => {
-    const record = item.data;
-    const order = admit(record?.paidOrder, true);
-    if (order.orderId !== item.id || !count(record.number, FIRST_ORDER_NUMBER) || !count(record.revision, 1) ||
-        !optional(record.completed, completion)) throw new Error("Invalid order");
-    if (record.delivery !== undefined) normalizeCheckoutDelivery(record.delivery);
-    orders.push(record);
-  });
+  await scanAll(collection, item => orders.push(checkOrder(item)));
   return orders.sort((a, b) => later(b.paidOrder.orderId, a.paidOrder.orderId));
 }
 
@@ -288,16 +296,26 @@ export async function listOrdersForEmail(
 ): Promise<ShopperOrderSummary[]> {
   const target = email.trim().toLowerCase();
   if (!target) return [];
-  const all = await listOrders(collection);
-  return all
-    .filter((record) => {
-      const rawEmail = (record.paidOrder.contactSnapshot as { contact?: { email?: unknown } } | undefined)?.contact?.email;
-      return typeof rawEmail === "string" && rawEmail.trim().toLowerCase() === target;
-    })
+  const orders: OrderRecord[] = [], seen = new Set<string>();
+  let unfiltered = false;
+  const collect = (item: { id: string; data: OrderRecord }) => {
+    if (seen.has(item.id)) return;
+    seen.add(item.id);
+    const record = checkOrder(item);
+    if (record.emailKey !== target) unfiltered = true;
+    if (emailKeyOf(record.paidOrder) === target) orders.push(record);
+  };
+  try {
+    await scanAll(collection, collect, { emailKey: target });
+    if (!unfiltered) await scanAll(collection, collect, { emailKey: null });
+  } catch (error) {
+    if ((error as { name?: unknown })?.name !== "StorageQueryError") throw error;
+    await scanAll(collection, collect);
+  }
+  return orders
     // Newest paid first; two unparseable times compare as NaN and fall through to the next key.
     .sort((a, b) => paidAtMillis(b.paidOrder.paidAt) - paidAtMillis(a.paidOrder.paidAt) ||
       later(a.paidOrder.paidAt ?? "", b.paidOrder.paidAt ?? "") || (b.number ?? -1) - (a.number ?? -1) ||
       later(a.paidOrder.orderId, b.paidOrder.orderId))
     .map(projectShopperOrder);
 }
-
