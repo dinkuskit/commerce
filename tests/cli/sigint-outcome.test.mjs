@@ -18,7 +18,7 @@ const PRODUCT = {
 };
 const CONFIRM = createHash("sha256").update(JSON.stringify(PRODUCT)).digest("hex").slice(0, 12);
 const MUTATIONS = [
-  { name: "create product", argv: ["products", "create", "--name", "Fixture", "--sku", "FIXTURE", "--command-id", "fixture-create"], op: "create" },
+  { name: "create product", argv: ["products", "create", "--name", "Fixture", "--sku", "FIXTURE", "--command-id", "fixture-create", "--page", "page-fixture"], op: "create" },
   { name: "change product", argv: ["products", "set-price", "item_fixture", "--amount", "14.00", "--confirm", CONFIRM], op: "prices" },
   { name: "complete order", argv: ["orders", "complete", "order:fixture", "--confirm", "1"], op: "complete" },
   { name: "reopen order", argv: ["orders", "reopen", "order:fixture", "--confirm", "2"], op: "reopen" },
@@ -111,7 +111,7 @@ function client({ lifecycle = { sending: false }, fetchImpl, ...options } = {}) 
 
 // POST is not a sufficient mutation classifier: both APIs also read with POST.
 for (const [route, inputs] of [
-  ["catalog", ["get", "list", "create", "link", "prices", "choice", "labels", "sku", "weight", "identifiers", "archive", "media", "feeds"]],
+  ["catalog", ["get", "list", "create", "prices", "choice", "labels", "sku", "weight", "identifiers", "archive", "media", "feeds"]],
   ["orders", ["show", "list", "complete", "reopen"]],
 ]) {
   test(`${route}: only a dispatched mutation marks the shared lifecycle`, async () => {

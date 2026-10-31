@@ -67,7 +67,7 @@ export {
 } from "./route.js";
 export { setCatalogItemSku } from "./set-sku.js";
 export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct } from "./product-edit.js";
-export { PRODUCT_PAGES_COLLECTION, linkProductPage, pageProduct, productNotFound, productPageLinks, setProductPageOnSale } from "./product-pages.js";
+export { PRODUCT_PAGES_COLLECTION, claimProductPage, linkProductPage, pageProduct, productNotFound, setProductPageOnSale } from "./product-pages.js";
 export type { ProductPageRecord, ProductPages } from "./product-pages.js";
 export type { SetCatalogItemSkuInput, SetCatalogItemSkuResult } from "./set-sku.js";
 export { setCatalogItemIdentifiers } from "./set-identifiers.js";

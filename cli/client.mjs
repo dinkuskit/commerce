@@ -1,6 +1,7 @@
 // HTTP client for the DinkusKit Commerce plugin routes on an EmDash site.
 // It speaks only the public HTTP surface under
-// <site>/_emdash/api/plugins/<plugin-id>/<route>. It never imports Commerce
+// <site>/_emdash/api/plugins/<plugin-id>/<route>, plus EmDash's own content API
+// for a product's Content > Products page. It never imports Commerce
 // source, so nothing here can reach the Registry bundle (dist/sandbox/plugin.mjs).
 import { CliError, EXIT, createHttp, httpFailure, usageError, validateEndpoint } from "./kernel.mjs";
 
@@ -102,7 +103,7 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 	const baseUrl = `${siteUrl}/_emdash/api/plugins/${pluginId}`;
 	// Public reads never carry the credential, even when one is set.
 	const publicHttp = createHttp({ baseUrl, timeoutMs, fetchImpl, signal });
-	const adminHttp = (mutating) => {
+	const adminHttp = (mutating, base = baseUrl) => {
 		if (!token) {
 			throw new CliError("credential_required", `This command needs an EmDash API token in ${TOKEN_ENV}.`, { exit: EXIT.blocked });
 		}
@@ -124,7 +125,7 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 				{ exit: EXIT.blocked },
 			);
 		}
-		return createHttp({ baseUrl, headers: { authorization: `Bearer ${token}` }, timeoutMs, signal,
+		return createHttp({ baseUrl: base, headers: { authorization: `Bearer ${token}` }, timeoutMs, signal,
 			fetchImpl: mutating ? (url, init) => {
 				// Once dispatch starts, SIGINT cannot promise that nothing changed.
 				// Mark only after admission and before fetch can yield to the signal handler.
@@ -212,6 +213,23 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 		},
 
 		catalog: catalogCall,
+
+		// Every product is made for its page (catalog-product-needs-page-20261031). The page lives in EmDash, so this
+		// finds the Content > Products page with this slug, or makes it as a Draft titled with the product's name.
+		async productPage(slug, title) {
+			const what = "Making the product page";
+			const content = adminHttp(false, `${siteUrl}/_emdash/api/content/products`);
+			const entry = (response) => {
+				if (!response.ok) throw failure(response, what);
+				const data = response.json?.data, item = isRecord(data?.item) ? data.item : data;
+				if (!isRecord(item) || typeof item.id !== "string") throw contractError(what, "the page has no id.");
+				return item.id;
+			};
+			const found = await content("GET", `/${encodeURIComponent(slug)}`);
+			if (found.status !== 404) return { entryId: entry(found), made: false };
+			const made = await adminHttp(true, `${siteUrl}/_emdash/api/content/products`)("POST", "", { body: { slug, data: { title } }, headers: { "x-emdash-request": "1" } });
+			return { entryId: entry(made), made: true };
+		},
 
 		async showProduct(catalogItemId) {
 			const what = "Reading the product";

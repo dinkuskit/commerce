@@ -106,19 +106,19 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   // 2. Products sold before the upgrade stay on sale with the same prices; hidden and archived ones stay off.
   expect(await publicCatalog(page.request)).toEqual(before.shop);
 
-  // 3. Commerce settings keeps the saved setting and lists the products no page sells.
+  // 3. Commerce settings keeps the saved setting; every product is made for its page, so there is no list of
+  // products without one (catalog-product-needs-page-20261031).
   await page.goto("/_emdash/admin/plugins/dinkus-commerce/settings");
   await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).toBeChecked({ timeout: 30000 });
-  await expect(page.getByRole("heading", { name: "Products without a page" })).toBeVisible();
-  await expect(page.getByText("Blue scarf").first()).toBeVisible();
-  await expect(page.getByText(/Old cap.*\(archived\)/).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Products without a page" })).toHaveCount(0);
   await capture(page, "settings");
 
-  // 4. The page made before the panel opens it; linking by SKU shows the product as it was.
+  // 4. The page's next publish check claims its product; the page's panel then shows the product as it was.
+  // Already on sale from before the upgrade, so nothing changes for shoppers; the page is recorded as its seller.
+  expect(await setOnSale(page.request, { catalogItemId: hat, entryId: before.pageId, onSale: true })).toEqual({ changed: false });
+  expect(rows("catalog_items")[hat].pageId).toBe(before.pageId);
   await page.goto("/_emdash/admin/content/products/" + before.pageId);
   const panel = await openPanel(page);
-  await panel.getByRole("textbox", { name: "Or its SKU", exact: true }).fill("RED-HAT");
-  await panel.getByRole("button", { name: "Sell it here", exact: true }).click();
   await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
   await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("10.00");
   await expect(panel.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
@@ -132,10 +132,7 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   await capture(page, "panel");
   await expect.poll(() => rows("catalog_items")[hat].catalogData.items[hat].price.regular).toEqual({ currency: "USD", minor: "1300" });
 
-  // 5. The page's next publish check claims its product; another page is refused; unpublishing takes it off the shop.
-  // Already on sale from before the upgrade, so nothing changes for shoppers; the page is recorded as its seller.
-  expect(await setOnSale(page.request, { catalogItemId: hat, entryId: before.pageId, onSale: true })).toEqual({ changed: false });
-  expect(rows("catalog_items")[hat].pageId).toBe(before.pageId);
+  // 5. Another page is refused; unpublishing takes it off the shop.
   const competing = await page.request.post(onSaleRoute, { data: { catalogItemId: hat, entryId: "01COMPETINGPAGE000000000000", onSale: false }, headers });
   expect(competing.status()).toBe(400);
   expect(JSON.stringify(await competing.json())).toContain("Another page sells this product");

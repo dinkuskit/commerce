@@ -7,8 +7,8 @@ import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
  * Which product page sells which Commerce product. Commerce never reads the
- * CMS: the page's own Commerce panel and the store's publish check tell it, so
- * Commerce Settings can list products without a page.
+ * CMS: the page's own Commerce panel and the store's publish check tell it.
+ * Every product is made for its page (catalog-product-needs-page-20261031).
  *
  * The page that sells a product is kept on the product itself (`pageId`), set
  * by the publish check in the same write that puts it on sale or takes it off,
@@ -43,6 +43,19 @@ export async function pageProduct(pages: ProductPages, entryId: string, sold?: b
   return (rows.find(row => row.id.startsWith(sold ? "p:" : "e:")) ?? rows[0])?.data.catalogItemId;
 }
 
+/**
+ * Claims an empty page for a new product: its note is written only while no
+ * other note exists, so of two creates for one page only one sells it. False
+ * when another product took the page first.
+ */
+export async function claimProductPage(storage: { catalog: Catalog; pages: ProductPages }, entryId: string, catalogItemId: string): Promise<boolean> {
+  await editProduct(storage.catalog, catalogItemId, item => {
+    if (item.pageId && item.pageId !== entryId) throw conflict();
+    return null;
+  });
+  return (await storage.pages.compareAndSet("e:" + entryId, null, { entryId, catalogItemId })).applied;
+}
+
 /** Notes the picked product; missing products, choice IDs and products another page sells are refused. */
 export async function linkProductPage(storage: { catalog: Catalog; pages: ProductPages }, entryId: string, catalogItemId: string): Promise<void> {
   await editProduct(storage.catalog, catalogItemId, item => {
@@ -50,18 +63,6 @@ export async function linkProductPage(storage: { catalog: Catalog; pages: Produc
     return null; // Validate the product without changing it; only the page's pick is written.
   });
   await storage.pages.put("e:" + entryId, { entryId, catalogItemId });
-}
-
-/** Every linked product id, so Settings can show the ones no page sells. */
-export async function productPageLinks(pages: ProductPages): Promise<Set<string>> {
-  const linked = new Set<string>();
-  let cursor: string | undefined;
-  do {
-    const found = await pages.query({ limit: 100, cursor });
-    for (const row of found.items) linked.add(row.data.catalogItemId);
-    cursor = found.hasMore ? found.cursor : undefined;
-  } while (cursor);
-  return linked;
 }
 
 /**

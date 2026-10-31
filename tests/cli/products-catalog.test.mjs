@@ -14,8 +14,29 @@ function store() {
   const { ctx, call } = shop();
   const bodies = [];
   const hooks = { beforeWrite: undefined };
+  // EmDash's content API for Content > Products pages, by slug, as a Registry store answers it.
+  const pages = new Map();
+  const contentCalls = [];
+  const content = (path, init) => {
+    assert.equal(init.headers.authorization, `Bearer ${TOKEN}`);
+    contentCalls.push(`${init.method} ${path}`);
+    if (init.method === "GET") {
+      const id = pages.get(decodeURIComponent(path.slice(1)));
+      return id ? new Response(JSON.stringify({ success: true, data: { item: { id, slug: path.slice(1) } } }), { status: 200 })
+        : new Response(JSON.stringify({ success: false, error: { code: "NOT_FOUND", message: "Content item not found" } }), { status: 404 });
+    }
+    assert.equal(init.method, "POST");
+    assert.equal(init.headers["x-emdash-request"], "1");
+    const { slug, data } = JSON.parse(init.body);
+    assert.equal(typeof data.title, "string");
+    const id = `page-${slug}`;
+    pages.set(slug, id);
+    return new Response(JSON.stringify({ success: true, data: { item: { id, slug } } }), { status: 201 });
+  };
   const fetchImpl = async (url, init) => {
-    const route = new URL(url).pathname.replace("/_emdash/api/plugins/dinkus-commerce/", "");
+    const path = new URL(url).pathname;
+    if (path.startsWith("/_emdash/api/content/products")) return content(path.slice("/_emdash/api/content/products".length), init);
+    const route = path.replace("/_emdash/api/plugins/dinkus-commerce/", "");
     if (route !== "catalog" || init.method !== "POST") return new Response(JSON.stringify({ success: false, error: { code: "NOT_FOUND", message: "Plugin route not found" } }), { status: 404 });
     assert.equal(init.headers.authorization, `Bearer ${TOKEN}`);
     assert.equal(init.headers["x-emdash-request"], "1");
@@ -50,7 +71,7 @@ function store() {
     assert.match(confirmation, /^[0-9a-f]{12}$/);
     return cli(...argv, "--confirm", confirmation, "--json");
   }
-  return { ctx, bodies, hooks, cli, apply };
+  return { ctx, bodies, hooks, cli, apply, pages, contentCalls };
 }
 
 test("an agent migrates a product with the CLI alone: create, price, choice, stock and SKU", async () => {
@@ -64,7 +85,7 @@ test("an agent migrates a product with the CLI alone: create, price, choice, sto
   const made = await cli("products", "create", "--name", "Runtz", "--sku", "F-RUNTZ", "--command-id", "gfb-runtz", "--page", "page-runtz", "--json");
   assert.equal(made.code, 0, made.stderr);
   const id = made.json().data.catalogItemId;
-  const again = await cli("products", "create", "--name", "Runtz", "--sku", "F-RUNTZ", "--command-id", "gfb-runtz", "--json");
+  const again = await cli("products", "create", "--name", "Runtz", "--sku", "F-RUNTZ", "--command-id", "gfb-runtz", "--page", "page-runtz", "--json");
   assert.equal(again.json().data.catalogItemId, id, "a retry with the same --command-id finds the same product");
   assert.equal((await ctx.storage.catalog_items.get(id)).offSale, true, "a Draft");
   assert.deepEqual(await ctx.storage.product_pages.get("e:page-runtz"), { entryId: "page-runtz", catalogItemId: id });
@@ -129,9 +150,9 @@ test("an agent migrates a product with the CLI alone: create, price, choice, sto
   assert.match(human.stdout, /choice\s+Size: Small, Large/);
 });
 
-test("weight, identifiers, pictures, feeds, link, archive and restore go through the CLI", async () => {
+test("weight, identifiers, pictures, feeds, archive and restore go through the CLI", async () => {
   const { ctx, cli, apply } = store();
-  const id = (await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--json")).json().data.catalogItemId;
+  const id = (await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--json")).json().data.catalogItemId;
 
   assert.equal((await apply("products", "set-weight", id, "--oz", "12.5")).code, 0);
   assert.equal((await ctx.storage.catalog_items.get(id)).catalogData.items[id].weightOz, 12.5);
@@ -152,8 +173,9 @@ test("weight, identifiers, pictures, feeds, link, archive and restore go through
 
   assert.equal((await apply("products", "set-feeds", id, "--channel", "google-merchant")).code, 0);
   assert.deepEqual((await ctx.storage.catalog_items.get(id)).catalogData.feedChannels, ["google-merchant"]);
-  assert.equal((await apply("products", "link", id, "--page", "page-mug")).code, 0);
   assert.deepEqual(await ctx.storage.product_pages.get("e:page-mug"), { entryId: "page-mug", catalogItemId: id });
+  const gone = await cli("products", "link", id, "--page", "page-other", "--dry-run", "--json");
+  assert.equal(gone.code, 2, "products link is gone: a product is made for its page");
 
   assert.equal((await apply("products", "archive", id)).code, 0);
   assert.equal((await cli("products", "show", id, "--json")).json().data.product.archivedAt !== undefined, true);
@@ -170,4 +192,36 @@ test("weight, identifiers, pictures, feeds, link, archive and restore go through
     const usage = await cli("products", ...argv, "--dry-run", "--json");
     assert.equal(usage.code, 2, argv.join(" "));
   }
+});
+
+test("products create makes the product's page first, and a retry finds the same page and product (catalog-product-needs-page-20261031)", async () => {
+  const { ctx, bodies, cli, pages, contentCalls } = store();
+
+  const dry = await cli("products", "create", "--name", "Blue Dream", "--sku", "F-BLUE", "--command-id", "gfb-blue", "--dry-run", "--json");
+  assert.equal(dry.code, 0, dry.stderr);
+  assert.deepEqual(dry.json().data, { request: { op: "create", commandId: "gfb-blue", name: "Blue Dream", sku: "F-BLUE" }, pageSlug: "blue-dream" });
+  assert.deepEqual([bodies.length, contentCalls.length], [0, 0], "a dry run sends nothing");
+
+  const made = await cli("products", "create", "--name", "Blue Dream", "--sku", "F-BLUE", "--command-id", "gfb-blue", "--json");
+  assert.equal(made.code, 0, made.stderr);
+  const { catalogItemId: id, entryId, pageMade } = made.json().data;
+  assert.deepEqual([entryId, pageMade], ["page-blue-dream", true]);
+  assert.deepEqual(contentCalls, ["GET /blue-dream", "POST "], "looks for the page, then makes it");
+  assert.deepEqual(bodies.at(-1), { op: "create", commandId: "gfb-blue", name: "Blue Dream", sku: "F-BLUE", entryId: "page-blue-dream" });
+  assert.deepEqual(await ctx.storage.product_pages.get("e:page-blue-dream"), { entryId: "page-blue-dream", catalogItemId: id });
+
+  contentCalls.length = 0;
+  const again = await cli("products", "create", "--name", "Blue Dream", "--sku", "F-BLUE", "--command-id", "gfb-blue", "--json");
+  assert.equal(again.code, 0, again.stderr);
+  assert.deepEqual([again.json().data.catalogItemId, again.json().data.pageMade], [id, false]);
+  assert.deepEqual(contentCalls, ["GET /blue-dream"], "a retry reuses the page");
+  assert.equal(pages.size, 1);
+
+  // Another product for a page that already sells one is refused.
+  const taken = await cli("products", "create", "--name", "Blue Dream 2", "--sku", "F-BLUE-2", "--command-id", "gfb-blue-2", "--slug", "blue-dream", "--json");
+  assert.equal(taken.code, 1);
+  assert.match(taken.json().error.message, /already sells a product/);
+
+  const both = await cli("products", "create", "--name", "X", "--sku", "X", "--command-id", "x", "--slug", "x", "--page", "page-x", "--dry-run", "--json");
+  assert.equal(both.code, 2);
 });

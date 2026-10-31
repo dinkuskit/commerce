@@ -70,7 +70,7 @@ dinkus-commerce catalog show <item-id>
 
 dinkus-commerce products list
 dinkus-commerce products show <item-id>
-dinkus-commerce products create --name <name> --sku <sku> --command-id <id> [--page <entry-id>] [--dry-run]
+dinkus-commerce products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--dry-run]
 dinkus-commerce products set-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
 dinkus-commerce products set-sale-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
 dinkus-commerce products set-stock-status <item-id> --status <in-stock|out-of-stock|on-backorder> [--choice <item-id>] (--dry-run | --confirm <value>)
@@ -80,7 +80,6 @@ dinkus-commerce products set-identifiers <item-id> [--gtin <gtin>] [--mpn <mpn>]
 dinkus-commerce products save-media <item-id> [--image <media-id> | --clear-image] [--gallery <media-id> ... | --clear-gallery] (--dry-run | --confirm <value>)
 dinkus-commerce products set-feeds <item-id> (--channel <channel> ... | --none) (--dry-run | --confirm <value>)
 dinkus-commerce products add-choice <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)
-dinkus-commerce products link <item-id> --page <entry-id> (--dry-run | --confirm <value>)
 dinkus-commerce products archive <item-id> (--dry-run | --confirm <value>)
 dinkus-commerce products restore <item-id> (--dry-run | --confirm <value>)
 
@@ -136,7 +135,7 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | CLI command | Body |
 | --- | --- |
 | `products show` | `{ op: "get", catalogItemId }` |
-| `products create` | `{ op: "create", commandId, name, sku, entryId? }`: a physical Draft with Manage stock off. The same `commandId` again answers with the same product. |
+| `products create` | First, without `--page`, EmDash's content API: `GET /_emdash/api/content/products/<slug>`, and on `404` `POST /_emdash/api/content/products` `{ slug, data: { title: name } }` (a Draft page). Then `{ op: "create", commandId, name, sku, entryId }`: a physical Draft with Manage stock off, for that page. The same `commandId` again answers with the same product; another product for a page that already sells one is refused. |
 | `products set-price`, `set-sale-price`, `set-stock-status` | `{ op: "prices", catalogItemId, regular, sale, stockStatus? }`, the panel's one Save, with the values the command does not change read from `get`. `--choice` names one version of a product sold in choices. |
 | `products set-sku` | `{ op: "sku", catalogItemId, sku }` |
 | `products set-weight` | `{ op: "weight", catalogItemId, weightOz }` (`""` clears it) |
@@ -144,11 +143,14 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | `products save-media` | `{ op: "media", catalogItemId, image?, gallery? }` |
 | `products set-feeds` | `{ op: "feeds", catalogItemId, channels }` |
 | `products add-choice` | `{ op: "choice", productId, optionId, optionLabel, values }`: the product's first choice. The first value is the product itself; each other value makes a version with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. Later choices are added in the panel. |
-| `products link` | `{ op: "link", catalogItemId, entryId }` |
 | `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
-`products create --page` and `products link` record which page sells the
-product. Commerce keeps that link; the page has no product field to set
+Every product is made for its page (`catalog-product-needs-page-20261031`):
+the catalog API's `create` requires `entryId`, and there is no product without
+a page and no op to give one a page later. `products create` finds the
+Content > Products page by `--slug` (default: made from `--name`) or makes it
+as a Draft titled `--name`, or takes an existing page with `--page`, and
+Commerce records which page sells the product. Commerce keeps that link; the page has no product field to set
 (`catalog-page-link-in-commerce-20261029`). Publishing the page through EmDash
 (its content API or MCP) then puts the product on sale: the store's publish
 check sends Commerce only the page, and Commerce finds the product. A store
@@ -166,7 +168,7 @@ reason. A native store answers with Commerce's own error code
 product's page is what puts it on sale; no CLI command does that.
 
 `products create` is additive and needs no confirmation: a retry with the same
-`--command-id` never makes a second product, and `--dry-run` prints the
+`--command-id` and slug finds the same page and never makes a second product, and `--dry-run` prints the
 request and sends nothing. Every other write is a change to a product someone
 may be looking at, so it follows the confirm flow below.
 
@@ -318,7 +320,8 @@ server by the order version. There is no generic `--force`.
 | `--choice <item-id>` | `products set-price`, `set-sale-price`, `set-stock-status` | The version of a product sold in choices, from `products show`. Required for such a product. |
 | `--status <...>` | `products set-stock-status` | `in-stock`, `out-of-stock` or `on-backorder`. Refused when Inventory manages the stock. |
 | `--name <name>`, `--sku <sku>`, `--command-id <id>` | `products create` | Required. `--sku` is also `products set-sku`'s new SKU; the item id never changes. |
-| `--page <entry-id>` | `products create`, `products link` | The Products page entry that sells it. |
+| `--slug <slug>` | `products create` | The Products page slug to find or make (default: made from `--name`). |
+| `--page <entry-id>` | `products create` | An existing Products page entry that sells it, instead of `--slug`. |
 | `--oz <decimal>` | `products set-weight` | Ounces, above 0 and up to 2400. |
 | `--gtin`, `--mpn`, `--brand` | `products set-identifiers` | An empty value clears it; a field left out stays. |
 | `--image <media-id>`, `--gallery <media-id>` (repeatable), `--clear-image`, `--clear-gallery` | `products save-media` | EmDash media ids; `--gallery` replaces the whole gallery. |
@@ -484,7 +487,10 @@ The credential comes only from `EMDASH_TOKEN`, the variable the upstream
 `emdash` CLI uses. It is an EmDash personal access token sent as
 `Authorization: Bearer`. Private plugin routes require the `admin` scope,
 and `products list` requires a user with
-`content:edit_any`, as do the other `products` commands. Non-GET admin calls
+`content:edit_any`, as do the other `products` commands. `products create`
+without `--page` also reads and, when it is missing, makes the Products page
+through EmDash's content API, so its token needs the `content:read` and
+`content:write` scopes too (an `admin` token has them). Non-GET admin calls
 also send `X-EmDash-Request: 1` (EmDash's CSRF header). There is no `--token` flag, no token in config, and no
 printing of the token or the authorization header. Public `catalog` reads never
 send the token, even when it is set. Admin commands without it exit `4`, naming
@@ -533,8 +539,8 @@ EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --car
 # Correct where an order goes before shipping it.
 EMDASH_URL=https://shop.example dinkus-commerce orders address order:demo --name 'Sam Buyer' --line1 '2 Main St' --city Knoxville --region TN --postal-code 37902 --country US --dry-run
 
-# Migrate a product: a Draft for its page, a price, then a Size choice.
-EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --page 01J0PAGE --json
+# Migrate a product: its page and a Draft for it, a price, then a Size choice.
+EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --json
 EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --dry-run
 EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --confirm 3f9a0c1b2d4e
 EMDASH_URL=https://shop.example dinkus-commerce products add-choice item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run
@@ -647,4 +653,5 @@ or deployment qualification.
 real catalog API over in-memory storage, through EmDash's envelope: a
 migration by CLI alone (create and retry, prices, stock, a choice and its
 versions, SKU and its conflict), the stale-confirmation refusal, and weight,
-identifiers, pictures, feeds, link, archive and restore.
+identifiers, pictures, feeds, archive and restore, and `products create`
+making the page first and finding it again on a retry.

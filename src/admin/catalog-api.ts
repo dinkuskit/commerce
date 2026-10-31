@@ -1,7 +1,7 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import {
   addCatalogVariantOption, admitV1CatalogPriceSaveInput, assertCatalogStorageConstraints, CatalogError, createCatalogItem, editProduct, identifyConfirmedUniqueViolation, isManagedCatalogRecord,
-  linkProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku, pageProduct,
+  claimProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku, pageProduct,
   saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, setCatalogProductArchived, updateCatalogVariantLabels,
 } from "../features/catalog/kernel/index.js";
 import { loadProductFeedEligibility, setProductFeedEligibility } from "../features/feeds/kernel/index.js";
@@ -13,8 +13,8 @@ import { feedEligibility, storage, unique } from "./products.js";
 export const CATALOG_API_ROUTE = "catalog";
 
 /**
- * One `op` a request, with the panels' own checks: list, get (by `catalogItemId`, or by `entryId` for a page's product), create (a physical Draft, linked to
- * `entryId` when given; `commandId` makes a retry find the same product), link, prices, choice, labels, sku,
+ * One `op` a request, with the panels' own checks: list, get (by `catalogItemId`, or by `entryId` for a page's product), create (a physical Draft for
+ * the page `entryId`, which must sell no other product; `commandId` makes a retry find the same product), prices, choice, labels, sku,
  * weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels.
  * Writes return what the core functions return, so a refused write says why. A write may carry
  * `expected`, the code a preview printed: the first 12 hex digits of SHA-256 over the JSON `get` answer
@@ -33,15 +33,23 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
     return linked ? read(linked) : { product: null };
   }
   if (op === "create") {
-    const made = (await createCatalogItem(store.catalog,
-      { commandId: input.commandId, name: input.name, sku: input.sku, fulfillment: "physical" }, { ...unique(ctx), offSale: true })).item.itemId;
-    if (input.entryId !== undefined) await linkProductPage(store, String(input.entryId), made);
-    return { catalogItemId: made };
+    // Every product is made for its page, and a page sells one product (catalog-product-needs-page-20261031).
+    if (input.entryId === undefined) throw new CatalogError("INVALID_INPUT", "entryId is required: make the product's page first");
+    const entryId = String(input.entryId), sold = await pageProduct(store.pages, entryId);
+    const taken = () => new CatalogError("PRODUCT_PAGE_CONFLICT", "This page already sells a product");
+    if (sold && (await store.catalog.get(sold) as { commandId?: unknown } | null)?.commandId !== input.commandId) throw taken();
+    // createCatalogItem checks the input and answers a repeated command with the product it made, refusing changed input.
+    const { created, item } = await createCatalogItem(store.catalog,
+      { commandId: input.commandId, name: input.name, sku: input.sku, fulfillment: "physical" }, { ...unique(ctx), offSale: true });
+    if (sold) { if (item.itemId !== sold) throw taken(); return { catalogItemId: sold }; }
+    if (await claimProductPage(store, entryId, item.itemId) || await pageProduct(store.pages, entryId) === item.itemId) return { catalogItemId: item.itemId };
+    // Another create took the page first: the Draft this one just made is archived, never left off every page.
+    if (created) await setCatalogProductArchived(store.catalog, { catalogItemId: item.itemId, archived: true });
+    throw taken();
   }
   // Saved only while the product still reads as the preview showed it, checked here rather than by the caller.
   if (expected !== undefined && (await sha256Hex(JSON.stringify(await read((input.productId ?? id) as string)))).slice(0, 12) !== expected)
     throw new CatalogError("COMMAND_CONFLICT", "The product changed since that preview. Nothing changed; preview again.");
-  if (op === "link") return { linked: await linkProductPage(store, String(input.entryId), id).then(() => true) };
   if (op === "prices") return saveCatalogProductPrices(store, admitV1CatalogPriceSaveInput(input, isManagedCatalogRecord(await store.catalog.get(id))));
   if (op === "choice") return addCatalogVariantOption(store, input as never, unique(ctx));
   if (op === "labels") return updateCatalogVariantLabels(store, input as never);
