@@ -664,10 +664,14 @@
 {"action": "decision_proposed", "at": "2026-10-31T13:13:48+00:00", "data": {"decision_id": "catalog-product-needs-page-20261031"}, "event_id": "452ae632-2ed4-4967-b8d2-1689ee794f4b"}
 {"action": "decision_locked", "at": "2026-10-31T13:13:48+00:00", "data": {"decision_id": "catalog-product-needs-page-20261031"}, "event_id": "78b732b8-1010-4b35-a523-64ffe2d4e631"}
 {"action": "decision_implemented", "at": "2026-10-31T13:29:06+00:00", "data": {"decision_id": "catalog-product-needs-page-20261031"}, "event_id": "7efef5d5-4c5a-41d4-b092-a9081dff7fea"}
-{"action": "decision_proposed", "at": "2026-10-31T16:34:24+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "8f72a218-9d0b-4e50-b60e-34c7b8aca9d7"}
-{"action": "decision_locked", "at": "2026-10-31T16:34:24+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "ec38dd9b-38c1-4e41-b152-8608df00b1b7"}
-{"action": "decision_implemented", "at": "2026-10-31T16:34:24+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "d4664fa4-40b6-43c0-b364-b35d601cf889"}
-{"action": "decision_proposed", "at": "2026-10-31T16:34:24+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "b9c4bff8-2e76-4e0c-aa85-2912cb381e90"}
-{"action": "decision_locked", "at": "2026-10-31T16:34:24+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "9ae657cd-e926-4c60-a918-1c17eef3de90"}
-{"action": "decision_implemented", "at": "2026-10-31T16:34:25+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "fec04e27-4a83-4a89-acf1-47192021cd93"}
-{"action": "decision_superseded", "at": "2026-10-31T16:34:25+00:00", "data": {"affected": [], "decision_id": "catalog-simple-product-label-20261027", "replacement_id": "catalog-panel-cards-20261031"}, "event_id": "5d0f6b36-6c7b-48af-aff2-3d92fc71d8c6"}
+{"action": "decision_proposed", "at": "2026-10-31T14:46:19+00:00", "data": {"decision_id": "commerce-one-build-registry-20261031"}, "event_id": "3c784061-8103-409d-8deb-0fcfa5ed9fce"}
+{"action": "decision_locked", "at": "2026-10-31T14:46:19+00:00", "data": {"decision_id": "commerce-one-build-registry-20261031"}, "event_id": "b33de2e1-85bb-4023-90fc-fe75dbbfc437"}
+{"action": "decision_implemented", "at": "2026-10-31T15:23:28+00:00", "data": {"decision_id": "commerce-one-build-registry-20261031"}, "event_id": "f4d7846c-d8b0-4d39-9b64-fda5270bdc71"}
+{"action": "decision_verified", "at": "2026-10-31T15:23:28+00:00", "data": {"decision_id": "commerce-one-build-registry-20261031"}, "event_id": "de7ce444-1619-4ad8-93ff-3cd057cb25f5"}
+{"action": "decision_proposed", "at": "2026-10-31T19:10:28+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "7df3bbd7-bdee-4eb5-a468-e73642b0045d"}
+{"action": "decision_locked", "at": "2026-10-31T19:10:29+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "1f2910fd-722e-472e-9907-ae9047a1ce90"}
+{"action": "decision_implemented", "at": "2026-10-31T19:10:29+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "5eabb247-6aef-407b-92a9-1460aae496d7"}
+{"action": "decision_proposed", "at": "2026-10-31T19:10:29+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "c987a1a9-b2b0-447c-accc-4a13e97cffcf"}
+{"action": "decision_locked", "at": "2026-10-31T19:10:29+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "334df4c0-95b5-42f6-aa04-ecbac8fbb717"}
+{"action": "decision_implemented", "at": "2026-10-31T19:10:29+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "72151690-1a58-42b6-9a98-943a366e176f"}
+{"action": "decision_superseded", "at": "2026-10-31T19:10:29+00:00", "data": {"affected": [], "decision_id": "catalog-simple-product-label-20261027", "replacement_id": "catalog-panel-cards-20261031"}, "event_id": "fd38fb45-7482-42ee-a009-6f103348b129"}

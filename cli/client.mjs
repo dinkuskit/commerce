@@ -15,7 +15,6 @@ export const DEFAULT_PLUGIN_ID = "dinkus-commerce";
 export const ROUTES = Object.freeze({
 	publicCatalog: "catalog/public",
 	publicCatalogItem: "catalog/public/item",
-	listProducts: "catalog-items/list",
 	catalog: "catalog",
 	orders: "orders",
 });
@@ -195,21 +194,18 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 			return data === null ? null : checkPublicProduct(data, what);
 		},
 
+		// Both builds list products through the catalog route's list op (Commerce 0.7.0+); the native-only
+		// catalog-items/list route is gone (commerce-one-build-registry-20261031).
 		async listProducts() {
 			const what = "Listing products";
-			const data = unwrap(await adminRequest("GET", `/${ROUTES.listProducts}`), what, {
-				onNotFound: routeMissing(
-					ROUTES.listProducts,
-					"It is mounted only by the native Commerce build; the Registry build only has the Block Kit admin.",
-				),
-			});
+			const data = await catalogCall({ op: "list" }, what);
 			if (!isRecord(data) || !Array.isArray(data.products)) throw contractError(what, "products is not a list.");
 			for (const product of data.products) {
 				if (!isRecord(product) || typeof product.catalogItemId !== "string" || typeof product.name !== "string") {
 					throw contractError(what, "a product is missing its catalogItemId or name.");
 				}
 			}
-			return data;
+			return { products: data.products };
 		},
 
 		catalog: catalogCall,

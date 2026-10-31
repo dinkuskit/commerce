@@ -3,7 +3,6 @@ import test from "node:test";
 import { PluginRouteError } from "emdash";
 
 import {
-  CONFIGURE_INVENTORY_ROUTE,
   STORE_INVENTORY_CONFIGURATIONS_COLLECTION,
   InventorySetupError,
   configureCatalogItemInventory,
@@ -495,63 +494,6 @@ test("a configured product fails before a claim when no runtime provider is inst
   assert.equal(catalog.puts.length, 0);
 });
 
-test("the plugin declares the singleton configuration and one private update route", async () => {
-  const catalog = new MemoryCollection();
-  const configurations = configurationStorage();
-  const claims = claimStorage();
-  catalog.records.set("item-grill", managedItem());
-  await configuredStore(configurations);
-  const plugin = createPlugin({
-    inventorySetup: setupExecution({
-      resolveProvider: async () => ({
-        async registerManagedSku(registration) {
-          return {
-            outcome: "registered",
-            inventorySku: {
-              inventorySkuId: "inventory-route-grill",
-              sku: registration.request.sku,
-              displayName: registration.request.displayNameIfNew,
-            },
-          };
-        },
-      }),
-    }),
-  });
-
-  assert.deepEqual(plugin.storage[STORE_INVENTORY_CONFIGURATIONS_COLLECTION], {
-    indexes: [],
-    uniqueIndexes: ["configurationKey"],
-  });
-  const route = plugin.routes[CONFIGURE_INVENTORY_ROUTE];
-  assert.equal(route.public, false);
-  assert.equal(route.permission, "content:edit_any");
-
-  const context = {
-    input: { catalogItemId: "item-grill" },
-    storage: {
-      catalogItems: catalog,
-      storeInventoryConfigurations: configurations,
-      managedSkuClaims: claims,
-    },
-  };
-  await assert.rejects(
-    route.handler({
-      ...context,
-      request: new Request("https://smokyclub.test/configure-inventory", { method: "GET" }),
-    }),
-    (error) =>
-      error instanceof PluginRouteError &&
-      error.code === "METHOD_NOT_ALLOWED" &&
-      error.status === 405,
-  );
-
-  const result = await route.handler({
-    ...context,
-    request: new Request("https://smokyclub.test/configure-inventory", { method: "POST" }),
-  });
-  assert.equal(result.outcome, "inventory-active");
-});
-
 test("Configure Inventory does not overwrite a concurrent disable", async () => {
   const catalog = new MemoryCollection();
   const configurations = configurationStorage();
@@ -665,4 +607,15 @@ test('native non-default choice tracking remains the authority through provider 
   assert.equal(selected.manageStock, true);
   assert.equal((await saveCatalogProductPrices({ catalog, prices, availability }, { catalogItemId: 'large', regular: '21', sale: '', manageStock: false, expectedRevision: selected.priceRevision })).manageStock, false);
   await assert.rejects(configureCatalogItemInventory({ catalog, configurations, claims }, { catalogItemId: 'large' }), e => e.code === 'MANAGE_STOCK_REQUIRED');
+});
+
+test("the plugin declares the singleton configuration; Configure Inventory has no native route any more", () => {
+  const plugin = createPlugin();
+  assert.deepEqual(plugin.storage[STORE_INVENTORY_CONFIGURATIONS_COLLECTION], {
+    indexes: [],
+    uniqueIndexes: ["configurationKey"],
+  });
+  // The native-only catalog-items/configure-inventory route is gone (commerce-one-build-registry-20261031);
+  // Inventory setup returns with Inventory, in Block Kit.
+  assert.equal(plugin.routes["catalog-items/configure-inventory"], undefined);
 });

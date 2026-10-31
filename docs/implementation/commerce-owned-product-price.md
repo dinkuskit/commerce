@@ -39,10 +39,10 @@ policy, or manual availability.
 
 Private POST routes require `content:edit_any`:
 
-- `catalog-items/set-regular-price`
-- `catalog-items/set-sale-price`
-- `catalog-items/clear-sale-price`
-- `catalog-items/clear-regular-price`
+- the product panel's Regular and Sale fields and the `catalog` route's `prices` op
+  (the native-only `catalog-items/set-regular-price`, `set-sale-price`,
+  `clear-sale-price` and `clear-regular-price` routes are gone,
+  `commerce-one-build-registry-20261031`)
 
 `resolveCatalogItemPrice` returns `listable` plus Regular, optional Sale, and
 `customerPays` (Sale when set, otherwise Regular).
@@ -56,5 +56,5 @@ read that contract first. Missing Regular returns `listable: false` and
 Existing catalog drafts have no `catalogPrices` row. After this slice they
 remain in the catalog and stay off the storefront until a clerk sets Regular.
 That is the locked shop-owner contract, not a silent wipe. Operator
-remediation is `catalog-items/set-regular-price`. Callers must pass the
+remediation is setting a Regular price (the panel, or the `catalog` route's `prices` op). Callers must pass the
 `prices` collection; a missing collection fails closed as not listable.

@@ -65,12 +65,9 @@ To show this panel, Commerce asks for the `admin.editor-draft:read` permission w
 ## Saving and upgrading catalog data
 
 Price and stock-status saves, including submitted feed channels, commit together.
-Native local-stock hosts keep variant-level tracking changes in that same commit.
-Native catalog lists return the product revision for every variant. A native bulk
-price request validates sibling variants against that same snapshot and commits
-its valid rows together; invalid rows remain individually reported. A competing
-product edit refuses the staged rows for that product without a partial save.
-A **Save weight** action commits all submitted variant weights together. These
+A competing product edit refuses the staged rows for that product without a
+partial save. A **Save weight** action commits all submitted variant weights
+together. These
 actions work within EmDash's default ten-subrequest sandbox limit. If another
 editor changes the product after a form opens, reload before saving again.
 
@@ -98,7 +95,7 @@ Use the permanent Commerce item ID to look up a product and submit a cart line. 
 
 Prices use USD integer minor units represented as strings. For example, USD 12.00 is `{ "currency": "USD", "minor": "1200" }`. Regular price is required for a simple product to be listable. A missing price does not mean free. An explicit zero Regular price can be listed, but the paid-checkout path must be verified separately. A Sale price requires Regular and must be strictly lower. The customer-facing price is Sale when present, otherwise Regular.
 
-The public catalog filters archived, Draft and nonlistable products. A product can have up to three options (such as Color and Size), up to fifty values per option, and up to fifty variant members. Product families with options expose variant members; they can omit the top-level price. Choose a sellable member and use its `catalogItemId` for checkout. Do not assume every catalog object has a price or that a family ID can be purchased without a choice.
+The public catalog filters archived, Draft and nonlistable products. A product can have up to three options (such as Color and Size), up to fifty values per option, and up to fifty variant members. Product families with options expose variant members without a top-level price. Choose a sellable member and use its `catalogItemId` for checkout. Looking up a concrete member through `catalog/public/item?itemId=…` returns its public family, whose `id` can differ from the requested member. When refreshing a cart, find that member in `variants.members` and use its own price, availability and fulfillment; do not substitute a sibling or the family's top-level facts. Paginated catalog rows are grouped the same way. Do not assume every catalog object has a price or that a family ID can be purchased without choosing a variant.
 
 Public catalog list and item responses also carry the feed channels the merchant approved for each product, so a storefront host can build public product feeds without admin reads. A product with no approved channel is never included.
 
@@ -110,7 +107,7 @@ Inventory is planned after v1, and the Registry build has no Manage stock switch
 
 ## Public storefront routes
 
-Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn`, while `dinkus-commerce` identifies the native development entry.
+Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn` and the beta package's is `r_fjzjvld3ssb4j63o`. Commerce runs one build, the Registry build; `dinkus-commerce` identifies the native development entry only the Template Store's playground still registers. It serves these routes except `policies/public` and `checkout/guest/readiness`, which the Registry build alone registers.
 
 | Route | Method | Contract |
 | --- | --- | --- |

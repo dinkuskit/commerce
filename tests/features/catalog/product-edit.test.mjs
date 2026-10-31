@@ -5,7 +5,7 @@ import { productPanel } from '../../../dist/admin/index.js';
 // Product editing lives in the Dinkus Commerce panel on each Content > Products page.
 const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
 import { addCatalogVariantOption, createCatalogItem, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
-import { readPublicCatalog, readPublicCatalogItem, renameCatalogProductRoute, setCatalogProductArchivedRoute } from '../../../dist/features/catalog/index.js';
+import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 import { quoteCatalogBasket, resolveManagedStorefrontAvailability } from '../../../dist/features/storefront-availability/kernel/index.js';
 
 class Catalog {
@@ -97,19 +97,6 @@ test('an archived product leaves the shop and checkout refuses it; restoring bri
 // The panel draws its cards as accordions; forms and notes sit inside them.
 const blocksOf = (blocks) => blocks.flatMap((block) => block.type === 'accordion' ? blocksOf(block.blocks) : [block]);
 const stateOf = (out) => out.blocks.find((block) => block.type === 'fields')?.fields.find((field) => field.label === 'Status')?.value;
-test('native routes rename and archive with content:edit_any over POST', async () => {
-  const { catalog } = await shop();
-  for (const route of [renameCatalogProductRoute, setCatalogProductArchivedRoute]) {
-    assert.equal(route.public, false);
-    assert.equal(route.permission, 'content:edit_any');
-  }
-  const call = (route, input, method = 'POST') => route.handler({ request: { method }, input, storage: { catalogItems: catalog } });
-  assert.deepEqual(await call(renameCatalogProductRoute, { catalogItemId: 'mug', name: 'Proof cup' }), { changed: true });
-  assert.deepEqual(await call(setCatalogProductArchivedRoute, { catalogItemId: 'mug', archived: true }), { changed: true });
-  await assert.rejects(call(renameCatalogProductRoute, { catalogItemId: 'mug', name: '' }), (error) => error.code === 'INVALID_INPUT');
-  await assert.rejects(call(setCatalogProductArchivedRoute, {}, 'GET'), (error) => error.code === 'METHOD_NOT_ALLOWED');
-});
-
 test('the product page panel names the product from the page title, archives and restores it', async () => {
   const { catalog, ctx } = await shop();
   const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);

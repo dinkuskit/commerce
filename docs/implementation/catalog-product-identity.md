@@ -12,7 +12,7 @@ and appended an event without replacing existing decision or event history.
 Commerce owns the permanent product identity and product facts. `itemId` is
 minted once when a catalog item is created and never changes. SKU is a
 merchant-facing attribute: it remains unique while assigned, but it may be
-edited through the authenticated `catalog-items/set-sku` route. Orders and
+edited through the product panel's SKU field and the `catalog` route's `sku` op (the native-only `catalog-items/set-sku` route is gone, `commerce-one-build-registry-20261031`). Orders and
 integrations key on `itemId`, not SKU.
 
 Commerce exposes the same filtered projection through:

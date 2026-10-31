@@ -14,12 +14,6 @@ export {
   readPublicStorePoliciesFromStorage,
 } from "./public.js";
 export {
-  SET_STORE_RETURN_POLICY_ROUTE,
-  SET_STORE_SHIPPING_POLICY_ROUTE,
-  setStoreReturnPolicyRoute,
-  setStoreShippingPolicyRoute,
-} from "./route.js";
-export {
   STORE_POLICIES_FEATURE_ID,
   STORE_POLICY_RECORD_ID,
   STORE_RETURN_POLICY_COLLECTION,

@@ -5,7 +5,6 @@ import { PluginRouteError } from "emdash";
 import {
   CATALOG_MANUAL_AVAILABILITY_COLLECTION,
   DEFAULT_CATALOG_MANUAL_AVAILABILITY,
-  SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE,
   CatalogError,
   createPlugin,
   loadCatalogItemManualAvailability,
@@ -176,63 +175,4 @@ test("manual availability rejects malformed input and untrustworthy storage", as
 
   assert.equal(availability.puts.length, 0);
   assert.equal(catalog.puts.length, 0);
-});
-
-test("the plugin exposes one private permissioned manual-availability action", async () => {
-  const plugin = createPlugin();
-  const route = plugin.routes[SET_CATALOG_ITEM_MANUAL_AVAILABILITY_ROUTE];
-  const catalog = new MemoryCollection([catalogItem()]);
-  const availability = new MemoryCollection();
-  const storage = {
-    catalogItems: catalog,
-    [CATALOG_MANUAL_AVAILABILITY_COLLECTION]: availability,
-  };
-
-  assert.deepEqual(plugin.storage[CATALOG_MANUAL_AVAILABILITY_COLLECTION], {
-    indexes: [],
-    uniqueIndexes: [],
-  });
-  assert.equal(route.public, false);
-  assert.equal(route.permission, "content:edit_any");
-  await assert.rejects(
-    route.handler({
-      input: { catalogItemId: "item-grill", status: "out-of-stock" },
-      storage,
-      request: new Request("https://example.test/set-manual-availability", {
-        method: "GET",
-      }),
-    }),
-    (error) => error instanceof PluginRouteError && error.status === 405,
-  );
-
-  const result = await route.handler({
-    input: { catalogItemId: "item-grill", status: "out-of-stock" },
-    storage,
-    request: new Request("https://example.test/set-manual-availability", {
-      method: "POST",
-    }),
-  });
-
-  assert.equal(result.availability.status, "out-of-stock");
-  assert.equal((await loadCatalogItemManualAvailability(availability, "item-grill", catalog)).status, "out-of-stock");
-
-  catalog.records.set(
-    "item-grill",
-    catalogItem({
-      stockManagement: { mode: "managed", status: "setup-required" },
-    }),
-  );
-  await assert.rejects(
-    route.handler({
-      input: { catalogItemId: "item-grill", status: "in-stock" },
-      storage,
-      request: new Request("https://example.test/set-manual-availability", {
-        method: "POST",
-      }),
-    }),
-    (error) =>
-      error instanceof PluginRouteError &&
-      error.code === "MANAGE_STOCK_ENABLED" &&
-      error.status === 409,
-  );
 });

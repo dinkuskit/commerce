@@ -590,7 +590,7 @@ test("a pre-price catalog item stays persisted and is not listable after reopen"
         sellable: result.sellable,
         resolvedStatus: result.status,
         inventoryContacted: providerResolved,
-        operatorRemediation: "catalog-items/set-regular-price",
+        operatorRemediation: "catalog prices op (the product panel's Regular price)",
         dataClassification: "synthetic",
       }),
   );

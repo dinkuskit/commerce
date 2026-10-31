@@ -5,17 +5,11 @@ import { PluginRouteError } from "emdash";
 import {
   CatalogError,
   catalogUniqueIndexName,
-  createCatalogItemRoute,
-  createCatalogItemRouteWithLocalStock,
-  createListCatalogProductsRouteWithLocalStock,
   createPlugin,
   createCatalogItem,
-  createSaveCatalogProductPricesRouteWithLocalStock,
   dinkusCommerce,
   identifyConfirmedUniqueViolation,
-  listCatalogProductsRoute,
   normalizeSku,
-  saveCatalogProductPricesRoute,
   setCatalogItemSku,
 } from "../../../dist/index.js";
 
@@ -505,7 +499,7 @@ test("only an exact named unique violation is classified as atomic proof", () =>
   assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_othernamespace'), null);
 });
 
-test("the EmDash plugin exposes one private, permissioned create route and both unique declarations", () => {
+test("the EmDash plugin exposes the private catalog route and both unique declarations", () => {
   assert.deepEqual(dinkusCommerce(), {
     id: "dinkus-commerce",
     version: "0.2.0",
@@ -527,97 +521,19 @@ test("the EmDash plugin exposes one private, permissioned create route and both 
       route: "product-media-panel",
       collections: ["products"],
     }],
-    options: { enableLocalStockManagement: false },
+    options: {},
   });
-  assert.deepEqual(dinkusCommerce({ enableLocalStockManagement: true }).options, {
-    enableLocalStockManagement: true,
-  });
-  assert.deepEqual(
-    dinkusCommerce({
-      enableLocalStockManagement: true,
-      siteUrl: "http://127.0.0.1:4321",
-    }).options,
-    {
-      enableLocalStockManagement: true,
-      siteUrl: "http://127.0.0.1:4321",
-    },
-  );
+  // The local Manage stock test aid is gone with the native-only routes; only the site URL is an option.
+  assert.deepEqual(dinkusCommerce({ enableLocalStockManagement: true }).options, {});
+  assert.deepEqual(dinkusCommerce({ siteUrl: "http://127.0.0.1:4321" }).options, { siteUrl: "http://127.0.0.1:4321" });
   assert.equal(commercePlugin.id, "dinkus-commerce");
   assert.deepEqual(commercePlugin.storage.catalogItems, {
     indexes: [],
     uniqueIndexes: ["commandId", "skuKey"],
   });
-  const route = commercePlugin.routes["catalog-items/create"];
-  assert.equal(route.public, false);
-  assert.equal(route.permission, "content:create");
-});
-
-test("the route rejects alternate methods and delegates POST to the catalog application", async () => {
-  const storage = new MemoryCatalogStorage();
-  const route = commercePlugin.routes["catalog-items/create"];
-  const baseContext = {
-    input: { commandId: "cmd:route", name: "Route Grill", sku: "ROUTE-GRILL" },
-    storage: { catalogItems: storage },
-  };
-
-  await assert.rejects(
-    route.handler({
-      ...baseContext,
-      request: new Request("https://example.test/catalog-items/create", { method: "GET" }),
-    }),
-    (error) =>
-      error instanceof PluginRouteError &&
-      error.code === "METHOD_NOT_ALLOWED" &&
-      error.status === 405,
-  );
-
-  const result = await route.handler({
-    ...baseContext,
-    request: new Request("https://example.test/catalog-items/create", { method: "POST" }),
-  });
-  assert.equal(result.created, true);
-  assert.equal(result.item.sku, "ROUTE-GRILL");
-});
-
-test("named catalog route exports stay default-disabled PluginRoute objects", async () => {
-  for (const route of [createCatalogItemRoute, listCatalogProductsRoute, saveCatalogProductPricesRoute]) {
-    assert.equal(typeof route, "object");
-    assert.equal(typeof route.handler, "function");
-    assert.equal(typeof route.permission, "string");
-  }
-  assert.equal(typeof createCatalogItemRouteWithLocalStock, "function");
-  assert.equal(typeof createListCatalogProductsRouteWithLocalStock, "function");
-  assert.equal(typeof createSaveCatalogProductPricesRouteWithLocalStock, "function");
-
-  const storage = new MemoryCatalogStorage();
-  await storage.put("item-bag", {
-    recordKind: "catalog-item",
-    itemId: "item-bag",
-    commandId: "catalog:create:bag",
-    creationIntent: { manageStock: false },
-    kind: "simple-product",
-    name: "Bag",
-    sku: "BAG-1",
-    skuKey: "BAG-1",
-    stockManagement: { mode: "unmanaged" },
-    state: "draft",
-    createdAt: "2026-09-26T00:00:00.000Z",
-  });
-  await assert.rejects(
-    saveCatalogProductPricesRoute.handler({
-      input: { catalogItemId: "item-bag", regular: "12", sale: "", manageStock: true },
-      storage: {
-        catalogItems: storage,
-        catalogPrices: { async get() { return null; }, async put() {} },
-        catalogManualAvailability: { async get() { return null; }, async put() {} },
-        managedSkuClaims: { async get() { return null; }, async query() { return { items: [] }; } },
-      },
-      request: new Request("http://127.0.0.1/catalog-items/save-prices", { method: "POST" }),
-      site: { url: "http://127.0.0.1" },
-    }),
-    (error) =>
-      error instanceof PluginRouteError &&
-      error.code === "MANAGE_STOCK_UNAVAILABLE",
-  );
-  assert.deepEqual(storage.records.get("item-bag").stockManagement, { mode: "unmanaged" });
+  // Products are made through the private catalog route (and the product panel) on both builds.
+  assert.equal(commercePlugin.routes["catalog-items/create"], undefined);
+  assert.equal(commercePlugin.routes.catalog.public, false);
+  assert.equal(commercePlugin.routes.catalog.permission, "content:edit_any");
+  assert.equal(commercePlugin.routes["catalog-items/set-on-sale"].permission, "content:publish_any");
 });

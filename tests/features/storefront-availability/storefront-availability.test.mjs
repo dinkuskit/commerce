@@ -5,11 +5,9 @@ import { PluginRouteError } from "emdash";
 import {
   CatalogError,
   StorefrontAvailabilityError,
-  SET_CATALOG_ITEM_BACKORDERS_ROUTE,
-  OUT_OF_STOCK_LISTING_ROUTE,
-  SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
   STOREFRONT_AVAILABILITY_RESULT_SCHEMA,
   createPlugin,
+  loadOutOfStockListing,
   resolveManagedStorefrontAvailability,
   resolveStorefrontAvailability,
   setManageStock,
@@ -694,44 +692,6 @@ test("admin settings reject malformed values and caller-controlled fields", asyn
   assert.equal(catalog.puts.length, 0);
 });
 
-test("the existing authenticated display and managed-backorder actions remain bounded", async () => {
-  const plugin = createPlugin();
-  const catalog = new MemoryCollection([catalogItem()]);
-  const settings = new MemoryCollection();
-  const backorderPolicies = new MemoryCollection();
-  const backordersRoute = plugin.routes[SET_CATALOG_ITEM_BACKORDERS_ROUTE];
-  const policyRoute = plugin.routes[SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE];
-
-  assert.equal(backordersRoute.public, false);
-  assert.equal(backordersRoute.permission, "content:edit_any");
-  assert.equal(policyRoute.public, false);
-  assert.equal(policyRoute.permission, "content:edit_any");
-  await assert.rejects(
-    backordersRoute.handler({
-      input: { catalogItemId: "item-grill", allowBackorders: true },
-      storage: { catalogItems: catalog, catalogBackorderPolicies: backorderPolicies },
-      request: new Request("https://example.test/set-backorders", { method: "GET" }),
-    }),
-    (error) => error instanceof PluginRouteError && error.status === 405,
-  );
-  await backordersRoute.handler({
-    input: { catalogItemId: "item-grill", allowBackorders: true },
-    storage: { catalogItems: catalog, catalogBackorderPolicies: backorderPolicies },
-    request: new Request("https://example.test/set-backorders", { method: "POST" }),
-  });
-  await policyRoute.handler({
-    input: { mode: "exact" },
-    storage: { storefrontAvailabilitySettings: settings },
-    request: new Request("https://example.test/storefront-availability", {
-      method: "POST",
-    }),
-  });
-
-  assert.equal(backorderPolicies.records.get("item-grill").allowBackorders, true);
-  assert.deepEqual(settings.records.get("active").policy, { mode: "exact" });
-  assert.equal(catalog.puts.length, 0);
-});
-
 test("unpriced products are not listable and never contact Inventory", async () => {
   let providerResolved = false;
   const catalog = new MemoryCollection([
@@ -933,14 +893,8 @@ test("the store listing defaults to show out-of-stock and persists hide", async 
   const hidden = await setOutOfStockListing(listing, { hideOutOfStock: true });
   assert.equal(hidden.changed, true);
   assert.equal(hidden.listing.hideOutOfStock, true);
-
-  const plugin = createPlugin();
-  const route = plugin.routes[OUT_OF_STOCK_LISTING_ROUTE];
-  assert.equal(route.permission, "content:edit_any");
-  const fromGet = await route.handler({
-    input: {},
-    storage: { storefrontOutOfStockListing: listing },
-    request: new Request("https://example.test/out-of-stock-listing", { method: "GET" }),
-  });
-  assert.equal(fromGet.hideOutOfStock, true);
+  assert.equal((await loadOutOfStockListing(listing)).hideOutOfStock, true);
+  // The Commerce settings page saves this on both builds; the native settings/out-of-stock-listing route is
+  // gone (commerce-one-build-registry-20261031).
+  assert.equal(createPlugin().routes["settings/out-of-stock-listing"], undefined);
 });
