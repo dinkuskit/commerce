@@ -38,7 +38,7 @@ test('consumer CI keeps failure propagation and uploads only explicit synthetic 
   for (const part of ['checks', 'storefront', 'packaged']) {
     assert.match(workflow, new RegExp(`run: bin/verify-commerce ${part}\\n`));
   }
-  assert.match(workflow, /public-contract:\n    needs: \[plan, checks, storefront, packaged\]/);
+  assert.match(workflow, /public-contract:\n    needs: \[plan, checks, package-drift, engine-floor, storefront, packaged\]/);
   assert.match(workflow, /packaged:[\s\S]*Preserve allowlisted installed-consumer evidence/);
   assert.doesNotMatch(workflow, /continue-on-error/);
   assert.match(workflow, /if: always\(\)/);
