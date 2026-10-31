@@ -1,6 +1,6 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import {
-  addCatalogVariantOption, admitV1CatalogPriceSaveInput, CatalogError, changeCatalogItemSku, createProductForPage, editProduct, isManagedCatalogRecord,
+  addCatalogVariantOption, admitV1CatalogPriceSaveInput, assertCatalogStorageConstraints, CatalogError, changeCatalogItemSku, createProductForPage, editProduct, isManagedCatalogRecord,
   listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, normalizeIdentifierPatch, pageProduct,
   saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, setCatalogProductArchived, updateCatalogVariantLabels,
 } from "../features/catalog/kernel/index.js";
@@ -43,7 +43,12 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
   if (op === "option") return addCatalogVariantOption(store, input as never, unique(ctx));
   if (op === "labels") return updateCatalogVariantLabels(store, input as never);
   // The item id never changes; a SKU another product has is refused by the store's unique index, proven active first.
-  if (op === "sku") return { changed: await changeCatalogItemSku(store.catalog, id, input.sku, unique(ctx)) };
+  if (op === "sku") {
+    // The API's sku op proves the unique index itself, as it always has; the read the panel makes instead has no room in this route's budget.
+    const u = unique(ctx);
+    await assertCatalogStorageConstraints(store.catalog, u.collection, u.pluginId);
+    return { changed: await changeCatalogItemSku(store.catalog, id, input.sku, u, undefined, true) };
+  }
   if (op === "weight") return { changed: await setCatalogItemWeight(store.catalog, id, input.weightOz) };
   if (op === "identifiers") {
     // The identifiers route's checks: a left-out field stays, null or "" clears it.

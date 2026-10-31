@@ -79,6 +79,10 @@ test('createProductForPage refuses a bad weight before making anything, and keep
   assert.equal((await product(store, made.catalogItemId)).regular, null);
   await assert.rejects(createProductForPage(store, { entryId: 'page-1', commandId: 'c9', name: 'Other', sku: 'OTHER' }, unique), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
   await assert.rejects(createProductForPage(store, { commandId: 'c9', name: 'Other', sku: 'OTHER' }, unique), (error) => error.code === 'INVALID_INPUT');
+  // A digital product has no weight: refused before anything is made.
+  const before = store.catalog.records.size;
+  await assert.rejects(createProductForPage(store, { entryId: 'page-9', commandId: 'c9', name: 'Guide', sku: 'OTHER', fulfillment: 'digital', regular: '4', weightOz: '8' }, unique), (error) => error.code === 'INVALID_INPUT' && /digital/.test(error.message));
+  assert.deepEqual([store.catalog.records.size, await pageProduct(store.pages, 'page-9') ?? null], [before, null]);
 });
 
 test("the panel's first Save makes a priced product; a bad weight keeps the form, a bad price keeps the typing on the product", async () => {

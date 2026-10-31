@@ -17,7 +17,7 @@ export function bool(value: unknown): boolean {
 }
 export function message(error: unknown): string {
   return error instanceof CatalogError || error instanceof StorefrontAvailabilityError
-    ? error.message : "Could not complete. Reload and retry.";
+    ? error.message : "Could not complete. Reload.";
 }
 export function alert(message: string): Block {
   return { type: "banner", title: message, variant: "error" };

@@ -2,8 +2,8 @@ import type { StorageCollection } from "emdash";
 import { catalogFail } from "./errors.js";
 import { PRODUCT_MOVED } from "./product-state.js";
 import { normalizeProductName, normalizeSku } from "./normalize.js";
-import { assertCatalogStorageConstraints, identifyConfirmedUniqueViolation } from "./storage-constraints.js";
-import type { CatalogItemRecord, CatalogStorage, CatalogStorageRecord } from "./types.js";
+import { identifyConfirmedUniqueViolation } from "./storage-constraints.js";
+import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet">;
 
@@ -21,7 +21,7 @@ const moved = () => catalogFail("COMMAND_CONFLICT", PRODUCT_MOVED);
  * when the product has moved since the form read it, and never retried on a lost race.
  */
 export async function editProduct(catalog: Catalog, catalogItemId: unknown,
-  edit: (item: CatalogItemRecord) => CatalogItemRecord | null, variants = false, fence?: ProductFence): Promise<boolean> {
+  edit: (item: CatalogItemRecord) => CatalogItemRecord | null | Promise<CatalogItemRecord | null>, variants = false, fence?: ProductFence): Promise<boolean> {
   if (typeof catalogItemId !== "string" || !catalogItemId || catalogItemId.length > 1024) catalogFail("INVALID_INPUT", "invalid catalogItemId");
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const stored = await catalog.getVersioned(catalogItemId);
@@ -32,7 +32,7 @@ export async function editProduct(catalog: Catalog, catalogItemId: unknown,
     // A variant's SKU lives on its own record, but the form read the product's revision: that is the fence.
     const root = fence && current.variantProductId ? await catalog.getVersioned(current.variantProductId) : stored;
     if (fence && fence.revision !== "catalog:" + root?.revision) moved();
-    const next = edit(current);
+    const next = await edit(current);
     if (!next) return false;
     const written = await catalog.compareAndSet(catalogItemId, stored.revision, next);
     if (written.applied) {
@@ -86,23 +86,26 @@ export function offShop(item: { archivedAt?: string; offSale?: true } | null | u
   return Boolean(item?.archivedAt || item?.offSale);
 }
 
+const TAKEN = "sku is already assigned to another catalog item";
 /**
- * Changes a product's SKU; the item id never changes. A SKU another product has is refused by the
- * store's unique index, which must be proven active first. The panel's Save and the catalog API's
- * `sku` op both come here.
+ * Changes a product's SKU; the item id never changes. A SKU another item holds is refused by one read before the
+ * write, and by the store's unique index at the write, which every product creation proves active. The panel's Save
+ * comes here within its storage budget; the catalog API's `sku` op proves the index again first and says so with
+ * `proven`, so it skips the read.
  */
-export async function changeCatalogItemSku(catalog: Catalog & CatalogStorage, catalogItemId: unknown, raw: unknown,
-  options: { collection?: string; pluginId?: string } = {}, fence?: ProductFence): Promise<boolean> {
-  await assertCatalogStorageConstraints(catalog, options.collection, options.pluginId);
+export async function changeCatalogItemSku(catalog: Catalog & Pick<StorageCollection<CatalogStorageRecord>, "query">, catalogItemId: unknown, raw: unknown,
+  options: { collection?: string; pluginId?: string } = {}, fence?: ProductFence, proven = false): Promise<boolean> {
   try {
     // The fence is checked before the typed SKU, so a stale form is refused as stale whatever it typed.
-    return await editProduct(catalog, catalogItemId, item => {
+    return await editProduct(catalog, catalogItemId, async item => {
       if (fence?.sku !== undefined && item.sku !== fence.sku) moved();
       const sku = normalizeSku(raw);
-      return item.sku === sku && item.skuKey === sku ? null : { ...named(item, item.name), sku, skuKey: sku };
+      if (item.sku === sku && item.skuKey === sku) return null;
+      if (!proven && (await catalog.query({ where: { skuKey: sku }, limit: 1 })).items.some(row => row.id !== item.itemId)) catalogFail("SKU_CONFLICT", TAKEN);
+      return { ...named(item, item.name), sku, skuKey: sku };
     }, true, fence);
   } catch (error) {
-    if (identifyConfirmedUniqueViolation(error, options.collection, options.pluginId) === "skuKey") catalogFail("SKU_CONFLICT", "sku is already assigned to another catalog item");
+    if (identifyConfirmedUniqueViolation(error, options.collection, options.pluginId) === "skuKey") catalogFail("SKU_CONFLICT", TAKEN);
     throw error;
   }
 }

@@ -325,7 +325,7 @@ server by the order version. There is no generic `--force`.
 | `--name <name>`, `--sku <sku>`, `--command-id <id>` | `products create` | Required. `--sku` is also `products set-sku`'s new SKU; the item id never changes. |
 | `--slug <slug>` | `products create` | The Products page slug to find or make (default: made from `--name`). |
 | `--page <entry-id>` | `products create` | An existing Products page entry that sells it, instead of `--slug`. |
-| `--regular <decimal>`, `--sale <decimal>`, `--stock-status <...>`, `--digital`, `--weight-oz <decimal>` | `products create` | Saved with the product in the same call, as the panel's first Save does: a Regular price (without one the product is off the shop), a Sale price lower than it, `in-stock` (the default), `out-of-stock` or `on-backorder`, a digital product with nothing to ship, and a shipping weight in ounces. |
+| `--regular <decimal>`, `--sale <decimal>`, `--stock-status <...>`, `--digital`, `--weight-oz <decimal>` | `products create` | Saved with the product in the same call, as the panel's first Save does: a Regular price (without one the product is off the shop), a Sale price lower than it, `in-stock` (the default), `out-of-stock` or `on-backorder`, a digital product with nothing to ship, and a shipping weight in ounces (refused for a digital product, before anything is made). |
 | `--oz <decimal>` | `products set-weight` | Ounces, above 0 and up to 2400. |
 | `--gtin`, `--mpn`, `--brand` | `products set-identifiers` | An empty value clears it; a field left out stays. |
 | `--image <media-id>`, `--gallery <media-id>` (repeatable), `--clear-image`, `--clear-gallery` | `products save-media` | EmDash media ids; `--gallery` replaces the whole gallery. |

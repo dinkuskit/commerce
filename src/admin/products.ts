@@ -93,10 +93,10 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
 function variantsCard(id: string, selected: CatalogProductListItem, focus?: string): Block {
   const variant = selected.variantProduct;
   if (!variant?.options.length) return card("Variants · none", [
-    note("The product itself is the first variant."),
+    note("The product is the first variant."),
     { type: "form", block_id: "a" + id, fields: [
       { type: "text_input", action_id: "optionLabel", label: "Option name", initial_value: "Size" },
-      { type: "text_input", action_id: "values", label: "Option values", placeholder: "Small, Medium, Large" },
+      { type: "text_input", action_id: "values", label: "Option values", placeholder: "Small, Large" },
     ], submit: { label: "Add options", action_id: "variant:" + JSON.stringify(["add", id, crypto.randomUUID()]) } },
   ], focus === "add");
   return card("Variants · " + variant.members.length, [
@@ -202,7 +202,7 @@ const variantSku = (base: string, valueId: string, cut = 63): string => {
 // A stale page must never act on a different image than its label named.
 function galleryIndex(value: unknown, mediaId: string, gallery: string[]): number {
   if (!Number.isInteger(value) || (value as number) < 0 || (value as number) >= gallery.length) throw new Error("Invalid image");
-  if (gallery[value as number] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed. Reload and try again.");
+  if (gallery[value as number] !== mediaId) throw new CatalogError("INVALID_INPUT", "The gallery changed. Reload.");
   return value as number;
 }
 type Draft = { fields?: Record<string, unknown> };

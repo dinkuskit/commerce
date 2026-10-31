@@ -45,6 +45,7 @@ export async function createProductForPage(
   const priced = raw.regular !== undefined || raw.sale !== undefined || raw.stockStatus !== undefined;
   const regular = str(raw.regular), sale = str(raw.sale);
   const weightOz = normalizeWeightOz(raw.weightOz ?? null);
+  if (weightOz !== null && fulfillment === "digital") throw new CatalogError("INVALID_INPUT", "A digital product has no weight");
   // A page sells one product; the same command again finds the one it made.
   const sold = await pageProduct(storage.pages, entryId);
   const taken = () => new CatalogError("PRODUCT_PAGE_CONFLICT", "This page already sells a product");

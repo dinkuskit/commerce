@@ -26,7 +26,7 @@ export async function setCatalogItemWeight(catalog: CatalogWriter, catalogItemId
 export async function setCatalogWeights(catalog: CatalogWriter, productId: string,
   weights: readonly (readonly [string, unknown])[], expectedRevision?: string | null): Promise<boolean> {
   if (!weights.length || weights.length > 50 || new Set(weights.map(([id]) => id)).size !== weights.length)
-    throw new CatalogError("INVALID_INPUT", "Weight form must contain 1–50 distinct items");
+    throw new CatalogError("INVALID_INPUT", "Weight form needs 1-50 distinct items");
   const typed = weights.map(([id, raw]) => [id, normalizeWeightOz(raw)] as const);
   return saveProductData(catalog, productId, (data, item, root) => {
     const members = root.variantProduct?.members ?? [{ catalogItemId: root.itemId, fulfillment: root.fulfillment ?? "physical" }];

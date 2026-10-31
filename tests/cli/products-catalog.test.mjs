@@ -161,7 +161,7 @@ test("a digital product stays digital when the CLI adds its first option", async
 });
 
 test("products create reports a refused price as a failure that still names the Draft it made", async () => {
-  const { cli } = store();
+  const { ctx, cli } = store();
   const refused = await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--regular", "10", "--sale", "12", "--json");
   assert.equal(refused.code, 1, "automation must not read a refused price as success");
   const doc = refused.json();
@@ -174,6 +174,11 @@ test("products create reports a refused price as a failure that still names the 
   const fixed = await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--regular", "10", "--sale", "8", "--json");
   assert.equal(fixed.code, 0, fixed.stderr);
   assert.deepEqual([fixed.json().data.catalogItemId, fixed.json().data.created, fixed.json().data.price.saved], [doc.data.catalogItemId, false, true]);
+  // A digital product with a weight is refused before anything is made.
+  const digital = await cli("products", "create", "--name", "Guide", "--sku", "GUIDE-W", "--command-id", "guide-w", "--page", "page-guide-w", "--digital", "--weight-oz", "8", "--json");
+  assert.equal(digital.code, 1);
+  assert.match(digital.json().error.message, /digital product has no weight/);
+  assert.equal([...ctx.storage.catalog_items.records.values()].some((row) => row.sku === "GUIDE-W"), false, "nothing was made");
 });
 
 test("weight, identifiers, pictures, feeds, archive and restore go through the CLI", async () => {
