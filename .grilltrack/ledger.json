@@ -15470,6 +15470,63 @@
       "superseded_by": null,
       "updated_at": "2026-10-30T12:59:57+00:00",
       "verification_ref": "file:docs/implementation/emdash-1-4-compatibility.md"
+    },
+    {
+      "baseline_ref": "git:c2d9a7f",
+      "candidate_refs": [],
+      "choice": "The private orders route gains one action, address (order id, version, address with name, line1, optional line2, city, optional region, postalCode, country). It runs the Orders page's correctDelivery at the named version: the whole delivery address is replaced, checked as checkout checks one, only to a country in the store's shipping countries, never on a Completed order (outdated: reopen first) or an order with no delivery address (invalid); billing is never changed. A saved change goes to Ship like every other orders-route change. The dinkus-commerce CLI adds orders address with required --name, --line1, --city, --postal-code and --country and optional --line2 and --region; it previews the current and new address and sends only with the confirmed version, and refuses a Completed order or one with no address before sending. Commerce sends no email.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanNF3JDSWdqfMTPan74ksApj",
+      "created_at": "2026-10-31T03:10:18+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-orders-api-001"
+      ],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-31T03:10:18+00:00",
+          "choice": "The private orders route gains one action, address (order id, version, address with name, line1, optional line2, city, optional region, postalCode, country). It runs the Orders page's correctDelivery at the named version: the whole delivery address is replaced, checked as checkout checks one, only to a country in the store's shipping countries, never on a Completed order (outdated: reopen first) or an order with no delivery address (invalid); billing is never changed. A saved change goes to Ship like every other orders-route change. The dinkus-commerce CLI adds orders address with required --name, --line1, --city, --postal-code and --country and optional --line2 and --region; it previews the current and new address and sends only with the confirmed version, and refuses a Completed order or one with no address before sending. Commerce sends no email.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T03:10:18+00:00",
+          "choice": "The private orders route gains one action, address (order id, version, address with name, line1, optional line2, city, optional region, postalCode, country). It runs the Orders page's correctDelivery at the named version: the whole delivery address is replaced, checked as checkout checks one, only to a country in the store's shipping countries, never on a Completed order (outdated: reopen first) or an order with no delivery address (invalid); billing is never changed. A saved change goes to Ship like every other orders-route change. The dinkus-commerce CLI adds orders address with required --name, --line1, --city, --postal-code and --country and optional --line2 and --region; it previews the current and new address and sends only with the confirmed version, and refuses a Completed order or one with no address before sending. Commerce sends no email.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-orders-api-address-001",
+      "implementation_ref": "file:src/features/orders/api.ts file:cli/spec.mjs file:cli/client.mjs file:tests/features/orders/api.test.mjs file:tests/cli/dinkus-commerce.test.mjs file:docs/CLI-SPEC.md",
+      "question": "Can agents and the CLI correct an order's delivery address, as the Orders page's Correct address does?",
+      "rationale": "Ronald 31 Oct: lets go ahead and address it now; open a PR",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T03:10:18+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -15506,5 +15563,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-30T12:59:57+00:00"
+  "updated_at": "2026-10-31T03:10:18+00:00"
 }

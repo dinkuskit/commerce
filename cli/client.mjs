@@ -19,7 +19,7 @@ export const ROUTES = Object.freeze({
 	orders: "orders",
 });
 
-// What the orders route answers to complete and reopen.
+// What the orders route answers to complete, reopen and address.
 const ORDER_RESULTS = new Set(["saved", "outdated", "invalid", "not_found"]);
 
 const PLUGIN_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -241,7 +241,7 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 		},
 
 		async changeOrder(body) {
-			const what = body.action === "complete" ? "Completing the order" : "Moving the order back to Processing";
+			const what = { complete: "Completing the order", address: "Correcting the order's address" }[body.action] ?? "Moving the order back to Processing";
 			const data = await ordersCall(body, what);
 			if (!ORDER_RESULTS.has(data.result)) throw contractError(what, "the result is not saved, outdated, invalid or not_found.");
 			if (data.order !== undefined) checkOrder(data.order, what);

@@ -88,6 +88,7 @@ dinkus-commerce orders list [--status <processing|completed>] [--cursor <cursor>
 dinkus-commerce orders show <order-id>
 dinkus-commerce orders complete <order-id> [--carrier <text>] [--tracking <text>] (--dry-run | --confirm <version>)
 dinkus-commerce orders reopen <order-id> (--dry-run | --confirm <version>)
+dinkus-commerce orders address <order-id> --name <text> --line1 <text> [--line2 <text>] --city <text> [--region <text>] --postal-code <text> --country <code> (--dry-run | --confirm <version>)
 
 dinkus-commerce settings show                                          (planned)
 ```
@@ -172,7 +173,8 @@ may be looking at, so it follows the confirm flow below.
 ### Orders commands
 
 Every `orders` command sends one `POST orders` with a JSON body and the
-credential (GrillTrack `commerce-orders-api-001`). The route is private: EmDash
+credential (GrillTrack `commerce-orders-api-001`; `address` is
+`commerce-orders-api-address-001`). The route is private: EmDash
 requires `plugins:manage` (an administrator) and, for API tokens, the `admin`
 scope, and Commerce checks the administrator again, like its Orders page. Only
 the Registry (sandboxed) build mounts it; on a native install the site answers
@@ -184,6 +186,7 @@ the Registry (sandboxed) build mounts it; on a native install the site answers
 | `{ "action": "show", "orderId" }` | `{ order }`, or `{ "order": null }` when no order has that id. |
 | `{ "action": "complete", "orderId", "version", "carrier"?, "tracking"? }` | `{ result, order }` |
 | `{ "action": "reopen", "orderId", "version" }` | `{ result, order }` |
+| `{ "action": "address", "orderId", "version", "address": { name, line1, line2?, city, region?, postalCode, country } }` | `{ result, order }` |
 
 Unknown actions or fields, and malformed values, are refused before anything
 changes (a misspelt `trackingNumber` is an error, not ignored). Each order is:
@@ -212,11 +215,16 @@ billing was recorded); `billToMatchesShipTo` is true when it equals `shipTo`
 field for field. `choices` are the frozen option choices. `completed` is
 `{ at, carrier?, tracking? }` once Completed. `orders show` prints `bill to`.
 
-`complete` and `reopen` follow the Orders page's rules and apply only at the
-order `version` named, so a change made from a stale read changes nothing.
-`result` is `saved`, `outdated` (the version moved on, or the order is already
-in that status), `invalid` (carrier or tracking over 64 characters or with a
-line break) or `not_found`; `order` is the order as it now stands. Commerce
+`complete`, `reopen` and `address` follow the Orders page's rules and apply
+only at the order `version` named, so a change made from a stale read changes
+nothing. `address` is the Orders page's Correct address: it replaces the whole
+delivery address (`shipTo`), checked as checkout checks one, and never changes
+billing. `result` is `saved`, `outdated` (the version moved on, the order is
+already in that status, or for `address` the order is Completed: reopen it
+first), `invalid` (carrier or tracking over 64 characters or with a line break;
+for `address`, a missing or too-long line, an order with no delivery address,
+or a country outside the store's shipping countries) or `not_found`; `order` is
+the order as it now stands. Commerce
 sends no email either way. When the store has Ship's hosted service, a saved
 change goes to Ship right away, and Ship emails the shopper when the order
 becomes Completed ([Orders and Ship](implementation/registry-ship-sync.md)).
@@ -237,6 +245,12 @@ becomes Completed ([Orders and Ship](implementation/registry-ship-sync.md)).
   `result` as `error.code` (`outdated`, `invalid`, `not_found`); completing an
   order that is already Completed, or reopening one that is Processing, exits
   `1` with `already_completed` or `already_processing` before anything is sent.
+- `orders address` corrects where a Processing order goes, with the same
+  preview and `--confirm <version>` flow. `--name`, `--line1`, `--city`,
+  `--postal-code` and `--country` are required; `--line2` and `--region` are
+  optional, and the whole address is replaced. The preview prints the current
+  and new address. A Completed order exits `1` with `order_completed`, and an
+  order with no delivery address with `no_address`, before anything is sent.
 
 ### Planned commands
 
@@ -269,8 +283,8 @@ A product change is bound to what its preview read, and Commerce checks it
 Commerce's check runs inside the same request as the save, so the window a
 concurrent edit could slip through shrinks from a network round trip to the
 moment between that read and the write, and each write is still conditional.
-`orders complete` and `orders reopen` are bound on the server by the order
-version. There is no generic `--force`.
+`orders complete`, `orders reopen` and `orders address` are bound on the
+server by the order version. There is no generic `--force`.
 
 ## Global flags
 
@@ -295,8 +309,9 @@ version. There is no generic `--force`.
 | `--all` | `catalog list`, `orders list` | Follow every page and return one combined list. |
 | `--status <processing\|completed>` | `orders list` | Only Processing (not shipped) or Completed (shipped) orders. |
 | `--carrier <text>`, `--tracking <text>` | `orders complete` | Optional carrier and tracking number, at most 64 characters each. |
-| `--dry-run` | `orders complete`, `orders reopen` | Show the change and the version to confirm; send nothing. |
-| `--confirm <version>` | `orders complete`, `orders reopen` | Apply only if the order is still at this version. |
+| `--name`, `--line1`, `--line2`, `--city`, `--region`, `--postal-code`, `--country` | `orders address` | The corrected delivery address; `--line2` and `--region` are optional. Commerce checks it as checkout does; `--country` is two letters and must be one the store ships to. |
+| `--dry-run` | `orders complete`, `orders reopen`, `orders address` | Show the change and the version to confirm; send nothing. |
+| `--confirm <version>` | `orders complete`, `orders reopen`, `orders address` | Apply only if the order is still at this version. |
 | `--amount <decimal>` | `products set-price`, `products set-sale-price` | USD amount such as `19.99`; or `--clear`. |
 | `--clear` | `products set-price`, `set-sale-price`, `set-weight` | Clear the value instead. |
 | `--choice <item-id>` | `products set-price`, `set-sale-price`, `set-stock-status` | The version of a product sold in choices, from `products show`. Required for such a product. |
@@ -349,9 +364,11 @@ unchanged: `catalog list` adds `pages` with `--all` and omits `cursor` on the
 last page, `catalog show` is one product, and `products list` is the native
 `{ products, manageStockControl }` payload. `orders list` is
 `{ orders, total, cursor? }` (`cursor` is the route's `next` as a string),
-`orders show` is one order, and a saved `orders complete` or `orders reopen`
-is the route's `{ result, order }`. A preview uses `outcome: "preview"`, with
-`data: { orderId, number, version, from, to, carrier?, tracking? }` and
+`orders show` is one order, and a saved `orders complete`, `orders reopen` or
+`orders address` is the route's `{ result, order }`. A preview uses
+`outcome: "preview"`, with
+`data: { orderId, number, version, from, to, carrier?, tracking? }` (for
+`orders address`, `from` and `to` are the current and new address) and
 `confirmation` set to the version to pass to `--confirm`; a product change's
 preview is `data: { catalogItemId, request }` with the 12-digit confirmation
 value, and a saved one is the catalog route's answer. A refused change
@@ -380,7 +397,7 @@ values are escaped as `\t`, `\n`, `\r`, and `\\`. Records per command:
 - `products list`: `record=product catalogItemId sku name regular sale manageStock stockStatus variants`.
 - `orders list`: `record=order orderId number version status test total.minor total.currency paidAt`,
   then `record=cursor cursor` when another page exists.
-- `orders show`, `orders complete`, `orders reopen`: one record of flattened
+- `orders show`, `orders complete`, `orders reopen`, `orders address`: one record of flattened
   `context.*` and `data.*` fields (plus `confirmation` for a preview); arrays
   are JSON.
 - Any failure: `code message`.
@@ -512,6 +529,9 @@ EMDASH_URL=https://shop.example dinkus-commerce orders list --status processing
 EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --dry-run
 EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --confirm 1
 
+# Correct where an order goes before shipping it.
+EMDASH_URL=https://shop.example dinkus-commerce orders address order:demo --name 'Sam Buyer' --line1 '2 Main St' --city Knoxville --region TN --postal-code 37902 --country US --dry-run
+
 # Migrate a product: a Draft for its page, a price, then a Size choice.
 EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --page 01J0PAGE --json
 EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --dry-run
@@ -593,7 +613,7 @@ change, rebuild, and compare.
 | `products list` | Wired | `GET catalog-items/list` with `EMDASH_TOKEN` (native build), else `POST catalog` `{op: list}` (Commerce 0.7.0+) |
 | `products show`, `create` and every product change | Wired | `POST catalog` with `EMDASH_TOKEN` (both builds, Commerce 0.7.0+) |
 | `orders list`, `orders show` | Wired | `POST orders` with `EMDASH_TOKEN` (Registry build) |
-| `orders complete`, `orders reopen` | Wired | `POST orders` with `EMDASH_TOKEN`, bound to the confirmed order version (Registry build) |
+| `orders complete`, `orders reopen`, `orders address` | Wired | `POST orders` with `EMDASH_TOKEN`, bound to the confirmed order version (Registry build) |
 | `settings show` | Planned | No complete read-only settings route |
 
 ## Acceptance checks
