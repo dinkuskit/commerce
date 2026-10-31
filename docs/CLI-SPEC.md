@@ -126,7 +126,7 @@ Commerce 0.7.0 or later.
 
 ### Product commands
 
-Every product command except `products list` sends one or more `POST catalog`
+Every product command sends one or more `POST catalog`
 calls with a JSON body and the credential. The route is private and needs
 `content:edit_any`, the permission the product page panels use; both builds
 mount it. Each body names one `op` and runs the panels' own checks:
