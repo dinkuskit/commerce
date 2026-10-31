@@ -998,15 +998,9 @@ test("Block Kit recovery after a storage read failure does not pretend managed i
     sandboxContext(store),
   );
   assert.equal(recovered.toast.type, "error");
-  const texts = flatten(recovered.blocks);
-  assert.ok(texts.some((text) => text.includes("Coming soon")));
-  assert.ok(texts.some((text) => text.includes("Stock status hidden")));
+  // With the product unreadable, the panel answers the error alone: no form claims a stock status it cannot know.
   assert.equal(hasWorkingManageStock(recovered.blocks), false);
-  const form = recovered.blocks.find((block) => block.type === "form");
-  assert.ok(form);
-  assert.equal(
-    form.fields.some((field) => field.action_id === "stockStatus"),
-    false,
-  );
+  const blocksOf = (blocks) => blocks.flatMap((block) => block.type === "accordion" ? blocksOf(block.blocks) : [block]);
+  assert.equal(blocksOf(recovered.blocks).some((block) => block.type === "form" && block.fields.some((field) => field.action_id === "stockStatus")), false);
   assert.deepEqual(snapshot(store), before);
 });

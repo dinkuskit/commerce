@@ -7,16 +7,16 @@ import { setProductPageOnSale } from '../../../dist/features/catalog/kernel/inde
 import { shop } from './catalog-store.mjs';
 
 // catalog-api-20261027: agents and the CLI manage products with the panels' own checks, as JSON.
-test('an agent makes a Draft product for a page, prices it, adds a choice and reads it back', async () => {
+test('an agent makes a Draft product for a page, prices it, adds an option and reads it back', async () => {
   const { ctx, call } = shop();
   assert.equal(CATALOG_API_ROUTE, 'catalog');
   const { catalogItemId } = await call({ op: 'create', commandId: 'gfb-runtz', name: 'Runtz', sku: 'RUNTZ', entryId: 'page-runtz' });
   const made = await ctx.storage.catalog_items.get(catalogItemId);
   assert.deepEqual([made.name, made.sku, made.fulfillment, made.offSale], ['Runtz', 'RUNTZ', 'physical', true], 'a physical Draft, off the shop');
   assert.deepEqual(await ctx.storage.product_pages.get('e:page-runtz'), { entryId: 'page-runtz', catalogItemId }, 'linked to its page (#194)');
-  assert.deepEqual(await call({ op: 'create', commandId: 'gfb-runtz', name: 'Runtz', sku: 'RUNTZ', entryId: 'page-runtz' }), { catalogItemId }, 'a retry finds the same product');
+  assert.equal((await call({ op: 'create', commandId: 'gfb-runtz', name: 'Runtz', sku: 'RUNTZ', entryId: 'page-runtz' })).catalogItemId, catalogItemId, 'a retry finds the same product');
   const unmanaged = await call({ op: 'create', commandId: 'gfb-managed', name: 'Managed', sku: 'MANAGED', manageStock: true, fulfillment: 'digital', entryId: 'page-managed' });
-  assert.deepEqual([(await ctx.storage.catalog_items.get(unmanaged.catalogItemId)).stockManagement.mode, (await ctx.storage.catalog_items.get(unmanaged.catalogItemId)).fulfillment], ['unmanaged', 'physical'], 'only the panel\'s fields are taken');
+  assert.deepEqual([(await ctx.storage.catalog_items.get(unmanaged.catalogItemId)).stockManagement.mode, (await ctx.storage.catalog_items.get(unmanaged.catalogItemId)).fulfillment], ['unmanaged', 'digital'], 'Manage stock stays off; fulfillment is the panel\'s physical switch (catalog-first-save-creates-20261031)');
 
   const saved = await call({ op: 'prices', catalogItemId, regular: '12.00', sale: '', stockStatus: 'in-stock' });
   assert.equal(saved.saved, true);
@@ -25,7 +25,7 @@ test('an agent makes a Draft product for a page, prices it, adds a choice and re
   assert.equal(refused.saved, false, 'a refused save says why instead of writing');
   await assert.rejects(call({ op: 'prices', catalogItemId, regular: '5.00', sale: '', manageStock: true }), error => error.code === 'MANAGE_STOCK_UNAVAILABLE');
 
-  const choice = await call({ op: 'choice', productId: catalogItemId, optionId: 'size', optionLabel: 'Size', values: [
+  const choice = await call({ op: 'option', productId: catalogItemId, optionId: 'size', optionLabel: 'Size', values: [
     { valueId: 'small', label: 'Small', member: { catalogItemId, fulfillment: 'physical' } },
     { valueId: 'large', label: 'Large', member: { commandId: 'gfb-runtz-l', name: 'Runtz', sku: 'RUNTZ-L', fulfillment: 'physical' } },
   ] });
@@ -65,7 +65,7 @@ test('SKU, weight, identifiers, pictures, feeds and archive go through the panel
   assert.deepEqual(await call({ op: 'sku', catalogItemId, sku: 'MUG-2' }), { changed: true });
   assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).sku, 'MUG-2');
   assert.deepEqual(await call({ op: 'sku', catalogItemId, sku: 'MUG-2' }), { changed: false });
-  assert.deepEqual(await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' }), { catalogItemId }, 'a create retry still finds the renamed product');
+  assert.equal((await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' })).catalogItemId, catalogItemId, 'a create retry still finds the renamed product');
   const cup = await call({ op: 'create', commandId: 'cup', name: 'Cup', sku: 'CUP', entryId: 'page-cup' });
   await assert.rejects(call({ op: 'sku', catalogItemId: cup.catalogItemId, sku: 'MUG-2' }), error => error.code === 'SKU_CONFLICT');
   await assert.rejects(call({ op: 'sku', catalogItemId, sku: '' }), error => error.code === 'INVALID_INPUT');
@@ -84,7 +84,7 @@ test('SKU, weight, identifiers, pictures, feeds and archive go through the panel
   assert.equal(await readPublicCatalogItem(ctx, catalogItemId), null);
   assert.deepEqual(await call({ op: 'archive', catalogItemId, archived: false }), { changed: true });
   assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).offSale, true, 'restored as a Draft');
-  for (const input of [{}, { op: 'delete', catalogItemId }, { op: 'link', entryId: 'page-other', catalogItemId }, null, 'list']) {
+  for (const input of [{}, { op: 'delete', catalogItemId }, { op: 'link', entryId: 'page-other', catalogItemId }, { op: 'choice', productId: catalogItemId }, null, 'list']) {
     await assert.rejects(catalogApi({ input }, ctx), /Invalid catalog request/);
   }
 });
@@ -100,7 +100,7 @@ test('every product is made for its page: create needs a page that sells no othe
   // Another create for the same page is refused before anything is made; the same command again finds the same product.
   await assert.rejects(call({ op: 'create', commandId: 'cup', name: 'Cup', sku: 'CUP', entryId: 'page-mug' }), error => error.code === 'PRODUCT_PAGE_CONFLICT');
   assert.deepEqual(records(), before, 'no second product');
-  assert.deepEqual(await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' }), { catalogItemId });
+  assert.equal((await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' })).catalogItemId, catalogItemId);
   assert.deepEqual(await ctx.storage.product_pages.get('e:page-mug'), { entryId: 'page-mug', catalogItemId });
   // A product another page already sells cannot be made for this page by replaying its command.
   await call({ op: 'prices', catalogItemId, regular: '12.00', sale: '', stockStatus: 'in-stock' });
@@ -153,7 +153,7 @@ test('a write carrying a preview code is saved only while the product still read
   await assert.rejects(call({ op: 'feeds', catalogItemId, channels: [], expected: feeds }), error => error.code === 'COMMAND_CONFLICT');
   assert.deepEqual((await ctx.storage.catalog_items.get(catalogItemId)).catalogData.feedChannels, ['google-merchant'], 'the newer channels stay');
   const choice = await code();
-  assert.equal((await call({ op: 'choice', productId: catalogItemId, optionId: 'size', optionLabel: 'Size', expected: choice, values: [
+  assert.equal((await call({ op: 'option', productId: catalogItemId, optionId: 'size', optionLabel: 'Size', expected: choice, values: [
     { valueId: 's', label: 'S', member: { catalogItemId, fulfillment: 'physical' } },
     { valueId: 'l', label: 'L', member: { commandId: 'hat-l', name: 'Hat', sku: 'HAT-L', fulfillment: 'physical' } },
   ] })).changed, true, 'a choice is checked against its product');

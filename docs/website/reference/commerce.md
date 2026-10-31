@@ -51,9 +51,9 @@ billing address or determine taxes or currency.
 
 **Content > Products** is the one place to manage a product. Each product page has two panels beside the editor: **Dinkus Commerce** and **Product image & gallery**.
 
-- On a page with no product, press **Add price and stock**. It makes a Draft product named from the page title, with the SKU you type or one made from the title, and links it to the page. Commerce keeps the link, so there is no product box on the page to fill in or save. Every product is made for its page this way, and a page sells one product, so there are no products without a page to sort out.
-- On a linked page, the panel shows the product's state (Draft, On sale, Published: off the shop or Archived) and SKU, and edits its price and sale price, stock status, choices, weight, and GTIN, MPN and Brand. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
-- A product starts as a simple product, and the panel says so. To sell it in more than one version, add a choice such as Size; the product becomes variable and each choice gets its own price, SKU and stock.
+- A page with no product opens on its price form: Regular, Sale, an optional SKU (made from the title if left blank), Stock status, a **Physical product** switch and Weight. **Save** makes a Draft product named from the page title, with those values, and links it to the page. Commerce keeps the link, so there is no product box on the page to fill in or save. Every product is made for its page this way, and a page sells one product, so there are no products without a page to sort out.
+- A linked page shows the product's status (Draft, On sale, Published: off the shop or Archived), SKU and name, then cards like a Shopify product form: **Pricing & stock** (Regular, Sale, SKU and Stock status, one Save), **Variants**, **Shipping** (weight in ounces, for physical products) and **Identifiers** (GTIN, MPN and Brand). The cards other than Pricing & stock start collapsed. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
+- A product is simple until it has an option. The collapsed **Variants** card asks for an option name, such as Size, and its values, comma-separated: **Add options** makes the product variable, with the product itself as the first variant and a new variant for each other value, its SKU made from the product's SKU and the value. Each variant is then its own card with Regular, Sale, SKU and Stock status; **Edit options** renames options and values and sets each variant's fulfillment; **Add another option** (up to three) and **Add a variant** (up to fifty) extend it.
 - **Product image & gallery** chooses the product's picture and up to eight gallery pictures from the Media Library, in order. It works once the page sells a product; until then it points to **Dinkus Commerce**.
 - A product with no Regular price is not for sale, so the panel says **Add a Regular price to sell it**, and a published page's product reads **Published: off the shop** until it has one. Saving with Regular empty answers with the same words instead of **Product saved**.
 - The page title is the product's name. Publishing the page copies the title to the product, so the shop, cart, checkout and new orders show it. Paid orders keep the name they were bought under. To rename a product, change the page title and publish. A store must have the publish check that sends the title (DinkusKit Template Store from template-store#158) before it upgrades to this Commerce; until then products keep their current names.
@@ -64,13 +64,13 @@ To show this panel, Commerce asks for the `admin.editor-draft:read` permission w
 
 ## Saving and upgrading catalog data
 
-Price and stock-status saves, including submitted feed choices, commit together.
-Native local-stock hosts keep choice-level tracking changes in that same commit.
-Native catalog lists return the product revision for every choice. A native bulk
-price request validates sibling choices against that same snapshot and commits
+Price and stock-status saves, including submitted feed channels, commit together.
+Native local-stock hosts keep variant-level tracking changes in that same commit.
+Native catalog lists return the product revision for every variant. A native bulk
+price request validates sibling variants against that same snapshot and commits
 its valid rows together; invalid rows remain individually reported. A competing
 product edit refuses the staged rows for that product without a partial save.
-A **Save weight** action commits all submitted choice weights together. These
+A **Save weight** action commits all submitted variant weights together. These
 actions work within EmDash's default ten-subrequest sandbox limit. If another
 editor changes the product after a form opens, reload before saving again.
 
@@ -89,7 +89,7 @@ For direct kernel consumers, price, manual-availability and feed-eligibility
 readers now require the catalog reader as their third argument. Use these
 readers or the catalog API, rather than reading the legacy collections directly;
 raw legacy records may no longer be current. A product supports at most fifty
-choices, and saves exceeding the host's 1 MiB record limit are refused before
+variants, and saves exceeding the host's 1 MiB record limit are refused before
 writing.
 
 ## Product identity and pricing
@@ -138,15 +138,15 @@ Agents and command-line tools manage products through the private `catalog` rout
 | `op` | Does |
 | --- | --- |
 | `list` | Lists products: id, name, SKU, and when it was archived. |
-| `get` | One product (`catalogItemId`) with its choices, prices, pictures and feed channels. With `entryId` instead, the product that page sells: the one its panel picked, else the one it last sold; `product: null` when it sells none. |
-| `create` | Makes a physical Draft from `name` and `sku` for the product page `entryId`, which is required: make the page first. A page that already sells a product is refused. Send a `commandId` so a retry finds the same product. |
-| `prices`, `choice`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, choices and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |
+| `get` | One product (`catalogItemId`) with its options, variants, prices, pictures and feed channels. With `entryId` instead, the product that page sells: the one its panel picked, else the one it last sold; `product: null` when it sells none. |
+| `create` | Makes a Draft from `name` and `sku` for the product page `entryId`, which is required: make the page first. It is the panel's first Save: `fulfillment` (`physical`, the default, or `digital`), `regular`, `sale`, `stockStatus` and `weightOz` are saved in the same call when given, and the answer carries the price form (`price`, with `saved: false` and a message when the price was refused). A page that already sells a product is refused. Send a `commandId` so a retry finds the same product. |
+| `prices`, `option`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, options and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |
 
 Publishing the page still puts the product on sale, so an agent sells a product by making its page through EmDash, creating the product with the page's `entryId`, pricing it and publishing its page through EmDash. Commerce keeps the link, as it does for the panel, and the page has no product field to set. A store whose template predates this still reads the page's own **Commerce product** field (`commerce_item_id`) when it publishes; there, the agent also sets that field to the product's `catalogItemId`, or the store is updated first. Manage stock stays off, as in the panels. A refused write answers with the reason.
 
-A write may carry `expected`: the first 12 hex digits of the SHA-256 of the product's `get` answer as JSON (for a choice, of its product, named as `productId`). Commerce then saves only while the product still reads that way, so an agent never overwrites a change it did not see.
+A write may carry `expected`: the first 12 hex digits of the SHA-256 of the product's `get` answer as JSON (for a variant, of its product, named as `productId`). Commerce then saves only while the product still reads that way, so an agent never overwrites a change it did not see.
 
-The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-choice`, `archive` and `restore`. `products create` makes the Content > Products page too (found by slug, or made as a Draft from the name), then the product for it, so one command does both steps. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
+The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-option`, `archive` and `restore`. `products create` makes the Content > Products page too (found by slug, or made as a Draft from the name), then the product for it, priced with `--regular`, `--sale`, `--stock-status` and `--weight-oz` when given, so one command does it all. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
 
 Select CLI configuration with `--profile <name>` or `DINKUS_COMMERCE_PROFILE`. A requested name must be explicitly defined in a config file's `profiles` object; inherited names do not count. A missing name or malformed selected profile stops with exit `2` before any HTTP request, rather than silently sending a change to the base site. Profile maps and matching entries must be JSON objects; an explicitly defined empty object still inherits that file's base metadata. Existing configuration precedence and restrictions on sending credentials to project-configured sites are unchanged. See the repository's [CLI specification](https://github.com/dinkuskit/commerce/blob/main/docs/CLI-SPEC.md#configuration-and-authentication) for paths and examples.
 

@@ -4,7 +4,7 @@ import { writeFileSync } from "node:fs";
 import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 import { resolveStorefrontAvailability } from "../../dist/features/storefront-availability/index.js";
-import { openMediaPanel, openPanel, openProductPage, openProductPageTitled, readProductPage, setOnSale } from "./product-page.mjs";
+import { openCard, openMediaPanel, openPanel, openProductPage, openProductPageTitled, readProductPage, setOnSale } from "./product-page.mjs";
 
 // Primary owner for transport/rendering: real workerd, host authorization and SQLite.
 // Kernel unit tests cannot detect broken sandbox RPC, invalid Block Kit, or lost form state.
@@ -58,11 +58,12 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     ({ panel } = opened);
     panelEndpoint = opened.endpoint;
     const pageId = opened.id;
-    await expect(panel.getByText("Not a product yet. Add price and stock to sell it.", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Save makes this page's product as a Draft; publishing the page puts it on sale.", { exact: true })).toBeVisible();
     await capture("product-page-unlinked");
-    await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("RED-HAT");
+    await panel.getByRole("textbox", { name: "SKU", exact: true }).fill("RED-HAT");
     const createResponse = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
-    await panel.getByRole("button", { name: "Add price and stock", exact: true }).click();
+    // The first Save makes the product (catalog-first-save-creates-20261031); the form's other fields stay as they were.
+    await panel.getByRole("button", { name: "Save", exact: true }).click();
     const createdResponse = await createResponse;
     const createdBody = (await createdResponse.json()).data;
     expect(createdBody.toast).toEqual({ type: "success", message: "Draft made. Publish the page to sell it." });
@@ -76,11 +77,11 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     const id = created[0].itemId;
     expect(raw("product_pages").find(row => row.entryId === pageId)?.catalogItemId).toBe(id);
     expect((await readProductPage(page.request, pageId)).data?.commerce_item_id ?? null).toBeNull();
-    await expect(panel.getByText(/^Draft: publish to sell it/)).toBeVisible();
+    await expect(panel.getByText("Draft: publish to sell it", { exact: true })).toBeVisible();
     // A reload opens the product from Commerce's link, with nothing saved on the page.
     await page.reload();
     panel = await openPanel(page);
-    await expect(panel.getByText(/^Draft: publish to sell it/)).toBeVisible();
+    await expect(panel.getByText("Draft: publish to sell it", { exact: true })).toBeVisible();
     const availability = () => resolveStorefrontAvailability(store, { catalogItemId: id }, { resolveProvider: async () => { throw new Error("Inventory must not be needed"); } });
     expect((await availability()).listable).toBe(false);
     const replay = await page.request.post(createdResponse.request().url(), { data: createdResponse.request().postDataJSON(), headers: { "X-EmDash-Request": "1" } });
@@ -120,7 +121,8 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await page.reload();
     panel = await openPanel(page);
     // Published but with no Regular price yet: off the shop, and the panel names the missing price.
-    await expect(panel.getByText(/^Published: off the shop · SKU RED-HAT/)).toBeVisible();
+    await expect(panel.getByText("Published: off the shop", { exact: true })).toBeVisible();
+    await expect(panel.getByText("RED-HAT", { exact: true })).toBeVisible();
     await expect(panel.getByText("Add a Regular price to sell it", { exact: true })).toBeVisible();
 
     await expect(panel.getByText("Manage stock — Coming soon", { exact: true })).toBeVisible();
@@ -138,47 +140,50 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await panel.getByRole("radio", { name: "Out of stock", exact: true }).check();
     expect((await save()).toast.type).toBe("success");
     await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
-    await expect(panel.getByText(/^On sale · SKU RED-HAT/)).toBeVisible();
+    await expect(panel.getByText("On sale", { exact: true })).toBeVisible();
     await expect(panel.getByText("Add a Regular price to sell it", { exact: true })).toHaveCount(0);
     expect(lastSave.values).not.toHaveProperty("manageStock");
     expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].price).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
     // Shipping weight in ounces sits on the catalog item; a refused weight keeps the typing and the stored value.
+    // Weight sits in the Shipping card, collapsed until opened; every save redraws the panel with it collapsed again.
+    const weightBox = async () => { await openCard(panel, "Shipping"); return panel.getByRole("textbox", { name: "Weight (oz)", exact: true }); };
     const saveWeight = async () => {
       const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
       await panel.getByRole("button", { name: "Save weight", exact: true }).click();
       return (await (await response).json()).data;
     };
-    await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
+    await (await weightBox()).fill("12.5");
     expect((await saveWeight()).toast.message).toBe("Weight saved");
-    await expect(panel.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("12.5");
+    await expect((await weightBox())).toHaveValue("12.5");
     expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].weightOz).toBe(12.5);
-    await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("heavy");
+    await (await weightBox()).fill("heavy");
     expect((await saveWeight()).toast.type).toBe("error");
-    await expect(panel.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("heavy");
+    await expect((await weightBox())).toHaveValue("heavy");
     expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].weightOz).toBe(12.5);
     await capture("product-weight-refused");
-    await panel.getByRole("textbox", { name: "Weight (oz)", exact: true }).fill("12.5");
+    await (await weightBox()).fill("12.5");
     expect((await saveWeight()).toast.type).toBe("success");
     expect(raw("catalog_items")[0].stockManagement).toEqual({ mode: "unmanaged" });
     // GTIN, MPN and Brand for shopping feeds: checked like the identifiers route, an empty box clears its field.
+    const idBox = async (name) => { await openCard(panel, "Identifiers"); return panel.getByRole("textbox", { name, exact: true }); };
     const saveIds = async () => {
       const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
       await panel.getByRole("button", { name: "Save identifiers", exact: true }).click();
       return (await (await response).json()).data;
     };
-    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381 333931");
-    await panel.getByRole("textbox", { name: "MPN", exact: true }).fill("RH-1");
-    await panel.getByRole("textbox", { name: "Brand", exact: true }).fill("Smoky");
+    await (await idBox("GTIN")).fill("4006381 333931");
+    await (await idBox("MPN")).fill("RH-1");
+    await (await idBox("Brand")).fill("Smoky");
     expect((await saveIds()).toast.message).toBe("Identifiers saved");
     expect(raw("catalog_items")[0]).toMatchObject({ gtin: "4006381333931", mpn: "RH-1", brand: "Smoky" });
-    await expect(panel.getByRole("textbox", { name: "GTIN", exact: true })).toHaveValue("4006381333931");
-    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333932");
+    await expect((await idBox("GTIN"))).toHaveValue("4006381333931");
+    await (await idBox("GTIN")).fill("4006381333932");
     expect((await saveIds()).toast.type).toBe("error");
     // The refused form comes back with what was typed; the stored GTIN is unchanged.
-    await expect(panel.getByRole("textbox", { name: "GTIN", exact: true })).toHaveValue("4006381333932");
+    await expect((await idBox("GTIN"))).toHaveValue("4006381333932");
     expect(raw("catalog_items")[0].gtin).toBe("4006381333931");
-    await panel.getByRole("textbox", { name: "GTIN", exact: true }).fill("4006381333931");
-    await panel.getByRole("textbox", { name: "Brand", exact: true }).fill("");
+    await (await idBox("GTIN")).fill("4006381333931");
+    await (await idBox("Brand")).fill("");
     expect((await saveIds()).toast.type).toBe("success");
     expect(raw("catalog_items")[0]).not.toHaveProperty("brand");
     expect(raw("catalog_items")[0]).toMatchObject({ gtin: "4006381333931", mpn: "RH-1" });
@@ -241,10 +246,12 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
 
     // A second page cannot take a SKU another product holds; the panel keeps the typing.
     const another = await openProductPage(page, "Another hat");
-    await another.panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("RED-HAT");
-    await another.panel.getByRole("button", { name: "Add price and stock", exact: true }).click();
+    await another.panel.getByRole("textbox", { name: "SKU", exact: true }).fill("RED-HAT");
+    await another.panel.getByRole("textbox", { name: "Regular", exact: true }).fill("7");
+    await another.panel.getByRole("button", { name: "Save", exact: true }).click();
     await expect(another.panel.getByText("sku is already assigned to another catalog item", { exact: true }).first()).toBeVisible();
-    await expect(another.panel.getByRole("textbox", { name: "SKU (optional)", exact: true })).toHaveValue("RED-HAT");
+    await expect(another.panel.getByRole("textbox", { name: "SKU", exact: true })).toHaveValue("RED-HAT");
+    await expect(another.panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("7");
     expect(raw("catalog_items").filter(row => row.recordKind === "catalog-item")).toHaveLength(1);
     await page.goto("/_emdash/admin/content/products/" + pageId);
     panel = await openPanel(page);
@@ -384,8 +391,8 @@ test("clerk sets product images from the Media Library and the storefront render
 
     const bluePage = await openProductPage(page, "Blue hat");
     ({ panel, endpoint: panelEndpoint } = bluePage);
-    await panel.getByRole("textbox", { name: "SKU (optional)", exact: true }).fill("BLUE-HAT");
-    expect((await interact("Add price and stock")).toast.message).toBe("Draft made. Publish the page to sell it.");
+    await panel.getByRole("textbox", { name: "SKU", exact: true }).fill("BLUE-HAT");
+    expect((await interact("Save")).toast.message).toBe("Draft made. Publish the page to sell it.");
     const blueId = raw("catalog_items").find((row) => row.sku === "BLUE-HAT").itemId;
     expect(raw("product_pages").find((row) => row.entryId === bluePage.id)?.catalogItemId).toBe(blueId);
     await panel.getByRole("textbox", { name: "Regular", exact: true }).fill("5");

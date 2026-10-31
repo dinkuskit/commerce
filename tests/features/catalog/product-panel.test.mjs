@@ -43,7 +43,7 @@ async function shop() {
 const ui = (id = 'page-1') => ({ surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id, locale: null, version: 1 } });
 const panel = (input, ctx, id) => productPanel({ input, ui: ui(id) }, ctx);
 const texts = (blocks) => JSON.stringify(blocks);
-// The page's Add price and stock (or a catalog API create) notes its product; tests note a seeded one directly.
+// The page's first Save (or a catalog API create) notes its product; tests note a seeded one directly.
 const pick = (ctx, product, id = 'page-1') => linkProductPage({ catalog: ctx.storage.catalog_items, pages: ctx.storage.product_pages }, id, product);
 
 test('the panel refuses to run outside a product page editor', async () => {
@@ -52,11 +52,16 @@ test('the panel refuses to run outside a product page editor', async () => {
   assert.equal(out.toast?.type, 'error');
 });
 
-test('an unlinked page offers only Add price and stock: every product is made for its page', async () => {
+test('an unlinked page opens on the price form whose Save makes the product: every product is made for its page', async () => {
   const { ctx } = await shop();
   const out = await panel({ type: 'panel_load' }, ctx);
   assert.equal(validateBlockResponse(out).valid, true);
-  assert.match(texts(out.blocks), /Add price and stock/);
+  const form = out.blocks.find((block) => block.type === 'form');
+  assert.match(form.submit.action_id, /^sell:/);
+  assert.equal(form.submit.label, 'Save');
+  assert.deepEqual(form.fields.map((field) => field.action_id), ['regular', 'sale', 'sku', 'stockStatus', 'physical', 'weightOz']);
+  assert.equal(form.fields.find((field) => field.action_id === 'stockStatus').initial_value, 'in-stock');
+  assert.deepEqual(form.fields.find((field) => field.action_id === 'weightOz').condition, { field: 'physical', eq: true }, 'weight shows only for a physical product');
   assert.doesNotMatch(texts(out.blocks), /"mug"|Sell it here|Or its SKU|without a page/, 'no picking a product made elsewhere (catalog-product-needs-page-20261031)');
   // An older panel's attach button sells nothing and links nothing.
   const old = await panel({ type: 'form_submit', action_id: 'link', values: { product: 'mug' }, draft: { fields: {} } }, ctx);
@@ -65,7 +70,7 @@ test('an unlinked page offers only Add price and stock: every product is made fo
   assert.equal(out.patch, undefined, 'loading never touches the page');
 });
 
-test('Add price and stock makes an unmanaged Draft and Commerce keeps the page\'s link', async () => {
+test('the first Save makes an unmanaged Draft and Commerce keeps the page\'s link', async () => {
   const { ctx, catalog, pages } = await shop();
   const writes = [], put = catalog.put.bind(catalog);
   catalog.put = async (id, row) => { writes.push(structuredClone(row)); return put(id, row); };
@@ -87,7 +92,7 @@ test('Add price and stock makes an unmanaged Draft and Commerce keeps the page\'
   assert.match(texts(again.blocks), /Draft: publish to sell it/);
 });
 
-test('a refused Add price and stock keeps the typed SKU', async () => {
+test('a refused first Save keeps the typed SKU', async () => {
   const { ctx } = await shop();
   const out = await panel({ type: 'form_submit', action_id: 'sell', values: { sku: 'MUG' }, draft: { fields: { title: 'Second mug' } } }, ctx);
   assert.equal(out.toast?.type, 'error');
@@ -95,7 +100,7 @@ test('a refused Add price and stock keeps the typed SKU', async () => {
   assert.match(texts(out.blocks), /"initial_value":"MUG"/);
 });
 
-test('a retried Add price and stock resumes the product its first try made', async () => {
+test('a retried first Save resumes the product its first try made', async () => {
   const { ctx, catalog, pages } = await shop();
   const action = 'sell:' + crypto.randomUUID(), put = pages.put.bind(pages);
   pages.put = async () => { throw new Error('storage hiccup'); };
@@ -118,10 +123,10 @@ test('a page field naming another product changes nothing: Commerce holds the li
   // An older store's page still carries commerce_item_id; whatever it says, the panel acts on the linked product.
   const saved = await panel({ type: 'form_submit', action_id: 'save:mug', values: { regular: '9.00', sale: '' }, draft: { fields: { commerce_item_id: 'cap' } } }, ctx);
   assert.equal(await pageProduct(pages, 'page-1'), 'mug');
-  assert.match(texts(saved.blocks), /SKU MUG/);
+  assert.match(texts(saved.blocks), /"label":"SKU","value":"MUG"/);
   assert.equal(saved.patch, undefined);
   const loaded = await panel({ type: 'panel_load', draft: { fields: { commerce_item_id: 'cap' } } }, ctx);
-  assert.match(texts(loaded.blocks), /SKU MUG/);
+  assert.match(texts(loaded.blocks), /"label":"SKU","value":"MUG"/);
   assert.equal((await ctx.storage.catalog_prices.get('cap')), null, 'the named product is not changed');
 });
 
@@ -194,7 +199,7 @@ test('publishing names the product from the page title, and only a publish does'
   await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Tee' } } }, ctx);
   const id = await pageProduct(pages, 'page-1');
   const shown = texts((await panel({ type: 'panel_load' }, ctx)).blocks);
-  assert.match(shown, /Name comes from the page title/);
+  assert.match(shown, /Name \(page title\)/);
   assert.doesNotMatch(shown, /rename:|"Rename"/, 'the panel has no name of its own');
   ctx.storage.catalog_prices = new Store();
   await ctx.storage.catalog_prices.put(id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor: '1500' } });

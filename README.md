@@ -136,13 +136,16 @@ refused rather than silently cleared. `resolveStorefrontAvailability` returns
 `listable: false` when Regular is missing.
 
 Each Content > Products page has a Dinkus Commerce editor
-panel; Add price and stock makes a Draft catalog product for the page and links
-it, and the product goes on sale when the store publishes the page. Every
-product is made for its page; there are no products without one. Name is the customer-facing title
+panel. A page with no product opens on its price form, and its first Save makes
+a Draft catalog product for the page with that price, stock status, fulfillment
+and weight, and links it; the product goes on sale when the store publishes the
+page. Every product is made for its page; there are no products without one. Name is the customer-facing title
 (the product page H1 contract); this plugin does not render a storefront page.
-Opening a product shows Regular, Sale, a Manage stock notice, and In stock /
-Out of stock / On backorder when the product is unmanaged. It also shows an optional Shipping weight in ounces for each physical
-product or physical choice, which Ship will read for labels. Manage stock is
+A linked page shows the product's status, then cards: Pricing & stock (Regular,
+Sale, SKU, a Manage stock notice, and In stock / Out of stock / On backorder when
+the product is unmanaged), Variants (collapsed until the owner adds an option
+such as Size, then one card per variant), Shipping (an optional weight in ounces for each physical
+product or physical variant, which Ship will read for labels) and Identifiers. Manage stock is
 shown as Coming soon and cannot be changed. Those three stock statuses stay hidden on managed products. New products stay
 unmanaged and do not need Inventory. Existing managed products stay managed:
 clerks can edit prices, but omitted tracking fields preserve claims, bindings,

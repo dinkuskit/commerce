@@ -17,21 +17,21 @@ import { bigShop } from '../../helpers/catalog-memory.mjs';
 const submit = (action_id, values) => ({ type: 'form_submit', action_id, values });
 const isError = (answer) => answer.toast?.type === 'error' || answer.blocks?.some((block) => block.type === 'banner' && block.variant === 'error');
 
-const PAGES = new Set(['unlinked panel', 'product page', 'product page with choices']);
+const PAGES = new Set(['unlinked panel', 'product page', 'product page with variants']);
 
 test('each product screen costs the same few storage calls however many products the store has', async () => {
   const costs = new Map();
   for (const size of [10, 50, 150]) {
     const { run } = await bigShop(size);
     const screens = {
-      // An unlinked page's panel offers only Add price and stock (catalog-product-needs-page-20261031).
+      // An unlinked page's panel is the price form whose Save makes the product (catalog-product-needs-page-20261031).
       'unlinked panel': { type: 'panel_load' },
       'product page': { type: 'block_action', action_id: 'open', value: 'p002' },
       'price save': submit('save:p002', { regular: '12.00', sale: '', stockStatus: 'in-stock' }),
       'weight save': submit('weight:p002', { 'w:p002': '8' }),
       'archive': { type: 'block_action', action_id: 'archive', value: { id: 'p002', a: true } },
-      'product page with choices': { type: 'block_action', action_id: 'open', value: 'p001' },
-      'choice weight save': submit('weight:p001', { 'w:p001': '4', 'w:p001-large': '6' }),
+      'product page with variants': { type: 'block_action', action_id: 'open', value: 'p001' },
+      'variant weight save': submit('weight:p001', { 'w:p001': '4', 'w:p001-large': '6' }),
     };
     for (const [screen, input] of Object.entries(screens)) {
       const { answer, calls } = await run(input);
@@ -45,11 +45,12 @@ test('each product screen costs the same few storage calls however many products
   }
 });
 
-test('a choice price save stays under the limit in a big store', async () => {
+test('a variant price save stays under the limit in a big store', async () => {
   const { run } = await bigShop(150);
   const opened = (await run({ type: 'block_action', action_id: 'open', value: 'p001' })).answer;
-  const priceForm = opened.blocks.find((block) => block.type === 'form' && block.submit.action_id.startsWith('variant:["price","p001","p001-large"'));
-  assert.ok(priceForm, 'the Large choice has its own price form');
+  const blocksOf = (blocks) => blocks.flatMap((block) => block.type === 'accordion' ? blocksOf(block.blocks) : [block]);
+  const priceForm = blocksOf(opened.blocks).find((block) => block.type === 'form' && block.submit.action_id.startsWith('variant:["price","p001","p001-large"'));
+  assert.ok(priceForm, 'the Large variant has its own price form');
   const { answer, calls } = await run(submit(priceForm.submit.action_id, { regular: '15.00', sale: '', stockStatus: 'in-stock' }));
   assert.deepEqual(answer.toast, { type: 'success', message: 'Changes saved' });
   assert.ok(calls <= EMDASH_DEFAULT, `choice price save made ${calls} storage calls`);

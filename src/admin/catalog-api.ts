@@ -1,7 +1,7 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import {
-  addCatalogVariantOption, admitV1CatalogPriceSaveInput, assertCatalogStorageConstraints, CatalogError, createCatalogItem, editProduct, identifyConfirmedUniqueViolation, isManagedCatalogRecord,
-  claimProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku, pageProduct,
+  addCatalogVariantOption, admitV1CatalogPriceSaveInput, CatalogError, changeCatalogItemSku, createProductForPage, editProduct, isManagedCatalogRecord,
+  listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, normalizeIdentifierPatch, pageProduct,
   saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, setCatalogProductArchived, updateCatalogVariantLabels,
 } from "../features/catalog/kernel/index.js";
 import { loadProductFeedEligibility, setProductFeedEligibility } from "../features/feeds/kernel/index.js";
@@ -13,13 +13,13 @@ import { feedEligibility, storage, unique } from "./products.js";
 export const CATALOG_API_ROUTE = "catalog";
 
 /**
- * One `op` a request, with the panels' own checks: list, get (by `catalogItemId`, or by `entryId` for a page's product), create (a physical Draft for
- * the page `entryId`, which must sell no other product; `commandId` makes a retry find the same product), prices, choice, labels, sku,
- * weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels.
+ * One `op` a request, with the panels' own checks: list, get (by `catalogItemId`, or by `entryId` for a page's product), create (a Draft for
+ * the page `entryId`, which must sell no other product, with its price, stock status and weight when given; `commandId` makes a retry find
+ * the same product), prices, option, labels, sku, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels.
  * Writes return what the core functions return, so a refused write says why. A write may carry
  * `expected`, the code a preview printed: the first 12 hex digits of SHA-256 over the JSON `get` answer
  * (product, pictures and feed channels)
- * for `productId` (a choice's product), else `catalogItemId`.
+ * for `productId` (a variant's product), else `catalogItemId`.
  */
 export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContext): Promise<unknown> {
   const { op, expected, ...input } = isRecord(route.input) ? route.input : {};
@@ -32,39 +32,18 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
     const linked = input.entryId === undefined ? id : await pageProduct(store.pages, String(input.entryId));
     return linked ? read(linked) : { product: null };
   }
+  // Every product is made for its page, and a page sells one product (catalog-product-needs-page-20261031); the panel's first Save runs the same function.
   if (op === "create") {
-    // Every product is made for its page, and a page sells one product (catalog-product-needs-page-20261031).
-    if (input.entryId === undefined) throw new CatalogError("INVALID_INPUT", "entryId is required: make the product's page first");
-    const entryId = String(input.entryId), sold = await pageProduct(store.pages, entryId);
-    const taken = () => new CatalogError("PRODUCT_PAGE_CONFLICT", "This page already sells a product");
-    if (sold && (await store.catalog.get(sold) as { commandId?: unknown } | null)?.commandId !== input.commandId) throw taken();
-    // createCatalogItem checks the input and answers a repeated command with the product it made, refusing changed input.
-    const { created, item } = await createCatalogItem(store.catalog,
-      { commandId: input.commandId, name: input.name, sku: input.sku, fulfillment: "physical" }, { ...unique(ctx), offSale: true });
-    if (sold) { if (item.itemId !== sold) throw taken(); return { catalogItemId: sold }; }
-    if (await claimProductPage(store, entryId, item.itemId) || await pageProduct(store.pages, entryId) === item.itemId) return { catalogItemId: item.itemId };
-    // Another create took the page first: the Draft this one just made is archived, never left off every page.
-    if (created) await setCatalogProductArchived(store.catalog, { catalogItemId: item.itemId, archived: true });
-    throw taken();
+    return createProductForPage(store, input, unique(ctx));
   }
   // Saved only while the product still reads as the preview showed it, checked here rather than by the caller.
   if (expected !== undefined && (await sha256Hex(JSON.stringify(await read((input.productId ?? id) as string)))).slice(0, 12) !== expected)
     throw new CatalogError("COMMAND_CONFLICT", "The product changed since that preview. Nothing changed; preview again.");
   if (op === "prices") return saveCatalogProductPrices(store, admitV1CatalogPriceSaveInput(input, isManagedCatalogRecord(await store.catalog.get(id))));
-  if (op === "choice") return addCatalogVariantOption(store, input as never, unique(ctx));
+  if (op === "option") return addCatalogVariantOption(store, input as never, unique(ctx));
   if (op === "labels") return updateCatalogVariantLabels(store, input as never);
-  if (op === "sku") {
-    // The item id never changes; a SKU another product has is refused by the store's unique index,
-    // which must be proven active first, as setCatalogItemSku does.
-    const sku = normalizeSku(input.sku), { collection, pluginId } = unique(ctx);
-    await assertCatalogStorageConstraints(store.catalog, collection, pluginId);
-    try {
-      return { changed: await editProduct(store.catalog, id, item => item.sku === sku && item.skuKey === sku ? null : { ...named(item, item.name), sku, skuKey: sku }) };
-    } catch (error) {
-      if (identifyConfirmedUniqueViolation(error, collection, pluginId) === "skuKey") throw new CatalogError("SKU_CONFLICT", "sku is already assigned to another catalog item");
-      throw error;
-    }
-  }
+  // The item id never changes; a SKU another product has is refused by the store's unique index, proven active first.
+  if (op === "sku") return { changed: await changeCatalogItemSku(store.catalog, id, input.sku, unique(ctx)) };
   if (op === "weight") return { changed: await setCatalogItemWeight(store.catalog, id, input.weightOz) };
   if (op === "identifiers") {
     // The identifiers route's checks: a left-out field stays, null or "" clears it.

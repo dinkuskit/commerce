@@ -33,7 +33,7 @@ export async function setCatalogWeights(catalog: CatalogWriter, productId: strin
     let changed = false;
     for (const [id, weightOz] of typed) {
       if (!members.some(m => m.catalogItemId === id && m.fulfillment === "physical"))
-        throw new CatalogError("INVALID_INPUT", "Unknown physical product choice");
+        throw new CatalogError("INVALID_INPUT", "Unknown physical variant");
       const before = data.items[id] ?? {};
       if (before.weightOz !== weightOz) changed = true;
       data.items[id] = { ...before, weightOz };

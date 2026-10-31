@@ -1,4 +1,6 @@
 export { createCatalogItem } from "../create-catalog-item.js";
+export { createProductForPage } from "../create-product-for-page.js";
+export type { CreateProductForPageInput, CreateProductForPageResult, CreateProductForPageStorage } from "../create-product-for-page.js";
 export type { CreateCatalogItemOptions } from "../create-catalog-item.js";
 export { loadCatalogItemBackorderPolicy } from "../backorder-policy.js";
 export {
@@ -49,7 +51,7 @@ export type {
   CatalogProductVariantListItem,
 } from "../product-admin.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "../normalize.js";
-export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct, named } from "../product-edit.js";
+export { offShop, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, editProduct, named, changeCatalogItemSku } from "../product-edit.js";
 export { PRODUCT_PAGES_COLLECTION, claimProductPage, linkProductPage, pageProduct, productNotFound, setProductPageOnSale } from "../product-pages.js";
 export type { ProductPageRecord, ProductPages } from "../product-pages.js";
 export {

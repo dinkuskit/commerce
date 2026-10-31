@@ -74,7 +74,7 @@ function store() {
   return { ctx, bodies, hooks, cli, apply, pages, contentCalls };
 }
 
-test("an agent migrates a product with the CLI alone: create, price, choice, stock and SKU", async () => {
+test("an agent migrates a product with the CLI alone: create, price, option, stock and SKU", async () => {
   const { ctx, bodies, hooks, cli, apply } = store();
 
   const dry = await cli("products", "create", "--name", "Runtz", "--sku", "F-RUNTZ", "--command-id", "gfb-runtz", "--page", "page-runtz", "--dry-run", "--json");
@@ -125,7 +125,7 @@ test("an agent migrates a product with the CLI alone: create, price, choice, sto
   assert.equal(tooHigh.json().error.code, "refused", "Commerce's own price check answers");
   assert.equal((await apply("products", "set-sale-price", id, "--amount", "19.00")).code, 0);
 
-  const choice = await apply("products", "add-choice", id, "--name", "Size", "--value", "Small", "--value", "Large=F-RUNTZ-L");
+  const choice = await apply("products", "add-option", id, "--name", "Size", "--value", "Small", "--value", "Large=F-RUNTZ-L");
   assert.equal(choice.code, 0, choice.stderr);
   const shown = (await cli("products", "show", id, "--json")).json().data.product;
   assert.deepEqual(shown.variantProduct.options[0].values.map((value) => value.label), ["Small", "Large"]);
@@ -135,11 +135,11 @@ test("an agent migrates a product with the CLI alone: create, price, choice, sto
 
   const needsChoice = await cli("products", "set-price", id, "--amount", "25.00", "--dry-run", "--json");
   assert.equal(needsChoice.code, 2);
-  assert.equal(needsChoice.json().error.code, "choice_required");
-  assert.equal((await apply("products", "set-price", id, "--choice", large, "--amount", "25.00")).code, 0);
+  assert.equal(needsChoice.json().error.code, "variant_required");
+  assert.equal((await apply("products", "set-price", id, "--variant", large, "--amount", "25.00")).code, 0);
   assert.equal((await cli("products", "show", id, "--json")).json().data.product.variantProduct.members[1].regular, "25.00");
-  const second = await cli("products", "add-choice", id, "--name", "Color", "--value", "Red", "--value", "Blue=F-RUNTZ-B", "--dry-run", "--json");
-  assert.equal(second.json().error.code, "has_choices");
+  const second = await cli("products", "add-option", id, "--name", "Color", "--value", "Red", "--value", "Blue=F-RUNTZ-B", "--dry-run", "--json");
+  assert.equal(second.json().error.code, "has_options");
 
   assert.equal((await apply("products", "set-sku", id, "--sku", "F-RUNTZ-S")).code, 0);
   const conflict = await apply("products", "set-sku", id, "--sku", "F-RUNTZ-L");
@@ -147,7 +147,7 @@ test("an agent migrates a product with the CLI alone: create, price, choice, sto
   assert.deepEqual(conflict.json().error, { code: "refused", message: "Changing the product: sku is already assigned to another catalog item" });
   const human = await cli("products", "show", id);
   assert.match(human.stdout, /sku\s+F-RUNTZ-S/);
-  assert.match(human.stdout, /choice\s+Size: Small, Large/);
+  assert.match(human.stdout, /option\s+Size: Small, Large/);
 });
 
 test("weight, identifiers, pictures, feeds, archive and restore go through the CLI", async () => {
@@ -188,7 +188,7 @@ test("weight, identifiers, pictures, feeds, archive and restore go through the C
   const missing = await cli("products", "show", "nope", "--json");
   assert.equal(missing.code, 1);
   assert.equal(missing.json().error.code, "not_found");
-  for (const argv of [["set-weight", id], ["set-identifiers", id], ["save-media", id], ["set-feeds", id], ["add-choice", id, "--name", "Size", "--value", "One"], ["add-choice", id, "--name", "Size", "--value", "A=SKU", "--value", "B=SKU2"]]) {
+  for (const argv of [["set-weight", id], ["set-identifiers", id], ["save-media", id], ["set-feeds", id], ["add-option", id, "--name", "Size", "--value", "One"], ["add-option", id, "--name", "Size", "--value", "A=SKU", "--value", "B=SKU2"]]) {
     const usage = await cli("products", ...argv, "--dry-run", "--json");
     assert.equal(usage.code, 2, argv.join(" "));
   }

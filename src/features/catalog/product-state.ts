@@ -45,7 +45,7 @@ export async function catalogRoot(catalog: CatalogReader, id: string) {
   const current = item(await catalog.get(id), id);
   const root = current.variantProductId ? item(await catalog.get(current.variantProductId), current.variantProductId) : current;
   if (root.variantProductId || (current !== root && !root.variantProduct?.members.some(m => m.catalogItemId === id)))
-    catalogFail("CATALOG_ITEM_NOT_FOUND", "Product choice is unavailable");
+    catalogFail("CATALOG_ITEM_NOT_FOUND", "Variant is unavailable");
   return { current: catalogItemState(current, root), root };
 }
 
@@ -66,7 +66,7 @@ export async function saveProductData<T>(catalog: CatalogWriter, id: string,
   const stored = current.variantProductId ? await catalog.getVersioned(current.variantProductId) : selected;
   const root = structuredClone(item(stored?.value, current.variantProductId ?? id));
   if (root.variantProductId || (current.variantProductId && !root.variantProduct?.members.some(m => m.catalogItemId === id)))
-    catalogFail("CATALOG_ITEM_NOT_FOUND", "Product choice is unavailable");
+    catalogFail("CATALOG_ITEM_NOT_FOUND", "Variant is unavailable");
   if (expectedRevision !== undefined && expectedRevision !== "catalog:" + stored!.revision)
     catalogFail("COMMAND_CONFLICT", "Product changed; reload before saving");
   current = catalogItemState(current, root);

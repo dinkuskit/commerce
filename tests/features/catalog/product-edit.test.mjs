@@ -94,6 +94,9 @@ test('an archived product leaves the shop and checkout refuses it; restoring bri
   await assert.rejects(setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: 'yes' }), (error) => error.code === 'INVALID_INPUT');
 });
 
+// The panel draws its cards as accordions; forms and notes sit inside them.
+const blocksOf = (blocks) => blocks.flatMap((block) => block.type === 'accordion' ? blocksOf(block.blocks) : [block]);
+const stateOf = (out) => out.blocks.find((block) => block.type === 'fields')?.fields.find((field) => field.label === 'Status')?.value;
 test('native routes rename and archive with content:edit_any over POST', async () => {
   const { catalog } = await shop();
   for (const route of [renameCatalogProductRoute, setCatalogProductArchivedRoute]) {
@@ -111,19 +114,20 @@ test('the product page panel names the product from the page title, archives and
   const { catalog, ctx } = await shop();
   const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
   assert.equal(opened.blocks.some((block) => block.type === 'code'), false, 'nobody copies an id any more');
-  assert.ok(opened.blocks.some((block) => block.type === 'context' && block.text === 'On sale \u00b7 SKU MUG \u00b7 Name comes from the page title'));
+  const grid = opened.blocks.find((block) => block.type === 'fields');
+  assert.deepEqual(grid.fields.map((field) => [field.label, field.value]), [['Status', 'On sale'], ['SKU', 'MUG'], ['Name (page title)', 'Proof mug']]);
   assert.equal(opened.blocks.some((block) => block.type === 'form' && block.submit.action_id.startsWith('rename:')), false, 'the page title is the one name');
   const archive = opened.blocks.flatMap((block) => block.type === 'actions' ? block.elements : []).find((element) => element.action_id === 'archive');
   assert.equal(archive.label, 'Archive product');
   assert.ok(archive.confirm, 'archiving asks first');
   const archived = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: archive.value } }, ctx);
   assert.deepEqual(archived.toast, { type: 'success', message: 'Product archived' });
-  assert.ok(archived.blocks.some((block) => block.type === 'context' && /^Archived/.test(block.text)));
+  assert.match(stateOf(archived), /^Archived/);
   const restore = archived.blocks.flatMap((block) => block.type === 'actions' ? block.elements : []).find((element) => element.action_id === 'archive');
   assert.equal(restore.label, 'Restore');
   const restored = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: restore.value } }, ctx);
   assert.deepEqual(restored.toast, { type: 'success', message: 'Restored as a Draft' });
-  assert.ok(restored.blocks.some((block) => block.type === 'context' && /^Draft: publish to sell/.test(block.text)));
+  assert.match(stateOf(restored), /^Draft: publish to sell/);
   assert.equal('archivedAt' in await catalog.get('mug'), false);
 });
 
@@ -168,7 +172,7 @@ test('an existing product without a creation record keeps create replay working 
   assert.equal(replay.item.name, 'Proof hat');
 });
 
-test('Save choices keeps option and value ids that contain a colon', async () => {
+test('Save options keeps option and value ids that contain a colon', async () => {
   const { catalog, ctx } = await shop();
   await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Proof cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap' });
   await addCatalogVariantOption({ catalog }, { productId: 'cap', optionId: 'fit:v1', optionLabel: 'Fit', values: [
@@ -176,7 +180,7 @@ test('Save choices keeps option and value ids that contain a colon', async () =>
     { valueId: 'size:large', label: 'Large', member: { commandId: 'create-cap-large', name: 'Proof cap', sku: 'CAP-L', fulfillment: 'physical' } },
   ] }, { createId: () => 'cap-large' });
   const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'cap' } }, ctx);
-  const form = opened.blocks.find((block) => block.type === 'form' && block.submit.label === 'Save choices');
+  const form = blocksOf(opened.blocks).find((block) => block.type === 'form' && block.submit.label === 'Save options');
   const values = Object.fromEntries(form.fields.map((field) => [field.action_id, field.initial_value]));
   values[form.fields.find((field) => field.initial_value === 'Small').action_id] = 'Petite';
   const saved = await commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values } }, ctx);
@@ -185,17 +189,26 @@ test('Save choices keeps option and value ids that contain a colon', async () =>
     [['size:small', 'Petite'], ['size:large', 'Large']]);
 });
 
-// catalog-simple-product-label-20261027: the panel says a product is simple until it has a choice.
-test('a simple product says so, and a product with choices does not', async () => {
+// catalog-panel-cards-20261031: a product is simple until it has an option. Its Variants card stays collapsed and asks for an
+// option name and values, as Shopify's "Add options like size or color" does; a product with options opens on its variants.
+test('a simple product keeps its Variants card collapsed with the option form, and a product with options opens it', async () => {
   const { ctx } = await shop();
-  const says = (out) => out.blocks.filter((block) => block.type === 'context').map((block) => block.text);
-  const simple = 'Simple product. Add a choice, like Size, to sell it in more than one version.';
-  const mug = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
-  assert.ok(says(mug).includes(simple));
-  const addChoices = mug.blocks.findIndex((block) => block.type === 'form' && block.submit.label === 'Add choices');
-  assert.equal(mug.blocks[addChoices - 1].text, simple, 'the line sits right above Add choices');
-  const shirt = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'shirt' } }, ctx);
-  assert.equal(says(shirt).includes(simple), false);
+  const variants = (out) => out.blocks.find((block) => block.type === 'accordion' && block.label.startsWith('Variants'));
+  const mug = variants(await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx));
+  assert.equal(mug.label, 'Variants \u00b7 simple product');
+  assert.equal(mug.default_open, false);
+  assert.match(mug.blocks[0].text, /this product is the first/);
+  const add = mug.blocks.find((block) => block.type === 'form');
+  assert.equal(add.submit.label, 'Add options');
+  assert.deepEqual(add.fields.map((field) => field.action_id), ['optionLabel', 'values']);
+  const shirt = variants(await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'shirt' } }, ctx));
+  assert.equal(shirt.label, 'Variants \u00b7 2');
+  assert.equal(shirt.default_open, true);
+  assert.equal(blocksOf(shirt.blocks).some((block) => block.type === 'context' && /this product is the first/.test(block.text)), false);
+  // Each variant is its own card with its price form; the first one open.
+  const cards = shirt.blocks.filter((block) => block.type === 'accordion');
+  assert.deepEqual(cards.slice(0, 2).map((card) => [card.label, card.default_open, card.blocks.some((block) => block.type === 'form' && block.submit.label === 'Save')]), [['Small \u00b7 $20.00', true, true], ['Large \u00b7 $24.00', false, true]]);
+  assert.deepEqual(cards.slice(2).map((card) => card.label), ['Edit options', 'Add another option', 'Add a variant']);
 });
 
 test('a product with no Regular price says so instead of Product saved or On sale', async () => {
@@ -206,39 +219,39 @@ test('a product with no Regular price says so instead of Product saved or On sal
   assert.equal(says(opened).includes('Add a Regular price to sell it'), false);
   const cleared = await save('');
   assert.deepEqual(cleared.toast, { type: 'info', message: 'Add a Regular price to sell it' });
-  assert.ok(says(cleared).includes('Published: off the shop · SKU MUG · Name comes from the page title'), says(cleared).join(' | '));
+  assert.equal(stateOf(cleared), 'Published: off the shop');
   assert.ok(says(cleared).includes('Add a Regular price to sell it'));
   assert.equal(await readPublicCatalogItem(ctx, 'mug'), null, 'a missing price still keeps it off the shop');
   // A Draft keeps its state line and also names the missing price.
   await setCatalogProductOnSale(catalog, { catalogItemId: 'mug', onSale: false });
   const draft = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
-  assert.ok(says(draft).some((text) => /^Draft: publish to sell it/.test(text)));
+  assert.match(stateOf(draft), /^Draft: publish to sell it/);
   assert.ok(says(draft).includes('Add a Regular price to sell it'));
   await setCatalogProductOnSale(catalog, { catalogItemId: 'mug', onSale: true });
   // An explicit zero is a price.
   const zero = await save('0');
   assert.deepEqual(zero.toast, { type: 'success', message: 'Product saved' });
-  assert.ok(says(zero).some((text) => /^On sale/.test(text)));
+  assert.equal(stateOf(zero), 'On sale');
   assert.equal(says(zero).includes('Add a Regular price to sell it'), false);
   // A refused save still says why.
   assert.equal((await save('abc')).toast.type, 'error');
 });
 
-test('a choice saved with no Regular price says so, and the product is unpriced only when no choice has one', async () => {
+test('a variant saved with no Regular price says so, and the product is unpriced only when no variant has one', async () => {
   const { ctx } = await shop();
   // Stored prices carry revisions, as real storage does, so each choice's form names the one it read.
   for (const [id, row] of [...ctx.storage.catalog_prices.records]) await ctx.storage.catalog_prices.put(id, row);
   const says = (out) => out.blocks.filter((block) => block.type === 'context').map((block) => block.text);
   const clear = async (out, member) => {
-    const form = out.blocks.find((block) => block.type === 'form' && block.submit.action_id.startsWith('variant:') && JSON.parse(block.submit.action_id.slice(8))[2] === member);
+    const form = blocksOf(out.blocks).find((block) => block.type === 'form' && block.submit.action_id.startsWith('variant:') && JSON.parse(block.submit.action_id.slice(8))[2] === member);
     return commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values: { regular: '', sale: '' } } }, ctx);
   };
   const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'shirt' } }, ctx);
   const one = await clear(opened, 'shirt-large');
   assert.deepEqual(one.toast, { type: 'info', message: 'Add a Regular price to sell it' });
-  assert.ok(says(one).some((text) => /^On sale/.test(text)), 'Small still has a price');
+  assert.equal(stateOf(one), 'On sale', 'Small still has a price');
   assert.equal(says(one).includes('Add a Regular price to sell it'), false);
   const both = await clear(one, 'shirt');
-  assert.ok(says(both).some((text) => /^Published: off the shop/.test(text)));
+  assert.equal(stateOf(both), 'Published: off the shop');
   assert.ok(says(both).includes('Add a Regular price to sell it'));
 });

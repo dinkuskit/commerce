@@ -70,16 +70,16 @@ dinkus-commerce catalog show <item-id>
 
 dinkus-commerce products list
 dinkus-commerce products show <item-id>
-dinkus-commerce products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--dry-run]
-dinkus-commerce products set-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
-dinkus-commerce products set-sale-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
-dinkus-commerce products set-stock-status <item-id> --status <in-stock|out-of-stock|on-backorder> [--choice <item-id>] (--dry-run | --confirm <value>)
+dinkus-commerce products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--regular <decimal>] [--sale <decimal>] [--stock-status <in-stock|out-of-stock|on-backorder>] [--digital] [--weight-oz <decimal>] [--dry-run]
+dinkus-commerce products set-price <item-id> (--amount <decimal> | --clear) [--variant <item-id>] (--dry-run | --confirm <value>)
+dinkus-commerce products set-sale-price <item-id> (--amount <decimal> | --clear) [--variant <item-id>] (--dry-run | --confirm <value>)
+dinkus-commerce products set-stock-status <item-id> --status <in-stock|out-of-stock|on-backorder> [--variant <item-id>] (--dry-run | --confirm <value>)
 dinkus-commerce products set-sku <item-id> --sku <sku> (--dry-run | --confirm <value>)
 dinkus-commerce products set-weight <item-id> (--oz <decimal> | --clear) (--dry-run | --confirm <value>)
 dinkus-commerce products set-identifiers <item-id> [--gtin <gtin>] [--mpn <mpn>] [--brand <brand>] (--dry-run | --confirm <value>)
 dinkus-commerce products save-media <item-id> [--image <media-id> | --clear-image] [--gallery <media-id> ... | --clear-gallery] (--dry-run | --confirm <value>)
 dinkus-commerce products set-feeds <item-id> (--channel <channel> ... | --none) (--dry-run | --confirm <value>)
-dinkus-commerce products add-choice <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)
+dinkus-commerce products add-option <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)
 dinkus-commerce products archive <item-id> (--dry-run | --confirm <value>)
 dinkus-commerce products restore <item-id> (--dry-run | --confirm <value>)
 
@@ -116,7 +116,7 @@ Every route is served at
   has neither and exits `1` with `route_not_available`.
 - `products show <item-id>` sends `{ "op": "get", "catalogItemId" }` to
   `POST catalog`: the product as its page panel shows it (prices, stock,
-  state, weight, identifiers, choices and their versions), its pictures and its
+  state, weight, identifiers, options and their variants), its pictures and its
   feed channels.
 
 Both public routes are mounted by the Registry (sandboxed) build
@@ -136,13 +136,13 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | --- | --- |
 | `products show` | `{ op: "get", catalogItemId }` |
 | `products create` | First, without `--page`, EmDash's content API: `GET /_emdash/api/content/products/<slug>`, and on `404` `POST /_emdash/api/content/products` `{ slug, data: { title: name } }` (a Draft page). Then `{ op: "create", commandId, name, sku, entryId }`: a physical Draft with Manage stock off, for that page. The same `commandId` again answers with the same product; another product for a page that already sells one is refused. |
-| `products set-price`, `set-sale-price`, `set-stock-status` | `{ op: "prices", catalogItemId, regular, sale, stockStatus? }`, the panel's one Save, with the values the command does not change read from `get`. `--choice` names one version of a product sold in choices. |
+| `products set-price`, `set-sale-price`, `set-stock-status` | `{ op: "prices", catalogItemId, regular, sale, stockStatus? }`, the panel's one Save, with the values the command does not change read from `get`. `--variant` names one variant of a product with options; without it, a product that has variants is refused. |
 | `products set-sku` | `{ op: "sku", catalogItemId, sku }` |
 | `products set-weight` | `{ op: "weight", catalogItemId, weightOz }` (`""` clears it) |
 | `products set-identifiers` | `{ op: "identifiers", catalogItemId, gtin?, mpn?, brand? }` (`""` clears a field) |
 | `products save-media` | `{ op: "media", catalogItemId, image?, gallery? }` |
 | `products set-feeds` | `{ op: "feeds", catalogItemId, channels }` |
-| `products add-choice` | `{ op: "choice", productId, optionId, optionLabel, values }`: the product's first choice. The first value is the product itself; each other value makes a version with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. Later choices are added in the panel. |
+| `products add-option` | `{ op: "option", productId, optionId, optionLabel, values }`: the product's first option. The first value is the product itself; each other value makes a version with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. Later choices are added in the panel. |
 | `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
 Every product is made for its page (`catalog-product-needs-page-20261031`):
@@ -158,7 +158,7 @@ whose template predates this still reads the page's own `commerce_item_id`
 field when it publishes; on such a store, set that field to the product's
 `catalogItemId` too, or update the store first.
 
-The route also has `labels` (rename a choice or its values), which the CLI
+The route also has `labels` (rename an option or its values), which the CLI
 does not wrap yet. A refused price save answers `{ saved: false, message }`,
 which the CLI reports as `refused` with Commerce's message. A Registry store
 answers other refusals as `400` with code `ROUTE_ERROR` and Commerce's reason
@@ -278,7 +278,7 @@ A product change is bound to what its preview read, and Commerce checks it
    `4` with `confirmation_required` and sends nothing.
 3. The CLI reads the product again and stops with `outdated` if it no longer
    matches, then sends the change with the value as `expected` (and, for a
-   choice, the product as `productId`). The catalog route reads the product
+   variant, the product as `productId`). The catalog route reads the product
    once more and saves only if it still hashes to `expected`; otherwise it
    refuses with "The product changed since that preview", which the CLI
    reports as `outdated`. Nothing changes either way.
@@ -317,16 +317,17 @@ server by the order version. There is no generic `--force`.
 | `--confirm <version>` | `orders complete`, `orders reopen`, `orders address` | Apply only if the order is still at this version. |
 | `--amount <decimal>` | `products set-price`, `products set-sale-price` | USD amount such as `19.99`; or `--clear`. |
 | `--clear` | `products set-price`, `set-sale-price`, `set-weight` | Clear the value instead. |
-| `--choice <item-id>` | `products set-price`, `set-sale-price`, `set-stock-status` | The version of a product sold in choices, from `products show`. Required for such a product. |
+| `--variant <item-id>` | `products set-price`, `set-sale-price`, `set-stock-status` | The variant to change, from `products show`. Required for a product with variants. |
 | `--status <...>` | `products set-stock-status` | `in-stock`, `out-of-stock` or `on-backorder`. Refused when Inventory manages the stock. |
 | `--name <name>`, `--sku <sku>`, `--command-id <id>` | `products create` | Required. `--sku` is also `products set-sku`'s new SKU; the item id never changes. |
 | `--slug <slug>` | `products create` | The Products page slug to find or make (default: made from `--name`). |
 | `--page <entry-id>` | `products create` | An existing Products page entry that sells it, instead of `--slug`. |
+| `--regular <decimal>`, `--sale <decimal>`, `--stock-status <...>`, `--digital`, `--weight-oz <decimal>` | `products create` | Saved with the product in the same call, as the panel's first Save does: a Regular price (without one the product is off the shop), a Sale price lower than it, `in-stock` (the default), `out-of-stock` or `on-backorder`, a digital product with nothing to ship, and a shipping weight in ounces. |
 | `--oz <decimal>` | `products set-weight` | Ounces, above 0 and up to 2400. |
 | `--gtin`, `--mpn`, `--brand` | `products set-identifiers` | An empty value clears it; a field left out stays. |
 | `--image <media-id>`, `--gallery <media-id>` (repeatable), `--clear-image`, `--clear-gallery` | `products save-media` | EmDash media ids; `--gallery` replaces the whole gallery. |
 | `--channel <channel>` (repeatable), `--none` | `products set-feeds` | Product feed channels, such as `google-merchant`. |
-| `--name <label>`, `--value <label>[=<sku>]` (repeatable) | `products add-choice` | 2 to 50 values; the first is the product itself (no SKU). |
+| `--name <label>`, `--value <label>[=<sku>]` (repeatable) | `products add-option` | 2 to 50 values; the first is the product itself (no SKU). |
 | `--dry-run` | product changes | Show the change and the confirmation value; send nothing. |
 | `--confirm <value>` | product changes | Commerce saves only while the product still matches that dry run. |
 
@@ -539,11 +540,11 @@ EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --car
 # Correct where an order goes before shipping it.
 EMDASH_URL=https://shop.example dinkus-commerce orders address order:demo --name 'Sam Buyer' --line1 '2 Main St' --city Knoxville --region TN --postal-code 37902 --country US --dry-run
 
-# Migrate a product: its page and a Draft for it, a price, then a Size choice.
-EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --json
+# Migrate a product: its page and a priced Draft for it, then a Size option.
+EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --regular 22.00 --json
 EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --dry-run
 EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --confirm 3f9a0c1b2d4e
-EMDASH_URL=https://shop.example dinkus-commerce products add-choice item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run
+EMDASH_URL=https://shop.example dinkus-commerce products add-option item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run
 ```
 
 ## Non-goals
@@ -605,7 +606,7 @@ change, rebuild, and compare.
 - Order changes are bound to the order version and product changes to their
   preview code rather than a command id, so a lost answer is resolved by reading again:
   there is no receipt, unknown outcome, or pending-command store yet. Only
-  `products create` and `products add-choice` carry a command id, so a retry
+  `products create` and `products add-option` carry a command id, so a retry
   finds what the first try made.
 - The kernel's `httpFailure` reads a top-level string `error`. EmDash returns
   `{ success: false, error: { code, message } }`, so the client unwraps that
@@ -651,7 +652,7 @@ or deployment qualification.
 
 `tests/cli/products-catalog.test.mjs` runs every product command against the
 real catalog API over in-memory storage, through EmDash's envelope: a
-migration by CLI alone (create and retry, prices, stock, a choice and its
-versions, SKU and its conflict), the stale-confirmation refusal, and weight,
+migration by CLI alone (create and retry, prices, stock, an option and its
+variants, SKU and its conflict), the stale-confirmation refusal, and weight,
 identifiers, pictures, feeds, archive and restore, and `products create`
 making the page first and finding it again on a retry.
