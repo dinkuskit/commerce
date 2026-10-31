@@ -44,8 +44,34 @@ Two clean builds of this change emit the same digest.
 | `bin/verify-commerce storefront` | 11 passed |
 | `bin/verify-commerce packaged` | 3 passed, plus `native_npm_consumer=pass` |
 | `npm run test:settings` | 2 passed (Registry and native) |
+| `npm run test:registry-upgrade` (from v0.5.0) | `registry_upgrade=pass`: old phase 1 passed, new phase 1 passed |
 | `tests/route-auth.test.mjs` | the Registry build's public routes are exactly the documented set, without `policies/public` |
 | `tests/features/structured-data/jsonld-builder.test.mjs` | the Offer carries no shipping or return terms, legacy policy input is ignored, and the shape check refuses terms on an Offer |
+
+## Existing stores
+
+EmDash deletes a plugin's stored rows only when the plugin is uninstalled with
+its data; a collection a plugin stops declaring keeps its rows in
+`_plugin_storage`, and these two collections declared no indexes to drop. The
+policy feature is identical from v0.5.0 to v0.7.0, so a record written by
+v0.7.0's native settings routes has the shape v0.5.0 stores.
+
+`npm run test:registry-upgrade` (`scripts/registry-upgrade-proof.mjs`, from
+v0.5.0, `registry_upgrade=pass`) now covers them:
+
+- **Before.** v0.5.0's Registry build stocks the store through its own admin
+  and holds an `active` shipping and return record in each of the Registry
+  collections (`store_shipping_policy`, `store_return_policy`) and the native
+  ones (`storeShippingPolicy`, `storeReturnPolicy`); v0.5.0's own
+  `policies/public` serves the Registry pair back.
+- **After.** This build restarts on the same database: the existing checks hold
+  (stored products, prices and settings unchanged, the shop unchanged, the page
+  claims its product, the panel edits it), `policies/public` no longer answers,
+  and all four policy rows are byte-for-byte as they were, so a merchant who
+  wants that text back can read it from the database.
+
+The proof's panel check now reads #244's product card (status and SKU as
+before); it had not been run since that redesign.
 
 ## Follow-up outside this repository
 

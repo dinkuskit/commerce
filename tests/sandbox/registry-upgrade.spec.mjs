@@ -21,6 +21,23 @@ function storage() {
   return { database, rows };
 }
 const COLLECTIONS = ["catalog_items", "catalog_prices", "catalog_manual_availability", "storefront_out_of_stock_listing", "managed_sku_claims"];
+// Policy records an earlier release kept: the Registry build's two collections and the native entry's two, which
+// v0.5.0 through v0.7.0 wrote through its settings routes. Commerce keeps no policy records now
+// (policy-pages-are-content-20261031); the upgrade must leave these rows exactly where they were.
+const POLICY_COLLECTIONS = ["store_shipping_policy", "store_return_policy", "storeShippingPolicy", "storeReturnPolicy"];
+const policyRecords = () => {
+  const updatedAt = "2026-10-01T12:00:00.000Z";
+  const shipping = { recordKind: "store-shipping-policy", recordId: "active", revision: 3, configurationId: "ship-flat",
+    mode: "flat", amount: { currency: "USD", minor: "500" }, shippingDestinationCountries: ["US"],
+    handlingTimeDays: { min: 1, max: 2 }, transitTimeDays: { min: 3, max: 5 }, policyPageUrl: "https://shop.example.test/shipping", updatedAt };
+  const returns = { recordKind: "store-return-policy", recordId: "active", revision: 2, applicableCountry: ["US"],
+    returnPolicyCategory: "MerchantReturnFiniteReturnWindow", merchantReturnDays: 30, returnMethod: "ReturnByMail",
+    returnFees: "FreeReturn", policyPageUrl: "https://shop.example.test/returns", updatedAt };
+  return { store_shipping_policy: shipping, store_return_policy: returns, storeShippingPolicy: shipping, storeReturnPolicy: returns };
+};
+const rawPolicyRows = (database) => database.prepare(
+  "SELECT * FROM _plugin_storage WHERE plugin_id = ? AND collection IN (" + POLICY_COLLECTIONS.map(() => "?").join(",") + ") ORDER BY collection, id",
+).all("dinkus-commerce", ...POLICY_COLLECTIONS);
 const items = (rows) => Object.values(rows).filter((row) => row.recordKind === "catalog-item");
 const publicCatalog = async (request) => {
   const body = await (await request.get("/_emdash/api/plugins/dinkus-commerce/catalog/public")).json();
@@ -81,8 +98,21 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
   await page.goto("/_emdash/admin/plugins/dinkus-commerce/products");
   await expect(page.getByText("Red hat").first()).toBeVisible({ timeout: 60000 });
   await capture(page, "products");
+  // The store's policy records, as the earlier release stored them; its own public read serves the Registry pair.
+  const columns = database.prepare("PRAGMA table_info(_plugin_storage)").all().map((column) => column.name);
+  const now = new Date().toISOString();
+  for (const [collection, record] of Object.entries(policyRecords())) {
+    const row = { plugin_id: "dinkus-commerce", collection, id: "active", data: JSON.stringify(record), created_at: now, updated_at: now,
+      ...(columns.includes("revision") ? { revision: crypto.randomUUID() } : {}) };
+    const keys = Object.keys(row).filter((key) => columns.includes(key));
+    database.prepare("INSERT INTO _plugin_storage (" + keys.join(",") + ") VALUES (" + keys.map(() => "?").join(",") + ")").run(...keys.map((key) => row[key]));
+  }
+  const oldPolicies = await (await page.request.get("/_emdash/api/plugins/dinkus-commerce/policies/public")).json();
+  expect(oldPolicies.data).toEqual({ shipping: policyRecords().store_shipping_policy, returns: policyRecords().store_return_policy });
   const snapshot = { from: process.env.COMMERCE_UPGRADE_FROM, ids: { hat: hat.id, scarf: scarf.id, cap: cap.id }, pageId, shop,
-    storage: Object.fromEntries(COLLECTIONS.map((name) => [name, rows(name)])), settingsRows: rows("storefront_availability_settings") };
+    storage: Object.fromEntries(COLLECTIONS.map((name) => [name, rows(name)])), settingsRows: rows("storefront_availability_settings"),
+    policyRows: rawPolicyRows(database) };
+  expect(snapshot.policyRows).toHaveLength(4);
   expect(Object.keys(snapshot.storage.catalog_prices)).toHaveLength(3);
   expect(items(snapshot.storage.catalog_items).find((row) => row.itemId === cap.id).archivedAt).toBeTruthy();
   writeFileSync(snapshotFile(), JSON.stringify(snapshot, null, 2));
@@ -122,7 +152,9 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("12.00");
   await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("10.00");
   await expect(panel.getByRole("radio", { name: "In stock", exact: true })).toBeChecked();
-  await expect(panel.getByText(/^On sale · SKU RED-HAT/)).toBeVisible();
+  // The panel's product card (#244): status and SKU as they were.
+  await expect(panel.getByText("On sale", { exact: true })).toBeVisible();
+  await expect(panel.getByRole("textbox", { name: "SKU", exact: true })).toHaveValue("RED-HAT");
   expect(rows("catalog_items")[hat]).not.toHaveProperty("offSale");
   // Edited in the panel, the new price reaches the shop.
   const priceForm = panel.locator(BLOCK_FORM).filter({ has: page.getByRole("textbox", { name: "Regular", exact: true }) });
@@ -143,5 +175,11 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
 
   // 6. Products no page sells were left exactly as they were.
   for (const id of [scarf, cap]) expect(rows("catalog_items")[id]).toEqual(before.storage.catalog_items[id]);
+
+  // 7. Commerce keeps no policy records: the public read is gone, and the earlier release's policy rows, Registry
+  // and native alike, stay in the database exactly as they were, recoverable by anyone who wants them.
+  const policiesRead = await page.request.get("/_emdash/api/plugins/dinkus-commerce/policies/public");
+  expect(policiesRead.ok()).toBe(false);
+  expect(rawPolicyRows(database)).toEqual(before.policyRows);
   database.close();
 });
