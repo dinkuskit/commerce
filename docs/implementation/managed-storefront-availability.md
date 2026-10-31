@@ -18,12 +18,12 @@ type StorefrontAvailabilityDisplayPolicy =
 ```
 
 `status` is the new-store and legacy-record default. `threshold` requires a
-positive integer. The authenticated `settings/storefront-availability` action
+positive integer. The authenticated `settings/storefront-availability` action (native only, now gone with the native extras, `commerce-one-build-registry-20261031`; the setting lives on the Commerce settings page)
 changes only this singleton policy record.
 
 Each product may have one record in the dedicated `catalogBackorderPolicies`
 collection. A missing record means `allowBackorders: false`; opting in writes
-the explicit boolean policy. The authenticated `catalog-items/set-backorders`
+the explicit boolean policy. The authenticated `catalog-items/set-backorders` (native only, gone the same way)
 action accepts only the catalog item ID and the new boolean value.
 
 These policies do not rewrite the catalog item or store Inventory binding.

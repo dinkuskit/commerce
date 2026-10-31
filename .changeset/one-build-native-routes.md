@@ -1,0 +1,5 @@
+---
+"@dinkuskit/commerce": minor
+---
+
+Commerce runs one build, the Registry build, everywhere (GrillTrack `commerce-one-build-registry-20261031`). The native entry drops its 24 routes the Registry build never had (`catalog-items/create`, `list`, `save-prices`, `save-media`, `set-sku`, `set-identifiers`, `rename`, `set-archived`, `add-variant-option`, `update-variant-labels`, `bulk-save-prices`, `set-backorders`, `set-manual-availability`, `set-regular-price`, `set-sale-price`, `clear-regular-price`, `clear-sale-price`, `set-feed-eligibility`, `configure-inventory`, `settings/storefront-availability`, `settings/out-of-stock-listing`, `settings/placeholder-image`, `settings/shipping-policy`, `settings/return-policy`) and its local Manage stock test aid (`enableLocalStockManagement`), with their route constants and route objects. Both builds now serve the same routes: the product panels, the private `catalog` route, the store's publish check, the public reads, checkout and shopper accounts. The CLI's `products list` sends `{op: "list"}` to the `catalog` route on every store.

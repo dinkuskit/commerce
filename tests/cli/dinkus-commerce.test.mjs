@@ -12,7 +12,6 @@ import { runCli } from "../../cli/kernel.mjs";
 import { spec } from "../../cli/spec.mjs";
 import {
   COMMERCE_PLUGIN_ID,
-  LIST_CATALOG_PRODUCTS_ROUTE,
   CATALOG_API_ROUTE,
   ORDERS_API_ROUTE,
   PUBLIC_CATALOG_ITEM_ROUTE,
@@ -221,17 +220,15 @@ test("catalog show passes the item id as a query and exits 1 when nothing is lis
   assert.match(missing.stderr, /^dinkus-commerce: No listable public product has item id item_gone\./);
 });
 
-test("products list sends the bearer token on GET and passes the native payload through", async () => {
-  const payload = {
-    products: [{ catalogItemId: "item_a", name: "Demo", sku: "A-1", regular: "19.99", sale: null, manageStock: false, stockStatus: "in_stock" }],
-    manageStockControl: { state: "coming-soon" },
-  };
+test("products list sends the bearer token with {op: list} to the catalog route and passes the list through", async () => {
+  const payload = { products: [{ catalogItemId: "item_a", name: "Demo", sku: "A-1" }] };
   const result = await run(["--url", SITE, "--plugin-id", "shop-commerce", "products", "list", "--json"], {
     env: { EMDASH_TOKEN: TOKEN },
     fetchImpl: async (url, init) => {
-      assert.equal(new URL(url).href, `${SITE}/_emdash/api/plugins/shop-commerce/catalog-items/list`);
-      assert.equal(init.method, "GET");
+      assert.equal(new URL(url).href, `${SITE}/_emdash/api/plugins/shop-commerce/catalog`);
+      assert.equal(init.method, "POST");
       assert.equal(init.headers.authorization, `Bearer ${TOKEN}`);
+      assert.deepEqual(JSON.parse(init.body), { op: "list" });
       return new Response(JSON.stringify({ success: true, data: payload }), { status: 200 });
     },
   });
@@ -241,12 +238,13 @@ test("products list sends the bearer token on GET and passes the native payload 
   assert.deepEqual(document.context, { siteUrl: SITE, pluginId: "shop-commerce" });
 });
 
-test("products list falls back to the catalog route on a Registry install and needs a credential", async () => {
+test("products list uses the one catalog route on every build and needs a credential", async () => {
   const listed = { products: [{ catalogItemId: "item_a", name: "Demo", sku: "A-1" }, { catalogItemId: "item_b", name: "Old", sku: "B-1", archivedAt: "2026-10-01T00:00:00Z" }] };
   const registry = await run(["--url", SITE, "products", "list", "--json"], { env: { EMDASH_TOKEN: TOKEN }, routes: { catalog: (body) => (assert.deepEqual(body, { op: "list" }), ok(listed)) } });
   assert.equal(registry.code, 0, registry.stderr);
   assert.deepEqual(singleJson(registry.stdout).data, listed);
-  assert.deepEqual(registry.calls.map((call) => [call.init.method, call.url.pathname.split("/").pop()]), [["GET", "list"], ["POST", "catalog"]]);
+  // The native-only catalog-items/list route is gone (commerce-one-build-registry-20261031): one call, no fallback.
+  assert.deepEqual(registry.calls.map((call) => [call.init.method, call.url.pathname.split("/").pop()]), [["POST", "catalog"]]);
   const old = await run(["--url", SITE, "products", "list"], { env: { EMDASH_TOKEN: TOKEN } });
   assert.equal(old.code, 1);
   assert.match(old.stderr, /does not expose catalog\. .*Commerce 0\.7\.0 or later/);
@@ -271,8 +269,8 @@ test("exit codes follow the shared 0-5 contract", async () => {
     [2, ["--timeout", "forever", "catalog", "list"], {}],
     [3, ["catalog", "list"], { "catalog/public": fail(500, "INTERNAL_ERROR", "Plugin route error") }],
     [3, ["catalog", "list"], { "catalog/public": new TypeError("fetch failed") }],
-    [4, ["products", "list"], { "catalog-items/list": fail(401, "INVALID_TOKEN", "Invalid or expired token") }],
-    [4, ["products", "list"], { "catalog-items/list": fail(403, "INSUFFICIENT_SCOPE", "Token lacks required scope: admin") }],
+    [4, ["products", "list"], { catalog: fail(401, "INVALID_TOKEN", "Invalid or expired token") }],
+    [4, ["products", "list"], { catalog: fail(403, "INSUFFICIENT_SCOPE", "Token lacks required scope: admin") }],
     [5, ["catalog", "list"], { "catalog/public": { status: 200, body: { products: [] } } }],
     [5, ["catalog", "list"], { "catalog/public": { status: 200, body: { success: false, data: { products: [] } } } }],
     [5, ["catalog", "list"], { "catalog/public": { status: 200, body: "<html>not emdash</html>" } }],
@@ -335,7 +333,7 @@ test("admin commands never send the token to a plugin id from project config", a
   try {
     await mkdir(join(cwd, ".dinkuskit"));
     await writeFile(join(cwd, ".dinkuskit", "commerce.json"), JSON.stringify({ "plugin-id": "other-plugin" }));
-    const routes = { "catalog-items/list": ok({ products: [] }), "catalog/public": ok({ products: [] }) };
+    const routes = { catalog: ok({ products: [] }), "catalog/public": ok({ products: [] }) };
 
     // Trusted site URL from the environment, plugin id from the working directory.
     const refused = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE } });
@@ -352,18 +350,18 @@ test("admin commands never send the token to a plugin id from project config", a
 
     const fromFlag = await run(["--plugin-id", "dinkus-commerce", "products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE } });
     assert.equal(fromFlag.code, 0, fromFlag.stderr);
-    assert.equal(fromFlag.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog-items/list");
+    assert.equal(fromFlag.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog");
 
     await rm(join(cwd, ".dinkuskit", "commerce.json"));
     const fromDefault = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE } });
     assert.equal(fromDefault.code, 0, fromDefault.stderr);
-    assert.equal(fromDefault.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog-items/list");
+    assert.equal(fromDefault.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog");
 
     await mkdir(join(configHome, "dinkuskit", "commerce"), { recursive: true });
     await writeFile(join(configHome, "dinkuskit", "commerce", "config.json"), JSON.stringify({ "plugin-id": "dinkus-commerce" }));
     const fromUser = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN, EMDASH_URL: SITE, XDG_CONFIG_HOME: configHome } });
     assert.equal(fromUser.code, 0, fromUser.stderr);
-    assert.equal(fromUser.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog-items/list");
+    assert.equal(fromUser.calls[0].url.pathname, "/_emdash/api/plugins/dinkus-commerce/catalog");
   } finally {
     await rm(cwd, { recursive: true, force: true });
     await rm(configHome, { recursive: true, force: true });
@@ -376,7 +374,7 @@ test("admin commands never send the token to a site URL from project config", as
   try {
     await mkdir(join(cwd, ".dinkuskit"));
     await writeFile(join(cwd, ".dinkuskit", "commerce.json"), JSON.stringify({ url: "https://project.example" }));
-    const routes = { "catalog-items/list": ok({ products: [] }), "catalog/public": ok({ products: [] }) };
+    const routes = { catalog: ok({ products: [] }), "catalog/public": ok({ products: [] }) };
 
     const refused = await run(["products", "list", "--json"], { cwd, routes, env: { EMDASH_TOKEN: TOKEN } });
     assert.equal(refused.code, 4);
@@ -409,10 +407,10 @@ test("admin commands never send the token to a site URL from project config", as
 
 test("the credential never appears in stdout or stderr", async () => {
   const scenarios = [
-    [["products", "list"], { "catalog-items/list": ok({ products: [] }) }],
-    [["products", "list", "--json"], { "catalog-items/list": fail(401, "INVALID_TOKEN", "Invalid or expired token") }],
-    [["products", "list", "--plain"], { "catalog-items/list": fail(500, "INTERNAL_ERROR") }],
-    [["products", "list"], { "catalog-items/list": { status: 200, body: "garbage" } }],
+    [["products", "list"], { catalog: ok({ products: [] }) }],
+    [["products", "list", "--json"], { catalog: fail(401, "INVALID_TOKEN", "Invalid or expired token") }],
+    [["products", "list", "--plain"], { catalog: fail(500, "INTERNAL_ERROR") }],
+    [["products", "list"], { catalog: { status: 200, body: "garbage" } }],
     [["catalog", "list", "--json"], { "catalog/public": ok({ products: [product("item_a")] }) }],
     [["products", "set-price", "item_a", "--amount", "1.00", "--json"], {}],
     [["--help"], {}],
@@ -667,7 +665,6 @@ test("CLI route ids and named routes match the built Commerce package", async ()
   assert.deepEqual(ROUTES, {
     publicCatalog: PUBLIC_CATALOG_ROUTE,
     publicCatalogItem: PUBLIC_CATALOG_ITEM_ROUTE,
-    listProducts: LIST_CATALOG_PRODUCTS_ROUTE,
     catalog: CATALOG_API_ROUTE,
     orders: ORDERS_API_ROUTE,
   });

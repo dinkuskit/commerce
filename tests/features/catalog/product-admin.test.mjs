@@ -4,8 +4,6 @@ import { PluginRouteError } from "emdash";
 
 import {
   CatalogError,
-  LIST_CATALOG_PRODUCTS_ROUTE,
-  SAVE_CATALOG_PRODUCT_PRICES_ROUTE,
   catalogProductCreateInput,
   createManagedSkuRegistrationClaimKey,
   createPlugin,
@@ -350,36 +348,11 @@ test("the product list is by name and the admin routes stay private", async () =
   assert.equal(plugin.admin.entry, undefined);
   assert.equal(plugin.routes["product-panel"].permission, "content:edit_any");
   assert.equal(plugin.routes["product-media-panel"].permission, "content:edit_any");
-  assert.equal(plugin.routes[LIST_CATALOG_PRODUCTS_ROUTE].permission, "content:edit_any");
-  assert.equal(plugin.routes[SAVE_CATALOG_PRODUCT_PRICES_ROUTE].permission, "content:edit_any");
-  const context = {
-    storage: {
-      catalogItems: stores.catalog,
-      catalogPrices: stores.prices,
-      catalogManualAvailability: stores.availability,
-      managedSkuClaims: stores.claims,
-    },
-  };
-  await assert.rejects(
-    plugin.routes[SAVE_CATALOG_PRODUCT_PRICES_ROUTE].handler({
-      ...context,
-      input: { catalogItemId: "item-apple", regular: "3", sale: "" },
-      request: new Request("https://example.test/save-prices", { method: "GET" }),
-    }),
-    (error) => error instanceof PluginRouteError && error.status === 405,
-  );
-  const saved = await plugin.routes[SAVE_CATALOG_PRODUCT_PRICES_ROUTE].handler({
-    ...context,
-    input: { catalogItemId: "item-apple", regular: "3", sale: "" },
-    request: new Request("https://example.test/save-prices", { method: "POST" }),
-  });
-  assert.equal(saved.regular, "3.00");
-  const fromRoute = await plugin.routes[LIST_CATALOG_PRODUCTS_ROUTE].handler({
-    ...context,
-    input: {},
-    request: new Request("https://example.test/list", { method: "GET" }),
-  });
-  assert.equal(fromRoute.products[0].regular, "3.00");
+  // Prices are saved through the product panel and the private catalog route on both builds; the native
+  // list and save-prices routes are gone (commerce-one-build-registry-20261031).
+  assert.equal(plugin.routes["catalog-items/list"], undefined);
+  assert.equal(plugin.routes["catalog-items/save-prices"], undefined);
+  assert.equal(plugin.routes.catalog.permission, "content:edit_any");
 });
 
 test("one Save writes Out of stock and a refused status leaves the stored status unchanged", async () => {

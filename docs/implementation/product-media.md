@@ -73,10 +73,10 @@ admin lists the library itself:
   <filename>*). Choosing saves at once and returns to the product.
 - Commerce Settings → Catalog → **Placeholder image** with *Choose placeholder*
   / *Change placeholder* and *Remove placeholder* through the same page.
-- Native `createPlugin` mounts authenticated `catalog-items/save-media`
-  (`{ catalogItemId, image?, gallery? }`, media ids; omitted fields keep their
-  value, `null` or `""` clears) and `settings/placeholder-image` (GET, or POST
-  `{ image }`). The compatibility React Products and Store pages are unchanged.
+- Pictures and the placeholder are saved through the product image panel, the
+  Commerce settings page and the `catalog` route's `media` op on both builds;
+  the native-only `catalog-items/save-media` and `settings/placeholder-image`
+  routes are gone (`commerce-one-build-registry-20261031`).
 
 A refused choice (duplicate gallery image, full gallery, malformed media id,
 a gallery that changed since the page loaded, storage failure) leaves every

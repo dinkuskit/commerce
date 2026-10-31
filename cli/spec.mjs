@@ -154,19 +154,10 @@ async function catalogShow(ctx) {
 // ---------------------------------------------------------------------------
 // products
 
-// The native build lists prices and stock; a Registry store (Commerce 0.7.0+)
-// lists ids, names, SKUs and archive state through the catalog route.
+// Every store lists ids, names, SKUs and archive state through the catalog route (Commerce 0.7.0+);
+// products show has one product's prices and stock.
 async function listAnyProducts(client) {
-	try {
-		return await client.listProducts();
-	} catch (error) {
-		if (!(error instanceof CliError) || error.code !== "route_not_available") throw error;
-		const data = await client.catalog({ op: "list" }, "Listing products");
-		if (!Array.isArray(data.products) || data.products.some((product) => typeof product?.catalogItemId !== "string" || typeof product.name !== "string")) {
-			throw new CliError("malformed_response", "Listing products: a product is missing its catalogItemId or name.", { exit: EXIT.contract });
-		}
-		return { products: data.products };
-	}
+	return client.listProducts();
 }
 
 async function productsList(ctx) {
@@ -722,9 +713,9 @@ export const spec = {
 				summary: `Read and change products, with the product page panel checks. Needs ${TOKEN_ENV}.`,
 				commands: {
 					list: {
-						summary: "List products: prices and stock on a native store; ids, names, SKUs and archive state on a Registry store.",
+						summary: "List products: ids, names, SKUs and archive state.",
 						usage: "products list",
-						description: `Reads GET catalog-items/list with ${TOKEN_ENV}. The Registry build does not mount it, so the CLI then sends {op: list} to POST catalog (Commerce 0.7.0+); use products show for one product's prices.`,
+						description: `Sends {op: list} to POST catalog with ${TOKEN_ENV} (Commerce 0.7.0+); use products show for one product's prices and stock.`,
 						examples: ["dinkus-commerce --url https://shop.example products list --json"],
 						run: productsList,
 					},
@@ -941,7 +932,7 @@ export const spec = {
 						summary: "Show catalog and storefront settings. (planned)",
 						usage: "settings show",
 						run: planned(
-							"Commerce has no read-only settings route. The native build can read settings/out-of-stock-listing and settings/placeholder-image but not settings/storefront-availability, and the Registry build has none.",
+							"Commerce has no read-only settings route; its settings live on the Commerce settings page.",
 						),
 					},
 				},

@@ -25,7 +25,7 @@ authoritative managed quantity; they never manufacture a count or
 
 Each explicit choice is stored in the dedicated
 `catalogManualAvailability` collection under the catalog item ID. The private
-`catalog-items/set-manual-availability` action requires
+`catalog-items/set-manual-availability` action (native only; gone with the native extras, `commerce-one-build-registry-20261031`; stock status is saved with the prices through the panel and the `catalog` route's `prices` op) required
 `content:edit_any`, accepts only `catalogItemId` and a supported `status`, and
 rejects non-POST methods. It loads current `stockManagement.mode` from the
 server-owned catalog row and returns `MANAGE_STOCK_ENABLED` with conflict

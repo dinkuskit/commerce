@@ -42,7 +42,7 @@ has live proof.
 
 ## Product action
 
-The authenticated `catalog-items/configure-inventory` route requires EmDash
+The authenticated `catalog-items/configure-inventory` route (native only; gone with the native extras, `commerce-one-build-registry-20261031`, until Inventory returns in Block Kit) required EmDash
 `content:edit_any` permission and accepts exactly:
 
 ```json

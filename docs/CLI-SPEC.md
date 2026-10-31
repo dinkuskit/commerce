@@ -106,24 +106,23 @@ Every route is served at
 - `catalog show <item-id>` reads `GET catalog/public/item?itemId=<item-id>`.
   The service returns `null` for a missing, unpriced, or unlisted product; the
   CLI reports that as `not_found` and exits `1`.
-- `products list` reads `GET catalog-items/list` with the credential. It returns
-  every product with Regular and Sale as dollar strings, Manage stock, the
-  manual stock status for unmanaged products, and variant members. Only the
-  native Commerce build mounts this route. On a Registry (sandboxed) install the
-  site answers `404`, and the CLI sends `{ "op": "list" }` to `POST catalog`
-  instead, which lists each product's `catalogItemId`, `name`, `sku` and
-  `archivedAt`; `products show` has its prices. A Commerce older than 0.7.0
-  has neither and exits `1` with `route_not_available`.
+- `products list` sends `{ "op": "list" }` to `POST catalog` with the
+  credential, on every build (Commerce 0.7.0+): each product's `catalogItemId`,
+  `name`, `sku` and `archivedAt`; `products show` has its prices and stock. The
+  native-only `catalog-items/list` route is gone
+  (`commerce-one-build-registry-20261031`). A Commerce older than 0.7.0 has no
+  `catalog` route and exits `1` with `route_not_available`.
 - `products show <item-id>` sends `{ "op": "get", "catalogItemId" }` to
   `POST catalog`: the product as its page panel shows it (prices, stock,
   state, weight, identifiers, choices and their versions), its pictures and its
   feed channels.
 
-Both public routes are mounted by the Registry (sandboxed) build
-(`src/plugin.ts`) and the native build (`src/index.ts`), with the same request
-rules and response (GrillTrack `catalog-native-public-routes-001`). The
-`catalog` commands therefore work on either install, and so do the `products`
-commands on Commerce 0.7.0 or later.
+Both public routes and the private `catalog` route are mounted by the Registry
+(sandboxed) build (`src/plugin.ts`) and the native build (`src/index.ts`), with
+the same request rules and response (GrillTrack
+`catalog-native-public-routes-001`, `commerce-one-build-registry-20261031`).
+The `catalog` and `products` commands therefore work on either install on
+Commerce 0.7.0 or later.
 
 ### Product commands
 
@@ -365,8 +364,8 @@ may change. Control characters in merchant text are shown escaped
 The envelope always has `schema`, `command`, `outcome`, and `context`. Reads use
 `outcome: "ok"` and `data`. `data` passes the service payload through
 unchanged: `catalog list` adds `pages` with `--all` and omits `cursor` on the
-last page, `catalog show` is one product, and `products list` is the native
-`{ products, manageStockControl }` payload. `orders list` is
+last page, `catalog show` is one product, and `products list` is the catalog
+route's `{ products }` list. `orders list` is
 `{ orders, total, cursor? }` (`cursor` is the route's `next` as a string),
 `orders show` is one order, and a saved `orders complete`, `orders reopen` or
 `orders address` is the route's `{ result, order }`. A preview uses
@@ -525,7 +524,7 @@ dinkus-commerce --url https://shop.example catalog show item_demo --json
 # Out-of-stock products in a script, using a configured profile.
 dinkus-commerce --profile staging catalog list --all --plain | grep 'availability.status=out-of-stock'
 
-# Admin product list on a native install; EMDASH_TOKEN comes from your secret manager.
+# Admin product list; EMDASH_TOKEN comes from your secret manager.
 EMDASH_URL=https://shop.example dinkus-commerce products list
 
 # Local development site served over loopback http.
@@ -617,7 +616,7 @@ change, rebuild, and compare.
 | --- | --- | --- |
 | `catalog list` | Wired | `GET catalog/public[?cursor=]` (both builds) |
 | `catalog show` | Wired | `GET catalog/public/item?itemId=` (both builds) |
-| `products list` | Wired | `GET catalog-items/list` with `EMDASH_TOKEN` (native build), else `POST catalog` `{op: list}` (Commerce 0.7.0+) |
+| `products list` | Wired | `POST catalog` `{op: list}` with `EMDASH_TOKEN` (both builds, Commerce 0.7.0+) |
 | `products show`, `create` and every product change | Wired | `POST catalog` with `EMDASH_TOKEN` (both builds, Commerce 0.7.0+) |
 | `orders list`, `orders show` | Wired | `POST orders` with `EMDASH_TOKEN` (Registry build) |
 | `orders complete`, `orders reopen`, `orders address` | Wired | `POST orders` with `EMDASH_TOKEN`, bound to the confirmed order version (Registry build) |

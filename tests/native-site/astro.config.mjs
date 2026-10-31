@@ -6,7 +6,6 @@ import { sqlite } from "emdash/db";
 import { createPlugin as createNativePlugin, dinkusCommerce } from "../../dist/index.js";
 import { fileURLToPath } from "node:url";
 
-const enableLocalStockManagement = process.env.COMMERCE_ENABLE_LOCAL_STOCK === "true";
 const siteUrl = process.env.EMDASH_SITE_URL || process.env.COMMERCE_SITE_URL;
 const synthetic = process.env.COMMERCE_NATIVE_SYNTHETIC === "1";
 const syntheticBinding = "synthetic:variant-proof:v1";
@@ -80,7 +79,6 @@ const commerce = synthetic
       options: { ...(siteUrl ? { siteUrl } : {}), synthetic: true },
     }
   : dinkusCommerce({
-      enableLocalStockManagement,
       ...(siteUrl ? { siteUrl } : {}),
     });
 
