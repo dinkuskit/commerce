@@ -131,8 +131,9 @@ treated as zero stock or a backorder. The package stores no fallback quantity.
 Products with Manage Stock disabled use a separate Commerce-owned manual
 availability value: `in-stock`, `out-of-stock`, or
 `available-on-backorder`. A missing value defaults to `in-stock` for new and
-legacy products. The private `catalog-items/set-manual-availability` action
-can change it only while the product is unmanaged. The value remains dormant
+legacy products. The product panel's price form (the private `catalog` route's
+`prices` op, with its stock status) can change it only while the product is
+unmanaged. The value remains dormant
 while Inventory manages the product and returns if management is later
 disabled. `resolveStorefrontAvailability` selects the managed or unmanaged
 authority and always returns the same structured storefront contract;
