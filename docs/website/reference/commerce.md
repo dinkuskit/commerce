@@ -128,6 +128,20 @@ The catalog accepts only its documented query keys. Continue pagination until no
 
 Checkout rereads authoritative prices and availability. Never send a browser-computed price, tenant, provider choice, or order status as authority. See [site integration](/docs/developers/integrate) for the purchase flow.
 
+For guest checkout, check both the HTTP response and EmDash's JSON `success` flag, then Commerce's `data.ok`. A successful `prepare` returns a **presentation object** at `data.capability`, not a token string. For example (illustrative values, not a usable credential):
+
+<!-- guest-prepare-capability-example -->
+```json
+{
+  "capabilityId": "example-capability",
+  "capability": "example-capability.example-secret",
+  "retention": "json-body",
+  "header": "x-commerce-guest-capability"
+}
+```
+
+Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `start` and `status`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session.
+
 Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token of an Editor or Administrator (EmDash still requires the token's `admin` scope). Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same. The `address` action is the Orders page's Correct address: it replaces `shipTo` on a Processing order at the order version it read, with the same checks as checkout and only to a country the store ships to, and never changes billing. Move a Completed order back to Processing first.
 
 Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:

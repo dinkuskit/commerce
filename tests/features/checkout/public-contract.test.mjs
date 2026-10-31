@@ -10,6 +10,38 @@ import * as commerce from "@dinkuskit/commerce";
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const contract = readFileSync(join(root, "docs/implementation/guest-checkout-public.md"), "utf8");
 
+test("reference prepare example matches the public capability presentation, not a flat token", async () => {
+  const reference = readFileSync(join(root, "docs/website/reference/commerce.md"), "utf8");
+  const example = reference.match(/<!-- guest-prepare-capability-example -->\s*```json\n([\s\S]*?)\n```/);
+  assert.ok(example, "reference must show the capability presentation object");
+  const expected = JSON.parse(example[1]);
+  let minted;
+  // Pure source-contract test: memory-only mint, no HTTP/provider/binding.
+  const prepared = await checkout.prepareGuestCheckout({
+    capabilities: { async compareAndSet(id, revision, value) {
+      assert.equal(id, "example-capability");
+      assert.equal(revision, null);
+      minted = value;
+      return { applied: true };
+    } },
+    host: {
+      siteUrl: "https://checkout.example.test",
+      createCapabilityId: () => "example-capability",
+      createCartId: () => "example-cart",
+      createCapabilitySecret: () => "example-secret",
+      loadCheckoutContactRequirements: async () => ({ requirePhoneNumber: false, shippingCountries: [], revision: null }),
+    },
+  });
+  assert.equal(prepared.ok, true);
+  assert.equal(minted.recordKind, "guest-checkout-capability");
+  assert.equal(prepared.capabilityId, expected.capabilityId);
+  assert.deepEqual(prepared.capability, expected);
+  assert.equal(typeof prepared.capability.capability, "string");
+  assert.equal(prepared.capability.header, checkout.GUEST_CAPABILITY_HEADER);
+  assert.equal(prepared.checkout.attemptId, null);
+  assert.equal(prepared.checkout.order, null);
+});
+
 test("Template Store consumes only the public checkout contract and mounted guest routes", () => {
   assert.equal(checkout.GUEST_CHECKOUT_PREPARE_ROUTE, "checkout/guest/prepare");
   assert.equal(checkout.GUEST_CHECKOUT_START_ROUTE, "checkout/guest/start");
