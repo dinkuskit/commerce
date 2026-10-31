@@ -108,6 +108,28 @@ test('every product is made for its page: create needs a page that sells no othe
   await assert.rejects(call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-other' }), error => error.code === 'PRODUCT_PAGE_CONFLICT');
   assert.equal(await ctx.storage.product_pages.get('e:page-other'), null);
   assert.equal((await readPublicCatalogItem(ctx, 'page-mug', true))?.id, catalogItemId);
+  // A repeated command with changed input is refused, never answered with the product it made.
+  await assert.rejects(call({ op: 'create', commandId: 'mug', name: 'Big mug', sku: 'MUG', entryId: 'page-mug' }), error => error.code === 'COMMAND_CONFLICT');
+  await assert.rejects(call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG-2', entryId: 'page-mug' }), error => error.code === 'COMMAND_CONFLICT');
+});
+
+test('of two creates racing for one empty page, one sells it and the other is refused with its Draft archived', async () => {
+  const { ctx, call } = shop();
+  const a = { op: 'create', commandId: 'tee-a', name: 'Tee A', sku: 'TEE-A', entryId: 'page-tee' };
+  const b = { op: 'create', commandId: 'tee-b', name: 'Tee B', sku: 'TEE-B', entryId: 'page-tee' };
+  const results = await Promise.allSettled([call(a), call(b)]);
+  const won = results.filter(result => result.status === 'fulfilled'), lost = results.filter(result => result.status === 'rejected');
+  assert.deepEqual([won.length, lost.length, lost[0].reason.code], [1, 1, 'PRODUCT_PAGE_CONFLICT']);
+  const winner = won[0].value.catalogItemId;
+  assert.deepEqual(await ctx.storage.product_pages.get('e:page-tee'), { entryId: 'page-tee', catalogItemId: winner });
+  const items = [...ctx.storage.catalog_items.records.values()];
+  assert.equal(items.length, 2, 'both raced past the empty-page check');
+  const loser = items.find(item => item.itemId !== winner);
+  // The losing Draft is archived: off the shop, and out of the way of the page's product.
+  assert.ok(loser.archivedAt && loser.offSale);
+  // Retrying the losing command is refused the same way and makes nothing new.
+  await assert.rejects(call(loser.commandId === 'tee-a' ? a : b), error => error.code === 'PRODUCT_PAGE_CONFLICT');
+  assert.equal(ctx.storage.catalog_items.records.size, 2);
 });
 
 test('a write carrying a preview code is saved only while the product still reads the same', async () => {

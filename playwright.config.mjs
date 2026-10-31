@@ -34,7 +34,7 @@ export default defineConfig({
   projects: [
     {
       name: "sandbox",
-      testMatch: /commerce\.spec\.mjs|catalog-needs-page\.spec\.mjs|guest-checkout\.spec\.mjs|variant-checkout\.spec\.mjs/,
+      testMatch: /commerce\.spec\.mjs|guest-checkout\.spec\.mjs|product-needs-page\.spec\.mjs|variant-checkout\.spec\.mjs/,
       use: {
         baseURL: "http://127.0.0.1:" + port,
         viewport: { width: 1440, height: 1000 },

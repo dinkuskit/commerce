@@ -43,6 +43,19 @@ export async function pageProduct(pages: ProductPages, entryId: string, sold?: b
   return (rows.find(row => row.id.startsWith(sold ? "p:" : "e:")) ?? rows[0])?.data.catalogItemId;
 }
 
+/**
+ * Claims an empty page for a new product: its note is written only while no
+ * other note exists, so of two creates for one page only one sells it. False
+ * when another product took the page first.
+ */
+export async function claimProductPage(storage: { catalog: Catalog; pages: ProductPages }, entryId: string, catalogItemId: string): Promise<boolean> {
+  await editProduct(storage.catalog, catalogItemId, item => {
+    if (item.pageId && item.pageId !== entryId) throw conflict();
+    return null;
+  });
+  return (await storage.pages.compareAndSet("e:" + entryId, null, { entryId, catalogItemId })).applied;
+}
+
 /** Notes the picked product; missing products, choice IDs and products another page sells are refused. */
 export async function linkProductPage(storage: { catalog: Catalog; pages: ProductPages }, entryId: string, catalogItemId: string): Promise<void> {
   await editProduct(storage.catalog, catalogItemId, item => {

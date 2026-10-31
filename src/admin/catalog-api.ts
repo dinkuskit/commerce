@@ -1,7 +1,7 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import {
   addCatalogVariantOption, admitV1CatalogPriceSaveInput, assertCatalogStorageConstraints, CatalogError, createCatalogItem, editProduct, identifyConfirmedUniqueViolation, isManagedCatalogRecord,
-  linkProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku, pageProduct,
+  claimProductPage, listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, named, normalizeIdentifierPatch, normalizeSku, pageProduct,
   saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, setCatalogProductArchived, updateCatalogVariantLabels,
 } from "../features/catalog/kernel/index.js";
 import { loadProductFeedEligibility, setProductFeedEligibility } from "../features/feeds/kernel/index.js";
@@ -36,14 +36,16 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
     // Every product is made for its page, and a page sells one product (catalog-product-needs-page-20261031).
     if (input.entryId === undefined) throw new CatalogError("INVALID_INPUT", "entryId is required: make the product's page first");
     const entryId = String(input.entryId), sold = await pageProduct(store.pages, entryId);
-    if (sold) {
-      if ((await store.catalog.get(sold) as { commandId?: unknown } | null)?.commandId === input.commandId) return { catalogItemId: sold };
-      throw new CatalogError("PRODUCT_PAGE_CONFLICT", "This page already sells a product");
-    }
-    const made = (await createCatalogItem(store.catalog,
-      { commandId: input.commandId, name: input.name, sku: input.sku, fulfillment: "physical" }, { ...unique(ctx), offSale: true })).item.itemId;
-    await linkProductPage(store, entryId, made);
-    return { catalogItemId: made };
+    const taken = () => new CatalogError("PRODUCT_PAGE_CONFLICT", "This page already sells a product");
+    if (sold && (await store.catalog.get(sold) as { commandId?: unknown } | null)?.commandId !== input.commandId) throw taken();
+    // createCatalogItem checks the input and answers a repeated command with the product it made, refusing changed input.
+    const { created, item } = await createCatalogItem(store.catalog,
+      { commandId: input.commandId, name: input.name, sku: input.sku, fulfillment: "physical" }, { ...unique(ctx), offSale: true });
+    if (sold) { if (item.itemId !== sold) throw taken(); return { catalogItemId: sold }; }
+    if (await claimProductPage(store, entryId, item.itemId) || await pageProduct(store.pages, entryId) === item.itemId) return { catalogItemId: item.itemId };
+    // Another create took the page first: the Draft this one just made is archived, never left off every page.
+    if (created) await setCatalogProductArchived(store.catalog, { catalogItemId: item.itemId, archived: true });
+    throw taken();
   }
   // Saved only while the product still reads as the preview showed it, checked here rather than by the caller.
   if (expected !== undefined && (await sha256Hex(JSON.stringify(await read((input.productId ?? id) as string)))).slice(0, 12) !== expected)
