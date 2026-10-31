@@ -655,3 +655,6 @@
 {"action": "decision_locked", "at": "2026-10-30T12:35:02+00:00", "data": {"decision_id": "emdash-1-4-compatibility-20261030"}, "event_id": "05231a42-bb48-42b2-b70c-75e379815c3a"}
 {"action": "decision_implemented", "at": "2026-10-30T12:59:57+00:00", "data": {"decision_id": "emdash-1-4-compatibility-20261030"}, "event_id": "5b0dc402-e95c-4acd-a288-450b64829be2"}
 {"action": "decision_verified", "at": "2026-10-30T12:59:57+00:00", "data": {"decision_id": "emdash-1-4-compatibility-20261030"}, "event_id": "250453f6-a5d1-4703-ae01-59350c092c8d"}
+{"action": "decision_proposed", "at": "2026-10-31T03:10:18+00:00", "data": {"decision_id": "commerce-orders-api-address-001"}, "event_id": "a242a78e-dcde-4f02-81a3-9eeb94c29d18"}
+{"action": "decision_locked", "at": "2026-10-31T03:10:18+00:00", "data": {"decision_id": "commerce-orders-api-address-001"}, "event_id": "e7cd2152-bf22-45db-bb63-defe5d4af60e"}
+{"action": "decision_implemented", "at": "2026-10-31T03:10:18+00:00", "data": {"decision_id": "commerce-orders-api-address-001"}, "event_id": "34327831-76ee-425e-a967-4bca8ed93f7a"}

@@ -1,6 +1,7 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import { isRecord } from "../../shared/record.js";
-import { billingMatchesDelivery, billingOf, completeOrder, listOrders, orderFacts, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
+import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
+import { billingMatchesDelivery, billingOf, completeOrder, correctDelivery, listOrders, orderFacts, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
 
 /** Private JSON route for agents and the CLI: the Orders page's reads and owner changes. */
 export const ORDERS_API_ROUTE = "orders";
@@ -22,15 +23,16 @@ function invalid(): never {
 
 /**
  * list (optional status and offset, 50 a page, by order number), show, complete
- * (optional carrier and tracking) and reopen. Changes name the order version they
- * were read at, like the Orders page's forms, so a stale change does nothing.
+ * (optional carrier and tracking), reopen and address (Correct address, to a country
+ * the store ships to). Changes name the order version they were read at, like the
+ * Orders page's forms, so a stale change does nothing.
  */
 export async function ordersApi(route: SandboxedRouteContext, ctx: PluginContext): Promise<unknown> {
   // EmDash already requires plugins:manage, and the admin scope for API tokens; this is the Orders page's own check.
   if (route.user?.role !== 50) throw new Error("Orders require plugins:manage");
   const input = route.input;
   if (!isRecord(input)) invalid();
-  const allowed = { list: "action,status,offset", show: "action,orderId", complete: "action,orderId,version,carrier,tracking", reopen: "action,orderId,version" }[String(input.action)];
+  const allowed = { list: "action,status,offset", show: "action,orderId", complete: "action,orderId,version,carrier,tracking", reopen: "action,orderId,version", address: "action,orderId,version,address" }[String(input.action)];
   if (!allowed || Object.keys(input).some(key => !allowed.split(",").includes(key))) invalid();
   const collection = ctx.storage[ORDERS_COLLECTION] as OrdersCollection;
   if (input.action === "list") {
@@ -52,6 +54,8 @@ export async function ordersApi(route: SandboxedRouteContext, ctx: PluginContext
   if (!await collection.get(id)) return { result: "not_found" };
   const result = input.action === "complete"
     ? await completeOrder(collection, id, version, input, new Date().toISOString())
-    : await reopenOrder(collection, id, version);
+    : input.action === "address"
+      ? await correctDelivery(collection, id, version, input.address, (await loadCheckoutContactRequirements(ctx.settings)).shippingCountries)
+      : await reopenOrder(collection, id, version);
   return { result, order: apiOrder((await collection.get(id))!) };
 }

@@ -567,6 +567,65 @@ test("orders complete and reopen preview first and apply only at the confirmed v
   assert.equal(unknown.code, 2);
 });
 
+test("orders address previews the old and new address and corrects it only at the confirmed version", async () => {
+  const env = { EMDASH_TOKEN: TOKEN };
+  const bodies = [];
+  let answer = "saved";
+  const moved = { name: "Sam Buyer", line1: "2 Main St", city: "Knoxville", region: "TN", postalCode: "37902", country: "US" };
+  const routes = {
+    orders: (body) => {
+      bodies.push(body);
+      if (body.action === "show") {
+        if (body.orderId === "order:1002") return ok({ order: apiOrder(1002, { version: 2, status: "completed", completed: { at: "2026-10-10T18:00:00.000Z" } }) });
+        return ok({ order: body.orderId === "order:1003" ? apiOrder(1003, { shipTo: null }) : apiOrder(1001) });
+      }
+      return ok(answer === "saved" ? { result: "saved", order: apiOrder(1001, { version: 2, shipTo: moved }) } : { result: answer, order: apiOrder(1001) });
+    },
+  };
+  const flags = ["--name", "Sam Buyer", "--line1", "2 Main St", "--city", "Knoxville", "--region", "TN", "--postal-code", "37902", "--country", "US"];
+  const preview = await run(["--url", SITE, "orders", "address", "order:1001", ...flags, "--dry-run", "--json"], { routes, env });
+  assert.equal(preview.code, 0, preview.stderr);
+  const document = singleJson(preview.stdout);
+  assert.equal(document.outcome, "preview");
+  assert.equal(document.confirmation, "1");
+  assert.deepEqual(document.data, { orderId: "order:1001", number: 1001, version: 1, from: apiOrder(1001).shipTo, to: moved });
+  assert.deepEqual(bodies.splice(0).map((body) => body.action), ["show"]);
+  const human = await run(["--url", SITE, "orders", "address", "order:1001", ...flags, "--dry-run"], { routes, env });
+  assert.match(human.stdout, /from: Fixture Shopper, 1 Example Way, Testville, 00000, US\nto: {3}Sam Buyer, 2 Main St, Knoxville, TN, 37902, US\nconfirm with: --confirm 1/);
+  bodies.splice(0);
+
+  const applied = await run(["--url", SITE, "orders", "address", "order:1001", ...flags, "--confirm", "1"], { routes, env });
+  assert.equal(applied.code, 0, applied.stderr);
+  assert.deepEqual(bodies.splice(0), [{ action: "address", orderId: "order:1001", version: 1, address: moved }]);
+  assert.match(applied.stdout, /Order #1001 \(TEST\) now ships to Sam Buyer, 2 Main St, Knoxville, TN, 37902, US \(version 2\)\./);
+
+  for (const [result, pattern] of [["outdated", /move it back to Processing first/], ["invalid", /does not ship to that country/], ["not_found", /No order has that id/]]) {
+    answer = result;
+    const refused = await run(["--url", SITE, "orders", "address", "order:1001", ...flags, "--confirm", "1", "--json"], { routes, env });
+    assert.equal(refused.code, 1, result);
+    const failure = singleJson(refused.stdout);
+    assert.equal(failure.error.code, result);
+    assert.match(failure.error.message, pattern);
+  }
+  bodies.splice(0);
+
+  // A Completed order, or one with nothing to ship to, is refused before anything is sent.
+  for (const [orderId, code, pattern] of [["order:1002", "order_completed", /Move it back to Processing first/], ["order:1003", "no_address", /no delivery address/]]) {
+    const refused = await run(["--url", SITE, "orders", "address", orderId, ...flags, "--dry-run", "--json"], { routes, env });
+    assert.equal(refused.code, 1, orderId);
+    assert.equal(singleJson(refused.stdout).error.code, code);
+    assert.match(singleJson(refused.stdout).error.message, pattern);
+  }
+  assert.deepEqual(bodies.splice(0).map((body) => body.action), ["show", "show"]);
+  // Each required line must be given; nothing is sent without one.
+  for (const missing of ["--name", "--line1", "--city", "--postal-code", "--country"]) {
+    const without = flags.filter((_, index) => flags[index] !== missing && flags[index - 1] !== missing);
+    const usage = await run(["--url", SITE, "orders", "address", "order:1001", ...without, "--confirm", "1"], { routes, env });
+    assert.equal(usage.code, 2, missing);
+    assert.equal(usage.calls.length, 0);
+  }
+});
+
 test("--no-input product changes fail closed: nothing is sent without a well-formed --confirm", async () => {
   for (const [extra, code] of [[["--no-input"], 4], [["--no-input", "--confirm", "confirm_demo"], 2], [["--dry-run", "--confirm", "0123456789ab"], 2]]) {
     const result = await run(["--url", SITE, "products", "set-price", "item_demo", "--amount", "19.99", ...extra], { env: { EMDASH_TOKEN: TOKEN } });

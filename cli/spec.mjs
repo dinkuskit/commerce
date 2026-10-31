@@ -590,11 +590,16 @@ const ORDER_REFUSALS = {
 	invalid: "Carrier and tracking number must each be 64 characters or fewer, on one line. Nothing changed.",
 	not_found: "No order has that id. Nothing changed.",
 };
+const ADDRESS_REFUSALS = {
+	outdated: "The order changed since that version, or it is Completed now (move it back to Processing first). Nothing changed; run --dry-run again to see it now.",
+	invalid: "Commerce refused that address: a line is missing or longer than 200 characters, or the store does not ship to that country (Store settings). Nothing changed.",
+};
+const ADDRESS_FLAGS = [["name", "name"], ["line1", "line1"], ["line2", "line2"], ["city", "city"], ["region", "region"], ["postal-code", "postalCode"], ["country", "country"]];
 
 // The orders route applies a change only at the version the caller read, so a
 // fresh read is the preview and its version is the confirmation value.
 function orderChange(action) {
-	const to = action === "complete" ? "completed" : "processing";
+	const to = { complete: "completed", reopen: "processing" }[action];
 	return async (ctx) => {
 		const { client, context } = connect(ctx);
 		const orderId = assertQueryValue(ctx.args["order-id"], "<order-id>");
@@ -606,7 +611,9 @@ function orderChange(action) {
 		}
 		const values = action === "complete"
 			? { ...(ctx.flags.carrier === undefined ? {} : { carrier: ctx.flags.carrier }), ...(ctx.flags.tracking === undefined ? {} : { tracking: ctx.flags.tracking }) }
-			: {};
+			: action === "address"
+				? { address: Object.fromEntries(ADDRESS_FLAGS.filter(([flag]) => ctx.flags[flag] !== undefined).map(([flag, field]) => [field, ctx.flags[flag]])) }
+				: {};
 		return withContext(context, async () => {
 			let version = confirmed === undefined ? undefined : Number(confirmed);
 			if (version === undefined) {
@@ -615,11 +622,22 @@ function orderChange(action) {
 				if (order.status === to) {
 					throw new CliError("already_" + to, `Order ${visible(orderLabel(order))} is already ${STATUS_WORD[to]}. Nothing to change.`, { exit: EXIT.failure });
 				}
-				const preview = { orderId, number: order.number, version: order.version, from: order.status, to, ...values };
-				const human = [
-					`Order ${orderLabel(order)}, version ${order.version}: ${STATUS_WORD[order.status]} -> ${STATUS_WORD[to]}`,
-					...(action === "complete" ? [`carrier: ${values.carrier ?? "-"}`, `tracking: ${values.tracking ?? "-"}`] : ["Its carrier, tracking number and completion time are cleared."]),
-				].map(visible).join("\n");
+				// A Completed order's address is locked, as on the Orders page.
+				if (action === "address" && order.status === "completed") {
+					throw new CliError("order_completed", `Order ${visible(orderLabel(order))} is Completed, so its address is locked. Move it back to Processing first with orders reopen.`, { exit: EXIT.failure });
+				}
+				if (action === "address" && !order.shipTo) {
+					throw new CliError("no_address", `Order ${visible(orderLabel(order))} has no delivery address to correct.`, { exit: EXIT.failure });
+				}
+				const preview = action === "address"
+					? { orderId, number: order.number, version: order.version, from: order.shipTo, to: values.address }
+					: { orderId, number: order.number, version: order.version, from: order.status, to, ...values };
+				const human = (action === "address"
+					? [`Order ${orderLabel(order)}, version ${order.version}: correct the delivery address`, `from: ${shipTo(order.shipTo)}`, `to:   ${shipTo(values.address)}`]
+					: [
+						`Order ${orderLabel(order)}, version ${order.version}: ${STATUS_WORD[order.status]} -> ${STATUS_WORD[to]}`,
+						...(action === "complete" ? [`carrier: ${values.carrier ?? "-"}`, `tracking: ${values.tracking ?? "-"}`] : ["Its carrier, tracking number and completion time are cleared."]),
+					]).map(visible).join("\n");
 				if (ctx.flags["dry-run"]) {
 					return { outcome: "preview", context, data: preview, confirmation: String(order.version), human: `${human}\nconfirm with: --confirm ${order.version}` };
 				}
@@ -630,9 +648,12 @@ function orderChange(action) {
 			}
 			const data = await client.changeOrder({ action, orderId, version, ...values });
 			if (data.result !== "saved") {
-				throw new CliError(data.result, ORDER_REFUSALS[data.result], { exit: EXIT.failure, details: { document: { data } } });
+				const message = (action === "address" && ADDRESS_REFUSALS[data.result]) || ORDER_REFUSALS[data.result];
+				throw new CliError(data.result, message, { exit: EXIT.failure, details: { document: { data } } });
 			}
-			const human = `Order ${orderLabel(data.order)} is now ${STATUS_WORD[data.order.status]} (version ${data.order.version}).`;
+			const human = action === "address"
+				? `Order ${orderLabel(data.order)} now ships to ${shipTo(data.order.shipTo)} (version ${data.order.version}).`
+				: `Order ${orderLabel(data.order)} is now ${STATUS_WORD[data.order.status]} (version ${data.order.version}).`;
 			return { context, data, human: visible(human) };
 		});
 	};
@@ -846,7 +867,7 @@ export const spec = {
 				},
 			},
 			orders: {
-				summary: `Read orders and mark them shipped. Needs ${TOKEN_ENV} for an administrator.`,
+				summary: `Read orders, mark them shipped and correct their addresses. Needs ${TOKEN_ENV} for an administrator.`,
 				commands: {
 					list: {
 						summary: "List paid orders by order number, 50 a page or --all.",
@@ -900,6 +921,29 @@ export const spec = {
 						},
 						examples: ["dinkus-commerce --url https://shop.example orders reopen order:demo --confirm 2"],
 						run: orderChange("reopen"),
+					},
+					address: {
+						summary: "Correct where a Processing order goes (the Orders page's Correct address).",
+						usage:
+							"orders address <order-id> --name <text> --line1 <text> [--line2 <text>] --city <text> [--region <text>] --postal-code <text> --country <code> (--dry-run | --confirm <version>)",
+						description:
+							"Replaces the whole delivery address; billing is never changed. Commerce checks it as checkout does and only saves a country from the store's shipping countries. A Completed order's address is locked: reopen it first. Applied only at the order version you confirm.",
+						args: [{ name: "order-id" }],
+						flags: {
+							name: { type: "string", value: "<text>", description: "Who receives the parcel.", required: true },
+							line1: { type: "string", value: "<text>", description: "Street address.", required: true },
+							line2: { type: "string", value: "<text>", description: "Apartment, suite or unit." },
+							city: { type: "string", value: "<text>", description: "City or town.", required: true },
+							region: { type: "string", value: "<text>", description: "State, province or region, such as TN." },
+							"postal-code": { type: "string", value: "<text>", description: "ZIP or postal code.", required: true },
+							country: { type: "string", value: "<code>", description: "Two-letter country code, such as US.", required: true },
+							"dry-run": { type: "boolean", description: "Show the change and the version to confirm; send nothing." },
+							confirm: { type: "string", value: "<version>", description: "Apply only if the order is still at this version (from --dry-run)." },
+						},
+						examples: [
+							"dinkus-commerce --url https://shop.example orders address order:demo --name 'Sam Buyer' --line1 '2 Main St' --city Knoxville --region TN --postal-code 37902 --country US --dry-run",
+						],
+						run: orderChange("address"),
 					},
 				},
 			},

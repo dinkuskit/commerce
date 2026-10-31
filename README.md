@@ -198,7 +198,7 @@ unavailable. Synthetic fixture injection proves transport. Actual Stripe is
 not run. See
 [docs/implementation/guest-checkout-public.md](docs/implementation/guest-checkout-public.md).
 
-Commerce Orders provides authenticated order inspection in the sandbox admin. It reads Orders' own copies of paid orders, retains recorded prices and receipt identities, and distinguishes provider-paid from zero-payable orders. Orders not taken in live mode are marked TEST. Each order has a short number, a version, and a status: Processing until it ships, then Completed (shipped, never delivered). The owner can correct the delivery address while an order is Processing, complete it by hand with an optional carrier and tracking number, and move it back to Processing; each change raises the version. Agents and the CLI read orders and complete or reopen them through the private `orders` route with an administrator's API token. When the store has Ship's hosted service, Orders sends Ship each order and every change to it, and completes an order with USPS and the tracking number when Ship buys its label ([Orders and Ship](docs/implementation/registry-ship-sync.md)). It exposes no payment mutation and sends no email; Ship emails the shopper. See [installed Orders inspection](docs/implementation/orders-inspection.md) for bounds and local-proof limits.
+Commerce Orders provides authenticated order inspection in the sandbox admin. It reads Orders' own copies of paid orders, retains recorded prices and receipt identities, and distinguishes provider-paid from zero-payable orders. Orders not taken in live mode are marked TEST. Each order has a short number, a version, and a status: Processing until it ships, then Completed (shipped, never delivered). The owner can correct the delivery address while an order is Processing, complete it by hand with an optional carrier and tracking number, and move it back to Processing; each change raises the version. Agents and the CLI read orders, complete or reopen them, and correct their delivery address through the private `orders` route with an administrator's API token. When the store has Ship's hosted service, Orders sends Ship each order and every change to it, and completes an order with USPS and the tracking number when Ship buys its label ([Orders and Ship](docs/implementation/registry-ship-sync.md)). It exposes no payment mutation and sends no email; Ship emails the shopper. See [installed Orders inspection](docs/implementation/orders-inspection.md) for bounds and local-proof limits.
 
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
@@ -239,8 +239,8 @@ CLI. It reads the public catalog (`catalog list`, `catalog show`), on a
 native install with `EMDASH_TOKEN` the admin product list (`products list`),
 and on a Registry install with an administrator's `EMDASH_TOKEN` the orders
 (`orders list`, `orders show`), which it can also mark Completed or move back
-to Processing at a confirmed order version (`orders complete`,
-`orders reopen`), over the same EmDash plugin routes. Price, SKU and settings
+to Processing, or correct where they go, at a confirmed order version
+(`orders complete`, `orders reopen`, `orders address`), over the same EmDash plugin routes. Price, SKU and settings
 commands are listed as planned until Commerce has the routes they need. The CLI lives in
 `cli/`, outside `src/`, and adds nothing to `dist/sandbox/plugin.mjs`.
 
