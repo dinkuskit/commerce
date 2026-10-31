@@ -460,7 +460,9 @@ test('merchant edits choices and independent prices on desktop and phone', async
     // Open the mounted controls and prove an actual save, not just a screenshot.
     await page.setViewportSize({width:390,height:844});
     const phonePanel = await openPanel(page);
-    const phoneForm = phonePanel.locator(BLOCK_FORM).filter({has:page.getByRole('textbox',{name:'Regular',exact:true})}).nth(2);
+    // Medium's card, opened on the phone; after its save the redraw leaves only that card open, so read the last price form.
+    await openCard(phonePanel, cards[2]);
+    const phoneForm = phonePanel.locator(BLOCK_FORM).filter({has:page.getByRole('textbox',{name:'Regular',exact:true})}).last();
     await expect(phoneForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('28.00');
     await phoneForm.getByRole('textbox',{name:'Regular',exact:true}).fill('29');
     await phoneForm.getByRole('button',{name:/^Save/}).click();
@@ -469,6 +471,7 @@ test('merchant edits choices and independent prices on desktop and phone', async
     // and reopen for durable readback; do not resubmit the price mutation.
     await page.reload();
     await openPanel(page);
+    await openCard(phonePanel, cards[2]);
     await expect(phoneForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('29.00');
     await phoneForm.getByRole('textbox',{name:'Regular',exact:true}).scrollIntoViewIfNeeded();
     if (shopper) {
