@@ -202,12 +202,28 @@ test("storefront agent feeds project aiProjection, policies, and virtual-card mi
       variants: {
         schema: "dinkuskit.commerce.product-variants/v1",
         productId: "family-hoodie",
-        options: [{ optionId: "size", label: "Size", values: [{ valueId: "s", label: "Small" }] }],
+        options: [
+          {
+            optionId: "size",
+            label: "Size",
+            values: [
+              { valueId: "l", label: "Large" },
+              { valueId: "s", label: "Small" },
+            ],
+          },
+        ],
         members: [
+          {
+            catalogItemId: "member-hoodie-l",
+            selections: [{ optionId: "size", optionLabel: "Size", valueId: "l", valueLabel: "Large" }],
+            price: { currency: "USD", minor: "4500" },
+            availability: { status: "in-stock", sellable: true, listable: true },
+            fulfillment: "digital",
+          },
           {
             catalogItemId: "member-hoodie-s",
             selections: [{ optionId: "size", optionLabel: "Size", valueId: "s", valueLabel: "Small" }],
-            price: { currency: "USD", minor: "4500" },
+            price: { currency: "USD", minor: "1000" },
             availability: { status: "in-stock", sellable: true, listable: true },
             fulfillment: "digital",
           },
@@ -233,6 +249,7 @@ test("storefront agent feeds project aiProjection, policies, and virtual-card mi
     siteOrigin: "https://shop.example.test/",
     description: "Curated outdoor essentials.",
     pluginId: "r_gshdrqaldna3r7sn",
+    checkoutBreakdownSelector: "[data-checkout-breakdown]",
     products: [row, unlisted, optedOut, variantFamily, unfulfilledSimple],
     shipping: {
       mode: "flat",
@@ -262,15 +279,17 @@ test("storefront agent feeds project aiProjection, policies, and virtual-card mi
   assert.deepEqual(agentFeed.products[0].aiProjection?.highlights, ["100% merino wool", "Made in USA"]);
   assert.equal(agentFeed.products[1].price, undefined);
   assert.equal(agentFeed.products[1].fulfillment, "digital");
-  assert.equal(agentFeed.products[1].variants?.members[0]?.catalogItemId, "member-hoodie-s");
+  assert.equal(agentFeed.products[1].variants?.members[0]?.catalogItemId, "member-hoodie-l");
   assert.equal(agentFeed.products[1].variants?.members[0]?.price.minor, "4500");
+  assert.equal(agentFeed.products[1].variants?.members[1]?.catalogItemId, "member-hoodie-s");
+  assert.equal(agentFeed.products[1].variants?.members[1]?.price.minor, "1000");
   assert.equal(agentFeed.products[2].fulfillment, undefined);
   assert.equal(agentFeed.virtualCardSizing.taxMinor, "0");
 
   const llmsTxt = buildStorefrontLlmsTxt(options);
   assert.match(llmsTxt, /# Example Store/);
   assert.match(llmsTxt, /\[A wool hat\]\(https:\/\/shop\.example\.test\/products\/hat\): \$19\.99 USD \(1999 minor units\), in-stock, SKU `HAT-1`, physical — Merino wool watch cap for cold weather\./);
-  assert.match(llmsTxt, /\[Digital Pattern Hoodie\]\(https:\/\/shop\.example\.test\/products\/hoodie\): from \$45\.00 USD \(1 variants\), in-stock, SKU `HOODIE`, digital/);
+  assert.match(llmsTxt, /\[Digital Pattern Hoodie\]\(https:\/\/shop\.example\.test\/products\/hoodie\): from \$10\.00 USD \(2 variants\), in-stock, SKU `HOODIE`, digital/);
   assert.equal(llmsTxt.includes("OPT-OUT"), false);
   assert.match(llmsTxt, /Tax: `0` minor units/);
   assert.match(llmsTxt, />= 5000 minor units, inclusive, after coupon discounts/);
@@ -292,5 +311,14 @@ test("storefront agent feeds project aiProjection, policies, and virtual-card mi
   assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/status/);
   assert.match(agentsMd, /data\.capability\.capability/);
   assert.match(agentsMd, /data\.checkout\.pricing\.finalTotal\.minor/);
+  assert.match(agentsMd, /data\.checkout\.redirectUrl/);
+  assert.match(agentsMd, /data\.checkout\.state === "paid"/);
+  assert.match(agentsMd, /data\.checkout\.order/);
+  assert.equal(agentsMd.includes("shippingCountries"), false);
+  assert.equal(agentsMd.includes("sessionId"), false);
+  assert.equal(agentsMd.includes("paymentSession"), false);
   assert.match(agentsMd, /`billing`: required on every checkout/);
+
+  const agentsMdWithoutDom = buildStorefrontAgentsMd({ ...options, checkoutBreakdownSelector: undefined });
+  assert.equal(agentsMdWithoutDom.includes("data-checkout-total-minor"), false);
 });

@@ -65,6 +65,7 @@ export interface StorefrontAgentFeedOptions {
   readonly siteOrigin: string;
   readonly description?: string;
   readonly pluginId?: string;
+  readonly checkoutBreakdownSelector?: string;
   readonly products: readonly ProductFeedFacts[];
   readonly policies?: readonly StorefrontPolicySummary[];
   readonly shipping?: StorefrontShippingQuoteInput | null;
