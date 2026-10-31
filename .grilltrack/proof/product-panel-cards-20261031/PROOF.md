@@ -56,6 +56,14 @@ Base: main at `e482444` (after #241). Node 24.22.0.
 - Main merged in after #243 (one build, the native-only routes removed):
   main's ledger and events taken and this PR's two decisions and the
   supersession replayed through the CLI; `validate` passes.
+- After the sixth review: a request making several variants proves the unique
+  indexes once (`createCatalogItem`'s `proven` option after the first
+  creation), so Add options costs 16 storage calls plus 2 per new variant, and
+  `addCatalogVariantOption` makes at most seven new variants per request,
+  refusing more before anything is written.
+- Main merged in again after #245 (Registry headroom): ledger replayed the same
+  way; #245's shared Block Kit field helpers build this PR's forms and the
+  manage-stock notice has its single Registry text.
 
 ## Verification on this head
 
@@ -68,7 +76,7 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   kernel function with price, stock, fulfillment, weight, retries and
   refusals; the panel's first Save; Add options from comma-separated values;
   per-variant and product SKU changes and their refusals).
-- Registry bundle: `registry_bundle=pass backend_bytes=131042 headroom_bytes=30`
+- Registry bundle: `registry_bundle=pass backend_bytes=129054 headroom_bytes=2018` (with #245)
   (main: 130246, headroom 826).
 - On the head with the third review's fixes: typecheck and audits clean; the
   unit suite 874 passed, 1 failed (the pre-existing `packaged-consumers`
@@ -115,3 +123,9 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   - [variant-checkout-sandbox.png](https://github.com/dinkuskit/dinkus-pr-assets/blob/8aac1b356fa839395a9c53c614c8e2e7fd62fe76/commerce/pr-244-c47873b/variant-checkout-sandbox.png): a product with options.
 
 Head at proof time: `8ab920f` plus the proof folder itself.
+- On the head with #245 merged and the sixth review's fixes: typecheck and
+  audits clean; the unit suite 851 passed, 1 failed (the pre-existing
+  `packaged-consumers` teardown SIGKILL); the budget test runs Add options
+  with eight values, and a refused ninth, under the 32-call adapter; all
+  three Playwright lanes, 11 passed (sandbox 6 in 2.8m, native 3,
+  native-variant 2).
