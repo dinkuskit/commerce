@@ -14,11 +14,6 @@ export {
 } from "../resolve.js";
 export { quoteCatalogBasket } from "../quote.js";
 export {
-  OUT_OF_STOCK_LISTING_ROUTE,
-  PLACEHOLDER_IMAGE_ROUTE,
-  SET_STOREFRONT_AVAILABILITY_POLICY_ROUTE,
-} from "../route-ids.js";
-export {
   STOREFRONT_PLACEHOLDER_IMAGE_COLLECTION,
   STOREFRONT_PLACEHOLDER_IMAGE_RECORD_ID,
   loadStorefrontPlaceholderImage,

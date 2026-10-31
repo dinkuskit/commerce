@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { addCatalogVariantMember, addCatalogVariantOption, createCatalogItem, resolveCatalogVariantMember, updateCatalogVariantLabels, bulkSaveCatalogProductPrices, saveCatalogProductPrices, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
-import { readPublicCatalog, readPublicCatalogItem, createSaveCatalogProductPricesRouteWithLocalStock } from '../../../dist/features/catalog/index.js';
+import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
 // Small isolated store retains the same unique indexes and revision fence as the catalog contract.
 class Catalog {
@@ -57,12 +57,24 @@ test('public variant group retains priced members and excludes an unpriced sibli
   const catalog = new Catalog(), prices = new Catalog(); await catalog.put('product', base);
   await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
   prices.records.set('large-item', { recordKind: 'catalog-price', recordId: 'large-item', catalogItemId: 'large-item', regular: { currency: 'USD', minor: '2400' } });
-  const product = (await readPublicCatalog(publicContext(catalog, prices))).products[0];
+  const ctx = publicContext(catalog, prices);
+  const product = (await readPublicCatalog(ctx)).products[0];
   const unpriced = product.variants.members.find(m => m.catalogItemId === 'product');
   if (unpriced) assert.deepEqual(unpriced.availability, { status: 'availability-unavailable', sellable: false, listable: false });
   assert.deepEqual(product.variants.members.map(m => m.catalogItemId), ['large-item']);
   assert.equal(product.variants.members[0].price.minor, '2400');
   assert.equal(product.variants.members[0].availability.sellable, true);
+  assert.equal(product.variants.members[0].fulfillment, 'physical');
+  assert.equal(product.id, 'product');
+  assert.equal(Object.hasOwn(product, 'price'), false, 'a family has no top-level member price');
+  assert.equal(product.availability.sellable, false, 'choose a member, not the family');
+  const byMember = await readPublicCatalogItem(ctx, 'large-item');
+  assert.deepEqual(byMember, product, 'a member lookup returns the same grouped public family');
+  assert.notEqual(byMember.id, 'large-item');
+  assert.equal(byMember.variants.members.find(member => member.catalogItemId === 'large-item').price.minor, '2400');
+  assert.deepEqual(await readPublicCatalogItem(ctx, 'product'), product);
+  assert.equal(product.variants.members.some(member => member.catalogItemId === 'product'), false,
+    'even when the requested id equals the family id, its unpriced default member stays absent');
 });
 
 test('failed parent commit leaves additional rows unavailable to purchase', async () => {
@@ -466,16 +478,4 @@ test('native choice tracking and price share one commit, preserve dormant status
   choice = (await listCatalogProducts(storage)).products[0].variantProduct.members[1];
   assert.equal(choice.manageStock, false);
   assert.equal(choice.regular, '29.00');
-});
-
-
-test('native route keeps trusted local choice tracking and default-host admission', async () => {
-  const storage = await pricedChoices();
-  const context = { storage: { catalogItems: storage.catalog, catalogPrices: storage.prices, catalogManualAvailability: storage.availability, managedSkuClaims: new Catalog() }, site: { url: 'http://127.0.0.1:4321' }, request: { method: 'POST', url: 'http://127.0.0.1:4321/save' }, input: { catalogItemId: 'large-item', regular: '26', sale: '', manageStock: true } };
-  const optedIn = createSaveCatalogProductPricesRouteWithLocalStock({ enableLocalStockManagement: true, siteUrl: 'http://127.0.0.1:4321' });
-  assert.equal((await optedIn.handler(context)).manageStock, true);
-  const defaultHost = createSaveCatalogProductPricesRouteWithLocalStock();
-  assert.equal((await defaultHost.handler(context)).manageStock, true, 'same-value serialized tracking keeps the authoritative state');
-  await assert.rejects(defaultHost.handler({ ...context, input: { ...context.input, manageStock: false } }), e => e.code === 'MANAGE_STOCK_UNAVAILABLE');
-  assert.equal((await resolveCatalogVariantMember(storage.catalog, 'large-item')).item.stockManagement.mode, 'managed');
 });

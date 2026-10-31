@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { catalogApi, CATALOG_API_ROUTE } from '../../../dist/admin/index.js';
 import { readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
+import { setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
 import { shop } from './catalog-store.mjs';
 
 // catalog-api-20261027: agents and the CLI manage products with the panels' own checks, as JSON.
@@ -13,8 +14,8 @@ test('an agent makes a Draft product for a page, prices it, adds a choice and re
   const made = await ctx.storage.catalog_items.get(catalogItemId);
   assert.deepEqual([made.name, made.sku, made.fulfillment, made.offSale], ['Runtz', 'RUNTZ', 'physical', true], 'a physical Draft, off the shop');
   assert.deepEqual(await ctx.storage.product_pages.get('e:page-runtz'), { entryId: 'page-runtz', catalogItemId }, 'linked to its page (#194)');
-  assert.deepEqual(await call({ op: 'create', commandId: 'gfb-runtz', name: 'Runtz', sku: 'RUNTZ' }), { catalogItemId }, 'a retry finds the same product');
-  const unmanaged = await call({ op: 'create', commandId: 'gfb-managed', name: 'Managed', sku: 'MANAGED', manageStock: true, fulfillment: 'digital' });
+  assert.deepEqual(await call({ op: 'create', commandId: 'gfb-runtz', name: 'Runtz', sku: 'RUNTZ', entryId: 'page-runtz' }), { catalogItemId }, 'a retry finds the same product');
+  const unmanaged = await call({ op: 'create', commandId: 'gfb-managed', name: 'Managed', sku: 'MANAGED', manageStock: true, fulfillment: 'digital', entryId: 'page-managed' });
   assert.deepEqual([(await ctx.storage.catalog_items.get(unmanaged.catalogItemId)).stockManagement.mode, (await ctx.storage.catalog_items.get(unmanaged.catalogItemId)).fulfillment], ['unmanaged', 'physical'], 'only the panel\'s fields are taken');
 
   const saved = await call({ op: 'prices', catalogItemId, regular: '12.00', sale: '', stockStatus: 'in-stock' });
@@ -44,9 +45,9 @@ test('an agent makes a Draft product for a page, prices it, adds a choice and re
   assert.deepEqual(await call({ op: 'get' }), { product: null });
 });
 
-test('SKU, weight, identifiers, pictures, feeds, archive and link go through the panels\' checks', async () => {
+test('SKU, weight, identifiers, pictures, feeds and archive go through the panels\' checks', async () => {
   const { ctx, call } = shop();
-  const { catalogItemId } = await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG' });
+  const { catalogItemId } = await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' });
   assert.deepEqual(await call({ op: 'weight', catalogItemId, weightOz: '12.5' }), { changed: true });
   assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).catalogData.items[catalogItemId].weightOz, 12.5);
   await assert.rejects(call({ op: 'weight', catalogItemId, weightOz: '0' }), error => error.code === 'INVALID_INPUT');
@@ -64,8 +65,8 @@ test('SKU, weight, identifiers, pictures, feeds, archive and link go through the
   assert.deepEqual(await call({ op: 'sku', catalogItemId, sku: 'MUG-2' }), { changed: true });
   assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).sku, 'MUG-2');
   assert.deepEqual(await call({ op: 'sku', catalogItemId, sku: 'MUG-2' }), { changed: false });
-  assert.deepEqual(await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG' }), { catalogItemId }, 'a create retry still finds the renamed product');
-  const cup = await call({ op: 'create', commandId: 'cup', name: 'Cup', sku: 'CUP' });
+  assert.deepEqual(await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' }), { catalogItemId }, 'a create retry still finds the renamed product');
+  const cup = await call({ op: 'create', commandId: 'cup', name: 'Cup', sku: 'CUP', entryId: 'page-cup' });
   await assert.rejects(call({ op: 'sku', catalogItemId: cup.catalogItemId, sku: 'MUG-2' }), error => error.code === 'SKU_CONFLICT');
   await assert.rejects(call({ op: 'sku', catalogItemId, sku: '' }), error => error.code === 'INVALID_INPUT');
   // As setCatalogItemSku: no SKU change while the store cannot prove its SKU index is active.
@@ -79,19 +80,61 @@ test('SKU, weight, identifiers, pictures, feeds, archive and link go through the
   await call({ op: 'feeds', catalogItemId, channels: ['google-merchant'] });
   assert.deepEqual((await ctx.storage.catalog_items.get(catalogItemId)).catalogData.feedChannels, ['google-merchant']);
 
-  assert.deepEqual(await call({ op: 'link', entryId: 'page-mug', catalogItemId }), { linked: true });
   assert.deepEqual(await call({ op: 'archive', catalogItemId, archived: true }), { changed: true });
   assert.equal(await readPublicCatalogItem(ctx, catalogItemId), null);
   assert.deepEqual(await call({ op: 'archive', catalogItemId, archived: false }), { changed: true });
   assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).offSale, true, 'restored as a Draft');
-  for (const input of [{}, { op: 'delete', catalogItemId }, null, 'list']) {
+  for (const input of [{}, { op: 'delete', catalogItemId }, { op: 'link', entryId: 'page-other', catalogItemId }, null, 'list']) {
     await assert.rejects(catalogApi({ input }, ctx), /Invalid catalog request/);
   }
 });
 
+test('every product is made for its page: create needs a page that sells no other product', async () => {
+  // catalog-product-needs-page-20261031: no product without a page, as on Shopify and WooCommerce.
+  const { ctx, call } = shop();
+  const records = () => structuredClone(ctx.storage.catalog_items.records);
+  await assert.rejects(call({ op: 'create', commandId: 'loose', name: 'Loose', sku: 'LOOSE' }), error => error.code === 'INVALID_INPUT' && /make the product's page first/.test(error.message));
+  assert.equal(ctx.storage.catalog_items.records.size, 0, 'nothing is made without a page');
+  const { catalogItemId } = await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' });
+  const before = records();
+  // Another create for the same page is refused before anything is made; the same command again finds the same product.
+  await assert.rejects(call({ op: 'create', commandId: 'cup', name: 'Cup', sku: 'CUP', entryId: 'page-mug' }), error => error.code === 'PRODUCT_PAGE_CONFLICT');
+  assert.deepEqual(records(), before, 'no second product');
+  assert.deepEqual(await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' }), { catalogItemId });
+  assert.deepEqual(await ctx.storage.product_pages.get('e:page-mug'), { entryId: 'page-mug', catalogItemId });
+  // A product another page already sells cannot be made for this page by replaying its command.
+  await call({ op: 'prices', catalogItemId, regular: '12.00', sale: '', stockStatus: 'in-stock' });
+  await setProductPageOnSale({ catalog: ctx.storage.catalog_items, pages: ctx.storage.product_pages }, { entryId: 'page-mug', onSale: true });
+  await assert.rejects(call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-other' }), error => error.code === 'PRODUCT_PAGE_CONFLICT');
+  assert.equal(await ctx.storage.product_pages.get('e:page-other'), null);
+  assert.equal((await readPublicCatalogItem(ctx, 'page-mug', true))?.id, catalogItemId);
+  // A repeated command with changed input is refused, never answered with the product it made.
+  await assert.rejects(call({ op: 'create', commandId: 'mug', name: 'Big mug', sku: 'MUG', entryId: 'page-mug' }), error => error.code === 'COMMAND_CONFLICT');
+  await assert.rejects(call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG-2', entryId: 'page-mug' }), error => error.code === 'COMMAND_CONFLICT');
+});
+
+test('of two creates racing for one empty page, one sells it and the other is refused with its Draft archived', async () => {
+  const { ctx, call } = shop();
+  const a = { op: 'create', commandId: 'tee-a', name: 'Tee A', sku: 'TEE-A', entryId: 'page-tee' };
+  const b = { op: 'create', commandId: 'tee-b', name: 'Tee B', sku: 'TEE-B', entryId: 'page-tee' };
+  const results = await Promise.allSettled([call(a), call(b)]);
+  const won = results.filter(result => result.status === 'fulfilled'), lost = results.filter(result => result.status === 'rejected');
+  assert.deepEqual([won.length, lost.length, lost[0].reason.code], [1, 1, 'PRODUCT_PAGE_CONFLICT']);
+  const winner = won[0].value.catalogItemId;
+  assert.deepEqual(await ctx.storage.product_pages.get('e:page-tee'), { entryId: 'page-tee', catalogItemId: winner });
+  const items = [...ctx.storage.catalog_items.records.values()];
+  assert.equal(items.length, 2, 'both raced past the empty-page check');
+  const loser = items.find(item => item.itemId !== winner);
+  // The losing Draft is archived: off the shop, and out of the way of the page's product.
+  assert.ok(loser.archivedAt && loser.offSale);
+  // Retrying the losing command is refused the same way and makes nothing new.
+  await assert.rejects(call(loser.commandId === 'tee-a' ? a : b), error => error.code === 'PRODUCT_PAGE_CONFLICT');
+  assert.equal(ctx.storage.catalog_items.records.size, 2);
+});
+
 test('a write carrying a preview code is saved only while the product still reads the same', async () => {
   const { ctx, call } = shop();
-  const { catalogItemId } = await call({ op: 'create', commandId: 'hat', name: 'Hat', sku: 'HAT' });
+  const { catalogItemId } = await call({ op: 'create', commandId: 'hat', name: 'Hat', sku: 'HAT', entryId: 'page-hat' });
   const code = async () => createHash('sha256').update(JSON.stringify(await call({ op: 'get', catalogItemId }))).digest('hex').slice(0, 12);
   const seen = await code();
   assert.equal((await call({ op: 'prices', catalogItemId, regular: '10.00', sale: '', expected: seen })).saved, true);

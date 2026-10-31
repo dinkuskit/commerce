@@ -1,6 +1,7 @@
 // HTTP client for the DinkusKit Commerce plugin routes on an EmDash site.
 // It speaks only the public HTTP surface under
-// <site>/_emdash/api/plugins/<plugin-id>/<route>. It never imports Commerce
+// <site>/_emdash/api/plugins/<plugin-id>/<route>, plus EmDash's own content API
+// for a product's Content > Products page. It never imports Commerce
 // source, so nothing here can reach the Registry bundle (dist/sandbox/plugin.mjs).
 import { CliError, EXIT, createHttp, httpFailure, usageError, validateEndpoint } from "./kernel.mjs";
 
@@ -14,12 +15,11 @@ export const DEFAULT_PLUGIN_ID = "dinkus-commerce";
 export const ROUTES = Object.freeze({
 	publicCatalog: "catalog/public",
 	publicCatalogItem: "catalog/public/item",
-	listProducts: "catalog-items/list",
 	catalog: "catalog",
 	orders: "orders",
 });
 
-// What the orders route answers to complete and reopen.
+// What the orders route answers to complete, reopen and address.
 const ORDER_RESULTS = new Set(["saved", "outdated", "invalid", "not_found"]);
 
 const PLUGIN_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -102,7 +102,7 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 	const baseUrl = `${siteUrl}/_emdash/api/plugins/${pluginId}`;
 	// Public reads never carry the credential, even when one is set.
 	const publicHttp = createHttp({ baseUrl, timeoutMs, fetchImpl, signal });
-	const adminHttp = (mutating) => {
+	const adminHttp = (mutating, base = baseUrl) => {
 		if (!token) {
 			throw new CliError("credential_required", `This command needs an EmDash API token in ${TOKEN_ENV}.`, { exit: EXIT.blocked });
 		}
@@ -124,7 +124,7 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 				{ exit: EXIT.blocked },
 			);
 		}
-		return createHttp({ baseUrl, headers: { authorization: `Bearer ${token}` }, timeoutMs, signal,
+		return createHttp({ baseUrl: base, headers: { authorization: `Bearer ${token}` }, timeoutMs, signal,
 			fetchImpl: mutating ? (url, init) => {
 				// Once dispatch starts, SIGINT cannot promise that nothing changed.
 				// Mark only after admission and before fetch can yield to the signal handler.
@@ -194,24 +194,38 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 			return data === null ? null : checkPublicProduct(data, what);
 		},
 
+		// Both builds list products through the catalog route's list op (Commerce 0.7.0+); the native-only
+		// catalog-items/list route is gone (commerce-one-build-registry-20261031).
 		async listProducts() {
 			const what = "Listing products";
-			const data = unwrap(await adminRequest("GET", `/${ROUTES.listProducts}`), what, {
-				onNotFound: routeMissing(
-					ROUTES.listProducts,
-					"It is mounted only by the native Commerce build; the Registry build only has the Block Kit admin.",
-				),
-			});
+			const data = await catalogCall({ op: "list" }, what);
 			if (!isRecord(data) || !Array.isArray(data.products)) throw contractError(what, "products is not a list.");
 			for (const product of data.products) {
 				if (!isRecord(product) || typeof product.catalogItemId !== "string" || typeof product.name !== "string") {
 					throw contractError(what, "a product is missing its catalogItemId or name.");
 				}
 			}
-			return data;
+			return { products: data.products };
 		},
 
 		catalog: catalogCall,
+
+		// Every product is made for its page (catalog-product-needs-page-20261031). The page lives in EmDash, so this
+		// finds the Content > Products page with this slug, or makes it as a Draft titled with the product's name.
+		async productPage(slug, title) {
+			const what = "Making the product page";
+			const content = adminHttp(false, `${siteUrl}/_emdash/api/content/products`);
+			const entry = (response) => {
+				if (!response.ok) throw failure(response, what);
+				const data = response.json?.data, item = isRecord(data?.item) ? data.item : data;
+				if (!isRecord(item) || typeof item.id !== "string") throw contractError(what, "the page has no id.");
+				return item.id;
+			};
+			const found = await content("GET", `/${encodeURIComponent(slug)}`);
+			if (found.status !== 404) return { entryId: entry(found), made: false };
+			const made = await adminHttp(true, `${siteUrl}/_emdash/api/content/products`)("POST", "", { body: { slug, data: { title } }, headers: { "x-emdash-request": "1" } });
+			return { entryId: entry(made), made: true };
+		},
 
 		async showProduct(catalogItemId) {
 			const what = "Reading the product";
@@ -241,7 +255,7 @@ export function createCommerceClient({ siteUrl, siteUrlSource, pluginId, pluginI
 		},
 
 		async changeOrder(body) {
-			const what = body.action === "complete" ? "Completing the order" : "Moving the order back to Processing";
+			const what = { complete: "Completing the order", address: "Correcting the order's address" }[body.action] ?? "Moving the order back to Processing";
 			const data = await ordersCall(body, what);
 			if (!ORDER_RESULTS.has(data.result)) throw contractError(what, "the result is not saved, outdated, invalid or not_found.");
 			if (data.order !== undefined) checkOrder(data.order, what);

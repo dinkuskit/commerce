@@ -15,7 +15,7 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const BASE = "https://base.example.test";
 const TARGET = "https://selected.example.test";
 const TOKEN = "synthetic-profile-fixture-credential";
-const CREATE = ["products", "create", "--name", "Profile fixture", "--sku", "PROFILE-FIXTURE", "--command-id", "profile-fixture", "--no-input"];
+const CREATE = ["products", "create", "--name", "Profile fixture", "--sku", "PROFILE-FIXTURE", "--command-id", "profile-fixture", "--page", "page-profile-fixture", "--no-input"];
 const INHERITED = ["constructor", "toString", "__proto__", "hasOwnProperty"];
 
 async function fixture(t, { user, project } = {}) {

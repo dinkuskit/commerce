@@ -38,6 +38,7 @@ export async function reconcilePaymentWakes(
   wakes: CommercePaymentWakePort,
 ): Promise<WakeReconciliationResult[]> {
   const results: WakeReconciliationResult[] = [];
+  const retain = (wake: CommercePaymentWake, reason: Extract<WakeReconciliationResult, { status: "retained" }>["reason"]) => results.push({ wake, status: "retained", reason });
   let pending: readonly CommercePaymentWake[];
   try {
     pending = await wakes.list();
@@ -46,23 +47,23 @@ export async function reconcilePaymentWakes(
   }
   for (const wake of pending) {
     if (!isWake(wake)) {
-      results.push({ wake, status: "retained", reason: "unknown" });
+      retain(wake, "unknown");
       continue;
     }
     let association;
     try {
       association = await associations.get(wake.attemptId);
     } catch {
-      results.push({ wake, status: "retained", reason: "unavailable" });
+      retain(wake, "unavailable");
       continue;
     }
     if (!association) {
-      results.push({ wake, status: "retained", reason: "missing" });
+      retain(wake, "missing");
       continue;
     }
     if (association.attemptId !== wake.attemptId ||
         association.bindingRef !== wake.bindingRef) {
-      results.push({ wake, status: "retained", reason: "mismatch" });
+      retain(wake, "mismatch");
       continue;
     }
     try {
@@ -71,31 +72,31 @@ export async function reconcilePaymentWakes(
         candidate => candidate.attemptId === association.attemptId,
       );
       if (!canonicalAttempt || canonicalAttempt.payment.bindingRef !== association.bindingRef) {
-        results.push({ wake, status: "retained", reason: "mismatch" });
+        retain(wake, "mismatch");
         continue;
       }
       const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId);
       if (attempt.phase !== "paid" && attempt.phase !== "released") {
-        results.push({ wake, status: "retained", reason: "unknown" });
+        retain(wake, "unknown");
         continue;
       }
       if (attempt.coupon && attempt.coupon.status !==
           (attempt.phase === "paid" ? "consumed" : "released")) {
-        results.push({ wake, status: "retained", reason: "unknown" });
+        retain(wake, "unknown");
         continue;
       }
       if (attempt.phase === "paid" &&
           (!attempt.order || attempt.order.attemptId !== wake.attemptId)) {
-        results.push({ wake, status: "retained", reason: "mismatch" });
+        retain(wake, "mismatch");
         continue;
       }
       if (!await wakes.acknowledge(wake)) {
-        results.push({ wake, status: "retained", reason: "unavailable" });
+        retain(wake, "unavailable");
         continue;
       }
       results.push({ wake, status: "acknowledged", attempt });
     } catch {
-      results.push({ wake, status: "retained", reason: "unavailable" });
+      retain(wake, "unavailable");
     }
   }
   return results;

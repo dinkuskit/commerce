@@ -35,7 +35,19 @@ the work that closes them. The project owner set this rule on 2026-10-08.
 Commerce's Registry build comes from `emdash-plugin.jsonc` and `src/plugin.ts`
 (see Sandbox distribution below). The package root is the
 native entry. Both builds serve the same Block Kit admin (no React admin
-screens; `commerce-admin-block-kit-only-20261024`). Native-only gaps:
+screens; `commerce-admin-block-kit-only-20261024`) and the same routes: the
+product panels, the private `catalog` route, the store's publish check, the
+public catalog reads, checkout and shopper accounts; only the Registry build
+registers `store-proof`, `orders`, `checkout/guest/readiness` and
+`policies/public`. Commerce runs one build everywhere
+(`commerce-one-build-registry-20261031`, Ronald, 31 Oct 2026): the Template
+Store's local dev, demo and browser tests mount the Registry build, and the
+native entry's 24 extra routes (`catalog-items/*` writes and lists,
+`settings/*`, `configure-inventory`) and its local Manage stock test aid are
+gone. Only the Template Store's playground still registers the native entry,
+until its own switch to the Registry build; then the native entry goes too.
+Native camelCase storage gets no migration to the Registry build's snake_case.
+Native-only gaps:
 
 - Coupons: native installs keep coupon storage and coupon codes at checkout,
   with no coupon admin screen (coupons are built in dinkuskit/coupons). The Registry build leaves coupon storage and admin out to
@@ -48,13 +60,13 @@ screens; `commerce-admin-block-kit-only-20261024`). Native-only gaps:
   This closes when coupons can also be created for a Registry store, through the
   Coupons admin plugin or CLI in `dinkuskit/coupons`; the native coupon path is
   then removed.
-- Host-wired checkout: Template Store wires checkout through the native entry's
+- Host-wired checkout: the playground wires checkout through the native entry's
   host options. Registry installs use the installed checkout services instead,
-  and Template Store has to move to them to follow this rule.
-
-The local Manage stock switch (`enableLocalStockManagement`) is a
-developer-only test aid, not a product feature. Native installations get no
-data migration path to the Registry build.
+  and the playground moves to them with its switch to the Registry build.
+- Store policies: the native `settings/shipping-policy` and
+  `settings/return-policy` writes went with the native-only routes and the
+  Registry build never had a write, so `policies/public` answers unset until
+  Commerce decides how a store sets its policies.
 
 ## Status
 
@@ -121,8 +133,9 @@ treated as zero stock or a backorder. The package stores no fallback quantity.
 Products with Manage Stock disabled use a separate Commerce-owned manual
 availability value: `in-stock`, `out-of-stock`, or
 `available-on-backorder`. A missing value defaults to `in-stock` for new and
-legacy products. The private `catalog-items/set-manual-availability` action
-can change it only while the product is unmanaged. The value remains dormant
+legacy products. The product panel's price form (the private `catalog` route's
+`prices` op, with its stock status) can change it only while the product is
+unmanaged. The value remains dormant
 while Inventory manages the product and returns if management is later
 disabled. `resolveStorefrontAvailability` selects the managed or unmanaged
 authority and always returns the same structured storefront contract;
@@ -137,8 +150,8 @@ refused rather than silently cleared. `resolveStorefrontAvailability` returns
 
 Each Content > Products page has a Dinkus Commerce editor
 panel; Add price and stock makes a Draft catalog product for the page and links
-it, and the product goes on sale when the store publishes the page. Commerce
-settings lists products without a page. Name is the customer-facing title
+it, and the product goes on sale when the store publishes the page. Every
+product is made for its page; there are no products without one. Name is the customer-facing title
 (the product page H1 contract); this plugin does not render a storefront page.
 Opening a product shows Regular, Sale, a Manage stock notice, and In stock /
 Out of stock / On backorder when the product is unmanaged. It also shows an optional Shipping weight in ounces for each physical
@@ -198,7 +211,7 @@ unavailable. Synthetic fixture injection proves transport. Actual Stripe is
 not run. See
 [docs/implementation/guest-checkout-public.md](docs/implementation/guest-checkout-public.md).
 
-Commerce Orders provides authenticated order inspection in the sandbox admin. It reads Orders' own copies of paid orders, retains recorded prices and receipt identities, and distinguishes provider-paid from zero-payable orders. Orders not taken in live mode are marked TEST. Each order has a short number, a version, and a status: Processing until it ships, then Completed (shipped, never delivered). The owner can correct the delivery address while an order is Processing, complete it by hand with an optional carrier and tracking number, and move it back to Processing; each change raises the version. Agents and the CLI read orders and complete or reopen them through the private `orders` route with an administrator's API token. When the store has Ship's hosted service, Orders sends Ship each order and every change to it, and completes an order with USPS and the tracking number when Ship buys its label ([Orders and Ship](docs/implementation/registry-ship-sync.md)). It exposes no payment mutation and sends no email; Ship emails the shopper. See [installed Orders inspection](docs/implementation/orders-inspection.md) for bounds and local-proof limits.
+Commerce Orders provides authenticated order inspection in the sandbox admin. It reads Orders' own copies of paid orders, retains recorded prices and receipt identities, and distinguishes provider-paid from zero-payable orders. Orders not taken in live mode are marked TEST. Each order has a short number, a version, and a status: Processing until it ships, then Completed (shipped, never delivered). The owner can correct the delivery address while an order is Processing, complete it by hand with an optional carrier and tracking number, and move it back to Processing; each change raises the version. Agents and the CLI read orders, complete or reopen them, and correct their delivery address through the private `orders` route with an Editor's or Administrator's API token; staff with the Editor role work the Orders page too. When the store has Ship's hosted service, Orders sends Ship each order and every change to it, and completes an order with USPS and the tracking number when Ship buys its label ([Orders and Ship](docs/implementation/registry-ship-sync.md)). It exposes no payment mutation and sends no email; Ship emails the shopper. See [installed Orders inspection](docs/implementation/orders-inspection.md) for bounds and local-proof limits.
 
 The current product boundary is recorded in [docs/CHARTER.md](docs/CHARTER.md).
 
@@ -237,10 +250,10 @@ the build, local installation and proof steps.
 `bin/dinkus-commerce.mjs` is an unpublished scaffold of the `dinkus-commerce`
 CLI. It reads the public catalog (`catalog list`, `catalog show`), on a
 native install with `EMDASH_TOKEN` the admin product list (`products list`),
-and on a Registry install with an administrator's `EMDASH_TOKEN` the orders
+and on a Registry install with an Editor's or Administrator's `EMDASH_TOKEN` the orders
 (`orders list`, `orders show`), which it can also mark Completed or move back
-to Processing at a confirmed order version (`orders complete`,
-`orders reopen`), over the same EmDash plugin routes. Price, SKU and settings
+to Processing, or correct where they go, at a confirmed order version
+(`orders complete`, `orders reopen`, `orders address`), over the same EmDash plugin routes. Price, SKU and settings
 commands are listed as planned until Commerce has the routes they need. The CLI lives in
 `cli/`, outside `src/`, and adds nothing to `dist/sandbox/plugin.mjs`.
 

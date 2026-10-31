@@ -28,9 +28,11 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 | Page | What it does |
 | --- | --- |
 | **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment, the customer's email and phone, and the Ship to and Bill to addresses. |
-| **Commerce settings** | Connect, checkout settings, catalog choices (hide out-of-stock products, a placeholder image for products without one), and **Products without a page**, each with **Make a page**. |
+| **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, a placeholder image for products without one). |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
+
+Staff with the EmDash **Editor** role can manage products and merchant store settings and work **Orders**: inspect, Complete order, Move back to Processing and Correct address. Connecting DinkusKit and checkout setup need an **Administrator**. Orders shows each customer's email, phone and addresses, so give the Editor role only to people you trust with them.
 
 ## Merchant store settings
 
@@ -49,7 +51,7 @@ billing address or determine taxes or currency.
 
 **Content > Products** is the one place to manage a product. Each product page has two panels beside the editor: **Dinkus Commerce** and **Product image & gallery**.
 
-- On a page with no product, press **Add price and stock**. It makes a Draft product named from the page title, with the SKU you type or one made from the title, and links it to the page. Commerce keeps the link, so there is no product box on the page to fill in or save. The panel also lists products without a page, so one can be sold on this page instead.
+- On a page with no product, press **Add price and stock**. It makes a Draft product named from the page title, with the SKU you type or one made from the title, and links it to the page. Commerce keeps the link, so there is no product box on the page to fill in or save. Every product is made for its page this way, and a page sells one product, so there are no products without a page to sort out.
 - On a linked page, the panel shows the product's state (Draft, On sale, Published: off the shop or Archived) and SKU, and edits its price and sale price, stock status, choices, weight, and GTIN, MPN and Brand. **Archive** takes it off the shop; **Restore** brings it back as a Draft.
 - A product starts as a simple product, and the panel says so. To sell it in more than one version, add a choice such as Size; the product becomes variable and each choice gets its own price, SKU and stock.
 - **Product image & gallery** chooses the product's picture and up to eight gallery pictures from the Media Library, in order. It works once the page sells a product; until then it points to **Dinkus Commerce**.
@@ -63,12 +65,9 @@ To show this panel, Commerce asks for the `admin.editor-draft:read` permission w
 ## Saving and upgrading catalog data
 
 Price and stock-status saves, including submitted feed choices, commit together.
-Native local-stock hosts keep choice-level tracking changes in that same commit.
-Native catalog lists return the product revision for every choice. A native bulk
-price request validates sibling choices against that same snapshot and commits
-its valid rows together; invalid rows remain individually reported. A competing
-product edit refuses the staged rows for that product without a partial save.
-A **Save weight** action commits all submitted choice weights together. These
+A competing product edit refuses the staged rows for that product without a
+partial save. A **Save weight** action commits all submitted choice weights
+together. These
 actions work within EmDash's default ten-subrequest sandbox limit. If another
 editor changes the product after a form opens, reload before saving again.
 
@@ -96,7 +95,7 @@ Use the permanent Commerce item ID to look up a product and submit a cart line. 
 
 Prices use USD integer minor units represented as strings. For example, USD 12.00 is `{ "currency": "USD", "minor": "1200" }`. Regular price is required for a simple product to be listable. A missing price does not mean free. An explicit zero Regular price can be listed, but the paid-checkout path must be verified separately. A Sale price requires Regular and must be strictly lower. The customer-facing price is Sale when present, otherwise Regular.
 
-The public catalog filters archived, Draft and nonlistable products. A product can have up to three options (such as Color and Size), up to fifty values per option, and up to fifty variant members. Product families with options expose variant members; they can omit the top-level price. Choose a sellable member and use its `catalogItemId` for checkout. Do not assume every catalog object has a price or that a family ID can be purchased without a choice.
+The public catalog filters archived, Draft and nonlistable products. A product can have up to three options (such as Color and Size), up to fifty values per option, and up to fifty variant members. Product families with options expose variant members without a top-level price. Choose a sellable member and use its `catalogItemId` for checkout. Looking up a concrete member through `catalog/public/item?itemId=…` returns its public family, whose `id` can differ from the requested member. When refreshing a cart, find that member in `variants.members` and use its own price, availability and fulfillment; do not substitute a sibling or the family's top-level facts. Paginated catalog rows are grouped the same way. Do not assume every catalog object has a price or that a family ID can be purchased without a choice.
 
 Public catalog list and item responses also carry the feed channels the merchant approved for each product, so a storefront host can build public product feeds without admin reads. A product with no approved channel is never included.
 
@@ -108,7 +107,7 @@ Inventory is planned after v1, and the Registry build has no Manage stock switch
 
 ## Public storefront routes
 
-Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn`, while `dinkus-commerce` identifies the native development entry.
+Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve the actual installed identity; the stable Registry runtime ID is `r_gshdrqaldna3r7sn` and the beta package's is `r_fjzjvld3ssb4j63o`. Commerce runs one build, the Registry build; `dinkus-commerce` identifies the native development entry only the Template Store's playground still registers. It serves these routes except `policies/public` and `checkout/guest/readiness`, which the Registry build alone registers.
 
 | Route | Method | Contract |
 | --- | --- | --- |
@@ -143,7 +142,7 @@ For guest checkout, check both the HTTP response and EmDash's JSON `success` fla
 
 Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `start` and `status`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session.
 
-Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token that can manage plugins. Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same.
+Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token of an Editor or Administrator (EmDash still requires the token's `admin` scope). Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same. The `address` action is the Orders page's Correct address: it replaces `shipTo` on a Processing order at the order version it read, with the same checks as checkout and only to a country the store ships to, and never changes billing. Move a Completed order back to Processing first.
 
 Agents and command-line tools manage products through the private `catalog` route (POST) with an EmDash API token that can edit content. Each request names one `op` and runs the same checks as the product page panels:
 
@@ -151,15 +150,14 @@ Agents and command-line tools manage products through the private `catalog` rout
 | --- | --- |
 | `list` | Lists products: id, name, SKU, and when it was archived. |
 | `get` | One product (`catalogItemId`) with its choices, prices, pictures and feed channels. With `entryId` instead, the product that page sells: the one its panel picked, else the one it last sold; `product: null` when it sells none. |
-| `create` | Makes a physical Draft from `name` and `sku`, and links it to the product page `entryId` when given. Send a `commandId` so a retry finds the same product. |
-| `link` | Links a product to the product page `entryId`. |
+| `create` | Makes a physical Draft from `name` and `sku` for the product page `entryId`, which is required: make the page first. A page that already sells a product is refused. Send a `commandId` so a retry finds the same product. |
 | `prices`, `choice`, `labels`, `sku`, `weight`, `identifiers`, `archive`, `media`, `feeds` | Change prices and stock status, choices and their labels, the SKU, weight, GTIN/MPN/Brand, Archive or Restore, pictures, and product feed eligibility. |
 
-Publishing the page still puts the product on sale, so an agent sells a product by creating it with the page's `entryId` (or linking it), pricing it and publishing its page through EmDash. Commerce keeps the link, as it does for the panel, and the page has no product field to set. A store whose template predates this still reads the page's own **Commerce product** field (`commerce_item_id`) when it publishes; there, the agent also sets that field to the product's `catalogItemId`, or the store is updated first. Manage stock stays off, as in the panels. A refused write answers with the reason.
+Publishing the page still puts the product on sale, so an agent sells a product by making its page through EmDash, creating the product with the page's `entryId`, pricing it and publishing its page through EmDash. Commerce keeps the link, as it does for the panel, and the page has no product field to set. A store whose template predates this still reads the page's own **Commerce product** field (`commerce_item_id`) when it publishes; there, the agent also sets that field to the product's `catalogItemId`, or the store is updated first. Manage stock stays off, as in the panels. A refused write answers with the reason.
 
 A write may carry `expected`: the first 12 hex digits of the SHA-256 of the product's `get` answer as JSON (for a choice, of its product, named as `productId`). Commerce then saves only while the product still reads that way, so an agent never overwrites a change it did not see.
 
-The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-choice`, `link`, `archive` and `restore`. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
+The `dinkus-commerce` command-line tool wraps these as `products show`, `create`, `set-price`, `set-sale-price`, `set-stock-status`, `set-sku`, `set-weight`, `set-identifiers`, `save-media`, `set-feeds`, `add-choice`, `archive` and `restore`. `products create` makes the Content > Products page too (found by slug, or made as a Draft from the name), then the product for it, so one command does both steps. Each change shows a preview with `--dry-run` and is sent only with the `--confirm` value it printed, which Commerce checks before it saves.
 
 Select CLI configuration with `--profile <name>` or `DINKUS_COMMERCE_PROFILE`. A requested name must be explicitly defined in a config file's `profiles` object; inherited names do not count. A missing name or malformed selected profile stops with exit `2` before any HTTP request, rather than silently sending a change to the base site. Profile maps and matching entries must be JSON objects; an explicitly defined empty object still inherits that file's base metadata. Existing configuration precedence and restrictions on sending credentials to project-configured sites are unchanged. See the repository's [CLI specification](https://github.com/dinkuskit/commerce/blob/main/docs/CLI-SPEC.md#configuration-and-authentication) for paths and examples.
 
@@ -192,6 +190,29 @@ Commerce runs a background check every five minutes while it is switched on. It 
 Reconciliation requires a persisted paid checkout order before acknowledging its payment notice. The separate handoff to the Orders module catches receiver failures so it can be retried; acknowledgement alone is therefore not independent proof that the Orders screen displays the order. A browser return cannot establish payment success. Use the [test-order checks](/docs/store-owners/test-order) and confirm the order in Commerce's Orders screen.
 
 Coupon codes are refused at checkout on Registry stores in this release.
+
+## Completing and correcting an order
+
+Open **Orders**, then **Inspect #N**. New orders are **Processing**;
+**Completed** means shipped, not delivered. Test orders stay in the normal list
+and are marked **TEST**; do not use them for real fulfillment or postage.
+
+- Before shipment, use **Correct address** on a Processing order that has a
+  delivery address. The corrected country must be one of the store's shipping
+  destinations. This changes where the order goes, not its frozen checkout or
+  billing address.
+- Without Ship, use **Complete order** to record shipment by hand. Carrier and
+  tracking number are optional, at most 64 characters each. Commerce records the
+  completion time and shows the order as Completed; this does not buy a label or
+  send a shipping email. Signed-in shoppers can see the status, carrier and
+  tracking number in their order history when the storefront provides it.
+- A Completed order's address is locked. To correct a mistake, choose **Move back
+  to Processing** and confirm. This clears the completion time, carrier and
+  tracking number, but keeps any corrected delivery address. It does not cancel
+  a shipping label. Correct the order and complete it again as appropriate.
+
+If an order changed after you opened its form, the stale save changes nothing.
+Open the order again and check its current details before retrying.
 
 ## Next steps
 

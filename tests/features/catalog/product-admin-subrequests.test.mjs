@@ -24,7 +24,7 @@ test('each product screen costs the same few storage calls however many products
   for (const size of [10, 50, 150]) {
     const { run } = await bigShop(size);
     const screens = {
-      // An unlinked page's panel lists products without a page, reading 100 names per call.
+      // An unlinked page's panel offers only Add price and stock (catalog-product-needs-page-20261031).
       'unlinked panel': { type: 'panel_load' },
       'product page': { type: 'block_action', action_id: 'open', value: 'p002' },
       'price save': submit('save:p002', { regular: '12.00', sale: '', stockStatus: 'in-stock' }),
@@ -37,12 +37,10 @@ test('each product screen costs the same few storage calls however many products
       const { answer, calls } = await run(input);
       assert.equal(isError(answer), false, `${screen} with ${size} products answered ${JSON.stringify(answer).slice(0, 300)}`);
       assert.ok(calls <= EMDASH_DEFAULT, `${screen} with ${size} products made ${calls} storage calls`);
-      // Only the unlinked panel's list grows with the catalog.
+      // No screen's cost grows with the catalog.
       const first = costs.get(screen) ?? calls;
       costs.set(screen, first);
-      if (screen !== 'unlinked panel') {
-        assert.equal(calls, first, `${screen} cost ${first} calls with 10 products and ${calls} with ${size}`);
-      }
+      assert.equal(calls, first, `${screen} cost ${first} calls with 10 products and ${calls} with ${size}`);
     }
   }
 });

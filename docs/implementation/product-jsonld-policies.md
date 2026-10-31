@@ -32,7 +32,7 @@ or page state.
 
 ## Optional identifiers
 
-Authenticated `catalog-items/set-identifiers` writes optional `gtin` (validated
+The product panel's identifiers form and the `catalog` route's `identifiers` op (the native-only `catalog-items/set-identifiers` route is gone, `commerce-one-build-registry-20261031`) write optional `gtin` (validated
 GTIN-8/12/13/14 with check digit), `mpn`, and `brand` onto the catalog item.
 Public `catalog/public` and `catalog/public/item` project only present fields.
 Native Products admin exposes the fields; unset means omitted.
@@ -46,7 +46,7 @@ Native Products admin exposes the fields; unset means omitted.
 
 Each record is singleton `active` with a monotonic `revision`. Public
 `GET policies/public` returns both. Native authenticated
-`settings/shipping-policy` and `settings/return-policy` write them. Unset
+`settings/shipping-policy` and `settings/return-policy` wrote them on the native entry only; those routes went with the native extras (`commerce-one-build-registry-20261031`) and the Registry build never had a write, so until Commerce decides how a store sets its policies they stay unset everywhere. Unset
 fields are omitted — never invented.
 
 Checkout continues to resolve shipping charges from installed checkout settings

@@ -9,8 +9,10 @@ ID from the product's admin page. Decisions: `catalog-product-rename-001`,
 - **Rename.** Superseded for the product page panel by
   `catalog-page-title-is-name-20261026`: the panel has no Name field, and
   publishing the page sets the name from its title (see
-  [one-product-screen.md](one-product-screen.md)). The native
-  `catalog-items/rename` route stays.
+  [one-product-screen.md](one-product-screen.md)). That is the one rename
+  path on both builds: a title-only publish of the page renames the product it
+  sells. The native-only `catalog-items/rename` route is gone and the `catalog`
+  route has no rename op (`commerce-one-build-registry-20261031`).
   The name lives on the product's own record, which speaks for each of its
   choices: the Shop card, the cart, checkout and new orders all read it from
   there, so one compare-and-set renames everything at once.
@@ -31,8 +33,7 @@ ID from the product's admin page. Decisions: `catalog-product-rename-001`,
   has a copy button. The Registry admin shows the same id in a Block Kit code
   block. EmDash 1.2.0 Block Kit has no copy element, so an owner selects the
   id there.
-- **Routes (native).** `POST catalog-items/rename {catalogItemId, name}` and
-  `POST catalog-items/set-archived {catalogItemId, archived}` need
+- **Routes.** The native-only `catalog-items/rename` and `catalog-items/set-archived` routes are gone (`commerce-one-build-registry-20261031`); archive and restore go through the `catalog` route's `archive` op and the product panel on both builds, rename through the page title. They needed
   `content:edit_any` and answer `{ changed }`. The Registry build adds no route:
   its admin acts through the existing `admin` route.
 

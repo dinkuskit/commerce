@@ -115,8 +115,8 @@ const plugin: SandboxedPlugin = {
       pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, route.input)),
     // Agents and the CLI manage products here with an EmDash API token (catalog-api-20261027).
     [CATALOG_API_ROUTE]: privatePost("content:edit_any", catalogApi),
-    // Agents and the CLI read and complete orders here with an EmDash API token.
-    [ORDERS_API_ROUTE]: privatePost("plugins:manage", async (route, ctx) => {
+    // Agents and the CLI work orders here with an EmDash API token of an Editor or Administrator.
+    [ORDERS_API_ROUTE]: privatePost("content:edit_any", async (route, ctx) => {
       const answer = await ordersApi(route, ctx);
       // Ship hears about a saved change right away, as it does from the Orders page.
       if ((answer as { result?: string }).result === "saved") await syncOrdersWithShip(ctx).catch(() => {});

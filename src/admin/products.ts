@@ -3,8 +3,8 @@ import type { Block, BlockResponse } from "@emdash-cms/blocks";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import type { StorageCollection } from "emdash";
 import {
-  CatalogError, createCatalogItem, listCatalogProductSummaries, loadCatalogProduct, editProduct,
-  linkProductPage, pageProduct, productNotFound, productPageLinks, PRODUCT_PAGES_COLLECTION, type ProductPages,
+  CatalogError, createCatalogItem, loadCatalogProduct, editProduct,
+  linkProductPage, pageProduct, productNotFound, PRODUCT_PAGES_COLLECTION, type ProductPages,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
   normalizeWeightOz, setCatalogItemWeight, setCatalogWeights, setCatalogProductArchived,
@@ -16,8 +16,9 @@ import {
   loadProductFeedEligibility, setProductFeedEligibility,
   type ProductFeedChannel, type ProductFeedEligibilityRecord,
 } from "../features/feeds/kernel/index.js";
-import { alert, button, failed, header, message, note, object, refused, text } from "./common.js";
+import { alert, button, failed, fresh, header, input, message, note, object, radio, refused, submit, text, toggle } from "./common.js";
 import { library, preview, target } from "./media.js";
+import { REGISTRY_BUILD } from "../shared/registry-build.js";
 
 const STOCK_OPTIONS = [
   { label: "In stock", value: "in-stock" },
@@ -49,23 +50,23 @@ function manageStockNotice(managed: boolean | null): Block {
   const base = "Manage stock \u2014 Coming soon";
   return {
     type: "context",
-    text: managed === true
-      ? base + ". This product stays managed."
-      : managed === false
-        ? base
+    text: REGISTRY_BUILD || managed === false
+      ? base
+      : managed === true
+        ? base + ". This product stays managed."
         : base + ". Stock status hidden.",
   };
 }
 const FEEDS = [["google-merchant", "Google Merchant"], ["meta-catalog", "Meta catalog"]] as const;
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
   return { type: "form", block_id: "product-" + id + "-" + crypto.randomUUID(), fields: [
-      { type: "text_input", action_id: "regular", label: "Regular", initial_value: values.regular },
-      { type: "text_input", action_id: "sale", label: "Sale", initial_value: values.sale },
+      input("regular", "Regular", values.regular),
+      input("sale", "Sale", values.sale),
       ...(values.manageStock === false ? [{ type: "radio" as const, action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS,
         initial_value: values.stockStatus ?? undefined }] : []),
       ...(values.feedChannels === undefined ? [] : FEEDS.map(([channel, label]) =>
-        ({ type: "toggle" as const, action_id: "feed:" + channel, label, initial_value: values.feedChannels!.includes(channel) }))),
-    ], submit: { label: "Save", action_id: action } };
+        toggle("feed:" + channel, label, values.feedChannels!.includes(channel)))),
+    ], submit: submit("Save", action) };
 }
 const IDENTIFIERS = [["gtin", "GTIN"], ["mpn", "MPN"], ["brand", "Brand"]] as const;
 const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
@@ -76,18 +77,18 @@ function weightForm(selected: CatalogProductListItem): Block[] {
     : [[selected, "Weight (oz)"] as const];
   const fields = items.filter(([item]) => item.fulfillment === "physical").map(([item, label]) =>
     ({ type: "text_input" as const, action_id: "w:" + item.catalogItemId, label, initial_value: item.weightOz === undefined ? "" : String(item.weightOz) }));
-  return fields.length ? [header("Shipping weight"), { type: "form", block_id: "weight-" + crypto.randomUUID(), fields,
-    submit: { label: "Save weight", action_id: "weight:" + JSON.stringify([selected.catalogItemId, selected.revision]) } }] : [];
+  return fields.length ? [header("Shipping weight"), { type: "form", block_id: fresh("weight-"), fields,
+    submit: submit("Save weight", "weight:" + JSON.stringify([selected.catalogItemId, selected.revision])) }] : [];
 }
 function variantEditor(id: string, variant: CatalogProductListItem["variantProduct"]): Block[] {
   // A product is simple until it has a choice; adding one makes it variable (catalog-simple-product-label-20261027).
   if (!variant?.options.length) return [note("Simple product. Add a choice, like Size, to sell it in more than one version."), {
     type: "form", block_id: "variant-add-" + id, fields: [
-      { type: "text_input", action_id: "optionLabel", label: "Option", initial_value: "Size" },
-      { type: "text_input", action_id: "smallLabel", label: "First value", initial_value: "Small" },
-      { type: "text_input", action_id: "largeLabel", label: "Second value", initial_value: "Large" },
-      { type: "text_input", action_id: "sku", label: "Second SKU" },
-      ...["first", "second"].map(key => ({ type: "radio" as const, action_id: key, label: key === "first" ? "First fulfillment" : "Second fulfillment", options: FULFILLMENT })),
+      input("optionLabel", "Option", "Size"),
+      input("smallLabel", "First value", "Small"),
+      input("largeLabel", "Second value", "Large"),
+      input("sku", "Second SKU"),
+      ...["first", "second"].map(key => (radio(key, key === "first" ? "First fulfillment" : "Second fulfillment", FULFILLMENT))),
     ], submit: { label: "Add choices", action_id: "variant:" + JSON.stringify(["add", id, ...Array.from({ length: 4 }, () => crypto.randomUUID())]) },
   }];
   const label = (m: typeof variant.members[number]) => m.selections.map(s => s.valueLabel).join(" / ");
@@ -97,26 +98,26 @@ function variantEditor(id: string, variant: CatalogProductListItem["variantProdu
       productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" },
         "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision])),
     ]),
-    { type: "form", block_id: "variant-details-" + crypto.randomUUID(), fields: [
+    { type: "form", block_id: fresh("variant-details-"), fields: [
       ...variant.options.flatMap((o, i) => [
-        { type: "text_input" as const, action_id: i ? "option:" + o.optionId : "optionLabel", label: i ? "Option: " + o.label : "Option", initial_value: o.label },
-        ...o.values.map(v => ({ type: "text_input" as const, action_id: "label:" + JSON.stringify([o.optionId, v.valueId]), label: "Value: " + v.label, initial_value: v.label })),
+        input(i ? "option:" + o.optionId : "optionLabel", i ? "Option: " + o.label : "Option", o.label),
+        ...o.values.map(v => (input("label:" + JSON.stringify([o.optionId, v.valueId]), "Value: " + v.label, v.label))),
       ]),
-      ...variant.members.map(m => ({ type: "radio" as const, action_id: "fulfillment:" + m.catalogItemId, label: label(m) + " fulfillment", options: FULFILLMENT, initial_value: m.fulfillment })),
-    ], submit: { label: "Save choices", action_id: "variant:" + JSON.stringify(["details", id, variant.revision]) } },
+      ...variant.members.map(m => (radio("fulfillment:" + m.catalogItemId, label(m) + " fulfillment", FULFILLMENT, m.fulfillment))),
+    ], submit: submit("Save choices", "variant:" + JSON.stringify(["details", id, variant.revision])) },
     ...(variant.options.length < 3 ? [{
-      type: "form" as const, block_id: "variant-option-" + crypto.randomUUID(), fields: [
-        { type: "text_input" as const, action_id: "optionLabel", label: "Next option", initial_value: variant.options.length === 1 ? "Color" : "Material" },
-        { type: "text_input" as const, action_id: "firstValue", label: "First option value", initial_value: "Sand" },
-        { type: "text_input" as const, action_id: "secondValue", label: "Second option value", initial_value: "Ink" },
-        ...variant.members.map(m => ({ type: "text_input" as const, action_id: "member:" + m.catalogItemId, label: "Value for " + label(m), initial_value: "Sand" })),
+      type: "form" as const, block_id: fresh("variant-option-"), fields: [
+        input("optionLabel", "Next option", variant.options.length === 1 ? "Color" : "Material"),
+        input("firstValue", "First option value", "Sand"),
+        input("secondValue", "Second option value", "Ink"),
+        ...variant.members.map(m => (input("member:" + m.catalogItemId, "Value for " + label(m), "Sand"))),
       ], submit: { label: "Add option", action_id: "variant:" + JSON.stringify(["option", id, variant.revision, crypto.randomUUID()]) },
     }] : []),
     ...(variant.members.length < 50 ? [{
-      type: "form" as const, block_id: "variant-member-" + crypto.randomUUID(), fields: [
-        ...variant.options.map(o => ({ type: "text_input" as const, action_id: "choice:" + o.optionId, label: "Choice: " + o.label })),
-        { type: "text_input" as const, action_id: "sku", label: "Variant SKU" },
-        { type: "radio" as const, action_id: "fulfillment", label: "Variant fulfillment", options: FULFILLMENT, initial_value: "physical" },
+      type: "form" as const, block_id: fresh("variant-member-"), fields: [
+        ...variant.options.map(o => (input("choice:" + o.optionId, "Choice: " + o.label))),
+        input("sku", "Variant SKU"),
+        radio("fulfillment", "Variant fulfillment", FULFILLMENT, "physical"),
       ], submit: { label: "Add variant", action_id: "variant:" + JSON.stringify(["member", id, variant.revision, crypto.randomUUID()]) },
     }] : []),
   ];
@@ -161,9 +162,9 @@ async function product(ctx: PluginContext, id: string, form?: CatalogProductPric
     ...variantEditor(id, selected.variantProduct),
     ...weightForm(selected),
     // Barcode and brand for shopping feeds and the product page's structured data; empty clears one.
-    { type: "form", block_id: "ids-" + crypto.randomUUID(), fields: IDENTIFIERS.map(([key, label]) =>
-      ({ type: "text_input" as const, action_id: key, label, initial_value: selected[key] ?? "" })),
-      submit: { label: "Save identifiers", action_id: "ids:" + id } },
+    { type: "form", block_id: fresh("ids-"), fields: IDENTIFIERS.map(([key, label]) =>
+      input(key, label, selected[key] ?? "")),
+      submit: submit("Save identifiers", "ids:" + id) },
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
       : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
         text: "Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
@@ -192,32 +193,20 @@ const NO_PRICE = "Add a Regular price to sell it";
 const command = (action: string) => /^sell:[\w-]{8,64}$/.test(action) ? action.slice(5) : crypto.randomUUID();
 /** An action id's tail: a JSON list, or the bare product id an older panel sent. */
 const tail = (rest: string): [string, string?] => rest.startsWith("[") ? JSON.parse(rest) : [rest];
-/** Commerce products no product page sells yet, newest first, archived ones too so they can be restored; Commerce Settings lists them. */
-export async function productsWithoutPage(ctx: PluginContext) {
-  const store = storage(ctx);
-  const linked = await productPageLinks(store.pages);
-  return (await listCatalogProductSummaries(store.catalog)).filter(p => !linked.has(p.catalogItemId));
-}
-export const productLabel = (p: { name: string; sku: string; archivedAt?: string | null }) => p.name + " \u2014 " + p.sku + (p.archivedAt ? " (archived)" : "");
-/** The sell form carries its create command, so a retry after a partial failure resumes the same product. */
-async function unlinked(ctx: PluginContext, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
-  const orphans = await productsWithoutPage(ctx);
+/** The sell form carries its create command, so a retry after a partial failure resumes the same product. Every product is made for its page (catalog-product-needs-page-20261031). */
+function unlinked(sku = "", command: string = crypto.randomUUID()): BlockResponse {
   return { blocks: [
     note("Not a product yet. Add price and stock to sell it."),
-    { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [{ type: "text_input", action_id: "sku", label: "SKU (optional)", initial_value: sku }],
-      submit: { label: "Add price and stock", action_id: "sell:" + command } },
-    ...(orphans.length ? [{ type: "form" as const, block_id: "link-" + crypto.randomUUID(), fields: [{ type: "select" as const, action_id: "product",
-      label: "Or one without a page", options: orphans.slice(0, 50).map(p => ({ label: productLabel(p), value: p.catalogItemId })) },
-      { type: "text_input" as const, action_id: "sku", label: "Or its SKU" }],
-      submit: { label: "Sell it here", action_id: "link" } }] : []),
+    { type: "form", block_id: fresh("sell-"), fields: [input("sku", "SKU (optional)", sku)],
+      submit: submit("Add price and stock", "sell:" + command) },
   ] };
 }
 /** A SKU from the page title, made unique with a tail from its create command so a retry asks for the same SKU. */
 const skuFrom = (title: string, command: string) => (title.replace(/[^A-Za-z0-9]+/g, "-").slice(0, 40) + "-" + command.slice(0, 4)).toUpperCase().replace(/^-+/, "");
 /** Links this page to a Commerce product; Commerce keeps the link, the page has no field for it (catalog-page-link-in-commerce-20261029). */
-async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, chosen?: string, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
+async function sell(ctx: PluginContext, entryId: string, fields: Record<string, unknown>, sku = "", command: string = crypto.randomUUID()): Promise<BlockResponse> {
   const store = storage(ctx);
-  let id = chosen ?? await pageProduct(store.pages, entryId);
+  let id = await pageProduct(store.pages, entryId);
   let toast = "Linked.";
   if (!id) {
     // New products start as a physical Draft: off the shop until this page is published.
@@ -240,19 +229,14 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
   const input = route.input as Record<string, unknown>;
   try {
     const draft = input.draft as Draft | undefined, fields = draft?.fields ?? {}, action = String(input.action_id ?? "");
-    if (action.startsWith("sell")) return await sell(ctx, entryId, fields, undefined, text(object(input.values).sku ?? ""), command(action));
-    if (action === "link") {
-      // A typed SKU reaches every product, past the 50 the list shows.
-      const v = object(input.values), sku = String(v.sku ?? "").trim().toUpperCase();
-      return await sell(ctx, entryId, fields, sku ? (await listCatalogProductSummaries(storage(ctx).catalog)).find(p => p.sku.toUpperCase() === sku)?.catalogItemId ?? sku : text(v.product));
-    }
+    if (action.startsWith("sell")) return await sell(ctx, entryId, fields, text(object(input.values).sku ?? ""), command(action));
     if (input.type === "panel_load") {
       const linked = await pageProduct(storage(ctx).pages, entryId);
-      return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : await unlinked(ctx);
+      return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : unlinked();
     }
   } catch (error) {
     // A refused sell keeps the typed SKU, its create command and the buttons so the owner can retry.
-    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = await unlinked(ctx, String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? ""))).catch(() => ({ blocks: [] }));
+    const sku = (input.values as Draft["fields"] | undefined)?.sku, again = unlinked(String(sku ?? "").slice(0, 1024), command(String(input.action_id ?? "")));
     return refused(message(error), [alert(message(error)), ...again.blocks]);
   }
   return productEdit(route, ctx);

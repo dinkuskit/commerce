@@ -70,7 +70,7 @@ dinkus-commerce catalog show <item-id>
 
 dinkus-commerce products list
 dinkus-commerce products show <item-id>
-dinkus-commerce products create --name <name> --sku <sku> --command-id <id> [--page <entry-id>] [--dry-run]
+dinkus-commerce products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--dry-run]
 dinkus-commerce products set-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
 dinkus-commerce products set-sale-price <item-id> (--amount <decimal> | --clear) [--choice <item-id>] (--dry-run | --confirm <value>)
 dinkus-commerce products set-stock-status <item-id> --status <in-stock|out-of-stock|on-backorder> [--choice <item-id>] (--dry-run | --confirm <value>)
@@ -80,7 +80,6 @@ dinkus-commerce products set-identifiers <item-id> [--gtin <gtin>] [--mpn <mpn>]
 dinkus-commerce products save-media <item-id> [--image <media-id> | --clear-image] [--gallery <media-id> ... | --clear-gallery] (--dry-run | --confirm <value>)
 dinkus-commerce products set-feeds <item-id> (--channel <channel> ... | --none) (--dry-run | --confirm <value>)
 dinkus-commerce products add-choice <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)
-dinkus-commerce products link <item-id> --page <entry-id> (--dry-run | --confirm <value>)
 dinkus-commerce products archive <item-id> (--dry-run | --confirm <value>)
 dinkus-commerce products restore <item-id> (--dry-run | --confirm <value>)
 
@@ -88,6 +87,7 @@ dinkus-commerce orders list [--status <processing|completed>] [--cursor <cursor>
 dinkus-commerce orders show <order-id>
 dinkus-commerce orders complete <order-id> [--carrier <text>] [--tracking <text>] (--dry-run | --confirm <version>)
 dinkus-commerce orders reopen <order-id> (--dry-run | --confirm <version>)
+dinkus-commerce orders address <order-id> --name <text> --line1 <text> [--line2 <text>] --city <text> [--region <text>] --postal-code <text> --country <code> (--dry-run | --confirm <version>)
 
 dinkus-commerce settings show                                          (planned)
 ```
@@ -106,28 +106,27 @@ Every route is served at
 - `catalog show <item-id>` reads `GET catalog/public/item?itemId=<item-id>`.
   The service returns `null` for a missing, unpriced, or unlisted product; the
   CLI reports that as `not_found` and exits `1`.
-- `products list` reads `GET catalog-items/list` with the credential. It returns
-  every product with Regular and Sale as dollar strings, Manage stock, the
-  manual stock status for unmanaged products, and variant members. Only the
-  native Commerce build mounts this route. On a Registry (sandboxed) install the
-  site answers `404`, and the CLI sends `{ "op": "list" }` to `POST catalog`
-  instead, which lists each product's `catalogItemId`, `name`, `sku` and
-  `archivedAt`; `products show` has its prices. A Commerce older than 0.7.0
-  has neither and exits `1` with `route_not_available`.
+- `products list` sends `{ "op": "list" }` to `POST catalog` with the
+  credential, on every build (Commerce 0.7.0+): each product's `catalogItemId`,
+  `name`, `sku` and `archivedAt`; `products show` has its prices and stock. The
+  native-only `catalog-items/list` route is gone
+  (`commerce-one-build-registry-20261031`). A Commerce older than 0.7.0 has no
+  `catalog` route and exits `1` with `route_not_available`.
 - `products show <item-id>` sends `{ "op": "get", "catalogItemId" }` to
   `POST catalog`: the product as its page panel shows it (prices, stock,
   state, weight, identifiers, choices and their versions), its pictures and its
   feed channels.
 
-Both public routes are mounted by the Registry (sandboxed) build
-(`src/plugin.ts`) and the native build (`src/index.ts`), with the same request
-rules and response (GrillTrack `catalog-native-public-routes-001`). The
-`catalog` commands therefore work on either install, and so do the `products`
-commands on Commerce 0.7.0 or later.
+Both public routes and the private `catalog` route are mounted by the Registry
+(sandboxed) build (`src/plugin.ts`) and the native build (`src/index.ts`), with
+the same request rules and response (GrillTrack
+`catalog-native-public-routes-001`, `commerce-one-build-registry-20261031`).
+The `catalog` and `products` commands therefore work on either install on
+Commerce 0.7.0 or later.
 
 ### Product commands
 
-Every product command except `products list` sends one or more `POST catalog`
+Every product command sends one or more `POST catalog`
 calls with a JSON body and the credential. The route is private and needs
 `content:edit_any`, the permission the product page panels use; both builds
 mount it. Each body names one `op` and runs the panels' own checks:
@@ -135,7 +134,7 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | CLI command | Body |
 | --- | --- |
 | `products show` | `{ op: "get", catalogItemId }` |
-| `products create` | `{ op: "create", commandId, name, sku, entryId? }`: a physical Draft with Manage stock off. The same `commandId` again answers with the same product. |
+| `products create` | First, without `--page`, EmDash's content API: `GET /_emdash/api/content/products/<slug>`, and on `404` `POST /_emdash/api/content/products` `{ slug, data: { title: name } }` (a Draft page). Then `{ op: "create", commandId, name, sku, entryId }`: a physical Draft with Manage stock off, for that page. The same `commandId` again answers with the same product; another product for a page that already sells one is refused. |
 | `products set-price`, `set-sale-price`, `set-stock-status` | `{ op: "prices", catalogItemId, regular, sale, stockStatus? }`, the panel's one Save, with the values the command does not change read from `get`. `--choice` names one version of a product sold in choices. |
 | `products set-sku` | `{ op: "sku", catalogItemId, sku }` |
 | `products set-weight` | `{ op: "weight", catalogItemId, weightOz }` (`""` clears it) |
@@ -143,11 +142,14 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | `products save-media` | `{ op: "media", catalogItemId, image?, gallery? }` |
 | `products set-feeds` | `{ op: "feeds", catalogItemId, channels }` |
 | `products add-choice` | `{ op: "choice", productId, optionId, optionLabel, values }`: the product's first choice. The first value is the product itself; each other value makes a version with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. Later choices are added in the panel. |
-| `products link` | `{ op: "link", catalogItemId, entryId }` |
 | `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
-`products create --page` and `products link` record which page sells the
-product. Commerce keeps that link; the page has no product field to set
+Every product is made for its page (`catalog-product-needs-page-20261031`):
+the catalog API's `create` requires `entryId`, and there is no product without
+a page and no op to give one a page later. `products create` finds the
+Content > Products page by `--slug` (default: made from `--name`) or makes it
+as a Draft titled `--name`, or takes an existing page with `--page`, and
+Commerce records which page sells the product. Commerce keeps that link; the page has no product field to set
 (`catalog-page-link-in-commerce-20261029`). Publishing the page through EmDash
 (its content API or MCP) then puts the product on sale: the store's publish
 check sends Commerce only the page, and Commerce finds the product. A store
@@ -165,16 +167,18 @@ reason. A native store answers with Commerce's own error code
 product's page is what puts it on sale; no CLI command does that.
 
 `products create` is additive and needs no confirmation: a retry with the same
-`--command-id` never makes a second product, and `--dry-run` prints the
+`--command-id` and slug finds the same page and never makes a second product, and `--dry-run` prints the
 request and sends nothing. Every other write is a change to a product someone
 may be looking at, so it follows the confirm flow below.
 
 ### Orders commands
 
 Every `orders` command sends one `POST orders` with a JSON body and the
-credential (GrillTrack `commerce-orders-api-001`). The route is private: EmDash
-requires `plugins:manage` (an administrator) and, for API tokens, the `admin`
-scope, and Commerce checks the administrator again, like its Orders page. Only
+credential (GrillTrack `commerce-orders-api-001`; `address` is
+`commerce-orders-api-address-001`). The route is private: EmDash
+requires `content:edit_any` (an Editor or Administrator,
+`commerce-orders-staff-access-001`) and, for API tokens, the `admin` scope, and
+Commerce checks the role again, like its Orders page. Only
 the Registry (sandboxed) build mounts it; on a native install the site answers
 `404` and the CLI exits `1` with `route_not_available`.
 
@@ -184,6 +188,7 @@ the Registry (sandboxed) build mounts it; on a native install the site answers
 | `{ "action": "show", "orderId" }` | `{ order }`, or `{ "order": null }` when no order has that id. |
 | `{ "action": "complete", "orderId", "version", "carrier"?, "tracking"? }` | `{ result, order }` |
 | `{ "action": "reopen", "orderId", "version" }` | `{ result, order }` |
+| `{ "action": "address", "orderId", "version", "address": { name, line1, line2?, city, region?, postalCode, country } }` | `{ result, order }` |
 
 Unknown actions or fields, and malformed values, are refused before anything
 changes (a misspelt `trackingNumber` is an error, not ignored). Each order is:
@@ -212,11 +217,16 @@ billing was recorded); `billToMatchesShipTo` is true when it equals `shipTo`
 field for field. `choices` are the frozen option choices. `completed` is
 `{ at, carrier?, tracking? }` once Completed. `orders show` prints `bill to`.
 
-`complete` and `reopen` follow the Orders page's rules and apply only at the
-order `version` named, so a change made from a stale read changes nothing.
-`result` is `saved`, `outdated` (the version moved on, or the order is already
-in that status), `invalid` (carrier or tracking over 64 characters or with a
-line break) or `not_found`; `order` is the order as it now stands. Commerce
+`complete`, `reopen` and `address` follow the Orders page's rules and apply
+only at the order `version` named, so a change made from a stale read changes
+nothing. `address` is the Orders page's Correct address: it replaces the whole
+delivery address (`shipTo`), checked as checkout checks one, and never changes
+billing. `result` is `saved`, `outdated` (the version moved on, the order is
+already in that status, or for `address` the order is Completed: reopen it
+first), `invalid` (carrier or tracking over 64 characters or with a line break;
+for `address`, a missing or too-long line, an order with no delivery address,
+or a country outside the store's shipping countries) or `not_found`; `order` is
+the order as it now stands. Commerce
 sends no email either way. When the store has Ship's hosted service, a saved
 change goes to Ship right away, and Ship emails the shopper when the order
 becomes Completed ([Orders and Ship](implementation/registry-ship-sync.md)).
@@ -237,6 +247,12 @@ becomes Completed ([Orders and Ship](implementation/registry-ship-sync.md)).
   `result` as `error.code` (`outdated`, `invalid`, `not_found`); completing an
   order that is already Completed, or reopening one that is Processing, exits
   `1` with `already_completed` or `already_processing` before anything is sent.
+- `orders address` corrects where a Processing order goes, with the same
+  preview and `--confirm <version>` flow. `--name`, `--line1`, `--city`,
+  `--postal-code` and `--country` are required; `--line2` and `--region` are
+  optional, and the whole address is replaced. The preview prints the current
+  and new address. A Completed order exits `1` with `order_completed`, and an
+  order with no delivery address with `no_address`, before anything is sent.
 
 ### Planned commands
 
@@ -269,8 +285,8 @@ A product change is bound to what its preview read, and Commerce checks it
 Commerce's check runs inside the same request as the save, so the window a
 concurrent edit could slip through shrinks from a network round trip to the
 moment between that read and the write, and each write is still conditional.
-`orders complete` and `orders reopen` are bound on the server by the order
-version. There is no generic `--force`.
+`orders complete`, `orders reopen` and `orders address` are bound on the
+server by the order version. There is no generic `--force`.
 
 ## Global flags
 
@@ -295,14 +311,16 @@ version. There is no generic `--force`.
 | `--all` | `catalog list`, `orders list` | Follow every page and return one combined list. |
 | `--status <processing\|completed>` | `orders list` | Only Processing (not shipped) or Completed (shipped) orders. |
 | `--carrier <text>`, `--tracking <text>` | `orders complete` | Optional carrier and tracking number, at most 64 characters each. |
-| `--dry-run` | `orders complete`, `orders reopen` | Show the change and the version to confirm; send nothing. |
-| `--confirm <version>` | `orders complete`, `orders reopen` | Apply only if the order is still at this version. |
+| `--name`, `--line1`, `--line2`, `--city`, `--region`, `--postal-code`, `--country` | `orders address` | The corrected delivery address; `--line2` and `--region` are optional. Commerce checks it as checkout does; `--country` is two letters and must be one the store ships to. |
+| `--dry-run` | `orders complete`, `orders reopen`, `orders address` | Show the change and the version to confirm; send nothing. |
+| `--confirm <version>` | `orders complete`, `orders reopen`, `orders address` | Apply only if the order is still at this version. |
 | `--amount <decimal>` | `products set-price`, `products set-sale-price` | USD amount such as `19.99`; or `--clear`. |
 | `--clear` | `products set-price`, `set-sale-price`, `set-weight` | Clear the value instead. |
 | `--choice <item-id>` | `products set-price`, `set-sale-price`, `set-stock-status` | The version of a product sold in choices, from `products show`. Required for such a product. |
 | `--status <...>` | `products set-stock-status` | `in-stock`, `out-of-stock` or `on-backorder`. Refused when Inventory manages the stock. |
 | `--name <name>`, `--sku <sku>`, `--command-id <id>` | `products create` | Required. `--sku` is also `products set-sku`'s new SKU; the item id never changes. |
-| `--page <entry-id>` | `products create`, `products link` | The Products page entry that sells it. |
+| `--slug <slug>` | `products create` | The Products page slug to find or make (default: made from `--name`). |
+| `--page <entry-id>` | `products create` | An existing Products page entry that sells it, instead of `--slug`. |
 | `--oz <decimal>` | `products set-weight` | Ounces, above 0 and up to 2400. |
 | `--gtin`, `--mpn`, `--brand` | `products set-identifiers` | An empty value clears it; a field left out stays. |
 | `--image <media-id>`, `--gallery <media-id>` (repeatable), `--clear-image`, `--clear-gallery` | `products save-media` | EmDash media ids; `--gallery` replaces the whole gallery. |
@@ -346,12 +364,14 @@ may change. Control characters in merchant text are shown escaped
 The envelope always has `schema`, `command`, `outcome`, and `context`. Reads use
 `outcome: "ok"` and `data`. `data` passes the service payload through
 unchanged: `catalog list` adds `pages` with `--all` and omits `cursor` on the
-last page, `catalog show` is one product, and `products list` is the native
-`{ products, manageStockControl }` payload. `orders list` is
+last page, `catalog show` is one product, and `products list` is the catalog
+route's `{ products }` list. `orders list` is
 `{ orders, total, cursor? }` (`cursor` is the route's `next` as a string),
-`orders show` is one order, and a saved `orders complete` or `orders reopen`
-is the route's `{ result, order }`. A preview uses `outcome: "preview"`, with
-`data: { orderId, number, version, from, to, carrier?, tracking? }` and
+`orders show` is one order, and a saved `orders complete`, `orders reopen` or
+`orders address` is the route's `{ result, order }`. A preview uses
+`outcome: "preview"`, with
+`data: { orderId, number, version, from, to, carrier?, tracking? }` (for
+`orders address`, `from` and `to` are the current and new address) and
 `confirmation` set to the version to pass to `--confirm`; a product change's
 preview is `data: { catalogItemId, request }` with the 12-digit confirmation
 value, and a saved one is the catalog route's answer. A refused change
@@ -380,7 +400,7 @@ values are escaped as `\t`, `\n`, `\r`, and `\\`. Records per command:
 - `products list`: `record=product catalogItemId sku name regular sale manageStock stockStatus variants`.
 - `orders list`: `record=order orderId number version status test total.minor total.currency paidAt`,
   then `record=cursor cursor` when another page exists.
-- `orders show`, `orders complete`, `orders reopen`: one record of flattened
+- `orders show`, `orders complete`, `orders reopen`, `orders address`: one record of flattened
   `context.*` and `data.*` fields (plus `confirmation` for a preview); arrays
   are JSON.
 - Any failure: `code message`.
@@ -466,7 +486,10 @@ The credential comes only from `EMDASH_TOKEN`, the variable the upstream
 `emdash` CLI uses. It is an EmDash personal access token sent as
 `Authorization: Bearer`. Private plugin routes require the `admin` scope,
 and `products list` requires a user with
-`content:edit_any`, as do the other `products` commands. Non-GET admin calls
+`content:edit_any`, as do the other `products` commands. `products create`
+without `--page` also reads and, when it is missing, makes the Products page
+through EmDash's content API, so its token needs the `content:read` and
+`content:write` scopes too (an `admin` token has them). Non-GET admin calls
 also send `X-EmDash-Request: 1` (EmDash's CSRF header). There is no `--token` flag, no token in config, and no
 printing of the token or the authorization header. Public `catalog` reads never
 send the token, even when it is set. Admin commands without it exit `4`, naming
@@ -501,7 +524,7 @@ dinkus-commerce --url https://shop.example catalog show item_demo --json
 # Out-of-stock products in a script, using a configured profile.
 dinkus-commerce --profile staging catalog list --all --plain | grep 'availability.status=out-of-stock'
 
-# Admin product list on a native install; EMDASH_TOKEN comes from your secret manager.
+# Admin product list; EMDASH_TOKEN comes from your secret manager.
 EMDASH_URL=https://shop.example dinkus-commerce products list
 
 # Local development site served over loopback http.
@@ -512,8 +535,11 @@ EMDASH_URL=https://shop.example dinkus-commerce orders list --status processing
 EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --dry-run
 EMDASH_URL=https://shop.example dinkus-commerce orders complete order:demo --carrier USPS --tracking 9400100000000000000000 --confirm 1
 
-# Migrate a product: a Draft for its page, a price, then a Size choice.
-EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --page 01J0PAGE --json
+# Correct where an order goes before shipping it.
+EMDASH_URL=https://shop.example dinkus-commerce orders address order:demo --name 'Sam Buyer' --line1 '2 Main St' --city Knoxville --region TN --postal-code 37902 --country US --dry-run
+
+# Migrate a product: its page and a Draft for it, a price, then a Size choice.
+EMDASH_URL=https://shop.example dinkus-commerce products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --json
 EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --dry-run
 EMDASH_URL=https://shop.example dinkus-commerce products set-price item_demo --amount 22.00 --confirm 3f9a0c1b2d4e
 EMDASH_URL=https://shop.example dinkus-commerce products add-choice item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run
@@ -590,10 +616,10 @@ change, rebuild, and compare.
 | --- | --- | --- |
 | `catalog list` | Wired | `GET catalog/public[?cursor=]` (both builds) |
 | `catalog show` | Wired | `GET catalog/public/item?itemId=` (both builds) |
-| `products list` | Wired | `GET catalog-items/list` with `EMDASH_TOKEN` (native build), else `POST catalog` `{op: list}` (Commerce 0.7.0+) |
+| `products list` | Wired | `POST catalog` `{op: list}` with `EMDASH_TOKEN` (both builds, Commerce 0.7.0+) |
 | `products show`, `create` and every product change | Wired | `POST catalog` with `EMDASH_TOKEN` (both builds, Commerce 0.7.0+) |
 | `orders list`, `orders show` | Wired | `POST orders` with `EMDASH_TOKEN` (Registry build) |
-| `orders complete`, `orders reopen` | Wired | `POST orders` with `EMDASH_TOKEN`, bound to the confirmed order version (Registry build) |
+| `orders complete`, `orders reopen`, `orders address` | Wired | `POST orders` with `EMDASH_TOKEN`, bound to the confirmed order version (Registry build) |
 | `settings show` | Planned | No complete read-only settings route |
 
 ## Acceptance checks
@@ -626,4 +652,5 @@ or deployment qualification.
 real catalog API over in-memory storage, through EmDash's envelope: a
 migration by CLI alone (create and retry, prices, stock, a choice and its
 versions, SKU and its conflict), the stale-confirmation refusal, and weight,
-identifiers, pictures, feeds, link, archive and restore.
+identifiers, pictures, feeds, archive and restore, and `products create`
+making the page first and finding it again on a retry.

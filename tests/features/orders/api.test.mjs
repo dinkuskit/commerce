@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import BetterSqlite3 from 'better-sqlite3';
+import { Kysely, SqliteDialect } from 'kysely';
+import { createSettingsAccess } from 'emdash';
+import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { ORDERS_API_ROUTE, completeOrder, correctDelivery, createPaidOrderReceiver, ordersApi } from '../../../dist/features/orders/index.js';
+import { saveMerchantStoreSettings } from '../../../dist/features/store-settings/index.js';
 
 // In-memory storage with revisions, enough for compare-and-set.
 function collection() {
@@ -20,18 +25,26 @@ const delivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testv
 const order = (id, extra = {}) => ({ schema: 'dinkuskit.commerce.paid-order/v1', orderId: id, receiptId: 'r-' + id, attemptId: 'a-' + id, paidAt: '2026-10-10T01:00:00Z',
   lines: [{ catalogItemId: 'hat', quantity: 1, name: 'Hat', unitPrice: usd('100') }], total: usd('100'),
   contactSnapshot: { schema: 'dinkuskit.commerce.checkout-contact/v1', requirePhoneNumber: false, revision: null, contact: { email: 'shopper@example.com', delivery } }, ...extra });
+// Real plugin settings, so address checks read the store's shipping countries as the Orders page does.
+function settings() {
+  const sqlite = new BetterSqlite3(':memory:');
+  sqlite.exec('CREATE TABLE options (name TEXT PRIMARY KEY, value TEXT NOT NULL, revision TEXT NOT NULL)');
+  return createSettingsAccess(new OptionsRepository(new Kysely({ dialect: new SqliteDialect({ database: sqlite }) })), 'dinkus-commerce', {});
+}
 async function store(...orders) {
-  const kept = collection(), numbers = collection();
+  const kept = collection(), numbers = collection(), shop = settings();
   const receiver = createPaidOrderReceiver(kept, numbers);
   for (const paid of orders) await receiver.receive(paid);
-  return { kept, call: (input, role = 50) => ordersApi({ user: { id: 'agent', role }, input }, { storage: { orders: kept, order_numbers: numbers } }) };
+  return { kept, shop, call: (input, role = 50) => ordersApi({ user: { id: 'agent', role }, input }, { storage: { orders: kept, order_numbers: numbers }, settings: shop }) };
 }
 
-test('only administrators reach the orders route, which keeps its route id', async () => {
+test('only Editors and Administrators reach the orders route, which keeps its route id', async () => {
   assert.equal(ORDERS_API_ROUTE, 'orders');
   const { call } = await store(order('o1'));
-  for (const role of [40, 30, null, '50']) await assert.rejects(call({ action: 'list' }, role), /Orders require plugins:manage/);
-  await assert.rejects(ordersApi({ input: { action: 'list' } }, { storage: {} }), /Orders require plugins:manage/);
+  for (const role of [30, 20, null, '50']) await assert.rejects(call({ action: 'list' }, role), /Orders require an Editor or Administrator/);
+  await assert.rejects(ordersApi({ input: { action: 'list' } }, { storage: {} }), /Orders require an Editor or Administrator/);
+  // Staff work orders too (commerce-orders-staff-access-001).
+  assert.equal((await call({ action: 'list' }, 40)).total, 1);
 });
 
 test('show returns the order as agents see it, with its number, version, status and test mark', async () => {
@@ -106,6 +119,29 @@ test('complete and reopen follow the Orders page rules and report the order as i
   assert.deepEqual(await call({ action: 'complete', orderId: 'missing', version: 1 }), { result: 'not_found' });
 });
 
+test('address corrects where a Processing order goes, only to a country the store ships to', async () => {
+  const { call, shop } = await store(order('o1'));
+  await saveMerchantStoreSettings(shop, { expectedRevision: null, storeCountry: 'US', shippingCountries: ['US', 'CA'] });
+  const corrected = { name: 'Fixture Shopper', line1: '2 Corrected Road', line2: 'Unit 4', city: 'Testville', region: 'TN', postalCode: '00001', country: 'us' };
+  const saved = await call({ action: 'address', orderId: 'o1', version: 1, address: corrected });
+  assert.equal(saved.result, 'saved');
+  assert.deepEqual([saved.order.shipTo, saved.order.version, saved.order.status], [{ ...corrected, country: 'US' }, 2, 'processing']);
+  // A stale version, a country the store does not ship to and a bad address change nothing.
+  assert.equal((await call({ action: 'address', orderId: 'o1', version: 1, address: delivery })).result, 'outdated');
+  for (const address of [{ ...delivery, country: 'GB' }, { ...delivery, line1: '' }, { ...delivery, city: 'x'.repeat(201) }, { ...delivery, phone: '1' }, 'US', null]) {
+    const refused = await call({ action: 'address', orderId: 'o1', version: 2, address });
+    assert.deepEqual([refused.result, refused.order.shipTo.line1, refused.order.version], ['invalid', '2 Corrected Road', 2], JSON.stringify(address));
+  }
+  // Canada is on the list; optional lines may be left out.
+  const canada = { name: 'Fixture Shopper', line1: '9 Maple Street', city: 'Toronto', postalCode: 'M5V 1A1', country: 'CA' };
+  assert.deepEqual((await call({ action: 'address', orderId: 'o1', version: 2, address: canada })).order.shipTo, canada);
+  // A Completed order's address is locked: move it back to Processing first.
+  assert.equal((await call({ action: 'complete', orderId: 'o1', version: 3 })).result, 'saved');
+  const locked = await call({ action: 'address', orderId: 'o1', version: 4, address: delivery });
+  assert.deepEqual([locked.result, locked.order.shipTo, locked.order.version], ['outdated', canada, 4]);
+  assert.deepEqual(await call({ action: 'address', orderId: 'missing', version: 1, address: delivery }), { result: 'not_found' });
+});
+
 test('malformed requests are refused before anything changes', async () => {
   const { call, kept } = await store(order('o1'));
   const before = JSON.stringify([...kept.rows]);
@@ -114,7 +150,9 @@ test('malformed requests are refused before anything changes', async () => {
     { action: 'show', orderId: 'x'.repeat(1025) }, { action: 'show', orderId: 'o1', version: 1 }, { action: 'complete', orderId: 'o1' },
     { action: 'complete', orderId: 'o1', version: 0 }, { action: 'complete', orderId: 'o1', version: '1' },
     // A misspelt field is refused rather than ignored, so tracking is never silently dropped.
-    { action: 'complete', orderId: 'o1', version: 1, trackingNumber: 'T1' }, { action: 'reopen', orderId: 'o1', version: 1, carrier: 'USPS' }]) {
+    { action: 'complete', orderId: 'o1', version: 1, trackingNumber: 'T1' }, { action: 'reopen', orderId: 'o1', version: 1, carrier: 'USPS' },
+    { action: 'address', orderId: 'o1', address: delivery }, { action: 'address', orderId: 'o1', version: 1, shipTo: delivery },
+    { action: 'address', orderId: 'o1', version: 1, address: delivery, carrier: 'USPS' }]) {
     await assert.rejects(call(input), /Invalid orders request/, JSON.stringify(input));
   }
   assert.equal(JSON.stringify([...kept.rows]), before);

@@ -148,11 +148,11 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(created.ok()).toBe(true);
     const createdData = (await created.json()).data;
     const bootPageId = (createdData.item ?? createdData).id;
+    // Every product is made for its page (catalog-product-needs-page-20261031): Commerce's note of the boot's page is
+    // seeded with the rest of the old data, as the panel or the catalog API's create writes it.
+    insertStorage.run("dinkus-commerce", "product_pages", "e:" + bootPageId, JSON.stringify({ entryId: bootPageId, catalogItemId: unmanagedProduct.itemId }), now, now);
     await page.goto("/_emdash/admin/content/products/" + bootPageId);
     let panel = await openPanel(page);
-    // A page saved before the panel existed is linked once, by the product's SKU; Commerce keeps the link.
-    await panel.getByRole("textbox", { name: "Or its SKU", exact: true }).fill("BOOT-01");
-    await panel.getByRole("button", { name: "Sell it here", exact: true }).click();
 
     // 4. Old native data shows in the panel
     await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("180.00");
@@ -165,11 +165,11 @@ test.describe("Native populated-browser continuity fixture", () => {
       "SELECT data FROM _plugin_storage WHERE plugin_id = ? AND collection = ? AND id = ?",
     ).get("dinkus-commerce", collection, id).data);
 
-    // 5. Managed setup cannot be switched off through the native JSON route.
+    // 5. Managed setup cannot be switched off through the catalog route, the one JSON route both builds have.
     const managedBefore = storageRow("catalogItems", managedProduct.itemId);
     const claimBefore = storageRow("managedSkuClaims", managedClaim.recordId);
-    const disableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
-      data: { catalogItemId: managedProduct.itemId, regular: "42.00", sale: "35.00", manageStock: false },
+    const disableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog", {
+      data: { op: "prices", catalogItemId: managedProduct.itemId, regular: "42.00", sale: "35.00", manageStock: false },
       headers: { "X-EmDash-Request": "1" },
     });
     expect([400, 409]).toContain(disableAttempt.status());
@@ -201,8 +201,8 @@ test.describe("Native populated-browser continuity fixture", () => {
 
     const bootBeforeEnable = storageRow("catalogItems", unmanagedProduct.itemId);
     const bootPriceBeforeEnable = storageRow("catalogPrices", unmanagedProduct.itemId);
-    const enableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
-      data: { catalogItemId: unmanagedProduct.itemId, regular: "195.00", sale: "160.00", manageStock: true },
+    const enableAttempt = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog", {
+      data: { op: "prices", catalogItemId: unmanagedProduct.itemId, regular: "195.00", sale: "160.00", manageStock: true },
       headers: { "X-EmDash-Request": "1" },
     });
     expect([400, 409]).toContain(enableAttempt.status());
@@ -210,17 +210,16 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(storageRow("catalogItems", unmanagedProduct.itemId)).toEqual(bootBeforeEnable);
     expect(storageRow("catalogPrices", unmanagedProduct.itemId)).toEqual(bootPriceBeforeEnable);
 
-    // 8. Commerce settings shows the seeded setting and the product no page sells
+    // 8. Commerce settings shows the seeded setting; there is no list of products without a page to fix up.
     await page.goto("/_emdash/admin/plugins/dinkus-commerce/settings");
     const hide = page.getByRole("switch", { name: "Hide out-of-stock products", exact: true });
     await expect(hide).toBeChecked({ timeout: 30000 });
-    await expect(page.getByRole("heading", { name: "Products without a page" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Products without a page" })).toHaveCount(0);
     // DinkusKit Connect only accepts Registry installs, so a native store shows a (DEV) note instead of a Connect it cannot finish.
     await expect(page.getByText("(DEV) This store runs Commerce from source. DinkusKit Connect is on Registry stores only.", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Connect", exact: true })).toHaveCount(0);
     const connect = await page.request.post("/_emdash/api/plugins/dinkus-commerce/admin", { headers: { "X-EmDash-Request": "1" }, data: { type: "block_action", action_id: "connect" } });
     expect(JSON.stringify(await connect.json())).not.toContain("Approve at DinkusKit.com");
-    await expect(page.getByText("Wool Blanket \u2014 BLANKET-01", { exact: true })).toBeVisible();
     await saveScreenshot(page, "native-store-populated.png", artifactsDir);
 
     // 9. Edit the setting
@@ -260,8 +259,8 @@ test.describe("Native populated-browser continuity fixture", () => {
     expect(anonPage.url()).not.toContain("/_emdash/admin/plugins/dinkus-commerce/settings");
 
     // Verify unauthenticated API POST fails closed
-    const apiResponse = await request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/save-prices", {
-      data: { catalogItemId: "item-heritage-boot", regular: "200.00" },
+    const apiResponse = await request.post("/_emdash/api/plugins/dinkus-commerce/catalog", {
+      data: { op: "prices", catalogItemId: "item-heritage-boot", regular: "200.00", sale: "" },
     });
     expect([401, 403]).toContain(apiResponse.status());
 

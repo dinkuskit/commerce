@@ -49,7 +49,8 @@ async function bringIn(collection: OrdersCollection, services: OrdersServices, n
 }
 
 export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginContext, services: OrdersServices = {}): Promise<BlockResponse> {
-  if (!adminAuthorized(route)) return { blocks: [{ type: 'banner', variant: 'error', title: 'Orders require plugins:manage' }] };
+  // Staff (Editors) work orders as well as the owner (commerce-orders-staff-access-001).
+  if (!adminAuthorized(route, 40)) return { blocks: [{ type: 'banner', variant: 'error', title: 'Orders require an Editor or Administrator' }] };
   let selected: string | undefined;
   let pack = false, form: typeof addressForm | undefined;
   let offset = 0;

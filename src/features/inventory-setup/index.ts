@@ -11,7 +11,3 @@ export type {
   ConfigureInventoryClaimStorage,
   ConfigureInventoryExecution,
 } from "./types.js";
-export {
-  CONFIGURE_INVENTORY_ROUTE,
-  createConfigureInventoryRoute,
-} from "./route.js";

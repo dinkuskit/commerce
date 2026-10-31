@@ -154,19 +154,10 @@ async function catalogShow(ctx) {
 // ---------------------------------------------------------------------------
 // products
 
-// The native build lists prices and stock; a Registry store (Commerce 0.7.0+)
-// lists ids, names, SKUs and archive state through the catalog route.
+// Every store lists ids, names, SKUs and archive state through the catalog route (Commerce 0.7.0+);
+// products show has one product's prices and stock.
 async function listAnyProducts(client) {
-	try {
-		return await client.listProducts();
-	} catch (error) {
-		if (!(error instanceof CliError) || error.code !== "route_not_available") throw error;
-		const data = await client.catalog({ op: "list" }, "Listing products");
-		if (!Array.isArray(data.products) || data.products.some((product) => typeof product?.catalogItemId !== "string" || typeof product.name !== "string")) {
-			throw new CliError("malformed_response", "Listing products: a product is missing its catalogItemId or name.", { exit: EXIT.contract });
-		}
-		return { products: data.products };
-	}
+	return client.listProducts();
 }
 
 async function productsList(ctx) {
@@ -251,24 +242,26 @@ async function productsShow(ctx) {
 	});
 }
 
+// Every product is made for its page (catalog-product-needs-page-20261031): without --page, this finds or makes the
+// Content > Products page first (EmDash's content API), then the product for it. A retry finds both again.
 async function productsCreate(ctx) {
 	const { client, context } = connect(ctx);
-	const body = {
-		op: "create",
-		commandId: ctx.flags["command-id"],
-		name: ctx.flags.name,
-		sku: ctx.flags.sku,
-		...(ctx.flags.page === undefined ? {} : { entryId: ctx.flags.page }),
-	};
-	const human = visible(`New Draft product ${body.name} (${body.sku}), command ${body.commandId}${body.entryId === undefined ? "" : `, for page ${body.entryId}`}.`);
-	if (ctx.flags["dry-run"]) return { outcome: "preview", context, data: { request: body }, human: `${human}\nNothing was sent.` };
+	if (ctx.flags.page !== undefined && ctx.flags.slug !== undefined) throw usageError("Give --page or --slug, not both.", "invalid_argument");
+	const slugFlag = ctx.flags.slug === undefined ? undefined : slug(ctx.flags.slug, "--slug");
+	const pageSlug = ctx.flags.page === undefined ? slugFlag ?? slug(ctx.flags.name, "--name") : undefined;
+	const body = { op: "create", commandId: ctx.flags["command-id"], name: ctx.flags.name, sku: ctx.flags.sku, entryId: ctx.flags.page };
+	const page = pageSlug === undefined ? `page ${body.entryId}` : `the Products page ${pageSlug} (made as a Draft if it does not exist)`;
+	const human = visible(`New Draft product ${body.name} (${body.sku}), command ${body.commandId}, for ${page}.`);
+	if (ctx.flags["dry-run"]) return { outcome: "preview", context, data: { request: body, ...(pageSlug === undefined ? {} : { pageSlug }) }, human: `${human}\nNothing was sent.` };
 	return withContext(context, async () => {
+		const made = pageSlug === undefined ? null : await client.productPage(pageSlug, body.name);
+		if (made) body.entryId = made.entryId;
 		const data = await client.catalog(body, "Creating the product");
 		if (typeof data.catalogItemId !== "string") throw new CliError("malformed_response", "Creating the product: catalogItemId is missing.", { exit: EXIT.contract });
 		return {
 			context,
-			data,
-			human: visible(`Product ${data.catalogItemId} is a Draft. Price it, then publish its page to put it on sale.`),
+			data: { ...data, entryId: body.entryId, ...(made ? { pageMade: made.made } : {}) },
+			human: visible(`Product ${data.catalogItemId} is a Draft on page ${body.entryId}. Price it, then publish its page to put it on sale.`),
 		};
 	});
 }
@@ -382,13 +375,6 @@ const PRODUCT_CHANGES = {
 		request: (product, channels) => ({
 			body: { op: "feeds", catalogItemId: product.catalogItemId, channels },
 			lines: [`Product feeds: ${channels.length ? channels.join(", ") : "none"}`],
-		}),
-	},
-	link: {
-		check: (ctx) => ctx.flags.page,
-		request: (product, entryId) => ({
-			body: { op: "link", catalogItemId: product.catalogItemId, entryId },
-			lines: [`Product page: ${entryId}`, "Commerce keeps this link. Publish that page through EmDash to put the product on sale."],
 		}),
 	},
 	archive: {
@@ -590,11 +576,16 @@ const ORDER_REFUSALS = {
 	invalid: "Carrier and tracking number must each be 64 characters or fewer, on one line. Nothing changed.",
 	not_found: "No order has that id. Nothing changed.",
 };
+const ADDRESS_REFUSALS = {
+	outdated: "The order changed since that version, or it is Completed now (move it back to Processing first). Nothing changed; run --dry-run again to see it now.",
+	invalid: "Commerce refused that address: a line is missing or longer than 200 characters, or the store does not ship to that country (Store settings). Nothing changed.",
+};
+const ADDRESS_FLAGS = [["name", "name"], ["line1", "line1"], ["line2", "line2"], ["city", "city"], ["region", "region"], ["postal-code", "postalCode"], ["country", "country"]];
 
 // The orders route applies a change only at the version the caller read, so a
 // fresh read is the preview and its version is the confirmation value.
 function orderChange(action) {
-	const to = action === "complete" ? "completed" : "processing";
+	const to = { complete: "completed", reopen: "processing" }[action];
 	return async (ctx) => {
 		const { client, context } = connect(ctx);
 		const orderId = assertQueryValue(ctx.args["order-id"], "<order-id>");
@@ -606,7 +597,9 @@ function orderChange(action) {
 		}
 		const values = action === "complete"
 			? { ...(ctx.flags.carrier === undefined ? {} : { carrier: ctx.flags.carrier }), ...(ctx.flags.tracking === undefined ? {} : { tracking: ctx.flags.tracking }) }
-			: {};
+			: action === "address"
+				? { address: Object.fromEntries(ADDRESS_FLAGS.filter(([flag]) => ctx.flags[flag] !== undefined).map(([flag, field]) => [field, ctx.flags[flag]])) }
+				: {};
 		return withContext(context, async () => {
 			let version = confirmed === undefined ? undefined : Number(confirmed);
 			if (version === undefined) {
@@ -615,11 +608,22 @@ function orderChange(action) {
 				if (order.status === to) {
 					throw new CliError("already_" + to, `Order ${visible(orderLabel(order))} is already ${STATUS_WORD[to]}. Nothing to change.`, { exit: EXIT.failure });
 				}
-				const preview = { orderId, number: order.number, version: order.version, from: order.status, to, ...values };
-				const human = [
-					`Order ${orderLabel(order)}, version ${order.version}: ${STATUS_WORD[order.status]} -> ${STATUS_WORD[to]}`,
-					...(action === "complete" ? [`carrier: ${values.carrier ?? "-"}`, `tracking: ${values.tracking ?? "-"}`] : ["Its carrier, tracking number and completion time are cleared."]),
-				].map(visible).join("\n");
+				// A Completed order's address is locked, as on the Orders page.
+				if (action === "address" && order.status === "completed") {
+					throw new CliError("order_completed", `Order ${visible(orderLabel(order))} is Completed, so its address is locked. Move it back to Processing first with orders reopen.`, { exit: EXIT.failure });
+				}
+				if (action === "address" && !order.shipTo) {
+					throw new CliError("no_address", `Order ${visible(orderLabel(order))} has no delivery address to correct.`, { exit: EXIT.failure });
+				}
+				const preview = action === "address"
+					? { orderId, number: order.number, version: order.version, from: order.shipTo, to: values.address }
+					: { orderId, number: order.number, version: order.version, from: order.status, to, ...values };
+				const human = (action === "address"
+					? [`Order ${orderLabel(order)}, version ${order.version}: correct the delivery address`, `from: ${shipTo(order.shipTo)}`, `to:   ${shipTo(values.address)}`]
+					: [
+						`Order ${orderLabel(order)}, version ${order.version}: ${STATUS_WORD[order.status]} -> ${STATUS_WORD[to]}`,
+						...(action === "complete" ? [`carrier: ${values.carrier ?? "-"}`, `tracking: ${values.tracking ?? "-"}`] : ["Its carrier, tracking number and completion time are cleared."]),
+					]).map(visible).join("\n");
 				if (ctx.flags["dry-run"]) {
 					return { outcome: "preview", context, data: preview, confirmation: String(order.version), human: `${human}\nconfirm with: --confirm ${order.version}` };
 				}
@@ -630,9 +634,12 @@ function orderChange(action) {
 			}
 			const data = await client.changeOrder({ action, orderId, version, ...values });
 			if (data.result !== "saved") {
-				throw new CliError(data.result, ORDER_REFUSALS[data.result], { exit: EXIT.failure, details: { document: { data } } });
+				const message = (action === "address" && ADDRESS_REFUSALS[data.result]) || ORDER_REFUSALS[data.result];
+				throw new CliError(data.result, message, { exit: EXIT.failure, details: { document: { data } } });
 			}
-			const human = `Order ${orderLabel(data.order)} is now ${STATUS_WORD[data.order.status]} (version ${data.order.version}).`;
+			const human = action === "address"
+				? `Order ${orderLabel(data.order)} now ships to ${shipTo(data.order.shipTo)} (version ${data.order.version}).`
+				: `Order ${orderLabel(data.order)} is now ${STATUS_WORD[data.order.status]} (version ${data.order.version}).`;
 			return { context, data, human: visible(human) };
 		});
 	};
@@ -706,9 +713,9 @@ export const spec = {
 				summary: `Read and change products, with the product page panel checks. Needs ${TOKEN_ENV}.`,
 				commands: {
 					list: {
-						summary: "List products: prices and stock on a native store; ids, names, SKUs and archive state on a Registry store.",
+						summary: "List products: ids, names, SKUs and archive state.",
 						usage: "products list",
-						description: `Reads GET catalog-items/list with ${TOKEN_ENV}. The Registry build does not mount it, so the CLI then sends {op: list} to POST catalog (Commerce 0.7.0+); use products show for one product's prices.`,
+						description: `Sends {op: list} to POST catalog with ${TOKEN_ENV} (Commerce 0.7.0+); use products show for one product's prices and stock.`,
 						examples: ["dinkus-commerce --url https://shop.example products list --json"],
 						run: productsList,
 					},
@@ -721,18 +728,19 @@ export const spec = {
 						run: productsShow,
 					},
 					create: {
-						summary: "Make a Draft product, off the shop until its page is published.",
-						usage: "products create --name <name> --sku <sku> --command-id <id> [--page <entry-id>] [--dry-run]",
+						summary: "Make a product and its page: a Draft, off the shop until the page is published.",
+						usage: "products create --name <name> --sku <sku> --command-id <id> [--slug <slug> | --page <entry-id>] [--dry-run]",
 						description:
-							"Sends {op: create} to POST catalog. The product is physical with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same product instead of making another. --page links it to that product page; Commerce keeps the link, and publishing the page then puts it on sale.",
+							"Every product has its page. Without --page, finds the Content > Products page with --slug (default: from --name) through EmDash's content API, or makes it as a Draft titled --name, then sends {op: create, entryId} to POST catalog. The product is physical with Manage stock off, as in the product page panel. Sending the same --command-id again finds the same page and product instead of making others; Commerce refuses a page that already sells another product. Publishing the page then puts the product on sale.",
 						flags: {
 							name: { type: "string", value: "<name>", required: true, description: "Product name. Publishing its page later sets it to the page title." },
 							sku: { type: "string", value: "<sku>", required: true, description: "Unique SKU." },
 							"command-id": { type: "string", value: "<id>", required: true, description: "Your id for this create, such as gfb-runtz, so a retry finds the same product." },
-							page: { type: "string", value: "<entry-id>", description: "The Products page entry that sells it." },
+							slug: { type: "string", value: "<slug>", description: "The Products page slug to find or make (default: from --name)." },
+							page: { type: "string", value: "<entry-id>", description: "An existing Products page entry that sells it, instead of --slug." },
 							"dry-run": { type: "boolean", description: "Print the request; send nothing." },
 						},
-						examples: ["dinkus-commerce --url https://shop.example products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz --page 01J0PAGE"],
+						examples: ["dinkus-commerce --url https://shop.example products create --name Runtz --sku F-RUNTZ --command-id gfb-runtz"],
 						run: productsCreate,
 					},
 					"set-price": {
@@ -816,15 +824,6 @@ export const spec = {
 						examples: ["dinkus-commerce --url https://shop.example products add-choice item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run"],
 						run: productChange("add-choice"),
 					},
-					"link": {
-						summary: "Link a product to the product page that sells it.",
-						usage: "products link <item-id> --page <entry-id> (--dry-run | --confirm <value>)",
-						description: "Sends {op: link}. Commerce keeps the link, and publishing the page then puts the product on sale. " + CONFIRM_NOTE,
-						args: [{ name: "item-id" }],
-						flags: { page: { type: "string", value: "<entry-id>", required: true, description: "The Products page entry." }, "dry-run": dryRun, confirm },
-						examples: ["dinkus-commerce --url https://shop.example products link item_demo --page 01J0PAGE --dry-run"],
-						run: productChange("link"),
-					},
 					"archive": {
 						summary: "Archive a product: off the shop, with Restore.",
 						usage: "products archive <item-id> (--dry-run | --confirm <value>)",
@@ -846,7 +845,7 @@ export const spec = {
 				},
 			},
 			orders: {
-				summary: `Read orders and mark them shipped. Needs ${TOKEN_ENV} for an administrator.`,
+				summary: `Read orders, mark them shipped and correct their addresses. Needs ${TOKEN_ENV} for an Editor or Administrator.`,
 				commands: {
 					list: {
 						summary: "List paid orders by order number, 50 a page or --all.",
@@ -901,6 +900,29 @@ export const spec = {
 						examples: ["dinkus-commerce --url https://shop.example orders reopen order:demo --confirm 2"],
 						run: orderChange("reopen"),
 					},
+					address: {
+						summary: "Correct where a Processing order goes (the Orders page's Correct address).",
+						usage:
+							"orders address <order-id> --name <text> --line1 <text> [--line2 <text>] --city <text> [--region <text>] --postal-code <text> --country <code> (--dry-run | --confirm <version>)",
+						description:
+							"Replaces the whole delivery address; billing is never changed. Commerce checks it as checkout does and only saves a country from the store's shipping countries. A Completed order's address is locked: reopen it first. Applied only at the order version you confirm.",
+						args: [{ name: "order-id" }],
+						flags: {
+							name: { type: "string", value: "<text>", description: "Who receives the parcel.", required: true },
+							line1: { type: "string", value: "<text>", description: "Street address.", required: true },
+							line2: { type: "string", value: "<text>", description: "Apartment, suite or unit." },
+							city: { type: "string", value: "<text>", description: "City or town.", required: true },
+							region: { type: "string", value: "<text>", description: "State, province or region, such as TN." },
+							"postal-code": { type: "string", value: "<text>", description: "ZIP or postal code.", required: true },
+							country: { type: "string", value: "<code>", description: "Two-letter country code, such as US.", required: true },
+							"dry-run": { type: "boolean", description: "Show the change and the version to confirm; send nothing." },
+							confirm: { type: "string", value: "<version>", description: "Apply only if the order is still at this version (from --dry-run)." },
+						},
+						examples: [
+							"dinkus-commerce --url https://shop.example orders address order:demo --name 'Sam Buyer' --line1 '2 Main St' --city Knoxville --region TN --postal-code 37902 --country US --dry-run",
+						],
+						run: orderChange("address"),
+					},
 				},
 			},
 			settings: {
@@ -910,7 +932,7 @@ export const spec = {
 						summary: "Show catalog and storefront settings. (planned)",
 						usage: "settings show",
 						run: planned(
-							"Commerce has no read-only settings route. The native build can read settings/out-of-stock-listing and settings/placeholder-image but not settings/storefront-availability, and the Registry build has none.",
+							"Commerce has no read-only settings route; its settings live on the Commerce settings page.",
 						),
 					},
 				},
