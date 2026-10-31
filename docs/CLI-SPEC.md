@@ -141,7 +141,7 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | `products set-identifiers` | `{ op: "identifiers", catalogItemId, gtin?, mpn?, brand? }` (`""` clears a field) |
 | `products save-media` | `{ op: "media", catalogItemId, image?, gallery? }` |
 | `products set-feeds` | `{ op: "feeds", catalogItemId, channels }` |
-| `products add-option` | `{ op: "option", productId, optionId, optionLabel, values }`: the product's first option. The first value is the product itself; each other value makes a variant with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. Later options are added in the panel. |
+| `products add-option` | `{ op: "option", productId, optionId, optionLabel, values }`: the product's first option. The first value is the product itself; each other value makes a variant with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. One request makes up to seven new variants and is refused, before anything is written, beyond that; more are added in the panel. Later options are added there too. |
 | `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
 Every product is made for its page (`catalog-product-needs-page-20261031`):

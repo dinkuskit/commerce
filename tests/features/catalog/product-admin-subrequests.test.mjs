@@ -13,6 +13,7 @@ const EMDASH_DEFAULT = 10;
 const TEMPLATE_STORE = 32;
 
 import { bigShop } from '../../helpers/catalog-memory.mjs';
+import { shop as catalogShop } from './catalog-store.mjs';
 
 const submit = (action_id, values) => ({ type: 'form_submit', action_id, values });
 const isError = (answer) => answer.toast?.type === 'error' || answer.blocks?.some((block) => block.type === 'banner' && block.variant === 'error');
@@ -69,4 +70,32 @@ test('storage adapters written for 0.2.x without getMany still list and load pro
   }
   assert.equal((await loadCatalogProduct(legacy, 'p001')).variantProduct.members.length, 2);
   assert.equal(await loadCatalogProduct(legacy, 'p001-large'), null, 'a choice is not a listed product');
+});
+
+test('Add options makes up to seven new variants in one Save within the Template Store budget, and refuses more before writing', async () => {
+  const { ctx } = catalogShop();
+  const raw = ctx.storage.catalog_items;
+  const calls = { n: 0, limit: 0 };
+  for (const [name, collection] of Object.entries(ctx.storage)) ctx.storage[name] = new Proxy(collection, { get(target, key) {
+    const value = Reflect.get(target, key);
+    return typeof value === 'function' ? (...args) => { calls.n += 1; if (calls.limit && calls.n > calls.limit) throw new Error('Invocation budget exceeded'); return value.apply(target, args); } : value;
+  } });
+  const run = async (input, limit = TEMPLATE_STORE) => { calls.n = 0; calls.limit = limit; return { answer: await commerceAdmin({ input }, ctx), calls: calls.n }; };
+  const blocksOf = (blocks) => blocks.flatMap((block) => block.type === 'accordion' ? blocksOf(block.blocks) : [block]);
+  await run({ type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-eeeeeeeeeeee', values: { regular: '12', sale: '', sku: 'TEE', stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Tee' } } }, 0);
+  const add = blocksOf((await run({ type: 'panel_load' }, 0)).answer.blocks).find((block) => block.type === 'form' && block.submit.label === 'Add options');
+  // Eight new variants is one more than a request makes: refused before anything is written, so no variant rows are left behind.
+  const rows = raw.records.size;
+  const tooMany = await run(submit(add.submit.action_id, { optionLabel: 'Size', values: 'A, B, C, D, E, F, G, H, I' }));
+  assert.equal(tooMany.answer.toast.type, 'error');
+  assert.match(tooMany.answer.toast.message, /Up to 7 new variants at once/);
+  assert.equal(raw.records.size, rows, 'no variant row was written');
+  assert.ok(tooMany.calls <= TEMPLATE_STORE, `the refusal made ${tooMany.calls} storage calls`);
+  // Eight values, seven new variants: the indexes are proved once for the request, so it fits.
+  const fits = await run(submit(add.submit.action_id, { optionLabel: 'Size', values: 'XS, S, M, L, XL, XXL, 3XL, 4XL' }));
+  assert.deepEqual(fits.answer.toast, { type: 'success', message: 'Changes saved' });
+  assert.ok(fits.calls <= TEMPLATE_STORE, `Add options with eight values made ${fits.calls} storage calls`);
+  const product = [...raw.records.values()].find((row) => row.variantProduct);
+  assert.equal(product.variantProduct.members.length, 8);
+  assert.equal(raw.records.size, rows + 7);
 });

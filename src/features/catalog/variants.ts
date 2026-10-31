@@ -169,7 +169,7 @@ export async function addCatalogVariantMember(
   };
   valid(next, productId);
   if (!(await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: next })).applied)
-    catalogFail("STORAGE_UNAVAILABLE", "variant membership changed concurrently");
+    catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
   return { changed: true, product: next };
 }
 
@@ -245,7 +245,7 @@ export async function addCatalogVariantOption(
     if (entry.catalogItemId !== undefined) {
       const memberId = id(entry.catalogItemId, "catalogItemId"), prev = existingById.get(memberId);
       if (!prev || assigned.has(memberId) || entry.commandId !== undefined || entry.sku !== undefined)
-        catalogFail("INVALID_INPUT", "only existing members may be reused once");
+        catalogFail("INVALID_INPUT", "members may be reused once");
       if (Array.isArray(entry.selections)) {
         for (const s of entry.selections) {
           if (!isRecord(s) || (s.optionId !== optionId && !prev.selections.some(x => x.optionId === s.optionId && x.valueId === s.valueId)))
@@ -279,8 +279,11 @@ export async function addCatalogVariantOption(
     }
   }
   if (assigned.size !== p.members.length) catalogFail("INVALID_INPUT", "each existing member needs a value");
+  // Each new variant is two storage calls after one proof of the unique indexes; seven keep one sandbox request within
+  // Template Store's 32 with the panel's redraw, so a request making more is refused before anything is written.
+  if (toCreate.length > 7) catalogFail("INVALID_INPUT", "Up to 7 new variants at once; add more with Add a variant.");
   const totalMembers = p.members.length + toCreate.length;
-  if (totalMembers < 2 || totalMembers > 50) catalogFail("INVALID_INPUT", "variant product requires 2-50 members");
+  if (totalMembers < 2 || totalMembers > 50) catalogFail("INVALID_INPUT", "a product has 2-50 variants");
   const comboSet = new Set<string>();
   for (const sel of [
     ...p.members.map(m => [...m.selections, { optionId, valueId: assigned.get(m.catalogItemId)!.valueId }]),
@@ -293,7 +296,7 @@ export async function addCatalogVariantOption(
   const createdMembers: CatalogVariantMember[] = [];
   for (const c of toCreate) {
     const created = await createCatalogItem(storage.catalog as never, { commandId: c.commandId, name: c.name, sku: c.sku, fulfillment: c.fulfillment }, {
-      ...options, variantMember: { productId, selections: c.selections, fulfillment: c.fulfillment },
+      ...options, proven: createdMembers.length > 0, variantMember: { productId, selections: c.selections, fulfillment: c.fulfillment },
     });
     if (created.item.itemId === productId || existingById.has(created.item.itemId) || createdMembers.some(m => m.catalogItemId === created.item.itemId))
       catalogFail("INVALID_INPUT", "only the default item may be reused");
@@ -313,7 +316,7 @@ export async function addCatalogVariantOption(
   };
   valid(product, productId);
   const committed = await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: product });
-  if (!committed.applied) catalogFail("STORAGE_UNAVAILABLE", "variant membership changed concurrently");
+  if (!committed.applied) catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
   return { changed: true, product };
 }
 
