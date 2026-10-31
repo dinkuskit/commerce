@@ -365,7 +365,8 @@ test('merchant edits choices and independent prices on desktop and phone', async
     const staleForm = priceForms.nth(1);
     await staleForm.getByRole('textbox',{name:'Regular',exact:true}).fill('25');
     await staleForm.getByRole('button',{name:/^Save/}).click();
-    await expect(staleForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('25');
+    // The refused form comes back with the typing, in its own card, which is the one left open.
+    await expect(priceForms.last().getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('25');
     await expect.poll(() => all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].price.regular.minor).toBe('2600');
     await page.reload(); await openPanel(page);
     await openCard(ui, cards[1]);
@@ -405,7 +406,7 @@ test('merchant edits choices and independent prices on desktop and phone', async
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.length).toBe(3);
     owned = all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.map(m => m.catalogItemId);
     await openCard(ui, cards[2]);
-    const mediumForm = priceForms.nth(2);
+    const mediumForm = priceForms.last();
     await mediumForm.getByRole('textbox',{name:'Regular',exact:true}).fill('28');
     await mediumForm.getByRole('radio',{name:'In stock',exact:true}).check();
     await mediumForm.getByRole('button',{name:/^Save/}).click();
