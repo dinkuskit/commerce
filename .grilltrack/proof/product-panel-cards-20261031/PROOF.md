@@ -47,9 +47,13 @@ Base: main at `e482444` (after #241). Node 24.22.0.
     prices and stock; a stale form is refused with the typing kept in its
     open card; a second option and a third variant; option renames with a
     pending order's frozen selections.
-- Screenshots here, from the passing walk: `product-page-unlinked.png` (the
-  price form on a new page), `price-stock-saved.png` (cards after saves),
-  `product-mobile.png` (phone width), `needs-page-2-new-page-panel.png`,
-  `variant-checkout-sandbox.png` (a product with options).
+- Screenshots from the passing walk live in dinkuskit/dinkus-pr-assets under
+  `commerce/pr-244-c47873b/`, whose README records each file's bytes, SHA-256,
+  provenance and redaction status (commit `8aac1b356fa839395a9c53c614c8e2e7fd62fe76`):
+  - [product-page-unlinked.png](https://github.com/dinkuskit/dinkus-pr-assets/blob/8aac1b356fa839395a9c53c614c8e2e7fd62fe76/commerce/pr-244-c47873b/product-page-unlinked.png): the price form on a new page.
+  - [price-stock-saved.png](https://github.com/dinkuskit/dinkus-pr-assets/blob/8aac1b356fa839395a9c53c614c8e2e7fd62fe76/commerce/pr-244-c47873b/price-stock-saved.png): the cards after saves.
+  - [product-mobile.png](https://github.com/dinkuskit/dinkus-pr-assets/blob/8aac1b356fa839395a9c53c614c8e2e7fd62fe76/commerce/pr-244-c47873b/product-mobile.png): phone width.
+  - [needs-page-2-new-page-panel.png](https://github.com/dinkuskit/dinkus-pr-assets/blob/8aac1b356fa839395a9c53c614c8e2e7fd62fe76/commerce/pr-244-c47873b/needs-page-2-new-page-panel.png): a fresh page in the page-first walk.
+  - [variant-checkout-sandbox.png](https://github.com/dinkuskit/dinkus-pr-assets/blob/8aac1b356fa839395a9c53c614c8e2e7fd62fe76/commerce/pr-244-c47873b/variant-checkout-sandbox.png): a product with options.
 
 Head at proof time: `8ab920f` plus the proof folder itself.
