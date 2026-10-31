@@ -1,8 +1,10 @@
 # Product panel cards and first-Save create: proof
 
 Decisions built: `catalog-panel-cards-20261031` and `catalog-first-save-creates-20261031`
-(owner-agreed 31 Oct 2026 in the panel-redesign thread; texts in the PR), on
-`catalog-product-needs-page-20261031` and `product-variant-model-20261008`.
+(locked on the owner's words of 31 Oct 2026 in the panel-redesign thread and
+recorded in the ledger with this PR; `catalog-simple-product-label-20261027` is
+superseded by the first), on `catalog-product-needs-page-20261031` and
+`product-variant-model-20261008`.
 Base: main at `e482444` (after #241). Node 24.22.0.
 
 ## Behaviour
@@ -18,6 +20,13 @@ Base: main at `e482444` (after #241). Node 24.22.0.
   card just saved or refused stays open on the redraw.
 - Vocabulary: options, values, variants. API op `option`, CLI `add-option`
   and `--variant`, no aliases.
+- After the first ClawSweeper review: a typed SKU is changed before the price,
+  so a SKU another product has is refused before anything is saved and the
+  refilled form's revision still holds; a variant's derived SKU comes from the
+  value's distinct id with room for the suffix; the CLI's `add-option` keeps
+  the product's fulfillment; a refused first price shows the generated SKU
+  when none was typed; a storage read failure during a Save returns the
+  typing in a price form that claims no stock status.
 
 ## Verification on this head
 

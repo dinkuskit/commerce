@@ -436,14 +436,14 @@ const PRODUCT_CHANGES = {
 						valueId: entry.valueId,
 						label: entry.label,
 						member: index === 0
-							? { catalogItemId: product.catalogItemId, fulfillment: "physical" }
-							: { commandId: `option-${tag}-${entry.valueId}`.slice(0, 160), name: product.name, sku: entry.sku, fulfillment: "physical" },
+							? { catalogItemId: product.catalogItemId, fulfillment: product.fulfillment ?? "physical" }
+							: { commandId: `option-${tag}-${entry.valueId}`.slice(0, 160), name: product.name, sku: entry.sku, fulfillment: product.fulfillment ?? "physical" },
 					})),
 				},
 				lines: [
 					`Option ${ctx.flags.name}: ${entries.map((entry) => entry.label).join(", ")}`,
 					`${entries[0].label} is this product (${product.sku}); ${entries.slice(1).map((entry) => `${entry.label} is new SKU ${entry.sku}`).join("; ")}.`,
-					"New variants start with no price.",
+					`New variants start with no price and are ${product.fulfillment ?? "physical"}, like the product.`,
 				],
 			};
 		},

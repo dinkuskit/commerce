@@ -150,6 +150,16 @@ test("an agent migrates a product with the CLI alone: create, price, option, sto
   assert.match(human.stdout, /option\s+Size: Small, Large/);
 });
 
+test("a digital product stays digital when the CLI adds its first option", async () => {
+  const { ctx, cli, apply } = store();
+  const id = (await cli("products", "create", "--name", "Guide", "--sku", "GUIDE", "--command-id", "guide", "--page", "page-guide", "--digital", "--regular", "4.00", "--json")).json().data.catalogItemId;
+  assert.deepEqual([(await ctx.storage.catalog_items.get(id)).fulfillment, (await cli("products", "show", id, "--json")).json().data.product.regular], ["digital", "4.00"]);
+  const option = await apply("products", "add-option", id, "--name", "Edition", "--value", "Standard", "--value", "Deluxe=GUIDE-DELUXE");
+  assert.equal(option.code, 0, option.stderr);
+  const members = (await cli("products", "show", id, "--json")).json().data.product.variantProduct.members;
+  assert.deepEqual(members.map((member) => member.fulfillment), ["digital", "digital"], "the product's fulfillment carries to each variant");
+});
+
 test("weight, identifiers, pictures, feeds, archive and restore go through the CLI", async () => {
   const { ctx, cli, apply } = store();
   const id = (await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--json")).json().data.catalogItemId;

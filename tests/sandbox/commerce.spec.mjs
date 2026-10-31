@@ -58,7 +58,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     ({ panel } = opened);
     panelEndpoint = opened.endpoint;
     const pageId = opened.id;
-    await expect(panel.getByText("Save makes the product as a Draft; publish the page to sell it.", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Save makes the product as a Draft.", { exact: true })).toBeVisible();
     await capture("product-page-unlinked");
     await panel.getByRole("textbox", { name: "SKU", exact: true }).fill("RED-HAT");
     const createResponse = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");

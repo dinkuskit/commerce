@@ -39,12 +39,12 @@ type ProductFields = {
   regular: CatalogProductPriceForm["regular"];
   sale: CatalogProductPriceForm["sale"];
   sku?: string;
-  manageStock: boolean;
+  manageStock: boolean | null;
   stockStatus: CatalogProductPriceForm["stockStatus"];
   feedChannels?: readonly ProductFeedChannel[];
 };
 type Form = Extract<Block, { type: "form" }>;
-function manageStockNotice(managed: boolean): Block {
+function manageStockNotice(managed: boolean | null): Block {
   return note("Manage stock — Coming soon" + (managed ? ". This product stays managed." : ""));
 }
 const FEEDS = [["google-merchant", "Google Merchant"], ["meta-catalog", "Meta catalog"]] as const;
@@ -92,8 +92,8 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
  */
 function variantsCard(id: string, selected: CatalogProductListItem, focus?: string): Block {
   const variant = selected.variantProduct;
-  if (!variant?.options.length) return card("Variants · simple product", [
-    note("Sell it in sizes, colors or other variants; this product is the first and keeps its SKU and price."),
+  if (!variant?.options.length) return card("Variants · none", [
+    note("This product becomes the first variant and keeps its SKU and price."),
     { type: "form", block_id: "variant-add-" + id, fields: [
       { type: "text_input", action_id: "optionLabel", label: "Option name", initial_value: "Size" },
       { type: "text_input", action_id: "values", label: "Option values", placeholder: "Small, Medium, Large" },
@@ -189,11 +189,11 @@ function valueIdFor(label: string, fallback: string, taken: readonly { valueId: 
 function valueLabels(raw: unknown): string[] {
   const labels: string[] = [];
   for (const s of text(raw).split(",")) { const l = s.trim(); if (l && !labels.some(x => x.toLowerCase() === l.toLowerCase())) labels.push(l); }
-  if (labels.length < 2) throw new CatalogError("INVALID_INPUT", "Give two or more values, comma-separated.");
+  if (labels.length < 2) throw new CatalogError("INVALID_INPUT", "Give two or more values.");
   return labels;
 }
-/** A new variant's SKU: the product's SKU plus the value, as the CLI's --value <label>=<sku> would be typed; the owner can change it after. */
-const variantSku = (base: string, value: string) => (base + "-" + value.replace(/[^A-Za-z0-9]+/g, "-")).toUpperCase().slice(0, 64).replace(/-+$/, "");
+/** A new variant's SKU: the product's SKU plus the value's id, which is distinct within the option; the suffix always fits, and the owner can change it after. */
+const variantSku = (base: string, valueId: string) => (base.slice(0, 63 - valueId.length) + "-" + valueId).toUpperCase();
 // A stale page must never act on a different image than its label named.
 function galleryIndex(value: unknown, mediaId: string, gallery: string[]): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value >= gallery.length) throw new Error("Invalid gallery image");
@@ -214,13 +214,13 @@ const tail = (rest: string): [string, string?] => rest.startsWith("[") ? JSON.pa
 function unlinked(values: Record<string, unknown> = {}, command: string = crypto.randomUUID()): BlockResponse {
   const v = (key: string, fallback = "") => typeof values[key] === "string" ? values[key] as string : fallback;
   return { blocks: [
-    note("Save makes the product as a Draft; publish the page to sell it."),
+    note("Save makes the product as a Draft."),
     { type: "form", block_id: "sell-" + crypto.randomUUID(), fields: [
       { type: "text_input", action_id: "regular", label: "Regular", initial_value: v("regular") },
       { type: "text_input", action_id: "sale", label: "Sale", initial_value: v("sale") },
       { type: "text_input", action_id: "sku", label: "SKU", initial_value: v("sku") },
       { type: "radio", action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS, initial_value: v("stockStatus", "in-stock") },
-      { type: "toggle", action_id: "physical", label: "Physical product", initial_value: values.physical !== false },
+      { type: "toggle", action_id: "physical", label: "Physical", initial_value: values.physical !== false },
       { type: "text_input", action_id: "weightOz", label: "Weight (oz)", initial_value: v("weightOz"), condition: { field: "physical", eq: true } },
     ], submit: { label: "Save", action_id: "sell:" + command } },
   ] };
@@ -236,7 +236,7 @@ async function sell(ctx: PluginContext, entryId: string, fields: Record<string, 
   const made = await createProductForPage(storage(ctx), { entryId, commandId: "page:" + command, name: title, sku: sku || skuFrom(title, command),
     fulfillment: physical ? "physical" : "digital", regular: values.regular, sale: values.sale, stockStatus: values.stockStatus, weightOz: physical ? values.weightOz : undefined }, unique(ctx));
   const price = made.price;
-  if (price && !price.saved) return { ...await product(ctx, made.catalogItemId, { ...price, sku }), toast: { type: "error", message: price.message ?? NO_PRICE } };
+  if (price && !price.saved) return { ...await product(ctx, made.catalogItemId, { ...price, ...(sku ? { sku } : {}) }), toast: { type: "error", message: price.message ?? NO_PRICE } };
   return product(ctx, made.catalogItemId, undefined, "Draft made. Publish the page to sell it.");
 }
 /** The Dinkus Commerce panel on a product page: that page's price, sale, SKU, variants, stock, weight and identifiers. */
@@ -316,11 +316,11 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
     if (input.type === "form_submit") {
       values = object(input.values);
       const store = storage(ctx);
-      // A typed SKU that differs is changed after the price, which is saved at the revision the form read; a SKU another
-      // product has is refused with the form refilled, the price already saved.
-      const resku = async (id: string, current: string) => {
-        if (values.sku !== undefined && text(values.sku).trim().toUpperCase() !== current) await changeCatalogItemSku(store.catalog, id, values.sku, unique(ctx));
-      };
+      // A typed SKU that differs is changed first: one another product has is refused before anything is saved, so the
+      // refilled form keeps a revision that still holds. A changed SKU moves the product's revision, so the price save
+      // that follows it is bound to the record this request just read instead of the one the form read.
+      const resku = async (id: string, current: string) =>
+        values.sku !== undefined && text(values.sku).trim().toUpperCase() !== current && await changeCatalogItemSku(store.catalog, id, values.sku, unique(ctx));
       if (action.startsWith("save:")) {
         const [id, expectedRevision] = tail(action.slice(5));
         const item = await store.catalog.get(id);
@@ -329,7 +329,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
           catalogItemId: id,
           regular: text(values.regular),
           sale: text(values.sale),
-          expectedRevision,
+          expectedRevision: await resku(id, (item as { sku?: string } | null)?.sku ?? "") ? undefined : expectedRevision,
         };
         if (Object.hasOwn(values, "manageStock")) payload.manageStock = values.manageStock;
         if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus);
@@ -337,10 +337,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         const channels = FEEDS.map(([channel]) => channel).filter(channel => values["feed:" + channel] === true);
         if (feedSubmitted) payload.feedChannels = channels;
         const saved = await saveCatalogProductPrices(store, admitV1CatalogPriceSaveInput(payload, wasManaged));
-        if (saved.saved) {
-          await resku(id, (item as { sku?: string } | null)?.sku ?? "");
-          committed = { id, message: saved.regular ? "Product saved" : NO_PRICE };
-        }
+        if (saved.saved) committed = { id, message: saved.regular ? "Product saved" : NO_PRICE };
         const typed = values.sku === undefined ? {} : { sku: text(values.sku) };
         return { ...await product(ctx, id, !saved.saved && feedSubmitted ? { ...saved, ...typed, feedChannels: channels } : { ...saved, ...typed }), toast: { type: !saved.saved ? "error" : saved.regular ? "success" : "info", message: saved.message ?? (saved.regular ? "Product saved" : NO_PRICE) } };
       }
@@ -368,7 +365,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
           await addCatalogVariantOption(store, { productId: id, optionId: optionId(), optionLabel: text(values.optionLabel), values: valueLabels(values.values).map((l, i) => {
             const valueId = valueIdFor(l.toLowerCase(), "v" + i, taken);
             taken.push({ valueId });
-            return { valueId, label: l, member: i ? { commandId: args[0] + "-" + i, name: selected.name, sku: variantSku(selected.sku, l), fulfillment: f } : { catalogItemId: id, fulfillment: f } };
+            return { valueId, label: l, member: i ? { commandId: args[0] + "-" + i, name: selected.name, sku: variantSku(selected.sku, valueId), fulfillment: f } : { catalogItemId: id, fulfillment: f } };
           }) }, unique(ctx));
         } else if (operation === "option") {
           const byLabel = new Map<string, { valueId: string; label: string }>();
@@ -399,10 +396,9 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         } else if (operation === "price") {
           const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]);
           if (!member) throw new Error("Variant unavailable");
-          const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: args[1], regular: text(values.regular), sale: text(values.sale),
+          const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: await resku(args[0], member.sku) ? undefined : args[1], regular: text(values.regular), sale: text(values.sale),
             ...(!member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {}) });
           if (!saved.saved) throw new Error(saved.message ?? "Could not save price");
-          await resku(args[0], member.sku);
           committed = { id, message: saved.regular ? "Changes saved" : NO_PRICE };
           if (!saved.regular) return await product(ctx, id, undefined, NO_PRICE, args[0]);
         } else if (operation === "details") await updateCatalogVariantLabels(store, {
@@ -455,6 +451,10 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         return refused(failure, [alert(failure), ...back.blocks]);
       } catch { /* storage recovery falls through to the render-only alert */ }
     }
+    // Even a storage outage must not erase the typing: the price form comes back as typed, claiming nothing about stock.
+    const { regular, sale, sku } = values, sent = String(input.action_id);
+    if (sent.startsWith("save:") && typeof regular === "string" && typeof sale === "string")
+      return refused(failure, [alert(failure), productForm(sent.slice(5), { regular, sale, ...(typeof sku === "string" ? { sku } : {}), manageStock: null, stockStatus: null })]);
     return failed(failure);
   }
 }

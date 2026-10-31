@@ -195,16 +195,16 @@ test('a simple product keeps its Variants card collapsed with the option form, a
   const { ctx } = await shop();
   const variants = (out) => out.blocks.find((block) => block.type === 'accordion' && block.label.startsWith('Variants'));
   const mug = variants(await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx));
-  assert.equal(mug.label, 'Variants \u00b7 simple product');
+  assert.equal(mug.label, 'Variants \u00b7 none');
   assert.equal(mug.default_open, false);
-  assert.match(mug.blocks[0].text, /this product is the first/);
+  assert.match(mug.blocks[0].text, /first variant/);
   const add = mug.blocks.find((block) => block.type === 'form');
   assert.equal(add.submit.label, 'Add options');
   assert.deepEqual(add.fields.map((field) => field.action_id), ['optionLabel', 'values']);
   const shirt = variants(await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'shirt' } }, ctx));
   assert.equal(shirt.label, 'Variants \u00b7 2');
   assert.equal(shirt.default_open, true);
-  assert.equal(blocksOf(shirt.blocks).some((block) => block.type === 'context' && /this product is the first/.test(block.text)), false);
+  assert.equal(blocksOf(shirt.blocks).some((block) => block.type === 'context' && /first variant/.test(block.text)), false);
   // Each variant is its own card with its price form; the first one open.
   const cards = shirt.blocks.filter((block) => block.type === 'accordion');
   assert.deepEqual(cards.slice(0, 2).map((card) => [card.label, card.default_open, card.blocks.some((block) => block.type === 'form' && block.submit.label === 'Save')]), [['Small \u00b7 $20.00', true, true], ['Large \u00b7 $24.00', false, true]]);

@@ -103,7 +103,7 @@ test("the panel's first Save makes a priced product; a bad weight keeps the form
   // The linked panel: status grid, Pricing & stock open, then cards; a digital product has no Shipping card.
   assert.equal(saved.blocks[0].type, 'fields');
   assert.deepEqual(saved.blocks[0].fields.map((f) => f.label), ['Status', 'SKU', 'Name (page title)']);
-  assert.deepEqual(cards(saved).map((card) => [card.label, card.default_open]), [['Variants · simple product', false], ['Identifiers', false]]);
+  assert.deepEqual(cards(saved).map((card) => [card.label, card.default_open]), [['Variants · none', false], ['Identifiers', false]]);
   assert.ok(saved.blocks.some((block) => block.type === 'header' && block.text === 'Pricing & stock'));
 });
 
@@ -136,9 +136,13 @@ test('Add options makes a variant for each comma-separated value, and each varia
   const taken = await commerceAdmin({ input: { type: 'form_submit', action_id: fresh.submit.action_id, values: { regular: '23', sale: '', sku: 'TEE-LARGE', stockStatus: 'in-stock' } } }, ctx);
   assert.equal(taken.toast.type, 'error');
   assert.match(taken.toast.message, /already assigned/);
-  assert.deepEqual([(await product(store, id)).variantProduct.members[1].regular, (await product(store, id)).variantProduct.members[1].sku], ['23.00', 'TEE-M'], 'the price is saved at the revision the form read; the refused SKU is not');
+  assert.deepEqual([(await product(store, id)).variantProduct.members[1].regular, (await product(store, id)).variantProduct.members[1].sku], ['22.00', 'TEE-M'], 'the SKU is refused before anything is saved');
   const refilled = forms(taken).find((form) => form.submit.action_id === fresh.submit.action_id);
   assert.equal(refilled.fields.find((f) => f.action_id === 'sku').initial_value, 'TEE-LARGE', 'the refused form keeps what was typed');
+  // Correcting the SKU on that refilled form saves both: its revision still holds, since nothing was saved.
+  const corrected = await commerceAdmin({ input: { type: 'form_submit', action_id: refilled.submit.action_id, values: { regular: '23', sale: '', sku: 'TEE-M2', stockStatus: 'in-stock' } } }, ctx);
+  assert.deepEqual(corrected.toast, { type: 'success', message: 'Changes saved' });
+  assert.deepEqual([(await product(store, id)).variantProduct.members[1].regular, (await product(store, id)).variantProduct.members[1].sku], ['23.00', 'TEE-M2']);
   // The Pricing & stock form of a simple product changes its SKU the same way.
   const { ctx: other, store: otherStore } = shop();
   await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-444444444444', values: { regular: '5', sale: '', sku: 'CAP', stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Cap' } } } }, other);
@@ -148,4 +152,32 @@ test('Add options makes a variant for each comma-separated value, and each varia
   assert.equal(resku.toast.type, 'success', JSON.stringify(resku.toast));
   assert.equal((await product(otherStore, capId)).sku, 'CAP-2');
   assert.equal(resku.blocks[0].fields.find((f) => f.label === 'SKU').value, 'CAP-2');
+});
+
+test('derived variant SKUs stay distinct for look-alike values and long product SKUs', async () => {
+  const { ctx, store } = shop();
+  const long = 'L'.repeat(64);
+  await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-555555555555', values: { regular: '9', sale: '', sku: long, stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Long' } } } }, ctx);
+  const id = await pageProduct(store.pages, 'page-1');
+  const add = forms(await commerceAdmin({ input: { type: 'panel_load' } }, ctx)).find((form) => form.submit.label === 'Add options');
+  const added = await commerceAdmin({ input: { type: 'form_submit', action_id: add.submit.action_id, values: { optionLabel: 'Fit', values: 'A B, A-B, Plain' } } }, ctx);
+  assert.notEqual(added.toast?.type, 'error', JSON.stringify(added.toast));
+  const skus = (await product(store, id)).variantProduct.members.map((m) => m.sku);
+  assert.equal(skus[0], long);
+  assert.deepEqual(skus.slice(1), [long.slice(0, 63 - 'a-b-2'.length) + '-A-B-2', long.slice(0, 63 - 'plain'.length) + '-PLAIN'], 'the suffix always fits, and look-alike values get distinct ids');
+  assert.equal(new Set(skus).size, 3);
+});
+
+test('a blank SKU with a refused first price keeps the generated SKU, so fixing the price alone saves', async () => {
+  const { ctx, store } = shop();
+  const typo = await commerceAdmin({ input: { type: 'form_submit', action_id: 'sell:11111111-aaaa-bbbb-cccc-666666666666', values: { regular: 'nine', sale: '', sku: '', stockStatus: 'in-stock', physical: true }, draft: { fields: { title: 'Blank cap' } } } }, ctx);
+  assert.equal(typo.toast.type, 'error');
+  const id = await pageProduct(store.pages, 'page-1');
+  const made = await product(store, id);
+  const form = forms(typo).find((f) => f.submit.action_id.startsWith('save:'));
+  assert.equal(form.fields.find((f) => f.action_id === 'sku').initial_value, made.sku, 'the generated SKU, not the blank that was typed');
+  assert.match(made.sku, /^BLANK-CAP/);
+  const fixed = await commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values: { regular: '9', sale: '', sku: made.sku, stockStatus: 'in-stock' } } }, ctx);
+  assert.deepEqual(fixed.toast, { type: 'success', message: 'Product saved' });
+  assert.deepEqual([(await product(store, id)).regular, (await product(store, id)).sku], ['9.00', made.sku]);
 });
