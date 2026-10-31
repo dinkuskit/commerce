@@ -675,3 +675,5 @@
 {"action": "focus_started", "at": "2026-10-31T19:34:14+00:00", "data": {"cadence": "sequential", "domain": "Checkout totals"}, "event_id": "8c4238c8-4020-490e-b8f2-8af3145669f0"}
 {"action": "decision_proposed", "at": "2026-10-31T19:34:14+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "fa897222-8bf6-45cf-99a8-6f38f7c0a786"}
 {"action": "decision_locked", "at": "2026-10-31T19:34:14+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "57748e65-14b4-4962-93fd-69bf14d47fe1"}
+{"action": "shared_understanding_confirmed", "at": "2026-10-31T19:42:54+00:00", "data": {"summary": "Ronald, 31 Oct 2026 19:33 UTC, answered 'agreed' to '#235: a PDF-only order still pays flat shipping. Fix it.': a checkout with only digital items pays no shipping; any physical item keeps the free/flat charge and Free shipping over."}, "event_id": "0d098bc9-5e57-4143-9ccd-fbbd0c1c48da"}
+{"action": "decision_implemented", "at": "2026-10-31T19:42:55+00:00", "data": {"decision_id": "checkout-digital-only-no-shipping-20261031"}, "event_id": "942bc20c-af4c-4a7b-ba65-ee83d419e5a8"}
