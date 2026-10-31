@@ -305,22 +305,25 @@ export async function verifyShopperSignIn(
     }
     const expected = await hashCustomerSecret(`${emailKey}:${code}`);
     const matches = timingSafeEqual(challenge.verifier, expected);
-    const nextAttempts = challenge.attempts + 1;
-    // Atomically claim the attempt budget (and mark consumed on match) on the exact revision before branching or minting a session.
-    const claimed = await runtime.loginCodes.compareAndSet(emailKey, stored.revision, {
-      ...challenge,
-      attempts: nextAttempts,
-      consumed: matches,
-    });
-    if (!claimed.applied) {
-      fail("CONTENTION");
-    }
+    const claim = async () => {
+      const claimed = await runtime.loginCodes.compareAndSet(emailKey, stored.revision, {
+        ...challenge,
+        attempts: challenge.attempts + 1,
+        consumed: matches,
+      });
+      if (!claimed.applied) fail("CONTENTION");
+      return claimed.revision;
+    };
     if (!matches) {
+      await claim();
       fail("CODE_INVALID");
     }
     const sessionId = (runtime.host.createSessionId ?? (() => crypto.randomUUID()))();
     const secret = (runtime.host.createSessionSecret ?? randomSecret)();
     if (!sessionId.trim() || !secret.trim()) fail("UNAVAILABLE");
+    // Ensure the customer profile before consuming the OTP or writing a session row so a seeding failure leaves neither behind.
+    const customer = await ensureCustomerProfile(runtime, emailKey, email);
+    const claimedRevision = await claim();
     const expiresAt = now + CUSTOMER_SESSION_TTL_SECONDS;
     const sessionRecord: CustomerSessionRecord = {
       recordKind: "commerce-customer-session",
@@ -331,10 +334,14 @@ export async function verifyShopperSignIn(
       createdAt: now,
       expiresAt,
     };
-    if (!(await runtime.sessions.compareAndSet(sessionId, null, sessionRecord)).applied) {
-      fail("CONTENTION");
+    try {
+      if (!(await runtime.sessions.compareAndSet(sessionId, null, sessionRecord)).applied) {
+        fail("CONTENTION");
+      }
+    } catch (error) {
+      await runtime.loginCodes.compareAndSet(emailKey, claimedRevision, challenge).catch(() => {});
+      throw error;
     }
-    const customer = await ensureCustomerProfile(runtime, emailKey, email);
     const capability: CustomerSessionPresentation = {
       sessionId,
       session: `${sessionId}.${secret}`,

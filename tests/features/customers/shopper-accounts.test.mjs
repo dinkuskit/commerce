@@ -44,8 +44,16 @@ function memoryCollection() {
     async delete(id) {
       map.delete(id);
     },
-    async query({ limit = 100, cursor } = {}) {
-      const keys = [...map.keys()].sort();
+    async query({ where, limit = 100, cursor } = {}) {
+      const keys = [...map.keys()]
+        .filter((id) => {
+          if (!where) return true;
+          const value = map.get(id).value;
+          return Object.entries(where).every(([field, expected]) =>
+            expected === null ? value?.[field] === undefined || value?.[field] === null : value?.[field] === expected,
+          );
+        })
+        .sort();
       const start = cursor ? keys.indexOf(cursor) + 1 : 0;
       const slice = keys.slice(start, start + limit);
       return {
@@ -434,6 +442,7 @@ test("6-digit OTP sign-in mints an origin-bound session, auto-links case-folded 
 test("native createPlugin mounts the shopper account routes and storage collections", async () => {
   const plugin = createPlugin({ siteUrl: "https://store.example.com" });
   assert.ok(plugin.capabilities.includes("email:send"));
+  assert.deepEqual(plugin.storage.orders.indexes, ["emailKey"]);
   for (const route of [
     SHOPPER_SIGN_IN_START_ROUTE,
     SHOPPER_SIGN_IN_VERIFY_ROUTE,
@@ -823,4 +832,116 @@ test('historical US orders and saved profiles retain optional regions outside ne
   assert.equal(orders.length, 1);
   const stored = await storage.orders.get('legacy-without-region');
   assert.deepEqual(stored.paidOrder.contactSnapshot.contact.delivery, delivery);
+});
+
+test("indexed emailKey lookup bounds store-wide order scans under a 10-call ceiling, preserves legacy unindexed rows, and avoids consuming OTP or writing a session on profile seeding failure", async () => {
+  const { ctx, storage, handlers } = createSandboxFixture({ code: "482910" });
+  const receiver = createPaidOrderReceiver(storage.orders, storage.order_numbers);
+
+  // Seed 600 orders for other shoppers plus 1 indexed order and 1 pre-upgrade unindexed order for shopper@example.com.
+  for (let i = 0; i < 600; i += 1) {
+    await receiver.receive(
+      makeOrder({
+        orderId: `ord_other_${String(i).padStart(4, "0")}`,
+        email: `buyer-${i}@example.com`,
+        paidAt: "2026-10-15T12:00:00.000Z",
+      }),
+    );
+  }
+  await receiver.receive(
+    makeOrder({
+      orderId: "ord_shopper_indexed",
+      email: "Shopper@Example.com",
+      paidAt: "2026-10-20T15:00:00.000Z",
+      phone: "+16175550177",
+      delivery: {
+        name: "Indexed Shopper",
+        line1: "77 Indexed Way",
+        city: "Boston",
+        region: "MA",
+        postalCode: "02110",
+        country: "US",
+      },
+    }),
+  );
+  // Pre-upgrade legacy order row stored without an emailKey top-level field.
+  await storage.orders.compareAndSet("ord_shopper_legacy", null, {
+    paidOrder: makeOrder({
+      orderId: "ord_shopper_legacy",
+      email: "SHOPPER@example.com",
+      paidAt: "2026-10-18T10:00:00.000Z",
+    }),
+    number: 1602,
+    revision: 1,
+  });
+
+  // Wrap every storage collection with a per-operation call counter and configurable ceiling.
+  let calls = 0;
+  let ceiling = 10;
+  for (const [name, col] of Object.entries(storage)) {
+    storage[name] = new Proxy(col, {
+      get(target, prop) {
+        const fn = target[prop];
+        if (typeof fn !== "function") return fn;
+        return async (...args) => {
+          calls += 1;
+          if (calls > ceiling) throw new Error("storage call ceiling exceeded");
+          return fn.apply(target, args);
+        };
+      },
+    });
+  }
+
+  const req = (route, session, method = "POST") => ({
+    url: `https://store.example.com/_emdash/api/plugins/dinkus-commerce/account/${route}`,
+    method,
+    headers: {
+      origin: "https://store.example.com",
+      ...(session ? { [CUSTOMER_SESSION_HEADER]: session } : {}),
+    },
+  });
+
+  calls = 0;
+  const started = await handlers.startSignIn({ input: { email: "shopper@example.com" }, request: req("sign-in/start") }, ctx);
+  assert.equal(started.ok, true);
+  assert.equal(calls, 2);
+
+  // First simulate a storage ceiling failure during profile seeding (ceiling = 3 fails during orders lookup).
+  // The OTP challenge must NOT be consumed and no session row may be written (#229).
+  calls = 0;
+  ceiling = 3;
+  const failedVerify = await handlers.verifySignIn(
+    { input: { email: "shopper@example.com", code: "482910" }, request: req("sign-in/verify") },
+    ctx,
+  );
+  assert.equal(failedVerify.ok, false);
+  assert.equal(failedVerify.error.code, "UNAVAILABLE");
+
+  ceiling = 100;
+  const challengeAfterFailure = await storage[CUSTOMER_LOGIN_CODES_COLLECTION].get("shopper@example.com");
+  assert.equal(challengeAfterFailure.consumed, false);
+  assert.equal(challengeAfterFailure.attempts, 0);
+  assert.equal((await storage[CUSTOMER_SESSIONS_COLLECTION].query()).items.length, 0);
+
+  // Now run under the 10-call ceiling: verifySignIn succeeds in 7 calls despite 600+ store-wide orders.
+  calls = 0;
+  ceiling = 10;
+  const verified = await handlers.verifySignIn(
+    { input: { email: "shopper@example.com", code: "482910" }, request: req("sign-in/verify") },
+    ctx,
+  );
+  assert.equal(verified.ok, true);
+  assert.equal(calls, 7);
+  assert.equal(verified.profile.phone, "+16175550177");
+  assert.equal(verified.profile.delivery.line1, "77 Indexed Way");
+
+  // Authenticated account/orders read succeeds in 4 calls and returns both the indexed and legacy orders.
+  calls = 0;
+  const ordersRes = await handlers.orders({ request: req("orders", verified.capability.session, "GET") }, ctx);
+  assert.equal(ordersRes.ok, true);
+  assert.equal(calls, 4);
+  assert.deepEqual(
+    ordersRes.orders.map((o) => o.orderId),
+    ["ord_shopper_indexed", "ord_shopper_legacy"],
+  );
 });

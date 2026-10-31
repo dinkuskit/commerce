@@ -57,8 +57,8 @@ async function freeze(
   }
   const quote = await quoteCatalogBasket(e.catalog, cart.map(line => line.catalogItemId), e.availability);
   if (!quote.ok) fail(QUOTE_FAILURES[quote.reason]);
-  const contactSnapshot = await captureCheckoutContact(rawContact, e.loadCheckoutContactRequirements,
-    quote.lines.some(line => line.fulfillment === "physical"));
+  const shipsGoods = quote.lines.some(line => line.fulfillment === "physical");
+  const contactSnapshot = await captureCheckoutContact(rawContact, e.loadCheckoutContactRequirements, shipsGoods);
   for (const [index, quoted] of quote.lines.entries()) {
     const line = cart[index];
     const { variant } = quoted;
@@ -77,7 +77,7 @@ async function freeze(
     }
   }
   let pricing;
-  if (e.pricing) pricing = await composeCheckoutPricing(lines, cart, attemptId, couponCode, e);
+  if (e.pricing) pricing = await composeCheckoutPricing(lines, cart, attemptId, couponCode, e, shipsGoods);
   else if (couponCode !== undefined) fail("Pricing composition is unavailable");
   const minor = lines.reduce((sum, line) => sum + parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity), 0n).toString();
   const total = pricing?.snapshot.finalTotal ?? normalizeMoney({ currency: "USD", minor });

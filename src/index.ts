@@ -319,7 +319,7 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
         uniqueIndexes: [],
       },
       [ORDERS_COLLECTION]: {
-        indexes: [],
+        indexes: ["emailKey"],
         uniqueIndexes: [],
       },
       [ORDER_NUMBERS_COLLECTION]: {

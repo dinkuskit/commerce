@@ -47,7 +47,11 @@ boundary, not an implemented route or storage change in this decision slice.
      email (`paidOrder.contactSnapshot.contact.email`) matches the shopper's
      verified email (compared case-insensitively via ASCII lowercase) link
      automatically to the shopper's account view without mutating `paidOrder`
-     snapshots.
+     snapshots. Stored `orders` records persist a normalized top-level
+     `emailKey` (indexed in `emdash-plugin.jsonc` and `createPlugin()`) so
+     `listOrdersForEmail` queries `{ emailKey }` plus a `{ emailKey: null }`
+     fallback for pre-upgrade legacy records rather than scanning all store
+     orders.
    - The shopper order view projects order number, `paidAt`, fulfillment status
      (`Processing` vs. `Completed`), carrier and tracking number when present,
      line items, pricing summary, and effective delivery address
@@ -58,8 +62,9 @@ boundary, not an implemented route or storage change in this decision slice.
      an optional normalized phone number (`normalizeCheckoutContactInput`).
    - If the customer record has no saved delivery address yet, it auto-seeds
      from their most recent order's effective delivery address upon account
-     read/sign-in and can be edited by the shopper in their Account view or
-     used to prefill checkout.
+     read/sign-in (before consuming the OTP challenge or persisting a session
+     row during sign-in verification) and can be edited by the shopper in their
+     Account view or used to prefill checkout.
 
 ## Platform reference check (`emdash-commerce`)
 

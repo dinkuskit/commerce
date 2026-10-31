@@ -155,3 +155,52 @@ test("unsupported pricing schema fails before payment resolution", async (t) => 
   );
   assert.equal(resolved, 0);
 });
+
+// checkout-digital-only-no-shipping-20261031 (issue 235): nothing physical, nothing to ship.
+test("a checkout with only digital items pays no shipping; one physical item brings the charge back", async (t) => {
+  const state = await setup();
+  t.after(() => state.opened.db.close());
+  let freeOver;
+  state.execution.pricing = {
+    coupons: createCheckoutCouponPort(state.coupons),
+    resolveShippingConfiguration: async () => ({
+      configurationId: "ship-1", revision: 7, mode: "flat", amount: { currency: "USD", minor: "500" },
+      ...(freeOver ? { freeOver: { currency: "USD", minor: freeOver } } : {}),
+    }),
+    paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+  };
+  state.execution.resolvePayments = async () => ({
+    pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+    ensureSession: async (request) => ({
+      outcome: "open", attemptId: request.attemptId, total: request.total,
+      session: { sessionId: `session-${request.attemptId}`, redirectUrl: "https://pay.example/session", createdAt: 1000, expiresAt: 2800 },
+    }),
+    lookup: async () => ({ outcome: "unknown" }),
+  });
+  const items = state.execution.catalog.catalog.records;
+  const mark = (id, fulfillment) => items.set(id, { ...items.get(id), fulfillment });
+  mark("one", "digital");
+  mark("two", "digital");
+  const digital = await startCheckout(state.execution, "digital-only", withSyntheticCheckoutContact({ lines: cart }));
+  assert.deepEqual(digital.payment.pricing.shipping, { configurationId: "ship-1", revision: 7, mode: "free", charge: { currency: "USD", minor: "0" } });
+  assert.equal(digital.payment.pricing.finalTotal.minor, "250");
+  assert.equal(digital.payment.total.minor, "250");
+  assert.equal(digital.contactSnapshot.contact.delivery, undefined);
+
+  // One physical item (here unmarked, which counts as physical) keeps the flat charge, once.
+  mark("two", undefined);
+  const mixed = await startCheckout(state.execution, "mixed", withSyntheticCheckoutContact({ lines: cart }));
+  assert.deepEqual(mixed.payment.pricing.shipping, { configurationId: "ship-1", revision: 7, mode: "flat", charge: { currency: "USD", minor: "500" } });
+  assert.equal(mixed.payment.pricing.finalTotal.minor, "750");
+
+  // Free shipping over still waives a mixed basket's charge.
+  freeOver = "250";
+  const waived = await startCheckout(state.execution, "mixed-free-over", withSyntheticCheckoutContact({ lines: cart }));
+  assert.equal(waived.payment.pricing.shipping.mode, "free");
+  assert.equal(waived.payment.pricing.finalTotal.minor, "250");
+
+  // A broken shipping configuration still stops a digital-only checkout.
+  mark("two", "digital");
+  freeOver = "0";
+  await assert.rejects(() => startCheckout(state.execution, "digital-bad-config", withSyntheticCheckoutContact({ lines: cart })), /Invalid shipping configuration/);
+});

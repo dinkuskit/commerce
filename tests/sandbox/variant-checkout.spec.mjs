@@ -5,7 +5,7 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { createSettingsAccess } from 'emdash';
 import { OptionsRepository } from 'emdash/internal/plugins/host';
 import { loadMerchantStoreSettings, saveMerchantStoreSettings } from '../../dist/features/store-settings/kernel/index.js';
-import { BLOCK_FORM, openPanel, openProductPage, setOnSale } from './product-page.mjs';
+import { BLOCK_FORM, openCard, openPanel, openProductPage, setOnSale } from './product-page.mjs';
 
 function proofDb() {
   const native = test.info().project.name === "native-variant";
@@ -267,8 +267,8 @@ test('merchant edits choices and independent prices on desktop and phone', async
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect.poll(() => db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(`uidx_plugin_dinkus-commerce_${catalog}_skuKey`), {timeout:90000}).toBeTruthy();
     const opened = await openProductPage(page, name), ui = opened.panel;
-    await ui.getByRole('textbox',{name:'SKU (optional)',exact:true}).fill('MERCHANT-PROOF-SMALL');
-    await ui.getByRole('button',{name:'Add price and stock',exact:true}).click();
+    await ui.getByRole('textbox',{name:'SKU',exact:true}).fill('MERCHANT-PROOF-SMALL');
+    await ui.getByRole('button',{name:'Save',exact:true}).click();
     // Commerce keeps the page's link; nothing waits on the page's Save.
     await expect.poll(() => all(catalog).filter(r => r.name === name).length).toBe(1);
     const root = all(catalog).find(r => r.name === name);
@@ -278,16 +278,28 @@ test('merchant edits choices and independent prices on desktop and phone', async
     expect(root.variantProduct.defaultMemberId).toBe(root.itemId);
     expect(root.variantProduct.options).toHaveLength(0);
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(1);
-    await ui.getByRole('textbox',{name:'Second SKU',exact:true}).fill('MERCHANT-PROOF-LARGE');
-    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Physical',exact:true}).first().check();
-    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Add choices',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).last().check();
-    await ui.getByRole('button',{name:'Add choices',exact:true}).click();
+    // The Variants card is collapsed on a simple product; Add options makes it variable with the product itself as the first variant,
+    // and a new variant for each other value whose SKU is the product's SKU plus the value (catalog-panel-cards-20261031).
+    await openCard(ui, /^Variants/);
+    await ui.getByRole('textbox',{name:'Option values',exact:true}).fill('Small, Large');
+    await ui.getByRole('button',{name:'Add options',exact:true}).click();
+    await expect.poll(() => (all(catalog).find(r => r.itemId === root.itemId).variantProduct?.members ?? []).length).toBe(2);
+    expect(all(catalog).find(r => r.sku === 'MERCHANT-PROOF-SMALL-LARGE'), 'the new variant takes the product SKU plus the value').toBeTruthy();
+    // Large is digital in this walk: a variant's fulfillment is set in Edit options.
+    await openCard(ui, 'Edit options');
+    await ui.getByRole('radio',{name:'Digital',exact:true}).last().check();
+    await ui.getByRole('button',{name:'Save options',exact:true}).click();
+    await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.members[1].fulfillment).toBe('digital');
+    await openCard(ui, /^Large/);
     await expect(ui.getByRole('textbox',{name:'Regular',exact:true})).toHaveCount(2);
     const expanded = all(catalog).find(r => r.itemId === root.itemId).variantProduct;
     owned = expanded.members.map(m => m.catalogItemId);
     expect(expanded.defaultMemberId).toBe(root.itemId);
+    // Each variant's price form sits in its own card; a save redraws the panel with only the first card open.
     const priceForms = ui.locator(BLOCK_FORM).filter({has:page.getByRole('textbox',{name:'Regular',exact:true})});
+    const cards = [/^Small/, /^(Large|Big)/, /^Medium/];
     for (const [i, amount, status] of [[0,'20','Out of stock'],[1,'24','In stock']]) {
+      await openCard(ui, cards[i]);
       const form = priceForms.nth(i);
       await form.getByRole('textbox',{name:'Regular',exact:true}).fill(amount);
       await form.getByRole('radio',{name:status,exact:true}).check();
@@ -329,16 +341,18 @@ test('merchant edits choices and independent prices on desktop and phone', async
     await priceForms.nth(0).getByRole('button',{name:/^Save/}).click();
     await expect.poll(() => all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[0]].price.regular.minor).toBe('2200');
     await expect(priceForms.nth(0).getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('22.00');
-    await expect(ui.getByRole('button',{name:'Save choices',exact:true})).toBeEnabled();
+    await openCard(ui, 'Edit options');
+    await expect(ui.getByRole('button',{name:'Save options',exact:true})).toBeEnabled();
     expect(all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].price.regular.minor).toBe('2400');
     await ui.getByRole('textbox',{name:'Value: Large',exact:true}).fill('Big');
-    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Save choices'})}).getByRole('radio',{name:'Physical',exact:true}).last().check();
+    await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Save options'})}).getByRole('radio',{name:'Physical',exact:true}).last().check();
     const detailResponse = page.waitForResponse(r => r.url().split('?')[0].endsWith('/panel/product') && r.request().method() === 'POST');
-    await ui.getByRole('button',{name:'Save choices',exact:true}).click();
+    await ui.getByRole('button',{name:'Save options',exact:true}).click();
     { const r = await detailResponse; writeFileSync(`${process.env.COMMERCE_PROOF_ARTIFACTS}/merchant-details-${native ? 'native' : 'sandbox'}.json`, JSON.stringify({request:r.request().postDataJSON(),response:await r.json()},null,2)); }
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.options[0].values[1].label).toBe('Big');
+    await openCard(ui, 'Edit options');
     await expect(ui.getByRole('textbox',{name:'Value: Big',exact:true})).toHaveValue('Big');
-    await expect(ui.getByRole('button',{name:'Save choices',exact:true})).toBeEnabled();
+    await expect(ui.getByRole('button',{name:'Save options',exact:true})).toBeEnabled();
     const final = all(catalog).find(r => r.itemId === root.itemId).variantProduct;
     expect(final.members.map(m => m.catalogItemId)).toEqual(owned);
     expect(final.members[1].fulfillment).toBe('physical');
@@ -347,12 +361,15 @@ test('merchant edits choices and independent prices on desktop and phone', async
     concurrentProduct.catalogData.items[owned[1]].price.regular.minor = '2600';
     db.prepare('UPDATE _plugin_storage SET data=?,revision=?,updated_at=? WHERE plugin_id=? AND collection=? AND id=?')
       .run(JSON.stringify(concurrentProduct),crypto.randomUUID(),new Date().toISOString(),'dinkus-commerce',catalog,productKey);
+    await openCard(ui, cards[1]);
     const staleForm = priceForms.nth(1);
     await staleForm.getByRole('textbox',{name:'Regular',exact:true}).fill('25');
     await staleForm.getByRole('button',{name:/^Save/}).click();
-    await expect(staleForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('25');
+    // The refused form comes back with the typing, in its own card, which is the one left open.
+    await expect(priceForms.last().getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('25');
     await expect.poll(() => all(catalog).find(r => r.itemId === owned[0]).catalogData.items[owned[1]].price.regular.minor).toBe('2600');
     await page.reload(); await openPanel(page);
+    await openCard(ui, cards[1]);
     const freshForm = priceForms.nth(1);
     await expect(freshForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('26.00');
     await freshForm.getByRole('radio',{name:'Out of stock',exact:true}).check();
@@ -373,17 +390,23 @@ test('merchant edits choices and independent prices on desktop and phone', async
     }
 
     // Append second option (Size × Color) with explicit existing-member values (Sand for Small and Big), then add Medium / Ink.
+    await openCard(ui, 'Add another option');
+    await ui.getByRole('textbox',{name:'Option values',exact:true}).fill('Sand, Ink');
+    await ui.getByRole('textbox',{name:'Value for Small',exact:true}).fill('Sand');
+    await ui.getByRole('textbox',{name:'Value for Big',exact:true}).fill('Sand');
     await ui.getByRole('button',{name:'Add option',exact:true}).click();
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.options.length).toBe(2);
-    await expect(ui.getByRole('textbox',{name:'Choice: Size',exact:true})).toBeVisible();
-    await ui.getByRole('textbox',{name:'Choice: Size',exact:true}).fill('Medium');
-    await ui.getByRole('textbox',{name:'Choice: Color',exact:true}).fill('Ink');
-    await ui.getByRole('textbox',{name:'Variant SKU',exact:true}).fill('MERCHANT-PROOF-MEDIUM-INK');
+    await openCard(ui, 'Add a variant');
+    await expect(ui.getByRole('textbox',{name:'Size',exact:true})).toBeVisible();
+    await ui.getByRole('textbox',{name:'Size',exact:true}).fill('Medium');
+    await ui.getByRole('textbox',{name:'Color',exact:true}).fill('Ink');
+    await ui.getByRole('textbox',{name:'SKU',exact:true}).last().fill('MERCHANT-PROOF-MEDIUM-INK');
     await ui.locator(BLOCK_FORM).filter({has:page.getByRole('button',{name:'Add variant',exact:true})}).getByRole('radio',{name:'Digital',exact:true}).check();
     await ui.getByRole('button',{name:'Add variant',exact:true}).click();
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.length).toBe(3);
     owned = all(catalog).find(r => r.itemId === root.itemId).variantProduct.members.map(m => m.catalogItemId);
-    const mediumForm = priceForms.nth(2);
+    await openCard(ui, cards[2]);
+    const mediumForm = priceForms.last();
     await mediumForm.getByRole('textbox',{name:'Regular',exact:true}).fill('28');
     await mediumForm.getByRole('radio',{name:'In stock',exact:true}).check();
     await mediumForm.getByRole('button',{name:/^Save/}).click();
@@ -413,9 +436,10 @@ test('merchant edits choices and independent prices on desktop and phone', async
     }
 
     // Rename Color and Ink in the editor; the pending Medium / Ink order must keep its frozen Size / Color selections.
+    await openCard(ui, 'Edit options');
     await ui.getByRole('textbox',{name:'Option: Color',exact:true}).fill('Shade');
     await ui.getByRole('textbox',{name:'Value: Ink',exact:true}).fill('Midnight');
-    await ui.getByRole('button',{name:'Save choices',exact:true}).click();
+    await ui.getByRole('button',{name:'Save options',exact:true}).click();
     await expect.poll(() => all(catalog).find(r => r.itemId === root.itemId).variantProduct.options[1].label).toBe('Shade');
 
     if (shopper) {
@@ -436,7 +460,9 @@ test('merchant edits choices and independent prices on desktop and phone', async
     // Open the mounted controls and prove an actual save, not just a screenshot.
     await page.setViewportSize({width:390,height:844});
     const phonePanel = await openPanel(page);
-    const phoneForm = phonePanel.locator(BLOCK_FORM).filter({has:page.getByRole('textbox',{name:'Regular',exact:true})}).nth(2);
+    // Medium's card, opened on the phone; after its save the redraw leaves only that card open, so read the last price form.
+    await openCard(phonePanel, cards[2]);
+    const phoneForm = phonePanel.locator(BLOCK_FORM).filter({has:page.getByRole('textbox',{name:'Regular',exact:true})}).last();
     await expect(phoneForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('28.00');
     await phoneForm.getByRole('textbox',{name:'Regular',exact:true}).fill('29');
     await phoneForm.getByRole('button',{name:/^Save/}).click();
@@ -445,6 +471,7 @@ test('merchant edits choices and independent prices on desktop and phone', async
     // and reopen for durable readback; do not resubmit the price mutation.
     await page.reload();
     await openPanel(page);
+    await openCard(phonePanel, cards[2]);
     await expect(phoneForm.getByRole('textbox',{name:'Regular',exact:true})).toHaveValue('29.00');
     await phoneForm.getByRole('textbox',{name:'Regular',exact:true}).scrollIntoViewIfNeeded();
     if (shopper) {

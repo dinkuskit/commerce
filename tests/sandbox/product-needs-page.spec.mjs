@@ -75,12 +75,13 @@ test("every product is made for its page: catalog API, CLI, panel and settings",
     // 3. The page the CLI made opens on its product in the panel.
     await page.goto("/_emdash/admin/content/products/" + entryId);
     const panel = await openPanel(page);
-    await expect(panel.getByText(/SKU PF-HAT/).first()).toBeVisible();
+    await expect(panel.getByText("PF-HAT", { exact: true }).first()).toBeVisible();
     await capture("1-cli-page-panel");
 
-    // 4. A new page offers only Add price and stock: no list of other products to sell here.
+    // 4. A new page opens on its price form, whose Save makes the product: no list of other products to sell here.
     const fresh = await openProductPage(page, "Fresh tee");
-    await expect(fresh.panel.getByRole("button", { name: "Add price and stock", exact: true })).toBeVisible();
+    await expect(fresh.panel.getByRole("textbox", { name: "Regular", exact: true })).toBeVisible();
+    await expect(fresh.panel.getByRole("button", { name: "Save", exact: true })).toBeVisible();
     await expect(fresh.panel.getByRole("button", { name: "Sell it here", exact: true })).toHaveCount(0);
     await expect(fresh.panel.getByText("Or one without a page")).toHaveCount(0);
     await expect(fresh.panel.getByRole("textbox", { name: "Or its SKU", exact: true })).toHaveCount(0);

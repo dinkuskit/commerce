@@ -90,7 +90,7 @@ function valid(raw: unknown, productId: string): CatalogVariantProduct {
       selected.add(s.optionId);
     }
     if (selected.size !== p.options.length || combinations.has(key(m.selections)))
-      catalogFail("STORAGE_UNAVAILABLE", "duplicate variant combinations are invalid");
+      catalogFail("STORAGE_UNAVAILABLE", "duplicate variant combination");
     combinations.add(key(m.selections));
   }
   if (p.defaultMemberId !== productId || !members.has(productId)) catalogFail("STORAGE_UNAVAILABLE", "variant default member is invalid");
@@ -131,23 +131,23 @@ export async function addCatalogVariantMember(
   const productId = id(raw.productId, "productId");
   const parent = await storage.catalog.getVersioned(productId);
   if (!parent || parent.value.recordKind !== "catalog-item" || parent.value.itemId !== productId || !parent.value.variantProduct)
-    catalogFail("CATALOG_ITEM_NOT_FOUND", "product has no variant choices");
+    catalogFail("CATALOG_ITEM_NOT_FOUND", "product has no options");
   const p = valid(parent.value.variantProduct, productId);
   if (p.creationPayload === payload(raw)) return { changed: false, product: p };
   if (!p.options.length) catalogFail("INVALID_INPUT", "variant product has no options");
   // A new member is always fenced by the caller's revision, so a stale request cannot write old member values.
   if (!Number.isSafeInteger(raw.expectedRevision) || raw.expectedRevision < 0) catalogFail("INVALID_INPUT", "invalid expectedRevision");
-  if (raw.expectedRevision !== p.revision) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload first");
+  if (raw.expectedRevision !== p.revision) catalogFail("COMMAND_CONFLICT", "options changed; reload first");
   if (p.members.length >= 50) catalogFail("INVALID_INPUT", "variant member cap exceeded");
   if (!Array.isArray(raw.selections) || raw.selections.length !== p.options.length)
-    catalogFail("INVALID_INPUT", "new member requires a value for every option");
+    catalogFail("INVALID_INPUT", "new member needs every option's value");
   const nextOptions = p.options.map(o => ({ ...o, values: [...o.values] }));
   const seenOptions = new Set<string>(), byOption = new Map<string, string>();
   for (const s of raw.selections) {
     if (!isRecord(s)) catalogFail("INVALID_INPUT", "variant selection is required");
     const oId = id(s.optionId, "optionId"), vId = id(s.valueId, "valueId");
     const o = nextOptions.find(x => x.optionId === oId);
-    if (!o || seenOptions.has(oId)) catalogFail("INVALID_INPUT", "new member requires a value for every option");
+    if (!o || seenOptions.has(oId)) catalogFail("INVALID_INPUT", "new member needs every option's value");
     seenOptions.add(oId);
     if (!o.values.some(v => v.valueId === vId)) {
       if (s.label === undefined || o.values.length >= 50) catalogFail("INVALID_INPUT", "unknown variant value");
@@ -156,20 +156,20 @@ export async function addCatalogVariantMember(
     byOption.set(oId, vId);
   }
   const selections = nextOptions.map(o => ({ optionId: o.optionId, valueId: byOption.get(o.optionId)! }));
-  if (p.members.some(m => same(m.selections, selections))) catalogFail("INVALID_INPUT", "duplicate variant combinations are invalid");
+  if (p.members.some(m => same(m.selections, selections))) catalogFail("INVALID_INPUT", "duplicate variant combination");
   const f = fill(raw.fulfillment), commandId = id(raw.commandId, "commandId"), name = text(raw.name, "name"), sku = text(raw.sku, "sku");
   const created = await createCatalogItem(storage.catalog as never, { commandId, name, sku, fulfillment: f }, {
     ...options, variantMember: { productId, selections, fulfillment: f },
   });
   if (created.item.itemId === productId || p.members.some(m => m.catalogItemId === created.item.itemId))
-    catalogFail("INVALID_INPUT", "only the permanent default item may be reused");
+    catalogFail("INVALID_INPUT", "only the default item may be reused");
   const next: CatalogVariantProduct = {
     ...p, creationPayload: payload(raw), revision: p.revision + 1, options: nextOptions,
     members: [...p.members, { catalogItemId: created.item.itemId, selections, fulfillment: f }],
   };
   valid(next, productId);
   if (!(await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: next })).applied)
-    catalogFail("STORAGE_UNAVAILABLE", "variant membership changed concurrently");
+    catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
   return { changed: true, product: next };
 }
 
@@ -193,10 +193,10 @@ export async function addCatalogVariantOption(
   if (current && p.creationPayload === payload(input)) return { changed: false, product: p };
   // Only the first option may come without a revision (v1 callers); appending one must name the revision it read.
   if (input.expectedRevision === undefined) {
-    if (p.options.length) catalogFail("COMMAND_CONFLICT", "variant choices already exist; reload first");
+    if (p.options.length) catalogFail("COMMAND_CONFLICT", "options exist; reload first");
   } else {
     if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) catalogFail("INVALID_INPUT", "invalid expectedRevision");
-    if (input.expectedRevision !== (current ? p.revision : 0)) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload first");
+    if (input.expectedRevision !== (current ? p.revision : 0)) catalogFail("COMMAND_CONFLICT", "options changed; reload first");
   }
   const optionId = id(input.optionId, "optionId"), optionLabel = text(input.optionLabel, "option label");
   if (p.options.some(o => o.optionId === optionId))
@@ -205,7 +205,7 @@ export async function addCatalogVariantOption(
   const empty = p.options.length === 0;
   if (!Array.isArray(input.values) || input.values.length < 2 || input.values.length > 50 ||
       (empty && input.members === undefined && (!input.values[0]?.member || input.values[0].member.catalogItemId !== productId)))
-    catalogFail("INVALID_INPUT", "variant choice needs 2-50 values and keeps the default member");
+    catalogFail("INVALID_INPUT", "an option needs 2-50 values");
   const values: CatalogVariantOptionValue[] = [], seenValues = new Set<string>();
   const entries: { entry: VariantMemberInput; defaultValueId?: string }[] = [];
   for (const [i, v] of input.values.entries()) {
@@ -216,7 +216,7 @@ export async function addCatalogVariantOption(
     if (empty && input.members === undefined && (!v.member || typeof v.member !== "object")) catalogFail("INVALID_INPUT", "variant member is required");
     if (v.member !== undefined) {
       if (!isRecord(v.member)) catalogFail("INVALID_INPUT", "variant member is required");
-      if (empty && i > 0 && v.member.catalogItemId !== undefined) catalogFail("INVALID_INPUT", "only the permanent default item may be reused");
+      if (empty && i > 0 && v.member.catalogItemId !== undefined) catalogFail("INVALID_INPUT", "only the default item may be reused");
       entries.push({ entry: v.member, defaultValueId: valueId });
     }
     if (v.members !== undefined) {
@@ -245,7 +245,7 @@ export async function addCatalogVariantOption(
     if (entry.catalogItemId !== undefined) {
       const memberId = id(entry.catalogItemId, "catalogItemId"), prev = existingById.get(memberId);
       if (!prev || assigned.has(memberId) || entry.commandId !== undefined || entry.sku !== undefined)
-        catalogFail("INVALID_INPUT", "only existing members may be reused once");
+        catalogFail("INVALID_INPUT", "members may be reused once");
       if (Array.isArray(entry.selections)) {
         for (const s of entry.selections) {
           if (!isRecord(s) || (s.optionId !== optionId && !prev.selections.some(x => x.optionId === s.optionId && x.valueId === s.valueId)))
@@ -266,7 +266,7 @@ export async function addCatalogVariantOption(
       }
       for (const o of nextOptions.slice(0, -1)) {
         const s = Array.isArray(entry.selections) ? entry.selections.find(x => isRecord(x) && x.optionId === o.optionId) : undefined;
-        if (!s) catalogFail("INVALID_INPUT", "new member requires a value for every option");
+        if (!s) catalogFail("INVALID_INPUT", "new member needs every option's value");
         const vId = id(s.valueId, "valueId");
         if (!o.values.some(v => v.valueId === vId)) {
           if (s.label === undefined || o.values.length >= 50) catalogFail("INVALID_INPUT", "unknown variant value");
@@ -278,25 +278,28 @@ export async function addCatalogVariantOption(
       toCreate.push({ commandId, name, sku, fulfillment: f, selections });
     }
   }
-  if (assigned.size !== p.members.length) catalogFail("INVALID_INPUT", "every existing member requires a value for the new option");
+  if (assigned.size !== p.members.length) catalogFail("INVALID_INPUT", "each existing member needs a value");
+  // Each new variant is two storage calls after one proof of the unique indexes; seven keep one sandbox request within
+  // Template Store's 32 with the panel's redraw, so a request making more is refused before anything is written.
+  if (toCreate.length > 7) catalogFail("INVALID_INPUT", "Up to 7 new variants at once; add more with Add a variant.");
   const totalMembers = p.members.length + toCreate.length;
-  if (totalMembers < 2 || totalMembers > 50) catalogFail("INVALID_INPUT", "variant product requires 2-50 members");
+  if (totalMembers < 2 || totalMembers > 50) catalogFail("INVALID_INPUT", "a product has 2-50 variants");
   const comboSet = new Set<string>();
   for (const sel of [
     ...p.members.map(m => [...m.selections, { optionId, valueId: assigned.get(m.catalogItemId)!.valueId }]),
     ...toCreate.map(c => c.selections),
   ]) {
     const k = key(sel);
-    if (comboSet.has(k)) catalogFail("INVALID_INPUT", "duplicate variant combinations are invalid");
+    if (comboSet.has(k)) catalogFail("INVALID_INPUT", "duplicate variant combination");
     comboSet.add(k);
   }
   const createdMembers: CatalogVariantMember[] = [];
   for (const c of toCreate) {
     const created = await createCatalogItem(storage.catalog as never, { commandId: c.commandId, name: c.name, sku: c.sku, fulfillment: c.fulfillment }, {
-      ...options, variantMember: { productId, selections: c.selections, fulfillment: c.fulfillment },
+      ...options, proven: createdMembers.length > 0, variantMember: { productId, selections: c.selections, fulfillment: c.fulfillment },
     });
     if (created.item.itemId === productId || existingById.has(created.item.itemId) || createdMembers.some(m => m.catalogItemId === created.item.itemId))
-      catalogFail("INVALID_INPUT", "only the permanent default item may be reused");
+      catalogFail("INVALID_INPUT", "only the default item may be reused");
     createdMembers.push({ catalogItemId: created.item.itemId, selections: c.selections, fulfillment: c.fulfillment });
   }
   const members: CatalogVariantMember[] = [
@@ -313,7 +316,7 @@ export async function addCatalogVariantOption(
   };
   valid(product, productId);
   const committed = await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: product });
-  if (!committed.applied) catalogFail("STORAGE_UNAVAILABLE", "variant membership changed concurrently");
+  if (!committed.applied) catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
   return { changed: true, product };
 }
 
@@ -327,9 +330,9 @@ export async function updateCatalogVariantLabels(storage: CatalogVariantStorage,
       (raw.values === undefined && raw.options === undefined && raw.optionLabel === undefined && raw.members === undefined))
     catalogFail("INVALID_INPUT", "invalid variant label update");
   const parent = await storage.catalog.getVersioned(productId);
-  if (!parent || parent.value.recordKind !== "catalog-item" || !parent.value.variantProduct) catalogFail("CATALOG_ITEM_NOT_FOUND", "product has no variant choices");
+  if (!parent || parent.value.recordKind !== "catalog-item" || !parent.value.variantProduct) catalogFail("CATALOG_ITEM_NOT_FOUND", "product has no options");
   const p = valid(parent.value.variantProduct, productId);
-  if (p.revision !== raw.expectedRevision) catalogFail("COMMAND_CONFLICT", "variant choices changed; reload first");
+  if (p.revision !== raw.expectedRevision) catalogFail("COMMAND_CONFLICT", "options changed; reload first");
   const optionLabels = new Map<string, string>();
   if (raw.optionLabel !== undefined) {
     const targetId = raw.optionId !== undefined ? id(raw.optionId, "optionId") : p.options[0]?.optionId;
