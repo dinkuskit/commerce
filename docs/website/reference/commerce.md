@@ -179,6 +179,29 @@ Reconciliation requires a persisted paid checkout order before acknowledging its
 
 Coupon codes are refused at checkout on Registry stores in this release.
 
+## Completing and correcting an order
+
+Open **Orders**, then **Inspect #N**. New orders are **Processing**;
+**Completed** means shipped, not delivered. Test orders stay in the normal list
+and are marked **TEST**; do not use them for real fulfillment or postage.
+
+- Before shipment, use **Correct address** on a Processing order that has a
+  delivery address. The corrected country must be one of the store's shipping
+  destinations. This changes where the order goes, not its frozen checkout or
+  billing address.
+- Without Ship, use **Complete order** to record shipment by hand. Carrier and
+  tracking number are optional, at most 64 characters each. Commerce records the
+  completion time and shows the order as Completed; this does not buy a label or
+  send a shipping email. Signed-in shoppers can see the status, carrier and
+  tracking number in their order history when the storefront provides it.
+- A Completed order's address is locked. To correct a mistake, choose **Move back
+  to Processing** and confirm. This clears the completion time, carrier and
+  tracking number, but keeps any corrected delivery address. It does not cancel
+  a shipping label. Correct the order and complete it again as appropriate.
+
+If an order changed after you opened its form, the stale save changes nothing.
+Open the order again and check its current details before retrying.
+
 ## Next steps
 
 Start with [your first product](/docs/store-owners/first-product), or build the host in [Integrate DinkusKit into a site](/docs/developers/integrate).
