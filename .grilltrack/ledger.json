@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-10-29T21:25:23+00:00",
-    "domain": "Checkout asks for a delivery address when the basket has a physical item",
-    "started_at": "2026-10-29T21:25:23+00:00",
+    "confirmed_at": "2026-10-31T20:34:02+00:00",
+    "domain": "Checkout totals",
+    "started_at": "2026-10-31T20:34:01+00:00",
     "status": "confirmed",
-    "summary": "Build owner-locked commerce-billing-address-001 (billing required on every checkout, no fallback) and the amended commerce-delivery-address-001 in Commerce: checkout contact accepts and freezes billing, Orders detail shows Email, Phone, Ship to and Bill to, agents' API and CLI return billTo and billToMatchesShipTo; free Registry bundle room first; reviewed PR without merge or release. Template store follows after a Commerce beta."
+    "summary": "Ronald, 31 Oct 2026 19:33 UTC, answered 'agreed' to '#235: a PDF-only order still pays flat shipping. Fix it.': a checkout with only digital items pays no shipping; any physical item keeps the free/flat charge and Free shipping over."
   },
   "decisions": [
     {
@@ -15932,6 +15932,64 @@
       "superseded_by": null,
       "updated_at": "2026-10-31T19:34:34+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. A checkout whose lines are all digital charges 0 shipping and records the shipping as free, whatever the flat charge or Free shipping over amount. A basket with at least one physical item (an item with no fulfillment marked counts as physical, as in commerce-delivery-address-001) keeps the existing free or flat charge, once per checkout, and Free shipping over still applies. Payments charges the frozen snapshot unchanged, so a 0 charge adds no Shipping line. Checkouts already started keep their frozen totals.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/235",
+      "created_at": "2026-10-31T20:34:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-totals-composition-001",
+        "commerce-delivery-address-001"
+      ],
+      "domain": "Checkout totals",
+      "history": [
+        {
+          "at": "2026-10-31T20:34:02+00:00",
+          "choice": "No. A checkout whose lines are all digital charges 0 shipping and records the shipping as free, whatever the flat charge or Free shipping over amount. A basket with at least one physical item (an item with no fulfillment marked counts as physical, as in commerce-delivery-address-001) keeps the existing free or flat charge, once per checkout, and Free shipping over still applies. Payments charges the frozen snapshot unchanged, so a 0 charge adds no Shipping line. Checkouts already started keep their frozen totals.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T20:34:02+00:00",
+          "choice": "No. A checkout whose lines are all digital charges 0 shipping and records the shipping as free, whatever the flat charge or Free shipping over amount. A basket with at least one physical item (an item with no fulfillment marked counts as physical, as in commerce-delivery-address-001) keeps the existing free or flat charge, once per checkout, and Free shipping over still applies. Payments charges the frozen snapshot unchanged, so a 0 charge adds no Shipping line. Checkouts already started keep their frozen totals.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-digital-only-no-shipping-20261031",
+      "implementation_ref": "c83231a: composeCheckoutPricing waives shipping when no checkout line is physical (orchestrate passes the same flag that asks for a delivery address); tests checkout-pricing.test.mjs digital-only/mixed/free-over/bad-config and registry-checkout-services compiled digital-only; typecheck, audit:repo, unit 839/840 (packaged-consumers teardown fails on main too in this sandbox), integration 111/111; headroom 2772",
+      "question": "Should a basket with nothing to ship pay the store's flat shipping charge?",
+      "rationale": "Shopify charges shipping only when a line requires shipping (variant requiresShipping) and WooCommerce virtual products do not require shipping; Dad's #235 showed a $6 PDF charged $4.99 shipping with no address taken. Ronald 2026-10-31 19:33 UTC: agreed.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T20:34:02+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -15968,5 +16026,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T19:55:58+00:00"
+  "updated_at": "2026-10-31T20:34:02+00:00"
 }
