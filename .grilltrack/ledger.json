@@ -14829,7 +14829,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-31T19:10:29+00:00",
+          "at": "2026-10-31T19:34:34+00:00",
           "choice": "Keep one product model: a product is simple until it has a choice, and adding a choice (up to 3 options) makes it variable, with the product itself as the first member. The Dinkus Commerce panel shows one context line right above Add choices on a product with no choices: 'Simple product. Add a choice, like Size, to sell it in more than one version.' Once it has a choice the line goes and the choices editor shows. No new state, field or route.",
           "from": "locked",
           "implementation_ref": null,
@@ -14855,7 +14855,7 @@
       "review_source_identity": null,
       "status": "superseded",
       "superseded_by": "catalog-panel-cards-20261031",
-      "updated_at": "2026-10-31T19:10:29+00:00",
+      "updated_at": "2026-10-31T19:34:34+00:00",
       "verification_ref": null
     },
     {
@@ -15729,13 +15729,82 @@
       "verification_ref": "pr:dinkuskit/commerce#243;file:.grilltrack/proof/commerce-one-build-registry-20261031/PROOF.md"
     },
     {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+      "context_ref": "decision:commerce-one-build-registry-20261031",
+      "created_at": "2026-10-31T19:07:44+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Checkout asks for a delivery address when the basket has a physical item",
+      "history": [
+        {
+          "at": "2026-10-31T19:07:44+00:00",
+          "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T19:18:11+00:00",
+          "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-10-31T19:18:11+00:00",
+          "choice": "Behavior-preserving shaves, measured on the final backend.js: (1) Rolldown inlines constants and tree-shakes without property-read or unknown-global side effects (optimization.inlineConst true; treeshake propertyReadSideEffects false, unknownGlobalSideEffects false); (2) the Block Kit admin builds text inputs, radios, toggles, fresh form ids and submit buttons through shared helpers in src/admin/common.ts; (3) the Registry build reads a product's stock management as managed or unmanaged only, since it has no Inventory binding and nothing there reads the setup status detail, while a managed record still resolves unavailable; (4) wake reconciliation records a retained wake through one helper; (5) the ISO 3166-1 alpha-2 country set is a 676-bit table instead of a 498-character string, with the same membership and the same sorted listing; (6) the Registry build's manage-stock notice has one text. No route, record, message, validation rule or admin block changes. Result on main 26d6319: 130,246 to 128,266 bytes, headroom 826 to 2,806, the 2,200-byte reserve (us-region-registry-budget-exception-20261021) back.",
+          "from": "implemented",
+          "implementation_ref": "pr:dinkuskit/commerce#245;file:.grilltrack/proof/registry-headroom-20261031/PROOF.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "registry-headroom-20261031",
+      "implementation_ref": "pr:dinkuskit/commerce#245;file:.grilltrack/proof/registry-headroom-20261031/PROOF.md",
+      "question": "How does the Registry backend get room back for merchant features such as store policy editing, when it sits 826 bytes under the 131,072-byte per-file cap?",
+      "rationale": "Ronald, 31 Oct 2026: 'agreed lets do this' (the shaves land first, as their own PR).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-10-31T19:18:11+00:00",
+      "verification_ref": "pr:dinkuskit/commerce#245;file:.grilltrack/proof/registry-headroom-20261031/PROOF.md"
+    },
+    {
       "baseline_ref": "git:e4824441154eb8e72bf5984ee62afece2bae1902",
       "candidate_refs": [
         "dinkuskit/commerce#244"
       ],
       "choice": "A status grid (Status, SKU, Name from the page title), then cards like a Shopify product form: Pricing & stock open (Regular, Sale, SKU, Stock status and the feed channels, one Save), and Variants, Shipping and Identifiers as Block Kit accordions, collapsed until opened. A product is simple until it has an option: its Variants card is collapsed and asks for an Option name and comma-separated Option values; Add options makes it variable with the product itself as the first variant and a new variant per value, whose SKU is the product's SKU plus the value's id and whose fulfillment is the product's. A product with options opens its Variants card: one card per variant with Regular, Sale, SKU and Stock status and its own Save, then Edit options (labels and each variant's fulfillment), Add another option (up to three) and Add a variant (up to fifty). After a save or a refusal the card it concerned is the open one. The SKU is editable in the panel for the product and each variant, changed before the price so a SKU another product has is refused before anything is saved. The words are options, values and variants, as on Shopify and in UCP: 'choice' and 'version' leave merchant-facing copy, docs and refusal messages; the catalog API's op is option and the CLI's command add-option with --variant, with no aliases. No product type field, state or route is added; opening a card is client-side.",
       "context_ref": "dinkuskit/commerce#244",
-      "created_at": "2026-10-31T19:10:28+00:00",
+      "created_at": "2026-10-31T19:34:34+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -15746,7 +15815,7 @@
       "domain": "Checkout asks for a delivery address when the basket has a physical item",
       "history": [
         {
-          "at": "2026-10-31T19:10:29+00:00",
+          "at": "2026-10-31T19:34:34+00:00",
           "choice": "A status grid (Status, SKU, Name from the page title), then cards like a Shopify product form: Pricing & stock open (Regular, Sale, SKU, Stock status and the feed channels, one Save), and Variants, Shipping and Identifiers as Block Kit accordions, collapsed until opened. A product is simple until it has an option: its Variants card is collapsed and asks for an Option name and comma-separated Option values; Add options makes it variable with the product itself as the first variant and a new variant per value, whose SKU is the product's SKU plus the value's id and whose fulfillment is the product's. A product with options opens its Variants card: one card per variant with Regular, Sale, SKU and Stock status and its own Save, then Edit options (labels and each variant's fulfillment), Add another option (up to three) and Add a variant (up to fifty). After a save or a refusal the card it concerned is the open one. The SKU is editable in the panel for the product and each variant, changed before the price so a SKU another product has is refused before anything is saved. The words are options, values and variants, as on Shopify and in UCP: 'choice' and 'version' leave merchant-facing copy, docs and refusal messages; the catalog API's op is option and the CLI's command add-option with --variant, with no aliases. No product type field, state or route is added; opening a card is client-side.",
           "from": "proposed",
           "implementation_ref": null,
@@ -15760,7 +15829,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-31T19:10:29+00:00",
+          "at": "2026-10-31T19:34:34+00:00",
           "choice": "A status grid (Status, SKU, Name from the page title), then cards like a Shopify product form: Pricing & stock open (Regular, Sale, SKU, Stock status and the feed channels, one Save), and Variants, Shipping and Identifiers as Block Kit accordions, collapsed until opened. A product is simple until it has an option: its Variants card is collapsed and asks for an Option name and comma-separated Option values; Add options makes it variable with the product itself as the first variant and a new variant per value, whose SKU is the product's SKU plus the value's id and whose fulfillment is the product's. A product with options opens its Variants card: one card per variant with Regular, Sale, SKU and Stock status and its own Save, then Edit options (labels and each variant's fulfillment), Add another option (up to three) and Add a variant (up to fifty). After a save or a refusal the card it concerned is the open one. The SKU is editable in the panel for the product and each variant, changed before the price so a SKU another product has is refused before anything is saved. The words are options, values and variants, as on Shopify and in UCP: 'choice' and 'version' leave merchant-facing copy, docs and refusal messages; the catalog API's op is option and the CLI's command add-option with --variant, with no aliases. No product type field, state or route is added; opening a card is client-side.",
           "from": "locked",
           "implementation_ref": null,
@@ -15786,7 +15855,7 @@
       "review_source_identity": null,
       "status": "implemented",
       "superseded_by": null,
-      "updated_at": "2026-10-31T19:10:29+00:00",
+      "updated_at": "2026-10-31T19:34:34+00:00",
       "verification_ref": null
     },
     {
@@ -15796,7 +15865,7 @@
       ],
       "choice": "The panel opens straight onto the price form: Regular, Sale, an optional SKU (made from the title if blank), Stock status with In stock preselected, a Physical switch and, for a physical product, Weight (oz), with one Save. Save creates the Draft named from the page title, claims the page, and writes the price, stock status, fulfillment and weight, through createProductForPage, the one kernel function the panel, the catalog API's create (which takes fulfillment, regular, sale, stockStatus and weightOz and answers with created and the price form) and the CLI's products create (--regular, --sale, --stock-status, --digital, --weight-oz) all call. The create command is kept so a retry resumes the same product; a weight is checked before anything is written; a price Commerce refuses leaves the Draft made and linked and comes back with the reason and the typing. There is no Add price and stock button.",
       "context_ref": "dinkuskit/commerce#244",
-      "created_at": "2026-10-31T19:10:29+00:00",
+      "created_at": "2026-10-31T19:34:34+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -15807,7 +15876,7 @@
       "domain": "Checkout asks for a delivery address when the basket has a physical item",
       "history": [
         {
-          "at": "2026-10-31T19:10:29+00:00",
+          "at": "2026-10-31T19:34:34+00:00",
           "choice": "The panel opens straight onto the price form: Regular, Sale, an optional SKU (made from the title if blank), Stock status with In stock preselected, a Physical switch and, for a physical product, Weight (oz), with one Save. Save creates the Draft named from the page title, claims the page, and writes the price, stock status, fulfillment and weight, through createProductForPage, the one kernel function the panel, the catalog API's create (which takes fulfillment, regular, sale, stockStatus and weightOz and answers with created and the price form) and the CLI's products create (--regular, --sale, --stock-status, --digital, --weight-oz) all call. The create command is kept so a retry resumes the same product; a weight is checked before anything is written; a price Commerce refuses leaves the Draft made and linked and comes back with the reason and the typing. There is no Add price and stock button.",
           "from": "proposed",
           "implementation_ref": null,
@@ -15821,7 +15890,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-10-31T19:10:29+00:00",
+          "at": "2026-10-31T19:34:34+00:00",
           "choice": "The panel opens straight onto the price form: Regular, Sale, an optional SKU (made from the title if blank), Stock status with In stock preselected, a Physical switch and, for a physical product, Weight (oz), with one Save. Save creates the Draft named from the page title, claims the page, and writes the price, stock status, fulfillment and weight, through createProductForPage, the one kernel function the panel, the catalog API's create (which takes fulfillment, regular, sale, stockStatus and weightOz and answers with created and the price form) and the CLI's products create (--regular, --sale, --stock-status, --digital, --weight-oz) all call. The create command is kept so a retry resumes the same product; a weight is checked before anything is written; a price Commerce refuses leaves the Draft made and linked and comes back with the reason and the typing. There is no Add price and stock button.",
           "from": "locked",
           "implementation_ref": null,
@@ -15847,7 +15916,7 @@
       "review_source_identity": null,
       "status": "implemented",
       "superseded_by": null,
-      "updated_at": "2026-10-31T19:10:29+00:00",
+      "updated_at": "2026-10-31T19:34:34+00:00",
       "verification_ref": null
     }
   ],
@@ -15885,5 +15954,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T19:10:29+00:00"
+  "updated_at": "2026-10-31T19:34:34+00:00"
 }

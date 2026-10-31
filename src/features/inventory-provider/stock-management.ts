@@ -1,3 +1,4 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import type {
   InventorySkuIdentity,
   ManagedSkuRegistration,
@@ -42,6 +43,9 @@ function rejection(value: unknown): ManagedSkuRegistrationRejection | null {
 
 export function normalizeStoredStockManagement(value: unknown): StockManagement {
   const s = asRecord(value);
+  // The Registry build has no Inventory binding (src/shared/registry-build.ts): a managed record stays managed,
+  // and so unavailable, but nothing there reads its setup status, so the status detail is not parsed.
+  if (REGISTRY_BUILD) return s?.mode === "managed" ? { mode: "managed", status: "setup-required" } : { mode: "unmanaged" };
   if (s?.mode === "unmanaged") return { mode: "unmanaged" };
   if (s?.mode !== "managed") return { mode: "unmanaged" };
   if (s.status === "setup-required") return { mode: "managed", status: "setup-required" };

@@ -34,6 +34,15 @@ export function header(text: string): Block {
 export function note(text: string): Block {
   return { type: "context", text };
 }
+type Choice = { readonly label: string; readonly value: string };
+export const input = (action_id: string, label: string, initial_value?: string) =>
+  ({ type: "text_input" as const, action_id, label, ...(initial_value === undefined ? {} : { initial_value }) });
+export const radio = (action_id: string, label: string, options: readonly Choice[], initial_value?: string) =>
+  ({ type: "radio" as const, action_id, label, options: [...options], ...(initial_value === undefined ? {} : { initial_value }) });
+/** A form block id no earlier page load used, so a stale form never resubmits. */
+export const fresh = (prefix: string) => prefix + crypto.randomUUID();
+export const submit = (label: string, action_id: string) => ({ label, action_id });
+export const toggle = (action_id: string, label: string, initial_value: boolean) => ({ type: "toggle" as const, action_id, label, initial_value });
 export function button(label: string, action_id: string, value?: unknown) {
   return { type: "button" as const, label, action_id, ...(value === undefined ? {} : { value }) };
 }

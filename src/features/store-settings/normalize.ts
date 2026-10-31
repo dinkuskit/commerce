@@ -13,7 +13,11 @@ const COUNTRY = /^[A-Z]{2}$/;
 
 // ISO 3166-1 alpha-2, kept as a compact set rather than a large UI option list:
 // the codes run together and are read back two letters at a time.
-const ISO_COUNTRIES = new Set(`ADAEAFAGAIALAMAOAQARASATAUAWAXAZBABBBDBEBFBGBHBIBJBLBMBNBOBQBRBSBTBVBWBYBZCACCCDCFCGCHCICKCLCMCNCOCRCUCVCWCXCYCZDEDJDKDMDODZECEEEGEHERESETFIFJFKFMFOFRGAGBGDGEGFGGGHGIGLGMGNGPGQGRGSGTGUGWGYHKHMHNHRHTHUIDIEILIMINIOIQIRISITJEJMJOJPKEKGKHKIKMKNKPKRKWKYKZLALBLCLILKLRLSLTLULVLYMAMCMDMEMFMGMHMKMLMMMNMOMPMQMRMSMTMUMVMWMXMYMZNANCNENFNGNINLNONPNRNUNZOMPAPEPFPGPHPKPLPMPNPRPSPTPWPYQARERORSRURWSASBSCSDSESGSHSISJSKSLSMSNSOSRSSSTSVSXSYSZTCTDTFTGTHTJTKTLTMTNTOTRTTTVTWTZUAUGUMUSUYUZVAVCVEVGVIVNVUWFWSYEYTZAZMZW`.match(/../g));
+// ISO 3166-1 alpha-2 as a 676-bit table (26 x 26 letters, base64): a code's bit is set when it is assigned.
+// Half the bytes of the codes written out, which matters in the Registry backend.
+const ISO_BITS = Uint8Array.from(atob("eFnf7u+93d4nP4QVgNQADgBcCbCf+xUAjQYYeA9AQAMAHSv0QYFP/fz/1yVLCAABQDyPUwEAAEAAUfH95zq7n5pBEARXhUAAAkAAAAAAEAAIBEAAAQ=="), (c) => c.charCodeAt(0));
+const isoIndex = (code: string) => (code.charCodeAt(0) - 65) * 26 + code.charCodeAt(1) - 65;
+const isoCountry = (code: string) => (ISO_BITS[isoIndex(code) >> 3]! & (1 << (isoIndex(code) & 7))) !== 0;
 
 export const DEFAULT_SETTINGS: MerchantStoreSettings = Object.freeze({
   recordKind: MERCHANT_STORE_SETTINGS_RECORD_KIND,
@@ -34,7 +38,7 @@ function storageInvalid(message: string, cause?: unknown): never {
 function country(value: unknown, field: string): CountryCode {
   if (typeof value !== "string") invalid(`${field} must be an ISO 3166-1 alpha-2 country code`);
   const normalized = value.trim().toUpperCase();
-  if (!COUNTRY.test(normalized) || !ISO_COUNTRIES.has(normalized)) invalid(`${field} is not a recognized country code`);
+  if (!COUNTRY.test(normalized) || !isoCountry(normalized)) invalid(`${field} is not a recognized country code`);
   return normalized;
 }
 
@@ -118,5 +122,5 @@ export function normalizeSettingsInput(
 }
 
 export function countryCodes(): readonly string[] {
-  return [...ISO_COUNTRIES].sort();
+  return Array.from({ length: 676 }, (_, i) => String.fromCharCode(65 + Math.floor(i / 26), 65 + i % 26)).filter(isoCountry);
 }

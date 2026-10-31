@@ -13,7 +13,8 @@ import {
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage,
 } from "../features/catalog/kernel/index.js";
 import { loadProductFeedEligibility, type ProductFeedChannel, type ProductFeedEligibilityRecord } from "../features/feeds/kernel/index.js";
-import { alert, button, failed, header, message, note, object, refused, text } from "./common.js";
+import { alert, button, failed, fresh, header, input, message, note, object, radio, refused, submit, text, toggle } from "./common.js";
+import { REGISTRY_BUILD } from "../shared/registry-build.js";
 import { library, preview, target } from "./media.js";
 
 const STOCK_OPTIONS = [
@@ -45,7 +46,8 @@ type ProductFields = {
 };
 type Form = Extract<Block, { type: "form" }>;
 function manageStockNotice(managed: boolean | null): Block {
-  return note("Manage stock — Coming soon" + (managed ? ". This product stays managed." : ""));
+  // The Registry build never manages a product (registry-headroom-20261031), so it has the one text.
+  return note("Manage stock — Coming soon" + (!REGISTRY_BUILD && managed ? ". This product stays managed." : ""));
 }
 const FEEDS = [["google-merchant", "Google Merchant"], ["meta-catalog", "Meta catalog"]] as const;
 /** A card the owner opens with a press, as on Shopify's product form; everything inside is an ordinary block (catalog-panel-cards-20261031). */
@@ -54,15 +56,14 @@ const card = (label: string, blocks: Block[], open = false): Block => ({ type: "
 const forms = (blocks: Block[]): Form[] => blocks.flatMap(b => b.type === "form" ? [b] : b.type === "accordion" ? forms(b.blocks) : []);
 /** Regular, Sale, SKU, stock status and the feed channels save together in one press (feeds-facts-consistency-060). */
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
-  return { type: "form", block_id: "p" + crypto.randomUUID(), fields: [
-      { type: "text_input", action_id: "regular", label: "Regular", initial_value: values.regular },
-      { type: "text_input", action_id: "sale", label: "Sale", initial_value: values.sale },
-      ...(values.sku === undefined ? [] : [{ type: "text_input" as const, action_id: "sku", label: "SKU", initial_value: values.sku }]),
-      ...(values.manageStock === false ? [{ type: "radio" as const, action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS,
-        initial_value: values.stockStatus ?? undefined }] : []),
+  return { type: "form", block_id: fresh("p"), fields: [
+      input("regular", "Regular", values.regular),
+      input("sale", "Sale", values.sale),
+      ...(values.sku === undefined ? [] : [input("sku", "SKU", values.sku)]),
+      ...(values.manageStock === false ? [radio("stockStatus", "Stock status", STOCK_OPTIONS, values.stockStatus ?? undefined)] : []),
       ...(values.feedChannels === undefined ? [] : FEEDS.map(([channel, label]) =>
-        ({ type: "toggle" as const, action_id: "feed:" + channel, label, initial_value: values.feedChannels!.includes(channel) }))),
-    ], submit: { label: "Save", action_id: action } };
+        toggle("feed:" + channel, label, values.feedChannels!.includes(channel)))),
+    ], submit: submit("Save", action) };
 }
 const IDENTIFIERS = [["gtin", "GTIN"], ["mpn", "MPN"], ["brand", "Brand"]] as const;
 const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
@@ -81,9 +82,9 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
     ? selected.variantProduct.members.map(m => [m, "Weight (oz): " + label(m)] as const)
     : [[selected, "Weight (oz)"] as const];
   const fields = items.filter(([item]) => item.fulfillment === "physical").map(([item, l]) =>
-    ({ type: "text_input" as const, action_id: "w:" + item.catalogItemId, label: l, initial_value: item.weightOz === undefined ? "" : String(item.weightOz) }));
-  return fields.length ? [card("Shipping", [{ type: "form", block_id: "w" + crypto.randomUUID(), fields,
-    submit: { label: "Save weight", action_id: "weight:" + JSON.stringify([selected.catalogItemId, selected.revision]) } }], open)] : [];
+    input("w:" + item.catalogItemId, l, item.weightOz === undefined ? "" : String(item.weightOz)));
+  return fields.length ? [card("Shipping", [{ type: "form", block_id: fresh("w"), fields,
+    submit: submit("Save weight", "weight:" + JSON.stringify([selected.catalogItemId, selected.revision])) }], open)] : [];
 }
 /**
  * The Variants card. A product is simple until it has an option (product-variant-model-20261008): the card stays
@@ -95,9 +96,9 @@ function variantsCard(id: string, selected: CatalogProductListItem, focus?: stri
   if (!variant?.options.length) return card("Variants · none", [
     note("The product is the first variant."),
     { type: "form", block_id: "a" + id, fields: [
-      { type: "text_input", action_id: "optionLabel", label: "Option name", initial_value: "Size" },
+      input("optionLabel", "Option name", "Size"),
       { type: "text_input", action_id: "values", label: "Option values", placeholder: "Small, Large" },
-    ], submit: { label: "Add options", action_id: "variant:" + JSON.stringify(["add", id, crypto.randomUUID()]) } },
+    ], submit: submit("Add options", "variant:" + JSON.stringify(["add", id, crypto.randomUUID()])) },
   ], focus === "add");
   return card("Variants · " + variant.members.length, [
     // The variant just saved or refused stays open; otherwise the first one is.
@@ -105,23 +106,23 @@ function variantsCard(id: string, selected: CatalogProductListItem, focus?: stri
       manageStockNotice(m.manageStock),
       productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" }, "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision, m.sku])),
     ], focus === m.catalogItemId || !i && !variant.members.some(x => x.catalogItemId === focus))),
-    card("Edit options", [{ type: "form", block_id: "d" + crypto.randomUUID(), fields: [
+    card("Edit options", [{ type: "form", block_id: fresh("d"), fields: [
       ...variant.options.flatMap((o, i) => [
-        { type: "text_input" as const, action_id: i ? "option:" + o.optionId : "optionLabel", label: "Option: " + o.label, initial_value: o.label },
-        ...o.values.map(v => ({ type: "text_input" as const, action_id: "label:" + JSON.stringify([o.optionId, v.valueId]), label: "Value: " + v.label, initial_value: v.label })),
+        input(i ? "option:" + o.optionId : "optionLabel", "Option: " + o.label, o.label),
+        ...o.values.map(v => input("label:" + JSON.stringify([o.optionId, v.valueId]), "Value: " + v.label, v.label)),
       ]),
-      ...variant.members.map(m => ({ type: "radio" as const, action_id: "fulfillment:" + m.catalogItemId, label: label(m) + " fulfillment", options: FULFILLMENT, initial_value: m.fulfillment })),
-    ], submit: { label: "Save options", action_id: "variant:" + JSON.stringify(["details", id, variant.revision]) } }], focus === "details"),
-    ...(variant.options.length < 3 ? [card("Add another option", [{ type: "form" as const, block_id: "o" + crypto.randomUUID(), fields: [
-      { type: "text_input" as const, action_id: "optionLabel", label: "Option name", initial_value: ["Color", "Material"][variant.options.length - 1] },
-      { type: "text_input" as const, action_id: "values", label: "Option values" },
-      ...variant.members.map(m => ({ type: "text_input" as const, action_id: "member:" + m.catalogItemId, label: "Value for " + label(m) })),
-    ], submit: { label: "Add option", action_id: "variant:" + JSON.stringify(["option", id, variant.revision]) } }], focus === "option")] : []),
-    ...(variant.members.length < 50 ? [card("Add a variant", [{ type: "form" as const, block_id: "m" + crypto.randomUUID(), fields: [
-      ...variant.options.map(o => ({ type: "text_input" as const, action_id: "value:" + o.optionId, label: o.label })),
-      { type: "text_input" as const, action_id: "sku", label: "SKU" },
-      { type: "radio" as const, action_id: "fulfillment", label: "Fulfillment", options: FULFILLMENT, initial_value: selected.fulfillment },
-    ], submit: { label: "Add variant", action_id: "variant:" + JSON.stringify(["member", id, variant.revision, crypto.randomUUID()]) } }], focus === "member")] : []),
+      ...variant.members.map(m => radio("fulfillment:" + m.catalogItemId, label(m) + " fulfillment", FULFILLMENT, m.fulfillment)),
+    ], submit: submit("Save options", "variant:" + JSON.stringify(["details", id, variant.revision])) }], focus === "details"),
+    ...(variant.options.length < 3 ? [card("Add another option", [{ type: "form" as const, block_id: fresh("o"), fields: [
+      input("optionLabel", "Option name", ["Color", "Material"][variant.options.length - 1]),
+      input("values", "Option values"),
+      ...variant.members.map(m => input("member:" + m.catalogItemId, "Value for " + label(m))),
+    ], submit: submit("Add option", "variant:" + JSON.stringify(["option", id, variant.revision])) }], focus === "option")] : []),
+    ...(variant.members.length < 50 ? [card("Add a variant", [{ type: "form" as const, block_id: fresh("m"), fields: [
+      ...variant.options.map(o => input("value:" + o.optionId, o.label)),
+      input("sku", "SKU"),
+      radio("fulfillment", "Fulfillment", FULFILLMENT, selected.fulfillment),
+    ], submit: submit("Add variant", "variant:" + JSON.stringify(["member", id, variant.revision, crypto.randomUUID()])) }], focus === "member")] : []),
   ], true);
 }
 /** The Product image & gallery panel (catalog-media-panel-20261027): Commerce's picture and gallery for this product. */
@@ -166,9 +167,9 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
     variantsCard(id, selected, focus),
     ...shippingCard(selected, focus === "weight"),
     // Barcode and brand for shopping feeds and the product page's structured data; empty clears one.
-    card("Identifiers", [{ type: "form", block_id: "i" + crypto.randomUUID(), fields: IDENTIFIERS.map(([key, l]) =>
-        ({ type: "text_input" as const, action_id: key, label: l, initial_value: selected[key] ?? "" })),
-        submit: { label: "Save identifiers", action_id: "ids:" + id } }], focus === "ids"),
+    card("Identifiers", [{ type: "form", block_id: fresh("i"), fields: IDENTIFIERS.map(([key, l]) =>
+        input(key, l, selected[key] ?? "")),
+        submit: submit("Save identifiers", "ids:" + id) }], focus === "ids"),
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
       : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
         text: "Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
@@ -220,14 +221,14 @@ function unlinked(values: Record<string, unknown> = {}, command: string = crypto
   const v = (key: string, fallback = "") => typeof values[key] === "string" ? values[key] as string : fallback;
   return { blocks: [
     note("Save makes the product as a Draft."),
-    { type: "form", block_id: "s" + crypto.randomUUID(), fields: [
-      { type: "text_input", action_id: "regular", label: "Regular", initial_value: v("regular") },
-      { type: "text_input", action_id: "sale", label: "Sale", initial_value: v("sale") },
-      { type: "text_input", action_id: "sku", label: "SKU", initial_value: v("sku") },
-      { type: "radio", action_id: "stockStatus", label: "Stock status", options: STOCK_OPTIONS, initial_value: v("stockStatus", "in-stock") },
-      { type: "toggle", action_id: "physical", label: "Physical", initial_value: values.physical !== false },
+    { type: "form", block_id: fresh("s"), fields: [
+      input("regular", "Regular", v("regular")),
+      input("sale", "Sale", v("sale")),
+      input("sku", "SKU", v("sku")),
+      radio("stockStatus", "Stock status", STOCK_OPTIONS, v("stockStatus", "in-stock")),
+      toggle("physical", "Physical", values.physical !== false),
       { type: "text_input", action_id: "weightOz", label: "Weight (oz)", initial_value: v("weightOz"), condition: { field: "physical", eq: true } },
-    ], submit: { label: "Save", action_id: "sell:" + command } },
+    ], submit: submit("Save", "sell:" + command) },
   ] };
 }
 /** A SKU from the page title, made unique with a tail from its create command so a retry asks for the same SKU. */
