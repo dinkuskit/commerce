@@ -38,8 +38,8 @@ native entry. Both builds serve the same Block Kit admin (no React admin
 screens; `commerce-admin-block-kit-only-20261024`) and the same routes: the
 product panels, the private `catalog` route, the store's publish check, the
 public catalog reads, checkout and shopper accounts; only the Registry build
-registers `store-proof`, `orders`, `checkout/guest/readiness` and
-`policies/public`. Commerce runs one build everywhere
+registers `store-proof`, `orders` and `checkout/guest/readiness`. Commerce
+runs one build everywhere
 (`commerce-one-build-registry-20261031`, Ronald, 31 Oct 2026): the Template
 Store's local dev, demo and browser tests mount the Registry build, and the
 native entry's 24 extra routes (`catalog-items/*` writes and lists,
@@ -63,10 +63,6 @@ Native-only gaps:
 - Host-wired checkout: the playground wires checkout through the native entry's
   host options. Registry installs use the installed checkout services instead,
   and the playground moves to them with its switch to the Registry build.
-- Store policies: the native `settings/shipping-policy` and
-  `settings/return-policy` writes went with the native-only routes and the
-  Registry build never had a write, so `policies/public` answers unset until
-  Commerce decides how a store sets its policies.
 
 ## Status
 

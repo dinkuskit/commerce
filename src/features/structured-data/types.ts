@@ -43,47 +43,9 @@ export interface StructuredPageFacts {
   readonly images?: readonly string[];
 }
 
-export interface StructuredDayBounds {
-  readonly min: number;
-  readonly max: number;
-}
-
-export interface StructuredShippingPolicy {
-  readonly revision: number;
-  readonly configurationId: string;
-  readonly mode: "free" | "flat";
-  readonly amount?: StructuredMoney;
-  readonly shippingDestinationCountries?: readonly string[];
-  readonly handlingTimeDays?: StructuredDayBounds;
-  readonly transitTimeDays?: StructuredDayBounds;
-  readonly policyPageUrl?: string;
-}
-
-export interface StructuredReturnPolicy {
-  readonly revision: number;
-  readonly applicableCountry?: readonly string[];
-  readonly returnPolicyCategory?:
-    | "MerchantReturnFiniteReturnWindow"
-    | "MerchantReturnNotPermitted"
-    | "MerchantReturnUnlimitedWindow";
-  readonly merchantReturnDays?: number;
-  readonly returnMethod?: "ReturnByMail" | "ReturnInStore" | "ReturnAtKiosk";
-  readonly returnFees?:
-    | "FreeReturn"
-    | "ReturnFeesCustomerResponsibility"
-    | "ReturnShippingFees";
-  readonly policyPageUrl?: string;
-}
-
-export interface StructuredPoliciesInput {
-  readonly shipping?: StructuredShippingPolicy | null;
-  readonly returns?: StructuredReturnPolicy | null;
-}
-
 export interface BuildProductJsonLdInput {
   readonly product: StructuredProductInput;
   readonly page: StructuredPageFacts;
-  readonly policies?: StructuredPoliciesInput;
 }
 
 /** Page facts for an editorial product preview with no Commerce identity. */

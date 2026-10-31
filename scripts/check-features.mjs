@@ -30,7 +30,6 @@ const requiredFiles = [
   "src/features/coupons/index.ts",
   "src/features/orders/index.ts",
   "docs/contracts/commerce-handoffs.md",
-  "src/features/store-policies/index.ts",
   "src/features/structured-data/index.ts",
   "docs/implementation/product-jsonld-policies.md",
   "docs/implementation/guest-checkout-public.md",
@@ -102,7 +101,6 @@ export const STORAGE_OWNERS = {
   storefront_out_of_stock_listing: "storefront-availability",
   storefront_placeholder_image: "storefront-availability",
   checkout_carts: "checkout", checkout_guest_capabilities: "checkout", checkout_payment_associations: "checkout",
-  store_shipping_policy: "store-policies", store_return_policy: "store-policies",
   orders: "orders", order_numbers: "orders",
   customers: "customers", customer_login_codes: "customers", customer_sessions: "customers",
 };
@@ -146,7 +144,6 @@ export async function auditFeatures(repositoryRoot = root) {
     "`dinkus.checkout`",
     "`dinkus.orders`",
     "`dinkus.customers`",
-    "`dinkus.store-policies`",
     "`dinkus.structured-data`",
     "`src/features/catalog/`",
     "`src/features/inventory-provider/`",
@@ -156,7 +153,6 @@ export async function auditFeatures(repositoryRoot = root) {
     "`src/features/orders/`",
     "`src/features/customers/`",
     "`src/features/coupons/`",
-    "`src/features/store-policies/`",
     "`src/features/structured-data/`",
     "`bin/verify-commerce quick`",
     "`bin/verify-commerce full`",
@@ -205,13 +201,10 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/coupons must resolve to the coupons public entry",
     );
   }
-  if (
-    manifest.exports?.["./features/store-policies"]?.default !==
-    "./dist/features/store-policies/index.js"
-  ) {
-    findings.push(
-      "package export ./features/store-policies must resolve to the store-policies public entry",
-    );
+  // A store's policies are its EmDash pages; Commerce keeps no policy records
+  // (GrillTrack policy-pages-are-content-20261031).
+  if (manifest.exports?.["./features/store-policies"] !== undefined) {
+    findings.push("package export ./features/store-policies is retired: Commerce keeps no policy records");
   }
   if (
     manifest.exports?.["./features/structured-data"]?.default !==

@@ -61,31 +61,18 @@ test('offer price converts integer minor units exactly and prefers sale customer
   assert.equal(sale.offers.priceCurrency, 'USD');
 });
 
-test('shippingDetails and hasMerchantReturnPolicy are omitted when unconfigured', () => {
+test('the Offer carries no shipping or return terms: a store\'s policies are its EmDash pages', () => {
   const bare = buildProductJsonLd({ product: product(), page });
   assertProductJsonLdShape(bare);
   assert.equal('shippingDetails' in bare.offers, false);
   assert.equal('hasMerchantReturnPolicy' in bare.offers, false);
-
-  const withChargeOnly = buildProductJsonLd({
-    product: product(),
-    page,
-    policies: {
-      shipping: {
-        revision: 1,
-        configurationId: 'ship-1',
-        mode: 'free',
-      },
-    },
-  });
-  assert.deepEqual(withChargeOnly.offers.shippingDetails.shippingRate, {
-    '@type': 'MonetaryAmount',
-    value: '0.00',
-    currency: 'USD',
-  });
-  assert.equal('shippingDestination' in withChargeOnly.offers.shippingDetails, false);
-  assert.equal('deliveryTime' in withChargeOnly.offers.shippingDetails, false);
-  assert.equal('hasMerchantReturnPolicy' in withChargeOnly.offers, false);
+  // Policy input from an older host is ignored, and the shape check refuses terms on an Offer.
+  const legacy = buildProductJsonLd({ product: product(), page, policies: { shipping: { revision: 1, configurationId: 'ship-1', mode: 'free' } } });
+  assert.deepEqual(legacy, bare);
+  assert.throws(
+    () => assertProductJsonLdShape({ ...bare, offers: { ...bare.offers, shippingDetails: { '@type': 'OfferShippingDetails' } } }),
+    /must not carry shipping or return terms/,
+  );
 });
 
 test('optional identifiers emit only when present; itemId keys the product, sku is merchant attribute', () => {
@@ -108,34 +95,10 @@ test('output validates against schema.org types without network or storage', () 
   const jsonLd = buildProductJsonLd({
     product: product({ gtin: '036000291452', brand: 'Example' }),
     page,
-    policies: {
-      shipping: {
-        revision: 2,
-        configurationId: 'ship-2',
-        mode: 'flat',
-        amount: { currency: 'USD', minor: '500' },
-        shippingDestinationCountries: ['US'],
-        handlingTimeDays: { min: 0, max: 1 },
-        transitTimeDays: { min: 2, max: 5 },
-      },
-      returns: {
-        revision: 3,
-        applicableCountry: ['US'],
-        returnPolicyCategory: 'MerchantReturnFiniteReturnWindow',
-        merchantReturnDays: 30,
-        returnMethod: 'ReturnByMail',
-        returnFees: 'FreeReturn',
-        policyPageUrl: 'https://shop.example.test/returns',
-      },
-    },
   });
   assertProductJsonLdShape(jsonLd);
-  assert.equal(jsonLd.offers.shippingDetails['@type'], 'OfferShippingDetails');
-  assert.equal(jsonLd.offers.hasMerchantReturnPolicy['@type'], 'MerchantReturnPolicy');
-  assert.equal(
-    jsonLd.offers.hasMerchantReturnPolicy.returnPolicyCategory,
-    'https://schema.org/MerchantReturnFiniteReturnWindow',
-  );
+  assert.equal(jsonLd.offers['@type'], 'Offer');
+  assert.deepEqual(jsonLd.brand, { '@type': 'Brand', name: 'Example' });
 });
 
 test('builder is pure: no fetch and no storage globals required', () => {

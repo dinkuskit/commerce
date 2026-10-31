@@ -32,10 +32,6 @@ import {
   SHOPPER_SIGN_IN_VERIFY_ROUTE,
   SHOPPER_SIGN_OUT_ROUTE,
 } from "./features/customers/kernel/index.js";
-import {
-  PUBLIC_STORE_POLICIES_ROUTE,
-  readSandboxPublicStorePolicies,
-} from "./features/store-policies/kernel/index.js";
 
 const guestRequest = {
   body: "json" as const,
@@ -103,7 +99,6 @@ const plugin: SandboxedPlugin = {
       const page = new URL(route.request.url).searchParams.has("pageId");
       return readPublicCatalogItem(ctx, queryValue(route.request.url, page ? "pageId" : "itemId", "Invalid catalog item query", true)!, page);
     }),
-    [PUBLIC_STORE_POLICIES_ROUTE]: publicRead(async (_route, ctx) => readSandboxPublicStorePolicies(ctx)),
     // DinkusKit.com reads a waiting Connect's receipt here, on the store's own web address.
     "store-proof": { public: true, methods: ["GET"], response: "raw", request: { body: "none" }, handler: (route, ctx) => storeProof(route.input, ctx) },
     admin: privatePost("content:edit_any", commerceAdmin),

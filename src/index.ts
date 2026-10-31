@@ -20,10 +20,6 @@ import {
   readPublicCatalogItem,
 } from "./features/catalog/storefront/index.js";
 import {
-  STORE_RETURN_POLICY_COLLECTION,
-  STORE_SHIPPING_POLICY_COLLECTION,
-} from "./features/store-policies/index.js";
-import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
   MANAGED_SKU_REGISTRATION_CLAIM_UNIQUE_INDEXES,
 } from "./features/inventory-provider/index.js";
@@ -82,8 +78,6 @@ export * from "./features/storefront-availability/index.js";
 
 import { MERCHANT_STORE_SETTINGS_ROUTE } from "./features/store-settings/index.js";
 export * from "./features/store-settings/index.js";
-
-export * from "./features/store-policies/index.js";
 
 export * from "./features/structured-data/index.js";
 
@@ -333,14 +327,6 @@ export function createPlugin(options: CommercePluginOptions = {}): ResolvedPlugi
       [COUPONS_COLLECTION]: {
         indexes: ["normalizedCode"],
         uniqueIndexes: ["normalizedCode"],
-      },
-      [STORE_SHIPPING_POLICY_COLLECTION]: {
-        indexes: [],
-        uniqueIndexes: [],
-      },
-      [STORE_RETURN_POLICY_COLLECTION]: {
-        indexes: [],
-        uniqueIndexes: [],
       },
       [NATIVE_CUSTOMERS_COLLECTION]: {
         indexes: [],

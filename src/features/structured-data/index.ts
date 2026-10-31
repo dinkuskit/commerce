@@ -18,8 +18,5 @@ export type {
   StructuredAvailabilityStatus,
   StructuredMoney,
   StructuredPageFacts,
-  StructuredPoliciesInput,
   StructuredProductInput,
-  StructuredReturnPolicy,
-  StructuredShippingPolicy,
 } from "./types.js";
