@@ -2,7 +2,8 @@
 
 Locks: `catalog-one-product-screen-20261023`, `catalog-products-page-removed-20261023`,
 `catalog-product-states-20261023`, `admin-sidebar-plugin-folders-20261023`,
-`catalog-page-link-in-commerce-20261029`.
+`catalog-page-link-in-commerce-20261029`, `catalog-product-needs-page-20261031`,
+`catalog-panel-cards-20261031`, `catalog-first-save-creates-20261031`.
 
 ## Product page panel (Registry build)
 
@@ -16,32 +17,52 @@ no Commerce product field, so there is nothing on the page to type into or
 save. Commerce 0.6.0 also asked for `admin.editor-draft:patch` to fill such a
 field; this build no longer does.
 
-- A page with no product shows "Add price and stock" with an optional SKU.
-  Every product is made for its page (`catalog-product-needs-page-20261031`),
-  so there is no list of products without a page to pick from: the catalog
-  API's `create` requires the page's `entryId` and refuses a page that already
-  sells a product, and the CLI's `products create` finds or makes the page
-  first.
-- Add price and stock creates a physical product named from the page title.
-  The SKU is the one typed, or one made from the title. The product starts as
-  a Draft (`offSale: true`) in its first write, so a stop before linking never
-  leaves it on the shop, and a retry finds that same Draft. The panel links the page in `product_pages`;
-  nothing waits on the page's Save.
-- A linked page shows the product's name, its state (Draft, On sale or
-  Archived) and SKU, then the editor that used to live on the Products page:
-  price and sale, stock status, choices, weight and Archive or Restore. It
-  has no Name field: the page title is the product's one name
-  (`catalog-page-title-is-name-20261026`), set when the page is published.
+- A page with no product opens on its price form: Regular, Sale, an optional
+  SKU, Stock status (In stock preselected), a "Physical product" switch and,
+  for a physical product, Weight (oz), with one Save
+  (`catalog-first-save-creates-20261031`). Every product is made for its page
+  (`catalog-product-needs-page-20261031`), so there is no list of products
+  without a page to pick from: the catalog API's `create` requires the page's
+  `entryId` and refuses a page that already sells a product, and the CLI's
+  `products create` finds or makes the page first.
+- That Save calls `createProductForPage`, the one kernel function the panel,
+  the catalog API's `create` and the CLI all use: it checks the weight first,
+  makes the product named from the page title (the SKU typed, or one made from
+  the title), claims the page in `product_pages`, then saves the price and
+  stock status and the weight. The product starts as a Draft (`offSale: true`)
+  in its first write, so a stop before linking never leaves it on the shop,
+  and a retry with the same create command finds that same Draft and saves the
+  price again. A price Commerce refuses (a typo, or Sale above Regular) leaves
+  the Draft made and linked and comes back with the reason and the typing in
+  the Pricing & stock form, so the owner fixes it there. Nothing waits on the
+  page's Save.
+- A linked page shows a status grid (Status, SKU and Name, which comes from the
+  page title, `catalog-page-title-is-name-20261026`), then cards drawn as Block
+  Kit accordions, like a Shopify product form (`catalog-panel-cards-20261031`):
+  **Pricing & stock** open (Regular, Sale, SKU, Stock status and the feed
+  channels, one Save; a changed SKU is saved first, so one another product has
+  is refused before anything changes), then **Variants**, **Shipping** (weights
+  of the physical items) and **Identifiers** (GTIN, MPN, Brand) collapsed, and
+  Archive or Restore. Opening a card is client-side: no state, field or route.
 - A product with no Regular price says "Add a Regular price to sell it" under
-  its state line, and a published page's unpriced product reads "Published:
+  its status, and a published page's unpriced product reads "Published:
   off the shop", never On sale. A Save that leaves Regular empty answers with
   the same words as an info notice instead of "Product saved"
-  (`catalog-unpriced-product-warning-20261027`). A choice product is unpriced
-  when none of its choices has a Regular price.
-- A product with no choices says "Simple product. Add a choice, like Size, to
-  sell it in more than one version." right above Add choices
-  (`catalog-simple-product-label-20261027`). The first choice makes it
-  variable, with the product itself as the first member.
+  (`catalog-unpriced-product-warning-20261027`). A product with options is
+  unpriced when none of its variants has a Regular price.
+- A product is simple until it has an option (`product-variant-model-20261008`).
+  Its Variants card is collapsed, labelled "Variants · simple product", and
+  asks for an Option name (Size) and comma-separated Option values; Add options
+  makes the product variable with the product itself as the first variant and a
+  new variant for each other value, named from the product, with the product's
+  SKU plus the value as its SKU and the product's fulfillment. A product with
+  options opens its Variants card: one card per variant (the first open) with
+  Regular, Sale, SKU and Stock status and its own Save, then Edit options
+  (labels and each variant's fulfillment), Add another option (up to three,
+  comma-separated values plus which value each existing variant has) and Add a
+  variant (up to fifty). The words are options, values and variants, as on
+  Shopify and in UCP; "choice" and "version" are gone from merchant-facing copy,
+  the catalog API's op is `option` and the CLI's command `add-option`.
 - Pictures have their own panel, "Product image & gallery"
   (`product-media-panel`, `catalog-media-panel-20261027`). It opens from the
   page's `product_pages` link and needs no draft access; picks, reorders and
@@ -56,14 +77,14 @@ field; this build no longer does.
   and a made-up SKU takes its tail from that command. A retry after a partial
   failure resumes the product the first try made instead of making another.
 - The bulk "Apply same price" form is not in the panel, to stay under the
-  Registry's 128 KiB backend limit. Each choice keeps its own Save.
+  Registry's 128 KiB backend limit. Each variant keeps its own Save.
 - A refused Add price and stock keeps the typed SKU and its buttons.
 
 ## Catalog API (catalog-api-20261027)
 
 The private `catalog` route (`content:edit_any`, POST) lets any agent or tool
 with an EmDash API token do what the product page panels do, one `op` per
-request: list, get, create, link, prices, choice, labels, sku, weight,
+request: list, get, create, prices, option, labels, sku, weight,
 identifiers, archive, media and feeds. It calls the same catalog functions as the panels, so
 it has their checks and answers. `create` makes a physical Draft and only takes
 `commandId`, `name` and `sku`; Manage stock stays off. `create` with `entryId` and `link`

@@ -26,6 +26,8 @@ export interface CreateCatalogItemOptions {
   now?: () => Date;
   /** The product is written off the shop (a Draft) in its first write. */
   offSale?: true;
+  /** This invocation already proved the unique indexes, so one request making several variants proves them once. */
+  proven?: boolean;
   /** Internal member linkage must be durable before a parent commits membership. */
   variantMember?: {
     productId: string;
@@ -94,7 +96,7 @@ function resolveExistingCommand(
   if (!sameCommandPayload(existing, input)) {
     throw new CatalogError(
       "COMMAND_CONFLICT",
-      "commandId already used with different catalog input",
+      "commandId used with other input",
     );
   }
   return { created: false, item: existing };
@@ -106,7 +108,7 @@ export async function createCatalogItem(
   options: CreateCatalogItemOptions = {},
 ): Promise<CreateCatalogItemResult> {
   const input = normalizeCreateCatalogItemInput(rawInput);
-  await assertCatalogStorageConstraints(storage, options.collection, options.pluginId);
+  if (!options.proven) await assertCatalogStorageConstraints(storage, options.collection, options.pluginId);
 
   const existing = await findCommand(storage, input.commandId);
   if (existing) return resolveExistingCommand(existing, input, options);

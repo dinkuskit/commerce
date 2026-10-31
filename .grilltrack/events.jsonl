@@ -672,3 +672,10 @@
 {"action": "decision_locked", "at": "2026-10-31T19:07:44+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "418df0e2-3ca7-4300-96bc-296b88bdf85a"}
 {"action": "decision_implemented", "at": "2026-10-31T19:18:11+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "ec91dcf1-b5b7-4a25-80cd-3eb805041120"}
 {"action": "decision_verified", "at": "2026-10-31T19:18:11+00:00", "data": {"decision_id": "registry-headroom-20261031"}, "event_id": "f3434269-40af-4c71-989c-fbf3bedc3d12"}
+{"action": "decision_proposed", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "b8ac3c5f-1b6e-4d62-bc80-14ddcff49105"}
+{"action": "decision_locked", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "a9bf229f-544d-48d9-b86f-828240c381fb"}
+{"action": "decision_implemented", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-panel-cards-20261031"}, "event_id": "c65197ca-476b-4409-b899-0eef84086897"}
+{"action": "decision_proposed", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "def68878-e3c8-4b5e-ad4f-0decfbc0c8a6"}
+{"action": "decision_locked", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "66d88367-bf1d-4f9f-a6c8-d96d3622022c"}
+{"action": "decision_implemented", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "3ad3f37e-ec1e-4142-9403-7f58f51115ed"}
+{"action": "decision_superseded", "at": "2026-10-31T19:34:34+00:00", "data": {"affected": [], "decision_id": "catalog-simple-product-label-20261027", "replacement_id": "catalog-panel-cards-20261031"}, "event_id": "38d72c26-716a-48d7-b190-d8ffb5285fd5"}
