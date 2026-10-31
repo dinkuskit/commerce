@@ -43,10 +43,12 @@ export async function pageProduct(pages: ProductPages, entryId: string, sold?: b
   return (rows.find(row => row.id.startsWith(sold ? "p:" : "e:")) ?? rows[0])?.data.catalogItemId;
 }
 
-/** The panel notes the product an editor picked; a product another page sells is refused. */
+/** Notes the picked product; missing products, choice IDs and products another page sells are refused. */
 export async function linkProductPage(storage: { catalog: Catalog; pages: ProductPages }, entryId: string, catalogItemId: string): Promise<void> {
-  const owner = ((await storage.catalog.getVersioned(catalogItemId))?.value as CatalogItemRecord | undefined)?.pageId;
-  if (owner && owner !== entryId) throw conflict();
+  await editProduct(storage.catalog, catalogItemId, item => {
+    if (item.pageId && item.pageId !== entryId) throw conflict();
+    return null; // Validate the product without changing it; only the page's pick is written.
+  });
   await storage.pages.put("e:" + entryId, { entryId, catalogItemId });
 }
 
