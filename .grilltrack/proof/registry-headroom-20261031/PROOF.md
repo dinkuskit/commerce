@@ -46,10 +46,13 @@ largest contributors at checkout (46.8 KB), catalog (45.5 KB), orders
 Two clean builds of this change emit the same digest; main's digest is the one
 commerce#243's own proof recorded, so #243 left the Registry backend untouched.
 
-The 2,200-byte reserve named in `us-region-registry-budget-exception-20261021`
-is back, with room to spare. For the record: store policy editing on the
-Settings page, built and measured in the same session, costs 2,828 bytes of it;
-it waits for Ronald's choice and is not in this change.
+There is no fixed reserve to restore: the only size rule is the 131,072-byte
+per-file cap. The 2,200-byte figure was the room left on 21 Oct 2026, not a
+rule (`commerce-connect-size-20261022`; Ronald, 31 Oct 2026: "We don't need a
+reserve"), and `us-region-registry-budget-exception-20261021`, the exception
+to it, is superseded. For the record: store policy editing on the Settings
+page, built and measured in the same session, costs 2,828 bytes; it waits for
+Ronald's choice and is not in this change.
 
 ## Observed
 

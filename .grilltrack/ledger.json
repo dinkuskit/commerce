@@ -14112,6 +14112,20 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
+        },
+        {
+          "at": "2026-10-31T19:55:58+00:00",
+          "choice": "For Commerce #161 US physical-delivery region validation only, allow the measured 129554-byte backend to leave at least 1518 bytes under the unchanged 131072-byte cap. This uses 682 bytes of the default 2200-byte reserve. Retain the general reserve for other work, preserve all feature/security behavior, keep Coupons and Inventory parked, and require separate merge/deploy/release authorization.",
+          "from": "needs_reverification",
+          "implementation_ref": ".grilltrack/proof/us-region-checkout-20261021/BUDGET.md",
+          "note": "The exception was to a 2,200-byte Registry reserve that is not a rule: commerce-connect-size-20261022 records the owner, 22 Oct 2026, 'no reserve is mandatory; that was just the amount left at the time', and on 31 Oct 2026: 'that's not something I requested... As it fits in the registry plugin cap, I'm okay. We don't need a reserve.' The only size rule is the 131,072-byte per-file cap.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
         }
       ],
       "id": "us-region-registry-budget-exception-20261021",
@@ -14124,9 +14138,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-22T13:25:04+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-connect-size-20261022",
+      "updated_at": "2026-10-31T19:55:58+00:00",
       "verification_ref": ".grilltrack/proof/us-region-checkout-20261021/PROOF.md"
     },
     {
@@ -15954,5 +15968,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-10-31T19:34:34+00:00"
+  "updated_at": "2026-10-31T19:55:58+00:00"
 }

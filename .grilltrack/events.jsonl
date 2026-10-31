@@ -679,3 +679,4 @@
 {"action": "decision_locked", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "66d88367-bf1d-4f9f-a6c8-d96d3622022c"}
 {"action": "decision_implemented", "at": "2026-10-31T19:34:34+00:00", "data": {"decision_id": "catalog-first-save-creates-20261031"}, "event_id": "3ad3f37e-ec1e-4142-9403-7f58f51115ed"}
 {"action": "decision_superseded", "at": "2026-10-31T19:34:34+00:00", "data": {"affected": [], "decision_id": "catalog-simple-product-label-20261027", "replacement_id": "catalog-panel-cards-20261031"}, "event_id": "38d72c26-716a-48d7-b190-d8ffb5285fd5"}
+{"action": "decision_superseded", "at": "2026-10-31T19:55:58+00:00", "data": {"affected": [], "decision_id": "us-region-registry-budget-exception-20261021", "replacement_id": "commerce-connect-size-20261022"}, "event_id": "5a773232-014e-4b62-a186-1a4ab54acd44"}
