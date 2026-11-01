@@ -4,7 +4,7 @@ set -euo pipefail
 # Public, pinned skill bootstrap.  The source repositories remain the owners
 # of these skills; this repository only installs them into the local project.
 SAARIUS_REPO="https://github.com/saariuslystoned/SaariusSkills.git"
-SAARIUS_SHA="776dc8f6db7d8b39421e8b969512e63607990c47"
+SAARIUS_SHA="9c7585f34337621d42cc508aff2e3ff317aa4e9c"
 # Keep the established bundle pin; only the research skill has a newer revision.
 EMDASH_COMMERCE_SHA="23f2bb1208b3baa7aedaa87faec00395f9bdd061"
 SKILL_NAMES=(grilltrack emdash-sites building-emdash-site creating-plugins emdash-cli upgrading-emdash emdash-ci-deploy)
