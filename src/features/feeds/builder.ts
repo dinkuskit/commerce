@@ -449,7 +449,9 @@ export function buildStorefrontAgentsMd(options: StorefrontAgentFeedOptions): st
     "     - `tax: { currency: \"USD\", minor: \"0\" }`",
     "     - `finalTotal: { currency: \"USD\", minor: \"...\" }`",
     "   - Size the virtual card to `data.checkout.pricing.finalTotal.minor` (in USD cents) and navigate to `data.checkout.redirectUrl` (when `data.checkout.state === \"pending\"` and `data.checkout.redirectUrl` is non-null; zero-total checkouts complete immediately with `data.checkout.state === \"paid\"`).",
-    `3. **Poll Status / Receipt**: \`POST ${pluginBase}/checkout/guest/status\` with header \`x-commerce-guest-capability: <token>\` and JSON body \`{}\` (or \`{ "attemptId": "<data.checkout.attemptId>" }\`) until \`data.checkout.state === "paid"\` and \`data.checkout.order\` (\`orderId\`, \`receiptId\`, \`lines\`, \`total\`, \`pricing\`) is present.`,
+    `3. **Poll Status / Receipt**: \`POST ${pluginBase}/checkout/guest/status\` with header \`x-commerce-guest-capability: <token>\` and JSON body \`{}\` (or \`{ "attemptId": "<data.checkout.attemptId>" }\`). Bound pending-status checks (at most 5 checks per attempt):`,
+    "   - When `data.checkout.state === \"paid\"`, read `data.checkout.order` (`orderId`, `receiptId`, `lines`, `total`, `pricing`).",
+    "   - When `data.checkout.state === \"released-retry\"` or `\"recoverable-failure\"`, stop polling that attempt immediately; retain the existing `x-commerce-guest-capability` token and issue a fresh `POST .../checkout/guest/start` before polling again.",
     "",
   ].join("\n");
 }
