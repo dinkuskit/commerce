@@ -45,13 +45,19 @@ const shopperSessionBodyRequest = {
   body: "json" as const,
   headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS],
 };
+// GET account/profile has no body, so the route takes text and parses a POST's JSON itself (commerce#256).
+const shopperProfileRequest = { ...shopperSessionBodyRequest, body: "text" as const };
+const profileInput = (input: unknown) => {
+  if (typeof input != "string") return input;
+  try { return input ? JSON.parse(input) : undefined; } catch { return null; }
+};
 // Checkout hands each paid order to Orders, which keeps its own copy.
 const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckoutServices,
   ctx => createPaidOrderReceiver(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, ctx.storage[ORDER_NUMBERS_COLLECTION] as OrderNumbers));
 const installedShopperAccounts = createInstalledShopperAccountHandlers(
   (ctx, emailKey) => listOrdersForEmail(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, emailKey),
 );
-function shopperRoute<T>(methods: ("GET" | "POST")[], request: { body: "json" | "none"; headers: string[] },
+function shopperRoute<T>(methods: ("GET" | "POST")[], request: { body: "json" | "none" | "text"; headers: string[] },
   handler: (route: Parameters<typeof installedShopperAccounts.orders>[0], ctx: Parameters<typeof installedShopperAccounts.orders>[1]) => Promise<T>) {
   return pluginRoute({ public: true, methods, request, cacheControl: "no-store", handler });
 }
@@ -125,7 +131,8 @@ const plugin: SandboxedPlugin = {
     [SHOPPER_SIGN_IN_VERIFY_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.verifySignIn),
     [SHOPPER_SIGN_OUT_ROUTE]: shopperRoute(["POST"], shopperSessionBodyRequest, installedShopperAccounts.signOut),
     [SHOPPER_ACCOUNT_ORDERS_ROUTE]: shopperRoute(["GET"], { body: "none", headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS] }, installedShopperAccounts.orders),
-    [SHOPPER_ACCOUNT_PROFILE_ROUTE]: shopperRoute(["GET", "POST"], shopperSessionBodyRequest, installedShopperAccounts.profile),
+    [SHOPPER_ACCOUNT_PROFILE_ROUTE]: shopperRoute(["GET", "POST"], shopperProfileRequest,
+      (route, ctx) => installedShopperAccounts.profile({ ...route, input: profileInput(route.input) }, ctx)),
   },
 };
 // Every route also registers the background check if switching on could not; after that it costs nothing.
