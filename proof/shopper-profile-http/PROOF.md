@@ -29,8 +29,13 @@ Cache-Control: private, no-store
 
 Expected: HTTP 200, `no-store`, and the same saved profile already returned by
 `GET account/orders` with that session. This reproduces an earlier failure with
-official Registry Commerce `0.8.1-beta.1` bytes mounted in a disposable SDK site;
-neither that mounting nor this development-source run is Registry installation.
+official Registry package `dinkus-commerce-beta` version `0.8.0-beta.1` mounted
+in a disposable SDK site: release record CID
+`bafyreifhyinphpjabarlkyjjxbqrg7cxvs3meq4tyeqkrqiez7pnanmbfa`, backend 129540 bytes,
+SHA-256 `e24ac8e7c7d54806b8a7cb0ec79874d08212aed9bacd1636f1d587e797d7358e`.
+The original note's `0.8.1-beta.1` was a transcription error; the manifest and
+Registry record both say `0.8.0-beta.1`. Neither mounting nor this development-source
+run is Registry installation.
 The current Template Account reader uses `account/orders.profile`, so this report
 does not claim its ordinary profile display is broken.
 
