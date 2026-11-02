@@ -54,15 +54,19 @@ test("profile HTTP reads work alongside JSON writes and transport refusals", asy
       expect(reread.body.data.profile.phone).toBeNull();
       expect(reread.body.data.profile.delivery).toBeNull();
     });
-    for (const [label, options, status, errorCode] of [
-      ["malformed JSON", { method: "POST", body: "{" }, 400, "INVALID_PLUGIN_REQUEST"],
-      ["body over the declared default 1 MiB limit", { method: "POST", body: JSON.stringify({ phone: "x".repeat(1024 * 1024) }) }, 413, "INVALID_PLUGIN_REQUEST"],
+    // The route takes text so a bodyless GET is admitted (commerce#256): the host still refuses an oversized
+    // body, and Commerce refuses malformed JSON in-band, as every Commerce Registry route refuses.
+    for (const [label, options, status, check] of [
+      ["malformed JSON", { method: "POST", body: "{" }, 200,
+        body => expect(body.data).toMatchObject({ ok: false, error: { code: "INVALID_INPUT" } })],
+      ["body over the declared default 1 MiB limit", { method: "POST", body: JSON.stringify({ phone: "x".repeat(1024 * 1024) }) }, 413,
+        body => expect(body.error.code).toBe("INVALID_PLUGIN_REQUEST")],
     ]) {
       await test.step(`${label} is refused before mutation`, async () => {
         const before = snapshot();
         const result = await invoke(options);
         expect(result.status).toBe(status);
-        expect(result.body.error.code).toBe(errorCode);
+        check(result.body);
         expect(snapshot()).toEqual(before);
       });
     }
