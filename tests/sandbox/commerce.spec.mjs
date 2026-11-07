@@ -37,7 +37,15 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     return body.data;
   };
   try {
+    const indexBefore = database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey");
+    // Drive EmDash's genuine maintenance once instead of waiting for its first timer tick.
+    const maintenance = await request.post("/__proof/maintenance");
+    expect(maintenance.status()).toBe(200);
+    expect((await maintenance.json()).published).toEqual([]);
     await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey"), { timeout: 90000 }).toBeTruthy();
+    const indexAfter = database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey");
+    expect(indexAfter).toBeTruthy();
+    console.log("fixture_schema_index=" + JSON.stringify({ before: Boolean(indexBefore), after: Boolean(indexAfter) }));
     const anonymous = await browser.newContext();
     const denial = await anonymous.request.post(new URL(endpoint, test.info().project.use.baseURL).href, { data: { type: "form_submit", action_id: "settings.save", values: { hideOutOfStock: true } }, headers: { "X-EmDash-Request": "1" } });
     expect([401, 403]).toContain(denial.status());
