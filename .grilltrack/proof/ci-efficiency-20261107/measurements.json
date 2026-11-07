@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "base": "6d8e7ed737e5396eb5f7781a216c120b77844cd9",
+  "command": [
+    "bin/verify-commerce",
+    "storefront"
+  ],
+  "platform": "Linux arm64",
+  "node": "24.22.0",
+  "npm": "11.19.1",
+  "lock_sha256": "50b601be48e823c72c7e08d095421add5c7cbfa25d7e19616136e3e8f8c62b32",
+  "source_files": {
+    "tests/sandbox/commerce.spec.mjs": "04a90b710b63fa0a70bd8df6d37e5566ea8753e23bf81d745109b00cd78904ad",
+    "tests/sandbox-site/src/middleware.mjs": "253204461a5c11c00c5ee57be3517fd046f49d1d2bbc0c022acc70b0ecbd8ae2",
+    "tests/sandbox-site/src/maintenance-proof.mjs": "2171137f4c9b50f6c7af26ae86c8cf292d1e881e87c15536e8d94f878b055d59",
+    "tests/workflows/fixture-maintenance.test.mjs": "4dd85e2c94e414e347ac335e742ed11f85e1fb7b572ab18984ef629e233091db"
+  },
+  "upstream_emdash_version": "1.4.0",
+  "upstream_module_sha256": {
+    "menus-oypxT1pI.mjs": "534a76123afbf8ee1ef881941003e289e42e686aa65e8c3edf7886acf7051171",
+    "emdash-runtime-C8T-pZpS.mjs": "a251fb15c61e9b16ba8e514d71a62e2fad2e23a201a7ee2e7806bb3333cdc674",
+    "astro/middleware.mjs": "215105233c1634638b6119fb50cba6d2c374ae8c14dd95383819c813df65f65e",
+    "backup-8rPSJ28a.mjs": "e5a137b295f2d82b091c2ae98c97a8added5054e8915a16c42b4570ed507866a"
+  },
+  "acceptance": {
+    "minimum_median_seconds_saved": 20,
+    "minimum_median_percent_saved": 20,
+    "maximum_systematic_cpu_regression_percent": 5
+  },
+  "samples": [
+    {
+      "label": "B1",
+      "outcome": "passed",
+      "cases": "7 passed",
+      "wall_seconds": 146.90690147399994,
+      "user_seconds": 53.007546,
+      "system_seconds": 14.106334,
+      "max_rss_kib": 2106192,
+      "exit": 0,
+      "capture_sha256": "b4c77435bbeeda9ac6fbb48cde1848b3bd99ed96e9be3e0eb7fc3991c33313aa"
+    },
+    {
+      "label": "C1 setup refusal",
+      "outcome": "failed before tests",
+      "cases": "0 executed",
+      "wall_seconds": 5.367101485000148,
+      "user_seconds": 8.372833,
+      "system_seconds": 2.594373,
+      "max_rss_kib": 1122332,
+      "exit": 1,
+      "capture_sha256": "5d0b2326773c052bd80b1111b6b0f71cbac56850126f3c7ac653299bc5ae4c52"
+    },
+    {
+      "label": "C1",
+      "outcome": "passed",
+      "cases": "7 passed",
+      "wall_seconds": 83.610765098,
+      "user_seconds": 48.37884,
+      "system_seconds": 12.379301,
+      "max_rss_kib": 2216588,
+      "exit": 0,
+      "capture_sha256": "1e3c3d62777b1b53a5a92fe568ada2018e2bde378ad688fd5b5de098b6983a03"
+    },
+    {
+      "label": "C2",
+      "outcome": "failed",
+      "cases": "5 passed, 2 failed",
+      "wall_seconds": 79.31046104999996,
+      "user_seconds": 49.857209,
+      "system_seconds": 13.078656,
+      "max_rss_kib": 2232324,
+      "exit": 1,
+      "capture_sha256": "e38e39a41da831d04cefea3f57cfb291e51217c31c1b7f88e6f65d348a5aaecb"
+    },
+    {
+      "label": "diagnostic",
+      "outcome": "passed",
+      "cases": "1 passed, filtered diagnostic",
+      "wall_seconds": 47.167175027999974,
+      "user_seconds": 31.98019,
+      "system_seconds": 7.743573,
+      "max_rss_kib": 2138952,
+      "exit": 0,
+      "capture_sha256": "d3ba3706cde94f315bfb669c4c7c872ec6d8445b5c8b84a1fdc653b0793c59e2"
+    },
+    {
+      "label": "B2",
+      "outcome": "passed",
+      "cases": "7 passed",
+      "wall_seconds": 145.00068038500012,
+      "user_seconds": 50.296419,
+      "system_seconds": 13.524642,
+      "max_rss_kib": 2309160,
+      "exit": 0,
+      "capture_sha256": "8d32254edffa9ccedb5d0041c83f768dc04eb9e7a6538401307c0ef714696d60"
+    },
+    {
+      "label": "C3",
+      "outcome": "passed",
+      "cases": "7 passed",
+      "wall_seconds": 85.49991910500012,
+      "user_seconds": 50.995863,
+      "system_seconds": 13.530029,
+      "max_rss_kib": 2151660,
+      "exit": 0,
+      "capture_sha256": "d2c747631a4be5d9adf941cb19a2e7a4e51e8ec06770255de53f332b9c108bfd"
+    }
+  ],
+  "successful_run_comparison": {
+    "classification": "successful-run latency qualifies; candidate reliability failure remains unexplained",
+    "baseline_median_seconds": 145.95379092950003,
+    "successful_candidate_median_seconds": 84.55534210150006,
+    "median_seconds_saved": 61.39844882799997,
+    "median_percent_saved": 42.0670463144443,
+    "baseline_median_cpu_seconds": 65.46747049999999,
+    "successful_candidate_median_cpu_seconds": 62.6420165,
+    "cpu_reduction_percent": 4.315813607003487,
+    "candidate_full_runs": {
+      "pass": 2,
+      "fail": 1
+    },
+    "failed_candidate_not_replaced": true,
+    "candidate3_pass": 7,
+    "schema": [
+      {
+        "before": false,
+        "after": true
+      }
+    ]
+  },
+  "diagnostic": {
+    "request_started": true,
+    "request_to_response_ms": 31.0744560000021,
+    "status": 200,
+    "category": "duplicate-sku",
+    "result": "did not reproduce C2; no response-wait or tolerance change made"
+  },
+  "boundaries": {
+    "original_browser_cases": 7,
+    "candidate_full_runs": {
+      "pass": 2,
+      "fail": 1
+    },
+    "candidate_schema_before_after": [
+      {
+        "before": false,
+        "after": true
+      },
+      {
+        "before": false,
+        "after": true
+      }
+    ],
+    "actual_unique_index_verified": true,
+    "backup_setting_and_last_run_rows": 0,
+    "full_repository_verification": "pending on frozen committed head"
+  },
+  "limitations": [
+    "Successful-run latency comparison is conditional; C2 reliability failure remains unexplained and is not attributed to a pre-existing flake.",
+    "The setup now drives real maintenance explicitly; this fixture no longer waits for the first automatic timer tick and does not verify periodic cadence.",
+    "Warm dependencies and fixture compiler caches; fresh canonical build and new SQLite run path per sample. Stale task-owned dev-lock cleanup was identical before subsequent samples.",
+    "Diagnostic profile and filtered repro are not benchmark samples. A stale dev-lock refusal before any test is retained separately.",
+    "No hosted job, critical-path or monetary saving established."
+  ]
+}
