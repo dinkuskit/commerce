@@ -58,6 +58,7 @@ type PublicCatalogResponse = {
       }[];
       members: readonly {
         catalogItemId: string;
+        sku?: string;
         selections: readonly {
           optionId: string; optionLabel: string;
           valueId: string; valueLabel: string;
@@ -86,8 +87,10 @@ A simple product needs an authoritative customer price and listable
 availability. Its price is `customerPays` (sale when present, otherwise regular).
 A product with choices is projected as one family containing its priced,
 listable members; it has no top-level `price` and its top-level `sellable` is
-false. Use the selected member's own price and availability, not the family's
-status or a price inferred from another member. Unpriced or nonlistable members
+false. Each projected member includes its own current merchant `sku`; older
+bundles omit that additive field. Use the selected member's SKU, price and
+availability, not the family's SKU/status or facts inferred from another member.
+A SKU edit does not change the permanent `catalogItemId` or a frozen paid order. Unpriced or nonlistable members
 are omitted, and a family with no projected members is omitted. A simple
 product can carry a hidden one-member descriptor with `options: []`; it retains
 its ordinary top-level price. See [variant-checkout-v1.md](./variant-checkout-v1.md).
