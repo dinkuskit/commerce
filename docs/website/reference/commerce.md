@@ -194,7 +194,7 @@ Coupon codes are refused at checkout on Registry stores in this release.
 
 ## Completing and correcting an order
 
-Open **Orders**, then **Inspect #N**. New orders are **Processing**;
+Open **Orders**, then **Inspect #N**. Order details use separate wrapping rows so long IDs, contact details and addresses stay readable without truncation. New orders are **Processing**;
 **Completed** means shipped, not delivered. Test orders stay in the normal list
 and are marked **TEST**; do not use them for real fulfillment or postage.
 

@@ -48,7 +48,7 @@ test('only live orders drop the TEST mark, in the list and the detail', () => {
  const labels = list.blocks.filter(b => b.type === 'fields').map(b => b.fields[0].value);
  assert.deepEqual(labels, ['#1001', '#1002 (TEST)', '#1003 (TEST)']);
  assert.deepEqual(list.blocks.filter(b => b.type === 'actions').map(b => b.elements[0].label), ['Inspect #1001', 'Inspect #1002 (TEST)', 'Inspect #1003 (TEST)']);
- assert.match(JSON.stringify(ordersView({ status: 'available', orders }, 'order:test')), /Order:\\n#1002 \(TEST\)/);
+ assert.ok(ordersView({ status: 'available', orders }, 'order:test').blocks.some(b => b.type === 'section' && b.text === 'Order: #1002 (TEST)'));
  assert.doesNotMatch(JSON.stringify(ordersView({ status: 'available', orders }, paid.orderId)), /TEST/);
 });
 test('a Processing order with an address links to Ship\'s label page when the store has Ship', () => {
@@ -68,21 +68,42 @@ test('a Processing order with an address links to Ship\'s label page when the st
  // The list never links.
  assert.doesNotMatch(JSON.stringify(ordersView({ status: 'available', orders: [shipping] }, undefined, page)), /Create shipping label/);
 });
+test('detail facts are separate wrapping sections, not newline-delimited or truncating cells', () => {
+ const view = ordersView(input, paid.orderId);
+ const rows = view.blocks.filter(block => block.type === 'section').map(block => block.text);
+ assert.equal(validateBlocks(view.blocks).valid, true);
+ assert.deepEqual(rows.slice(0, 4), ['Order: ' + paid.orderId + ' (TEST)', 'Order ID: ' + paid.orderId, 'Version: 1', 'Receipt: ' + paid.receiptId]);
+ assert.ok(rows.includes('Checkout attempt: ' + paid.attemptId));
+ assert.ok(rows.includes('Payment: Provider-paid'));
+ assert.ok(rows.includes('Provider payment: ' + paid.paymentId));
+ assert.ok(rows.includes('Status: Processing'));
+ assert.ok(rows.every(text => !text.includes('\n')));
+ // Completion facts retain their own rows too; no truncating fields block holds metadata.
+ const completed = ordersView({ status: 'available', orders: [{ paidOrder: paid, completed: { at: '2026-10-10T20:00:00.000Z', carrier: 'USPS', tracking: 'SYNTHETIC-TRACKING-1' } }] }, paid.orderId);
+ assert.deepEqual(completed.blocks.filter(b => b.type === 'section' && /^(Completed at|Carrier|Tracking number):/.test(b.text)).map(b => b.text),
+   ['Completed at: 2026-10-10T20:00:00.000Z', 'Carrier: USPS', 'Tracking number: SYNTHETIC-TRACKING-1']);
+ assert.ok(view.blocks.filter(b => b.type === 'fields').flatMap(b => b.fields).every(f => !['Order ID', 'Receipt', 'Ship to', 'Bill to'].includes(f.label)));
+});
 test('the detail shows the customer and both addresses; billing reads Same when it matches', () => {
  const delivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', region: 'NY', postalCode: '10001', country: 'US' };
  const contact = (extra) => ({ ...paid, contactSnapshot: { schema: 'dinkuskit.commerce.checkout-contact/v1', requirePhoneNumber: false, revision: null,
    contact: { email: 'shopper@example.test', delivery, ...extra } } });
- const text = (order, record = {}) => {
+ const rows = (order, record = {}) => {
    const detail = ordersView({ status: 'available', orders: [{ ...record, paidOrder: order }] }, order.orderId);
    assert.equal(validateBlocks(detail.blocks).valid, true);
-   return detail.blocks.find(block => block.type === 'section' && block.text.startsWith('Order:')).text;
+   return detail.blocks.filter(block => block.type === 'section').map(block => block.text);
  };
- const same = text(contact({ phone: '555 0101', billing: { ...delivery } }));
- assert.match(same, /\nEmail:\nshopper@example\.test\nPhone:\n555 0101\nShip to:\nFixture Shopper, 1 Example Way, Testville, NY, 10001, US\nBill to:\nSame as delivery address$/);
+ const same = rows(contact({ phone: '555 0101', billing: { ...delivery } }));
+ assert.deepEqual(same.slice(-4), ['Email: shopper@example.test', 'Phone: 555 0101',
+   'Ship to: Fixture Shopper, 1 Example Way, Testville, NY, 10001, US', 'Bill to: Same as delivery address']);
  const elsewhere = { name: 'Bill Payer', line1: '9 Billing Way', city: 'Toronto', region: 'ON', postalCode: 'M5V 1A1', country: 'CA' };
- assert.match(text(contact({ billing: elsewhere })), /\nPhone:\nNot recorded\n.*\nBill to:\nBill Payer, 9 Billing Way, Toronto, ON, M5V 1A1, CA$/s);
+ const different = rows(contact({ billing: elsewhere }));
+ assert.ok(different.includes('Phone: Not recorded'));
+ assert.equal(different.at(-1), 'Bill to: Bill Payer, 9 Billing Way, Toronto, ON, M5V 1A1, CA');
  // Once the owner corrects delivery, a billing copy of the old address is shown in full.
- assert.match(text(contact({ billing: { ...delivery } }), { delivery: { ...delivery, line1: '2 Corrected Road' } }), /\(corrected\)\nBill to:\nFixture Shopper, 1 Example Way, /);
+ const corrected = rows(contact({ billing: { ...delivery } }), { delivery: { ...delivery, line1: '2 Corrected Road' } });
+ assert.equal(corrected.at(-2), 'Ship to: Fixture Shopper, 2 Corrected Road, Testville, NY, 10001, US (corrected)');
+ assert.equal(corrected.at(-1), 'Bill to: Fixture Shopper, 1 Example Way, Testville, NY, 10001, US');
  // Orders paid before billing was recorded.
- assert.match(text(contact({})), /\nBill to:\nNot recorded$/);
+ assert.equal(rows(contact({})).at(-1), 'Bill to: Not recorded');
 });

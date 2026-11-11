@@ -99,6 +99,24 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await expect(page.getByText('Status: Processing')).toBeVisible();
     await expect(page.getByText('Order ID: ' + paid.order.orderId)).toBeVisible();
     await expect(page.getByText('Version: 1')).toBeVisible();
+    // Text presence alone also passes when the host collapses newline-delimited
+    // facts into one paragraph. Each fact must occupy its own wrapping row.
+    const detailRows = ['Order ID: ' + paid.order.orderId, 'Version: 1', 'Receipt: ' + paid.order.receiptId,
+      'Checkout attempt: ' + paid.order.attemptId, 'Payment: Provider-paid', 'Status: Processing'];
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const boxes = [];
+      for (const text of detailRows) {
+        const row = page.getByText(text, { exact: true });
+        await expect(row).toBeVisible();
+        expect(await row.evaluate(node => getComputedStyle(node).textOverflow)).not.toBe('ellipsis');
+        boxes.push(await row.boundingBox());
+      }
+      for (let i = 1; i < boxes.length; i++) expect(boxes[i].y).toBeGreaterThanOrEqual(boxes[i - 1].y + boxes[i - 1].height);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await capture('orders-provider-detail-' + width);
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await capture('orders-provider-detail');
     // The owner corrects the address; Checkout's frozen copy stays and the version goes up.
     // A corrected address must go to one of the store's shipping countries.
