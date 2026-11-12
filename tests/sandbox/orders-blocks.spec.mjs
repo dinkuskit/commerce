@@ -9,6 +9,77 @@ import { createCheckoutStore, startCheckout } from '../../dist/features/checkout
 import { fixture, cart, withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
 import { createPaidOrderReceiver } from '../../dist/features/orders/index.js';
 
+// Inspectable rendering evidence from the real installed Orders entry point.
+// Synthetic receiver-admitted records only; no intercepted admin responses.
+test('installed Orders records frozen item choices on desktop and phone', async ({ page, request }) => {
+  expect((await request.get('/_emdash/api/setup/dev-bypass')).status()).toBe(200);
+  expect((await request.post('/__proof/install')).status()).toBe(200);
+  const pluginId = process.env.COMMERCE_COUPON_PLUGIN_ID;
+  const database = new Database(process.env.COMMERCE_PROOF_DB.slice(5));
+  const db = new Kysely({ dialect: new SqliteDialect({ database }) });
+  const path = `/_emdash/admin/plugins/${pluginId}/orders`;
+  const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
+  const numbers = new PluginStorageRepository(db, pluginId, 'order_numbers', []);
+  const usd = minor => ({ currency: 'USD', minor });
+  const mediumText = 'Size: M · Color: Frozen storm blue with the original checkout label';
+  const choice = (catalogItemId, size, color) => ({ schema: 'dinkuskit.commerce.checkout-variant-selection/v1',
+    productId: 'fixture-shirt', catalogItemId, fulfillment: 'physical', selections: [
+      { optionId: 'size', optionLabel: 'Size', valueId: size.toLowerCase(), valueLabel: size },
+      ...(color ? [{ optionId: 'color', optionLabel: 'Color', valueId: 'blue', valueLabel: color }] : [])] });
+  try {
+    const order = { schema: 'dinkuskit.commerce.paid-order/v1', orderId: 'proof-frozen-choices',
+      receiptId: 'receipt-proof-frozen-choices', attemptId: 'attempt-proof-frozen-choices',
+      mode: 'test', paymentId: 'synthetic-payment-frozen-choices', paidAt: '2090-01-01T00:00:00.000Z',
+      lines: ['medium', 'large'].map(catalogItemId => ({ catalogItemId, name: 'Fixture shirt', quantity: 1, unitPrice: usd('100') })),
+      total: usd('200'), variantSelections: [choice('large', 'L'), choice('medium', 'M', 'Frozen storm blue with the original checkout label')] };
+    expect(await createPaidOrderReceiver(kept, numbers).receive(order)).toBe('stored');
+    const original = () => database.prepare("SELECT collection,id,data,revision FROM _plugin_storage WHERE plugin_id=? AND collection IN ('orders','order_numbers','checkout_carts') ORDER BY collection,id").all(pluginId);
+    const before = original();
+    const inspectLabel = 'Inspect #' + (await kept.get(order.orderId)).number + ' (TEST)';
+    await page.goto('/_emdash/api/auth/dev-bypass?redirect=' + path);
+    const welcome = page.getByRole('button', { name: 'Get Started', exact: true });
+    const inspect = page.getByRole('button', { name: inspectLabel, exact: true });
+    await expect(welcome.or(inspect)).toBeVisible({ timeout: 60000 });
+    if (await welcome.isVisible()) await welcome.click();
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(path);
+      await expect(inspect).toBeVisible({ timeout: 60000 });
+      await inspect.focus(); await page.keyboard.press('Enter');
+      const receipt = page.getByText('Receipt: ' + order.receiptId);
+      await expect(receipt).toBeVisible();
+      const inspected = await receipt.textContent();
+      const items = page.getByText('Fixture shirt', { exact: true });
+      await expect(items).toHaveCount(2);
+      const itemOutput = await items.evaluateAll(nodes => nodes.map(node => {
+        const fields = node.parentElement.parentElement;
+        const following = fields.parentElement.nextElementSibling;
+        const section = following?.querySelector('.flex-1');
+        const style = section && getComputedStyle(section);
+        return { fields: fields.innerText, followingText: following?.innerText ?? null,
+          textOverflow: style?.textOverflow ?? null, textHeight: section?.getBoundingClientRect().height ?? null,
+          lineHeight: style?.lineHeight ?? null };
+      }));
+      const noHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+      await items.first().scrollIntoViewIfNeeded();
+      await page.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, `orders-frozen-choices-${width}.png`), fullPage: true, animations: 'disabled' });
+      await page.getByRole('button', { name: 'Back to orders', exact: true }).click();
+      await expect(inspect).toBeVisible();
+      const evidence = { width, inspectLabel, inspected,
+        items: itemOutput, noHorizontalOverflow, backToOrders: await inspect.textContent(), storageUnchanged: JSON.stringify(original()) === JSON.stringify(before) };
+      console.log('ORDER_FROZEN_CHOICES_PROOF ' + JSON.stringify(evidence));
+      await test.info().attach(`orders-frozen-choices-${width}.json`, { body: JSON.stringify(evidence, null, 2), contentType: 'application/json' });
+      expect.soft(itemOutput[0].followingText).toBe(mediumText);
+      expect.soft(itemOutput[1].followingText).toBe('Size: L');
+      expect.soft(itemOutput[0].fields).toContain('medium');
+      expect.soft(itemOutput[1].fields).toContain('large');
+      for (const item of itemOutput) expect.soft(item.textOverflow).not.toBe('ellipsis');
+      expect.soft(noHorizontalOverflow).toBe(true);
+      expect.soft(evidence.storageUnchanged).toBe(true);
+    }
+  } finally { await db.destroy(); }
+});
+
 // Orders acceptance on the installed Registry-format artifact. It
 // uses canonical checkout writes and synthetic payment outcomes, never a
 // payment provider or a production order.
