@@ -11,7 +11,7 @@ import { createPaidOrderReceiver } from '../../dist/features/orders/index.js';
 
 // Inspectable rendering evidence from the real installed Orders entry point.
 // Synthetic receiver-admitted records only; no intercepted admin responses.
-test('installed Orders records frozen item choices on desktop and phone', async ({ page, request }) => {
+async function proveFrozenItemChoices({ page, request }) {
   expect((await request.get('/_emdash/api/setup/dev-bypass')).status()).toBe(200);
   expect((await request.post('/__proof/install')).status()).toBe(200);
   const pluginId = process.env.COMMERCE_COUPON_PLUGIN_ID;
@@ -78,7 +78,7 @@ test('installed Orders records frozen item choices on desktop and phone', async 
       expect.soft(evidence.storageUnchanged).toBe(true);
     }
   } finally { await db.destroy(); }
-});
+}
 
 // Orders acceptance on the installed Registry-format artifact. It
 // uses canonical checkout writes and synthetic payment outcomes, never a
@@ -311,3 +311,7 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'http-matrix.json'), JSON.stringify(matrix, null, 2));
   } finally { await db.destroy(); }
 });
+
+// This harness shares its installation/database across cases. Preserve the
+// original acceptance test's first-run welcome and empty-shop prerequisites.
+test('installed Orders records frozen item choices on desktop and phone', proveFrozenItemChoices);
