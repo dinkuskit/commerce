@@ -16,6 +16,34 @@ test('inspection preserves canonical IDs, recorded amounts and independent fulfi
  assert.equal(detail.blocks[1].elements[0].action_id, 'orders.list');
  assert.ok(JSON.stringify(ordersView(input, zero.orderId)).includes('Zero payable — no payment required'));
 });
+test('each item displays its own frozen choices even when snapshots have a different order', () => {
+ const line = id => ({ catalogItemId: id, name: 'Fixture shirt', quantity: 1, unitPrice: { currency: 'USD', minor: '100' } });
+ const selection = (id, values) => ({ schema: 'dinkuskit.commerce.checkout-variant-selection/v1', productId: 'shirt', catalogItemId: id,
+   fulfillment: 'physical', selections: values.map(([optionLabel, valueLabel], i) => ({ optionId: 'option-' + i, valueId: 'value-' + i, optionLabel, valueLabel })) });
+ const order = { ...paid, lines: [line('medium'), line('large')], total: { currency: 'USD', minor: '200' }, pricing: undefined,
+   variantSelections: [selection('large', [['Size', 'L']]), selection('medium', [['Size', 'M'], ['Color', 'Frozen blue']])] };
+ const original = structuredClone(order);
+ const detail = ordersView({ status: 'available', orders: [kept(order)] }, order.orderId);
+ assert.equal(validateBlocks(detail.blocks).valid, true);
+ const items = detail.blocks.filter(block => block.type === 'fields' && block.fields[0].label === 'Item');
+ assert.equal(items.length, 2);
+ for (const [i, text] of ['Size: M · Color: Frozen blue', 'Size: L'].entries()) {
+   assert.deepEqual(detail.blocks[detail.blocks.indexOf(items[i]) + 1], { type: 'section', text });
+ }
+ assert.deepEqual(order, original);
+ assert.equal(fields(detail)['Order total'], 'USD 2.00');
+});
+test('legacy, simple and unmatched snapshots never borrow another item\'s choices', () => {
+ const render = variantSelections => ordersView({ status: 'available', orders: [kept({ ...paid, variantSelections })] }, paid.orderId);
+ const plain = render(undefined);
+ const simple = paid.lines.map(line => ({ catalogItemId: line.catalogItemId, selections: [] }));
+ assert.deepEqual(render(simple), plain);
+ assert.deepEqual(render([{ catalogItemId: 'foreign', selections: [{ optionLabel: 'Size', valueLabel: 'XL' }] }]), plain);
+ const long = 'Frozen color '.repeat(15).trim();
+ const detail = render([{ catalogItemId: paid.lines[0].catalogItemId, selections: [{ optionLabel: 'Color', valueLabel: long }] }]);
+ assert.ok(detail.blocks.some(block => block.type === 'section' && block.text === 'Color: ' + long));
+ assert.equal(validateBlocks(detail.blocks).valid, true);
+});
 test('empty, outage, missing order and absent legacy breakdown remain distinct', () => {
  assert.match(JSON.stringify(ordersView({ status: 'available', orders: [] })), /No orders recorded yet/);
  assert.match(JSON.stringify(ordersView({ status: 'unavailable' })), /Orders unavailable/);

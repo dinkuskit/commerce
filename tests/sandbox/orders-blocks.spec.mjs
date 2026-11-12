@@ -7,6 +7,7 @@ import { Kysely, SqliteDialect } from 'kysely';
 import { OptionsRepository, PluginStorageRepository } from 'emdash';
 import { createCheckoutStore, startCheckout } from '../../dist/features/checkout/index.js';
 import { fixture, cart, withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
+import { createPaidOrderReceiver } from '../../dist/features/orders/index.js';
 
 // Orders acceptance on the installed Registry-format artifact. It
 // uses canonical checkout writes and synthetic payment outcomes, never a
@@ -162,6 +163,35 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     database.prepare('UPDATE users SET role=50').run();
     // The page read Orders' own copies, brought in from Checkout the first time it found none.
     expect((await kept.get(paid.order.orderId)).paidOrder).toEqual({ schema: 'dinkuskit.commerce.paid-order/v1', ...paid.order });
+    // Orders renders frozen variant choices, not today's catalog or snapshot array positions.
+    const choice = (catalogItemId, size, color) => ({ schema: 'dinkuskit.commerce.checkout-variant-selection/v1', productId: 'fixture-shirt', catalogItemId,
+      fulfillment: 'physical', selections: [{ optionId: 'size', optionLabel: 'Size', valueId: size.toLowerCase(), valueLabel: size },
+        ...(color ? [{ optionId: 'color', optionLabel: 'Color', valueId: 'blue', valueLabel: color }] : [])] });
+    const variantOrder = { schema: 'dinkuskit.commerce.paid-order/v1', ...paid.order,
+      orderId: 'order:variants', receiptId: 'receipt:variants', attemptId: 'attempt:variants',
+      lines: paid.order.lines.map(line => ({ ...line, name: 'Fixture shirt' })),
+      variantSelections: [choice('two', 'L'), choice('one', 'M', 'Frozen storm blue with the original checkout label')] };
+    expect(await createPaidOrderReceiver(kept).receive(variantOrder)).toBe('stored');
+    await page.reload();
+    // The native page numbers new copies asynchronously; do not read its number before that load.
+    await expect(page.getByRole('button', { name: 'Inspect #1003 (TEST)', exact: true })).toBeVisible({ timeout: 60000 });
+    await interact(await inspect(variantOrder));
+    const frozenCopy = await kept.get(variantOrder.orderId);
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const medium = page.getByText('Size: M · Color: Frozen storm blue with the original checkout label', { exact: true });
+      const large = page.getByText('Size: L', { exact: true });
+      await expect(medium).toBeVisible(); await expect(large).toBeVisible();
+      await expect(page.getByText('Fixture shirt', { exact: true })).toHaveCount(2);
+      expect((await medium.boundingBox()).y).toBeLessThan((await large.boundingBox()).y);
+      for (const label of [medium, large]) expect(await label.evaluate(node => getComputedStyle(node).textOverflow)).not.toBe('ellipsis');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await medium.scrollIntoViewIfNeeded(); await capture('orders-variant-choices-' + width);
+    }
+    expect(await kept.get(variantOrder.orderId)).toEqual(frozenCopy);
+    expect(snapshot()).toEqual(original);
+    await kept.delete(variantOrder.orderId);
+    await page.reload();
     // A malformed Checkout aggregate fails Bring in missing orders closed.
     await orders.compareAndSet('orders-invalid', null, { attempts: null });
     await interact('Bring in missing orders');
