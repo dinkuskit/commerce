@@ -194,9 +194,15 @@ Coupon codes are refused at checkout on Registry stores in this release.
 
 ## Completing and correcting an order
 
-Open **Orders**, then **Inspect #N**. New orders are **Processing**;
-**Completed** means shipped, not delivered. Test orders stay in the normal list
-and are marked **TEST**; do not use them for real fulfillment or postage.
+Open **Orders**, then **Inspect #N**. The native list shows the newest recorded
+payment first, before splitting into pages of 25 orders. Orders without a usable
+payment time follow dated orders. Equal or missing times use the higher order
+number first, then the exact order ID in ascending order. This changes only the
+native list, not the private Orders API's ordering or an order's number.
+
+New orders are **Processing**; **Completed** means shipped, not delivered. Test
+orders stay in the normal list and are marked **TEST**; do not use them for real
+fulfillment or postage.
 
 - Before shipment, use **Correct address** on a Processing order that has a
   delivery address. The corrected country must be one of the store's shipping

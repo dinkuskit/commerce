@@ -244,8 +244,10 @@ test('installed Orders shows the latest payment before pagination on desktop and
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 1000 });
       await page.goto(path);
-      await expect(newest).toBeVisible({ timeout: 60000 });
       const rows = page.getByRole('button', { name: /^Inspect / });
+      await expect(rows.first()).toBeVisible({ timeout: 60000 });
+      const firstPage = await rows.allTextContents();
+      console.log('ORDER_CHRONOLOGY_FIRST_PAGE ' + JSON.stringify({ width, firstPage }));
       await expect(rows).toHaveText(labels.toReversed().slice(0, 25));
       await expect(newest).toBeInViewport();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -253,13 +255,24 @@ test('installed Orders shows the latest payment before pagination on desktop and
       await page.getByRole('button', { name: 'Next', exact: true }).click();
       await expect(page.getByRole('button', { name: labels[0], exact: true })).toBeVisible();
       await expect(newest).toHaveCount(0);
+      const nextPage = await rows.allTextContents();
       await page.getByRole('button', { name: 'Previous', exact: true }).click();
       await expect(rows).toHaveText(labels.toReversed().slice(0, 25));
       await newest.focus(); await page.keyboard.press('Enter');
-      await expect(page.getByText('Receipt: receipt-zz-chronology-newest')).toBeVisible();
+      const receipt = page.getByText('Receipt: receipt-zz-chronology-newest');
+      await expect(receipt).toBeVisible();
+      const inspected = await receipt.textContent();
       await page.getByRole('button', { name: 'Back to orders', exact: true }).click();
       await expect(rows).toHaveText(labels.toReversed().slice(0, 25));
       expect(snapshot()).toEqual(original);
+      // Publish inspectable output, not only a PASS claim or local media path.
+      // All orders in this case are synthetic; no customer/contact data is read.
+      const evidence = { width, firstPage, nextPage, inspected,
+        backToOrders: await rows.allTextContents(), storageUnchanged: true };
+      console.log('ORDER_CHRONOLOGY_PROOF ' + JSON.stringify(evidence));
+      await test.info().attach(`orders-chronology-${width}.json`, {
+        body: JSON.stringify(evidence, null, 2), contentType: 'application/json',
+      });
     }
   } finally { await db.destroy(); }
 });
