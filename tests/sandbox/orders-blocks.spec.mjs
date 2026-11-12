@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { Kysely, SqliteDialect } from 'kysely';
 import { OptionsRepository, PluginStorageRepository } from 'emdash';
 import { createCheckoutStore, startCheckout } from '../../dist/features/checkout/index.js';
+import { createPaidOrderReceiver } from '../../dist/features/orders/index.js';
 import { fixture, cart, withSyntheticCheckoutContact } from '../features/checkout/fixture.mjs';
 
 // Orders acceptance on the installed Registry-format artifact. It
@@ -208,5 +209,57 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await anonymousCatalog.close();
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'orders-canonical.json'), JSON.stringify({ paid: paid.order, free: free.order }, null, 2));
     writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, 'http-matrix.json'), JSON.stringify(matrix, null, 2));
+  } finally { await db.destroy(); }
+});
+
+// Focused installed regression for commerce#265. Existing orders may coexist;
+// future-dated synthetic payments make the known 26-order chronology unambiguous.
+test('installed Orders shows the latest payment before pagination on desktop and phone', async ({ page, request }) => {
+  expect((await request.get('/_emdash/api/setup/dev-bypass')).status()).toBe(200);
+  expect((await request.post('/__proof/install')).status()).toBe(200);
+  const pluginId = process.env.COMMERCE_COUPON_PLUGIN_ID;
+  const database = new Database(process.env.COMMERCE_PROOF_DB.slice(5));
+  const db = new Kysely({ dialect: new SqliteDialect({ database }) });
+  const path = `/_emdash/admin/plugins/${pluginId}/orders`;
+  const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
+  const numbers = new PluginStorageRepository(db, pluginId, 'order_numbers', []);
+  try {
+    const receiver = createPaidOrderReceiver(kept, numbers), labels = [];
+    const usd = { currency: 'USD', minor: '100' };
+    for (let i = 1; i <= 26; i++) {
+      const id = i === 26 ? 'zz-chronology-newest' : 'aa-chronology-' + String(i).padStart(2, '0');
+      expect(await receiver.receive({ schema: 'dinkuskit.commerce.paid-order/v1', orderId: id,
+        receiptId: 'receipt-' + id, attemptId: 'attempt-' + id, mode: 'test', paymentId: 'synthetic-payment-' + id,
+        paidAt: new Date(Date.UTC(2090, 0, i)).toISOString(),
+        lines: [{ catalogItemId: 'synthetic-hat', name: 'Synthetic hat', quantity: 1, unitPrice: usd }], total: usd })).toBe('stored');
+      labels.push('Inspect #' + (await kept.get(id)).number + ' (TEST)');
+    }
+    const snapshot = () => database.prepare("SELECT collection,id,data,revision FROM _plugin_storage WHERE plugin_id=? AND collection IN ('orders','order_numbers','checkout_carts') ORDER BY collection,id").all(pluginId);
+    const original = snapshot();
+    await page.goto('/_emdash/api/auth/dev-bypass?redirect=' + path);
+    const welcome = page.getByRole('button', { name: 'Get Started', exact: true });
+    const newest = page.getByRole('button', { name: labels.at(-1), exact: true });
+    await expect(welcome.or(newest)).toBeVisible({ timeout: 60000 });
+    if (await welcome.isVisible()) await welcome.click();
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(path);
+      await expect(newest).toBeVisible({ timeout: 60000 });
+      const rows = page.getByRole('button', { name: /^Inspect / });
+      await expect(rows).toHaveText(labels.toReversed().slice(0, 25));
+      await expect(newest).toBeInViewport();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, `orders-chronology-${width}.png`), fullPage: true, animations: 'disabled' });
+      await page.getByRole('button', { name: 'Next', exact: true }).click();
+      await expect(page.getByRole('button', { name: labels[0], exact: true })).toBeVisible();
+      await expect(newest).toHaveCount(0);
+      await page.getByRole('button', { name: 'Previous', exact: true }).click();
+      await expect(rows).toHaveText(labels.toReversed().slice(0, 25));
+      await newest.focus(); await page.keyboard.press('Enter');
+      await expect(page.getByText('Receipt: receipt-zz-chronology-newest')).toBeVisible();
+      await page.getByRole('button', { name: 'Back to orders', exact: true }).click();
+      await expect(rows).toHaveText(labels.toReversed().slice(0, 25));
+      expect(snapshot()).toEqual(original);
+    }
   } finally { await db.destroy(); }
 });

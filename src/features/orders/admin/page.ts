@@ -2,7 +2,7 @@ import { adminAuthorized, pageOffset, pagination } from '../../../shared/admin-b
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PluginContext, SandboxedRouteContext } from 'emdash/plugin';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
-import { completeOrder, correctDelivery, createPaidOrderReceiver, deliveryOf, listOrders, numberOrders, ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, reopenOrder, type OrderNumbers, type OrdersCollection } from '../store.js';
+import { completeOrder, correctDelivery, createPaidOrderReceiver, deliveryOf, listOrders, numberOrders, ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, reopenOrder, type OrderNumbers, type OrderRecord, type OrdersCollection } from '../store.js';
 import { addressForm, completeForm, ordersView } from './view.js';
 import { orderPackBody, type InventoryPackPort } from '../pack.js';
 import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
@@ -46,6 +46,12 @@ async function bringIn(collection: OrdersCollection, services: OrdersServices, n
     { type: 'banner', variant: 'default', title: stored ? 'Brought in ' + stored + ' missing order' + (stored === 1 ? '' : 's') : 'No missing orders' },
     ...(conflicts ? [{ type: 'banner' as const, variant: 'error' as const, title: conflicts + ' order' + (conflicts === 1 ? ' differs' : 's differ') + ' from Checkout', description: 'Orders kept its first copy.' }] : []),
   ];
+}
+
+/** Unknown legacy payment times follow dated orders; do not infer a date from an ID or number. */
+function paidTime(record: OrderRecord): number {
+  const time = Date.parse(record.paidOrder.paidAt ?? '');
+  return Number.isFinite(time) ? time : -Infinity;
 }
 
 export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginContext, services: OrdersServices = {}): Promise<BlockResponse> {
@@ -128,6 +134,9 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
           : 'Inventory Pack is not connected for this store. The order is not marked packed.' });
       return view;
     }
+    // Native presentation only: newest payment first, before slicing pages. Keep listOrders' ID order for other consumers.
+    orders.sort((a, b) => paidTime(b) - paidTime(a) || (b.number ?? -1) - (a.number ?? -1) ||
+      (a.paidOrder.orderId < b.paidOrder.orderId ? -1 : a.paidOrder.orderId > b.paidOrder.orderId ? 1 : 0));
     offset = pageOffset(offset, orders.length);
     const response = ordersView({ status: 'available', orders: orders.slice(offset, offset + 25) });
     response.blocks.splice(1, 0, ...notices);
