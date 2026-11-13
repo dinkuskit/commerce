@@ -194,7 +194,13 @@ Coupon codes are refused at checkout on Registry stores in this release.
 
 ## Completing and correcting an order
 
-Open **Orders**, then **Inspect #N**. Addresses read as parcel lines and long IDs, contact details and item choices wrap rather than being cut off. **Create shipping label** (when the store has Ship) or **Complete order** sits on the ready-to-ship line under the addresses. New orders are **Processing**;
+Open **Orders**, then **Inspect #N**. The native list shows the newest recorded
+payment first, before splitting into pages of 25 orders. Orders without a usable
+payment time follow dated orders. Equal or missing times use the higher order
+number first, then the exact order ID in ascending order. This changes only the
+native list, not the private Orders API's ordering or an order's number.
+
+Addresses read as parcel lines and long IDs, contact details and item choices wrap rather than being cut off. **Create shipping label** (when the store has Ship) or **Complete order** sits on the ready-to-ship line under the addresses. New orders are **Processing**;
 **Completed** means shipped, not delivered. Test orders stay in the normal list
 and are marked **TEST**; do not use them for real fulfillment or postage.
 
