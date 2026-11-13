@@ -104,7 +104,8 @@ async function freeze(
 const normalizedCoupon = (code: string) => REGISTRY_BUILD ? code : normalizeCouponCode(code);
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
-export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string): Promise<CheckoutAttempt> {
+/** `saved`: the lines were read from the saved cart, which must still hold them (the guest route). */
+export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string, saved?: boolean): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
   if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
   const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
@@ -125,8 +126,8 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
       if ((previous.coupon?.code ?? undefined) !== requested) fail("Active checkout coupon selection is frozen");
       return drive(e, cartId, previous.attemptId, true);
     }
-    // The guest route buys the saved cart: a cart changed since it was read is contention, never a silent switch.
-    if (stored?.record.cart && JSON.stringify(stored.record.cart.lines) !== JSON.stringify(cart)) fail("Checkout contention; retry");
+    // Checkout buys the saved cart: one changed, or deleted by expiry cleanup, since it was read is contention.
+    if ((saved || stored?.record.cart) && JSON.stringify(stored?.record.cart?.lines) !== JSON.stringify(cart)) fail("Checkout contention; retry");
     if (previous && retryAfter !== previous.attemptId) fail("Retry requires the released attempt identity");
     if (!previous && retryAfter !== undefined) fail("Retry checkout not found");
     const attempt = await freeze(

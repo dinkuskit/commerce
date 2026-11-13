@@ -263,6 +263,27 @@ test("a cart changed while checkout starts is contention, never a purchase of th
   assert.equal(started.checkout.total.minor, String(3 * 250));
 });
 
+test("a cart deleted by expiry cleanup while checkout starts is contention, never a purchase", async (t) => {
+  const { clearExpiredCarts } = await import("../../../dist/features/checkout/storage.js");
+  const f = await setup(t);
+  await f.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] });
+  // Start has read the live cart; then the background check finds it past its time and deletes it.
+  let reads = 0;
+  const carts = new Proxy(f.runtime.carts, { get(target, name) {
+    const value = Reflect.get(target, name, target);
+    if (name !== "getVersioned") return typeof value === "function" ? value.bind(target) : value;
+    return async (...args) => {
+      if (++reads === 2) await clearExpiredCarts(f.storage[CHECKOUT_COLLECTION], 9_999_999_999);
+      return value.apply(target, args);
+    };
+  } });
+  const raced = await startGuestCheckout({ ...f.runtime, carts }, { contact }, f.headers);
+  assert.ok(reads >= 2, "start read the cart twice");
+  assert.equal(raced.error?.code, "CONTENTION", JSON.stringify(raced));
+  assert.equal(f.synth.counts().paymentCreates, 0);
+  assert.deepEqual((await f.storage[CHECKOUT_COLLECTION].query()).items, [], "the deleted cart is not recreated");
+});
+
 test("a checkout saved before the server cart (attempts only) still reads, replays and pays", async (t) => {
   const { clearExpiredCarts } = await import("../../../dist/features/checkout/storage.js");
   const f = await setup(t);

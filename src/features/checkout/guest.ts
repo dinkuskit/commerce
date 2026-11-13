@@ -287,6 +287,7 @@ export async function startGuestCheckout(
       authorized.cartId,
       { ...(input as Record<string, unknown>), lines },
       retryAfter,
+      true,
     );
     return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {
