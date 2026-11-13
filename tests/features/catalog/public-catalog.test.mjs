@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
-function context({ hasMore = false, cursor, count = 1, status = 'in-stock', managed = false, priced = true, hide = false, mixed = false } = {}) {
+function context({ hasMore = false, cursor, count = 1, status = 'in-stock', managed = false, priced = true, hide = false, mixed = false, offCatalog } = {}) {
   const record = { recordKind: 'catalog-item', itemId: 'hat', name: 'Hat', sku: 'HAT',
     stockManagement: managed ? { mode: 'managed', status: 'active', inventorySkuId: 'sku' } : { mode: 'unmanaged' } };
   const empty = { async get() { return null; }, async query() { return { items: [], hasMore: false }; } };
@@ -17,7 +17,7 @@ function context({ hasMore = false, cursor, count = 1, status = 'in-stock', mana
     catalog_prices: { async get() { return priced ? { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat', regular: { currency: 'USD', minor: '400' }, sale: { currency: 'USD', minor: '300' } } : null; } },
     catalog_manual_availability: { async get() { return { recordKind: 'catalog-manual-availability', recordId: 'hat', catalogItemId: 'hat', status }; } },
     catalog_backorder_policies: empty, store_inventory_configurations: empty, storefront_availability_settings: empty,
-    storefront_out_of_stock_listing: { async get() { return { recordKind: 'storefront-out-of-stock-listing', recordId: 'active', hideOutOfStock: hide, updatedAt: '2026-10-07T00:00:00Z' }; } },
+    storefront_out_of_stock_listing: { async get() { return { recordKind: 'storefront-out-of-stock-listing', recordId: 'active', hideOutOfStock: hide, ...(offCatalog ? { offCatalog } : {}), updatedAt: '2026-10-07T00:00:00Z' }; } },
     catalog_media: empty, storefront_placeholder_image: empty,
   } };
 }
@@ -30,6 +30,16 @@ test('public projection preserves authoritative sale, listing and managed fail-c
   assert.deepEqual(managed.availability, { status: 'availability-unavailable', sellable: false, listable: true });
   assert.deepEqual(Object.keys(managed).sort(), ['availability', 'gallery', 'id', 'image', 'name', 'price', 'sku']);
   assert.deepEqual([managed.image, managed.gallery], [null, []], 'no media record and no placeholder yields no image');
+});
+
+test('the public catalog says when the owner turned the DinkusKit catalog listing off', async () => {
+  assert.equal('offCatalog' in await readPublicCatalog(context()), false);
+  const off = await readPublicCatalog(context({ offCatalog: true }));
+  assert.equal(off.offCatalog, true);
+  assert.equal(off.products.length, 1, 'the shop itself still lists the product');
+  const unreadable = context();
+  unreadable.storage.storefront_out_of_stock_listing = { async get() { throw new Error('down'); } };
+  assert.equal((await readPublicCatalog(unreadable)).offCatalog, true, 'an unreadable setting counts as off');
 });
 
 test('catalog page keeps continuation across filtered rows and refuses oversized/nonprogressing pages', async () => {

@@ -894,6 +894,25 @@ test("the store listing defaults to show out-of-stock and persists hide", async 
   assert.equal(hidden.changed, true);
   assert.equal(hidden.listing.hideOutOfStock, true);
   assert.equal((await loadOutOfStockListing(listing)).hideOutOfStock, true);
+  // The catalog switch rides on the same record: off is stored, on leaves no field, and a save that omits it keeps it.
+  assert.equal(hidden.listing.offCatalog, undefined);
+  const off = await setOutOfStockListing(listing, { hideOutOfStock: true, offCatalog: true });
+  assert.equal(off.changed, true);
+  assert.equal(off.listing.offCatalog, true);
+  assert.equal((await setOutOfStockListing(listing, { hideOutOfStock: true })).changed, false);
+  assert.equal((await setOutOfStockListing(listing, { hideOutOfStock: false })).listing.offCatalog, true);
+  const on = await setOutOfStockListing(listing, { hideOutOfStock: false, offCatalog: false });
+  assert.equal(on.changed, true);
+  assert.equal("offCatalog" in on.listing, false);
+  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: false, offCatalog: "no" }), /hideOutOfStock and offCatalog only/);
+  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: false, extra: 1 }), /hideOutOfStock and offCatalog only/);
+  // A record saved by a release before the switch (no offCatalog field) loads as listed and is not rewritten by reading.
+  const older = new MemoryCollection();
+  const saved = { recordKind: "storefront-out-of-stock-listing", recordId: "active", hideOutOfStock: true, updatedAt: "2026-10-19T00:00:00.000Z" };
+  await older.put("active", saved);
+  assert.deepEqual(await loadOutOfStockListing(older), saved);
+  assert.equal((await setOutOfStockListing(older, { hideOutOfStock: true, offCatalog: false })).changed, false);
+  assert.deepEqual(await older.get("active"), saved);
   // The Commerce settings page saves this; there is no settings/out-of-stock-listing route.
   assert.equal(registryPlugin.routes["settings/out-of-stock-listing"], undefined);
 });

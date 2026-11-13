@@ -26,6 +26,7 @@ function normalizeStoredListing(
     value.recordKind !== "storefront-out-of-stock-listing" ||
     value.recordId !== STOREFRONT_OUT_OF_STOCK_LISTING_RECORD_ID ||
     typeof value.hideOutOfStock !== "boolean" ||
+    typeof (value.offCatalog ?? false) !== "boolean" ||
     typeof value.updatedAt !== "string" ||
     value.updatedAt.trim().length === 0
   ) {
@@ -66,24 +67,27 @@ export async function setOutOfStockListing(
       "out-of-stock listing input must be an object",
     );
   }
-  const input = rawInput as Record<string, unknown>;
+  const listing = await loadOutOfStockListing(storage);
+  // offCatalog left out keeps the owner's catalog choice.
+  const { hideOutOfStock, offCatalog = !!listing.offCatalog, ...rest } = rawInput as Record<string, unknown>;
   if (
-    Object.keys(input).length !== 1 ||
-    typeof input.hideOutOfStock !== "boolean"
+    Object.keys(rest).length ||
+    typeof hideOutOfStock !== "boolean" ||
+    typeof offCatalog !== "boolean"
   ) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "out-of-stock listing accepts hideOutOfStock only",
+      "out-of-stock listing accepts hideOutOfStock and offCatalog only",
     );
   }
-  const listing = await loadOutOfStockListing(storage);
-  if (listing.hideOutOfStock === input.hideOutOfStock) {
+  if (listing.hideOutOfStock === hideOutOfStock && !!listing.offCatalog === offCatalog) {
     return { changed: false, listing };
   }
   const updated: StorefrontOutOfStockListingRecord = {
     recordKind: "storefront-out-of-stock-listing",
     recordId: STOREFRONT_OUT_OF_STOCK_LISTING_RECORD_ID,
-    hideOutOfStock: input.hideOutOfStock,
+    hideOutOfStock,
+    ...(offCatalog ? { offCatalog } : {}),
     updatedAt: (options.now ?? (() => new Date()))().toISOString(),
   };
   try {
