@@ -46,33 +46,32 @@ async function proveFrozenItemChoices({ page, request }) {
       await page.goto(path);
       await expect(inspect).toBeVisible({ timeout: 60000 });
       await inspect.focus(); await page.keyboard.press('Enter');
+      await page.getByRole('button', { name: 'Order record', exact: true }).click();
       const receipt = page.getByText('Receipt: ' + order.receiptId);
       await expect(receipt).toBeVisible();
       const inspected = await receipt.textContent();
-      const items = page.getByText('Fixture shirt', { exact: true });
+      const items = page.getByRole('cell', { name: 'Fixture shirt', exact: true });
       await expect(items).toHaveCount(2);
+      // Each item is one table row: name, its own frozen choices, quantity and line total.
       const itemOutput = await items.evaluateAll(nodes => nodes.map(node => {
-        const fields = node.parentElement.parentElement;
-        const following = fields.parentElement.nextElementSibling;
-        const section = following?.querySelector('.flex-1');
-        const style = section && getComputedStyle(section);
-        return { fields: fields.innerText, followingText: following?.innerText ?? null,
-          textOverflow: style?.textOverflow ?? null, textHeight: section?.getBoundingClientRect().height ?? null,
-          lineHeight: style?.lineHeight ?? null };
+        const cells = [...node.parentElement.children], options = cells[1], style = getComputedStyle(options);
+        return { row: cells.map(cell => cell.innerText), followingText: options.innerText,
+          textOverflow: style.textOverflow, textHeight: options.getBoundingClientRect().height, lineHeight: style.lineHeight };
       }));
+      const catalogIds = await page.getByText(/^Fixture shirt: /).allTextContents();
       const noHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
       await items.first().scrollIntoViewIfNeeded();
       await page.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, `orders-frozen-choices-${width}.png`), fullPage: true, animations: 'disabled' });
       await page.getByRole('button', { name: 'Back to orders', exact: true }).click();
       await expect(inspect).toBeVisible();
       const evidence = { width, inspectLabel, inspected,
-        items: itemOutput, noHorizontalOverflow, backToOrders: await inspect.textContent(), storageUnchanged: JSON.stringify(original()) === JSON.stringify(before) };
+        items: itemOutput, catalogIds, noHorizontalOverflow, backToOrders: await inspect.textContent(), storageUnchanged: JSON.stringify(original()) === JSON.stringify(before) };
       console.log('ORDER_FROZEN_CHOICES_PROOF ' + JSON.stringify(evidence));
       await test.info().attach(`orders-frozen-choices-${width}.json`, { body: JSON.stringify(evidence, null, 2), contentType: 'application/json' });
       expect.soft(itemOutput[0].followingText).toBe(mediumText);
       expect.soft(itemOutput[1].followingText).toBe('Size: L');
-      expect.soft(itemOutput[0].fields).toContain('medium');
-      expect.soft(itemOutput[1].fields).toContain('large');
+      expect.soft(itemOutput.map(item => item.row.slice(2))).toEqual([['1', '$1.00'], ['1', '$1.00']]);
+      expect.soft(catalogIds).toEqual(['Fixture shirt: medium', 'Fixture shirt: large']);
       for (const item of itemOutput) expect.soft(item.textOverflow).not.toBe('ellipsis');
       expect.soft(noHorizontalOverflow).toBe(true);
       expect.soft(evidence.storageUnchanged).toBe(true);
@@ -100,6 +99,11 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     const received = await response;
     expect(received.status()).toBe(200);
     return { body: (await received.json()).data, input: received.request().postDataJSON() };
+  };
+  // The Order record fold holds the IDs and version; each new page arrives with it closed.
+  const openRecord = async () => {
+    const fold = page.getByRole('button', { name: 'Order record', exact: true });
+    if (await fold.getAttribute('aria-expanded') !== 'true') await fold.click();
   };
   try {
     await page.goto('/_emdash/api/auth/dev-bypass?redirect=' + path + 'orders');
@@ -164,17 +168,21 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await capture('orders-list-desktop');
     const open = page.getByRole('button', { name: await inspect(paid.order), exact: true });
     await open.focus(); await page.keyboard.press('Enter');
+    // Packing first: status line, actions and items; the IDs sit in the Order record fold.
+    await expect(page.getByText(/^Paid .* · Processing$/)).toBeVisible();
+    await expect(page.getByText('Test order', { exact: true })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Paid', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: '$2.50', exact: true }).last()).toBeVisible();
+    await expect(page.getByText('Receipt: ' + paid.order.receiptId)).toBeHidden();
+    await openRecord();
     await expect(page.getByText('Receipt: ' + paid.order.receiptId)).toBeVisible();
     await expect(page.getByText('Checkout attempt: ' + paid.order.attemptId)).toBeVisible();
-    await expect(page.getByText('Payment: Provider-paid')).toBeVisible();
-    await expect(page.getByText('USD 2.50', { exact: true })).toBeVisible();
-    await expect(page.getByText('Status: Processing')).toBeVisible();
     await expect(page.getByText('Order ID: ' + paid.order.orderId)).toBeVisible();
     await expect(page.getByText('Version: 1')).toBeVisible();
     // Text presence alone also passes when the host collapses newline-delimited
     // facts into one paragraph. Each fact must occupy its own wrapping row.
     const detailRows = ['Order ID: ' + paid.order.orderId, 'Version: 1', 'Receipt: ' + paid.order.receiptId,
-      'Checkout attempt: ' + paid.order.attemptId, 'Payment: Provider-paid', 'Status: Processing'];
+      'Checkout attempt: ' + paid.order.attemptId, 'Provider payment: ' + paid.order.paymentId];
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 1000 });
       const boxes = [];
@@ -199,7 +207,9 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await capture('orders-address-form');
     await interact('Save address');
     await expect(page.getByText('Address saved', { exact: true })).toBeVisible();
-    await expect(page.getByText(/2 Corrected Road.*\(corrected\)/)).toBeVisible();
+    await expect(page.getByText('2 Corrected Road', { exact: true })).toBeVisible();
+    await expect(page.getByText('Corrected after checkout', { exact: true })).toBeVisible();
+    await openRecord();
     await expect(page.getByText('Version: 2')).toBeVisible();
     await capture('orders-address-corrected');
     expect((await kept.get(paid.order.orderId)).delivery.line1).toBe('2 Corrected Road');
@@ -210,8 +220,11 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await capture('orders-complete-form');
     await interact('Complete order');
     await expect(page.getByText('Order completed', { exact: true })).toBeVisible();
-    await expect(page.getByText('Status: Completed')).toBeVisible();
-    await expect(page.getByText('Tracking number: SYNTHETIC-TRACKING-1')).toBeVisible();
+    await expect(page.getByText(/^Paid .* · Completed · /)).toBeVisible();
+    await expect(page.getByText('Shipped', { exact: true })).toBeVisible();
+    await expect(page.getByText('USPS', { exact: true })).toBeVisible();
+    await expect(page.getByText('SYNTHETIC-TRACKING-1', { exact: true })).toBeVisible();
+    await openRecord();
     await expect(page.getByText('Version: 3')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Correct address', exact: true })).toHaveCount(0);
     await capture('orders-completed');
@@ -222,7 +235,8 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await page.getByRole('button', { name: 'Move back', exact: true }).click();
     expect((await moved).status()).toBe(200);
     await expect(page.getByText('Moved back to Processing', { exact: true })).toBeVisible();
-    await expect(page.getByText('Status: Processing')).toBeVisible();
+    await expect(page.getByText(/^Paid .* · Processing$/)).toBeVisible();
+    await openRecord();
     await expect(page.getByText('Version: 4')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Correct address', exact: true })).toBeVisible();
     expect((await kept.get(paid.order.orderId)).completed).toBeUndefined();
@@ -242,8 +256,8 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await page.reload();
     await expect(page.getByRole('button', { name: await inspect(paid.order), exact: true })).toBeVisible({ timeout: 60000 });
     await interact(await inspect(free.order));
-    await expect(page.getByText('Payment: Zero payable — no payment required')).toBeVisible();
-    await expect(page.getByText('USD 0.00', { exact: true }).last()).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Nothing to pay', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: '$0.00', exact: true }).last()).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await capture('orders-zero-mobile');
     await interact('Back to orders');

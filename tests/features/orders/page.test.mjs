@@ -109,7 +109,7 @@ test('the Checkout to Orders handoff keeps the first copy and reports repeats an
  assert.equal(await receiver.receive({ ...fresh, orderId: 'order:test', mode: 'test' }), 'stored');
 });
 
-test('copies kept before the contact check still list, showing No address', async () => {
+test('copies kept before the contact check still list, showing No ship-to address', async () => {
  const { listOrders } = await import('../../../dist/features/orders/index.js');
  const usd = { currency: 'USD', minor: '100' };
  const paidOrder = { schema: 'dinkuskit.commerce.paid-order/v1', orderId: 'order:old', receiptId: 'r', attemptId: 'a',
@@ -118,5 +118,5 @@ test('copies kept before the contact check still list, showing No address', asyn
  assert.equal((await listOrders(orders)).length, 1);
  const detail = JSON.stringify(await ordersBlocks({ ...route, input: { type: 'block_action', action_id: 'orders.open:order:old' } }, { storage: { orders } }));
  assert.ok(!detail.includes('Orders unavailable'));
- assert.ok(detail.includes('No address'));
+ assert.ok(detail.includes('No ship-to address'));
 });

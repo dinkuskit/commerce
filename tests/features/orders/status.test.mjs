@@ -92,7 +92,7 @@ test('the owner completes an order from its page and moves it back to Processing
   const detail = await ordersBlocks(route({ type: 'block_action', action_id: 'orders.open:o1' }), ctx, services);
   const buttons = detail.blocks.filter(b => b.type === 'actions').flatMap(b => b.elements.map(e => e.action_id));
   assert.ok(buttons.includes('orders.finish:o1') && buttons.includes('orders.address:o1'));
-  assert.match(JSON.stringify(detail), /Status: Processing/);
+  assert.match(JSON.stringify(detail), /· Processing"/);
 
   const form = await ordersBlocks(route({ type: 'block_action', action_id: 'orders.finish:o1' }), ctx, services);
   assert.equal(validateBlocks(form.blocks).valid, true);
@@ -107,9 +107,9 @@ test('the owner completes an order from its page and moves it back to Processing
   assert.equal(validateBlocks(done.blocks).valid, true);
   const text = JSON.stringify(done);
   assert.match(text, /Order completed/);
-  assert.match(text, /Status: Completed/);
-  assert.match(text, /Carrier: USPS/);
-  assert.match(text, /Tracking number: T123/);
+  assert.match(text, /· Completed · /);
+  assert.match(text, /"Shipped"\},\{"type":"section","text":"USPS"/);
+  assert.match(text, /"text":"T123"/);
   // Completed: no Complete order, no Correct address; Move back asks first.
   const actions = done.blocks.filter(b => b.type === 'actions').flatMap(b => b.elements);
   assert.ok(!actions.some(e => e.action_id === 'orders.finish:o1' || e.action_id === 'orders.address:o1'));
@@ -125,7 +125,7 @@ test('the owner completes an order from its page and moves it back to Processing
 
   const back = JSON.stringify(await ordersBlocks(route({ type: 'block_action', action_id: reopen.action_id }), ctx, services));
   assert.match(back, /Moved back to Processing/);
-  assert.match(back, /Status: Processing/);
+  assert.match(back, /· Processing"/);
   assert.match(JSON.stringify(await ordersBlocks(route({ type: 'block_action', action_id: reopen.action_id }), ctx, services)), /Order not changed/);
   assert.equal((await listOrders(orders))[0].revision, 3);
 });

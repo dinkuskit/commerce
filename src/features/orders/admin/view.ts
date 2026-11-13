@@ -9,13 +9,25 @@ import { normalizeMoney } from '../../catalog/kernel/index.js';
 
 /** Read-only projection. The authenticated controller owns loading and authorization. */
 export type OrdersInspection = { status: 'available'; orders: readonly OrderRecord[] } | { status: 'unavailable' };
-function amount(value: Money): string {
-  const minor = BigInt(normalizeMoney(value).minor);
-  return 'USD ' + (minor / 100n) + '.' + String(minor % 100n).padStart(2, '0');
+function amount(value: Money | bigint): string {
+  const minor = typeof value === 'bigint' ? value : BigInt(normalizeMoney(value).minor);
+  return '$' + (minor / 100n).toLocaleString('en-US') + '.' + String(minor % 100n).padStart(2, '0');
+}
+/** Order times read in UTC until stores record a time zone. */
+function when(at: string): string {
+  return new Date(at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+}
+/** An address as the lines on a parcel, one wrapping section each. */
+function lines(a: CheckoutDeliveryAddress): Block[] {
+  return [a.name, [a.line1, a.line2].filter(Boolean).join(', '), a.city + ', ' + [a.region, a.postalCode].filter(Boolean).join(' '), a.country]
+    .map(text);
+}
+function text(value: string): Block {
+  return { type: 'section', text: value };
 }
 function payment(order: PaidOrder): string {
-  if (order.paymentId) return 'Provider-paid';
-  return normalizeMoney(order.total).minor === '0' ? 'Zero payable — no payment required' : 'Payment not recorded';
+  if (order.paymentId) return 'Paid';
+  return normalizeMoney(order.total).minor === '0' ? 'Nothing to pay' : 'Payment not recorded';
 }
 // Keep repeated Block Kit wire keys in one place: this view ships in the backend.
 function action(label: string, action_id: string): Block {
@@ -26,15 +38,6 @@ function unavailable(title: string, description: string): Block {
 }
 function header(): Block {
   return { type: 'header', text: 'Orders' };
-}
-function address(a: CheckoutDeliveryAddress): string {
-  return [a.name, a.line1, a.line2, a.city, a.region, a.postalCode, a.country].filter(Boolean).join(', ');
-}
-// Digital-only orders and orders paid before addresses were collected have none;
-// copies kept before Orders checked the contact snapshot may lack its contact.
-function shipTo(record: OrderRecord): string {
-  const a = deliveryOf(record);
-  return a ? address(a) + (record.delivery ? ' (corrected)' : '') : 'No address';
 }
 /** People read the short number; orders kept before numbering show their ID until the page numbers them. Only live orders are real. */
 function label(record: OrderRecord): string {
@@ -65,13 +68,6 @@ export function completeForm(record: OrderRecord, failure?: string, typed?: Reco
   return orderForm(record, 'Complete', failure, 'Order not completed', [['carrier', 'Carrier (optional)', String(typed?.carrier ?? '')],
     ['tracking', 'Tracking number (optional)', String(typed?.tracking ?? '')]], 'Complete order', 'complete');
 }
-// Section text uses normal HTML whitespace: newlines do not separate facts.
-// Keep one wrapping section per pair; fields cells truncate long IDs and addresses.
-function detailFields(...pairs: string[]): Block[] {
-  const blocks: Block[] = [];
-  for (let i = 0; i < pairs.length; i += 2) blocks.push({ type: 'section', text: pairs[i] + ': ' + pairs[i + 1] });
-  return blocks;
-}
 const notRecorded = 'Not recorded';
 const back = action('Back to orders', 'orders.list');
 /** Selection is the exact canonical order ID, never a row offset or payment ID. `labelPage` is Ship's page for the selected order. */
@@ -91,43 +87,43 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     }
     const matches = input.orders.filter(record => record.paidOrder.orderId === selectedOrderId);
     if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
-    const record = matches[0], order = record.paidOrder, done = record.completed, contact = order.contactSnapshot?.contact, billing = billingOf(record);
-    const id = encodeURIComponent(order.orderId), version = (record.revision ?? 1) + ':' + id;
-    blocks.push(...detailFields('Order', label(record), 'Order ID', order.orderId, 'Version', String(record.revision ?? 1), 'Receipt', order.receiptId,
-      'Checkout attempt', order.attemptId, 'Payment', payment(order),
-      'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Status', status(record),
-      ...(done ? ['Completed at', done.at, 'Carrier', done.carrier ?? notRecorded, 'Tracking number', done.tracking ?? notRecorded] : []),
-      'Email', contact?.email ?? notRecorded, 'Phone', contact?.phone ?? notRecorded, 'Ship to', shipTo(record),
-      // Orders paid before billing was recorded have none.
-      'Bill to', billingMatchesDelivery(record) ? 'Same as delivery address' : billing ? address(billing) : notRecorded));
+    const record = matches[0], order = record.paidOrder, done = record.completed, contact = order.contactSnapshot?.contact, billing = billingOf(record), ship = deliveryOf(record);
+    const id = encodeURIComponent(order.orderId), version = (record.revision ?? 1) + ':' + id, pricing = order.pricing;
+    // Packing first: what to send and where, then the action that finishes it.
+    blocks.push({ type: 'header', text: 'Order ' + label(record) }, { type: 'context', text: [order.paidAt ? 'Paid ' + when(order.paidAt) : 'Paid', status(record),
+      ...(done ? [when(done.at)] : [])].join(' · ') },
+    ...(order.mode === 'live' ? [] : [{ type: 'banner', variant: 'alert', title: 'Test order', description: 'No money moved. Postage is never bought for a test order.' } as Block]),
     // A Completed order's address is locked; moving it back to Processing unlocks it.
     // A Processing order with an address links to Ship's label page when the store has Ship.
-    blocks.push({ type: 'actions', elements: done
+    { type: 'actions', elements: done
       ? [{ type: 'button', label: 'Move back to Processing', action_id: 'orders.reopen:' + version,
         confirm: { title: 'Move back to Processing?', text: 'Its carrier, tracking number and completion time are cleared.', confirm: 'Move back', deny: 'Cancel' } }]
-      : [...(labelPage && deliveryOf(record) ? [{ type: 'link' as const, label: 'Create shipping label', target: { kind: 'external' as const, url: labelPage }, appearance: 'primary' as const }] : []),
-        { type: 'button', label: 'Complete order', action_id: 'orders.finish:' + id },
-        ...(deliveryOf(record) ? [{ type: 'button' as const, label: 'Correct address', action_id: 'orders.address:' + id }] : [])] });
-    blocks.push({ type: 'header', text: 'Items' });
+      : [...(labelPage && ship ? [{ type: 'link' as const, label: 'Create shipping label', target: { kind: 'external' as const, url: labelPage }, appearance: 'primary' as const }] : []),
+        { type: 'button', label: 'Complete order', action_id: 'orders.finish:' + id, ...(labelPage && ship ? {} : { style: 'primary' as const }) },
+        ...(ship ? [{ type: 'button' as const, label: 'Correct address', action_id: 'orders.address:' + id }] : [])] });
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
     // Reserve mints tickets only through an Inventory provider, which the Registry build never has.
     if (!REGISTRY_BUILD && order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + id));
-    for (const line of order.lines) {
-      blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
-        'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
-      const choices = order.variantSelections?.find(selection => selection.catalogItemId === line.catalogItemId)?.selections;
-      if (choices?.length) blocks.push({ type: 'section', text: choices.map(choice => choice.optionLabel + ': ' + choice.valueLabel).join(' · ') });
-    }
-    if (order.pricing) {
-      const pricing = order.pricing;
-      blocks.push({ type: 'header', text: 'Recorded pricing' }, fields('Item subtotal', amount(pricing.merchandiseSubtotal),
-        'Coupon', pricing.coupon?.code ?? 'None recorded',
-        'Coupon discount', amount(pricing.couponDiscount),
-        'Net items', amount(pricing.netMerchandise),
-        'Shipping', amount(pricing.shipping.charge),
-        'Pricing total', amount(pricing.finalTotal)));
-    } else blocks.push({ type: 'context', text: 'Item subtotal, coupon and shipping breakdown not recorded.' });
-    blocks.push(fields('Order total', amount(order.total)));
+    blocks.push({ type: 'header', text: 'Items' }, { type: 'table', page_action_id: 'orders.items', columns: [
+      { key: 'item', label: 'Item' }, { key: 'options', label: 'Options' }, { key: 'quantity', label: 'Qty' }, { key: 'total', label: 'Total' }],
+    rows: order.lines.map(line => ({ item: line.name, quantity: String(line.quantity),
+      options: order.variantSelections?.find(selection => selection.catalogItemId === line.catalogItemId)?.selections
+        .map(choice => choice.optionLabel + ': ' + choice.valueLabel).join(' · ') ?? '',
+      total: amount(BigInt(normalizeMoney(line.unitPrice).minor) * BigInt(line.quantity)) })) } as Block);
+    const payments: Block[] = [{ type: 'header', text: 'Payment' }, { type: 'table', page_action_id: 'orders.items', columns: [{ key: 'name', label: payment(order) }, { key: 'value', label: 'Amount' }],
+      rows: [...(pricing ? [['Subtotal', amount(pricing.merchandiseSubtotal)],
+        ...(pricing.coupon ? [['Coupon ' + pricing.coupon.code, '−' + amount(pricing.couponDiscount)]] : []),
+        ['Shipping', amount(pricing.shipping.charge)]] : []), ['Total', amount(order.total)]].map(([name, value]) => ({ name, value })) } as Block];
+    const left: Block[] = [{ type: 'header', text: 'Ship to' }, ...(ship ? lines(ship) : [text('No ship-to address')]),
+      ...(record.delivery ? [{ type: 'context', text: 'Corrected after checkout' } as Block] : []),
+      ...(done ? [{ type: 'header', text: 'Shipped' } as Block, text(done.carrier ?? 'Carrier not recorded'), text(done.tracking ?? 'No tracking number')] : [])];
+    const right: Block[] = [{ type: 'header', text: 'Customer' }, text(contact?.email ?? 'No email'), text(contact?.phone ?? 'No phone'),
+      // Orders paid before billing was recorded have none.
+      { type: 'header', text: 'Bill to' }, ...(billingMatchesDelivery(record) ? [text('Same as ship-to')] : billing ? lines(billing) : [text(notRecorded)])];
+    blocks.push({ type: 'columns', columns: [left, right] }, ...payments, { type: 'accordion', label: 'Order record', blocks: [
+      text('Order ID: ' + order.orderId), text('Version: ' + (record.revision ?? 1)), text('Receipt: ' + order.receiptId),
+      text('Checkout attempt: ' + order.attemptId), text('Provider payment: ' + (order.paymentId ?? notRecorded)),
+      ...order.lines.map(line => text(line.name + ': ' + line.catalogItemId))] } as Block);
     return { blocks };
   } catch {
     return { blocks: [header(), back, unavailable('Orders unavailable', 'Recorded amounts could not be displayed safely.')] };

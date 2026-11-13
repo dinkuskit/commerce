@@ -57,7 +57,7 @@ test('the owner corrects the address; the checkout copy stays and the version go
   const values = { ...delivery, line1: '2 Fixed Road', line2: '', region: '' };
   const saved = JSON.stringify(await ordersBlocks(route({ type: 'form_submit', action_id: submit, values }), storage, services));
   assert.match(saved, /Address saved/);
-  assert.match(saved, /2 Fixed Road, Testville, 00000, US \(corrected\)/);
+  assert.match(saved, /"text":"2 Fixed Road"\},\{"type":"section","text":"Testville, 00000"\},\{"type":"section","text":"US"\},\{"type":"context","text":"Corrected after checkout"/);
   const [record] = await listOrders(orders);
   assert.equal(record.revision, 2);
   assert.equal(record.paidOrder.contactSnapshot.contact.delivery.line1, '1 Example Way');
@@ -82,6 +82,6 @@ test('a digital-only order offers no address correction', async () => {
   const orders = collection();
   await createPaidOrderReceiver(orders).receive(order('d1', '2026-10-10T01:00:00Z', false));
   const detail = JSON.stringify(await ordersBlocks(route({ type: 'block_action', action_id: 'orders.open:d1' }), { storage: { orders } }, services));
-  assert.ok(detail.includes('No address'));
+  assert.ok(detail.includes('No ship-to address'));
   assert.ok(!detail.includes('orders.address:'));
 });
