@@ -29,7 +29,7 @@ function checkoutFixture() {
   return { opened, f };
 }
 
-test("captures contact after admission, freezes it through CAS, and copies it to the order without projecting PII", async (t) => {
+test("captures contact after admission, freezes it through CAS, and copies it to the order, shown only on the paid order", async (t) => {
   const { opened, f } = checkoutFixture();
   t.after(() => opened.db.close());
 
@@ -60,8 +60,10 @@ test("captures contact after admission, freezes it through CAS, and copies it to
   assert.deepEqual(paid.order.contactSnapshot, started.contactSnapshot);
   assert.equal(paid.payment.total.minor, "75");
   assert.equal(paid.order.total.minor, "75");
-  assert.equal(JSON.stringify(projectGuestCheckout(paid)).includes("guest@example.test"), false);
-  assert.equal(JSON.stringify(projectGuestCheckout(paid)).includes("555 0101"), false);
+  // Before payment no answer carries contact; the paid order shows it to the cart key's holder (commerce-thank-you-contact-20261113).
+  assert.equal(JSON.stringify(projectGuestCheckout(started)).includes("guest@example.test"), false);
+  assert.equal(JSON.stringify(projectGuestCheckout(started)).includes("555 0101"), false);
+  assert.deepEqual(projectGuestCheckout(paid).order.contact, contact("guest@example.test"));
 });
 
 test("authoritative phone flag is reread for new checkout and forged client policy is denied", async (t) => {
@@ -233,8 +235,8 @@ test('native routes use real plugin settings, hint outside status schema, reread
   assert.deepEqual(frozen.contactSnapshot,snapshot);
   assert.deepEqual(frozen.order.contactSnapshot,snapshot);
   assert.deepEqual(frozen.order.total,payment.total);
-  assert.equal(JSON.stringify(paid).includes('shopper@example.test'),false);
-  assert.equal(JSON.stringify(paid).includes('555 0123'),false);
+  assert.deepEqual(paid.checkout.order.contact,snapshot.contact);
+  assert.equal(JSON.stringify({...paid,checkout:{...paid.checkout,order:null}}).includes('shopper@example.test'),false);
 });
 
 test('native guest contact denies missing email and cross-cart injection, corrupt prepare exposes neither PII nor optional promise', async t => {
@@ -272,7 +274,7 @@ test('active historical original replays without new contact or a current requir
 
 import { runtimeFixture } from './registry-runtime.mjs';
 
-test('actual default workerd bindings enforce current SDK phone setting and keep contact out of payment/public transport', async t => {
+test('actual default workerd bindings enforce current SDK phone setting and keep contact out of payment transport and show it only on the paid order', async t => {
   const f=await runtimeFixture(); t.after(()=>f.close());
   const prepare='checkout/guest/prepare',start='checkout/guest/start',status='checkout/guest/status';
   const optional=await f.invoke(prepare);
@@ -297,6 +299,6 @@ test('actual default workerd bindings enforce current SDK phone setting and keep
   const attempt=(await f.cartRecords())[0].attempts[0];
   assert.deepEqual(attempt.contactSnapshot,frozen);
   assert.deepEqual(attempt.order.contactSnapshot,frozen);
-  assert.equal(JSON.stringify(paid).includes('workerd-shopper@example.test'),false);
-  assert.equal(JSON.stringify(paid).includes('555 0134'),false);
+  assert.deepEqual(paid.checkout.order.contact,frozen.contact);
+  assert.equal(JSON.stringify(f.requests).includes('workerd-shopper@example.test'),false);
 });

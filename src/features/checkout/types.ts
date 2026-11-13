@@ -7,6 +7,7 @@ import type { CheckoutCouponPort, CouponNotApplicableReason, CouponQuoteSnapshot
 import type {
   CheckoutContactRequirementsLoader,
   CheckoutContactSnapshot,
+  NormalizedCheckoutContact,
 } from "../checkout-contact/index.js";
 
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
@@ -338,6 +339,8 @@ export interface GuestCheckoutOrderSummary {
   receiptId: string;
   lines: GuestCheckoutLine[];
   total: Money;
+  /** The order's email, phone and addresses, for the thank-you page of the browser holding the cart key. */
+  contact?: NormalizedCheckoutContact;
   pricing?: GuestCheckoutPricingSummary;
 }
 

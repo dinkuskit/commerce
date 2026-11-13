@@ -16763,6 +16763,49 @@
       "superseded_by": "commerce-cart-expiry-20261113",
       "updated_at": "2026-11-13T17:17:40+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Yes, like Shopify. Once an order is paid, Commerce's guest answer for that cart's key carries the order's frozen contact (email, phone, delivery and billing addresses) as order.contact, so the store's thank-you page shows it. Nothing before payment carries contact, Payments never receives it, and only the browser holding the cart key can read it. Narrows the 'public status excludes contact' part of checkout-contact-email-phone-20261008 to unpaid answers.",
+      "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
+      "created_at": "2026-11-13T21:40:23+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "checkout-contact-email-phone-20261008"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-13T21:40:23+00:00",
+          "choice": "Yes, like Shopify. Once an order is paid, Commerce's guest answer for that cart's key carries the order's frozen contact (email, phone, delivery and billing addresses) as order.contact, so the store's thank-you page shows it. Nothing before payment carries contact, Payments never receives it, and only the browser holding the cart key can read it. Narrows the 'public status excludes contact' part of checkout-contact-email-phone-20261008 to unpaid answers.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-thank-you-contact-20261113",
+      "implementation_ref": null,
+      "question": "Should the thank-you page show the shopper's email and addresses?",
+      "rationale": "Ronald 13 Nov 21:34 UTC picked 'Yes, like Shopify' on the decision card. Shopify's and WooCommerce's order confirmation pages both show the email and the shipping and billing addresses; the template's thank-you lock (template-thank-you-server-20261113) lists addresses. Costs 21 bytes of the Registry cap.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-13T21:40:23+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -16799,5 +16842,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T17:17:40+00:00"
+  "updated_at": "2026-11-13T21:40:23+00:00"
 }

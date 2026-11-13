@@ -226,7 +226,7 @@ Projection schema `dinkuskit.commerce.guest-checkout-projection/v1`:
 | `attemptId` | Server-issued current attempt, not authority; null before start |
 | `lines`, `total` | Frozen Commerce USD minor-unit amounts |
 | `redirectUrl` | Hosted-payment handoff URL when a session exists; never proof of paid/unpaid |
-| `order` | `{ orderId, receiptId, lines, total }` only after a persisted paid Commerce order |
+| `order` | `{ orderId, receiptId, lines, total, contact }` only after a persisted paid Commerce order; `contact` is the order's frozen email, phone and addresses (`commerce-thank-you-contact-20261113`) |
 | `retryAfter` | Released attempt id required to start the next attempt |
 | `unavailable` | Guest-safe code/message for genuine unavailable attempt state; never raw provider errors |
 
@@ -258,7 +258,8 @@ coupon and the shopper starts again without it, which is their explicit
 acceptance of the full price. Raw coupon service messages never reach the
 shopper.
 
-`order` never includes `paymentId`, provider secrets, or other shopper data.
+`order` never includes `paymentId` or provider secrets. Its only shopper data is
+the paid order's own `contact`, read by the holder of that cart's key.
 Unexpected provider or storage failures return guest-safe `UNAVAILABLE` and
 never raw provider, storage, or secret strings. A pre-retained capability
 keeps a durable recoverable attempt; terminal failures are not swallowed
