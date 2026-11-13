@@ -69,7 +69,7 @@ Each sync, in order (`src/features/orders/ship.ts`):
   "email": "shopper@example.test",
   "completed": null,
   "storeName": "Demo Store",
-  "lines": [{ "catalogItemId": "item_demo", "name": "Demo Mug", "quantity": 2, "unitPrice": { "currency": "USD", "minor": "1250" }, "weightOz": 12.5 }]
+  "lines": [{ "catalogItemId": "item_demo_m", "name": "Demo Tee", "quantity": 2, "unitPrice": { "currency": "USD", "minor": "1250" }, "options": "Size: M", "weightOz": 12.5 }]
 }
 ```
 
@@ -80,7 +80,14 @@ cents in a string (the paid order's line price, before any order-level
 coupon; Registry stores take no coupons in v1), and the product's current
 shipping weight in ounces when one is set, for insurance,
 packing slips and later customs forms (GrillTrack `commerce-ship-sync-001`,
-Ronald's "yes no no", 23:10 UTC 2026-10-10). `completed` is
+Ronald's "yes no no", 23:10 UTC 2026-10-10). A line with variant choices
+also carries `options`: the paid order's frozen choices for that catalog item
+id, exactly as the Orders page shows them (`Size: M · Colour: Red`), made one
+line and cut to at most 200 UTF-16 units without splitting a character, so two
+sizes of one product never look alike in Ship. A line without choices sends no
+`options`. Orders Ship already took are not resent for it; they carry it from
+their next version (GrillTrack `commerce-ship-line-options-20261113`, Ronald's
+"agreed", 15:57 UTC 2026-11-13, commerce#264). `completed` is
 `{ at, carrier?, tracking? }` once the order is Completed. `storeName` is the
 store's name for Ship's shipped email: EmDash's Site title (`ctx.site.name`)
 made one line as below and cut to at most 200 UTF-16 units without splitting

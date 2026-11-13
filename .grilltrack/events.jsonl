@@ -711,3 +711,7 @@
 {"action": "decision_verified", "at": "2026-11-01T21:25:26+00:00", "data": {"decision_id": "commerce-remove-native-entry-20261101"}, "event_id": "c0f42fa9-bc2a-4b9a-8ede-a4dff9a2b4bb"}
 {"action": "decision_proposed", "at": "2026-11-13T15:37:48+00:00", "data": {"decision_id": "catalog-listing-switch-20261113"}, "event_id": "d311e63d-2295-4def-966c-04b03454b797"}
 {"action": "decision_locked", "at": "2026-11-13T15:37:49+00:00", "data": {"decision_id": "catalog-listing-switch-20261113"}, "event_id": "3e768892-ce1a-42ee-b476-08fd3bf30cdf"}
+{"action": "decision_proposed", "at": "2026-11-13T16:27:02+00:00", "data": {"decision_id": "commerce-ship-line-options-20261113"}, "event_id": "d92f13fb-d921-4791-b8ef-00106ad175e7"}
+{"action": "decision_locked", "at": "2026-11-13T16:27:03+00:00", "data": {"decision_id": "commerce-ship-line-options-20261113"}, "event_id": "a734930d-7c82-45b3-9234-d43b2d92269a"}
+{"action": "decision_implemented", "at": "2026-11-13T16:27:03+00:00", "data": {"decision_id": "commerce-ship-line-options-20261113"}, "event_id": "9c62ab5b-b51a-44c3-b148-de8663ef0194"}
+{"action": "decision_verified", "at": "2026-11-13T16:27:03+00:00", "data": {"decision_id": "commerce-ship-line-options-20261113"}, "event_id": "a4c288b6-f9c5-4ce1-8e98-ff24f842922a"}

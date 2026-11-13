@@ -16411,6 +16411,77 @@
       "superseded_by": null,
       "updated_at": "2026-11-13T15:37:49+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:12a15e6",
+      "candidate_refs": [],
+      "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/264",
+      "created_at": "2026-11-13T16:27:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-ship-sync-001"
+      ],
+      "domain": "Checkout totals",
+      "history": [
+        {
+          "at": "2026-11-13T16:27:03+00:00",
+          "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-13T16:27:03+00:00",
+          "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-13T16:27:03+00:00",
+          "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
+          "from": "implemented",
+          "implementation_ref": "commerce PR #271: lineOptions shared by the Orders page and syncShip; each Ship line carries options when it has variant choices; tests, contract docs, reference and changeset",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-ship-line-options-20261113",
+      "implementation_ref": "commerce PR #271: lineOptions shared by the Orders page and syncShip; each Ship line carries options when it has variant choices; tests, contract docs, reference and changeset",
+      "question": "Do Ship's orders show which size or other options the shopper chose, so two lines of the same product (commerce#264) never look alike?",
+      "rationale": "Ronald, 13 Nov 2026 15:57 UTC: \"agreed\"",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-11-13T16:27:03+00:00",
+      "verification_ref": "file:.grilltrack/proof/commerce-ship-line-options-20261113/PROOF.md"
     }
   ],
   "last_activation": {
@@ -16447,5 +16518,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T15:37:49+00:00"
+  "updated_at": "2026-11-13T16:27:03+00:00"
 }
