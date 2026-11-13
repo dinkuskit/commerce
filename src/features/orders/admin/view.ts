@@ -108,8 +108,12 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     // Pack asks Inventory to pack the tickets reserve minted; it never marks the order packed here.
     // Reserve mints tickets only through an Inventory provider, which the Registry build never has.
     if (!REGISTRY_BUILD && order.ticketIds?.length) blocks.push(action('Pack', 'orders.pack:' + id));
-    for (const line of order.lines) blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
-      'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
+    for (const line of order.lines) {
+      blocks.push(fields('Item', line.name, 'Catalog ID', line.catalogItemId,
+        'Quantity', String(line.quantity), 'Unit price', amount(line.unitPrice)));
+      const choices = order.variantSelections?.find(selection => selection.catalogItemId === line.catalogItemId)?.selections;
+      if (choices?.length) blocks.push({ type: 'section', text: choices.map(choice => choice.optionLabel + ': ' + choice.valueLabel).join(' · ') });
+    }
     if (order.pricing) {
       const pricing = order.pricing;
       blocks.push({ type: 'header', text: 'Recorded pricing' }, fields('Item subtotal', amount(pricing.merchandiseSubtotal),

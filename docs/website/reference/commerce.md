@@ -27,7 +27,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 | Page | What it does |
 | --- | --- |
-| **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment, the customer's email and phone, and the Ship to and Bill to addresses. |
+| **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment, the customer's email and phone, and the Ship to and Bill to addresses. Each item shows its recorded variant choices, such as Size: M, when present; later option renames do not change them. |
 | **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, a placeholder image for products without one). |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
