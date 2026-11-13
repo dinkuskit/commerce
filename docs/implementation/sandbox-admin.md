@@ -34,7 +34,9 @@ a transport/storage failure must not imply an atomic rollback or success.
 
 Commerce currently uses flat plugin page links, labeled
 Commerce Products and Commerce Settings. Commerce Settings has a Catalog
-section and its own Save for Hide out-of-stock products.
+section and its own Save for Hide out-of-stock products and List my products
+in the DinkusKit catalog. The catalog switch starts on; off adds `offCatalog`
+to the public catalog answer, and the store's catalog feed then lists nothing.
 This is the current agreed placement, not a permanent navigation constraint.
 The private admin route requires content:edit_any and POST; EmDash supplies
 session/token authorization, CSRF protection, and Block Kit response validation.

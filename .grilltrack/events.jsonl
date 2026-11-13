@@ -709,3 +709,5 @@
 {"action": "decision_locked", "at": "2026-11-01T21:06:13+00:00", "data": {"decision_id": "commerce-remove-native-entry-20261101"}, "event_id": "3148da82-503c-4b8b-9479-1dcfc963a5fb"}
 {"action": "decision_implemented", "at": "2026-11-01T21:25:26+00:00", "data": {"decision_id": "commerce-remove-native-entry-20261101"}, "event_id": "a7c91cbd-5b01-4679-a961-4b0b2cd50e2f"}
 {"action": "decision_verified", "at": "2026-11-01T21:25:26+00:00", "data": {"decision_id": "commerce-remove-native-entry-20261101"}, "event_id": "c0f42fa9-bc2a-4b9a-8ede-a4dff9a2b4bb"}
+{"action": "decision_proposed", "at": "2026-11-13T15:37:48+00:00", "data": {"decision_id": "catalog-listing-switch-20261113"}, "event_id": "d311e63d-2295-4def-966c-04b03454b797"}
+{"action": "decision_locked", "at": "2026-11-13T15:37:49+00:00", "data": {"decision_id": "catalog-listing-switch-20261113"}, "event_id": "3e768892-ce1a-42ee-b476-08fd3bf30cdf"}
