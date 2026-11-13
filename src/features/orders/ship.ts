@@ -1,5 +1,5 @@
 import { isRecord } from "../../shared/record.js";
-import { completeOrder, listOrders, orderFacts, type OrdersCollection } from "./store.js";
+import { completeOrder, lineOptions, listOrders, orderFacts, type OrdersCollection } from "./store.js";
 
 /** One order version as Orders sends it to Ship's hosted service (docs/contracts/commerce-handoffs.md). */
 export const SHIP_ORDER_SCHEMA = "dinkuskit.commerce.ship-order/v1";
@@ -38,6 +38,9 @@ function unavailable(): never {
 function oneLine<T>(value: T): T {
   return (typeof value === "string" ? value.replace(/[\s\p{Cc}]+/gu, " ").trim() : value) as T;
 }
+
+/** One line of at most 200 UTF-16 units, cut without splitting a character. */
+const cut = (text: string) => oneLine(text).slice(0, 200).replace(/[\ud800-\udbff]$/, "").trimEnd();
 
 /** Ship's label page for one order. The owner signs in there with DinkusKit.com; the link carries no pass. */
 export function shipLabelPage(ship: Pick<ShipConnection, "origin" | "site">, orderId: string): string {
@@ -80,7 +83,7 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
   }
   // Each order carries the store's name for Ship's emails: one line, at most 200 UTF-16 units
   // without splitting a character, and left out when nothing is left.
-  const storeName = oneLine(ship.name ?? "").slice(0, 200).replace(/[\ud800-\udbff]$/, "").trimEnd();
+  const storeName = cut(ship.name ?? "");
   let room = SHIP_ORDERS_PER_SYNC;
   for (const record of await listOrders(collection)) {
     const facts = orderFacts(record);
@@ -89,9 +92,10 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     const lines = [];
     for (const { catalogItemId, name, quantity, unitPrice } of record.paidOrder.lines) {
       // Digital items never go in the box; an item since removed from the catalog goes without a weight.
-      // Each line carries what the shopper paid for one of it, for insurance and packing slips.
-      const found = await item(catalogItemId);
-      if (found?.physical !== false) lines.push({ catalogItemId, name: oneLine(name), quantity, unitPrice, ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
+      // Each line carries what the shopper paid for one of it, for insurance and packing slips, and the
+      // options they chose ("Size: M"), the same text as the order page, so two sizes never look alike.
+      const found = await item(catalogItemId), options = cut(lineOptions(record.paidOrder, catalogItemId));
+      if (found?.physical !== false) lines.push({ catalogItemId, name: oneLine(name), quantity, unitPrice, ...(options ? { options } : {}), ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
     }
     // What people typed (the address, item names, carrier and tracking number) goes as one line, and an
     // address field, carrier or tracking number with nothing left is left out. The order keeps what was typed.

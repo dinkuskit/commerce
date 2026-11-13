@@ -1,7 +1,7 @@
 import { fields } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
-import { billingMatchesDelivery, billingOf, deliveryOf, type OrderRecord } from '../store.js';
+import { billingMatchesDelivery, billingOf, deliveryOf, lineOptions, type OrderRecord } from '../store.js';
 import type { CheckoutDeliveryAddress } from '../../checkout-contact/index.js';
 import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
 import type { Money } from '../../catalog/kernel/index.js';
@@ -118,8 +118,7 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     blocks.push({ type: 'table', page_action_id: 'orders.items', columns: [
       { key: 'item', label: 'Item' }, { key: 'options', label: 'Options' }, { key: 'price', label: 'Price' }, { key: 'quantity', label: 'Qty' }, { key: 'total', label: 'Total' }],
     rows: order.lines.map(line => ({ item: line.name, price: amount(line.unitPrice), quantity: '× ' + line.quantity,
-      options: order.variantSelections?.find(selection => selection.catalogItemId === line.catalogItemId)?.selections
-        .map(choice => choice.optionLabel + ': ' + choice.valueLabel).join(' · ') ?? '',
+      options: lineOptions(order, line.catalogItemId),
       total: amount(BigInt(normalizeMoney(line.unitPrice).minor) * BigInt(line.quantity)) })) } as Block,
     { type: 'table', page_action_id: 'orders.items', columns: [{ key: 'name', label: payment(order) }, { key: 'value', label: 'Amount' }],
       rows: [...(pricing ? [['Items subtotal', amount(pricing.merchandiseSubtotal)],
