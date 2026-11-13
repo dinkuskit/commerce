@@ -95,7 +95,8 @@ export async function cartGuestCheckout(
       const merged = lines.length ? cartInput(await Promise.all(lines.map(line => cartLine(runtime, line)))) : [];
       const quote = await quoteCatalogBasket(runtime.catalog, merged.map(line => line.catalogItemId),
         { resolveProvider: runtime.host.resolveAvailabilityProvider });
-      if (!quote.ok) fail(quote.reason.startsWith("inv") ? "INVENTORY_UNAVAILABLE" : "PRODUCT_UNAVAILABLE");
+      // Stock is checked again when checkout starts; any refusal here reads as unavailable.
+      if (!quote.ok) fail("PRODUCT_UNAVAILABLE");
       if (!await store.compareAndSet(authorized.cartId, stored?.version ?? null, {
         attempts: stored?.record.attempts ?? [], cart: { lines: merged, at: now, ...(key ? { key } : {}) },
       })) fail("CONTENTION");
