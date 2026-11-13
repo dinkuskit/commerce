@@ -44,19 +44,34 @@ test("same-origin storefront renders concrete grouped members", async ({ page, b
     base(ids.parent, "PROOF-SHIRT-" + "SANDBOX", product);
     base(ids.large, "PROOF-SHIRT-L-" + "SANDBOX", null, { variantProductId: ids.parent, variantSelections: [{ optionId: "size", valueId: "large" }], variantFulfillment: "physical" });
     price(ids.parent, "2000"); price(ids.large, "2400"); availability(ids.parent, "out-of-stock"); availability(ids.large, "in-stock");
-    await page.goto(new URL("/", baseURL).toString());
-    const variants = page.locator(`[data-variants="${ids.parent}"]`);
-    await expect(variants).toContainText("2400");
-    const listing = db.prepare('SELECT data FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').get('dinkus-commerce','storefront_out_of_stock_listing','active');
-    const hideOutOfStock = listing && JSON.parse(listing.data).hideOutOfStock === true;
-    if (hideOutOfStock) await expect(variants.locator(`input[value="${ids.parent}"]`)).toHaveCount(0);
-    else {
-      await expect(variants).toContainText('Small');
-      await expect(variants.locator(`input[value="${ids.parent}"]`)).toBeDisabled();
-    }
-    await expect(variants.locator(`input[value="${ids.large}"]`)).toBeEnabled();
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(new URL("/", baseURL).toString());
+      const variants = page.locator(`[data-variants="${ids.parent}"]`);
+      await expect(variants).toContainText("2400");
+      const listing = db.prepare('SELECT data FROM _plugin_storage WHERE plugin_id=? AND collection=? AND id=?').get('dinkus-commerce','storefront_out_of_stock_listing','active');
+      const hideOutOfStock = listing && JSON.parse(listing.data).hideOutOfStock === true;
+      // Anonymous HTTP reads exercise the compiled Registry route, not an imported reader.
+      for (const suffix of ['', '/item?itemId=' + ids.parent, '/item?itemId=' + ids.large]) {
+        const response = await page.request.get(new URL('/_emdash/api/plugins/dinkus-commerce/catalog/public' + suffix, baseURL).toString());
+        expect(response.ok()).toBe(true);
+        const body = await response.json();
+        expect(body.success).toBe(true);
+        const family = suffix ? body.data : body.data.products.find(p => p.id === ids.parent);
+        expect(family.sku).toBe('PROOF-SHIRT-SANDBOX');
+        const expected = [[ids.large, 'PROOF-SHIRT-L-SANDBOX']];
+        if (!hideOutOfStock) expected.unshift([ids.parent, 'PROOF-SHIRT-SANDBOX']);
+        expect(family.variants.members.map(m => [m.catalogItemId, m.sku])).toEqual(expected);
+      }
+      if (hideOutOfStock) await expect(variants.locator(`input[value="${ids.parent}"]`)).toHaveCount(0);
+      else {
+        await expect(variants).toContainText('Small');
+        await expect(variants.locator(`input[value="${ids.parent}"]`)).toBeDisabled();
+      }
+      await expect(variants.locator(`input[value="${ids.large}"]`)).toBeEnabled();
 
-    await page.screenshot({ path: `${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-checkout-sandbox.png`, fullPage: true });
+      await page.screenshot({ path: `${process.env.COMMERCE_PROOF_ARTIFACTS}/variant-checkout-sandbox-${width}.png`, fullPage: true });
+    }
   } finally {
     for (const [collection, id] of [
       [collections.catalog, ids.parent], [collections.catalog, ids.large],

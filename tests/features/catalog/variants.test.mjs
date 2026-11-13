@@ -51,6 +51,7 @@ test('hidden default member is absent from public list and lookup until priced',
   const product = await readPublicCatalogItem(ctx, 'product');
   assert.equal(product.price.minor, '2400');
   assert.equal(product.availability.sellable, true);
+  assert.equal(product.variants.members[0].sku, 'HIDDEN');
 });
 
 test('public variant group retains priced members and excludes an unpriced sibling', async () => {
@@ -62,6 +63,7 @@ test('public variant group retains priced members and excludes an unpriced sibli
   const unpriced = product.variants.members.find(m => m.catalogItemId === 'product');
   if (unpriced) assert.deepEqual(unpriced.availability, { status: 'availability-unavailable', sellable: false, listable: false });
   assert.deepEqual(product.variants.members.map(m => m.catalogItemId), ['large-item']);
+  assert.equal(product.variants.members[0].sku, 'PROOF-LARGE');
   assert.equal(product.variants.members[0].price.minor, '2400');
   assert.equal(product.variants.members[0].availability.sellable, true);
   assert.equal(product.variants.members[0].fulfillment, 'physical');
@@ -75,6 +77,38 @@ test('public variant group retains priced members and excludes an unpriced sibli
   assert.deepEqual(await readPublicCatalogItem(ctx, 'product'), product);
   assert.equal(product.variants.members.some(member => member.catalogItemId === 'product'), false,
     'even when the requested id equals the family id, its unpriced default member stays absent');
+});
+
+test('public members carry their own current SKU through list and grouped item lookups without writes', async () => {
+  const catalog = new Catalog(), prices = new Catalog(); await catalog.put('product', base);
+  await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
+  for (const [id, minor] of [['product', '2000'], ['large-item', '2400']]) {
+    prices.records.set(id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor } });
+  }
+  const ctx = publicContext(catalog, prices);
+  ctx.storage.catalog_manual_availability.records.set('large-item', {
+    recordKind: 'catalog-manual-availability', recordId: 'large-item', catalogItemId: 'large-item', status: 'out-of-stock',
+  });
+  const original = structuredClone(catalog.records.get('large-item'));
+  for (const sku of ['PROOF-LARGE', 'RENAMED-LARGE']) {
+    catalog.records.set('large-item', { ...original, sku, skuKey: sku });
+    const before = structuredClone(catalog.records);
+    const listed = (await readPublicCatalog(ctx)).products[0];
+    for (const result of [listed, await readPublicCatalogItem(ctx, 'product'), await readPublicCatalogItem(ctx, 'large-item')]) {
+      assert.equal(result.sku, 'PROOF-SMALL', 'the family SKU is unchanged');
+      assert.deepEqual(result.variants.members.map(m => [m.catalogItemId, m.sku, m.price.minor, m.availability.sellable]), [
+        ['product', 'PROOF-SMALL', '2000', true], ['large-item', sku, '2400', false],
+      ]);
+      assert.deepEqual(Object.keys(result.variants.members[1]).sort(),
+        ['availability', 'catalogItemId', 'fulfillment', 'price', 'selections', 'sku']);
+    }
+    assert.deepEqual(catalog.records, before, 'public reads never write a SKU or any catalog state');
+  }
+  for (const sku of [undefined, '', 42, { private: 'must-not-project' }, 'x'.repeat(1025)]) {
+    catalog.records.set('large-item', { ...original, sku });
+    await assert.rejects(() => readPublicCatalog(ctx), /Catalog unavailable/);
+    await assert.rejects(() => readPublicCatalogItem(ctx, 'large-item'), /Catalog unavailable/);
+  }
 });
 
 test('failed parent commit leaves additional rows unavailable to purchase', async () => {

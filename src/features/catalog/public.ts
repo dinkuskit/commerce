@@ -60,6 +60,8 @@ export interface PublicCatalogProduct {
     readonly options: CatalogVariantProduct["options"];
     readonly members: readonly {
       catalogItemId: string;
+      /** Current merchant SKU of this concrete member; older projections omit it. */
+      sku?: string;
       selections: readonly ReturnType<typeof variantSelections>[number][];
       price: { readonly currency: "USD"; readonly minor: string } | null;
       availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable">;
@@ -121,8 +123,10 @@ async function projectPublicCatalogProduct(
         catalogItemId: member.catalogItemId,
       });
       if (!memberAvailability.listable) continue;
+      if (typeof memberItem.item.sku !== "string" || !memberItem.item.sku || memberItem.item.sku.length > 1024) unavailable();
       members.push({
         catalogItemId: member.catalogItemId,
+        sku: memberItem.item.sku,
         selections: variantSelections(variant.product, member),
         price: memberPrice.customerPays ?? null,
         availability: {
