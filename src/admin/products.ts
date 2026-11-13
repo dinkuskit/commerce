@@ -51,7 +51,9 @@ function manageStockNotice(managed: boolean | null): Block {
 }
 const FEEDS = [["google-merchant", "Google Merchant"], ["meta-catalog", "Meta catalog"]] as const;
 /** A card the owner opens with a press, as on Shopify's product form; everything inside is an ordinary block (catalog-panel-cards-20261031). */
-const card = (label: string, blocks: Block[], open = false): Block => ({ type: "accordion", label, blocks, default_open: open });
+// Stable semantic identities prevent a validation banner from moving one card's
+// client-side open state onto the next card. Labels and prices may change.
+const card = (id: string, label: string, blocks: Block[], open = false): Block => ({ type: "accordion", block_id: id, label, blocks, default_open: open });
 /** Forms on the panel, the ones inside cards included. */
 const forms = (blocks: Block[]): Form[] => blocks.flatMap(b => b.type === "form" ? [b] : b.type === "accordion" ? forms(b.blocks) : []);
 /** Regular, Sale, SKU, stock status and the feed channels save together in one press (feeds-facts-consistency-060). */
@@ -83,7 +85,7 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
     : [[selected, "Weight (oz)"] as const];
   const fields = items.filter(([item]) => item.fulfillment === "physical").map(([item, l]) =>
     input("w:" + item.catalogItemId, l, item.weightOz === undefined ? "" : String(item.weightOz)));
-  return fields.length ? [card("Shipping", [{ type: "form", block_id: fresh("w"), fields,
+  return fields.length ? [card("shipping:" + selected.catalogItemId, "Shipping", [{ type: "form", block_id: fresh("w"), fields,
     submit: submit("Save weight", "weight:" + JSON.stringify([selected.catalogItemId, selected.revision])) }], open)] : [];
 }
 /**
@@ -93,32 +95,32 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
  */
 function variantsCard(id: string, selected: CatalogProductListItem, focus?: string): Block {
   const variant = selected.variantProduct;
-  if (!variant?.options.length) return card("Variants · none", [
+  if (!variant?.options.length) return card("variants:" + id, "Variants · none", [
     note("The product is the first variant."),
     { type: "form", block_id: "a" + id, fields: [
       input("optionLabel", "Option name", "Size"),
       { type: "text_input", action_id: "values", label: "Option values", placeholder: "Small, Large" },
     ], submit: submit("Add options", "variant:" + JSON.stringify(["add", id, crypto.randomUUID()])) },
   ], focus === "add");
-  return card("Variants · " + variant.members.length, [
+  return card("variants:" + id, "Variants · " + variant.members.length, [
     // The variant just saved or refused stays open; otherwise the first one is.
-    ...variant.members.map((m, i) => card(label(m) + (m.regular ? " · $" + m.regular : ""), [
+    ...variant.members.map((m, i) => card("variant:" + m.catalogItemId, label(m) + (m.regular ? " · $" + m.regular : ""), [
       manageStockNotice(m.manageStock),
       productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" }, "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision, m.sku])),
     ], focus === m.catalogItemId || !i && !variant.members.some(x => x.catalogItemId === focus))),
-    card("Edit options", [{ type: "form", block_id: fresh("d"), fields: [
+    card("options:" + id, "Edit options", [{ type: "form", block_id: fresh("d"), fields: [
       ...variant.options.flatMap((o, i) => [
         input(i ? "option:" + o.optionId : "optionLabel", "Option: " + o.label, o.label),
         ...o.values.map(v => input("label:" + JSON.stringify([o.optionId, v.valueId]), "Value: " + v.label, v.label)),
       ]),
       ...variant.members.map(m => radio("fulfillment:" + m.catalogItemId, label(m) + " fulfillment", FULFILLMENT, m.fulfillment)),
     ], submit: submit("Save options", "variant:" + JSON.stringify(["details", id, variant.revision])) }], focus === "details"),
-    ...(variant.options.length < 3 ? [card("Add another option", [{ type: "form" as const, block_id: fresh("o"), fields: [
+    ...(variant.options.length < 3 ? [card("add-option:" + id, "Add another option", [{ type: "form" as const, block_id: fresh("o"), fields: [
       input("optionLabel", "Option name", ["Color", "Material"][variant.options.length - 1]),
       input("values", "Option values"),
       ...variant.members.map(m => input("member:" + m.catalogItemId, "Value for " + label(m))),
     ], submit: submit("Add option", "variant:" + JSON.stringify(["option", id, variant.revision])) }], focus === "option")] : []),
-    ...(variant.members.length < 50 ? [card("Add a variant", [{ type: "form" as const, block_id: fresh("m"), fields: [
+    ...(variant.members.length < 50 ? [card("add-variant:" + id, "Add a variant", [{ type: "form" as const, block_id: fresh("m"), fields: [
       ...variant.options.map(o => input("value:" + o.optionId, o.label)),
       input("sku", "SKU"),
       radio("fulfillment", "Fulfillment", FULFILLMENT, selected.fulfillment),
@@ -167,7 +169,7 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
     variantsCard(id, selected, focus),
     ...shippingCard(selected, focus === "weight"),
     // Barcode and brand for shopping feeds and the product page's structured data; empty clears one.
-    card("Identifiers", [{ type: "form", block_id: fresh("i"), fields: IDENTIFIERS.map(([key, l]) =>
+    card("identifiers:" + id, "Identifiers", [{ type: "form", block_id: fresh("i"), fields: IDENTIFIERS.map(([key, l]) =>
         input(key, l, selected[key] ?? "")),
         submit: submit("Save identifiers", "ids:" + id) }], focus === "ids"),
     { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })

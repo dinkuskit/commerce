@@ -153,7 +153,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect(lastSave.values).not.toHaveProperty("manageStock");
     expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].price).toMatchObject({ regular: { currency: "USD", minor: "1200" }, sale: { currency: "USD", minor: "1000" } });
     // Shipping weight in ounces sits on the catalog item; a refused weight keeps the typing and the stored value.
-    // Weight sits in the Shipping card, collapsed until opened; every save redraws the panel with it collapsed again.
+    // Once opened, Shipping stays open through a refused save and its correction.
     const weightBox = async () => { await openCard(panel, "Shipping"); return panel.getByRole("textbox", { name: "Weight (oz)", exact: true }); };
     const saveWeight = async () => {
       const response = page.waitForResponse(r => r.url().split("?")[0].endsWith(panelEndpoint) && r.request().method() === "POST");
@@ -166,7 +166,8 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].weightOz).toBe(12.5);
     await (await weightBox()).fill("heavy");
     expect((await saveWeight()).toast.type).toBe("error");
-    await expect((await weightBox())).toHaveValue("heavy");
+    await expect(panel.getByRole("button", { name: "Shipping", exact: true })).toHaveAttribute("aria-expanded", "true");
+    await expect(panel.getByRole("textbox", { name: "Weight (oz)", exact: true })).toHaveValue("heavy");
     expect(raw("catalog_items")[0].catalogData.items[raw("catalog_items")[0].itemId].weightOz).toBe(12.5);
     await capture("product-weight-refused");
     await (await weightBox()).fill("12.5");
