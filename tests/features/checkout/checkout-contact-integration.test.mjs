@@ -29,7 +29,7 @@ function checkoutFixture() {
   return { opened, f };
 }
 
-test("captures contact after admission, freezes it through CAS, and copies it to the order without projecting PII", async (t) => {
+test("captures contact after admission, freezes it through CAS, and copies it to the order, shown only on the paid order", async (t) => {
   const { opened, f } = checkoutFixture();
   t.after(() => opened.db.close());
 
@@ -60,8 +60,10 @@ test("captures contact after admission, freezes it through CAS, and copies it to
   assert.deepEqual(paid.order.contactSnapshot, started.contactSnapshot);
   assert.equal(paid.payment.total.minor, "75");
   assert.equal(paid.order.total.minor, "75");
-  assert.equal(JSON.stringify(projectGuestCheckout(paid)).includes("guest@example.test"), false);
-  assert.equal(JSON.stringify(projectGuestCheckout(paid)).includes("555 0101"), false);
+  // Before payment no answer carries contact; the paid order shows it to the cart key's holder (commerce-thank-you-contact-20261113).
+  assert.equal(JSON.stringify(projectGuestCheckout(started)).includes("guest@example.test"), false);
+  assert.equal(JSON.stringify(projectGuestCheckout(started)).includes("555 0101"), false);
+  assert.deepEqual(projectGuestCheckout(paid).order.contact, contact("guest@example.test"));
 });
 
 test("authoritative phone flag is reread for new checkout and forged client policy is denied", async (t) => {
@@ -211,7 +213,7 @@ test('native routes use real plugin settings, hint outside status schema, reread
   const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'shopper@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}};
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, body, {capability:token,settings:f.settings}), e=>e.code==='INVALID_CART');
   assert.equal(f.synth.counts().paymentCreates,0);
-  assert.deepEqual((await f.storage.checkoutCarts.query()).items, []);
+  assert.deepEqual((await f.storage.checkoutCarts.query()).items.flatMap(i => i.data.attempts), []);
   const result=await invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, {...body,contact:{...body.contact,phone:'555 0123'}}, {capability:token,settings:f.settings});
   assert.equal(result.ok,true);
   const snapshot=(await f.storage.checkoutCarts.query()).items[0].data.attempts[0].contactSnapshot;
@@ -233,8 +235,8 @@ test('native routes use real plugin settings, hint outside status schema, reread
   assert.deepEqual(frozen.contactSnapshot,snapshot);
   assert.deepEqual(frozen.order.contactSnapshot,snapshot);
   assert.deepEqual(frozen.order.total,payment.total);
-  assert.equal(JSON.stringify(paid).includes('shopper@example.test'),false);
-  assert.equal(JSON.stringify(paid).includes('555 0123'),false);
+  assert.deepEqual(paid.checkout.order.contact,snapshot.contact);
+  assert.equal(JSON.stringify({...paid,checkout:{...paid.checkout,order:null}}).includes('shopper@example.test'),false);
 });
 
 test('native guest contact denies missing email and cross-cart injection, corrupt prepare exposes neither PII nor optional promise', async t => {
@@ -247,7 +249,7 @@ test('native guest contact denies missing email and cross-cart injection, corrup
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{cartId:'other-cart',lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}},{capability:token,settings:f.settings}),e=>e.code==='INVALID_CART');
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}},{capability:'guessed.token',settings:f.settings}),e=>e.code==='CAPABILITY_DENIED');
   assert.equal(f.synth.counts().paymentCreates,0);
-  assert.deepEqual((await f.storage.checkoutCarts.query()).items,[]);
+  assert.deepEqual((await f.storage.checkoutCarts.query()).items.flatMap(i => i.data.attempts),[]);
   await f.settings.set('merchantStoreSettings',{recordKind:'merchant-store-settings',requirePhoneNumber:'false'});
   await assert.rejects(prepareGuest(f.routes[GUEST_CHECKOUT_PREPARE_ROUTE],f.storage,{settings:f.settings}),e=>e.code==='UNAVAILABLE'&&!e.message.includes('a@example.test'));
   assert.equal((await f.storage.checkoutGuestCapabilities.query()).items.length,1);
@@ -272,7 +274,7 @@ test('active historical original replays without new contact or a current requir
 
 import { runtimeFixture } from './registry-runtime.mjs';
 
-test('actual default workerd bindings enforce current SDK phone setting and keep contact out of payment/public transport', async t => {
+test('actual default workerd bindings enforce current SDK phone setting and keep contact out of payment transport and show it only on the paid order', async t => {
   const f=await runtimeFixture(); t.after(()=>f.close());
   const prepare='checkout/guest/prepare',start='checkout/guest/start',status='checkout/guest/status';
   const optional=await f.invoke(prepare);
@@ -284,7 +286,7 @@ test('actual default workerd bindings enforce current SDK phone setting and keep
   const denied=await f.invoke(start,body,token);
   assert.equal(denied.error.code,'INVALID_CART');
   assert.equal(f.counts.transport,0);
-  assert.deepEqual(await f.cartRecords(),[]);
+  assert.deepEqual((await f.cartRecords()).flatMap(r=>r.attempts),[]);
   const started=await f.invoke(start,{...body,contact:{...body.contact,phone:'555 0134'}},token);
   assert.equal(started.ok,true);
   const frozen=(await f.cartRecords())[0].attempts[0].contactSnapshot;
@@ -297,6 +299,6 @@ test('actual default workerd bindings enforce current SDK phone setting and keep
   const attempt=(await f.cartRecords())[0].attempts[0];
   assert.deepEqual(attempt.contactSnapshot,frozen);
   assert.deepEqual(attempt.order.contactSnapshot,frozen);
-  assert.equal(JSON.stringify(paid).includes('workerd-shopper@example.test'),false);
-  assert.equal(JSON.stringify(paid).includes('555 0134'),false);
+  assert.deepEqual(paid.checkout.order.contact,frozen.contact);
+  assert.equal(JSON.stringify(f.requests).includes('workerd-shopper@example.test'),false);
 });

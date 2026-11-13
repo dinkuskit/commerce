@@ -16,7 +16,7 @@ const SANDBOX_PUBLIC = [
   "store-proof GET",
   "checkout/guest/prepare POST",
   "checkout/guest/start POST",
-  "checkout/guest/status POST",
+  "checkout/guest/cart POST",
   "checkout/guest/readiness GET",
   "account/sign-in/start POST",
   "account/sign-in/verify POST",

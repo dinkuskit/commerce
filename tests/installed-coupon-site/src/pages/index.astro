@@ -35,8 +35,13 @@ document.getElementById('prepare').onclick = async () => {
 };
 document.getElementById('start').onclick = async () => {
   if (!selected || !capability) return;
-  const result = await call('checkout/guest/start', { method: 'POST', headers: { 'content-type': 'application/json', 'x-commerce-guest-capability': capability },
-    body: JSON.stringify({ lines: [{ catalogItemId: selected.id, quantity: 1 }] }) });
+  const headers = { 'content-type': 'application/json', 'x-commerce-guest-capability': capability };
+  // Checkout starts from the cart Commerce holds: save it, then start with no lines.
+  const saved = await call('checkout/guest/cart', { method: 'POST', headers, body: '{}' });
+  const cart = await call('checkout/guest/cart', { method: 'POST', headers,
+    body: JSON.stringify({ version: saved.cart?.version ?? null, lines: [{ catalogItemId: selected.id, quantity: 1 }] }) });
+  if (!cart.ok) { status.textContent = cart.error.code; return; }
+  const result = await call('checkout/guest/start', { method: 'POST', headers, body: '{}' });
   status.textContent = result.ok ? result.checkout.state : result.error.code;
 };
 </script></body></html>

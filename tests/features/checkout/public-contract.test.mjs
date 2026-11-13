@@ -46,6 +46,7 @@ test("Template Store consumes only the public checkout contract and mounted gues
   assert.equal(checkout.GUEST_CHECKOUT_PREPARE_ROUTE, "checkout/guest/prepare");
   assert.equal(checkout.GUEST_CHECKOUT_START_ROUTE, "checkout/guest/start");
   assert.equal(checkout.GUEST_CHECKOUT_STATUS_ROUTE, "checkout/guest/status");
+  assert.equal(checkout.GUEST_CHECKOUT_CART_ROUTE, "checkout/guest/cart");
   assert.equal(checkout.GUEST_CAPABILITY_HEADER, "x-commerce-guest-capability");
   assert.deepEqual([...checkout.GUEST_CHECKOUT_DECLARED_HEADERS], [
     "x-commerce-guest-capability",
@@ -61,6 +62,7 @@ test("Template Store consumes only the public checkout contract and mounted gues
   assert.equal(typeof checkout.prepareGuestCheckout, "function");
   assert.equal(typeof checkout.startGuestCheckout, "function");
   assert.equal(typeof checkout.statusGuestCheckout, "function");
+  assert.equal(typeof checkout.cartGuestCheckout, "function");
   assert.equal(typeof checkout.admitGuestCheckoutStartInput, "function");
   assert.equal(typeof checkout.projectGuestCheckout, "function");
   assert.equal(commerce.GUEST_CHECKOUT_PREPARE_ROUTE, checkout.GUEST_CHECKOUT_PREPARE_ROUTE);
@@ -71,6 +73,7 @@ test("Template Store consumes only the public checkout contract and mounted gues
     "checkout/guest/prepare",
     "checkout/guest/start",
     "checkout/guest/status",
+    "checkout/guest/cart",
     "x-commerce-guest-capability",
     "origin",
     "sec-fetch-site",
@@ -88,10 +91,12 @@ test("Template Store consumes only the public checkout contract and mounted gues
   assert.equal(contract.includes("Bearer "), false);
   const manifest = JSON.parse(readFileSync(join(root, "dist/sandbox/manifest.json"), "utf8"));
   const guestRoutes = Object.fromEntries((manifest.routes ?? []).map((route) => [route.name, route]));
+  // The Registry build has no status route: a cart read is the status check.
+  assert.equal(guestRoutes["checkout/guest/status"], undefined);
   for (const name of [
     "checkout/guest/prepare",
     "checkout/guest/start",
-    "checkout/guest/status",
+    "checkout/guest/cart",
   ]) {
     assert.equal(guestRoutes[name].public, true);
     assert.deepEqual(guestRoutes[name].request.headers, [

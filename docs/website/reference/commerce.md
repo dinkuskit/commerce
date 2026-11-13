@@ -115,8 +115,8 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 | `catalog/public/item?itemId=…` or `?pageId=…` | GET | One projected product or `null`; no canonical page URL. With `pageId`, the product that published page sells. |
 | `checkout/guest/readiness` | GET | The installed checkout readiness response. |
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
-| `checkout/guest/start` | POST | Cart lines and required contact details, authorized by that capability. |
-| `checkout/guest/status` | POST | The authorized purchase's current checkout projection. |
+| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. |
+| `checkout/guest/start` | POST | Required contact details, authorized by that capability. Checkout starts from the saved cart; the browser sends no lines. |
 | `account/sign-in/start` | POST | Emails a shopper a 6-digit sign-in code. |
 | `account/sign-in/verify` | POST | Exchanges the code for a shopper session. |
 | `account/sign-out` | POST | Ends the shopper session. |
@@ -141,7 +141,9 @@ For guest checkout, check both the HTTP response and EmDash's JSON `success` fla
 }
 ```
 
-Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `start` and `status`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session. On `start` and `status`, `data.checkout.pricing` exposes `merchandiseSubtotal`, `couponDiscount`, `netMerchandise`, `shipping`, explicit `tax: { "currency": "USD", "minor": "0" }`, and `finalTotal` in integer USD minor units for deterministic checkout and single-use virtual card sizing.
+Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `cart` and `start`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session. On `start` and on a `cart` read (`{}`, which is also the payment status check), `data.checkout.pricing` exposes `merchandiseSubtotal`, `couponDiscount`, `netMerchandise`, `shipping`, explicit `tax: { "currency": "USD", "minor": "0" }`, and `finalTotal` in integer USD minor units for deterministic checkout and single-use virtual card sizing.
+
+Once the order is paid, `data.checkout.order.contact` carries the order's email, phone (when given) and `delivery` and `billing` addresses, as the shopper entered them at checkout, so the store's thank-you page can show them. Only a request with that cart's own capability, from the store's own origin, gets it; nothing before payment carries contact, and Payments never receives it. Treat it as personal data: draw it on the page, never cache, log or put it in a URL.
 
 Agents and command-line tools read and complete orders through the private `orders` route with an EmDash API token of an Editor or Administrator (EmDash still requires the token's `admin` scope). Each order carries `shipTo` and `billTo` as full addresses and `billToMatchesShipTo`, true when the two are the same. The `address` action is the Orders page's Correct address: it replaces `shipTo` on a Processing order at the order version it read, with the same checks as checkout and only to a country the store ships to, and never changes billing. Move a Completed order back to Processing first.
 

@@ -42,7 +42,8 @@ export {
   admitGuestCheckoutPrepareInput,
   admitGuestCheckoutStatusInput,
   admitGuestCheckoutStartInput,
-  admitGuestCheckoutPricingStartInput,
+  cartGuestCheckout,
+  cartLines,
   guestCheckoutFailure,
   prepareGuestCheckout,
   startGuestCheckout,
@@ -93,6 +94,7 @@ export {
 export {
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
+  GUEST_CHECKOUT_CART_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
   GUEST_CHECKOUT_READINESS_ROUTE,
 } from "../route-ids.js";

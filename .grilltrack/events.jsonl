@@ -719,3 +719,17 @@
 {"action": "decision_locked", "at": "2026-11-13T16:29:13+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "470400e8-af5e-4060-a053-594800c00400"}
 {"action": "decision_implemented", "at": "2026-11-13T16:29:14+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "92668622-a151-4485-9123-ad0009efc0fa"}
 {"action": "decision_verified", "at": "2026-11-13T16:29:14+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "260a8f52-5bb0-490e-8b34-04cf5b955365"}
+{"action": "focus_started", "at": "2026-11-13T17:17:39+00:00", "data": {"cadence": "frontier-batch", "domain": "Server-side cart"}, "event_id": "3ed94139-3cd1-4626-84f3-561ee7f2e16c"}
+{"action": "decision_proposed", "at": "2026-11-13T17:17:39+00:00", "data": {"decision_id": "commerce-server-cart-20261113"}, "event_id": "de3baa6c-0a59-4a24-b754-c6aa59106983"}
+{"action": "decision_locked", "at": "2026-11-13T17:17:39+00:00", "data": {"decision_id": "commerce-server-cart-20261113"}, "event_id": "3773379e-76e9-457b-beaf-534f00af279b"}
+{"action": "decision_proposed", "at": "2026-11-13T17:17:39+00:00", "data": {"decision_id": "commerce-cart-agent-writes-20261113"}, "event_id": "a42babfa-ba87-4450-b15f-68ab09159809"}
+{"action": "decision_locked", "at": "2026-11-13T17:17:39+00:00", "data": {"decision_id": "commerce-cart-agent-writes-20261113"}, "event_id": "28bc35f6-2074-44e6-aaf2-8d741f54611d"}
+{"action": "decision_proposed", "at": "2026-11-13T17:17:39+00:00", "data": {"decision_id": "commerce-cart-expiry-20261113"}, "event_id": "96613820-797a-4773-9ee5-2c2cb13204eb"}
+{"action": "decision_locked", "at": "2026-11-13T17:17:39+00:00", "data": {"decision_id": "commerce-cart-expiry-20261113"}, "event_id": "a2cbea99-649b-48ac-a7d4-9ff93a3290a0"}
+{"action": "shared_understanding_confirmed", "at": "2026-11-13T17:17:39+00:00", "data": {"summary": "Ronald answered each cart question in the cart thread on 13 Nov 2026: server cart in Commerce 'agreed' (16:08 UTC), agents on the same cart 'yeah' with the Shopify check (14:06), 30 days 'agreed' (16:10), build before the first real order (14:05). Store-site parts (forms, cookie, size picker, count cookie, thank-you page, agent links) are in template-store's ledger."}, "event_id": "add046bc-6d72-4e25-b3de-1c7922cdac86"}
+{"action": "decision_proposed", "at": "2026-11-13T17:17:40+00:00", "data": {"decision_id": "commerce-cart-read-is-status-20261113"}, "event_id": "0fa6fa7e-49df-4a3d-bf53-e9b480e43c64"}
+{"action": "decision_proposed", "at": "2026-11-13T17:17:40+00:00", "data": {"decision_id": "commerce-cart-expiry-reads-empty-20261113"}, "event_id": "1aff3681-811c-47dc-87ba-5e1879b8bad0"}
+{"action": "decision_locked", "at": "2026-11-13T17:17:40+00:00", "data": {"decision_id": "commerce-cart-read-is-status-20261113"}, "event_id": "beb498ee-b327-442e-afb5-9f3da6a4091c"}
+{"action": "decision_superseded", "at": "2026-11-13T17:17:40+00:00", "data": {"affected": [], "decision_id": "commerce-cart-expiry-reads-empty-20261113", "replacement_id": "commerce-cart-expiry-20261113"}, "event_id": "9226b93f-0225-4a54-a8c8-1f38918b5bed"}
+{"action": "decision_proposed", "at": "2026-11-13T21:40:23+00:00", "data": {"decision_id": "commerce-thank-you-contact-20261113"}, "event_id": "06cd8b67-3ff9-4978-8ed5-002ee0bfc40e"}
+{"action": "decision_locked", "at": "2026-11-13T21:40:23+00:00", "data": {"decision_id": "commerce-thank-you-contact-20261113"}, "event_id": "c0b31db0-7d4b-4fae-bf4f-19a816e7240b"}

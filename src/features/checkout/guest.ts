@@ -1,6 +1,8 @@
 import { isRecord, sortedKeys } from "../../shared/record.js";
 import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
-import { startCheckout, reconcileCheckout } from "./orchestrate.js";
+import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
+import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
+import { resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
 import { CouponUnavailableError } from "./pricing.js";
 import { authorizeGuestCapability, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
@@ -14,6 +16,7 @@ import {
 import type {
   CartLine,
   CheckoutAttempt,
+  CheckoutRecord,
   GuestCheckoutHostOptions,
   GuestCheckoutResult,
   GuestCheckoutRuntime,
@@ -34,36 +37,78 @@ export function admitGuestCheckoutPrepareInput(raw: unknown): void {
   if (Object.keys(input).length !== 0) fail("INVALID_CART");
 }
 
-export function admitGuestCheckoutStartInput(raw: unknown): CartLine[] {
+/** Checkout starts from the cart record; the browser sends no lines (commerce-server-cart-20261113). */
+export function admitGuestCheckoutStartInput(raw: unknown, pricing?: boolean): { couponCode?: string } {
   const input = asObject(raw);
-  const keys = sortedKeys(input);
-  if (!["contact,lines", "lines"].includes(keys)) fail("INVALID_CART");
-  if (!Array.isArray(input.lines) || input.lines.length === 0 || input.lines.length > 100) {
-    fail("INVALID_CART");
-  }
-  return input.lines.map((line) => {
-    if (!isRecord(line)) fail("INVALID_CART");
-    const keys = sortedKeys(line);
-    if (keys !== "catalogItemId,quantity") fail("INVALID_CART");
-    const catalogItemId = (line as { catalogItemId: unknown }).catalogItemId;
-    const quantity = (line as { quantity: unknown }).quantity;
-    if (typeof catalogItemId !== "string" || !catalogItemId.trim() ||
-        catalogItemId.length > 256) fail("INVALID_CART");
-    if (!Number.isSafeInteger(quantity) || (quantity as number) <= 0 ||
-        (quantity as number) > 1_000_000) fail("INVALID_CART");
-    return { catalogItemId: catalogItemId.trim(), quantity: quantity as number };
-  });
-}
-
-export function admitGuestCheckoutPricingStartInput(raw: unknown): CartLine[] | { lines: CartLine[]; couponCode?: string } {
-  const input = asObject(raw);
-  const keys = Object.keys(input).sort();
-  if (!["contact,lines", "contact,couponCode,lines", "lines", "couponCode,lines"].includes(keys.join())) fail("INVALID_CART");
-  const lines = admitGuestCheckoutStartInput({ lines: input.lines });
-  if (!Object.hasOwn(input, "couponCode")) return lines;
+  if (!["", "contact", ...(pricing ? ["couponCode", "contact,couponCode"] : [])].includes(sortedKeys(input))) fail("INVALID_CART");
+  if (!Object.hasOwn(input, "couponCode")) return {};
   if (typeof input.couponCode !== "string" || !input.couponCode.trim() ||
       input.couponCode.length > 128) fail("INVALID_CART");
-  return { lines, couponCode: input.couponCode.trim() };
+  return { couponCode: input.couponCode.trim() };
+}
+
+const CART_SECONDS = 30 * 86_400;
+
+/** Live lines: none once the cart is 30 days untouched (commerce-cart-expiry-20261113) or its order is paid. */
+export function cartLines(record: CheckoutRecord | undefined, now: number): CartLine[] {
+  return record?.cart && now < +record.cartExpires! && record.attempts.at(-1)?.phase !== "paid" ? record.cart.lines : [];
+}
+
+async function cartLine(runtime: GuestCheckoutRuntime, line: unknown): Promise<CartLine> {
+  if (!isRecord(line)) fail("INVALID_CART");
+  const keys = sortedKeys(line);
+  if (keys === "catalogItemId,quantity") return line as unknown as CartLine;
+  const { productId, options, quantity } = line as { productId: unknown; options: unknown; quantity: unknown };
+  if (keys !== "options,productId,quantity" || typeof productId !== "string" || !isRecord(options)) fail("INVALID_CART");
+  // Commerce picks the variant from the chosen option labels (template-cart-size-picker-20261113).
+  const product = (await resolveCatalogVariantMember(runtime.catalog.catalog, productId))?.product;
+  const member = product?.members.find(m => m.selections.length === Object.keys(options).length &&
+    variantSelections(product, m).every(s => options[s.optionLabel] === s.valueLabel));
+  return member ? { catalogItemId: member.catalogItemId, quantity: quantity as number } : fail("PRODUCT_UNAVAILABLE");
+}
+
+/**
+ * Read the cart (`{}`) or replace it whole (`{lines, version}`, plus `key` for an agent retry).
+ * A stale version changes nothing (commerce-cart-agent-writes-20261113).
+ */
+export async function cartGuestCheckout(
+  runtime: GuestCheckoutRuntime,
+  input: unknown,
+  headers?: Headers | Record<string, string>,
+): Promise<GuestCheckoutResult> {
+  try {
+    const raw = input === undefined ? {} : asObject(input);
+    const keys = sortedKeys(raw);
+    if (!["", "lines,version", "key,lines,version"].includes(keys)) fail("INVALID_CART");
+    const authorized = await authorizeGuestCapability(runtime, readGuestCapabilityHeader(headers));
+    const store = createCheckoutStore(runtime.carts);
+    const now = nowSeconds(runtime);
+    const stored = await store.read(authorized.cartId);
+    const { lines, version, key } = raw as { lines: unknown; version: unknown; key?: unknown };
+    let attempt = stored?.record.attempts.at(-1);
+    if (!keys) {
+      // A read is also the status check: it runs Commerce's payment check on the current attempt.
+      if (attempt && paymentsReady(runtime.host)) attempt = await reconcileCheckout(executionOf(runtime), authorized.cartId, attempt.attemptId);
+    } else if (key === undefined || key !== stored?.record.cart?.key) {
+      if (attempt && attempt.phase !== "released") fail("CHECKOUT_FROZEN");
+      if (!Array.isArray(lines) || key !== undefined && (typeof key !== "string" || key.length > 128)) fail("INVALID_CART");
+      if (version !== (stored?.version ?? null)) fail("CONTENTION");
+      const merged = lines.length ? cartInput(await Promise.all(lines.map(line => cartLine(runtime, line)))) : [];
+      // Stock is checked again when checkout starts; any refusal here reads as unavailable.
+      if (!(await quoteCatalogBasket(runtime.catalog, merged.map(line => line.catalogItemId),
+        { resolveProvider: runtime.host.resolveAvailabilityProvider })).ok) fail("PRODUCT_UNAVAILABLE");
+      if (!await store.compareAndSet(authorized.cartId, stored?.version ?? null, {
+        attempts: stored?.record.attempts ?? [], cart: { lines: merged, ...(key ? { key } : {}) }, cartExpires: String(now + CART_SECONDS),
+      })) fail("CONTENTION");
+    }
+    const saved = await store.read(authorized.cartId);
+    return {
+      ok: true, capabilityId: authorized.capabilityId, checkout: attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout(),
+      cart: { lines: cartLines(saved?.record, now), version: saved?.version ?? null, expiresAt: +(saved?.record.cartExpires ?? now + CART_SECONDS) },
+    };
+  } catch (error) {
+    return guestSafeResult(error);
+  }
 }
 
 export function admitGuestCheckoutStatusInput(raw: unknown): { attemptId?: string } {
@@ -222,9 +267,7 @@ export async function startGuestCheckout(
   headers?: Headers | Record<string, string>,
 ): Promise<GuestCheckoutResult> {
   try {
-    const admitted = runtime.host.pricing
-      ? admitGuestCheckoutPricingStartInput(input)
-      : admitGuestCheckoutStartInput(input);
+    admitGuestCheckoutStartInput(input, Boolean(runtime.host.pricing));
     const authorized = await authorizeGuestCapability(
       runtime,
       readGuestCapabilityHeader(headers),
@@ -235,13 +278,17 @@ export async function startGuestCheckout(
     const previous = existing ? currentAttempt(existing.record.attempts) : undefined;
     const retryAfter =
       previous?.phase === "released" ? previous.attemptId : undefined;
+    const currentNow = nowSeconds(runtime);
+    // An open or paid attempt replays its own frozen lines; otherwise the live cart is bought.
+    const lines = previous && !retryAfter ? previous.cart : cartLines(existing?.record, currentNow);
+    if (!lines.length) fail("INVALID_CART");
     const attempt = await startCheckout(
       executionOf(runtime),
       authorized.cartId,
-      { ...(input as Record<string, unknown>), lines: Array.isArray(admitted) ? admitted : admitted.lines },
+      { ...(input as Record<string, unknown>), lines },
       retryAfter,
+      true,
     );
-    const currentNow = nowSeconds(runtime);
     return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {
     return guestSafeResult(error);
@@ -267,7 +314,7 @@ export async function statusGuestCheckout(
     const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
     // Validation can reject start before any attempt is saved. Observe that
     // absence without minting a new capability or creating a payment session.
-    if (stored === null && admitted.attemptId === undefined) {
+    if (!stored?.record.attempts.length && admitted.attemptId === undefined) {
       return { ok: true, capabilityId: authorized.capabilityId, checkout: projectPreparedGuestCheckout() };
     }
     const current = currentAttempt(stored?.record.attempts ?? []);
