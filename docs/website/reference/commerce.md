@@ -28,7 +28,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 | Page | What it does |
 | --- | --- |
 | **Orders** | Lists orders. **Inspect #N** opens one: when it was paid and its status, then **Ship to** (with **Correct address**) beside **Customer** (email and phone) and **Bill to**. Below them, a line such as "3 items ready to ship" carries **Create shipping label** (when the store has Ship) or **Complete order**. Then comes the items table, with each item's recorded variant choices (such as Size: M; later option renames do not change them), price, quantity and line total, and then items subtotal, coupon, shipping and order total. Order ID, version, receipt, checkout attempt, provider payment and catalog IDs are in the **Order record** fold. Times show in UTC. |
-| **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, a placeholder image for products without one). |
+| **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, list the store's products in the DinkusKit catalog that AI shopping assistants search, a placeholder image for products without one). |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 

@@ -55,6 +55,8 @@ export interface StorefrontOutOfStockListingRecord {
   recordKind: "storefront-out-of-stock-listing";
   recordId: typeof STOREFRONT_OUT_OF_STOCK_LISTING_RECORD_ID;
   hideOutOfStock: boolean;
+  /** True once the owner turned off "List my products in the DinkusKit catalog". Absent means listed. */
+  offCatalog?: boolean;
   updatedAt: string;
 }
 

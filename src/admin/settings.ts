@@ -29,18 +29,20 @@ async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
     ] },
   ];
 }
-function settingsResponse(hideOutOfStock: boolean, failure?: string): BlockResponse {
+function settingsResponse(hideOutOfStock: boolean, catalog: boolean, failure?: string): BlockResponse {
   return { blocks: [
     header("Commerce settings"), navigation(), header("Catalog"),
     ...(failure ? [alert(failure), note("Save not confirmed; choice kept.")] : []),
     { type: "form", block_id: fresh("catalog-settings-"), fields: [
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
+      // Off empties the store's catalog feed, so the cross-store catalog drops it (agent-catalog-toggle-home-20261113).
+      { type: "toggle", action_id: "catalog", label: "List my products in the DinkusKit catalog", initial_value: catalog },
     ], submit: submit("Save", "settings.save") },
   ] };
 }
 export async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse): Promise<BlockResponse> {
   const listing = await loadOutOfStockListing(listingStorage(ctx));
-  const response = settingsResponse(listing.hideOutOfStock);
+  const response = settingsResponse(listing.hideOutOfStock, !listing.offCatalog);
   // A waiting Connect is checked here, so the owner's return from DinkusKit.com's Approve lands connected.
   const state = await connectState(ctx).catch((): ConnectState => ({ state: "disconnected" }));
   // Connect finished on this load: fetch the checkout settings now and answer with the DinkusKit section alone, as its buttons do.
@@ -64,7 +66,8 @@ export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginCon
     }
     if (input.type === "form_submit") {
       values = object(input.values);
-      await setOutOfStockListing(listingStorage(ctx), { hideOutOfStock: bool(values.hideOutOfStock) });
+      // A form drawn before the catalog switch existed sends no catalog value; the stored choice is kept.
+      await setOutOfStockListing(listingStorage(ctx), { hideOutOfStock: bool(values.hideOutOfStock), ...("catalog" in values ? { offCatalog: !bool(values.catalog) } : {}) });
       return await settings(ctx, route, "Settings saved");
     }
     throw new Error("Unknown interaction");
@@ -76,7 +79,7 @@ export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginCon
       catch { /* fall through to the generic alert */ }
     }
     if (input.type === "form_submit" && typeof values.hideOutOfStock === "boolean") {
-      return refused(failure, settingsResponse(values.hideOutOfStock, failure).blocks);
+      return refused(failure, settingsResponse(values.hideOutOfStock, values.catalog !== false, failure).blocks);
     }
     return failed(failure);
   }

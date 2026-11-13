@@ -157,13 +157,20 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   }
   expect(rows("product_pages")).toEqual({});
   // 2. Products sold before the upgrade stay on sale with the same prices; hidden and archived ones stay off.
-  expect(await publicCatalog(page.request)).toEqual(before.shop);
+  // This build also says each variant member's own SKU, which the earlier release did not; nothing else may differ.
+  const withoutMemberSku = (products) => products.map((product) => product.variants
+    ? { ...product, variants: { ...product.variants, members: product.variants.members.map(({ sku: _sku, ...member }) => member) } } : product);
+  expect(withoutMemberSku(await publicCatalog(page.request))).toEqual(before.shop);
 
   // 3. Commerce settings keeps the saved setting; every product is made for its page, so there is no list of
   // products without one (catalog-product-needs-page-20261031).
   await page.goto("/_emdash/admin/plugins/dinkus-commerce/settings");
   await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).toBeChecked({ timeout: 30000 });
   await expect(page.getByRole("heading", { name: "Products without a page" })).toHaveCount(0);
+  // The catalog switch is new: a store that never saw it is listed, and reading its saved setting adds no field.
+  await expect(page.getByRole("switch", { name: "List my products in the DinkusKit catalog", exact: true })).toBeChecked();
+  expect((await (await page.request.get("/_emdash/api/plugins/dinkus-commerce/catalog/public")).json()).data).not.toHaveProperty("offCatalog");
+  expect(rows("storefront_out_of_stock_listing").active).not.toHaveProperty("offCatalog");
   await capture(page, "settings");
 
   // 4. The page's next publish check claims its product; the page's panel then shows the product as it was.
