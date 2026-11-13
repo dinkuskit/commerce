@@ -223,6 +223,8 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
     unavailable();
   }
   const { c, storage, media, images, placeholder, eligibility } = await rememberCatalogReads(ctx, page.items);
+  // The store's catalog feed lists nothing while this is set; an unreadable setting counts as off (agent-catalog-toggle-home-20261113).
+  const off = await c.storefront_out_of_stock_listing!.get("active").then((row) => (row as { offCatalog?: boolean } | null)?.offCatalog, () => true) ? { offCatalog: true as const } : {};
   const imageIds = new Set(placeholder ? [placeholder.mediaId] : []);
   const products: PublicCatalogProduct[] = [];
   for (let index = skip; index < page.items.length; index += 1) {
@@ -234,16 +236,14 @@ export async function readPublicCatalog(ctx: PluginContext, cursor?: string): Pr
       const stored = await loadCatalogItemMedia(media, item.itemId);
       const added = [stored.image, ...stored.gallery].flatMap((entry) => entry && !imageIds.has(entry.mediaId) ? [entry.mediaId] : []);
       if (index > skip && imageIds.size + added.length > IMAGE_READS_PER_PAGE) {
-        return { products, cursor: `${index}.${storageCursor ?? ""}` };
+        return { products, cursor: `${index}.${storageCursor ?? ""}`, ...off };
       }
       for (const id of added) imageIds.add(id);
     }
     const product = await projectPublicCatalogProduct(media, storage, item, images, placeholder, eligibility);
     if (product) products.push(product);
   }
-  // The store's catalog feed lists nothing while this is set; an unreadable setting counts as off (agent-catalog-toggle-home-20261113).
-  const off = await c.storefront_out_of_stock_listing!.get("active").then((row) => (row as { offCatalog?: boolean } | null)?.offCatalog, () => true);
-  return { products, ...(page.hasMore ? { cursor: `0.${page.cursor}` } : {}), ...(off ? { offCatalog: true } : {}) };
+  return { products, ...(page.hasMore ? { cursor: `0.${page.cursor}` } : {}), ...off };
 }
 
 /**
