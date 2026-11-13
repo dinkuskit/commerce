@@ -45,6 +45,8 @@ test('merchant variant writes deny Small before Payments and freeze Large money,
   const frozen = structuredClone(started.payment);
   assert.equal(started.variantSelections[0].selections[0].valueLabel, 'Large');
   assert.equal(started.variantSelections[0].fulfillment, 'digital');
+  // Payments shows this under the name on Stripe's page; frozen with the rest of the request.
+  assert.equal(started.payment.lines[0].options, 'Size: Large');
   await saveCatalogProductPrices(writes, { catalogItemId: 'large', regular: '99', sale: '', stockStatus: 'out-of-stock', expectedRevision: 'catalog:' + (await catalog.getVersioned('small')).revision });
   await updateCatalogVariantLabels(writes, { productId: 'small', expectedRevision: expanded.product.revision, optionLabel: 'Changed size', values: [{ valueId: 'l', label: 'Changed Large' }], members: [{ catalogItemId: 'large', fulfillment: 'physical' }] });
   f.setPayment('paid');
@@ -98,6 +100,7 @@ test('two-option variant checkout freezes both Size and Color selections against
     { optionId: 'size', optionLabel: 'Size', valueId: 'm', valueLabel: 'Medium' },
     { optionId: 'color', optionLabel: 'Color', valueId: 'ink', valueLabel: 'Ink' },
   ]);
+  assert.equal(started.payment.lines[0].options, 'Size: Medium · Color: Ink');
 
   await updateCatalogVariantLabels(writes, {
     productId: 'small', expectedRevision: memberAdded.product.revision,
@@ -115,6 +118,7 @@ test('two-option variant checkout freezes both Size and Color selections against
   assert.equal(paid.phase, 'paid');
   assert.equal(paid.order.total.minor, '2800');
   assert.equal(paid.order.variantSelections[0].fulfillment, 'digital');
+  assert.equal(paid.payment.lines[0].options, 'Size: Medium · Color: Ink');
   assert.deepEqual(paid.order.variantSelections[0].selections, [
     { optionId: 'size', optionLabel: 'Size', valueId: 'm', valueLabel: 'Medium' },
     { optionId: 'color', optionLabel: 'Color', valueId: 'ink', valueLabel: 'Ink' },

@@ -713,3 +713,7 @@
 {"action": "decision_locked", "at": "2026-11-13T16:02:29+00:00", "data": {"decision_id": "commerce-ship-line-options-20261113"}, "event_id": "302bbaf8-2843-42a0-90d0-e7cb57433621"}
 {"action": "decision_implemented", "at": "2026-11-13T16:03:57+00:00", "data": {"decision_id": "commerce-ship-line-options-20261113"}, "event_id": "625f8810-cde5-4467-b358-1e0f2a02e7f2"}
 {"action": "decision_verified", "at": "2026-11-13T16:03:57+00:00", "data": {"decision_id": "commerce-ship-line-options-20261113"}, "event_id": "2cf18f41-15ee-4f00-b2c3-7a24c8f080e6"}
+{"action": "decision_proposed", "at": "2026-11-13T16:20:11+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "a685f715-1db3-4ed7-9083-c6b68aba2215"}
+{"action": "decision_locked", "at": "2026-11-13T16:20:11+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "f939094e-876a-4e91-8c4c-8b2d0d418079"}
+{"action": "decision_implemented", "at": "2026-11-13T16:20:11+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "a5399d12-52a2-432e-8972-1aa63cb92712"}
+{"action": "decision_verified", "at": "2026-11-13T16:20:11+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "9f724d6c-58ad-49f1-9914-e140bd0aff62"}

@@ -12,7 +12,12 @@ do not invent an aggregate price or selection. Uncommitted membership,
 orphans, malformed combinations, and duplicate selections fail closed.
 
 Checkout remains client-compatible: `CartLine` is still
-`{ catalogItemId, quantity }` and `PaymentRequest` is unchanged. Commerce
+`{ catalogItemId, quantity }`. Each `PaymentRequest` line of an item with
+options also carries `options`, the frozen choices as the order page shows
+them (`Size: M · Colour: Red`, one line, at most 200 UTF-16 units), which
+Payments shows under the item name on Stripe's page (GrillTrack
+`commerce-payment-line-options-20261113`); an item without options sends
+none. Item ids, quantities and amounts are unchanged. Commerce
 stores the selected product handle, option/value labels, member ID, and
 fulfillment in its attempt and canonical order snapshots. Price and option
 edits therefore do not rewrite a paid order.
