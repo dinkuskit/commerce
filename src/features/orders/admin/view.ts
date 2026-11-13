@@ -65,8 +65,12 @@ export function completeForm(record: OrderRecord, failure?: string, typed?: Reco
   return orderForm(record, 'Complete', failure, 'Order not completed', [['carrier', 'Carrier (optional)', String(typed?.carrier ?? '')],
     ['tracking', 'Tracking number (optional)', String(typed?.tracking ?? '')]], 'Complete order', 'complete');
 }
-function detailFields(...pairs: string[]): Block {
-  return { type: 'section', text: pairs.map((value, i) => i % 2 ? value : value + ':').join('\n') };
+// Section text uses normal HTML whitespace: newlines do not separate facts.
+// Keep one wrapping section per pair; fields cells truncate long IDs and addresses.
+function detailFields(...pairs: string[]): Block[] {
+  const blocks: Block[] = [];
+  for (let i = 0; i < pairs.length; i += 2) blocks.push({ type: 'section', text: pairs[i] + ': ' + pairs[i + 1] });
+  return blocks;
 }
 const notRecorded = 'Not recorded';
 const back = action('Back to orders', 'orders.list');
@@ -89,7 +93,7 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
     const record = matches[0], order = record.paidOrder, done = record.completed, contact = order.contactSnapshot?.contact, billing = billingOf(record);
     const id = encodeURIComponent(order.orderId), version = (record.revision ?? 1) + ':' + id;
-    blocks.push(detailFields('Order', label(record), 'Order ID', order.orderId, 'Version', String(record.revision ?? 1), 'Receipt', order.receiptId,
+    blocks.push(...detailFields('Order', label(record), 'Order ID', order.orderId, 'Version', String(record.revision ?? 1), 'Receipt', order.receiptId,
       'Checkout attempt', order.attemptId, 'Payment', payment(order),
       'Provider payment', order.paymentId ?? notRecorded, 'Paid at', order.paidAt ?? notRecorded, 'Status', status(record),
       ...(done ? ['Completed at', done.at, 'Carrier', done.carrier ?? notRecorded, 'Tracking number', done.tracking ?? notRecorded] : []),

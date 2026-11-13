@@ -67,8 +67,8 @@ test('the address rides the paid order; a digital-only basket carries none', asy
   assert.deepEqual(order.contactSnapshot.contact.billing, billing);
   const detail = JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: order }] }, order.orderId));
   assert.ok(detail.includes('Fixture Shopper, 1 Example Way, Testville, CA, 00000, US'));
-  assert.ok(detail.includes('Bill to:\\nBill Payer, 9 Billing Way, Toronto, ON, M5V 1A1, CA'));
-  assert.ok(detail.includes('Email:\\ndelivery-fixture@example.test'));
+  assert.ok(detail.includes('Bill to: Bill Payer, 9 Billing Way, Toronto, ON, M5V 1A1, CA'));
+  assert.ok(detail.includes('Email: delivery-fixture@example.test'));
 
   const digital = checkout(() => 'digital'); t.after(digital.close);
   digital.f.execution.loadCheckoutContactRequirements = requirements([]);
