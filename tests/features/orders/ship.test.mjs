@@ -87,6 +87,22 @@ test('each order with an address goes to Ship once per version, with each item\'
   assert.equal(state.sent.length, 5);
 });
 
+test('each line carries the options the shopper chose, as the order page shows them, so two sizes never look alike', async () => {
+  const chose = (catalogItemId, ...pairs) => ({ schema: 'dinkuskit.commerce.checkout-variant-selection/v1', productId: 'tee', catalogItemId, fulfillment: 'physical',
+    selections: pairs.map(([optionLabel, valueLabel]) => ({ optionId: optionLabel, optionLabel, valueId: valueLabel, valueLabel })) });
+  const paid = order('o1', [line('hat'), line('scarf'), line('ebook')]);
+  const tees = { ...paid, lines: [{ ...line('tee-m'), name: 'Wrong Turn Tee' }, { ...line('tee-l'), name: 'Wrong Turn Tee' }, line('hat')],
+    variantSelections: [chose('tee-m', ['Size', 'M']), chose('tee-l', ['Size', 'L'], ['Colour', 'Smoke\nGrey'])] };
+  const long = { ...order('o2', [line('scarf')]), variantSelections: [chose('scarf', ['Note', 'a'.repeat(193) + '😀b'])] };
+  catalog['tee-m'] = catalog['tee-l'] = { physical: true, weightOz: 6.5 };
+  const { state, connection } = ship();
+  await syncShip(await store(tees, long), connection, item);
+  assert.deepEqual(state.sent[0].lines.map(sent => [sent.name, sent.options]), [['Wrong Turn Tee', 'Size: M'], ['Wrong Turn Tee', 'Size: L · Colour: Smoke Grey'], ['HAT', undefined]]);
+  // A product without options sends no options field at all; a long one is cut to 200 UTF-16 units without splitting a character.
+  assert.equal('options' in state.sent[0].lines[2], false);
+  assert.equal(state.sent[1].lines[0].options, 'Note: ' + 'a'.repeat(193));
+});
+
 test('each order carries the store\'s name from the Site title, cleaned for Ship, and none when nothing is left', async () => {
   const sent = async name => {
     const { state, connection } = ship();

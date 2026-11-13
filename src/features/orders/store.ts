@@ -183,6 +183,12 @@ export function reopenOrder(
 }
 
 /** Where the order goes now: the owner's correction, else the address typed at checkout. */
+/** A line's chosen options as the order page shows them, such as "Size: M · Colour: Red", or "" when it has none. */
+export function lineOptions(order: PaidOrder, catalogItemId: string): string {
+  return order.variantSelections?.find(selection => selection.catalogItemId === catalogItemId)?.selections
+    .map(choice => choice.optionLabel + ": " + choice.valueLabel).join(" · ") ?? "";
+}
+
 export function deliveryOf(record: OrderRecord): CheckoutDeliveryAddress | undefined {
   return record.delivery ?? record.paidOrder.contactSnapshot?.contact?.delivery;
 }
