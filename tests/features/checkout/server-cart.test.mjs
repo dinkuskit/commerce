@@ -229,14 +229,15 @@ test("the background check deletes carts past their 30 days and keeps paid order
   await carts.put("old-empty", { attempts: [], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "2000" });
   await carts.put("old-released", { attempts: [{ attemptId: "r-1", phase: "released" }], cart: { lines: [] }, cartExpires: "2000" });
   await carts.put("old-paid", { attempts: [paidAttempt], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "2000" });
-  await carts.put("old-paying", { attempts: [{ attemptId: "p-1", phase: "paying" }], cart: { lines: [] }, cartExpires: "2000" });
+  await carts.put("old-paying", { attempts: [{ attemptId: "p-1", phase: "paying" }], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "2000" });
   await carts.put("fresh", { attempts: [], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "9000" });
   await clearExpiredCarts(carts, 5000);
   assert.equal(await carts.get("old-empty"), null);
   assert.equal(await carts.get("old-released"), null);
   assert.deepEqual(await carts.get("old-paid"), { attempts: [paidAttempt] });
-  // A cart mid-checkout moves a day on, so the next run's page of 100 never stalls behind it.
-  assert.deepEqual(await carts.get("old-paying"), { attempts: [{ attemptId: "p-1", phase: "paying" }], cart: { lines: [] }, cartExpires: String(5000 + DAY) });
+  // A cart mid-checkout keeps its attempt but not its expired lines (they never come back), and is looked
+  // at again a day on, so the next run's page of 100 never stalls behind it.
+  assert.deepEqual(await carts.get("old-paying"), { attempts: [{ attemptId: "p-1", phase: "paying" }], cartExpires: String(5000 + DAY) });
   assert.ok((await carts.get("fresh")).cart);
 });
 
