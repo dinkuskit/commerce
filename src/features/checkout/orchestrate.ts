@@ -125,6 +125,8 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
       if ((previous.coupon?.code ?? undefined) !== requested) fail("Active checkout coupon selection is frozen");
       return drive(e, cartId, previous.attemptId, true);
     }
+    // The guest route buys the saved cart: a cart changed since it was read is contention, never a silent switch.
+    if (stored?.record.cart && JSON.stringify(stored.record.cart.lines) !== JSON.stringify(cart)) fail("Checkout contention; retry");
     if (previous && retryAfter !== previous.attemptId) fail("Retry requires the released attempt identity");
     if (!previous && retryAfter !== undefined) fail("Retry checkout not found");
     const attempt = await freeze(

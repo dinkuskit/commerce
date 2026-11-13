@@ -72,7 +72,7 @@ async function setup(t) {
   assert.equal(prepared.ok, true);
   const headers = { [GUEST_CAPABILITY_HEADER]: prepared.capability.capability };
   return {
-    runtime, synth, storage: opened.storage,
+    runtime, synth, storage: opened.storage, headers,
     cart: (input = {}, rt = runtime) => cartGuestCheckout(rt, input, headers),
     start: (input = { contact }) => startGuestCheckout(runtime, input, headers),
   };
@@ -235,6 +235,54 @@ test("the background check deletes carts past their 30 days and keeps paid order
   assert.equal(await carts.get("old-empty"), null);
   assert.equal(await carts.get("old-released"), null);
   assert.deepEqual(await carts.get("old-paid"), { attempts: [paidAttempt] });
-  assert.ok((await carts.get("old-paying")).cart, "a cart mid-checkout waits for a later run");
+  // A cart mid-checkout moves a day on, so the next run's page of 100 never stalls behind it.
+  assert.deepEqual(await carts.get("old-paying"), { attempts: [{ attemptId: "p-1", phase: "paying" }], cart: { lines: [] }, cartExpires: String(5000 + DAY) });
   assert.ok((await carts.get("fresh")).cart);
+});
+
+test("a cart changed while checkout starts is contention, never a purchase of the old lines", async (t) => {
+  const f = await setup(t);
+  const saved = await f.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] });
+  // The shopper changes the cart in another tab after start has read it but before the attempt is saved.
+  let reads = 0;
+  const carts = new Proxy(f.runtime.carts, { get(target, name) {
+    const value = Reflect.get(target, name, target);
+    if (name !== "getVersioned") return typeof value === "function" ? value.bind(target) : value;
+    return async (...args) => {
+      if (++reads === 2) assert.equal((await f.cart({ version: saved.cart.version, lines: [{ catalogItemId: "hat", quantity: 3 }] })).ok, true);
+      return value.apply(target, args);
+    };
+  } });
+  const raced = await startGuestCheckout({ ...f.runtime, carts }, { contact }, f.headers);
+  assert.ok(reads >= 2, "start read the cart twice");
+  assert.equal(raced.error?.code, "CONTENTION", JSON.stringify(raced));
+  assert.equal(f.synth.counts().paymentCreates, 0);
+  const started = await f.start();
+  assert.equal(started.ok, true, JSON.stringify(started));
+  assert.equal(started.checkout.total.minor, String(3 * 250));
+});
+
+test("a checkout saved before the server cart (attempts only) still reads, replays and pays", async (t) => {
+  const { clearExpiredCarts } = await import("../../../dist/features/checkout/storage.js");
+  const f = await setup(t);
+  await f.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] });
+  const started = await f.start();
+  const carts = f.storage[CHECKOUT_COLLECTION];
+  const [{ id, data }] = (await carts.query()).items;
+  // Commerce 0.8.0 stored each checkout as { attempts } with no cart and no expiry.
+  await carts.put(id, { attempts: data.attempts });
+  const read = await f.cart();
+  assert.equal(read.ok, true, JSON.stringify(read));
+  assert.equal(read.checkout.attemptId, started.checkout.attemptId);
+  assert.deepEqual(read.cart.lines, []);
+  const replay = await f.start();
+  // Start replays the saved attempt's own frozen purchase; it prices nothing new.
+  assert.equal(replay.checkout.attemptId, started.checkout.attemptId, JSON.stringify(replay));
+  assert.equal(replay.checkout.total.minor, started.checkout.total.minor);
+  await clearExpiredCarts(carts, 10 ** 12);
+  assert.ok(await carts.get(id), "cleanup never touches a record with no cart expiry");
+  f.synth.setPayment("paid");
+  const paid = await f.cart();
+  assert.equal(paid.checkout.state, "paid");
+  assert.ok(paid.checkout.order.orderId);
 });
