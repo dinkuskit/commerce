@@ -220,3 +220,21 @@ test("the cart needs the shopper's own key", async (t) => {
   assert.equal(denied.error.code, "CAPABILITY_DENIED");
   assert.deepEqual((await f.storage[CHECKOUT_COLLECTION].query()).items, []);
 });
+
+test("the background check deletes carts past their 30 days and keeps paid orders", async (t) => {
+  const { clearExpiredCarts } = await import("../../../dist/features/checkout/storage.js");
+  const f = await setup(t);
+  const carts = f.storage[CHECKOUT_COLLECTION];
+  const paidAttempt = { attemptId: "paid-1", phase: "paid", cart: [{ catalogItemId: "hat", quantity: 1 }], order: { orderId: "o-1" } };
+  await carts.put("old-empty", { attempts: [], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "2000" });
+  await carts.put("old-released", { attempts: [{ attemptId: "r-1", phase: "released" }], cart: { lines: [] }, cartExpires: "2000" });
+  await carts.put("old-paid", { attempts: [paidAttempt], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "2000" });
+  await carts.put("old-paying", { attempts: [{ attemptId: "p-1", phase: "paying" }], cart: { lines: [] }, cartExpires: "2000" });
+  await carts.put("fresh", { attempts: [], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "9000" });
+  await clearExpiredCarts(carts, 5000);
+  assert.equal(await carts.get("old-empty"), null);
+  assert.equal(await carts.get("old-released"), null);
+  assert.deepEqual(await carts.get("old-paid"), { attempts: [paidAttempt] });
+  assert.ok((await carts.get("old-paying")).cart, "a cart mid-checkout waits for a later run");
+  assert.ok((await carts.get("fresh")).cart);
+});

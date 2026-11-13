@@ -4,6 +4,7 @@ import type { CronEvent } from "emdash/plugin";
 import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
 
 import { GuestCheckoutError } from "./errors.js";
+import { clearExpiredCarts } from "./storage.js";
 import {
   guestCheckoutFailure,
   prepareGuestCheckout,
@@ -260,7 +261,9 @@ export function createInstalledCheckoutHandlers(
     readiness,
     reconcileWakes,
     cron: async (event, ctx) => {
-      if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await reconcileWakes(ctx);
+      if (event.name !== COMMERCE_CHECKOUT_WAKES_TASK) return;
+      await clearExpiredCarts(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts] as never, Math.floor(Date.now() / 1000)).catch(() => {});
+      await reconcileWakes(ctx);
     },
   };
 }

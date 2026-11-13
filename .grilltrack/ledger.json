@@ -16590,7 +16590,22 @@
         "commerce-cart-expiry-20261113"
       ],
       "domain": "Server-side cart",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-11-13T16:50:55+00:00",
+          "choice": "A cart untouched for 30 days reads as empty and cannot start checkout; the next change starts a fresh 30 days. The old record is left in storage rather than deleted by the 5-minute background check. This amends commerce-cart-expiry-20261113, which said the background check clears expired carts.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "Withdrawn. Ronald 13 Nov 16:50 UTC: 'makes sense to me i dont see any reason to kepe expired cart data'. The original lock stands: the 5-minute background check deletes expired carts, WooCommerce-style.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
+        }
+      ],
       "id": "commerce-cart-expiry-reads-empty-20261113",
       "implementation_ref": null,
       "question": "How does an expired cart go away?",
@@ -16601,9 +16616,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
-      "superseded_by": null,
-      "updated_at": "2026-11-13T16:41:04+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-cart-expiry-20261113",
+      "updated_at": "2026-11-13T16:50:55+00:00",
       "verification_ref": null
     }
   ],
@@ -16641,5 +16656,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T16:45:52+00:00"
+  "updated_at": "2026-11-13T16:50:55+00:00"
 }

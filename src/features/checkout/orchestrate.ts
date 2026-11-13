@@ -97,6 +97,9 @@ async function freeze(
 
 
 
+// The Registry build refuses every coupon at pricing (registry-coupons-unhooked-v1), so it keeps the code as sent.
+const normalizedCoupon = (code: string) => REGISTRY_BUILD ? code : normalizeCouponCode(code);
+
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
@@ -105,7 +108,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
     ? (["contact,couponCode,lines", "contact,lines", "couponCode,lines", "lines"].includes(sortedKeys(rawCart)))
       ? (Object.prototype.hasOwnProperty.call(rawCart, "couponCode")
         ? typeof (rawCart as { couponCode?: unknown }).couponCode === "string"
-          ? normalizeCouponCode((rawCart as { couponCode: string }).couponCode) : fail("Invalid cart coupon")
+          ? normalizedCoupon((rawCart as { couponCode: string }).couponCode) : fail("Invalid cart coupon")
         : undefined)
       : fail("Invalid cart")
     : undefined;
@@ -115,7 +118,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
     const previous = stored?.record.attempts.at(-1);
     if (previous && previous.phase !== "released") {
       if (JSON.stringify(previous.cart) !== JSON.stringify(cart)) fail("Active checkout cart is frozen");
-      const requested = requestedCouponCode === undefined ? undefined : normalizeCouponCode(requestedCouponCode);
+      const requested = requestedCouponCode === undefined ? undefined : normalizedCoupon(requestedCouponCode);
       if ((previous.coupon?.code ?? undefined) !== requested) fail("Active checkout coupon selection is frozen");
       return drive(e, cartId, previous.attemptId, true);
     }

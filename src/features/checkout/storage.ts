@@ -32,6 +32,25 @@ export function createCheckoutStore(collection: Pick<StorageCollection<CheckoutR
   };
 }
 
+/**
+ * The background check's cleanup, WooCommerce-style (commerce-cart-expiry-20261113): up to 100 carts past
+ * their 30 days per run. A cart with no checkout, or only released ones, is deleted. A paid cart keeps its
+ * order record and loses only the cart. A cart mid-checkout waits for a later run.
+ */
+export async function clearExpiredCarts(
+  carts: Pick<StorageCollection<CheckoutRecord>, "query" | "getVersioned" | "compareAndSet" | "compareAndDelete">,
+  now: number,
+): Promise<void> {
+  for (const { id } of (await carts.query({ where: { cartExpires: { lt: String(now) } }, limit: 100 })).items) {
+    const found = await carts.getVersioned(id);
+    const record = found?.value;
+    if (!found || !record || !(+record.cartExpires! <= now)) continue;
+    const phases = record.attempts.map(attempt => attempt.phase);
+    if (phases.every(phase => phase === "released")) await carts.compareAndDelete(id, found.revision);
+    else if (phases.includes("paid")) await carts.compareAndSet(id, found.revision, { attempts: record.attempts });
+  }
+}
+
 export function createCheckoutPaymentAssociationPort(
   collection: Pick<
     StorageCollection<CheckoutPaymentAssociation>,

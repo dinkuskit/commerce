@@ -51,8 +51,7 @@ const CART_SECONDS = 30 * 86_400;
 
 /** Live lines: none once the cart is 30 days untouched (commerce-cart-expiry-20261113) or its order is paid. */
 export function cartLines(record: CheckoutRecord | undefined, now: number): CartLine[] {
-  const cart = record?.cart;
-  return cart && now - cart.at < CART_SECONDS && record.attempts.at(-1)?.phase !== "paid" ? cart.lines : [];
+  return record?.cart && now < +record.cartExpires! && record.attempts.at(-1)?.phase !== "paid" ? record.cart.lines : [];
 }
 
 async function cartLine(runtime: GuestCheckoutRuntime, line: unknown): Promise<CartLine> {
@@ -84,33 +83,28 @@ export async function cartGuestCheckout(
     const authorized = await authorizeGuestCapability(runtime, readGuestCapabilityHeader(headers));
     const store = createCheckoutStore(runtime.carts);
     const now = nowSeconds(runtime);
-    let stored = await store.read(authorized.cartId);
+    const stored = await store.read(authorized.cartId);
     const { lines, version, key } = raw as { lines: unknown; version: unknown; key?: unknown };
-    if (keys && (key === undefined || key !== stored?.record.cart?.key)) {
-      const phase = stored?.record.attempts.at(-1)?.phase;
-      if (phase && phase !== "released") fail("CHECKOUT_FROZEN");
-      if (version !== (stored?.version ?? null) || !Array.isArray(lines) || (key !== undefined && (typeof key !== "string" || key.length > 128))) {
-        fail(Array.isArray(lines) ? "CONTENTION" : "INVALID_CART");
-      }
-      const merged = lines.length ? cartInput(await Promise.all(lines.map(line => cartLine(runtime, line)))) : [];
-      const quote = await quoteCatalogBasket(runtime.catalog, merged.map(line => line.catalogItemId),
-        { resolveProvider: runtime.host.resolveAvailabilityProvider });
-      // Stock is checked again when checkout starts; any refusal here reads as unavailable.
-      if (!quote.ok) fail("PRODUCT_UNAVAILABLE");
-      if (!await store.compareAndSet(authorized.cartId, stored?.version ?? null, {
-        attempts: stored?.record.attempts ?? [], cart: { lines: merged, at: now, ...(key ? { key } : {}) },
-      })) fail("CONTENTION");
-      stored = await store.read(authorized.cartId);
-    }
     let attempt = stored?.record.attempts.at(-1);
-    // A read is also the status check: it runs Commerce's payment check on the current attempt.
-    if (!keys && attempt && paymentsReady(runtime.host)) {
-      attempt = await reconcileCheckout(executionOf(runtime), authorized.cartId, attempt.attemptId);
-      stored = await store.read(authorized.cartId);
+    if (!keys) {
+      // A read is also the status check: it runs Commerce's payment check on the current attempt.
+      if (attempt && paymentsReady(runtime.host)) attempt = await reconcileCheckout(executionOf(runtime), authorized.cartId, attempt.attemptId);
+    } else if (key === undefined || key !== stored?.record.cart?.key) {
+      if (attempt && attempt.phase !== "released") fail("CHECKOUT_FROZEN");
+      if (!Array.isArray(lines) || key !== undefined && (typeof key !== "string" || key.length > 128)) fail("INVALID_CART");
+      if (version !== (stored?.version ?? null)) fail("CONTENTION");
+      const merged = lines.length ? cartInput(await Promise.all(lines.map(line => cartLine(runtime, line)))) : [];
+      // Stock is checked again when checkout starts; any refusal here reads as unavailable.
+      if (!(await quoteCatalogBasket(runtime.catalog, merged.map(line => line.catalogItemId),
+        { resolveProvider: runtime.host.resolveAvailabilityProvider })).ok) fail("PRODUCT_UNAVAILABLE");
+      if (!await store.compareAndSet(authorized.cartId, stored?.version ?? null, {
+        attempts: stored?.record.attempts ?? [], cart: { lines: merged, ...(key ? { key } : {}) }, cartExpires: String(now + CART_SECONDS),
+      })) fail("CONTENTION");
     }
+    const saved = await store.read(authorized.cartId);
     return {
       ok: true, capabilityId: authorized.capabilityId, checkout: attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout(),
-      cart: { lines: cartLines(stored?.record, now), version: stored?.version ?? null, expiresAt: (stored?.record.cart?.at ?? now) + CART_SECONDS },
+      cart: { lines: cartLines(saved?.record, now), version: saved?.version ?? null, expiresAt: +(saved?.record.cartExpires ?? now + CART_SECONDS) },
     };
   } catch (error) {
     return guestSafeResult(error);

@@ -216,8 +216,11 @@ export interface CheckoutAttempt {
   };
 }
 /** One durable aggregate per trusted cart. Preserve past attempts and paid receipts. */
-/** The shopper's cart lives beside its checkout attempts (commerce-server-cart-20261113); `at` is the last change in seconds. */
-export interface CheckoutRecord { attempts: CheckoutAttempt[]; cart?: { lines: CartLine[]; at: number; key?: string } }
+/**
+ * The shopper's cart lives beside its checkout attempts (commerce-server-cart-20261113). `cartExpires` is
+ * Unix seconds as a string, 30 days after the last change, indexed so the background check can find old carts.
+ */
+export interface CheckoutRecord { attempts: CheckoutAttempt[]; cart?: { lines: CartLine[]; key?: string }; cartExpires?: string }
 export interface CheckoutPaymentAssociation {
   recordKind: "checkout-payment-association";
   attemptId: string;
