@@ -66,17 +66,16 @@ test('the address rides the paid order; a digital-only basket carries none', asy
   assert.deepEqual(order.contactSnapshot.contact.delivery, syntheticDelivery);
   assert.deepEqual(order.contactSnapshot.contact.billing, billing);
   const detail = JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: order }] }, order.orderId));
-  assert.ok(detail.includes('Fixture Shopper, 1 Example Way, Testville, CA, 00000, US'));
-  assert.ok(detail.includes('Bill to:\\nBill Payer, 9 Billing Way, Toronto, ON, M5V 1A1, CA'));
-  assert.ok(detail.includes('Email:\\ndelivery-fixture@example.test'));
+  for (const line of ['Fixture Shopper', '1 Example Way', 'Testville, CA 00000', 'Bill Payer', '9 Billing Way', 'Toronto, ON M5V 1A1', 'delivery-fixture@example.test'])
+    assert.ok(detail.includes('"text":"' + line + '"'), line);
 
   const digital = checkout(() => 'digital'); t.after(digital.close);
   digital.f.execution.loadCheckoutContactRequirements = requirements([]);
   const download = await startCheckout(digital.f.execution, 'cart', { lines: cart, contact: { email, delivery: syntheticDelivery, billing } });
   assert.equal(download.phase, 'paid');
   assert.equal(download.order.contactSnapshot.contact.delivery, undefined);
-  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: paidOrderOf(download.order) }] }, download.order.orderId)).includes('No address'));
+  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: paidOrderOf(download.order) }] }, download.order.orderId)).includes('No ship-to address'));
   // A copy kept before Orders checked the contact snapshot still renders.
   const early = { ...paidOrderOf(download.order), contactSnapshot: {} };
-  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: early }] }, early.orderId)).includes('No address'));
+  assert.ok(JSON.stringify(ordersView({ status: 'available', orders: [{ paidOrder: early }] }, early.orderId)).includes('No ship-to address'));
 });

@@ -43,6 +43,12 @@ test('native list sorts every order newest paid first before 25-row pagination, 
   const ctx = { storage: { orders, order_numbers: numbers } }, services = { ship: async () => { shipCalls++; } };
   const first = await ordersBlocks(route(load), ctx, services);
   assert.deepEqual(ids(first), chronologicalIds.toReversed().slice(0, 25));
+  const summaries = first.blocks.filter(block => block.type === 'fields');
+  assert.equal(summaries.length, 25);
+  for (const summary of summaries) {
+    assert.deepEqual(summary.fields.find(field => field.label === 'Total'), { label: 'Total', value: '$1.00' });
+    assert.deepEqual(summary.fields.find(field => field.label === 'Payment'), { label: 'Payment', value: 'Payment not recorded' });
+  }
   const next = elements(first).find(e => e.label === 'Next');
   assert.ok(next);
   const second = await ordersBlocks(page(next), ctx, services);
