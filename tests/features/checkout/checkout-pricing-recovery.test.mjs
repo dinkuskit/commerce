@@ -315,6 +315,8 @@ test('percentage free shipping conserves whole-line cents without changing quant
   assert.deepEqual(a.payment.pricing.lines.map(l => [l.quantity, l.discount.minor, l.netAmount.minor]), [[2, '50', '100'], [1, '33', '67']]);
   assert.equal(f.sessions.get(a.attemptId).request.total.minor, '167');
   assert.equal(a.payment.lines[0].unitPrice.minor, '75');
+  // Items without options send none, so Stripe shows no grey line under them.
+  assert.equal(a.payment.lines.some(line => Object.hasOwn(line, 'options')), false);
 });
 
 test('merchandise-zero with positive shipping remains a payable frozen request', async t => {

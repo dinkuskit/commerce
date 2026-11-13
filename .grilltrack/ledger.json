@@ -16482,6 +16482,78 @@
       "superseded_by": null,
       "updated_at": "2026-11-13T16:27:03+00:00",
       "verification_ref": "file:.grilltrack/proof/commerce-ship-line-options-20261113/PROOF.md"
+    },
+    {
+      "baseline_ref": "git:09b4114",
+      "candidate_refs": [],
+      "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/262",
+      "created_at": "2026-11-13T16:29:13+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-multi-option-20261022",
+        "commerce-ship-line-options-20261113"
+      ],
+      "domain": "Checkout totals",
+      "history": [
+        {
+          "at": "2026-11-13T16:29:13+00:00",
+          "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-13T16:29:14+00:00",
+          "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-13T16:29:14+00:00",
+          "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+          "from": "implemented",
+          "implementation_ref": "src/shared/line-text.ts (oneLine, cut, lineOptions moved from orders so checkout can share them); src/features/checkout/orchestrate.ts freeze(); src/features/checkout/types.ts CheckoutLine.options; src/features/orders/ship.ts, store.ts, admin/view.ts import the shared text; docs/implementation/variant-checkout-v1.md; docs/website/reference/commerce.md; .changeset/payment-line-options.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-payment-line-options-20261113",
+      "implementation_ref": "src/shared/line-text.ts (oneLine, cut, lineOptions moved from orders so checkout can share them); src/features/checkout/orchestrate.ts freeze(); src/features/checkout/types.ts CheckoutLine.options; src/features/orders/ship.ts, store.ts, admin/view.ts import the shared text; docs/implementation/variant-checkout-v1.md; docs/website/reference/commerce.md; .changeset/payment-line-options.md",
+      "question": "Does Commerce send the shopper's chosen options with each payment line, so Stripe's payment page can tell two sizes of one product apart?",
+      "rationale": "Ronald 13 Nov 2026 16:03 UTC: 'agreed' to this pick (commerce#262) in the Dad's PRs sweep, including a ledger entry first.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-11-13T16:29:14+00:00",
+      "verification_ref": "tests/features/checkout/variant-checkout.test.mjs ('Size: Large'; 'Size: Medium \u00b7 Color: Ink' frozen through label renames into the paid request); tests/features/checkout/checkout-pricing-recovery.test.mjs (simple products send no options); tests/features/orders/ship.test.mjs (shared cut); bin/verify-commerce quick green locally 2026-11-13; Registry backend.js +44 bytes over commerce#271 0eb33d6"
     }
   ],
   "last_activation": {
@@ -16518,5 +16590,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T16:27:03+00:00"
+  "updated_at": "2026-11-13T16:29:14+00:00"
 }
