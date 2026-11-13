@@ -172,7 +172,10 @@ read (`null` for a cart never saved):
   the last saved `key` changes nothing and answers the current cart.
 - While a checkout attempt is open or paid, writes answer `CHECKOUT_FROZEN`.
   After a paid order, start a new cart with a fresh `prepare`.
-- A cart untouched for 30 days reads as empty; each write restarts the clock
+- A cart untouched for 30 days reads as empty; each write restarts the clock.
+  The 5-minute background check then deletes it, up to 100 carts a run
+  (WooCommerce-style); a paid cart keeps its attempts for Orders and loses only
+  the cart
   (`commerce-cart-expiry-20261113`). A paid cart also reads as empty.
 
 The answer carries `data.cart`:
