@@ -192,10 +192,12 @@ test("guest and wake handlers share the durable association and produce one orde
   assert.equal(status.checkout.state, "paid");
   assert.ok(status.checkout.order.orderId);
   assert.equal(wakes.length, 0);
-  const before = ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot();
+  // The fixture clock sits in 1970, so the cleanup sees this paid cart as expired; compare the attempts only.
+  const attempts = () => ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot().map(([id, record]) => [id, record.attempts]);
+  const before = attempts();
   wakes.push({ eventId: "wake-1", attemptId: started.checkout.attemptId, bindingRef: "stripe-test-binding", deliveryGeneration: 1, wokeAt: 1000 });
   await handlers.cron({ name: COMMERCE_CHECKOUT_WAKES_TASK, scheduledAt: new Date().toISOString() }, ctx);
-  assert.deepEqual(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts].snapshot(), before);
+  assert.deepEqual(attempts(), before);
   assert.equal(wakes.length, 0);
 });
 

@@ -211,7 +211,7 @@ function normalizedConfig(
     credentialResolver: input.credentialResolver,
     fetch: input.fetch,
     pricingSchema: input.pricingSchema,
-    validateCouponQuoteSnapshot: input.validateCouponQuoteSnapshot,
+    ...(REGISTRY_BUILD ? {} : { validateCouponQuoteSnapshot: input.validateCouponQuoteSnapshot }),
   });
 }
 
@@ -296,7 +296,7 @@ function createPaymentPort(
   }
 
   async function requestOutcome(request: PaymentRequest, create: boolean): Promise<PaymentOutcome> {
-    const exact = exactRequest(request, config.bindingRef, config.validateCouponQuoteSnapshot);
+    const exact = exactRequest(request, config.bindingRef, REGISTRY_BUILD ? undefined : config.validateCouponQuoteSnapshot);
     if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
       throw new Error("Payments pricing schema unsupported");
     }

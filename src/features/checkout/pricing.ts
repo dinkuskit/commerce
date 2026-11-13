@@ -197,5 +197,5 @@ export async function composeCheckoutPricing(
   if (!REGISTRY_BUILD && quoted && BigInt(snapshot.couponDiscount.minor) !== BigInt(quoted.quote.discount.minor)) {
     fail("Coupon allocation is not conserved");
   }
-  return { snapshot, ...(quoted ? { couponId: quoted.couponId, couponCode: quoted.code } : {}) };
+  return { snapshot, ...(!REGISTRY_BUILD && quoted ? { couponId: quoted.couponId, couponCode: quoted.code } : {}) };
 }
