@@ -104,6 +104,25 @@ test('each shop list page stays under the limit and the pages together list ever
   }
 });
 
+test('every page says the owner turned the DinkusKit catalog listing off, pages cut short by photos included', async () => {
+  const pages = async (ctx) => {
+    const seen = [];
+    let cursor;
+    do { const page = await readPublicCatalog(ctx, cursor); seen.push(page); cursor = page.cursor; } while (cursor !== undefined && seen.length < 200);
+    return seen;
+  };
+  const listed = await pages((await shop(150)).ctx);
+  assert.ok(listed.some((page) => /^[1-9]/.test(page.cursor ?? '')), 'some pages stop early for photos');
+  assert.ok(listed.every((page) => !('offCatalog' in page)), 'a store that never touched the switch says nothing');
+  const { ctx } = await shop(150);
+  const stored = ctx.storage.storefront_out_of_stock_listing.records;
+  stored.set('active', { ...stored.get('active'), offCatalog: true });
+  const off = await pages(ctx);
+  assert.equal(off.length, listed.length);
+  assert.ok(off.every((page) => page.offCatalog === true), 'every page carries the choice');
+  assert.deepEqual(off.flatMap((page) => page.products), listed.flatMap((page) => page.products), 'the shop itself lists the same products');
+});
+
 test('one product read stays well under the limit', async () => {
   const { ctx, calls } = await shop(150);
   const legacy = await shop(150, { batched: false });

@@ -25,4 +25,4 @@ the same text as the Orders page, with no resync of orders Ship already has.
   to 200 UTF-16 units without leaving half a character.
 - `bin/verify-commerce quick` passes (856 unit tests, repo and feature audits).
 - Registry bundle: `backend.js` 130,307 bytes on main (`12a15e6`, 765 headroom)
-  to 130,391 bytes (681 headroom), 84 bytes for this change. After main moved to `27fd637` (commerce#267): 130,421 (651 headroom) on main, 130,513 (559 headroom) with this change, 92 bytes.
+  to 130,391 bytes (681 headroom), 84 bytes for this change. After main moved to `27fd637` (commerce#267): 130,421 (651 headroom) on main, 130,513 (559 headroom) with this change, 92 bytes. After main moved to `09b4114` (commerce#270): 346 headroom on main, 270 with this change.
