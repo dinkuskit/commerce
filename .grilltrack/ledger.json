@@ -16372,11 +16372,52 @@
       "verification_ref": "file:.grilltrack/proof/commerce-remove-native-entry-20261101/PROOF.md"
     },
     {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "One switch in Commerce Settings > Catalog, 'List my products in the DinkusKit catalog', starting on. Off is stored as offCatalog on the store listing record and shown on the public catalog answer, so the store's catalog feed lists nothing. No second switch on dinkuskit.com.",
+      "context_ref": null,
+      "created_at": "2026-11-13T15:37:48+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Checkout totals",
+      "history": [
+        {
+          "at": "2026-11-13T15:37:49+00:00",
+          "choice": "One switch in Commerce Settings > Catalog, 'List my products in the DinkusKit catalog', starting on. Off is stored as offCatalog on the store listing record and shown on the public catalog answer, so the store's catalog feed lists nothing. No second switch on dinkuskit.com.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-listing-switch-20261113",
+      "implementation_ref": null,
+      "question": "Where does a store owner turn the cross-store DinkusKit catalog listing on or off?",
+      "rationale": "Ronald 13 Nov 2026 15:33 UTC: 'only on the admin panel, on the backend of the website. In the EM-admin, I think that is where it should land first. Having it in two places seems a little overcomplicated. It also leaves room for error.' Mirrors the DinkusKit site ledger entry agent-catalog-toggle-home-20261113. Measured cost 273 bytes of the Registry backend; 492 left.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-13T15:37:49+00:00",
+      "verification_ref": null
+    },
+    {
       "baseline_ref": "git:12a15e6",
       "candidate_refs": [],
       "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/264",
-      "created_at": "2026-11-13T16:02:29+00:00",
+      "created_at": "2026-11-13T16:27:02+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -16385,7 +16426,7 @@
       "domain": "Checkout totals",
       "history": [
         {
-          "at": "2026-11-13T16:02:29+00:00",
+          "at": "2026-11-13T16:27:03+00:00",
           "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16399,7 +16440,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-11-13T16:03:57+00:00",
+          "at": "2026-11-13T16:27:03+00:00",
           "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
           "from": "locked",
           "implementation_ref": null,
@@ -16413,10 +16454,10 @@
           "verification_ref": null
         },
         {
-          "at": "2026-11-13T16:03:57+00:00",
+          "at": "2026-11-13T16:27:03+00:00",
           "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
           "from": "implemented",
-          "implementation_ref": "commerce PR (this branch): lineOptions shared by the Orders page and syncShip; each Ship line carries options when it has variant choices; tests, contract docs, reference and changeset",
+          "implementation_ref": "commerce PR #271: lineOptions shared by the Orders page and syncShip; each Ship line carries options when it has variant choices; tests, contract docs, reference and changeset",
           "note": "verification recorded in cumulative context",
           "repair_required": false,
           "review_classifications": [],
@@ -16428,7 +16469,7 @@
         }
       ],
       "id": "commerce-ship-line-options-20261113",
-      "implementation_ref": "commerce PR (this branch): lineOptions shared by the Orders page and syncShip; each Ship line carries options when it has variant choices; tests, contract docs, reference and changeset",
+      "implementation_ref": "commerce PR #271: lineOptions shared by the Orders page and syncShip; each Ship line carries options when it has variant choices; tests, contract docs, reference and changeset",
       "question": "Do Ship's orders show which size or other options the shopper chose, so two lines of the same product (commerce#264) never look alike?",
       "rationale": "Ronald, 13 Nov 2026 15:57 UTC: \"agreed\"",
       "repair_required": false,
@@ -16439,15 +16480,15 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-11-13T16:03:57+00:00",
+      "updated_at": "2026-11-13T16:27:03+00:00",
       "verification_ref": "file:.grilltrack/proof/commerce-ship-line-options-20261113/PROOF.md"
     },
     {
-      "baseline_ref": "git:27fd637",
+      "baseline_ref": "git:09b4114",
       "candidate_refs": [],
       "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
       "context_ref": "https://github.com/dinkuskit/commerce/issues/262",
-      "created_at": "2026-11-13T16:20:11+00:00",
+      "created_at": "2026-11-13T16:29:13+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -16457,7 +16498,7 @@
       "domain": "Checkout totals",
       "history": [
         {
-          "at": "2026-11-13T16:20:11+00:00",
+          "at": "2026-11-13T16:29:13+00:00",
           "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16471,7 +16512,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-11-13T16:20:11+00:00",
+          "at": "2026-11-13T16:29:14+00:00",
           "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
           "from": "locked",
           "implementation_ref": null,
@@ -16485,7 +16526,7 @@
           "verification_ref": null
         },
         {
-          "at": "2026-11-13T16:20:11+00:00",
+          "at": "2026-11-13T16:29:14+00:00",
           "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
           "from": "implemented",
           "implementation_ref": "src/shared/line-text.ts (oneLine, cut, lineOptions moved from orders so checkout can share them); src/features/checkout/orchestrate.ts freeze(); src/features/checkout/types.ts CheckoutLine.options; src/features/orders/ship.ts, store.ts, admin/view.ts import the shared text; docs/implementation/variant-checkout-v1.md; docs/website/reference/commerce.md; .changeset/payment-line-options.md",
@@ -16511,8 +16552,8 @@
       "review_source_identity": null,
       "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-11-13T16:20:11+00:00",
-      "verification_ref": "tests/features/checkout/variant-checkout.test.mjs ('Size: Large'; 'Size: Medium \u00b7 Color: Ink' frozen through label renames into the paid request); tests/features/checkout/checkout-pricing-recovery.test.mjs (simple products send no options); tests/features/orders/ship.test.mjs (shared cut); bin/verify-commerce quick green locally 2026-11-13; Registry backend.js +44 bytes over commerce#271's head"
+      "updated_at": "2026-11-13T16:29:14+00:00",
+      "verification_ref": "tests/features/checkout/variant-checkout.test.mjs ('Size: Large'; 'Size: Medium \u00b7 Color: Ink' frozen through label renames into the paid request); tests/features/checkout/checkout-pricing-recovery.test.mjs (simple products send no options); tests/features/orders/ship.test.mjs (shared cut); bin/verify-commerce quick green locally 2026-11-13; Registry backend.js +44 bytes over commerce#271 0eb33d6"
     }
   ],
   "last_activation": {
@@ -16549,5 +16590,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T16:20:11+00:00"
+  "updated_at": "2026-11-13T16:29:14+00:00"
 }
