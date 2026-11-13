@@ -74,15 +74,18 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   await expect(inspect).toHaveCount(1);
   const orderLabel = await inspect.innerText();
   await inspect.click();
-  await expect(page.getByRole('main')).toContainText('Status: Processing');
-  await expect(page.getByRole('main')).toContainText('Payment: Provider-paid');
-  await expect(page.getByRole('main')).toContainText(/Order total\s*USD 12\.00/);
+  await expect(page.getByText(/^Paid .* · Processing$/)).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Paid', exact: true })).toBeVisible();
+  await expect(page.getByRole('row', { name: /^Order total\s*\$12\.00$/ })).toBeVisible();
+  // The IDs sit in the Order record fold.
+  await page.getByRole('button', { name: 'Order record', exact: true }).click();
   const detail = await page.getByRole('main').innerText();
   const receiptText = 'Receipt: ' + detail.match(/Receipt:\s*(\S+)/)[1];
   const attemptText = 'Checkout attempt: ' + detail.match(/Checkout attempt:\s*(\S+)/)[1];
   await capture('order-detail-fixture');
   // Reopen the UI to prove persistence and dedupe through normal order synchronization.
   await page.goto(commerce + 'orders'); await expect(inspect).toHaveCount(1); await inspect.click();
+  await page.getByRole('button', { name: 'Order record', exact: true }).click();
   await expect(page.getByRole('main')).toContainText(receiptText);
   const wake = await request.post('/fixture?action=wake');
   expect(wake.status()).toBe(200);

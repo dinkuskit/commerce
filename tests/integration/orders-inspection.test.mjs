@@ -47,9 +47,10 @@ test('Orders keeps its own copies of paid orders and reads only them across SQLi
     const list = await load();
     assert.equal(opens(list),2);
     assert.ok(buttons(list).some(b=>b.label==='Bring in missing orders'));
-    for (const [order, kind] of [[paid.order,'Provider-paid'],[free.order,'Zero payable']]) {
+    for (const [order, kind] of [[paid.order,'"Paid"'],[free.order,'Nothing to pay']]) {
       const detail = JSON.stringify(await load({type:'block_action',action_id:'orders.open:'+encodeURIComponent(order.orderId)}));
-      for (const expected of [order.orderId,order.receiptId,order.attemptId,kind,'Processing','Back to orders',order.paidAt]) assert.ok(detail.includes(expected),expected);
+      const paidAt = 'Paid ' + new Date(order.paidAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+      for (const expected of [order.orderId,order.receiptId,order.attemptId,kind,'Processing','Back to orders',paidAt]) assert.ok(detail.includes(expected),expected);
     }
     assert.deepEqual(rows('checkout_carts'),cartsBefore);
     assert.deepEqual(rows('orders'),ordersBefore);

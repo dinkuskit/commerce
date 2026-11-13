@@ -27,7 +27,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds a *
 
 | Page | What it does |
 | --- | --- |
-| **Orders** | Lists orders. **Inspect #N** opens one, with its status, payment, the customer's email and phone, and the Ship to and Bill to addresses. Each item shows its recorded variant choices, such as Size: M, when present; later option renames do not change them. |
+| **Orders** | Lists orders. **Inspect #N** opens one: when it was paid and its status, then **Ship to** (with **Correct address**) beside **Customer** (email and phone) and **Bill to**. Below them, a line such as "3 items ready to ship" carries **Create shipping label** (when the store has Ship) or **Complete order**. Then comes the items table, with each item's recorded variant choices (such as Size: M; later option renames do not change them), price, quantity and line total, and then items subtotal, coupon, shipping and order total. Order ID, version, receipt, checkout attempt, provider payment and catalog IDs are in the **Order record** fold. Times show in UTC. |
 | **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, a placeholder image for products without one). |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
@@ -194,7 +194,7 @@ Coupon codes are refused at checkout on Registry stores in this release.
 
 ## Completing and correcting an order
 
-Open **Orders**, then **Inspect #N**. Order details use separate wrapping rows so long IDs, contact details and addresses stay readable without truncation. New orders are **Processing**;
+Open **Orders**, then **Inspect #N**. Addresses read as parcel lines and long IDs, contact details and item choices wrap rather than being cut off. **Create shipping label** (when the store has Ship) or **Complete order** sits on the ready-to-ship line under the addresses. New orders are **Processing**;
 **Completed** means shipped, not delivered. Test orders stay in the normal list
 and are marked **TEST**; do not use them for real fulfillment or postage.
 
