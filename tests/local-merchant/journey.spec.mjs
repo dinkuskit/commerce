@@ -76,7 +76,7 @@ test('merchant configures catalog, connects Payments and observes one durable pa
   await inspect.click();
   await expect(page.getByText(/^Paid .* · Processing$/)).toBeVisible();
   await expect(page.getByRole('columnheader', { name: 'Paid', exact: true })).toBeVisible();
-  await expect(page.getByRole('row', { name: /^Total\s*\$12\.00$/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /^Order total\s*\$12\.00$/ })).toBeVisible();
   // The IDs sit in the Order record fold.
   await page.getByRole('button', { name: 'Order record', exact: true }).click();
   const detail = await page.getByRole('main').innerText();

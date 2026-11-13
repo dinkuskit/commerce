@@ -70,7 +70,7 @@ async function proveFrozenItemChoices({ page, request }) {
       await test.info().attach(`orders-frozen-choices-${width}.json`, { body: JSON.stringify(evidence, null, 2), contentType: 'application/json' });
       expect.soft(itemOutput[0].followingText).toBe(mediumText);
       expect.soft(itemOutput[1].followingText).toBe('Size: L');
-      expect.soft(itemOutput.map(item => item.row.slice(2))).toEqual([['1', '$1.00'], ['1', '$1.00']]);
+      expect.soft(itemOutput.map(item => item.row.slice(2))).toEqual([['$1.00', '× 1', '$1.00'], ['$1.00', '× 1', '$1.00']]);
       expect.soft(catalogIds).toEqual(['Fixture shirt: medium', 'Fixture shirt: large']);
       for (const item of itemOutput) expect.soft(item.textOverflow).not.toBe('ellipsis');
       expect.soft(noHorizontalOverflow).toBe(true);
@@ -220,10 +220,8 @@ test('installed Orders lists and inspects canonical orders and denies non-manage
     await capture('orders-complete-form');
     await interact('Complete order');
     await expect(page.getByText('Order completed', { exact: true })).toBeVisible();
-    await expect(page.getByText(/^Paid .* · Completed · /)).toBeVisible();
-    await expect(page.getByText('Shipped', { exact: true })).toBeVisible();
-    await expect(page.getByText('USPS', { exact: true })).toBeVisible();
-    await expect(page.getByText('SYNTHETIC-TRACKING-1', { exact: true })).toBeVisible();
+    await expect(page.getByText(/^Paid .* · Completed$/)).toBeVisible();
+    await expect(page.getByText(/^Shipped .* · USPS · SYNTHETIC-TRACKING-1$/)).toBeVisible();
     await openRecord();
     await expect(page.getByText('Version: 3')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Correct address', exact: true })).toHaveCount(0);

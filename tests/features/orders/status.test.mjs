@@ -90,7 +90,10 @@ test('the owner completes an order from its page and moves it back to Processing
   const list = JSON.stringify(await ordersBlocks(route({ type: 'page_load', page: '/orders' }), ctx, services));
   assert.match(list, /"Status","Processing"|Status.{0,20}Processing/);
   const detail = await ordersBlocks(route({ type: 'block_action', action_id: 'orders.open:o1' }), ctx, services);
-  const buttons = detail.blocks.filter(b => b.type === 'actions').flatMap(b => b.elements.map(e => e.action_id));
+  // Buttons sit in action rows (Correct address under Ship to) and on the ready-to-ship line.
+  const walk = b => [...(b.type === 'actions' ? b.elements : b.accessory ? [b.accessory] : []), ...(b.type === 'columns' ? b.columns.flat().flatMap(walk) : [])];
+  const controls = view => view.blocks.flatMap(walk);
+  const buttons = controls(detail).map(e => e.action_id);
   assert.ok(buttons.includes('orders.finish:o1') && buttons.includes('orders.address:o1'));
   assert.match(JSON.stringify(detail), /· Processing"/);
 
@@ -107,11 +110,10 @@ test('the owner completes an order from its page and moves it back to Processing
   assert.equal(validateBlocks(done.blocks).valid, true);
   const text = JSON.stringify(done);
   assert.match(text, /Order completed/);
-  assert.match(text, /· Completed · /);
-  assert.match(text, /"Shipped"\},\{"type":"section","text":"USPS"/);
-  assert.match(text, /"text":"T123"/);
+  assert.match(text, /· Completed"/);
+  assert.match(text, /"text":"Shipped [^"]+ · USPS · T123"/);
   // Completed: no Complete order, no Correct address; Move back asks first.
-  const actions = done.blocks.filter(b => b.type === 'actions').flatMap(b => b.elements);
+  const actions = controls(done);
   assert.ok(!actions.some(e => e.action_id === 'orders.finish:o1' || e.action_id === 'orders.address:o1'));
   const reopen = actions.find(e => e.label === 'Move back to Processing');
   assert.equal(reopen.action_id, 'orders.reopen:2:o1');
