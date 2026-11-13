@@ -252,6 +252,27 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     expect((await save(page, endpoint)).toast.type).toBe("success");
     expect((await availability()).listable).toBe(true);
 
+    // The DinkusKit catalog switch starts on and leaves no field; off is stored and said on the public catalog;
+    // a form drawn before the switch existed (no catalog value) keeps the owner's choice.
+    const catalogSwitch = page.getByRole("switch", { name: "List my products in the DinkusKit catalog", exact: true });
+    const publicCatalog = async () => (await (await page.request.get("/_emdash/api/plugins/dinkus-commerce/catalog/public")).json()).data;
+    await expect(catalogSwitch).toBeChecked();
+    expect(raw("storefront_out_of_stock_listing")[0]).not.toHaveProperty("offCatalog");
+    expect(await publicCatalog()).not.toHaveProperty("offCatalog");
+    await catalogSwitch.uncheck();
+    expect((await save(page, endpoint)).toast.type).toBe("success");
+    await page.reload();
+    await expect(catalogSwitch).not.toBeChecked();
+    expect(raw("storefront_out_of_stock_listing")[0].offCatalog).toBe(true);
+    expect((await publicCatalog()).offCatalog).toBe(true);
+    const older = await page.request.post(new URL(endpoint, test.info().project.use.baseURL).href, { data: { type: "form_submit", action_id: "settings.save", values: { hideOutOfStock: false } }, headers: { "X-EmDash-Request": "1" } });
+    expect(older.ok()).toBe(true);
+    expect(raw("storefront_out_of_stock_listing")[0].offCatalog).toBe(true);
+    await catalogSwitch.check();
+    expect((await save(page, endpoint)).toast.type).toBe("success");
+    expect(raw("storefront_out_of_stock_listing")[0]).not.toHaveProperty("offCatalog");
+    expect(await publicCatalog()).not.toHaveProperty("offCatalog");
+
     // A second page cannot take a SKU another product holds; the panel keeps the typing.
     const another = await openProductPage(page, "Another hat");
     await another.panel.getByRole("textbox", { name: "SKU", exact: true }).fill("RED-HAT");

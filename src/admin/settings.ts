@@ -66,7 +66,8 @@ export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginCon
     }
     if (input.type === "form_submit") {
       values = object(input.values);
-      await setOutOfStockListing(listingStorage(ctx), { hideOutOfStock: bool(values.hideOutOfStock), offCatalog: !bool(values.catalog) });
+      // A form drawn before the catalog switch existed sends no catalog value; the stored choice is kept.
+      await setOutOfStockListing(listingStorage(ctx), { hideOutOfStock: bool(values.hideOutOfStock), ...("catalog" in values ? { offCatalog: !bool(values.catalog) } : {}) });
       return await settings(ctx, route, "Settings saved");
     }
     throw new Error("Unknown interaction");
