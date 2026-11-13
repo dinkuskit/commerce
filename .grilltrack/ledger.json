@@ -4,9 +4,9 @@
   "current_focus": {
     "cadence": "frontier-batch",
     "confirmed": true,
-    "confirmed_at": "2026-11-13T17:00:13+00:00",
+    "confirmed_at": "2026-11-13T17:17:39+00:00",
     "domain": "Server-side cart",
-    "started_at": "2026-11-13T17:00:12+00:00",
+    "started_at": "2026-11-13T17:17:39+00:00",
     "status": "confirmed",
     "summary": "Ronald answered each cart question in the cart thread on 13 Nov 2026: server cart in Commerce 'agreed' (16:08 UTC), agents on the same cart 'yeah' with the Shopify check (14:06), 30 days 'agreed' (16:10), build before the first real order (14:05). Store-site parts (forms, cookie, size picker, count cookie, thank-you page, agent links) are in template-store's ledger."
   },
@@ -16484,18 +16484,90 @@
       "verification_ref": "file:.grilltrack/proof/commerce-ship-line-options-20261113/PROOF.md"
     },
     {
+      "baseline_ref": "git:09b4114",
+      "candidate_refs": [],
+      "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/262",
+      "created_at": "2026-11-13T16:29:13+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "product-variant-multi-option-20261022",
+        "commerce-ship-line-options-20261113"
+      ],
+      "domain": "Checkout totals",
+      "history": [
+        {
+          "at": "2026-11-13T16:29:13+00:00",
+          "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-13T16:29:14+00:00",
+          "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-13T16:29:14+00:00",
+          "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+          "from": "implemented",
+          "implementation_ref": "src/shared/line-text.ts (oneLine, cut, lineOptions moved from orders so checkout can share them); src/features/checkout/orchestrate.ts freeze(); src/features/checkout/types.ts CheckoutLine.options; src/features/orders/ship.ts, store.ts, admin/view.ts import the shared text; docs/implementation/variant-checkout-v1.md; docs/website/reference/commerce.md; .changeset/payment-line-options.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-payment-line-options-20261113",
+      "implementation_ref": "src/shared/line-text.ts (oneLine, cut, lineOptions moved from orders so checkout can share them); src/features/checkout/orchestrate.ts freeze(); src/features/checkout/types.ts CheckoutLine.options; src/features/orders/ship.ts, store.ts, admin/view.ts import the shared text; docs/implementation/variant-checkout-v1.md; docs/website/reference/commerce.md; .changeset/payment-line-options.md",
+      "question": "Does Commerce send the shopper's chosen options with each payment line, so Stripe's payment page can tell two sizes of one product apart?",
+      "rationale": "Ronald 13 Nov 2026 16:03 UTC: 'agreed' to this pick (commerce#262) in the Dad's PRs sweep, including a ledger entry first.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-11-13T16:29:14+00:00",
+      "verification_ref": "tests/features/checkout/variant-checkout.test.mjs ('Size: Large'; 'Size: Medium \u00b7 Color: Ink' frozen through label renames into the paid request); tests/features/checkout/checkout-pricing-recovery.test.mjs (simple products send no options); tests/features/orders/ship.test.mjs (shared cut); bin/verify-commerce quick green locally 2026-11-13; Registry backend.js +44 bytes over commerce#271 0eb33d6"
+    },
+    {
       "baseline_ref": "git:12a15e6",
       "candidate_refs": [],
       "choice": "Commerce holds the cart on the server: one record per cart with its lines, a version, the last-change time and its checkout attempts, keyed by the existing guest checkout key (id plus secret, secret stored hashed, tied to the site). The shopper's browser holds only that key, in a cookie the store site sets. Checkout starts from the cart record; the browser no longer sends lines (no older-storefront path: there are no real stores). Every change is checked against the catalog: sold-out, unknown or unpriced items are refused in plain words, and a quantity is cut to the in-stock count only where Commerce knows one. Commerce stays the only authority on price and sellability.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:00:13+00:00",
+      "created_at": "2026-11-13T17:17:39+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:00:13+00:00",
+          "at": "2026-11-13T17:17:39+00:00",
           "choice": "Commerce holds the cart on the server: one record per cart with its lines, a version, the last-change time and its checkout attempts, keyed by the existing guest checkout key (id plus secret, secret stored hashed, tied to the site). The shopper's browser holds only that key, in a cookie the store site sets. Checkout starts from the cart record; the browser no longer sends lines (no older-storefront path: there are no real stores). Every change is checked against the catalog: sold-out, unknown or unpriced items are refused in plain words, and a quantity is cut to the in-stock count only where Commerce knows one. Commerce stays the only authority on price and sellability.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16521,7 +16593,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:00:13+00:00",
+      "updated_at": "2026-11-13T17:17:39+00:00",
       "verification_ref": null
     },
     {
@@ -16529,14 +16601,14 @@
       "candidate_refs": [],
       "choice": "Every cart carries a version. A change from an agent (browser WebMCP now, UCP later) must quote the version it read; if the shopper changed the cart since, nothing changes and the current cart comes back. Agent cart writes carry an idempotency key, and an agent update replaces the whole cart (UCP update_cart semantics).",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:00:13+00:00",
+      "created_at": "2026-11-13T17:17:39+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:00:13+00:00",
+          "at": "2026-11-13T17:17:39+00:00",
           "choice": "Every cart carries a version. A change from an agent (browser WebMCP now, UCP later) must quote the version it read; if the shopper changed the cart since, nothing changes and the current cart comes back. Agent cart writes carry an idempotency key, and an agent update replaces the whole cart (UCP update_cart semantics).",
           "from": "proposed",
           "implementation_ref": null,
@@ -16562,7 +16634,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:00:13+00:00",
+      "updated_at": "2026-11-13T17:17:39+00:00",
       "verification_ref": null
     },
     {
@@ -16570,14 +16642,14 @@
       "candidate_refs": [],
       "choice": "30 days from the last change; every change restarts the clock. Commerce's existing 5-minute background check clears expired carts.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:00:13+00:00",
+      "created_at": "2026-11-13T17:17:39+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:00:13+00:00",
+          "at": "2026-11-13T17:17:39+00:00",
           "choice": "30 days from the last change; every change restarts the clock. Commerce's existing 5-minute background check clears expired carts.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16603,7 +16675,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:00:13+00:00",
+      "updated_at": "2026-11-13T17:17:39+00:00",
       "verification_ref": null
     },
     {
@@ -16611,7 +16683,7 @@
       "candidate_refs": [],
       "choice": "No. A cart read (checkout/guest/cart with {}) runs the same payment check and returns the same checkout projection, so the Registry build drops checkout/guest/status. The library route factories keep it. This pays for the cart route: the cart costs about 970 bytes and the fold frees about 650, leaving 300 bytes under the 128 KiB cap.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:00:13+00:00",
+      "created_at": "2026-11-13T17:17:40+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -16620,7 +16692,7 @@
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:00:14+00:00",
+          "at": "2026-11-13T17:17:40+00:00",
           "choice": "No. A cart read (checkout/guest/cart with {}) runs the same payment check and returns the same checkout projection, so the Registry build drops checkout/guest/status. The library route factories keep it. This pays for the cart route: the cart costs about 970 bytes and the fold frees about 650, leaving 300 bytes under the 128 KiB cap.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16646,7 +16718,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:00:14+00:00",
+      "updated_at": "2026-11-13T17:17:40+00:00",
       "verification_ref": null
     },
     {
@@ -16654,7 +16726,7 @@
       "candidate_refs": [],
       "choice": "A cart untouched for 30 days reads as empty and cannot start checkout; the next change starts a fresh 30 days. The old record is left in storage rather than deleted by the 5-minute background check. This amends commerce-cart-expiry-20261113, which said the background check clears expired carts.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:00:13+00:00",
+      "created_at": "2026-11-13T17:17:40+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -16663,7 +16735,7 @@
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:00:14+00:00",
+          "at": "2026-11-13T17:17:40+00:00",
           "choice": "A cart untouched for 30 days reads as empty and cannot start checkout; the next change starts a fresh 30 days. The old record is left in storage rather than deleted by the 5-minute background check. This amends commerce-cart-expiry-20261113, which said the background check clears expired carts.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16689,7 +16761,7 @@
       "review_source_identity": null,
       "status": "superseded",
       "superseded_by": "commerce-cart-expiry-20261113",
-      "updated_at": "2026-11-13T17:00:14+00:00",
+      "updated_at": "2026-11-13T17:17:40+00:00",
       "verification_ref": null
     }
   ],
@@ -16727,5 +16799,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T17:00:14+00:00"
+  "updated_at": "2026-11-13T17:17:40+00:00"
 }

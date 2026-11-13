@@ -12,7 +12,12 @@ do not invent an aggregate price or selection. Uncommitted membership,
 orphans, malformed combinations, and duplicate selections fail closed.
 
 Checkout remains client-compatible: `CartLine` is still
-`{ catalogItemId, quantity }` and `PaymentRequest` is unchanged. Commerce
+`{ catalogItemId, quantity }`. Each `PaymentRequest` line of an item with
+options also carries `options`, the frozen choices as the order page shows
+them (`Size: M · Colour: Red`, one line, at most 200 UTF-16 units), which
+Payments shows under the item name on Stripe's page (GrillTrack
+`commerce-payment-line-options-20261113`); an item without options sends
+none. Item ids, quantities and amounts are unchanged. Commerce
 stores the selected product handle, option/value labels, member ID, and
 fulfillment in its attempt and canonical order snapshots. Price and option
 edits therefore do not rewrite a paid order.
@@ -25,8 +30,9 @@ fulfillment descriptor remain legacy and are never assigned a fulfillment by
 inference.
 
 This slice does not add Inventory quantity, contact/address capture, bundles,
-customizations, Payments fields, Template writes, or a production Payments
-default.
+customizations, Template writes, or a production Payments default. Its only
+Payments field is the optional display text `options` on each payment line
+described above (added later by `commerce-payment-line-options-20261113`).
 
 A product may carry one to three variant-defining options, each with two to
 fifty values, and up to fifty concrete members. Each member has exactly one
@@ -54,8 +60,9 @@ have separate Block Kit identities; refused variant saves retain their inputs
 and command/revision fences. A hidden one-member descriptor retains the simple
 public price projection, while products with choices expose price only on
 concrete members. Guest checkout and order projections include the frozen
-Commerce selection snapshot across all options; Payments receives its existing
-request shape.
+Commerce selection snapshot across all options; Payments receives the same
+request shape plus the optional `options` text on lines with choices, which
+requires a Payments service that accepts it (dinkuskit/payments#119).
 
 The sandbox build shares repeated primitive strings and ordinary object field
 names in lexical bindings. It preserves module declarations and import

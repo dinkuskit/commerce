@@ -1,5 +1,6 @@
 import { isRecord } from "../../shared/record.js";
-import { completeOrder, lineOptions, listOrders, orderFacts, type OrdersCollection } from "./store.js";
+import { completeOrder, listOrders, orderFacts, type OrdersCollection } from "./store.js";
+import { cut, lineOptions, oneLine } from "../../shared/line-text.js";
 
 /** One order version as Orders sends it to Ship's hosted service (docs/contracts/commerce-handoffs.md). */
 export const SHIP_ORDER_SCHEMA = "dinkuskit.commerce.ship-order/v1";
@@ -29,18 +30,6 @@ export type ShipItemLookup = (catalogItemId: string) => Promise<{ physical: bool
 function unavailable(): never {
   throw new Error("Ship unavailable");
 }
-
-/**
- * Ship takes each text field as one line: every run of whitespace or control characters, line breaks and
- * the Unicode line and paragraph separators included, becomes one space, and the ends are trimmed.
- * Anything not text is left as it is.
- */
-function oneLine<T>(value: T): T {
-  return (typeof value === "string" ? value.replace(/[\s\p{Cc}]+/gu, " ").trim() : value) as T;
-}
-
-/** One line of at most 200 UTF-16 units, cut without splitting a character. */
-const cut = (text: string) => oneLine(text).slice(0, 200).replace(/[\ud800-\udbff]$/, "").trimEnd();
 
 /** Ship's label page for one order. The owner signs in there with DinkusKit.com; the link carries no pass. */
 export function shipLabelPage(ship: Pick<ShipConnection, "origin" | "site">, orderId: string): string {

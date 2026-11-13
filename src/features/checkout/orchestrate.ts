@@ -5,6 +5,7 @@ import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import { composeCheckoutPricing } from "./pricing.js";
 import { handOffPaidOrder } from "./paid-orders.js";
+import { cut, lineOptions } from "../../shared/line-text.js";
 import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
 import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
@@ -61,7 +62,9 @@ async function freeze(
     const { variant } = quoted;
     if (variant) selections.push({ schema: CHECKOUT_VARIANT_SELECTION_SCHEMA, productId: variant.productId,
       catalogItemId: line.catalogItemId, selections: variant.selections, fulfillment: variant.fulfillment });
-    lines.push({ ...line, name: quoted.name, unitPrice: quoted.unitPrice });
+    // Payments shows the choices under the name on Stripe's page, the same text as the order page.
+    const options = cut(lineOptions({ variantSelections: selections }, line.catalogItemId));
+    lines.push({ ...line, name: quoted.name, unitPrice: quoted.unitPrice, ...(options ? { options } : {}) });
     // Catalog quotes stock only for a managed item, which the Registry build never has.
     if (!REGISTRY_BUILD && quoted.stock) {
       stock ??= { operationId: attemptId, binding: quote.inventory!, requirements: [] };

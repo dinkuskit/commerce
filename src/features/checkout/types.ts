@@ -11,7 +11,8 @@ import type {
 
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
 export interface CartLine { catalogItemId: string; quantity: number }
-export interface CheckoutLine extends CartLine { name: string; unitPrice: Money }
+/** options: the frozen choices as the order page shows them ("Size: M"), one line; absent without options. */
+export interface CheckoutLine extends CartLine { name: string; unitPrice: Money; options?: string }
 export const CHECKOUT_VARIANT_SELECTION_SCHEMA =
   "dinkuskit.commerce.checkout-variant-selection/v1" as const;
 export interface CheckoutVariantSelectionSnapshot {

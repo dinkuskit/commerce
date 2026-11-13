@@ -1,7 +1,8 @@
 import { fields } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
-import { billingMatchesDelivery, billingOf, deliveryOf, lineOptions, type OrderRecord } from '../store.js';
+import { billingMatchesDelivery, billingOf, deliveryOf, type OrderRecord } from '../store.js';
+import { lineOptions } from '../../../shared/line-text.js';
 import type { CheckoutDeliveryAddress } from '../../checkout-contact/index.js';
 import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
 import type { Money } from '../../catalog/kernel/index.js';
