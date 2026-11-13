@@ -3,6 +3,8 @@ import { build } from 'esbuild';
 import { productCardFixture } from '../helpers/product-card-fixture.mjs';
 
 let renderer;
+// A refused save redraws the form under a fresh block id, so typing before React commits that redraw is lost.
+const drawn = page => page.waitForFunction(() => window.sentBlocks !== undefined && window.renderedBlocks === window.sentBlocks);
 test.beforeAll(async () => {
   const result = await build({ stdin: { contents: `
     import React from 'react';
@@ -11,8 +13,11 @@ test.beforeAll(async () => {
     function Panel() {
       const [blocks, setBlocks] = React.useState([]);
       window.showBlocks = setBlocks;
+      // Marks the blocks React has committed, so the test acts on the panel the response drew, not the one before it.
+      React.useEffect(() => { window.renderedBlocks = blocks; }, [blocks]);
       return React.createElement(BlockRenderer, { blocks, onAction: async input => {
         const result = await window.invokePanel(input);
+        window.sentBlocks = result.blocks;
         setBlocks(result.blocks);
       }});
     }
@@ -46,6 +51,7 @@ for (const width of [1440, 390]) for (const variants of [false, true]) {
     if (variants) await weights.nth(1).fill('6.5');
     await page.getByRole('button', { name: 'Save weight', exact: true }).click();
     await expect.poll(() => responses.length).toBe(1);
+    await drawn(page);
     expect(responses[0].toast.type).toBe('error');
     expect(fixture.snapshot()).toEqual(before);
     // No reopen helper: that hid this regression in the installed scenario.
@@ -56,6 +62,7 @@ for (const width of [1440, 390]) for (const variants of [false, true]) {
     await weights.first().fill('7');
     await page.getByRole('button', { name: 'Save weight', exact: true }).click();
     await expect.poll(() => responses.length).toBe(2);
+    await drawn(page);
     expect(responses[1].toast.type).toBe('success');
     await expect(shipping).toHaveAttribute('aria-expanded', 'true');
     await expect(weights.first()).toHaveValue('7');
