@@ -97,7 +97,8 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
   const origin = new URL(baseURL).origin;
   const prepare = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/prepare";
   const start = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/start";
-  const status = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/status";
+  // The Registry build has no status route: a cart read is the status check.
+  const cart = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/cart";
   const capture = process.env.COMMERCE_PROOF_ARTIFACTS
     ? `${process.env.COMMERCE_PROOF_ARTIFACTS}/guest-checkout-sandbox-unavailability.png`
     : undefined;
@@ -132,7 +133,7 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
     expect(capabilityCount(database)).toBe(1);
     expect(cartCount(database)).toBe(0);
     const missing = await request.post(start, {
-      data: { contact: { email: 'guest@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
+      data: { contact: { email: 'guest@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } } },
       headers: {
         ...writeHeaders(origin),
         "x-commerce-guest-capability": payload.capability.capability,
@@ -152,7 +153,7 @@ test("public guest checkout routes admit same-origin JSON and fail closed withou
     const tamperedBody = await tampered.json();
     expect(tamperedBody.data?.error?.code || tamperedBody.error?.code).toBe("INVALID_CART");
 
-    const guessed = await request.post(status, {
+    const guessed = await request.post(cart, {
       data: {},
       headers: { ...writeHeaders(origin), "x-commerce-guest-capability": "guessed.token" },
     });

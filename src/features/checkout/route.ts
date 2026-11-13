@@ -4,9 +4,10 @@ import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.
 import { COUPONS_COLLECTION, createCheckoutCouponPort, type CouponCollection } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
 import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
-import { prepareGuestCheckout, startGuestCheckout, statusGuestCheckout } from "./guest.js";
+import { cartGuestCheckout, prepareGuestCheckout, startGuestCheckout, statusGuestCheckout } from "./guest.js";
 import { admitBoundGuestCheckoutRuntime, NATIVE_GUEST_CHECKOUT_STORAGE } from "./runtime.js";
 import {
+  GUEST_CHECKOUT_CART_ROUTE,
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
@@ -22,6 +23,7 @@ function routeFail(code: string, message: string, status: number): never {
 }
 
 export {
+  GUEST_CHECKOUT_CART_ROUTE,
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
@@ -137,6 +139,27 @@ export function createGuestCheckoutStatusRoute(
   };
 }
 
+/** Read or replace the shopper's cart; a read also runs the payment check (as status does). */
+export function createGuestCheckoutCartRoute(
+  options: GuestCheckoutHostOptions = {},
+  paidOrders?: NativePaidOrders,
+): PluginRoute {
+  return {
+    public: true,
+    methods: ["POST"],
+    request: GUEST_REQUEST,
+    handler: async (ctx) => {
+      if (ctx.request.method.toUpperCase() !== "POST") {
+        routeFail("METHOD_NOT_ALLOWED", "guest checkout cart requires POST", 405);
+      }
+      return runNative(ctx, options, (runtime) =>
+        cartGuestCheckout(runtime, ctx.input, ctx.request.headers),
+      paidOrders);
+    },
+  };
+}
+
 export const guestCheckoutPrepareRoute: PluginRoute = createGuestCheckoutPrepareRoute();
 export const guestCheckoutStartRoute: PluginRoute = createGuestCheckoutStartRoute();
 export const guestCheckoutStatusRoute: PluginRoute = createGuestCheckoutStatusRoute();
+export const guestCheckoutCartRoute: PluginRoute = createGuestCheckoutCartRoute();

@@ -522,7 +522,8 @@ test("the Registry build keeps the public guest routes and additive association 
   assert.ok(registryDescriptor.storage.checkout_payment_associations);
   assert.ok(registryPlugin.routes["checkout/guest/prepare"]);
   assert.ok(registryPlugin.routes["checkout/guest/start"]);
-  assert.ok(registryPlugin.routes["checkout/guest/status"]);
+  assert.ok(registryPlugin.routes["checkout/guest/cart"]);
+  assert.equal(registryPlugin.routes["checkout/guest/status"], undefined);
 });
 
 test("trusted host snapshots normalized identity before lazy resolution", async () => {

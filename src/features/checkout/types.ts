@@ -216,7 +216,8 @@ export interface CheckoutAttempt {
   };
 }
 /** One durable aggregate per trusted cart. Preserve past attempts and paid receipts. */
-export interface CheckoutRecord { attempts: CheckoutAttempt[] }
+/** The shopper's cart lives beside its checkout attempts (commerce-server-cart-20261113); `at` is the last change in seconds. */
+export interface CheckoutRecord { attempts: CheckoutAttempt[]; cart?: { lines: CartLine[]; at: number; key?: string } }
 export interface CheckoutPaymentAssociation {
   recordKind: "checkout-payment-association";
   attemptId: string;
@@ -418,6 +419,7 @@ export type GuestCheckoutResult =
       capability?: GuestCapabilityPresentation;
       contactRequirements?: { requirePhoneNumber: boolean };
       checkout: GuestCheckoutProjection;
+      cart?: { lines: CartLine[]; version: string | null; expiresAt: number };
     }
   | {
       ok: false;

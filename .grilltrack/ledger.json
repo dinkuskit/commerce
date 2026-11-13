@@ -16493,6 +16493,62 @@
       "superseded_by": null,
       "updated_at": "2026-11-13T16:12:04+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. A cart read (checkout/guest/cart with {}) runs the same payment check and returns the same checkout projection, so the Registry build drops checkout/guest/status. The library route factories keep it. This pays for the cart route: the cart costs about 970 bytes and the fold frees about 650, leaving 300 bytes under the 128 KiB cap.",
+      "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
+      "created_at": "2026-11-13T16:40:13+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-server-cart-20261113"
+      ],
+      "domain": "Server-side cart",
+      "history": [],
+      "id": "commerce-cart-read-is-status-20261113",
+      "implementation_ref": null,
+      "question": "Does the Registry build keep a separate checkout status route once the cart is on the server?",
+      "rationale": "Commerce has no Registry room for both. Shopify's cart read also reflects a finished checkout. No real stores call status.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-11-13T16:40:13+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "A cart untouched for 30 days reads as empty and cannot start checkout; the next change starts a fresh 30 days. The old record is left in storage rather than deleted by the 5-minute background check. This amends commerce-cart-expiry-20261113, which said the background check clears expired carts.",
+      "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
+      "created_at": "2026-11-13T16:40:13+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-cart-expiry-20261113"
+      ],
+      "domain": "Server-side cart",
+      "history": [],
+      "id": "commerce-cart-expiry-reads-empty-20261113",
+      "implementation_ref": null,
+      "question": "How does an expired cart go away?",
+      "rationale": "Deleting needs a storage index and a sweep that do not fit in the Registry bytes left (300). The shopper sees the same result. A record is a few hundred bytes, carts are only made on the first add, and the site already rate-limits per IP. A sweep can come later if storage grows.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-11-13T16:40:13+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -16529,5 +16585,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T16:12:11+00:00"
+  "updated_at": "2026-11-13T16:40:13+00:00"
 }

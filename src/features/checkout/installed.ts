@@ -9,7 +9,7 @@ import {
   prepareGuestCheckout,
   reconcileGuestPaymentWakes,
   startGuestCheckout,
-  statusGuestCheckout,
+  cartGuestCheckout,
 } from "./guest.js";
 import { admitGuestCheckoutWrite, headerValue } from "./origin-admission.js";
 import { canonicalizeHttpOrigin, resolveTrustedSiteOrigin } from "./site-scope.js";
@@ -80,7 +80,7 @@ export type InstalledCheckoutServiceResolver = (
 export interface InstalledCheckoutHandlers {
   prepare(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
   start(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
-  status(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
+  cart(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
   readiness(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<CheckoutReadinessResponse>;
   reconcileWakes(ctx: PluginContext): Promise<InstalledWakeResult>;
   cron(event: CronEvent, ctx: PluginContext): Promise<void>;
@@ -256,7 +256,7 @@ export function createInstalledCheckoutHandlers(
   return {
     prepare: (route, ctx) => guest(route, ctx, runtime => prepareGuestCheckout(runtime, route.input)),
     start: (route, ctx) => guest(route, ctx, runtime => startGuestCheckout(runtime, route.input, route.request.headers)),
-    status: (route, ctx) => guest(route, ctx, runtime => statusGuestCheckout(runtime, route.input, route.request.headers)),
+    cart: (route, ctx) => guest(route, ctx, runtime => cartGuestCheckout(runtime, route.input, route.request.headers)),
     readiness,
     reconcileWakes,
     cron: async (event, ctx) => {

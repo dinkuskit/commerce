@@ -211,7 +211,7 @@ test('native routes use real plugin settings, hint outside status schema, reread
   const body={lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'shopper@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}};
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, body, {capability:token,settings:f.settings}), e=>e.code==='INVALID_CART');
   assert.equal(f.synth.counts().paymentCreates,0);
-  assert.deepEqual((await f.storage.checkoutCarts.query()).items, []);
+  assert.deepEqual((await f.storage.checkoutCarts.query()).items.flatMap(i => i.data.attempts), []);
   const result=await invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, {...body,contact:{...body.contact,phone:'555 0123'}}, {capability:token,settings:f.settings});
   assert.equal(result.ok,true);
   const snapshot=(await f.storage.checkoutCarts.query()).items[0].data.attempts[0].contactSnapshot;
@@ -247,7 +247,7 @@ test('native guest contact denies missing email and cross-cart injection, corrup
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{cartId:'other-cart',lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}},{capability:token,settings:f.settings}),e=>e.code==='INVALID_CART');
   await assert.rejects(invokeGuest(f.routes[GUEST_CHECKOUT_START_ROUTE],f.storage,{lines:[{catalogItemId:'hat',quantity:1}],contact:{email:'a@example.test',billing:{name:'Bill Payer',line1:'9 Billing Way',city:'Billtown',postalCode:'00009',country:'US'}}},{capability:'guessed.token',settings:f.settings}),e=>e.code==='CAPABILITY_DENIED');
   assert.equal(f.synth.counts().paymentCreates,0);
-  assert.deepEqual((await f.storage.checkoutCarts.query()).items,[]);
+  assert.deepEqual((await f.storage.checkoutCarts.query()).items.flatMap(i => i.data.attempts),[]);
   await f.settings.set('merchantStoreSettings',{recordKind:'merchant-store-settings',requirePhoneNumber:'false'});
   await assert.rejects(prepareGuest(f.routes[GUEST_CHECKOUT_PREPARE_ROUTE],f.storage,{settings:f.settings}),e=>e.code==='UNAVAILABLE'&&!e.message.includes('a@example.test'));
   assert.equal((await f.storage.checkoutGuestCapabilities.query()).items.length,1);
@@ -284,7 +284,7 @@ test('actual default workerd bindings enforce current SDK phone setting and keep
   const denied=await f.invoke(start,body,token);
   assert.equal(denied.error.code,'INVALID_CART');
   assert.equal(f.counts.transport,0);
-  assert.deepEqual(await f.cartRecords(),[]);
+  assert.deepEqual((await f.cartRecords()).flatMap(r=>r.attempts),[]);
   const started=await f.invoke(start,{...body,contact:{...body.contact,phone:'555 0134'}},token);
   assert.equal(started.ok,true);
   const frozen=(await f.cartRecords())[0].attempts[0].contactSnapshot;

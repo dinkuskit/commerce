@@ -21,7 +21,7 @@ export function createCheckoutStore(collection: Pick<StorageCollection<CheckoutR
     async read(cartId) {
       const stored = await collection.getVersioned(cartId);
       if (!stored) return null;
-      if (!stored.value || !Array.isArray(stored.value.attempts) || !stored.value.attempts.length) {
+      if (!stored.value || !Array.isArray(stored.value.attempts) || !(stored.value.attempts.length || stored.value.cart)) {
         throw new Error("Invalid stored checkout aggregate");
       }
       return { version: stored.revision, record: stored.value };

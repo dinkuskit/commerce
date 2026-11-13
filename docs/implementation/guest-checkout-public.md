@@ -19,13 +19,17 @@ EmDash API peer: `1.4.0`.
 
 ## Routes
 
-Both the native plugin and the Registry/sandbox descriptor mount:
+The Registry/sandbox descriptor mounts:
 
 | Route name | Method | Public | URL |
 | --- | --- | --- | --- |
 | `checkout/guest/prepare` | `POST` | yes | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/prepare` |
+| `checkout/guest/cart` | `POST` | yes | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/cart` |
 | `checkout/guest/start` | `POST` | yes | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/start` |
-| `checkout/guest/status` | `POST` | yes | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/status` |
+
+The library's route factories also offer `checkout/guest/status`. The Registry
+build leaves it out: a cart read runs the same payment check and returns the
+same `checkout` projection, so the status route would only cost Registry bytes.
 
 Public routes skip host session auth and CSRF. They declare incoming headers
 `origin`, `sec-fetch-site`, and `x-commerce-guest-capability`. EmDash 1.2.0
@@ -106,8 +110,8 @@ browser cannot choose tenant, site, cart, or attempt authority.
    `{ capabilityId, capability, retention: "json-body", header: "x-commerce-guest-capability" }`.
 3. Template Store retains `capability` (JSON body, or its own same-origin
    wrapper persisted before the response is returned) and sends it on later
-   `start`/`status` requests as header `x-commerce-guest-capability`.
-4. `start` and `status` are capability-required. No header or an invalid
+   `cart`, `start` and `status` requests as header `x-commerce-guest-capability`.
+4. `cart`, `start` and `status` are capability-required. No header or an invalid
    header never mints and never contacts Payments or stock.
 5. Guessed cart, order, or attempt IDs do not authorize. The header is the
    only guest authority.
@@ -140,16 +144,47 @@ never creates the Inventory store-identity record.
 `POST checkout/guest/prepare` body may be empty JSON `{}`. Body fields are
 not tenant, cart, or payment authority.
 
-`POST checkout/guest/start` body:
+`POST checkout/guest/cart` holds the shopper's cart on the server
+(GrillTrack `commerce-server-cart-20261113`). An empty body `{}` reads it; a
+read also runs Commerce's payment check on the cart's current attempt, as
+status does. A write replaces the whole cart and must quote the version it
+read (`null` for a cart never saved):
 
 ```json
-{ "lines": [{ "catalogItemId": "item-id", "quantity": 1 }] }
+{
+  "version": "<data.cart.version or null>",
+  "lines": [
+    { "catalogItemId": "item-id", "quantity": 1 },
+    { "productId": "shirt", "options": { "Size": "M", "Color": "Blue" }, "quantity": 2 }
+  ],
+  "key": "<optional idempotency key>"
+}
 ```
 
-Only `catalogItemId` (non-empty string) and a positive safe integer
-`quantity` are accepted. Extra fields, including `price`, `total`,
-`paymentState`, `provider`, `binding`, `redirect`, `cartId`, `paid`, and
-`attemptId`, are rejected.
+- A line names a concrete `catalogItemId`, or a product plus the option labels
+  the shopper picked; Commerce works out the variant
+  (`template-cart-size-picker-20261113`). Lines for the same item are added
+  together. An empty `lines` array empties the cart.
+- Every write is checked against the catalog. A sold-out, unknown or unpriced
+  item is refused with `PRODUCT_UNAVAILABLE` and nothing changes.
+- A stale `version` changes nothing and answers `CONTENTION`; read the cart
+  again (`commerce-cart-agent-writes-20261113`). A retried write that repeats
+  the last saved `key` changes nothing and answers the current cart.
+- While a checkout attempt is open or paid, writes answer `CHECKOUT_FROZEN`.
+  After a paid order, start a new cart with a fresh `prepare`.
+- A cart untouched for 30 days reads as empty; each write restarts the clock
+  (`commerce-cart-expiry-20261113`). A paid cart also reads as empty.
+
+The answer carries `data.cart`:
+`{ lines: [{ catalogItemId, quantity }], version, expiresAt }`, with
+`expiresAt` in Unix seconds, beside the usual `checkout` projection.
+
+`POST checkout/guest/start` starts checkout from the saved cart. The browser
+sends no lines. The body is `{}` or `{ "contact": { ... } }` (plus
+`couponCode` on self-hosted stores). An empty cart answers `INVALID_CART`.
+Extra fields, including `lines`, `price`, `total`, `paymentState`,
+`provider`, `binding`, `redirect`, `cartId`, `paid`, and `attemptId`, are
+rejected.
 
 `POST checkout/guest/status` body may be empty or include a wake hint
 `{ "wake": true, "attemptId": "<server-issued>" }`. `attemptId` is a locator

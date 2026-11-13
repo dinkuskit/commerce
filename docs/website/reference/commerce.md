@@ -115,8 +115,8 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 | `catalog/public/item?itemId=…` or `?pageId=…` | GET | One projected product or `null`; no canonical page URL. With `pageId`, the product that published page sells. |
 | `checkout/guest/readiness` | GET | The installed checkout readiness response. |
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
-| `checkout/guest/start` | POST | Cart lines and required contact details, authorized by that capability. |
-| `checkout/guest/status` | POST | The authorized purchase's current checkout projection. |
+| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change. |
+| `checkout/guest/start` | POST | Required contact details, authorized by that capability. Checkout starts from the saved cart; the browser sends no lines. |
 | `account/sign-in/start` | POST | Emails a shopper a 6-digit sign-in code. |
 | `account/sign-in/verify` | POST | Exchanges the code for a shopper session. |
 | `account/sign-out` | POST | Ends the shopper session. |

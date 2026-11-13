@@ -8,9 +8,11 @@ import {
   CHECKOUT_GUEST_CAPABILITY_COLLECTION,
   CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION,
   COMMERCE_PLUGIN_ID,
+  GUEST_CHECKOUT_CART_ROUTE,
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
+  createGuestCheckoutCartRoute,
   ORDER_NUMBERS_COLLECTION,
   ORDERS_COLLECTION,
   createGuestCheckoutPrepareRoute,
@@ -212,7 +214,31 @@ export function guestContext(storage, input, {
   };
 }
 
+/** Lines in the browser's order, merged like Commerce's cart, to tell an unchanged cart apart. */
+function cartKey(lines) {
+  const merged = new Map();
+  for (const line of lines) merged.set(line.catalogItemId, (merged.get(line.catalogItemId) ?? 0) + line.quantity);
+  return JSON.stringify([...merged].sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/**
+ * Checkout starts from the cart record (commerce-server-cart-20261113). A test that still hands start
+ * its lines saves them to the cart first, the way the store site does, then starts without them.
+ */
 export async function invokeGuest(route, storage, input, options = {}) {
+  const lines = input && typeof input === "object" && !Array.isArray(input) ? input.lines : undefined;
+  if (route.cartRoute && lines !== undefined && options.capability) {
+    const { lines: _sent, ...rest } = input;
+    const cartOptions = { ...options, route: GUEST_CHECKOUT_CART_ROUTE };
+    const read = await route.cartRoute.handler(guestContext(storage, {}, cartOptions)).catch(() => null);
+    const frozen = read?.checkout?.attemptId && read.checkout.state !== "released-retry";
+    const saved = frozen ? read.checkout.lines.map(({ catalogItemId, quantity }) => ({ catalogItemId, quantity })) : read?.cart?.lines ?? [];
+    if (!read || !Array.isArray(lines) || !lines.every(line => line && Number.isSafeInteger(line.quantity)) ||
+        cartKey(saved) !== cartKey(lines)) {
+      await route.cartRoute.handler(guestContext(storage, { lines, version: read?.cart?.version ?? null }, cartOptions));
+    }
+    return route.handler(guestContext(storage, rest, options));
+  }
   return route.handler(guestContext(storage, input, options));
 }
 
@@ -240,7 +266,9 @@ export function mountGuestRoutes(options = {}) {
   return {
     routes: {
       [GUEST_CHECKOUT_PREPARE_ROUTE]: createGuestCheckoutPrepareRoute(host),
-      [GUEST_CHECKOUT_START_ROUTE]: createGuestCheckoutStartRoute(host, paidOrders),
+      [GUEST_CHECKOUT_START_ROUTE]: Object.assign(createGuestCheckoutStartRoute(host, paidOrders),
+        { cartRoute: createGuestCheckoutCartRoute(host, paidOrders) }),
+      [GUEST_CHECKOUT_CART_ROUTE]: createGuestCheckoutCartRoute(host, paidOrders),
       [GUEST_CHECKOUT_STATUS_ROUTE]: createGuestCheckoutStatusRoute(host, paidOrders),
     },
   };

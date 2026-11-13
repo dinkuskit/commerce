@@ -22,7 +22,7 @@ const QUOTE_FAILURES = {
   "inventory-setup": "Inventory setup required",
   "inventory-unavailable": "Inventory unavailable",
 };
-function cartInput(raw: unknown): CartLine[] {
+export function cartInput(raw: unknown): CartLine[] {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > 100) fail("Invalid cart");
   const quantities = new Map<string, number>();
   for (const line of raw) {
@@ -35,9 +35,6 @@ function cartInput(raw: unknown): CartLine[] {
     quantities.set(id, quantity);
   }
   return [...quantities].sort(([a], [b]) => a.localeCompare(b)).map(([catalogItemId, quantity]) => ({ catalogItemId, quantity }));
-}
-function current(attempts: CheckoutAttempt[]): CheckoutAttempt {
-  return attempts[attempts.length - 1] ?? fail("Checkout not found");
 }
 async function freeze(
   cart: CartLine[],
@@ -115,7 +112,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   const cart = cartInput(Array.isArray(rawCart) ? rawCart : (rawCart as { lines: unknown }).lines);
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
-    const previous = stored ? current(stored.record.attempts) : undefined;
+    const previous = stored?.record.attempts.at(-1);
     if (previous && previous.phase !== "released") {
       if (JSON.stringify(previous.cart) !== JSON.stringify(cart)) fail("Active checkout cart is frozen");
       const requested = requestedCouponCode === undefined ? undefined : normalizeCouponCode(requestedCouponCode);
@@ -141,7 +138,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
       continue;
     }
     if (stored?.record.attempts.some(a => a.attemptId === attempt.attemptId)) fail("Attempt identity reused");
-    if (await e.store.compareAndSet(cartId, stored?.version ?? null, { attempts: [...(stored?.record.attempts ?? []), attempt] })) {
+    if (await e.store.compareAndSet(cartId, stored?.version ?? null, { ...stored?.record, attempts: [...(stored?.record.attempts ?? []), attempt] })) {
       return drive(e, cartId, attempt.attemptId, true);
     }
   }
@@ -246,7 +243,7 @@ async function persistCouponStatus(
     next.coupon!.status = status;
     const attempts = [...stored.record.attempts];
     attempts[index] = next;
-    if (await e.store.compareAndSet(cartId, stored.version, { attempts })) return next;
+    if (await e.store.compareAndSet(cartId, stored.version, { ...stored.record, attempts })) return next;
   }
   return null;
 }
@@ -403,7 +400,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
     }
     const attempts = [...stored.record.attempts];
     attempts[index] = next;
-    if (await e.store.compareAndSet(cartId, stored.version, { attempts })) {
+    if (await e.store.compareAndSet(cartId, stored.version, { ...stored.record, attempts })) {
       if (next.phase === "paying" && next.session) {
         // A local clock can suppress an old redirect but never authorize release.
         if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
