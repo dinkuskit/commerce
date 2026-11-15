@@ -386,14 +386,6 @@ const PRODUCT_CHANGES = {
 			lines: [`Product feeds: ${channels.length ? channels.join(", ") : "none"}`],
 		}),
 	},
-	archive: {
-		check: () => true,
-		request: (product) => ({ body: { op: "archive", catalogItemId: product.catalogItemId, archived: true }, lines: [`${stateWord(product)} -> Archived (off the shop)`] }),
-	},
-	restore: {
-		check: () => false,
-		request: (product) => ({ body: { op: "archive", catalogItemId: product.catalogItemId, archived: false }, lines: [`${stateWord(product)} -> Draft (publish its page to sell it)`] }),
-	},
 	"add-option": {
 		check: (ctx) => {
 			const values = (ctx.flags.value ?? []).map((text) => {
@@ -722,7 +714,7 @@ export const spec = {
 				summary: `Read and change products, with the product page panel checks. Needs ${TOKEN_ENV}.`,
 				commands: {
 					list: {
-						summary: "List products: ids, names, SKUs and archive state.",
+						summary: "List products: ids, names, SKUs and archive state (archive a product by trashing its page: emdash content delete).",
 						usage: "products list",
 						description: `Sends {op: list} to POST catalog with ${TOKEN_ENV} (Commerce 0.7.0+); use products show for one product's prices and stock.`,
 						examples: ["dinkus-commerce --url https://shop.example products list --json"],
@@ -837,24 +829,6 @@ export const spec = {
 						flags: { name: { type: "string", value: "<label>", required: true, description: "The option, such as Size." }, value: { type: "string", value: "<label>[=<sku>]", multiple: true, description: "The first value is this product itself (no SKU); each other value is a new version with its SKU." }, "dry-run": dryRun, confirm },
 						examples: ["dinkus-commerce --url https://shop.example products add-option item_demo --name Size --value Small --value Large=F-RUNTZ-L --dry-run"],
 						run: productChange("add-option"),
-					},
-					"archive": {
-						summary: "Archive a product: off the shop, with Restore.",
-						usage: "products archive <item-id> (--dry-run | --confirm <value>)",
-						description: "Sends {op: archive, archived: true}. " + CONFIRM_NOTE,
-						args: [{ name: "item-id" }],
-						flags: { "dry-run": dryRun, confirm },
-						examples: ["dinkus-commerce --url https://shop.example products archive item_demo --dry-run"],
-						run: productChange("archive"),
-					},
-					"restore": {
-						summary: "Restore an archived product as a Draft.",
-						usage: "products restore <item-id> (--dry-run | --confirm <value>)",
-						description: "Sends {op: archive, archived: false}. Publish its page to sell it again. " + CONFIRM_NOTE,
-						args: [{ name: "item-id" }],
-						flags: { "dry-run": dryRun, confirm },
-						examples: ["dinkus-commerce --url https://shop.example products restore item_demo --dry-run"],
-						run: productChange("restore"),
 					},
 				},
 			},

@@ -181,7 +181,7 @@ test("products create reports a refused price as a failure that still names the 
   assert.equal([...ctx.storage.catalog_items.records.values()].some((row) => row.sku === "GUIDE-W"), false, "nothing was made");
 });
 
-test("weight, identifiers, pictures, feeds, archive and restore go through the CLI", async () => {
+test("weight, identifiers, pictures and feeds go through the CLI; archive is the page's trash", async () => {
   const { ctx, cli, apply } = store();
   const id = (await cli("products", "create", "--name", "Mug", "--sku", "MUG", "--command-id", "mug", "--page", "page-mug", "--json")).json().data.catalogItemId;
 
@@ -208,13 +208,9 @@ test("weight, identifiers, pictures, feeds, archive and restore go through the C
   const gone = await cli("products", "link", id, "--page", "page-other", "--dry-run", "--json");
   assert.equal(gone.code, 2, "products link is gone: a product is made for its page");
 
-  assert.equal((await apply("products", "archive", id)).code, 0);
-  assert.equal((await cli("products", "show", id, "--json")).json().data.product.archivedAt !== undefined, true);
-  const twice = await apply("products", "archive", id);
-  assert.match((await cli("products", "show", id)).stdout, /state\s+Archived/);
-  assert.equal(twice.json().data.changed, false);
-  assert.equal((await apply("products", "restore", id)).code, 0);
-  assert.match((await cli("products", "show", id)).stdout, /state\s+Draft/);
+  // Archive and restore are EmDash's own content delete and restore on the page (catalog-archive-is-page-trash-20261115).
+  for (const command of ["archive", "restore"]) assert.equal((await cli("products", command, id, "--dry-run", "--json")).code, 2, command + " is gone");
+  assert.equal("archivedAt" in await ctx.storage.catalog_items.get(id), false);
 
   const missing = await cli("products", "show", "nope", "--json");
   assert.equal(missing.code, 1);

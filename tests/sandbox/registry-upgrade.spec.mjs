@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { BLOCK_FORM, ensureProductsCollection, openPanel, setOnSale } from "./product-page.mjs";
+import { BLOCK_FORM, ensureProductsCollection, ok, openPanel, setOnSale } from "./product-page.mjs";
 
 // Run by scripts/registry-upgrade-proof.mjs. The "old" phase runs an earlier
 // release's Registry build and stocks the store through that release's own
@@ -216,5 +216,28 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   // (commerce-remove-native-entry-20261101). The Registry build never reads them: the native mug is not on sale.
   expect(rawRows(database, NATIVE_COLLECTIONS)).toEqual(before.nativeRows);
   expect((await publicCatalog(page.request)).some((item) => item.id === "native-mug")).toBe(false);
+
+  // 9. The product the earlier release's Archive product button archived: this build has no Archive or Restore of
+  // its own (catalog-archive-is-page-trash-20261115). Given a page, moving that page to the trash keeps the
+  // archive, and publishing the page is the owner's word to sell it again, with the same id, SKU and price.
+  const capPage = await ok(await page.request.post("/_emdash/api/content/products", { headers, data: { data: { title: "Old cap" } } }));
+  const capPageId = (capPage.item ?? capPage).id;
+  expect(await setOnSale(page.request, { catalogItemId: cap, entryId: capPageId, onSale: false })).toEqual({ changed: false });
+  expect(rows("catalog_items")[cap].archivedAt).toBe(before.storage.catalog_items[cap].archivedAt);
+  expect((await publicCatalog(page.request)).some((item) => item.id === cap)).toBe(false);
+  await page.goto("/_emdash/admin/content/products/" + capPageId);
+  const archivedPanel = await openPanel(page);
+  await expect(archivedPanel.getByText("Archived: off the shop", { exact: true })).toBeVisible();
+  for (const name of ["Archive product", "Restore"]) await expect(archivedPanel.getByRole("button", { name, exact: true })).toHaveCount(0);
+  await capture(page, "archived-cap");
+  expect(await setOnSale(page.request, { catalogItemId: cap, entryId: capPageId, onSale: true })).toEqual({ changed: true });
+  const sold = rows("catalog_items")[cap];
+  expect(sold).not.toHaveProperty("archivedAt");
+  expect([sold.itemId, sold.sku, sold.pageId]).toEqual([cap, "OLD-CAP", capPageId]);
+  expect(rows("catalog_prices")[cap]).toEqual(before.storage.catalog_prices[cap]);
+  expect((await publicCatalog(page.request)).find((item) => item.id === cap)?.name).toBe("Old cap");
+  await page.goto("/_emdash/admin/content/products/" + capPageId);
+  await expect((await openPanel(page)).getByText("On sale", { exact: true })).toBeVisible();
+  await capture(page, "published-cap");
   database.close();
 });

@@ -4,9 +4,9 @@
   "current_focus": {
     "cadence": "frontier-batch",
     "confirmed": true,
-    "confirmed_at": "2026-11-13T17:17:39+00:00",
+    "confirmed_at": "2026-11-15T03:30:25+00:00",
     "domain": "Server-side cart",
-    "started_at": "2026-11-13T17:17:39+00:00",
+    "started_at": "2026-11-15T03:30:24+00:00",
     "status": "confirmed",
     "summary": "Ronald answered each cart question in the cart thread on 13 Nov 2026: server cart in Commerce 'agreed' (16:08 UTC), agents on the same cart 'yeah' with the Shopify check (14:06), 30 days 'agreed' (16:10), build before the first real order (14:05). Store-site parts (forms, cookie, size picker, count cookie, thank-you page, agent links) are in template-store's ledger."
   },
@@ -16556,18 +16556,62 @@
       "verification_ref": "tests/features/checkout/variant-checkout.test.mjs ('Size: Large'; 'Size: Medium \u00b7 Color: Ink' frozen through label renames into the paid request); tests/features/checkout/checkout-pricing-recovery.test.mjs (simple products send no options); tests/features/orders/ship.test.mjs (shared cut); bin/verify-commerce quick green locally 2026-11-13; Registry backend.js +44 bytes over commerce#271 0eb33d6"
     },
     {
+      "baseline_ref": "git:85c303d",
+      "candidate_refs": [],
+      "choice": "The product page's own EmDash status is the one status menu. Active = page published (on sale). Draft = page not published (off the shop). Archived = page moved to EmDash's trash: the store's publish check takes the product off sale and keeps its page link; Restore from trash brings the page back as a draft (EmDash sets status draft), so it stays off sale until the owner publishes it, like Shopify unarchive and WooCommerce untrash. Only permanent delete releases the link. Commerce drops its own Archive and Restore: the product panel buttons, the catalog API archive op and the CLI archive/restore commands. Agents archive the way people do, by trashing the page through EmDash's content API. Commerce keeps archivedAt only internally (the create race clean-up) and the panel shows the page's state.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/276",
+      "created_at": "2026-11-15T00:46:25+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-product-page-boundary-058",
+        "catalog-product-states-20261023"
+      ],
+      "domain": "Product states: archive",
+      "history": [
+        {
+          "at": "2026-11-15T02:12:38+00:00",
+          "choice": "The product page's own EmDash status is the one status menu. Active = page published (on sale). Draft = page not published (off the shop). Archived = page moved to EmDash's trash: the store's publish check takes the product off sale and keeps its page link; Restore from trash brings the page back as a draft (EmDash sets status draft), so it stays off sale until the owner publishes it, like Shopify unarchive and WooCommerce untrash. Only permanent delete releases the link. Commerce drops its own Archive and Restore: the product panel buttons, the catalog API archive op and the CLI archive/restore commands. Agents archive the way people do, by trashing the page through EmDash's content API. Commerce keeps archivedAt only internally (the create race clean-up) and the panel shows the page's state.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-archive-is-page-trash-20261115",
+      "implementation_ref": null,
+      "question": "How does an owner archive and restore a product, so the page and Commerce can never disagree?",
+      "rationale": "Ronald locked it on 15 Nov 2026 (\"lock it\") after ClawSweeper cleared commerce#277 with the v0.5.0 and v0.8.0 installed upgrade proofs and the stopped-check withdrawal.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-15T02:12:38+00:00",
+      "verification_ref": null
+    },
+    {
       "baseline_ref": "git:12a15e6",
       "candidate_refs": [],
       "choice": "Commerce holds the cart on the server: one record per cart with its lines, a version, the last-change time and its checkout attempts, keyed by the existing guest checkout key (id plus secret, secret stored hashed, tied to the site). The shopper's browser holds only that key, in a cookie the store site sets. Checkout starts from the cart record; the browser no longer sends lines (no older-storefront path: there are no real stores). Every change is checked against the catalog: sold-out, unknown or unpriced items are refused in plain words, and a quantity is cut to the in-stock count only where Commerce knows one. Commerce stays the only authority on price and sellability.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:17:39+00:00",
+      "created_at": "2026-11-15T03:30:24+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:17:39+00:00",
+          "at": "2026-11-15T03:30:25+00:00",
           "choice": "Commerce holds the cart on the server: one record per cart with its lines, a version, the last-change time and its checkout attempts, keyed by the existing guest checkout key (id plus secret, secret stored hashed, tied to the site). The shopper's browser holds only that key, in a cookie the store site sets. Checkout starts from the cart record; the browser no longer sends lines (no older-storefront path: there are no real stores). Every change is checked against the catalog: sold-out, unknown or unpriced items are refused in plain words, and a quantity is cut to the in-stock count only where Commerce knows one. Commerce stays the only authority on price and sellability.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16593,7 +16637,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:17:39+00:00",
+      "updated_at": "2026-11-15T03:30:25+00:00",
       "verification_ref": null
     },
     {
@@ -16601,14 +16645,14 @@
       "candidate_refs": [],
       "choice": "Every cart carries a version. A change from an agent (browser WebMCP now, UCP later) must quote the version it read; if the shopper changed the cart since, nothing changes and the current cart comes back. Agent cart writes carry an idempotency key, and an agent update replaces the whole cart (UCP update_cart semantics).",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:17:39+00:00",
+      "created_at": "2026-11-15T03:30:25+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:17:39+00:00",
+          "at": "2026-11-15T03:30:25+00:00",
           "choice": "Every cart carries a version. A change from an agent (browser WebMCP now, UCP later) must quote the version it read; if the shopper changed the cart since, nothing changes and the current cart comes back. Agent cart writes carry an idempotency key, and an agent update replaces the whole cart (UCP update_cart semantics).",
           "from": "proposed",
           "implementation_ref": null,
@@ -16634,7 +16678,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:17:39+00:00",
+      "updated_at": "2026-11-15T03:30:25+00:00",
       "verification_ref": null
     },
     {
@@ -16642,14 +16686,14 @@
       "candidate_refs": [],
       "choice": "30 days from the last change; every change restarts the clock. Commerce's existing 5-minute background check clears expired carts.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:17:39+00:00",
+      "created_at": "2026-11-15T03:30:25+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:17:39+00:00",
+          "at": "2026-11-15T03:30:25+00:00",
           "choice": "30 days from the last change; every change restarts the clock. Commerce's existing 5-minute background check clears expired carts.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16675,7 +16719,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:17:39+00:00",
+      "updated_at": "2026-11-15T03:30:25+00:00",
       "verification_ref": null
     },
     {
@@ -16683,7 +16727,7 @@
       "candidate_refs": [],
       "choice": "No. A cart read (checkout/guest/cart with {}) runs the same payment check and returns the same checkout projection, so the Registry build drops checkout/guest/status. The library route factories keep it. This pays for the cart route: the cart costs about 970 bytes and the fold frees about 650, leaving 300 bytes under the 128 KiB cap.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:17:40+00:00",
+      "created_at": "2026-11-15T03:30:25+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -16692,7 +16736,7 @@
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:17:40+00:00",
+          "at": "2026-11-15T03:30:25+00:00",
           "choice": "No. A cart read (checkout/guest/cart with {}) runs the same payment check and returns the same checkout projection, so the Registry build drops checkout/guest/status. The library route factories keep it. This pays for the cart route: the cart costs about 970 bytes and the fold frees about 650, leaving 300 bytes under the 128 KiB cap.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16718,7 +16762,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T17:17:40+00:00",
+      "updated_at": "2026-11-15T03:30:25+00:00",
       "verification_ref": null
     },
     {
@@ -16726,7 +16770,7 @@
       "candidate_refs": [],
       "choice": "A cart untouched for 30 days reads as empty and cannot start checkout; the next change starts a fresh 30 days. The old record is left in storage rather than deleted by the 5-minute background check. This amends commerce-cart-expiry-20261113, which said the background check clears expired carts.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T17:17:40+00:00",
+      "created_at": "2026-11-15T03:30:25+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -16735,7 +16779,7 @@
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T17:17:40+00:00",
+          "at": "2026-11-15T03:30:25+00:00",
           "choice": "A cart untouched for 30 days reads as empty and cannot start checkout; the next change starts a fresh 30 days. The old record is left in storage rather than deleted by the 5-minute background check. This amends commerce-cart-expiry-20261113, which said the background check clears expired carts.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16761,7 +16805,7 @@
       "review_source_identity": null,
       "status": "superseded",
       "superseded_by": "commerce-cart-expiry-20261113",
-      "updated_at": "2026-11-13T17:17:40+00:00",
+      "updated_at": "2026-11-15T03:30:25+00:00",
       "verification_ref": null
     },
     {
@@ -16769,7 +16813,7 @@
       "candidate_refs": [],
       "choice": "Yes, like Shopify. Once an order is paid, Commerce's guest answer for that cart's key carries the order's frozen contact (email, phone, delivery and billing addresses) as order.contact, so the store's thank-you page shows it. Nothing before payment carries contact, Payments never receives it, and only the browser holding the cart key can read it. Narrows the 'public status excludes contact' part of checkout-contact-email-phone-20261008 to unpaid answers.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-13T21:40:23+00:00",
+      "created_at": "2026-11-15T03:30:26+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -16778,7 +16822,7 @@
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-13T21:40:23+00:00",
+          "at": "2026-11-15T03:30:26+00:00",
           "choice": "Yes, like Shopify. Once an order is paid, Commerce's guest answer for that cart's key carries the order's frozen contact (email, phone, delivery and billing addresses) as order.contact, so the store's thank-you page shows it. Nothing before payment carries contact, Payments never receives it, and only the browser holding the cart key can read it. Narrows the 'public status excludes contact' part of checkout-contact-email-phone-20261008 to unpaid answers.",
           "from": "proposed",
           "implementation_ref": null,
@@ -16804,7 +16848,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-13T21:40:23+00:00",
+      "updated_at": "2026-11-15T03:30:26+00:00",
       "verification_ref": null
     }
   ],
@@ -16842,5 +16886,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-13T21:40:23+00:00"
+  "updated_at": "2026-11-15T03:30:26+00:00"
 }

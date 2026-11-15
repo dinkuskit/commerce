@@ -45,7 +45,7 @@ test('an agent makes a Draft product for a page, prices it, adds an option and r
   assert.deepEqual(await call({ op: 'get' }), { product: null });
 });
 
-test('SKU, weight, identifiers, pictures, feeds and archive go through the panels\' checks', async () => {
+test('SKU, weight, identifiers, pictures and feeds go through the panels\' checks', async () => {
   const { ctx, call } = shop();
   const { catalogItemId } = await call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG', entryId: 'page-mug' });
   assert.deepEqual(await call({ op: 'weight', catalogItemId, weightOz: '12.5' }), { changed: true });
@@ -80,11 +80,8 @@ test('SKU, weight, identifiers, pictures, feeds and archive go through the panel
   await call({ op: 'feeds', catalogItemId, channels: ['google-merchant'] });
   assert.deepEqual((await ctx.storage.catalog_items.get(catalogItemId)).catalogData.feedChannels, ['google-merchant']);
 
-  assert.deepEqual(await call({ op: 'archive', catalogItemId, archived: true }), { changed: true });
-  assert.equal(await readPublicCatalogItem(ctx, catalogItemId), null);
-  assert.deepEqual(await call({ op: 'archive', catalogItemId, archived: false }), { changed: true });
-  assert.equal((await ctx.storage.catalog_items.get(catalogItemId)).offSale, true, 'restored as a Draft');
-  for (const input of [{}, { op: 'delete', catalogItemId }, { op: 'link', entryId: 'page-other', catalogItemId }, { op: 'choice', productId: catalogItemId }, null, 'list']) {
+  // Archive is the page's Move to trash in EmDash, not a catalog op (catalog-archive-is-page-trash-20261115).
+  for (const input of [{}, { op: 'archive', catalogItemId, archived: true }, { op: 'delete', catalogItemId }, { op: 'link', entryId: 'page-other', catalogItemId }, { op: 'choice', productId: catalogItemId }, null, 'list']) {
     await assert.rejects(catalogApi({ input }, ctx), /Invalid catalog request/);
   }
 });

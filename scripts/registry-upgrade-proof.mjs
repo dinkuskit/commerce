@@ -2,7 +2,8 @@
 // Registry upgrade proof: a sandboxed (Registry-shaped) store runs an older
 // Commerce release, gets products, prices, settings and a product page through
 // that release's own admin, then restarts on this build against the same
-// database. Run `npm run build` first. COMMERCE_UPGRADE_FROM picks the release.
+// database. Run `npm run build` first. COMMERCE_UPGRADE_FROM picks the release;
+// COMMERCE_UPGRADE_SPEC picks the spec in tests/sandbox (registry-upgrade.spec.mjs by default).
 import { spawnSync } from "node:child_process";
 import { existsSync, rmSync } from "node:fs";
 import { resolve } from "node:path";

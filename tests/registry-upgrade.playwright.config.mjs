@@ -15,7 +15,7 @@ const old = phase === "old" ? { COMMERCE_SANDBOX_DESCRIPTOR: process.env.COMMERC
   COMMERCE_SANDBOX_ARTIFACT: process.env.COMMERCE_UPGRADE_FROM_ARTIFACT } : {};
 
 export default defineConfig({
-  testDir: "./sandbox", testMatch: "registry-upgrade.spec.mjs", timeout: 240000, workers: 1,
+  testDir: "./sandbox", testMatch: process.env.COMMERCE_UPGRADE_SPEC ?? "registry-upgrade.spec.mjs", timeout: 240000, workers: 1,
   outputDir: directory + "/test-results-" + phase, reporter: "list",
   use: { baseURL: "http://127.0.0.1:" + port, viewport: { width: 1440, height: 1000 } },
   webServer: {

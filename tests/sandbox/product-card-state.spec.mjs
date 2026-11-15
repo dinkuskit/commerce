@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { build } from 'esbuild';
+import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { productCardFixture } from '../helpers/product-card-fixture.mjs';
+import { setProductPageOnSale } from '../../dist/features/catalog/kernel/index.js';
 
 let renderer;
 // A refused save redraws the form under a fresh block id, so typing before React commits that redraw is lost.
@@ -73,3 +76,42 @@ for (const width of [1440, 390]) for (const variants of [false, true]) {
     expect(fixture.snapshot()).not.toEqual(before);
   });
 }
+
+// Archive is the page's own Move to trash (catalog-archive-is-page-trash-20261115): the panel offers no Archive or
+// Restore, the publish check takes the product off sale and back, and publishing also sells a product 0.8.0's
+// Archive button left archived. COMMERCE_ARCHIVE_PROOF_DIR keeps a screenshot of each state.
+test('the panel has no Archive or Restore, and publishing sells a product archived before', async ({ page }) => {
+  const fixture = await productCardFixture(false);
+  const shots = process.env.COMMERCE_ARCHIVE_PROOF_DIR;
+  if (shots) mkdirSync(shots, { recursive: true });
+  await page.exposeFunction('invokePanel', input => fixture.invoke(input));
+  await page.setViewportSize({ width: 520, height: 900 });
+  await page.setContent('<main id="panel" style="padding:16px;font-family:system-ui"></main>');
+  await page.addScriptTag({ content: renderer });
+  await page.waitForFunction(() => typeof window.showBlocks === 'function');
+  const panel = page.locator('#panel');
+  const show = async (name, status) => {
+    await page.evaluate(blocks => window.showBlocks(blocks), (await fixture.invoke({ type: 'panel_load' })).blocks);
+    await expect(panel.getByText(status, { exact: true })).toBeVisible();
+    if (shots) await panel.screenshot({ path: resolve(shots, `${name}.png`) });
+    for (const button of ['Archive product', 'Restore']) await expect(page.getByRole('button', { name: button, exact: true })).toHaveCount(0);
+  };
+  const publishCheck = onSale => setProductPageOnSale(fixture.store, { entryId: 'page-fixture', onSale });
+  await show('1-draft', 'Draft: publish to sell it');
+  await publishCheck(true);
+  await show('2-published-on-sale', 'On sale');
+  // Move to trash: the store's publish check takes the product off sale and keeps it linked to the page.
+  await publishCheck(false);
+  await show('3-page-in-trash', 'Draft: publish to sell it');
+  // Restore brings the page back as a Draft; publishing it sells the product again.
+  await publishCheck(true);
+  await show('4-restored-and-published', 'On sale');
+  // A product 0.8.0's Archive button archived stays archived through the trash, and publishing sells it.
+  const stored = await fixture.store.catalog.get(fixture.id);
+  await fixture.store.catalog.put(fixture.id, { ...stored, archivedAt: '2026-11-01T00:00:00.000Z' });
+  await show('5-archived-on-0.8.0', 'Archived: off the shop');
+  await publishCheck(false);
+  await show('6-archived-page-in-trash', 'Archived: off the shop');
+  await publishCheck(true);
+  await show('7-archived-then-published', 'On sale');
+});

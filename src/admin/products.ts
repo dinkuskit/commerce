@@ -7,7 +7,7 @@ import {
   pageProduct, productNotFound, PRODUCT_PAGES_COLLECTION, type ProductPages,
   saveCatalogProductPrices, loadCatalogItemManualAvailability, loadCatalogItemMedia, saveCatalogItemMedia,
   admitV1CatalogPriceSaveInput, isManagedCatalogRecord, CATALOG_GALLERY_LIMIT,
-  setCatalogWeights, setCatalogProductArchived,
+  setCatalogWeights,
   addCatalogVariantOption, updateCatalogVariantLabels, normalizeIdentifierPatch,
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage,
@@ -172,9 +172,7 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
     card("identifiers:" + id, "Identifiers", [{ type: "form", block_id: fresh("i"), fields: IDENTIFIERS.map(([key, l]) =>
         input(key, l, selected[key] ?? "")),
         submit: submit("Save identifiers", "ids:" + id) }], focus === "ids"),
-    { type: "actions", elements: [selected.archivedAt ? button("Restore", "archive", { id, a: false })
-      : { ...button("Archive product", "archive", { id, a: true }), style: "danger", confirm: { title: "Archive " + selected.name + "?",
-        text: "Past orders keep it.", confirm: "Archive", deny: "Cancel", style: "danger" } }] },
+    // Archive is the page's own Move to trash: the store's publish check takes the product off sale and keeps it (catalog-archive-is-page-trash-20261115).
   ], ...(toast ? { toast: { type: toast === NO_PRICE ? "info" : "success", message: toast } } : {}) };
 }
 async function saveGallery(ctx: PluginContext, id: string, edit: (gallery: string[]) => string[], toast: string): Promise<BlockResponse> {
@@ -291,12 +289,6 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
       if (action === "open") return await product(ctx, text(input.value));
       // The image library's Cancel goes back to the Product image & gallery panel it was opened from.
       if (action === "media.open") return await mediaView(ctx, text(input.value));
-      if (action === "archive") {
-        const v = object(input.value);
-        await setCatalogProductArchived(storage(ctx).catalog, { catalogItemId: v.id, archived: v.a }, undefined, true);
-        committed = { id: text(v.id), message: v.a ? "Product archived" : "Restored as a Draft" };
-        return await product(ctx, committed.id, undefined, committed.message);
-      }
       if (action === "media.pick") {
         const v = object(input.value);
         return await library(ctx, target(v), typeof v.c === "string" && v.c.length <= 1024 ? v.c : undefined);
@@ -437,11 +429,11 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
       toast: { type: "info", message: error.message }, blocks: [note(error.message)],
     };
     const failure = message(error);
-    // A refused media choice returns the clerk to the pictures (an archive, to the product) with the reason; stored values are unchanged.
-    if (input.type === "block_action" && /^(media\.(use|clear|remove|up)|archive)$/.test(String(input.action_id))) {
+    // A refused media choice returns the clerk to the pictures with the reason; stored values are unchanged.
+    if (input.type === "block_action" && /^media\.(use|clear|remove|up)$/.test(String(input.action_id))) {
       const v = input.value as { t?: unknown; id?: unknown } | null;
       try {
-        const back = typeof v?.id === "string" && v.id ? await (input.action_id === "archive" ? product : mediaView)(ctx, v.id) : null;
+        const back = typeof v?.id === "string" && v.id ? await mediaView(ctx, v.id) : null;
         if (back) return refused(failure, [alert(failure), ...back.blocks]);
       } catch { /* fall through to the generic alert */ }
     }

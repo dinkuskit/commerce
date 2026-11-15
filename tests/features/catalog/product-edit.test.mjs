@@ -65,7 +65,7 @@ test('renaming a product renames it for every choice, so cart and new orders car
   await assert.rejects(renameCatalogProduct(catalog, { catalogItemId: 'missing', name: 'X' }), (error) => error.code === 'CATALOG_ITEM_NOT_FOUND');
 });
 
-test('an archived product leaves the shop and checkout refuses it; restoring brings it back as a Draft', async () => {
+test('an archived product leaves the shop and checkout refuses it until the archive is cleared', async () => {
   const { catalog, ctx, quote } = await shop();
   assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true }, () => new Date('2026-10-17T21:00:00Z')), true);
   assert.equal((await catalog.get('shirt')).archivedAt, '2026-10-17T21:00:00.000Z');
@@ -77,18 +77,8 @@ test('an archived product leaves the shop and checkout refuses it; restoring bri
   const listed = (await listCatalogProducts({ catalog, prices: ctx.storage.catalog_prices, availability: ctx.storage.catalog_manual_availability })).products;
   assert.equal(listed.find((product) => product.catalogItemId === 'shirt').archivedAt, '2026-10-17T21:00:00.000Z', 'the owner still finds it');
   assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true }), false);
-  assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: false }, undefined, true), true);
-  assert.equal('archivedAt' in await catalog.get('shirt'), false);
-  // The product page panel restores it as a Draft: still off the shop until its page is published again.
-  assert.equal((await catalog.get('shirt')).offSale, true);
-  assert.deepEqual((await readPublicCatalog(ctx)).products.map((product) => product.id), ['mug']);
-  assert.deepEqual(await quote(['shirt-large']), { ok: false, reason: 'unavailable' });
-  assert.equal(await setCatalogProductOnSale(catalog, { catalogItemId: 'shirt', onSale: true }), true);
-  assert.deepEqual((await readPublicCatalog(ctx)).products.map((product) => product.id).sort(), ['mug', 'shirt']);
-  assert.equal((await quote(['shirt-large'])).ok, true);
-  // The native Products screen has no page to publish, so its Restore puts the product straight back on the shop.
-  await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true });
   assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: false }), true);
+  assert.equal('archivedAt' in await catalog.get('shirt'), false);
   assert.equal((await catalog.get('shirt')).offSale, undefined);
   assert.equal((await quote(['shirt-large'])).ok, true);
   await assert.rejects(setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: 'yes' }), (error) => error.code === 'INVALID_INPUT');
@@ -97,25 +87,19 @@ test('an archived product leaves the shop and checkout refuses it; restoring bri
 // The panel draws its cards as accordions; forms and notes sit inside them.
 const blocksOf = (blocks) => blocks.flatMap((block) => block.type === 'accordion' ? blocksOf(block.blocks) : [block]);
 const stateOf = (out) => out.blocks.find((block) => block.type === 'fields')?.fields.find((field) => field.label === 'Status')?.value;
-test('the product page panel names the product from the page title, archives and restores it', async () => {
+test('the product page panel names the product from the page title and leaves archiving to the page', async () => {
   const { catalog, ctx } = await shop();
   const opened = await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx);
   assert.equal(opened.blocks.some((block) => block.type === 'code'), false, 'nobody copies an id any more');
   const grid = opened.blocks.find((block) => block.type === 'fields');
   assert.deepEqual(grid.fields.map((field) => [field.label, field.value]), [['Status', 'On sale'], ['SKU', 'MUG'], ['Name (page title)', 'Proof mug']]);
   assert.equal(opened.blocks.some((block) => block.type === 'form' && block.submit.action_id.startsWith('rename:')), false, 'the page title is the one name');
-  const archive = opened.blocks.flatMap((block) => block.type === 'actions' ? block.elements : []).find((element) => element.action_id === 'archive');
-  assert.equal(archive.label, 'Archive product');
-  assert.ok(archive.confirm, 'archiving asks first');
-  const archived = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: archive.value } }, ctx);
-  assert.deepEqual(archived.toast, { type: 'success', message: 'Product archived' });
-  assert.match(stateOf(archived), /^Archived/);
-  const restore = archived.blocks.flatMap((block) => block.type === 'actions' ? block.elements : []).find((element) => element.action_id === 'archive');
-  assert.equal(restore.label, 'Restore');
-  const restored = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: restore.value } }, ctx);
-  assert.deepEqual(restored.toast, { type: 'success', message: 'Restored as a Draft' });
-  assert.match(stateOf(restored), /^Draft: publish to sell/);
-  assert.equal('archivedAt' in await catalog.get('mug'), false);
+  // Archive is the page's own Move to trash, so the panel has no Archive or Restore of its own (catalog-archive-is-page-trash-20261115).
+  assert.equal(blocksOf(opened.blocks).some((block) => block.type === 'actions' && block.elements.some((element) => element.action_id === 'archive')), false);
+  const stale = await commerceAdmin({ input: { type: 'block_action', action_id: 'archive', value: { id: 'mug', a: true } } }, ctx);
+  assert.notEqual(stale.toast?.message, 'Product archived');
+  assert.equal('archivedAt' in await catalog.get('mug'), false, 'an old Archive press changes nothing');
+  assert.equal(stateOf(await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx)), 'On sale');
 });
 
 test('a choice added to an archived product stays off the shop and out of checkout', async () => {

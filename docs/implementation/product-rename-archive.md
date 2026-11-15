@@ -2,7 +2,8 @@
 
 Owners can rename a product, archive it (and restore it), and copy its product
 ID from the product's admin page. Decisions: `catalog-product-rename-001`,
-`catalog-product-archive-001`, `catalog-product-id-visible-001`.
+`catalog-product-archive-001`, `catalog-product-id-visible-001`; archive and
+restore are now the product page's own trash (`catalog-archive-is-page-trash-20261115`).
 
 ## Behavior
 
@@ -20,20 +21,26 @@ ID from the product's admin page. Decisions: `catalog-product-rename-001`,
   line already stores its own name. The name rules are Add product's (1-160
   characters, no control characters). The record's first `creationPayload` is
   kept so a replayed create still matches.
-- **Archive.** Archive product (it asks first) marks the product's own record
-  `archivedAt`. That product and every choice of it, including a choice added
-  later, is off the public catalog and its item lookup, and checkout refuses it,
-  because `resolveStorefrontAvailability` and
-  `resolveManagedStorefrontAvailability` both answer not listable and not
-  sellable after checking the product record. It stays in the Products list marked
-  Archived, keeps its id, prices, media and orders, and Restore product puts it
-  back as it was. Nothing is deleted.
+- **Archive.** Superseded by `catalog-archive-is-page-trash-20261115`: the
+  owner moves the product's page to EmDash's trash. The store's publish check
+  takes the product off sale (its `offSale` Draft flag) and keeps the page's link,
+  so the product and every choice of it is off the public catalog and its item
+  lookup and checkout refuses it, while it keeps its id, prices, media and
+  orders. Restore from the trash brings the page back as a draft, and publishing
+  it sells the product again. Commerce's own Archive product and Restore buttons
+  are gone; a Commerce Restore used to leave a Draft under a still-live page with
+  no Publish button (commerce#276). Commerce still marks `archivedAt` on the
+  Draft that loses a create race for a page; `resolveStorefrontAvailability` and
+  `resolveManagedStorefrontAvailability` treat it as not listable and not
+  sellable. Publishing a page clears `archivedAt` on the product it sells, so a
+  product archived with 0.8.0's Archive button is sold again by publishing its
+  page; unpublishing or trashing keeps it. Nothing is deleted.
 - **Product ID.** The product page shows the product's id in a box. A product
   page's "Commerce product" field takes this id. In the native admin the box
   has a copy button. The Registry admin shows the same id in a Block Kit code
   block. EmDash 1.2.0 Block Kit has no copy element, so an owner selects the
   id there.
-- **Routes.** The native-only `catalog-items/rename` and `catalog-items/set-archived` routes are gone (`commerce-one-build-registry-20261031`); archive and restore go through the `catalog` route's `archive` op and the product panel on both builds, rename through the page title. They needed
+- **Routes.** The native-only `catalog-items/rename` and `catalog-items/set-archived` routes are gone (`commerce-one-build-registry-20261031`); the `catalog` route's `archive` op and the panel's Archive and Restore are gone too (`catalog-archive-is-page-trash-20261115`); rename goes through the page title. They needed
   `content:edit_any` and answer `{ changed }`. The Registry build adds no route:
   its admin acts through the existing `admin` route.
 
@@ -44,7 +51,7 @@ ID from the product's admin page. Decisions: `catalog-product-rename-001`,
 | Shopify (Admin GraphQL 2026-10) | `ProductStatus.ARCHIVED`: "no longer being sold and isn't available to customers"; archived products leave the storefront and the main product list. `productDelete` is "irreversible", and Shopify suggests "archiving or unpublishing products instead if you might need to restore them later" | `Product.title` is "the name for the product that displays to customers" | "The product information in completed orders is preserved" after a delete |
 | WooCommerce | Trash: trashed products "are not visible to customers" and can be restored. Delete permanently from Trash "cannot be undone" | The product title is the product page heading | Each order line keeps its own name (`WC_Order_Item::get_name`) beside `product_id` |
 | BigCommerce | Visible on storefront (`is_visible`) hides a product. Delete takes effect immediately | Product name | Not stated on the pages checked |
-| EmDash 1.2.0 content | Entries go to Trash (`deleted_at`) and can be restored, then permanently deleted | n/a | n/a |
+| EmDash 1.2.0 content | Entries go to Trash (`deleted_at`) and can be restored, then permanently deleted. In 1.4.0 a restore brings the entry back as a draft | n/a | n/a |
 
 Sources:
 [Shopify ProductStatus](https://shopify.dev/docs/api/admin-graphql/latest/enums/ProductStatus),
