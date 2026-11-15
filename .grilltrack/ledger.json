@@ -16568,20 +16568,35 @@
         "catalog-product-states-20261023"
       ],
       "domain": "Product states: archive",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-11-15T02:12:38+00:00",
+          "choice": "The product page's own EmDash status is the one status menu. Active = page published (on sale). Draft = page not published (off the shop). Archived = page moved to EmDash's trash: the store's publish check takes the product off sale and keeps its page link; Restore from trash brings the page back as a draft (EmDash sets status draft), so it stays off sale until the owner publishes it, like Shopify unarchive and WooCommerce untrash. Only permanent delete releases the link. Commerce drops its own Archive and Restore: the product panel buttons, the catalog API archive op and the CLI archive/restore commands. Agents archive the way people do, by trashing the page through EmDash's content API. Commerce keeps archivedAt only internally (the create race clean-up) and the panel shows the page's state.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "catalog-archive-is-page-trash-20261115",
       "implementation_ref": null,
       "question": "How does an owner archive and restore a product, so the page and Commerce can never disagree?",
-      "rationale": "commerce#276 (Backroad Bum rehearsal): Commerce Restore made a Commerce Draft under a live page with no Publish control. EmDash 1.4 source: repo.restore sets status='draft'; template-store product-on-sale keeps the link on soft trash (tests/paired/product-on-sale.spec.ts step 8). Shopify unarchive -> Draft; WooCommerce untrash -> draft. Removes code from the Registry bundle instead of adding a button.",
+      "rationale": "Ronald locked it on 15 Nov 2026 (\"lock it\") after ClawSweeper cleared commerce#277 with the v0.5.0 and v0.8.0 installed upgrade proofs and the stopped-check withdrawal.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-15T00:46:25+00:00",
+      "updated_at": "2026-11-15T02:12:38+00:00",
       "verification_ref": null
     }
   ],
@@ -16619,5 +16634,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-15T00:46:25+00:00"
+  "updated_at": "2026-11-15T02:12:38+00:00"
 }
