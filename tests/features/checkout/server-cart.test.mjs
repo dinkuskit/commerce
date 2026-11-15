@@ -13,6 +13,7 @@ import {
   startGuestCheckout,
 } from "../../../dist/features/checkout/index.js";
 import { addCatalogVariantOption, createCatalogItem, saveCatalogProductPrices } from "../../../dist/features/catalog/kernel/index.js";
+import { completeOrder, createPaidOrderReceiver, reopenOrder } from "../../../dist/features/orders/index.js";
 import {
   TRUSTED_SITE,
   initializeGuestCheckoutDatabase,
@@ -208,6 +209,43 @@ test("an open checkout freezes the cart, a read is the status check, and a paid 
   assert.equal(f.synth.counts().paymentCreates, 1);
   const after = await f.cart({ version: paid.cart.version, lines: [{ catalogItemId: "hat", quantity: 1 }] });
   assert.equal(after.error.code, "CHECKOUT_FROZEN");
+});
+
+test("a paid cart reads where Orders has the order now: Processing, Completed with tracking, and Processing again after reopening", async (t) => {
+  const f = await setup(t);
+  const orders = memory();
+  const rt = { ...f.runtime, paidOrders: createPaidOrderReceiver(orders) };
+  await f.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, rt);
+  await f.start();
+  f.synth.setPayment("paid");
+  const paid = await f.cart({}, rt);
+  assert.equal(paid.checkout.state, "paid");
+  const { orderId } = paid.checkout.order;
+  assert.ok(await orders.get(orderId), "Orders keeps the paid order");
+  assert.equal(paid.checkout.order.status, "processing");
+  assert.equal(paid.checkout.order.completed, null);
+
+  assert.equal(await completeOrder(orders, orderId, 1, { carrier: "USPS", tracking: "9400 1000" }, "2026-11-15T12:00:00.000Z"), "saved");
+  const shipped = (await f.cart({}, rt)).checkout.order;
+  assert.equal(shipped.status, "completed");
+  assert.deepEqual(shipped.completed, { at: "2026-11-15T12:00:00.000Z", carrier: "USPS", tracking: "9400 1000" });
+  // The frozen receipt is unchanged by the later status.
+  assert.equal(shipped.receiptId, paid.checkout.order.receiptId);
+  assert.deepEqual(shipped.total, paid.checkout.order.total);
+
+  assert.equal(await reopenOrder(orders, orderId, 2), "saved");
+  const reopened = (await f.cart({}, rt)).checkout.order;
+  assert.equal(reopened.status, "processing");
+  assert.equal(reopened.completed, null, "a reopened order shows no cleared tracking");
+
+  // Orders failing to answer never costs the shopper the receipt; the status is just left out.
+  const broken = { ...rt, paidOrders: { receive: rt.paidOrders.receive, status: async () => { throw new Error("storage down"); } } };
+  const still = await f.cart({}, broken);
+  assert.equal(still.checkout.state, "paid");
+  assert.equal(still.checkout.order.orderId, orderId);
+  assert.equal("status" in still.checkout.order, false);
+  // Without a status port (no Orders bound), the receipt carries no status.
+  assert.equal("status" in (await f.cart()).checkout.order, false);
 });
 
 test("the cart needs the shopper's own key", async (t) => {

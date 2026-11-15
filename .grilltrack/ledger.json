@@ -16850,6 +16850,49 @@
       "superseded_by": null,
       "updated_at": "2026-11-15T03:30:26+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Yes, like Shopify's order status page. A cart read of a paid order carries order.status (processing or completed) and order.completed ({ at, carrier?, tracking? } or null) from Orders as the order stands now, in the shopper account's shape. Only the browser holding that cart's key reads it. Completed means the owner marked it shipped, never delivered; reopening clears the tracking. The frozen payment and receipt facts never change, and when Orders cannot answer the receipt is returned without a status.",
+      "context_ref": null,
+      "created_at": "2026-11-15T16:21:59+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-thank-you-contact-20261113"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-15T16:21:59+00:00",
+          "choice": "Yes, like Shopify's order status page. A cart read of a paid order carries order.status (processing or completed) and order.completed ({ at, carrier?, tracking? } or null) from Orders as the order stands now, in the shopper account's shape. Only the browser holding that cart's key reads it. Completed means the owner marked it shipped, never delivered; reopening clears the tracking. The frozen payment and receipt facts never change, and when Orders cannot answer the receipt is returned without a status.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-guest-order-status-20261115",
+      "implementation_ref": null,
+      "question": "Should the guest's thank-you page show where the order is now, with carrier and tracking?",
+      "rationale": "Ronald agreed to commerce#275 on 15 Nov as this thread's follow-up after the server cart (commerce#272, template-store#229). Shopify's order status page shows a guest the fulfillment status and the tracking number without an account; DinkusKit stores have no email provider yet, so the thank-you page is the guest's only view. Costs 169 bytes of the Registry cap (143 spare).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-15T16:21:59+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -16886,5 +16929,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-15T03:30:26+00:00"
+  "updated_at": "2026-11-15T16:21:59+00:00"
 }

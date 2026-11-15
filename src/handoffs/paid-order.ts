@@ -50,6 +50,14 @@ export interface PaidOrder {
  */
 export type PaidOrderReceipt = "stored" | "duplicate" | "conflict";
 
+/** Where Orders has the order now: Completed (shipped, never "delivered") with what the owner recorded, or Processing. */
+export interface PaidOrderStatus {
+  status: "processing" | "completed";
+  completed: { at: string; carrier?: string; tracking?: string } | null;
+}
+
 export interface PaidOrderReceiver {
   receive(order: PaidOrder): Promise<PaidOrderReceipt>;
+  /** The kept order's current status, or null when Orders holds none. */
+  status?(orderId: string): Promise<PaidOrderStatus | null>;
 }

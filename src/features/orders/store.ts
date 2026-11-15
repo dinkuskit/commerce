@@ -90,6 +90,10 @@ export function createPaidOrderReceiver(collection: Pick<OrdersCollection, "get"
       if ((await collection.compareAndSet(order.orderId, null, { paidOrder: structuredClone(order), emailKey: emailKeyOf(order), ...number, revision: 1 })).applied) return "stored";
       return same(await collection.get(order.orderId), order);
     },
+    async status(orderId) {
+      const kept = await collection.get(orderId);
+      return kept ? { status: kept.completed ? "completed" : "processing", completed: kept.completed ?? null } : null;
+    },
   };
 }
 

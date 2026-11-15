@@ -737,3 +737,5 @@
 {"action": "decision_superseded", "at": "2026-11-15T03:30:25+00:00", "data": {"affected": [], "decision_id": "commerce-cart-expiry-reads-empty-20261113", "replacement_id": "commerce-cart-expiry-20261113"}, "event_id": "8daa3483-df0b-489b-bab3-7db7a33864fe"}
 {"action": "decision_proposed", "at": "2026-11-15T03:30:26+00:00", "data": {"decision_id": "commerce-thank-you-contact-20261113"}, "event_id": "32cfc44b-551b-4543-8e3c-35bf57ee15ea"}
 {"action": "decision_locked", "at": "2026-11-15T03:30:26+00:00", "data": {"decision_id": "commerce-thank-you-contact-20261113"}, "event_id": "ef60245a-3214-434b-967b-81cb046869d0"}
+{"action": "decision_proposed", "at": "2026-11-15T16:21:59+00:00", "data": {"decision_id": "commerce-guest-order-status-20261115"}, "event_id": "2eb9d67d-be6f-4330-8eee-72f18f5a1e20"}
+{"action": "decision_locked", "at": "2026-11-15T16:21:59+00:00", "data": {"decision_id": "commerce-guest-order-status-20261115"}, "event_id": "09186c39-c2d0-4657-923a-baa73e1e9d58"}

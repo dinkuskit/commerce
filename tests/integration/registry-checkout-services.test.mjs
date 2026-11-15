@@ -230,7 +230,10 @@ test('actual compiled default workerd zero-priced cart writes one payment-free o
   assert.equal(stored.session, undefined);
   assert.equal(state.requests.length, 0);
   const repeat = await state.invoke(STATUS, {}, token);
-  assert.deepEqual(repeat.checkout.order, result.checkout.order);
+  // A cart read adds where Orders has the order now (commerce-guest-order-status-20261115); the receipt is the same.
+  const { status, completed, ...receipt } = repeat.checkout.order;
+  assert.deepEqual({ status, completed }, { status: 'processing', completed: null });
+  assert.deepEqual(receipt, result.checkout.order);
   assert.equal(state.counts.transport, 0);
   assertOnlyBackgroundCheck(state);
 });
@@ -350,7 +353,10 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   assert.equal(paid.checkout.state, 'paid');
   assert.equal(paid.checkout.order.total.minor, '600');
   const replay = await state.invoke(START, input, token);
-  assert.deepEqual(replay.checkout.order, paid.checkout.order);
+  // Only a cart read carries Orders' status (commerce-guest-order-status-20261115); a replayed start keeps the receipt.
+  const { status, completed, ...receipt } = paid.checkout.order;
+  assert.deepEqual({ status, completed }, { status: 'processing', completed: null });
+  assert.deepEqual(replay.checkout.order, receipt);
   const stored = (await state.cartRecords())[0];
   assert.equal(stored.attempts.length, 1);
   assert.equal(stored.attempts[0].coupon, undefined);
