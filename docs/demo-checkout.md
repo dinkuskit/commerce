@@ -81,18 +81,21 @@ Template Store calls these same-origin `POST` routes:
 
 ```text
 /_emdash/api/plugins/dinkus-commerce/checkout/guest/prepare
+/_emdash/api/plugins/dinkus-commerce/checkout/guest/cart
 /_emdash/api/plugins/dinkus-commerce/checkout/guest/start
-/_emdash/api/plugins/dinkus-commerce/checkout/guest/status
 ```
 
 1. `prepare` mints a server-owned capability. It performs no payment or
    inventory operation.
-2. `start` sends only catalog item IDs and positive quantities, re-reads
+2. `cart` saves the shopper's cart on the server: catalog item IDs (or a
+   product and its chosen options) and positive quantities, checked against
+   the catalog on every change.
+3. `start` sends no lines. It reads the saved cart, re-reads
    Commerce price and sellability, freezes the amount and binding, creates
    the attempt, and calls Payments `POST /v1/checkout/session`. The response
    redirect is used only after Commerce validates its identity, amount,
    currency, session window, and HTTPS URL.
-3. `status` performs Payments `POST /v1/checkout/lookup` for the existing
+4. A `cart` read performs Payments `POST /v1/checkout/lookup` for the existing
    attempt and projects the durable Commerce result. `open` and `unknown`
    remain pending; a matching `paid` lookup is required before Commerce
    writes the order. Amount or currency mismatch is rejected.

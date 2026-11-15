@@ -171,7 +171,8 @@ async function exercise(port, databaseFile, siteUrl) {
       ? await postJson(
           `${server.origin}/_emdash/api/plugins/dinkus-commerce/checkout/guest/start`,
           server.origin,
-          { lines: [{ catalogItemId: "guest-hat", quantity: 1 }] },
+          // Checkout starts from the saved cart; with no Payments it stops before reading it.
+          {},
           presented,
         )
       : null;

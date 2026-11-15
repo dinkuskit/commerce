@@ -101,6 +101,8 @@ export function projectGuestCheckout(
         lines,
         total: attempt.order.total,
         ...(attempt.order.pricing ? { pricing: publicPricing(attempt.order.pricing) } : {}),
+        // Only the cart key's holder reads this (commerce-thank-you-contact-20261113).
+        contact: attempt.order.contactSnapshot?.contact,
       }
     : null;
   const isTerminalOrReleased = attempt.phase === "released" || attempt.phase === "releasing";

@@ -308,7 +308,9 @@ test("storefront agent feeds project aiProjection, policies, and virtual-card mi
   assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/catalog\/public/);
   assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/prepare/);
   assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/start/);
-  assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/status/);
+  assert.match(agentsMd, /\/_emdash\/api\/plugins\/r_gshdrqaldna3r7sn\/checkout\/guest\/cart/);
+  assert.doesNotMatch(agentsMd, /checkout\/guest\/status/);
+  assert.match(agentsMd, /Checkout starts from the saved cart, so send no `lines`/);
   assert.match(agentsMd, /data\.capability\.capability/);
   assert.match(agentsMd, /data\.checkout\.pricing\.finalTotal\.minor/);
   assert.match(agentsMd, /data\.checkout\.redirectUrl/);

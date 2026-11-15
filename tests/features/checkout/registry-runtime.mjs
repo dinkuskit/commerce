@@ -103,6 +103,14 @@ export async function verifyCouponPass(header) {
   return payload.site_id === SITE_ID && payload.scope.split(' ').includes('coupons:checkout');
 }
 
+/** Lines merged and sorted the way Commerce saves a cart. */
+function mergedLines(lines) {
+  if (!Array.isArray(lines)) return lines;
+  const merged = new Map();
+  for (const line of lines) merged.set(line?.catalogItemId, (merged.get(line?.catalogItemId) ?? 0) + line?.quantity);
+  return [...merged].sort(([a], [b]) => String(a).localeCompare(String(b))).map(([catalogItemId, quantity]) => ({ catalogItemId, quantity }));
+}
+
 export async function runtimeFixture({
   grants = true,
   owner = COMMERCE_REGISTRY_RUNTIME_ID,
@@ -269,10 +277,26 @@ export async function runtimeFixture({
     httpFetch: transportFetch ? (...args) => { counts.transport++; return transportFetch(...args); } : transport, limits: { wallTimeMs: 15000 } });
   assert.equal(runner.isAvailable(), true, 'actual pinned workerd binary must be available');
   const plugin = await runner.load(manifest, backendSource);
-  const invoke = (route, input = {}, capability, origin = SITE) => plugin.invokeRoute(route, input, {
+  const call = (route, input = {}, capability, origin = SITE) => plugin.invokeRoute(route, input, {
     url: `${SITE}/_emdash/api/plugins/${owner}/${route}`, method: 'POST',
     headers: { origin, 'sec-fetch-site': 'same-origin', ...(capability ? { 'x-commerce-guest-capability': capability } : {}) },
   });
+  // The Registry build has no status route and start takes no lines (commerce-server-cart-20261113):
+  // a cart read is the status check, and lines a test hands start are saved to the cart first.
+  const invoke = async (route, input = {}, capability, origin = SITE) => {
+    if (route === 'checkout/guest/status') return (await call('checkout/guest/cart', {}, capability, origin));
+    if (route !== 'checkout/guest/start' || !capability || !input || !Object.hasOwn(input, 'lines')) return call(route, input, capability, origin);
+    const { lines, ...rest } = input;
+    const read = await call('checkout/guest/cart', {}, capability, origin);
+    const frozen = read?.checkout?.attemptId && read.checkout.state !== 'released-retry';
+    const saved = frozen ? read.checkout.lines.map(({ catalogItemId, quantity }) => ({ catalogItemId, quantity })) : read?.cart?.lines ?? null;
+    const same = JSON.stringify(saved) === JSON.stringify(mergedLines(lines));
+    if (!same) {
+      const written = await call('checkout/guest/cart', { lines, version: read?.cart?.version ?? null }, capability, origin);
+      if (written?.ok === false) return written;
+    }
+    return call(route, rest, capability, origin);
+  };
   const invokeReadiness = (options = {}) => plugin.invokeRoute('checkout/guest/readiness', undefined, {
     url: options.url ?? `${SITE}/_emdash/api/plugins/${owner}/checkout/guest/readiness`,
     method: 'GET',

@@ -98,7 +98,7 @@
       "uniqueIndexes": []
     },
     "checkout_carts": {
-      "indexes": [],
+      "indexes": ["cartExpires"],
       "uniqueIndexes": []
     },
     "checkout_guest_capabilities": {

@@ -12,6 +12,7 @@ import {
   GUEST_CHECKOUT_DECLARED_HEADERS,
   GUEST_CHECKOUT_PREPARE_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
+  GUEST_CHECKOUT_CART_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
   createGuestCheckoutPrepareRoute,
   createGuestCheckoutStartRoute,
@@ -293,7 +294,7 @@ test("prepare rejects GET and starts with empty, malformed, or missing capabilit
       () => invokeGuest(
         f.plugin.routes[GUEST_CHECKOUT_START_ROUTE],
         f.storage,
-        lines(),
+        { contact: lines().contact },
         { capability: badCapability },
       ),
       (error) => error instanceof PluginRouteError && error.code === "CAPABILITY_DENIED",
@@ -628,7 +629,7 @@ test("kernel called directly still requires trusted site and a capability", asyn
   };
   const prepared = await prepareGuestCheckout(runtime);
   assert.equal(prepared.ok, true);
-  const denied = await startGuestCheckout(runtime, lines());
+  const denied = await startGuestCheckout(runtime, { contact: lines().contact });
   assert.equal(denied.ok, false);
   assert.equal(denied.error.code, "CAPABILITY_DENIED");
   const missingTenant = await prepareGuestCheckout({ ...runtime, constructorSiteUrl: undefined, host: { ...f.synth.host, siteUrl: undefined } });
@@ -732,7 +733,7 @@ test("direct kernel authorize denies an existing secret when known host sources 
     },
     runtimeSiteUrl: "",
   });
-  const conflictedStart = await startGuestCheckout(conflictedAuthorize, lines(), {
+  const conflictedStart = await startGuestCheckout(conflictedAuthorize, { contact: lines().contact }, {
     [GUEST_CAPABILITY_HEADER]: token,
   });
   assert.equal(conflictedStart.ok, false);
@@ -747,7 +748,7 @@ test("direct kernel authorize denies an existing secret when known host sources 
     },
     runtimeSiteUrl: "",
   });
-  const malformedStart = await startGuestCheckout(malformedAuthorize, lines(), {
+  const malformedStart = await startGuestCheckout(malformedAuthorize, { contact: lines().contact }, {
     [GUEST_CAPABILITY_HEADER]: token,
   });
   assert.equal(malformedStart.ok, false);
@@ -763,7 +764,7 @@ test("direct kernel authorize denies an existing secret when known host sources 
     },
     runtimeSiteUrl: "",
   });
-  const shadowedStart = await startGuestCheckout(shadowedAuthorize, lines(), {
+  const shadowedStart = await startGuestCheckout(shadowedAuthorize, { contact: lines().contact }, {
     [GUEST_CAPABILITY_HEADER]: token,
   });
   assert.equal(shadowedStart.ok, false);
@@ -933,6 +934,9 @@ test("prepared status racing a pre-claim start preserves one attempt and provide
   let signalClaim, releaseClaim;
   const atClaim = new Promise(resolve => { signalClaim = resolve; });
   const released = new Promise(resolve => { releaseClaim = resolve; });
+  // The cart is saved before the race; both starts then read the same cart.
+  await invokeGuest(f.plugin.routes[GUEST_CHECKOUT_CART_ROUTE], f.storage, { lines: lines().lines, version: null },
+    { capability: token, route: GUEST_CHECKOUT_CART_ROUTE });
   let first = true;
   const racingStorage = { ...f.storage, [CHECKOUT_COLLECTION]: {
     getVersioned: (...args) => carts.getVersioned(...args),
@@ -980,7 +984,8 @@ test('native guest routes report US-region refusal before effects and recover on
     await assert.rejects(() => invokeGuest(f.plugin.routes[GUEST_CHECKOUT_START_ROUTE], f.storage, input(region), { capability: token, settings }),
       error => error instanceof PluginRouteError && error.code === 'INVALID_CART' && error.message === 'Delivery address is invalid');
   }
-  assert.equal(await countCollection(f.storage, CHECKOUT_COLLECTION), 0);
+  // Only the saved cart exists: no attempt was started.
+  assert.deepEqual((await f.storage[CHECKOUT_COLLECTION].query()).items.flatMap(i => i.data.attempts), []);
   assert.equal(await countCollection(f.storage, 'checkoutPaymentAssociations'), 0);
   assert.equal(f.synth.counts().reserveCalls, 0);
   assert.equal(f.synth.counts().paymentCreates, 0);

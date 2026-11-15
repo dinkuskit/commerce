@@ -163,7 +163,7 @@ export async function composeCheckoutPricing(
   if (!config) fail(couponCode ? "Shipping configuration unavailable" : "Pricing configuration unavailable");
   let quoted: QuotedCoupon | undefined;
   if (couponCode !== undefined) {
-    const code = normalizeCouponCode(couponCode);
+    const code = REGISTRY_BUILD ? couponUnavailable("try-later") : normalizeCouponCode(couponCode);
     // The Registry build binds no coupon port (GrillTrack registry-coupons-unhooked-v1),
     // so it refuses the code here exactly as the native entry does without a
     // port, and Rolldown leaves the quote path and its validation out.
@@ -197,5 +197,5 @@ export async function composeCheckoutPricing(
   if (!REGISTRY_BUILD && quoted && BigInt(snapshot.couponDiscount.minor) !== BigInt(quoted.quote.discount.minor)) {
     fail("Coupon allocation is not conserved");
   }
-  return { snapshot, ...(quoted ? { couponId: quoted.couponId, couponCode: quoted.code } : {}) };
+  return { snapshot, ...(!REGISTRY_BUILD && quoted ? { couponId: quoted.couponId, couponCode: quoted.code } : {}) };
 }

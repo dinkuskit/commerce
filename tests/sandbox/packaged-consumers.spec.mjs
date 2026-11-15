@@ -83,11 +83,27 @@ test('extracted Registry guest checkout prepares and fails closed without Paymen
       ['catalog_prices', { recordKind: 'catalog-price', recordId: item, catalogItemId: item, regular: { currency: 'USD', minor: '250' } }],
       ['catalog_manual_availability', { recordKind: 'catalog-manual-availability', recordId: item, catalogItemId: item, status: 'in-stock' }],
     ]) insert.run(id, collection, item, JSON.stringify(data), now, now);
-    const started = await request.post(endpoint + 'start', { headers: { ...sameOrigin, 'x-commerce-guest-capability': payload.capability.capability },
-      data: { contact: { email: 'consumer@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } }, lines: [{ catalogItemId: item, quantity: 1 }] } });
+    // The cart route is the only way lines reach Commerce (commerce-cart-server-20261113). A foreign origin
+    // or a wrong capability changes nothing; the shopper's own capability saves the cart.
+    const capability = payload.capability.capability;
+    const save = { version: null, lines: [{ catalogItemId: item, quantity: 1 }] };
+    const codeOf = async (response) => { const body = await response.json(); return (body.data ?? body).error?.code ?? null; };
+    const foreignSave = await request.post(endpoint + 'cart', { data: save, headers: { origin: 'https://foreign.example.test', 'sec-fetch-site': 'cross-site', 'x-commerce-guest-capability': capability } });
+    expect(foreignSave.ok() && await codeOf(foreignSave) === null).toBe(false);
+    const forged = await request.post(endpoint + 'cart', { data: save, headers: { ...sameOrigin, 'x-commerce-guest-capability': capability.slice(0, -4) + 'AAAA' } });
+    expect(await codeOf(forged)).toMatch(/\S/);
+    expect(count('checkout_carts')).toBe(carts);
+    const saved = await request.post(endpoint + 'cart', { data: save, headers: { ...sameOrigin, 'x-commerce-guest-capability': capability } });
+    const savedBody = await saved.json();
+    expect(savedBody.data ?? savedBody).toMatchObject({ ok: true, cart: { lines: [{ catalogItemId: item, quantity: 1 }] } });
+    expect(count('checkout_carts')).toBe(carts + 1);
+    // Start buys the saved cart and sends no lines of its own; with no Payments it fails closed.
+    const started = await request.post(endpoint + 'start', { headers: { ...sameOrigin, 'x-commerce-guest-capability': capability },
+      data: { contact: { email: 'consumer@example.test', billing: { name: 'Bill Payer', line1: '9 Billing Way', city: 'Billtown', postalCode: '00009', country: 'US' } } } });
     const result = await started.json();
     expect((result.data ?? result).error?.code).toBe('PAYMENTS_UNAVAILABLE');
     expect(started.headers()['set-cookie']).toBeUndefined();
-    expect(count('checkout_carts')).toBe(carts);
+    const stored = JSON.parse(db.prepare('SELECT data FROM _plugin_storage WHERE plugin_id=? AND collection=?').all(id, 'checkout_carts').map(row => row.data).find(data => data.includes(item)));
+    expect(stored.attempts).toEqual([]);
   } finally { db.close(); }
 });

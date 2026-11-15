@@ -98,4 +98,8 @@ package subpath. Native and installed checkout bindings always use the
 original plugin context settings; only unit execution ports may inject a
 loader. Prepare exposes only `requirePhoneNumber` as a UI hint. Contact PII,
 the settings revision, and contact metadata remain absent from public
-projections.
+projections, with one exception: once an order is paid, the guest answer for
+that cart's key carries the order's frozen contact (email, phone, delivery and
+billing addresses) as `order.contact`, so the thank-you page can show it, as
+Shopify and WooCommerce do (GrillTrack `commerce-thank-you-contact-20261113`).
+Payments never receives it.

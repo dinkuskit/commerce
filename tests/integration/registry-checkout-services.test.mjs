@@ -105,7 +105,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   assert.equal(state.counts.trades, 0);
   assert.equal(state.counts.transport, 0);
   assertOnlyBackgroundCheck(state);
-  assert.deepEqual(await state.cartRecords(), []);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
 });
 
 test('EmDash 1.4 SDK storage preserves checkout records across runtime restart without reseed', async t => {
@@ -160,7 +160,7 @@ test('compiled Registry runtime ships no coupon storage or evaluator, and withou
     assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
     assert.equal(rejected.error.reason, 'try-later');
   }
-  assert.deepEqual(await state.cartRecords(), []);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
   assert.equal(state.requests.length, 0);
   // The same capability still checks out without a coupon.
   const plain = await state.invoke(START, basket, token);
@@ -200,7 +200,7 @@ test('coupons are unhooked from the Registry build: a coupon code is refused bef
         assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
         assert.equal(rejected.error.reason, 'try-later');
       }
-      assert.deepEqual(await state.cartRecords(), []);
+      assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
       assert.equal(state.counts.coupons, 0);
       assert.equal(state.requests.length, 0);
       // The same capability still checks out without a coupon, trading only for Payments.
@@ -373,11 +373,13 @@ test('compiled route rejects missing/foreign capability and browser totals befor
   t.after(() => state.close());
   const prepared = await state.invoke(PREPARE);
   const input = basket;
-  assert.equal((await state.invoke(START, input)).error.code, 'CAPABILITY_DENIED');
+  assert.equal((await state.invoke(START, { contact: input.contact })).error.code, 'CAPABILITY_DENIED');
+  // The browser no longer sends lines to start (commerce-server-cart-20261113).
+  assert.equal((await state.invoke(START, input)).error.code, 'INVALID_CART');
   assert.equal((await state.invoke(START, input, 'guessed')).error.code, 'CAPABILITY_DENIED');
   assert.equal((await state.invoke(START, input, prepared.capability.capability, 'https://foreign.example.test')).error.code, 'ORIGIN_DENIED');
   assert.equal((await state.invoke(START, { ...input, total: { currency: 'USD', minor: '0' } }, prepared.capability.capability)).error.code, 'INVALID_CART');
-  assert.deepEqual(await state.cartRecords(), []);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
   assert.equal(state.counts.transport, 0);
 });
 
@@ -522,7 +524,7 @@ test('malformed or copied configuration is rejected before encrypted credential/
   }
   assert.equal(state.counts.credentials, 0);
   assert.equal(state.counts.transport, 0);
-  assert.deepEqual(await state.cartRecords(), []);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
 });
 
 
@@ -600,7 +602,7 @@ test('default module rejects foreign origin before settings/credentials and pres
   assert.equal(state.counts.transport, 0);
   assert.deepEqual(await state.collections.catalog_items.get('hat'), before);
   assert.deepEqual(await state.collections.store_inventory_configurations.get('active'), binding);
-  assert.deepEqual(await state.cartRecords(), []);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
 });
 
 test('workerd bridge denies missing grants even with configured services and HTTP proxy', async t => {
@@ -757,12 +759,12 @@ test('wake transport rejects oversized/malformed batches with no ACK or canonica
   state.setTransportOverride(() => new Response(' '.repeat(131073)));
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
   assert.equal(state.counts.acknowledgments, 0);
-  assert.deepEqual(await state.cartRecords(), []);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
   state.setTransportOverride(() => Response.json(Array.from({ length: 101 }, () => ({
     eventId: 'evt_SYNTHETIC', attemptId: 'attempt', bindingRef: configuration().bindingRef, deliveryGeneration: 1, wokeAt: 1 }))));
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
   assert.equal(state.counts.acknowledgments, 0);
-  assert.deepEqual(await state.cartRecords(), []);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
 });
 
 // Ship's hosted service as Orders sees it: labels to collect, acknowledgements and orders received.
@@ -1127,7 +1129,7 @@ test('country-rejected start recovers through read-only prepared status on the s
   assert.equal(rejected.ok, false);
   assert.equal(rejected.error.code, 'INVALID_CART');
   assert.equal(rejected.error.message, 'The store does not ship to this country');
-  assert.equal((await state.cartRecords()).length, 0);
+  assert.equal((await state.cartRecords()).flatMap(record => record.attempts).length, 0);
   assert.equal((await state.collections.checkout_payment_associations.query()).items.length, 0);
   assert.equal(state.requests.length, 0);
   await saveMerchantStoreSettings(state.settings, {
@@ -1141,7 +1143,7 @@ test('country-rejected start recovers through read-only prepared status on the s
   assert.deepEqual(status.checkout, prepared.checkout);
   assert.deepEqual({ ...state.counts, credentials: 0 }, { ...before, credentials: 0 });
   assert.deepEqual((await state.collections.checkout_guest_capabilities.query()).items, capabilities);
-  assert.equal((await state.cartRecords()).length, 0);
+  assert.equal((await state.cartRecords()).flatMap(record => record.attempts).length, 0);
   const started = await state.invoke(START, input, token);
   assert.equal(started.ok, true);
   assert.equal(started.checkout.state, 'pending');
@@ -1229,7 +1231,7 @@ test('beta installation does not inherit stable storage or settings', async t =>
   finally { await stable.close(); }
   const beta = await runtimeFixture({ databasePath, owner: 'r_fjzjvld3ssb4j63o', seed: false, config: null, storeKey: null });
   try {
-    assert.deepEqual(await beta.cartRecords(), []);
+    assert.deepEqual((await beta.cartRecords()).flatMap(record => record.attempts), []);
     assert.equal(await beta.collections.catalog_items.get('hat'), null);
     assert.equal(await beta.settings.get('connection'), null);
     assert.equal((await beta.invokeReadiness()).status, 'unavailable');

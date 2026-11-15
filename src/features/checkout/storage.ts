@@ -21,7 +21,7 @@ export function createCheckoutStore(collection: Pick<StorageCollection<CheckoutR
     async read(cartId) {
       const stored = await collection.getVersioned(cartId);
       if (!stored) return null;
-      if (!stored.value || !Array.isArray(stored.value.attempts) || !stored.value.attempts.length) {
+      if (!stored.value || !Array.isArray(stored.value.attempts) || !(stored.value.attempts.length || stored.value.cart)) {
         throw new Error("Invalid stored checkout aggregate");
       }
       return { version: stored.revision, record: stored.value };
@@ -30,6 +30,27 @@ export function createCheckoutStore(collection: Pick<StorageCollection<CheckoutR
       return (await collection.compareAndSet(cartId, version, record)).applied;
     },
   };
+}
+
+/**
+ * The background check's cleanup, WooCommerce-style (commerce-cart-expiry-20261113): up to 100 carts past
+ * their 30 days per run. A cart with no checkout, or only released ones, is deleted. A paid cart keeps its
+ * order record and loses only the cart. A cart mid-checkout loses its lines and is looked at again a day on.
+ */
+export async function clearExpiredCarts(
+  carts: Pick<StorageCollection<CheckoutRecord>, "query" | "getVersioned" | "compareAndSet" | "compareAndDelete">,
+  now: number,
+): Promise<void> {
+  for (const { id } of (await carts.query({ where: { cartExpires: { lt: String(now) } }, limit: 100 })).items) {
+    const found = await carts.getVersioned(id);
+    const record = found?.value;
+    if (!found || !record || !(+record.cartExpires! <= now)) continue;
+    const phases = record.attempts.map(attempt => attempt.phase);
+    if (phases.every(phase => phase === "released")) await carts.compareAndDelete(id, found.revision);
+    // Past its 30 days the cart's lines are gone either way. A cart mid-checkout keeps its attempts and is
+    // looked at again a day on, so it never holds the page and starves carts behind it.
+    else await carts.compareAndSet(id, found.revision, { attempts: record.attempts, ...phases.includes("paid") ? {} : { cartExpires: String(now + 86400) } });
+  }
 }
 
 export function createCheckoutPaymentAssociationPort(

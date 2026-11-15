@@ -123,7 +123,7 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
       total: amount(BigInt(normalizeMoney(line.unitPrice).minor) * BigInt(line.quantity)) })) } as Block,
     { type: 'table', page_action_id: 'orders.items', columns: [{ key: 'name', label: payment(order) }, { key: 'value', label: 'Amount' }],
       rows: [...(pricing ? [['Items subtotal', amount(pricing.merchandiseSubtotal)],
-        ...(pricing.coupon ? [['Coupon ' + pricing.coupon.code, '−' + amount(pricing.couponDiscount)]] : []),
+        ...(!REGISTRY_BUILD && pricing.coupon ? [['Coupon ' + pricing.coupon.code, '−' + amount(pricing.couponDiscount)]] : []),
         ['Shipping', amount(pricing.shipping.charge)]] : []), ['Order total', amount(order.total)]].map(([name, value]) => ({ name, value })) } as Block,
     { type: 'accordion', label: 'Order record', blocks: [
       text('Order ID: ' + order.orderId), text('Version: ' + (record.revision ?? 1)), text('Receipt: ' + order.receiptId),

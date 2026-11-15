@@ -14,8 +14,9 @@ for the exact public shopper paths listed here.
   regardless of Cloudflare Access.
 - A public route names explicit methods and no permission. Public shopper
   routes accept only whitelisted input: catalog reads accept only `cursor` or
-  one `itemId`; guest checkout bodies accept only `catalogItemId`/`quantity`
-  lines plus optional contact and coupon code. Prices and totals always come
+  one `itemId`; the guest cart accepts only whole-cart writes of
+  `catalogItemId`/`quantity` (or `productId`/`options`/`quantity`) lines with
+  the version it read; start accepts only contact and an optional coupon code. Prices and totals always come
   from Commerce catalog storage, never from the browser.
 - `tests/route-auth.test.mjs` fails if any route lacks a declaration, if an
   admin route has no permission, or if the public set changes.
@@ -51,7 +52,7 @@ Public Registry/sandbox paths today:
 | `GET` | `/_emdash/api/plugins/dinkus-commerce/catalog/public/item` |
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/prepare` |
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/start` |
-| `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/status` |
+| `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/cart` |
 | `GET` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/readiness` |
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-in/start` |
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify` |

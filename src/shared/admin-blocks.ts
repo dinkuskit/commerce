@@ -21,11 +21,9 @@ export function fields(...pairs: string[]): Block {
   return { type: 'fields', fields };
 }
 
-/** The Coupons link renders only where a coupon admin page is mounted. */
-export function navigation(orders = 'Orders', settings = 'Settings', coupons?: string): Block {
+export function navigation(): Block {
   return { type: 'actions', elements: [
-    { type: 'link', label: orders, target: { kind: 'plugin-page', path: '/orders' } },
-    { type: 'link', label: settings, target: { kind: 'plugin-page', path: '/settings' } },
-    ...(coupons ? [{ type: 'link' as const, label: coupons, target: { kind: 'plugin-page' as const, path: '/coupons' } }] : []),
+    { type: 'link', label: 'Orders', target: { kind: 'plugin-page', path: '/orders' } },
+    { type: 'link', label: 'Settings', target: { kind: 'plugin-page', path: '/settings' } },
   ] };
 }
