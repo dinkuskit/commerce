@@ -32,11 +32,29 @@ The sandbox site has no template, so the proof calls Commerce's `catalog-items/s
 
 Result: `registry_upgrade=pass from=v0.5.0` (old phase 1 passed, new phase 1 passed), Node 24, Chromium.
 
+## Installed upgrade from the latest release (v0.8.0)
+
+`COMMERCE_UPGRADE_FROM=v0.8.0 COMMERCE_UPGRADE_SPEC=registry-upgrade-linked-archive.spec.mjs npm run test:registry-upgrade` runs `tests/sandbox/registry-upgrade-linked-archive.spec.mjs`. The "old" phase runs Commerce 0.8.0's own Registry build. A "Linked cap" product page's panel makes the product (SKU LINKED-CAP, Regular 15.00, Sale 12.00). The page is published and its publish check puts the cap on sale, and Commerce settings saves "Hide out-of-stock products". Then 0.8.0's own **Archive product** button archives the cap, and its page stays published. That is the #276 state (`upgrade-v0.8.0-1-archived-by-0.8.0.png`: "Archived: off the shop", with a Restore button). The "new" phase restarts on this build against the same database:
+
+1. Every row 0.8.0 stored is unchanged: the product, its price, its page link (`product_pages`) and the settings. The settings switch is still on.
+2. The page's panel says "Archived: off the shop" with Regular 15.00 and Sale 12.00, and has no Archive product or Restore button (`upgrade-v0.8.0-2-after-upgrade.png`).
+3. EmDash moves the page to the trash (`DELETE /_emdash/api/content/products/{id}`). The publish check's page-only off-sale call keeps the archive, and the cap stays off the public catalog.
+4. EmDash's Trash tab lists "Linked cap" (`upgrade-v0.8.0-3-in-trash.png`). Its row menu's **Restore** brings the page back as a Draft, and the cap stays archived.
+5. Publishing the page and its on-sale call sell the cap again. It keeps the same id, SKU, page, price row and store settings, and its public catalog entry matches the one it had on 0.8.0 before the archive. The one difference is the variant member SKU this build adds. The panel says "On sale" (`upgrade-v0.8.0-4-restored-and-published.png`).
+
+As in the v0.5.0 proof, the sandbox site has no template, so the spec calls `catalog-items/set-on-sale` the way the template's publish check does.
+
+Result: `registry_upgrade=pass from=v0.8.0` (old phase 1 passed, new phase 1 passed), Node 24, Chromium. The v0.5.0 proof above was re-run on the same head: `registry_upgrade=pass from=v0.5.0`.
+
+## A product left on sale by a stopped publish check
+
+The old Archive button was also the documented way to withdraw a product that a publish check left on sale when it stopped after selling the panel's pick but before moving the page's pointer (commit 8aec268). Now a page-only off-sale or delete check also withdraws the panel's pick when that product still records this page. Trash or unpublish therefore takes it off the shop, and trashing for good gives it back with no page. Unit test: "a check that sold the panel's pick and stopped before moving the pointer: trash or unpublish still takes that pick off the shop". It fails without the change and passes with it. The rarer case, where the editor picks yet another product before that check, is in `docs/implementation/one-product-screen.md`, together with the route call that still withdraws the product.
+
 ## Verification
 
 - `npm run typecheck`: clean.
-- `npm run test:unit`: 862 pass (Node 24).
+- Unit tests: 863 pass (Node 24).
 - `tests/sandbox/product-card-state.spec.mjs`: 5 pass.
-- Registry backend: 130,386 of 131,072 bytes, 686 bytes of headroom (main: 130,854).
+- Registry backend: 130,549 of 131,072 bytes, 523 bytes of headroom (main: 130,854).
 
 No real stores run Commerce yet; the only stores are the beta and template test stores.

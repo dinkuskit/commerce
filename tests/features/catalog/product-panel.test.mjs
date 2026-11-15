@@ -354,6 +354,34 @@ test('a check that stops halfway is finished by the next one', async () => {
   assert.equal((await pages.get('p:page-1')).catalogItemId, 'cap');
 });
 
+test('a check that sold the panel\'s pick and stopped before moving the pointer: trash or unpublish still takes that pick off the shop', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const storage = { catalog, pages };
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  ctx.storage.catalog_prices = new Store();
+  for (const id of ['mug', 'cap']) await ctx.storage.catalog_prices.put(id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor: '900' } });
+  await pick(ctx, 'mug');
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: true });
+  // The editor picks the cap; the next publish check sells it, then stops before the page's pointer moves.
+  await pick(ctx, 'cap');
+  const move = pages.compareAndSet.bind(pages);
+  pages.compareAndSet = async (id, ...rest) => { if (id === 'p:page-1') throw new Error('worker stopped'); return move(id, ...rest); };
+  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: true }));
+  pages.compareAndSet = move;
+  assert.equal((await pages.get('p:page-1')).catalogItemId, 'mug', 'the pointer has not moved');
+  assert.equal((await readPublicCatalogItem(ctx, 'cap'))?.name, 'Cap', 'the cap was left on sale');
+  // Commerce has no Archive of its own (catalog-archive-is-page-trash-20261115): unpublishing the page withdraws it.
+  assert.deepEqual(await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false }), { changed: true });
+  assert.deepEqual([(await catalog.get('cap')).offSale, (await catalog.get('cap')).pageId], [true, 'page-1']);
+  assert.equal(await readPublicCatalogItem(ctx, 'cap'), null);
+  assert.equal(await readPublicCatalogItem(ctx, 'mug'), null);
+  // Trashed for good: the cap is given back with no page, so another page may sell it.
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true });
+  assert.deepEqual([(await catalog.get('cap')).offSale, (await catalog.get('cap')).pageId], [true, undefined]);
+  await setProductPageOnSale(storage, { catalogItemId: 'cap', entryId: 'page-2', onSale: true });
+  assert.equal((await catalog.get('cap')).pageId, 'page-2');
+});
+
 test('a variant member is refused before any link changes', async () => {
   const { catalog, pages } = await shop();
   await catalog.put('mug-blue', { ...(await catalog.get('mug')), itemId: 'mug-blue', recordId: 'mug-blue', commandId: 'variant-blue', sku: 'MUG-BLUE', skuKey: 'mug-blue', variantProductId: 'mug' });

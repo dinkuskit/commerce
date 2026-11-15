@@ -223,7 +223,13 @@ for the same page):
   then moves elsewhere or is deleted, that product is not given back.
 
 In both cases the product keeps its page record, and another page asking for
-it is refused; trashing or unpublishing the page takes it off the shop.
+it is refused; trashing or unpublishing the page takes it off the shop. Commerce
+has no Archive of its own (catalog-archive-is-page-trash-20261115), so a page-only
+check that takes the page off the shop also withdraws the panel's pick when that
+pick still records this page: the product a stopped check sold is always the
+pick it read. Only if the editor picks yet another product before that check
+does a stale product stay on sale; the route still takes it off when named with
+its page (`catalogItemId` with `entryId` and `onSale: false`).
 Ordering checks by the page's version would close both, at the cost of a
 template change and bundle room this build does not have. Commerce never reads the CMS. The store template owns that call.
 

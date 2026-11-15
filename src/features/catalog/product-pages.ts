@@ -112,6 +112,15 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     changed = !offShop(item) !== onSale;
     return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const, ...(archivedAt ? { archivedAt } : {}) }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
   });
+  // A check that stopped after selling the panel's pick, before moving the pointer, left that pick on sale under this
+  // page; taking the page off the shop withdraws it too (catalog-archive-is-page-trash-20261115).
+  const pick = input.catalogItemId === undefined && !onSale ? await pageProduct(pages, entryId) : undefined;
+  if (pick && pick !== catalogItemId) await editProduct(catalog, pick, item => {
+    if (item.pageId !== entryId || item.offSale && !deleted) return null;
+    const { pageId: _page, pageClaim: _claim, ...rest } = item;
+    changed ||= !offShop(item);
+    return { ...(deleted ? rest : item), offSale: true };
+  });
   // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
   if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);
   const moved = deleted ? !mine || (await pages.compareAndDelete(key, mine.revision)).applied
