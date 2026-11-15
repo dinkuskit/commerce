@@ -1,5 +1,5 @@
 import type { StorageCollection } from "emdash";
-import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
+import type { PaidOrderReceiver, PaidOrderStatus } from "../../handoffs/paid-order.js";
 import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
@@ -342,6 +342,9 @@ export interface GuestCheckoutOrderSummary {
   /** The order's email, phone and addresses, for the thank-you page of the browser holding the cart key. */
   contact?: NormalizedCheckoutContact;
   pricing?: GuestCheckoutPricingSummary;
+  /** Orders' current status, carrier and tracking, read for the cart key's holder only (commerce-guest-order-status-20261115). */
+  status?: PaidOrderStatus["status"];
+  completed?: PaidOrderStatus["completed"];
 }
 
 export interface GuestCheckoutProjection {

@@ -102,8 +102,12 @@ export async function cartGuestCheckout(
       })) fail("CONTENTION");
     }
     const saved = await store.read(authorized.cartId);
+    const checkout = attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout();
+    // The cart key's holder also sees where Orders has the order now (commerce-guest-order-status-20261115).
+    const kept = checkout.order && await runtime.paidOrders?.status?.(checkout.order.orderId).catch(() => null);
+    if (kept) Object.assign(checkout.order!, kept);
     return {
-      ok: true, capabilityId: authorized.capabilityId, checkout: attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout(),
+      ok: true, capabilityId: authorized.capabilityId, checkout,
       cart: { lines: cartLines(saved?.record, now), version: saved?.version ?? null, expiresAt: +(saved?.record.cartExpires ?? now + CART_SECONDS) },
     };
   } catch (error) {

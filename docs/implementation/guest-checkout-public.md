@@ -226,7 +226,7 @@ Projection schema `dinkuskit.commerce.guest-checkout-projection/v1`:
 | `attemptId` | Server-issued current attempt, not authority; null before start |
 | `lines`, `total` | Frozen Commerce USD minor-unit amounts |
 | `redirectUrl` | Hosted-payment handoff URL when a session exists; never proof of paid/unpaid |
-| `order` | `{ orderId, receiptId, lines, total, contact }` only after a persisted paid Commerce order; `contact` is the order's frozen email, phone and addresses (`commerce-thank-you-contact-20261113`) |
+| `order` | `{ orderId, receiptId, lines, total, contact }` only after a persisted paid Commerce order; `contact` is the order's frozen email, phone and addresses (`commerce-thank-you-contact-20261113`). A cart read also adds `status` (`processing` or `completed`) and `completed` (`{ at, carrier?, tracking? }` or `null`) from Orders as the order stands now (`commerce-guest-order-status-20261115`) |
 | `retryAfter` | Released attempt id required to start the next attempt |
 | `unavailable` | Guest-safe code/message for genuine unavailable attempt state; never raw provider errors |
 
@@ -259,7 +259,12 @@ acceptance of the full price. Raw coupon service messages never reach the
 shopper.
 
 `order` never includes `paymentId` or provider secrets. Its only shopper data is
-the paid order's own `contact`, read by the holder of that cart's key.
+the paid order's own `contact` and, on a cart read, Orders' current `status`
+and `completed` (carrier and tracking when the owner recorded them; cleared
+again when the order is reopened), all read only by the holder of that cart's
+key. `completed` means the owner marked the order shipped, never that it was
+delivered. When Orders cannot answer, the receipt is still returned without
+`status`. The payment and receipt facts stay the frozen checkout copy.
 Unexpected provider or storage failures return guest-safe `UNAVAILABLE` and
 never raw provider, storage, or secret strings. A pre-retained capability
 keeps a durable recoverable attempt; terminal failures are not swallowed
