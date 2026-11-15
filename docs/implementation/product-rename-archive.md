@@ -32,7 +32,9 @@ restore are now the product page's own trash (`catalog-archive-is-page-trash-202
   no Publish button (commerce#276). Commerce still marks `archivedAt` on the
   Draft that loses a create race for a page; `resolveStorefrontAvailability` and
   `resolveManagedStorefrontAvailability` treat it as not listable and not
-  sellable. Nothing is deleted.
+  sellable. Publishing a page clears `archivedAt` on the product it sells, so a
+  product archived with 0.8.0's Archive button is sold again by publishing its
+  page; unpublishing or trashing keeps it. Nothing is deleted.
 - **Product ID.** The product page shows the product's id in a box. A product
   page's "Commerce product" field takes this id. In the native admin the box
   has a copy button. The Registry admin shows the same id in a Block Kit code

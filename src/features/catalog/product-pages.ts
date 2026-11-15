@@ -2,7 +2,7 @@ import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
 import { normalizeProductName } from "./normalize.js";
-import { editProduct, named } from "./product-edit.js";
+import { editProduct, named, offShop } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
@@ -104,11 +104,13 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     const { pageId: _page, pageClaim: _claim, ...rest } = item;
     return { ...rest, offSale: true };
   });
+  // Publishing the page is the owner's word to sell it, so it also ends an archive Commerce 0.8.0's own button
+  // stored (catalog-archive-is-page-trash-20261115); anything else keeps that archive.
   await editProduct(catalog, catalogItemId, item => {
     if (item.pageId && item.pageId !== entryId) throw conflict();
-    const { offSale: _off, pageId: _page, pageClaim: _claim, ...rest } = item;
-    changed = !item.offSale !== onSale;
-    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
+    const { offSale: _off, pageId: _page, pageClaim: _claim, archivedAt, ...rest } = item;
+    changed = !offShop(item) !== onSale;
+    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const, ...(archivedAt ? { archivedAt } : {}) }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
   });
   // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
   if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);
