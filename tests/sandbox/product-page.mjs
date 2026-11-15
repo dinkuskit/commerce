@@ -10,7 +10,7 @@ const headers = { "X-EmDash-Request": "1" };
 // its submit button, not an HTML <form> (emdash-cms/emdash#4183).
 export const BLOCK_FORM = '[role="group"]';
 
-async function ok(response) {
+export async function ok(response) {
   const body = await response.json().catch(() => ({}));
   expect(response.ok(), JSON.stringify(body)).toBe(true);
   return body.data;

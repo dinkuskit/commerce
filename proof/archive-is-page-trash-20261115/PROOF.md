@@ -21,6 +21,17 @@ These are unedited Playwright element screenshots of the real pinned EmDash Bloc
 
 `tests/features/catalog/product-panel.test.mjs`, "publishing the page sells a product archived by Commerce 0.8.0, and trash or unpublish keep that archive", stores a record in 0.8.0's shape (`archivedAt` set, page linked and published). It shows that unpublishing and trashing keep the archive, that publishing clears it and puts the product back in the public catalog, and that the product keeps its id, SKU, name and page. It fails on the first #277 commit (`e0b8960`), where publishing left `archivedAt` in place, and passes here.
 
+## Installed upgrade proof
+
+`npm run test:registry-upgrade` (`scripts/registry-upgrade-proof.mjs`, from its default `v0.5.0`) runs an older Commerce release's Registry build in the local EmDash 1.4.0 dev site, stocks it through that release's own admin, and restarts on this build against the same database. Its "old" phase archives "Old cap" with that release's own **Archive product** button, which stores `archivedAt`. Step 9 of the "new" phase is added here, and works through the installed admin and routes:
+
+1. It gives "Old cap" a product page. The publish check's off-sale call, which the template sends when a page is trashed or unpublished, leaves the archive (`archivedAt` unchanged) and keeps the cap off the public catalog. The page's Dinkus Commerce panel says "Archived: off the shop" and has no Archive product or Restore button (`upgrade-v0.5.0-archived-cap.png`).
+2. The publish check's on-sale call, which the template sends when the page is published, clears `archivedAt`. The cap keeps its id, SKU OLD-CAP, page and stored price row unchanged, and the public catalog lists "Old cap" again. The panel says "On sale" (`upgrade-v0.5.0-published-cap.png`).
+
+The sandbox site has no template, so the proof calls Commerce's `catalog-items/set-on-sale` route directly, as the template's publish check does. That is why EmDash's own Publish box still reads Draft in both captures. Steps 1 to 8 still pass unchanged: every row the earlier release stored is left as it was until the owner acts.
+
+Result: `registry_upgrade=pass from=v0.5.0` (old phase 1 passed, new phase 1 passed), Node 24, Chromium.
+
 ## Verification
 
 - `npm run typecheck`: clean.
