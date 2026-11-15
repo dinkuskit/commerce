@@ -40,10 +40,11 @@ export async function setProductFeedEligibility(
   storage: ProductFeedEligibilityStorage,
   catalog: ProductFeedEligibilityCatalog,
   input: SetProductFeedEligibilityInput,
+  expectedRevision?: string,
 ): Promise<ProductFeedEligibilityRecord> {
   const channels = normalizeProductFeedChannels(input.channels);
   return saveProductData(catalog, input.catalogItemId, data => {
     data.feedChannels = channels;
     return { recordKind: "product-feed-eligibility", recordId: input.catalogItemId, catalogItemId: input.catalogItemId, channels };
-  });
+  }, expectedRevision);
 }
