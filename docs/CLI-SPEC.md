@@ -80,8 +80,6 @@ dinkus-commerce products set-identifiers <item-id> [--gtin <gtin>] [--mpn <mpn>]
 dinkus-commerce products save-media <item-id> [--image <media-id> | --clear-image] [--gallery <media-id> ... | --clear-gallery] (--dry-run | --confirm <value>)
 dinkus-commerce products set-feeds <item-id> (--channel <channel> ... | --none) (--dry-run | --confirm <value>)
 dinkus-commerce products add-option <item-id> --name <label> --value <label> --value <label>=<sku> ... (--dry-run | --confirm <value>)
-dinkus-commerce products archive <item-id> (--dry-run | --confirm <value>)
-dinkus-commerce products restore <item-id> (--dry-run | --confirm <value>)
 
 dinkus-commerce orders list [--status <processing|completed>] [--cursor <cursor>] [--all]
 dinkus-commerce orders show <order-id>
@@ -140,7 +138,6 @@ mount it. Each body names one `op` and runs the panels' own checks:
 | `products save-media` | `{ op: "media", catalogItemId, image?, gallery? }` |
 | `products set-feeds` | `{ op: "feeds", catalogItemId, channels }` |
 | `products add-option` | `{ op: "option", productId, optionId, optionLabel, values }`: the product's first option. The first value is the product itself; each other value makes a variant with its own SKU, named from the product, with a command id made from the product and the value so a retry resumes. One request makes up to seven new variants and is refused, before anything is written, beyond that; more are added in the panel. Later options are added there too. |
-| `products archive`, `products restore` | `{ op: "archive", catalogItemId, archived }`; a restored product is a Draft. |
 
 Every product is made for its page (`catalog-product-needs-page-20261031`):
 the catalog API's `create` requires `entryId`, and there is no product without
@@ -562,7 +559,7 @@ EMDASH_URL=https://shop.example dinkus-commerce products add-option item_demo --
   (`products`) or to the order version (`orders`).
 - Shopper operations: guest checkout `prepare`/`start`/`status`, carts, coupons,
   and payments.
-- Media upload (use `emdash media`), product deletion (archive instead),
+- Media upload (use `emdash media`), product deletion and archiving (trash or restore the product's page with `emdash content delete` / `emdash content restore`; `catalog-archive-is-page-trash-20261115`),
   publishing a product page, and Inventory stock operations (use
   `dinkus-inventory`).
 - Shell completion, color, pagers, and progress output in the scaffold.
@@ -655,5 +652,5 @@ or deployment qualification.
 real catalog API over in-memory storage, through EmDash's envelope: a
 migration by CLI alone (create and retry, prices, stock, an option and its
 variants, SKU and its conflict), the stale-confirmation refusal, and weight,
-identifiers, pictures, feeds, archive and restore, and `products create`
+identifiers, pictures and feeds, the removed `archive` and `restore` commands, and `products create`
 making the page first and finding it again on a retry.

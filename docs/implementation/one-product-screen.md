@@ -42,8 +42,10 @@ field; this build no longer does.
   **Pricing & stock** open (Regular, Sale, SKU, Stock status and the feed
   channels, one Save; a changed SKU is saved first, so one another product has
   is refused before anything changes), then **Variants**, **Shipping** (weights
-  of the physical items) and **Identifiers** (GTIN, MPN, Brand) collapsed, and
-  Archive or Restore. Opening a card is client-side: no state, field or route.
+  of the physical items) and **Identifiers** (GTIN, MPN, Brand) collapsed.
+  Opening a card is client-side: no state, field or route. The panel has no
+  Archive or Restore: archiving is the page's own **Move to trash**
+  (`catalog-archive-is-page-trash-20261115`, see Product states).
 - A product with no Regular price says "Add a Regular price to sell it" under
   its status, and a published page's unpriced product reads "Published:
   off the shop", never On sale. A Save that leaves Regular empty answers with
@@ -85,7 +87,8 @@ field; this build no longer does.
 The private `catalog` route (`content:edit_any`, POST) lets any agent or tool
 with an EmDash API token do what the product page panels do, one `op` per
 request: list, get, create, prices, option, labels, sku, weight,
-identifiers, archive, media and feeds. It calls the same catalog functions as the panels, so
+identifiers, media and feeds (no archive: an agent trashes the product's page through
+EmDash's content API or `emdash content delete`, as an owner does). It calls the same catalog functions as the panels, so
 it has their checks and answers. `create` makes a physical Draft and only takes
 `commandId`, `name` and `sku`; Manage stock stays off. `create` with `entryId` and `link`
 write the panel's `e:` link row, and the page's next publish sells that product, so an
@@ -142,8 +145,18 @@ store's Commerce settings shows a note marked "(DEV)" in place of Connect.
 `offSale` on a catalog item means Draft: public catalog reads, item lookups,
 basket quotes and storefront availability treat it like an archived product.
 Products made before this flag existed have no `offSale`, so a product whose
-page is already published stays on sale. Restoring an archived product
-returns it as a Draft from the product page panel.
+page is already published stays on sale.
+
+The page's own EmDash status is the one status menu
+(`catalog-archive-is-page-trash-20261115`): Published is on sale, a page that
+is not published is a Draft, and **Move to trash** archives it. Trashing the
+page takes its product off sale and keeps the page's link to it; **Restore**
+from the trash brings the page back as a draft (EmDash sets `status = 'draft'`),
+so the product stays off sale until the page is published again, like Shopify's
+unarchive and WooCommerce's untrash. Only **Delete permanently** releases the
+link. Commerce has no Archive or Restore of its own, so its Draft can never
+sit under a live page with no Publish button (commerce#276). `archivedAt`
+remains only for the Draft that loses a create race for a page.
 
 The store's publish check calls the private route `catalog-items/set-on-sale`
 (`content:publish_any`, POST) with the page alone; Commerce finds its product
@@ -210,7 +223,7 @@ for the same page):
   then moves elsewhere or is deleted, that product is not given back.
 
 In both cases the product keeps its page record, and another page asking for
-it is refused; archiving the product in its panel takes it off the shop.
+it is refused; trashing or unpublishing the page takes it off the shop.
 Ordering checks by the page's version would close both, at the cost of a
 template change and bundle room this build does not have. Commerce never reads the CMS. The store template owns that call.
 

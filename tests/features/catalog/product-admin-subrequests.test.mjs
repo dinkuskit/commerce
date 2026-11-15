@@ -8,7 +8,7 @@ import { addCatalogVariantOption, createCatalogItem, listCatalogProducts, loadCa
 
 // Every storage call from a Registry plugin is one subrequest, and the sandbox allows only a
 // few per call: EmDash's default is 10, Template Store raises it to 32. A product screen must
-// cost the same in a big catalog as in a small one, archived products included.
+// cost the same in a big catalog as in a small one, archived products included (archive itself is the page's trash).
 const EMDASH_DEFAULT = 10;
 const TEMPLATE_STORE = 32;
 
@@ -31,7 +31,6 @@ test('each product screen costs the same few storage calls however many products
       // A new SKU in the same Save costs one read, not the index proof every creation makes.
       'price save': submit('save:p002', { regular: '12.00', sale: '', sku: 'SKU-P002-B', stockStatus: 'in-stock' }),
       'weight save': submit('weight:p002', { 'w:p002': '8' }),
-      'archive': { type: 'block_action', action_id: 'archive', value: { id: 'p002', a: true } },
       'product page with variants': { type: 'block_action', action_id: 'open', value: 'p001' },
       'variant weight save': submit('weight:p001', { 'w:p001': '4', 'w:p001-large': '6' }),
     };

@@ -719,3 +719,6 @@
 {"action": "decision_locked", "at": "2026-11-13T16:29:13+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "470400e8-af5e-4060-a053-594800c00400"}
 {"action": "decision_implemented", "at": "2026-11-13T16:29:14+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "92668622-a151-4485-9123-ad0009efc0fa"}
 {"action": "decision_verified", "at": "2026-11-13T16:29:14+00:00", "data": {"decision_id": "commerce-payment-line-options-20261113"}, "event_id": "260a8f52-5bb0-490e-8b34-04cf5b955365"}
+{"action": "focus_started", "at": "2026-11-15T00:46:25+00:00", "data": {"cadence": "sequential", "domain": "Product states: archive"}, "event_id": "e2727382-33dc-4a8d-884b-e5bcda573f99"}
+{"action": "shared_understanding_confirmed", "at": "2026-11-15T00:46:25+00:00", "data": {"summary": "Ronald, 15 Nov 2026 00:45 UTC, on 'remove Commerce's Archive and Restore buttons and use EmDash's trash as Archive; the panel just shows the page's state': 'this seems like the best option'."}, "event_id": "2898523a-ec06-4ffe-b8b5-c9a61175dc25"}
+{"action": "decision_proposed", "at": "2026-11-15T00:46:26+00:00", "data": {"decision_id": "catalog-archive-is-page-trash-20261115"}, "event_id": "79bd84ff-9bc0-4262-a188-eadf81115349"}

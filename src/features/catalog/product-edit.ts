@@ -56,18 +56,17 @@ export const named = (item: CatalogItemRecord, name: string): CatalogItemRecord 
   creationPayload: item.creationPayload ?? { kind: item.kind, name: item.name, sku: item.sku, skuKey: item.skuKey, manageStock: item.creationIntent?.manageStock ?? false },
 });
 
-/** Archives a product (off the shop, not for sale) or restores it as a Draft. Nothing is deleted. */
 /**
- * Archives or restores a product. The product page panel restores it as a Draft (`toDraft`) for its page's publish
- * check to put back on sale; the native Products screen, which has no page, restores it straight onto the shop.
+ * Archives a product (off the shop, not for sale) or clears that. Nothing is deleted. Owners archive by trashing the product's
+ * page (catalog-archive-is-page-trash-20261115); Commerce itself archives only the Draft that loses a create race for a page.
  */
-export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date(), toDraft = false): Promise<boolean> {
+export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date()): Promise<boolean> {
   if (typeof input.archived !== "boolean") catalogFail("INVALID_INPUT", "archived must be boolean");
   const archivedAt = now().toISOString();
   return editProduct(catalog, input.catalogItemId, (item) => {
     if (Boolean(item.archivedAt) === input.archived) return null;
     const { archivedAt: _old, ...rest } = item;
-    return input.archived ? { ...rest, archivedAt } : toDraft ? { ...rest, offSale: true } : rest;
+    return input.archived ? { ...rest, archivedAt } : rest;
   });
 }
 
