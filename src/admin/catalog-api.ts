@@ -2,7 +2,7 @@ import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import {
   addCatalogVariantOption, admitV1CatalogPriceSaveInput, assertCatalogStorageConstraints, CatalogError, changeCatalogItemSku, createProductForPage, editProduct, isManagedCatalogRecord,
   listCatalogProductSummaries, loadCatalogItemMedia, loadCatalogProduct, normalizeIdentifierPatch, pageProduct,
-  saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, setCatalogProductArchived, updateCatalogVariantLabels,
+  saveCatalogItemMedia, saveCatalogProductPrices, setCatalogItemWeight, updateCatalogVariantLabels,
 } from "../features/catalog/kernel/index.js";
 import { loadProductFeedEligibility, setProductFeedEligibility } from "../features/feeds/kernel/index.js";
 import { isRecord } from "../shared/record.js";
@@ -15,7 +15,8 @@ export const CATALOG_API_ROUTE = "catalog";
 /**
  * One `op` a request, with the panels' own checks: list, get (by `catalogItemId`, or by `entryId` for a page's product), create (a Draft for
  * the page `entryId`, which must sell no other product, with its price, stock status and weight when given; `commandId` makes a retry find
- * the same product), prices, option, labels, sku, weight, identifiers, archive, media and feeds. Manage stock stays off, as in the panels.
+ * the same product), prices, option, labels, sku, weight, identifiers, media and feeds. Manage stock stays off, as in the panels. To archive,
+ * trash the product's page through EmDash's content API; restoring it brings the page back as a Draft (catalog-archive-is-page-trash-20261115).
  * Writes return what the core functions return, so a refused write says why. A write may carry
  * `expected`, the code a preview printed: the first 12 hex digits of SHA-256 over the JSON `get` answer
  * (product, pictures and feed channels)
@@ -59,7 +60,6 @@ export async function catalogApi(route: SandboxedRouteContext, ctx: PluginContex
       return next as never;
     }) };
   }
-  if (op === "archive") return { changed: await setCatalogProductArchived(store.catalog, input, undefined, true) };
   if (op === "media") return saveCatalogItemMedia(store, input);
   if (op === "feeds") return setProductFeedEligibility(feeds!, store.catalog, input as never);
   throw new Error("Invalid catalog request");

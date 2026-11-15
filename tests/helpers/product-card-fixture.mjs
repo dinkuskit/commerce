@@ -34,5 +34,5 @@ export async function productCardFixture(variants = false) {
   const invoke = input => productPanel({ input, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr',
     extensionId: 'product', entry: { collection: 'products', id: 'page-fixture', locale: null, version: 1 } } }, ctx);
   const snapshot = () => structuredClone([...storage.catalog_items.records]);
-  return { invoke, snapshot, id: made.catalogItemId };
+  return { invoke, snapshot, id: made.catalogItemId, store };
 }
