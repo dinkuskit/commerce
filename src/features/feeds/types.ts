@@ -34,6 +34,8 @@ export interface ProductAiProjection {
 export interface ProductFeedContent {
   /** The host's published, canonical product page URL. */
   canonicalUrl: string;
+  /** Host-owned URLs that preselect concrete members; no query syntax is invented by Commerce. */
+  variantUrls?: Readonly<Record<string, string>>;
   title: string;
   description?: string;
   imageUrls?: readonly string[];

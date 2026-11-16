@@ -18,8 +18,14 @@ map `productFeedEligibility` to the same shared reader used by Registry's
 `product_feed_eligibility` collection, and list reads batch this lookup.
 No eligibility record metadata or admin-only product fields are exposed.
 The feed builders omit products without
-eligibility, listability, a price, a published URL, or a title. Optional GTIN, MPN,
-brand, shipping, description, and image values are emitted only when supplied.
+eligibility, listability, a price, a published URL, or a title. For a product with
+options, these checks apply to each concrete member's price and listability,
+not a root/from price. Family eligibility and published content still gate all
+members. Unpriced/nonlistable members are omitted; listable sold-out members
+remain present with their own availability. A family never becomes a separate
+offer, even if the caller supplied a root price. Older host projections that
+omit option definitions but retain member selections are also recognized.
+Optional GTIN, MPN, brand, shipping, description, and images are never invented.
 
 `buildGoogleMerchantFeed` emits deterministic RSS 2.0 with Google `g:` fields.
 Every item carries `g:condition` `new` (Commerce has no used or refurbished
@@ -34,6 +40,36 @@ first image URL is the main image; the rest are sent as additional image links
 a bounded cursor contract for hosts that page their catalog reads. These
 builders are host-side exports and are intentionally not imported by
 `src/plugin.ts`, keeping them outside the Registry backend size cap.
+
+## Variant rows and landing pages
+
+Variant row `id` (and Meta `retailer_id`) is the permanent member `catalogItemId`;
+`item_group_id` is the permanent family `productId`, not a mutable SKU. The title
+adds the member's option/value labels. Google also carries `item_group_title`
+and repeated `variant_option` name/value pairs. Standard option labels Color,
+Size, Material, Pattern, Age group and Gender (case/whitespace normalized) are
+projected into the corresponding standard channel fields; arbitrary labels stay
+in the title and Google's generic option fields, never invented XML tags or
+Meta columns. Values are preserved, not translated or certified against a
+channel's taxonomy. Meta adds group/standard-attribute columns only when its
+output contains variant rows, preserving the existing simple-only CSV shape.
+Family brand and host content/images may be shared. Public members do not carry
+GTIN/MPN, so those identifiers are omitted for every variant row, including a
+default member whose ID equals the family ID; another member's identifiers must
+never be copied.
+
+The host can supply `content.variantUrls`, a map from concrete member ID to a
+published URL that preselects that member, for example
+`{ "tee-l": "https://shop.example.test/products/tee?item=tee-l" }` when that is
+the host's own selection contract. Commerce does not invent query syntax. An
+explicitly empty member URL omits that member. When a URL is absent, the builder
+retains the supplied family canonical URL for older hosts; **hosts must supply
+preselected URLs for variant landing-page parity**. This is not a Merchant Center
+or Meta admission validator, and emitting rows is not proof of channel approval.
+
+Channel reference: Google's [item group ID](https://support.google.com/merchants/answer/6324507)
+and [variant option](https://support.google.com/merchants/answer/17085214) describe
+separate member identities, grouping, option pairs and matching landing pages.
 
 A storefront host should read paged `catalog/public` data, join each item with
 its published page projection, pass `product.feedChannels ?? []` as the feed
