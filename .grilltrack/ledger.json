@@ -9688,6 +9688,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "Add coupons.dinkuskit.com as the second exact allowed host beside payments.dinkuskit.com under the existing network:request capability; no wildcard and no other host. Declaring it does not activate it on any site.",
+          "from": "verified",
+          "implementation_ref": "file:emdash-plugin.jsonc",
+          "note": "Coupons stay deferred; the host returns with the change that wires the hosted coupon port. Host changes do not make EmDash re-ask owners on update.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": "file:tests/integration/registry-checkout-services.test.mjs file:tests/features/checkout/installed-context.test.mjs"
         }
       ],
       "id": "commerce-allowed-hosts-coupons-dinkuskit-com",
@@ -9700,9 +9714,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-09T17:11:41+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-allowed-hosts-20261118",
+      "updated_at": "2026-11-18T15:03:24+00:00",
       "verification_ref": "file:tests/integration/registry-checkout-services.test.mjs file:tests/features/checkout/installed-context.test.mjs"
     },
     {
@@ -10816,6 +10830,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "Add ship.dinkuskit.com as the third exact allowed host beside payments.dinkuskit.com and coupons.dinkuskit.com under the existing network:request capability; no wildcard and no other host. Declaring it does not activate it on any site.",
+          "from": "verified",
+          "implementation_ref": "file:emdash-plugin.jsonc",
+          "note": "dependency commerce-allowed-hosts-coupons-dinkuskit-com changed: Coupons stay deferred; the host returns with the change that wires the hosted coupon port. Host changes do not make EmDash re-ask owners on update.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:tests/features/checkout/installed-context.test.mjs file:tests/integration/registry-checkout-services.test.mjs .grilltrack/proof/ship-sync-20261010/PROOF.md"
         }
       ],
       "id": "commerce-allowed-hosts-ship-dinkuskit-com",
@@ -10828,9 +10856,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-10T20:48:19+00:00",
+      "updated_at": "2026-11-18T15:03:24+00:00",
       "verification_ref": "file:tests/features/checkout/installed-context.test.mjs file:tests/integration/registry-checkout-services.test.mjs .grilltrack/proof/ship-sync-20261010/PROOF.md"
     },
     {
@@ -11087,6 +11115,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/ship-sync-20261010/PROOF.md; .grilltrack/proof/ship-item-price-20261010/PROOF.md; .grilltrack/proof/ship-store-name-20261011/PROOF.md; .grilltrack/proof/ship-one-line-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "When the store's Registry checkout configuration names ship (exactly an https origin and an audience, like coupons) and Commerce can trade its store key for a ship:orders pass (commerce-store-key-001; same issuer and site as the Payments pass, at most an hour old, audience equal to ship.audience), Orders syncs with Ship's hosted service when the Orders page opens, after each change saved on the page or through the agents' orders route, and on each background check (the commerce-checkout-wakes cron task). Checkout never calls Ship. Each sync first asks Ship for the labels it bought (GET /v1/labels, at most 100, each { eventId, orderId, version, carrier, tracking }); a label for an order still Processing at that version completes it with Ship's carrier and tracking number like the owner's Complete order, anything else changes nothing, and every label is acknowledged (POST /v1/labels/ack { eventId }). Then each order with a delivery address whose current version Ship has not taken goes to POST /v1/orders as dinkuskit.commerce.ship-order/v1, at most 10 per sync: order id, short number, version, status, test flag, current delivery address, the shopper's email, the completion, the store's name (storeName: EmDash's Site title as the host gives it, made one line as below, cut to at most 200 UTF-16 units without splitting a character, and left out when nothing is left), and the lines that go in the box (catalog item id, name, quantity, unitPrice (what the shopper paid for one of the item: the paid order's own line price as { currency, minor }), and the product's current weight in ounces when set; digital items left out). Text people typed goes as one line, as Ship's text rule requires: in the delivery address, each line's name, the completion's carrier and tracking number and storeName, each run of whitespace or control characters (C0, DEL and C1 controls, line breaks and the Unicode line and paragraph separators U+2028 and U+2029 included) becomes one space and the ends are trimmed, and an address field, carrier or tracking number with nothing left is left out. Only what is sent changes; the order keeps what was typed. No order totals, shipping charge, payment details or phone numbers are sent. A 2xx answer means Ship took that version, 422 means it never can and Orders waits for the order's next change, and anything else is retried by the next sync; the version Ship took is kept beside the order without raising the order's version. Ship labels only the latest version, buys no postage for a test order, and emails the shopper under the store's name when an order becomes Completed; Commerce sends no email. Without ship or a usable pass Commerce calls nothing.",
+          "from": "verified",
+          "implementation_ref": "src/features/orders/ship.ts (syncShip; each line's unitPrice from the paid order; storeName from the connection's Site title; typed text sent as one line by oneLine); src/features/orders/store.ts (orderFacts, shipVersion); src/features/checkout/registry-provider-admission.ts and registry-services.ts (ship setting, traded ship:orders pass, ctx.site.name); src/admin/index.ts and src/plugin.ts (sync on Orders, changes and cron); docs/implementation/registry-ship-sync.md; docs/contracts/commerce-handoffs.md",
+          "note": "dependency commerce-allowed-hosts-coupons-dinkuskit-com changed: Coupons stay deferred; the host returns with the change that wires the hosted coupon port. Host changes do not make EmDash re-ask owners on update.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
         }
       ],
       "id": "commerce-ship-sync-001",
@@ -11099,9 +11141,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-29T21:25:25+00:00",
+      "updated_at": "2026-11-18T15:03:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -11271,6 +11313,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/background-check-20261010/PROOF.md; full suite re-run with one-line text in .grilltrack/proof/ship-one-line-20261011/PROOF.md"
+        },
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "Commerce registers its commerce-checkout-wakes task to run every 5 minutes (cron \"*/5 * * * *\", UTC) when EmDash switches it on (the plugin:activate hook, which runs after install and when re-enabled), the way upstream EmDash schedules plugin work (ctx.cron.schedule plus the cron hook). Each run first settles payments Commerce missed through Payments' wakes, then syncs Orders with Ship. Commerce adds no scheduler of its own: the site's EmDash scheduler runs due tasks, which on Cloudflare is the Worker's scheduled() handler driven by a Cron Trigger in wrangler.jsonc (upstream's Cloudflare setup lists \"* * * * *\"); Template Store adding that trigger is handed to Ronald's other agents. A doorbell (Payments or Ship ringing a public Commerce route) may be added later for speed; the 5-minute check stays as the safety net either way.",
+          "from": "verified",
+          "implementation_ref": "src/plugin.ts (plugin:activate); docs/implementation/installed-checkout-context.md#background-check",
+          "note": "dependency commerce-allowed-hosts-coupons-dinkuskit-com changed: Coupons stay deferred; the host returns with the change that wires the hosted coupon port. Host changes do not make EmDash re-ask owners on update.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
         }
       ],
       "id": "commerce-background-check-001",
@@ -11283,9 +11339,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-29T21:25:25+00:00",
+      "updated_at": "2026-11-18T15:03:24+00:00",
       "verification_ref": "file:.grilltrack/proof/billing-address-20261029/PROOF.md"
     },
     {
@@ -11342,6 +11398,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "Add dinkuskit.com as the fourth exact allowed host beside payments.dinkuskit.com, coupons.dinkuskit.com and ship.dinkuskit.com under the existing network:request capability, used only for the store-key trade (POST /api/store-passes); no wildcard and no other host. Declaring it does not activate it on any site.",
+          "from": "verified",
+          "implementation_ref": "file:emdash-plugin.jsonc",
+          "note": "dependency commerce-allowed-hosts-coupons-dinkuskit-com changed: Coupons stay deferred; the host returns with the change that wires the hosted coupon port. Host changes do not make EmDash re-ask owners on update.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
         }
       ],
       "id": "commerce-allowed-hosts-dinkuskit-com",
@@ -11354,9 +11424,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-10T22:37:30+00:00",
+      "updated_at": "2026-11-18T15:03:24+00:00",
       "verification_ref": ".grilltrack/proof/store-key-20261010/PROOF.md"
     },
     {
@@ -16466,6 +16536,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "Yes. Each line Orders sends to Ship (dinkuskit.commerce.ship-order/v1) may carry options: the line's frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), matched by catalog item id from the paid order's variantSelections, made one line like the other text Ship takes and cut to at most 200 UTF-16 units without splitting a character. A line with no options (a simple product) sends no options field, so its record is unchanged. Ship keeps options (one line, at most 200 characters; older Ship ignores it) and shows it with the item name on the store admin Shipments order page and on Ship's own order page. Orders already at Ship are not resent; they pick it up on their next version. The schema name stays v1 because the field is optional and additive.",
+          "from": "verified",
+          "implementation_ref": "commerce PR #271: lineOptions shared by the Orders page and syncShip; each Ship line carries options when it has variant choices; tests, contract docs, reference and changeset",
+          "note": "dependency commerce-allowed-hosts-coupons-dinkuskit-com changed: Coupons stay deferred; the host returns with the change that wires the hosted coupon port. Host changes do not make EmDash re-ask owners on update.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:.grilltrack/proof/commerce-ship-line-options-20261113/PROOF.md"
         }
       ],
       "id": "commerce-ship-line-options-20261113",
@@ -16478,9 +16562,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-11-13T16:27:03+00:00",
+      "updated_at": "2026-11-18T15:03:24+00:00",
       "verification_ref": "file:.grilltrack/proof/commerce-ship-line-options-20261113/PROOF.md"
     },
     {
@@ -16538,6 +16622,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "Yes. When Checkout freezes an attempt, each PaymentRequest line of an item with options carries options: its frozen variant choices as one line of text, exactly as the Commerce order page shows them (optionLabel + ': ' + valueLabel, joined with ' \u00b7 ', such as 'Size: M \u00b7 Colour: Red'), made one line and cut to at most 200 UTF-16 units without splitting a character, the same text and cut Ship lines use. The text comes from the one shared lineOptions/cut in src/shared/line-text.ts used by the Orders page, the Ship sync and checkout. A line with no options (a simple product) sends no options field. The line is part of the frozen request, so the paid order's lines keep it and later label edits never change it. Item ids, quantities, amounts and already-frozen requests are unchanged; CartLine stays { catalogItemId, quantity }. Payments (payments-stripe-line-options-048) validates it and shows it under the item name on Stripe's page; the hosted Payments Worker must be deployed before a Commerce release that sends it, since older Payments refuses the extra field. This reopens the variant v1 choice to keep PaymentRequest unchanged, for display text only.",
+          "from": "verified",
+          "implementation_ref": "src/shared/line-text.ts (oneLine, cut, lineOptions moved from orders so checkout can share them); src/features/checkout/orchestrate.ts freeze(); src/features/checkout/types.ts CheckoutLine.options; src/features/orders/ship.ts, store.ts, admin/view.ts import the shared text; docs/implementation/variant-checkout-v1.md; docs/website/reference/commerce.md; .changeset/payment-line-options.md",
+          "note": "dependency commerce-allowed-hosts-coupons-dinkuskit-com changed: Coupons stay deferred; the host returns with the change that wires the hosted coupon port. Host changes do not make EmDash re-ask owners on update.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "tests/features/checkout/variant-checkout.test.mjs ('Size: Large'; 'Size: Medium \u00b7 Color: Ink' frozen through label renames into the paid request); tests/features/checkout/checkout-pricing-recovery.test.mjs (simple products send no options); tests/features/orders/ship.test.mjs (shared cut); bin/verify-commerce quick green locally 2026-11-13; Registry backend.js +44 bytes over commerce#271 0eb33d6"
         }
       ],
       "id": "commerce-payment-line-options-20261113",
@@ -16550,9 +16648,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-11-13T16:29:14+00:00",
+      "updated_at": "2026-11-18T15:03:24+00:00",
       "verification_ref": "tests/features/checkout/variant-checkout.test.mjs ('Size: Large'; 'Size: Medium \u00b7 Color: Ink' frozen through label renames into the paid request); tests/features/checkout/checkout-pricing-recovery.test.mjs (simple products send no options); tests/features/orders/ship.test.mjs (shared cut); bin/verify-commerce quick green locally 2026-11-13; Registry backend.js +44 bytes over commerce#271 0eb33d6"
     },
     {
@@ -16893,6 +16991,61 @@
       "superseded_by": null,
       "updated_at": "2026-11-15T16:21:59+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce declares exactly payments.dinkuskit.com, ship.dinkuskit.com and dinkuskit.com under network:request; coupons.dinkuskit.com is dropped while coupons stay deferred and comes back with the change that wires the hosted coupon port. The Registry listing gains a short 'What Commerce connects to' section naming each host, what it is for, and that none is contacted until the owner connects the store at DinkusKit.com. No api.dinkuskit.com gateway for now; revisit if listing complaints continue or a fourth hosted service returns.",
+      "context_ref": "docs/registry/description.md",
+      "created_at": "2026-11-18T15:03:24+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-18T15:03:24+00:00",
+          "choice": "Commerce declares exactly payments.dinkuskit.com, ship.dinkuskit.com and dinkuskit.com under network:request; coupons.dinkuskit.com is dropped while coupons stay deferred and comes back with the change that wires the hosted coupon port. The Registry listing gains a short 'What Commerce connects to' section naming each host, what it is for, and that none is contacted until the owner connects the store at DinkusKit.com. No api.dinkuskit.com gateway for now; revisit if listing complaints continue or a fourth hosted service returns.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-18T15:06:48+00:00",
+          "choice": "Commerce declares exactly payments.dinkuskit.com, ship.dinkuskit.com and dinkuskit.com under network:request; coupons.dinkuskit.com is dropped while coupons stay deferred and comes back with the change that wires the hosted coupon port. The Registry listing gains a short 'What Commerce connects to' section naming each host, what it is for, and that none is contacted until the owner connects the store at DinkusKit.com. No api.dinkuskit.com gateway for now; revisit if listing complaints continue or a fourth hosted service returns.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-allowed-hosts-20261118",
+      "implementation_ref": "emdash-plugin.jsonc allowedHosts (dinkuskit.com, payments.dinkuskit.com, ship.dinkuskit.com); docs/registry/description.md 'What Commerce connects to'; docs/website/reference/commerce.md; docs/implementation/registry-hosted-coupons.md; host tests in tests/features/checkout/installed-context.test.mjs and tests/integration/registry-checkout-services.test.mjs; .changeset/registry-hosts-and-auth.md",
+      "question": "Which hosts should Commerce's Registry manifest declare, and how does the listing explain them?",
+      "rationale": "Ronald: 'agreed lets defer for now do 1+2' and 'agreed' (2026-11-18).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-11-18T15:06:48+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -16929,5 +17082,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-15T16:21:59+00:00"
+  "updated_at": "2026-11-18T15:06:48+00:00"
 }

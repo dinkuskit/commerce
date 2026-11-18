@@ -3,24 +3,12 @@ import { shareGlobals, shareLiterals } from './share-literals.mjs';
 import { buildPlugin } from '@emdash-cms/plugin-cli';
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { auditedCouponTransformFrom } from './coupon-build-transform.mjs';
 import { stageRegistryListing } from './stage-registry-listing.mjs';
 
 // Neutral resolution omits legacy package main fields. Prebundle supported
 // browser-compatible dependencies, then retain the official manifest/probe build.
 const stage = resolve('.tmp/sandbox-source');
 await mkdir(resolve(stage, 'src'), { recursive: true });
-const authTransform = await auditedCouponTransformFrom(resolve('.'));
-// Commerce reaches only Role/toRoleLevel from the audited auth
-// package; its passkey/OAuth closure imports pure @oslojs crypto and encoding
-// modules that never run here. Marking them side-effect-free lets Rolldown drop
-// the unused code (about 5.6 KB) without touching the audited transform.
-const pureVendorModules = {
-  name: 'commerce-pure-vendor-modules',
-  transform(code, id) {
-    return id.includes('/node_modules/@oslojs/') ? { code, moduleSideEffects: false } : null;
-  },
-};
 // The Registry build cannot reach Manage stock, stock reservation or Pack (see
 // src/shared/registry-build.ts), so the flag is true here and Rolldown drops
 // those paths. Everything else is built exactly as the library build (dist/) is.
@@ -36,7 +24,7 @@ const bundle = await rolldown({
   // effects take 168 bytes off the final backend after literal sharing and the plugin CLI's own minify.
   optimization: { inlineConst: true },
   treeshake: { moduleSideEffects: true, propertyReadSideEffects: false, unknownGlobalSideEffects: false },
-  plugins: [authTransform, pureVendorModules, registryBuild],
+  plugins: [registryBuild],
   onwarn(warning) {
     if (warning.code === 'UNRESOLVED_IMPORT') throw new Error(warning.message);
     console.warn(warning.message);

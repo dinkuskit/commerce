@@ -5,9 +5,11 @@ to leave room under the 128 KiB backend limit, the Registry build no longer
 wires the hosted coupon port. A coupon code is refused as `COUPON_UNAVAILABLE`
 with reason `try-later` before any call, even when the checkout settings name
 the coupon service, and no `coupons:checkout` pass is traded. Settings that
-name `coupons` stay valid, `coupons.dinkuskit.com` stays declared so coupons
-can return without stores approving a new host, and the port, its tests and
-checkout's coupon pricing stay in the source. Since 2026-10-22 the Registry
+name `coupons` stay valid, and the port, its tests and checkout's coupon
+pricing stay in the source. Since 2026-11-18 `coupons.dinkuskit.com` is no
+longer declared (GrillTrack `commerce-allowed-hosts-20261118`); the change that
+wires the port again declares it again. EmDash asks owners again on an update
+only for new capabilities or newly public routes, not for a new host. Since 2026-10-22 the Registry
 build switch (`src/shared/registry-build.ts`, `REGISTRY_BUILD`) also leaves
 checkout's coupon quoting, reservation and reconciliation out of `backend.js`
 (about 5.6 KB): the refusal is the same `try-later` answer, raised where the
@@ -54,8 +56,9 @@ off on DinkusKit.com included), a coupon code makes start return
 `COUPON_UNAVAILABLE` with reason `try-later` before any attempt write, coupon
 request or Payments call.
 
-The manifest declares `network:request` with exactly `payments.dinkuskit.com`,
-`coupons.dinkuskit.com`, `ship.dinkuskit.com` and `dinkuskit.com`. Declaring a host does not
+While the port is unhooked the manifest declares `network:request` with exactly
+`payments.dinkuskit.com`, `ship.dinkuskit.com` and `dinkuskit.com`; hooking it
+back adds `coupons.dinkuskit.com`. Declaring a host does not
 activate it on any site; activation stays a host and owner step. The native
 entry keeps its own coupon storage and does not declare the coupon host.
 

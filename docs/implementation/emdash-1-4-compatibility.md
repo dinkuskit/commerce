@@ -44,7 +44,11 @@ otherwise.
 - **Audited auth build:** `@emdash-cms/auth` 1.4.0 adds one role-table line,
   `content:edit_own_drafts` for Contributors (emdash-cms/emdash#4133). The
   coupon build transform's package and `dist/index.mjs` hashes move to 1.4.0.
-  The other audited sources and initializers are byte-identical.
+  The other audited sources and initializers are byte-identical. Since
+  2026-11-18 the Registry build no longer bundles `@emdash-cms/auth` at all:
+  the store-settings check compares the role with Editor and Admin directly,
+  so the audited transform is gone. The package stays a dev dependency, as
+  the test oracle for that check.
 - **Store side:** fixes that matter to shoppers arrive with the store's own
   EmDash (the template store), not with this package. They include sandboxed
   `email:send` on Cloudflare (#4281), Access session writes (#4157) and stale
