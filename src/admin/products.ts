@@ -73,7 +73,7 @@ const label = (m: { selections: readonly { valueLabel: string }[] }) => m.select
 /** What the status grid says of the product: its state, SKU, name and how many variants it sells in. */
 function statusGrid(selected: CatalogProductListItem, unpriced: boolean): Block {
   return { type: "fields", fields: [
-    { label: "Status", value: selected.archivedAt ? "Archived: off the shop" : selected.offSale ? "Draft: publish to sell it" : unpriced ? "Published: off the shop" : "On sale" },
+    { label: "Status", value: selected.offSale ? "Draft: publish to sell it" : unpriced ? "Published: off the shop" : "On sale" },
     { label: "SKU", value: selected.sku },
     { label: "Name (page title)", value: selected.name },
   ] };
@@ -162,7 +162,7 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
   return { blocks: [
     statusGrid(selected, unpriced),
     // A missing Regular price keeps it off the shop whatever the page's state; it never means free.
-    ...(unpriced && !selected.archivedAt ? [note(NO_PRICE)] : []),
+    ...(unpriced ? [note(NO_PRICE)] : []),
     ...(form?.message ? [alert(form.message)] : []),
     ...(simple ? [header("Pricing & stock"), manageStockNotice(values.manageStock),
       productForm(id, { ...values, sku: form?.sku ?? selected.sku, stockStatus: values.stockStatus ?? status }, "save:" + JSON.stringify([id, selected.revision]))] : []),

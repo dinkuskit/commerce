@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
-import { addCatalogVariantOption, createCatalogItem, setCatalogProductArchived } from '../../../dist/features/catalog/kernel/index.js';
+import { addCatalogVariantOption, createCatalogItem, setCatalogProductOnSale } from '../../../dist/features/catalog/kernel/index.js';
 
 // Every storage or Media Library call from a Registry plugin is one subrequest, and Template
 // Store allows 32 per call (EmDash's default is 10). The shop list must page within that
-// however many products, photos and archived products the store has.
+// however many products, photos and Draft products the store has.
 const TEMPLATE_STORE = 32;
 
 class Collection {
@@ -47,7 +47,7 @@ const NAMES = ['catalog_items', 'catalog_prices', 'catalog_manual_availability',
   'store_inventory_configurations', 'storefront_availability_settings', 'storefront_out_of_stock_listing',
   'catalog_media', 'storefront_placeholder_image', 'managed_sku_claims', 'product_feed_eligibility'];
 
-/** A shop like a real one: archived and unpriced products, sold-out ones hidden, photos and galleries, choices. */
+/** A shop like a real one: Draft and unpriced products, sold-out ones hidden, photos and galleries, choices. */
 async function shop(count, { batched = true } = {}) {
   const calls = { n: 0 };
   const storage = Object.fromEntries(NAMES.map((name) => [name, new Collection(calls, batched)]));
@@ -62,7 +62,7 @@ async function shop(count, { batched = true } = {}) {
     if (i % 11 === 10) set('catalog_manual_availability', id, { recordKind: 'catalog-manual-availability', recordId: id, catalogItemId: id, status: 'available-on-backorder' });
     if (i % 2 === 0) set('catalog_media', id, { recordKind: 'catalog-media', recordId: id, catalogItemId: id, image: { mediaId: 'img-' + id },
       gallery: i % 4 === 0 ? [1, 2, 3].map((n) => ({ mediaId: `gal-${id}-${n}` })) : [] });
-    if (i % 3 === 0) await setCatalogProductArchived(catalog, { catalogItemId: id, archived: true });
+    if (i % 3 === 0) await setCatalogProductOnSale(catalog, { catalogItemId: id, onSale: false });
   }
   await addCatalogVariantOption({ catalog }, { productId: 'p001', optionId: 'size', optionLabel: 'Size', values: [
     { valueId: 'small', label: 'Small', member: { catalogItemId: 'p001', fulfillment: 'physical' } },
@@ -100,7 +100,7 @@ test('each shop list page stays under the limit and the pages together list ever
     assert.equal(new Set(products.map((product) => product.id)).size, products.length);
     assert.ok(products.length > size / 3, `${size} products listed ${products.length}`);
     assert.ok(products.every((product) => product.availability.status !== 'out-of-stock'), 'hidden sold-out products stay hidden');
-    assert.ok(!products.some((product) => Number(product.id.slice(1)) % 3 === 0), 'archived products stay off the shop');
+    assert.ok(!products.some((product) => Number(product.id.slice(1)) % 3 === 0), 'Draft products stay off the shop');
   }
 });
 

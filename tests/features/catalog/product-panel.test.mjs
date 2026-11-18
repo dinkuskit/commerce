@@ -153,31 +153,6 @@ test('the publish check puts a product on sale and back to Draft, and a deleted 
   assert.equal(pages.records.size, 0);
 });
 
-test('publishing the page sells a product archived by Commerce 0.8.0, and trash or unpublish keep that archive', async () => {
-  const { ctx, catalog, pages } = await shop();
-  const storage = { catalog, pages };
-  await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Tee' } } }, ctx);
-  const id = await pageProduct(pages, 'page-1');
-  ctx.storage.catalog_prices = new Store();
-  await ctx.storage.catalog_prices.put(id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor: '1500' } });
-  await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: true });
-  // The record as 0.8.0's Archive product button left it: archivedAt set, the page still published and linked.
-  const stored = await catalog.get(id);
-  await catalog.put(id, { ...stored, archivedAt: '2026-11-01T00:00:00.000Z' });
-  assert.equal(await readPublicCatalogItem(ctx, id), null, 'an archived product is off the shop');
-  // Moving the page to the trash, or unpublishing it, leaves the archive in place.
-  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: false }), { changed: false });
-  assert.equal((await catalog.get(id)).archivedAt, '2026-11-01T00:00:00.000Z');
-  assert.equal(await readPublicCatalogItem(ctx, id), null);
-  // Restoring the page from the trash makes it a Draft; publishing it is the owner's word to sell it.
-  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: id, entryId: 'page-1', onSale: true }), { changed: true });
-  const sold = await catalog.get(id);
-  assert.equal(sold.archivedAt, undefined);
-  assert.equal(sold.offSale, undefined);
-  assert.deepEqual([sold.sku, sold.name, sold.pageId], [stored.sku, stored.name, 'page-1'], 'the product keeps its SKU, name and page');
-  assert.equal((await readPublicCatalogItem(ctx, id))?.name, 'Tee', 'it is back on the shop');
-});
-
 test('the publish check finds the page\'s product in Commerce, and the shop finds a product by its page', async () => {
   const { ctx, catalog, pages } = await shop();
   const storage = { catalog, pages };

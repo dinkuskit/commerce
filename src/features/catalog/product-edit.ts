@@ -16,7 +16,7 @@ const moved = () => catalogFail("COMMAND_CONFLICT", PRODUCT_MOVED);
 
 /**
  * Applies one edit to a product's own record, which speaks for each of its
- * variants: the shop, cart and checkout read the name and archive state from it.
+ * variants: the shop, cart and checkout read the name and Draft state from it.
  * One compare-and-set per edit, so two edits can never leave a mix. With a `fence`, the edit is refused
  * when the product has moved since the form read it, and never retried on a lost race.
  */
@@ -56,20 +56,6 @@ export const named = (item: CatalogItemRecord, name: string): CatalogItemRecord 
   creationPayload: item.creationPayload ?? { kind: item.kind, name: item.name, sku: item.sku, skuKey: item.skuKey, manageStock: item.creationIntent?.manageStock ?? false },
 });
 
-/**
- * Archives a product (off the shop, not for sale) or clears that. Nothing is deleted. Owners archive by trashing the product's
- * page (catalog-archive-is-page-trash-20261115); Commerce itself archives only the Draft that loses a create race for a page.
- */
-export async function setCatalogProductArchived(catalog: Catalog, input: { catalogItemId?: unknown; archived?: unknown }, now = () => new Date()): Promise<boolean> {
-  if (typeof input.archived !== "boolean") catalogFail("INVALID_INPUT", "archived must be boolean");
-  const archivedAt = now().toISOString();
-  return editProduct(catalog, input.catalogItemId, (item) => {
-    if (Boolean(item.archivedAt) === input.archived) return null;
-    const { archivedAt: _old, ...rest } = item;
-    return input.archived ? { ...rest, archivedAt } : rest;
-  });
-}
-
 /** Puts a product on sale or takes it back to Draft. Only the store's publish check calls this; Commerce never reads the page. */
 export async function setCatalogProductOnSale(catalog: Catalog, input: { catalogItemId?: unknown; onSale?: unknown }): Promise<boolean> {
   if (typeof input.onSale !== "boolean") catalogFail("INVALID_INPUT", "onSale must be boolean");
@@ -80,9 +66,9 @@ export async function setCatalogProductOnSale(catalog: Catalog, input: { catalog
   });
 }
 
-/** Off the shop and refused at checkout: archived, or a Draft whose page is not published. */
-export function offShop(item: { archivedAt?: string; offSale?: true } | null | undefined): boolean {
-  return Boolean(item?.archivedAt || item?.offSale);
+/** Off the shop and refused at checkout: a Draft, whose page is not published (or is in the trash). */
+export function offShop(item: { offSale?: true } | null | undefined): boolean {
+  return Boolean(item?.offSale);
 }
 
 const TAKEN = "sku is already assigned to another catalog item";

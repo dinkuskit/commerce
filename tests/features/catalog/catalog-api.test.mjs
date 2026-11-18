@@ -110,7 +110,7 @@ test('every product is made for its page: create needs a page that sells no othe
   await assert.rejects(call({ op: 'create', commandId: 'mug', name: 'Mug', sku: 'MUG-2', entryId: 'page-mug' }), error => error.code === 'COMMAND_CONFLICT');
 });
 
-test('of two creates racing for one empty page, one sells it and the other is refused with its Draft archived', async () => {
+test('of two creates racing for one empty page, one sells it and the other is refused and its Draft has no page', async () => {
   const { ctx, call } = shop();
   const a = { op: 'create', commandId: 'tee-a', name: 'Tee A', sku: 'TEE-A', entryId: 'page-tee' };
   const b = { op: 'create', commandId: 'tee-b', name: 'Tee B', sku: 'TEE-B', entryId: 'page-tee' };
@@ -122,8 +122,8 @@ test('of two creates racing for one empty page, one sells it and the other is re
   const items = [...ctx.storage.catalog_items.records.values()];
   assert.equal(items.length, 2, 'both raced past the empty-page check');
   const loser = items.find(item => item.itemId !== winner);
-  // The losing Draft is archived: off the shop, and out of the way of the page's product.
-  assert.ok(loser.archivedAt && loser.offSale);
+  // The losing Draft stays a Draft with no page: off the shop, and out of the way of the page's product.
+  assert.deepEqual([loser.offSale, loser.pageId], [true, undefined]);
   // Retrying the losing command is refused the same way and makes nothing new.
   await assert.rejects(call(loser.commandId === 'tee-a' ? a : b), error => error.code === 'PRODUCT_PAGE_CONFLICT');
   assert.equal(ctx.storage.catalog_items.records.size, 2);

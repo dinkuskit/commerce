@@ -29,12 +29,14 @@ restore are now the product page's own trash (`catalog-archive-is-page-trash-202
   orders. Restore from the trash brings the page back as a draft, and publishing
   it sells the product again. Commerce's own Archive product and Restore buttons
   are gone; a Commerce Restore used to leave a Draft under a still-live page with
-  no Publish button (commerce#276). Commerce still marks `archivedAt` on the
-  Draft that loses a create race for a page; `resolveStorefrontAvailability` and
-  `resolveManagedStorefrontAvailability` treat it as not listable and not
-  sellable. Publishing a page clears `archivedAt` on the product it sells, so a
-  product archived with 0.8.0's Archive button is sold again by publishing its
-  page; unpublishing or trashing keeps it. Nothing is deleted.
+  no Publish button (commerce#276). Commerce keeps no archive state of its own
+  (`commerce-archive-state-removed-20261118`): the Draft that loses a create
+  race for a page stays a Draft with no page, and `archivedAt` is no longer read
+  or written. A product archived with Commerce 0.8.0's (or older) Archive button
+  is no longer held off the shop by that mark: if its page is published, or if it
+  sells without a page as products did before 0.7.0, it is back on sale after the
+  update, so trash its page to archive it again. There are no stores to carry
+  over, so Commerce keeps no code for this. Nothing is deleted.
 - **Product ID.** The product page shows the product's id in a box. A product
   page's "Commerce product" field takes this id. In the native admin the box
   has a copy button. The Registry admin shows the same id in a Block Kit code
