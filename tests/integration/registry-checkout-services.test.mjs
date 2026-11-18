@@ -96,7 +96,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
   assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'media:read', 'network:request', 'email:send']);
-  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'coupons.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
+  assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
   await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });

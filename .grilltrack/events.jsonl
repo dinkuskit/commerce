@@ -739,3 +739,7 @@
 {"action": "decision_locked", "at": "2026-11-15T03:30:26+00:00", "data": {"decision_id": "commerce-thank-you-contact-20261113"}, "event_id": "ef60245a-3214-434b-967b-81cb046869d0"}
 {"action": "decision_proposed", "at": "2026-11-15T16:21:59+00:00", "data": {"decision_id": "commerce-guest-order-status-20261115"}, "event_id": "2eb9d67d-be6f-4330-8eee-72f18f5a1e20"}
 {"action": "decision_locked", "at": "2026-11-15T16:21:59+00:00", "data": {"decision_id": "commerce-guest-order-status-20261115"}, "event_id": "09186c39-c2d0-4657-923a-baa73e1e9d58"}
+{"action": "decision_proposed", "at": "2026-11-18T15:03:24+00:00", "data": {"decision_id": "commerce-allowed-hosts-20261118"}, "event_id": "5e7728e9-7ca7-4a8e-9be1-13c32726c389"}
+{"action": "decision_locked", "at": "2026-11-18T15:03:24+00:00", "data": {"decision_id": "commerce-allowed-hosts-20261118"}, "event_id": "fae56898-1bdd-4695-a065-4e4ad72d08a9"}
+{"action": "decision_superseded", "at": "2026-11-18T15:03:24+00:00", "data": {"affected": ["commerce-allowed-hosts-ship-dinkuskit-com", "commerce-ship-sync-001", "commerce-allowed-hosts-dinkuskit-com", "commerce-background-check-001", "commerce-ship-line-options-20261113", "commerce-payment-line-options-20261113"], "decision_id": "commerce-allowed-hosts-coupons-dinkuskit-com", "replacement_id": "commerce-allowed-hosts-20261118"}, "event_id": "d81633c2-5a69-4808-9005-23899ace7d97"}
+{"action": "decision_implemented", "at": "2026-11-18T15:06:48+00:00", "data": {"decision_id": "commerce-allowed-hosts-20261118"}, "event_id": "c4bf6a22-2591-4949-b149-d5a3c23c31b7"}

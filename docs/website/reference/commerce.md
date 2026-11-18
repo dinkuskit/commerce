@@ -189,7 +189,7 @@ Shopper accounts are stored by Commerce. They are not EmDash users and give no a
 
 ## Installed checkout and orders
 
-The Registry build trades its own store key at DinkusKit.com for short-lived scoped passes and calls hosted Payments and Ship with them. The key never goes to Payments, Ship or a store page. A store that is not connected, or whose checkout settings are missing or turned off, keeps checkout unavailable. An explicit readiness flag from Payments other than the boolean `true` blocks creation of a new payment session. Historical payment lookups do not require current payment readiness.
+The Registry build may reach exactly three hosts: `dinkuskit.com`, `payments.dinkuskit.com` and `ship.dinkuskit.com`, and installing it calls none of them: pressing **Connect** starts the connection at DinkusKit.com, and Payments and Ship are called only once the store is connected and its settings name them. It trades its own store key at DinkusKit.com for short-lived scoped passes and calls hosted Payments and Ship with them. The key never goes to Payments, Ship or a store page. A store that is not connected, or whose checkout settings are missing or turned off, keeps checkout unavailable. An explicit readiness flag from Payments other than the boolean `true` blocks creation of a new payment session. Historical payment lookups do not require current payment readiness.
 
 Each item Commerce sends Payments carries the shopper's choices as the order page shows them, such as "Size: M", so Stripe's payment page shows them under the item name; items without options send none.
 
