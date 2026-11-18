@@ -374,6 +374,45 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   assert.deepEqual(await publicItem(), expectedProduct);
 });
 
+test('compiled option-product panel saves and clears family feed channels without changing variants', async t => {
+  const directory = await mkdtemp('/tmp/commerce-variant-feeds-');
+  const databasePath = join(directory, 'runtime.db');
+  let state = await runtimeFixture({ seed: false, databasePath, grants: false, config: null, storeKey: null });
+  t.after(async () => { await state.close(); await rm(directory, { recursive: true, force: true }); });
+  const entryId = 'page-feed-tee';
+  const panel = input => state.plugin.invokeRoute('product-panel', input, { url: `${SITE}/_emdash/api/content/products/${entryId}/plugin-extensions/${state.manifest.id}/panel/product`, method: 'POST', ui: productPanelUi(entryId) });
+  const flatten = blocks => blocks.flatMap(b => b.type === 'accordion' ? flatten(b.blocks) : [b]);
+  const forms = out => flatten(out.blocks).filter(b => b.type === 'form');
+  const load = () => panel({ type: 'panel_load' });
+  const submit = (form, values) => panel({ type: 'form_submit', action_id: form.submit.action_id, values });
+  const created = await panel({ type: 'form_submit', action_id: 'sell', values: { sku: 'FEED-TEE', regular: '20', stockStatus: 'in-stock' }, draft: { fields: { title: 'Feed tee' } } });
+  assert.equal(created.toast.type, 'success');
+  const id = (await state.collections.catalog_items.query()).items.find(row => row.data.recordKind === 'catalog-item').id;
+  const added = await submit(forms(await load()).find(f => f.submit.label === 'Add options'), { optionLabel: 'Size', values: 'M, L' });
+  assert.equal(added.toast.type, 'success');
+  const large = forms(added).find(f => f.submit.action_id.startsWith('variant:["price"') && JSON.parse(f.submit.action_id.slice(8))[2] !== id);
+  assert.equal((await submit(large, { regular: '24', sale: '', sku: 'FEED-TEE-L', stockStatus: 'on-backorder' })).toast.type, 'success');
+  await state.plugin.invokeRoute('catalog-items/set-on-sale', { entryId, onSale: true }, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog-items/set-on-sale`, method: 'POST' });
+  const publicList = () => state.plugin.invokeRoute('catalog/public', {}, { url: `${SITE}/_emdash/api/plugins/${state.manifest.id}/catalog/public`, method: 'GET' });
+  const feedForm = out => forms(out).find(f => f.submit.label === 'Save feeds');
+  const before = (await publicList()).products;
+  assert.equal(before.length, 1);assert.equal(before[0].variants.members.length, 2);
+  const stored = await state.collections.catalog_items.get(id);
+  const stale = feedForm(await load());assert.ok(stale, 'compiled panel exposes the family feed form');
+  assert.equal((await submit(stale, { 'feed:google-merchant': true, 'feed:meta-catalog': true })).toast.type, 'success');
+  assert.deepEqual((await publicList()).products, before.map(p => ({ ...p, feedChannels: ['google-merchant', 'meta-catalog'] })));
+  assert.deepEqual(await state.collections.catalog_items.get(id), { ...stored, catalogData: { ...stored.catalogData, feedChannels: ['google-merchant', 'meta-catalog'] } });
+  const refused = await submit(stale, { 'feed:google-merchant': false, 'feed:meta-catalog': true });
+  assert.equal(refused.toast.type, 'error');assert.match(refused.toast.message, /Product changed; reload/);
+  assert.deepEqual(feedForm(refused).fields.map(f => f.initial_value), [false, true]);
+  await state.close();
+  state = await runtimeFixture({ seed: false, databasePath, grants: false, config: null, storeKey: null });
+  assert.deepEqual(feedForm(await load()).fields.map(f => f.initial_value), [true, true], 'restart reads saved root channels');
+  assert.equal((await submit(feedForm(await load()), { 'feed:google-merchant': false, 'feed:meta-catalog': false })).toast.type, 'success');
+  assert.deepEqual((await publicList()).products, before);
+  assert.equal((await state.collections.orders.query()).items.length, 0);assert.equal(state.counts.transport, 0);
+});
+
 test('compiled route rejects missing/foreign capability and browser totals before order creation', async t => {
   const state = await runtimeFixture({ grants: false });
   t.after(() => state.close());

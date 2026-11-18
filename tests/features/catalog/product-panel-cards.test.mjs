@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { productPanel } from '../../../dist/admin/index.js';
+import { loadProductFeedEligibility } from '../../../dist/features/feeds/kernel/index.js';
 import { createProductForPage, loadCatalogProduct, pageProduct } from '../../../dist/features/catalog/kernel/index.js';
 
 // The panel's first Save makes the product (catalog-first-save-creates-20261031) through the one kernel function the
@@ -42,6 +43,65 @@ function shop() {
     storefront_out_of_stock_listing: empty, catalog_media: empty, storefront_placeholder_image: empty, managed_sku_claims: empty };
   return { catalog, pages, store: { catalog, pages, prices, availability }, ctx: { site: { url: 'https://shop.example.test' }, storage } };
 }
+test('option products keep one family feed form, independently of member prices and stock', async () => {
+  const { ctx, store } = shop();
+  const feeds = new Catalog();
+  ctx.storage.product_feed_eligibility = feeds;
+  const load = () => commerceAdmin({ input: { type: 'panel_load' } }, ctx);
+  const submit = (form, values) => commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values } }, ctx);
+  await createProductForPage(store, { entryId: 'page-1', commandId: 'feeds-tee', name: 'Tee', sku: 'FEED-TEE', regular: '20', stockStatus: 'in-stock' }, { collection: 'catalog_items' });
+  const id = await pageProduct(store.pages, 'page-1');
+  const simple = await load();
+  assert.equal(forms(simple).filter(f => f.fields.some(v => v.action_id === 'feed:google-merchant')).length, 1);
+  const add = forms(simple).find(f => f.submit.label === 'Add options');
+  await submit(add, { optionLabel: 'Size', values: 'Small, Large' });
+  const feedForm = out => forms(out).find(f => f.submit.label === 'Save feeds');
+  const opened = await load(), form = feedForm(opened);
+  assert.ok(form, 'one product-level feed form remains after options are added');
+  assert.equal(forms(opened).filter(f => f.fields.some(v => v.action_id === 'feed:google-merchant')).length, 1);
+  assert.deepEqual(form.fields.map(f => [f.action_id, f.initial_value]), [['feed:google-merchant', false], ['feed:meta-catalog', false]]);
+  const before = await store.catalog.get(id);
+  const child = (await product(store, id)).variantProduct.members[1].catalogItemId;
+  const childBefore = await store.catalog.get(child);
+  const saved = await submit(form, { 'feed:google-merchant': true, 'feed:meta-catalog': true });
+  assert.deepEqual(saved.toast, { type: 'success', message: 'Changes saved' });
+  assert.deepEqual(await store.catalog.get(id), { ...before, catalogData: { ...before.catalogData, feedChannels: ['google-merchant', 'meta-catalog'] } });
+  assert.deepEqual(await store.catalog.get(child), childBefore);
+  assert.deepEqual(await loadProductFeedEligibility(feeds, child, store.catalog), ['google-merchant', 'meta-catalog']);
+  assert.equal(cards(saved).find(c => c.label === 'Feeds').default_open, true);
+  assert.deepEqual(feedForm(await load()).fields.map(f => f.initial_value), [true, true], 'a reopened panel reads durable choices');
+  // An unpriced Large does not block channel eligibility, nor acquire its sibling's price or stock.
+  assert.equal((await product(store, id)).variantProduct.members[1].regular, null);
+  const cleared = await submit(feedForm(await load()), { 'feed:google-merchant': false, 'feed:meta-catalog': false });
+  assert.equal(cleared.toast.type, 'success');
+  assert.deepEqual(await loadProductFeedEligibility(feeds, id, store.catalog), []);
+  assert.deepEqual(feedForm(await load()).fields.map(f => f.initial_value), [false, false]);
+});
+
+test('a stale feed form is refused without overwriting a newer choice, and keeps its switches and fence', async () => {
+  const { ctx, store } = shop();
+  const feeds = new Catalog(); ctx.storage.product_feed_eligibility = feeds;
+  await createProductForPage(store, { entryId: 'page-1', commandId: 'feeds-stale', name: 'Tee', sku: 'STALE-TEE', regular: '20' }, { collection: 'catalog_items' });
+  const load = () => commerceAdmin({ input: { type: 'panel_load' } }, ctx);
+  const submit = (form, values) => commerceAdmin({ input: { type: 'form_submit', action_id: form.submit.action_id, values } }, ctx);
+  await submit(forms(await load()).find(f => f.submit.label === 'Add options'), { optionLabel: 'Size', values: 'S, L' });
+  const formOf = out => forms(out).find(f => f.submit.label === 'Save feeds');
+  const stale = formOf(await load());
+  assert.equal((await submit(formOf(await load()), { 'feed:google-merchant': true, 'feed:meta-catalog': false })).toast.type, 'success');
+  const before = structuredClone([...store.catalog.records]);
+  const refused = await submit(stale, { 'feed:google-merchant': false, 'feed:meta-catalog': true });
+  assert.equal(refused.toast.type, 'error');assert.match(refused.toast.message, /Product changed; reload/);
+  assert.deepEqual([...store.catalog.records], before);
+  assert.equal(formOf(refused).submit.action_id, stale.submit.action_id);
+  assert.deepEqual(formOf(refused).fields.map(f => f.initial_value), [false, true]);
+  const malformed = await submit(formOf(await load()), {});
+  assert.equal(malformed.toast.type, 'error');assert.deepEqual([...store.catalog.records], before);
+  const fresh = await submit(formOf(await load()), { 'feed:google-merchant': false, 'feed:meta-catalog': true });
+  assert.equal(fresh.toast.type, 'success');
+  const id = await pageProduct(store.pages, 'page-1');
+  assert.deepEqual(await loadProductFeedEligibility(feeds, id, store.catalog), ['meta-catalog']);
+});
+
 const unique = { collection: 'catalog_items' };
 const product = (store, id) => loadCatalogProduct({ catalog: store.catalog, prices: store.prices, availability: store.availability }, id);
 
