@@ -6,7 +6,7 @@ You supply the storefront. Installing Commerce does not create a finished shop o
 
 ## What Commerce connects to
 
-Commerce asks to reach three DinkusKit addresses. It contacts none of them until you connect your store at DinkusKit.com, and a store you never connect makes no outside calls.
+Commerce asks to reach three DinkusKit addresses. Installing it makes no outside calls. Pressing **Connect** in Commerce settings starts the connection at dinkuskit.com, and Payments and Ship are contacted only once your store is connected and set up to use them.
 
 - **dinkuskit.com**: connecting your store, and the short-lived passes Commerce uses for the other two. Your store key is only ever sent here.
 - **payments.dinkuskit.com**: opening a payment page with your own Stripe or Authorize.net account, and confirming the payment afterwards.
