@@ -1,6 +1,6 @@
 # Commerce keeps no archive mark of its own
 
-Ledger: `commerce-archive-state-removed-20261118`. Base: main b632f03 (after commerce#284).
+Ledger: `commerce-archive-state-removed-20261118`. Base: main 055cd3f (after commerce#284 and #280).
 
 ## Panel states
 
@@ -15,8 +15,8 @@ Ledger: `commerce-archive-state-removed-20261118`. Base: main b632f03 (after com
 
 ## Build and tests (Node 24.22.0)
 
-- `npm run build`: `backend_bytes=130325 headroom_bytes=747 backend_sha256=76f7fe02c4bfdf48c453741d96d83f3e2ccab94b96c8309c99e5253bd4f0d6aa` (main b632f03: 130,719, so 394 bytes freed).
-- `npm run test:unit`: 873/873 pass. `npm run test:integration`: 111/111 pass.
+- `npm run build`: `backend_bytes=130439 headroom_bytes=633 backend_sha256=67b34864783fed1e30c4d5f2add0ef7807f170e6f9f94489240378e3bc9b4dab` on main 055cd3f merged in (main alone: 130,833).
+- `npm run test:unit`: 875/875 pass. `npm run test:integration`: 112/112 pass.
 
 ## Upgrade behaviour (accepted)
 
