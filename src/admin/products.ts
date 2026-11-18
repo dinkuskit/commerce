@@ -12,7 +12,7 @@ import {
   type CatalogStorageRecord, type CatalogPriceRecord, type CatalogManualAvailabilityRecord,
   type CatalogProductPriceForm, type CatalogProductListItem, type CatalogMediaRecord, type CatalogMediaStorage,
 } from "../features/catalog/kernel/index.js";
-import { loadProductFeedEligibility, type ProductFeedChannel, type ProductFeedEligibilityRecord } from "../features/feeds/kernel/index.js";
+import { loadProductFeedEligibility, setProductFeedEligibility, type ProductFeedChannel, type ProductFeedEligibilityRecord } from "../features/feeds/kernel/index.js";
 import { alert, button, failed, fresh, header, input, message, note, object, radio, refused, submit, text, toggle } from "./common.js";
 import { REGISTRY_BUILD } from "../shared/registry-build.js";
 import { library, preview, target } from "./media.js";
@@ -45,11 +45,15 @@ type ProductFields = {
   feedChannels?: readonly ProductFeedChannel[];
 };
 type Form = Extract<Block, { type: "form" }>;
+const panelForm = (fields: Form["fields"], label: string, action: string): Form =>
+  ({ type: "form", block_id: fresh("p"), fields, submit: submit(label, action) });
 function manageStockNotice(managed: boolean | null): Block {
   // The Registry build never manages a product (registry-headroom-20261031), so it has the one text.
   return note("Manage stock — Coming soon" + (!REGISTRY_BUILD && managed ? ". This product stays managed." : ""));
 }
 const FEEDS = [["google-merchant", "Google Merchant"], ["meta-catalog", "Meta catalog"]] as const;
+const feedFields = (channels?: readonly ProductFeedChannel[]): Form["fields"] => channels ?
+  FEEDS.map(([channel, label]) => toggle("feed:" + channel, label, channels.includes(channel))) : [];
 /** A card the owner opens with a press, as on Shopify's product form; everything inside is an ordinary block (catalog-panel-cards-20261031). */
 // Stable semantic identities prevent a validation banner from moving one card's
 // client-side open state onto the next card. Labels and prices may change.
@@ -58,14 +62,13 @@ const card = (id: string, label: string, blocks: Block[], open = false): Block =
 const forms = (blocks: Block[]): Form[] => blocks.flatMap(b => b.type === "form" ? [b] : b.type === "accordion" ? forms(b.blocks) : []);
 /** Regular, Sale, SKU, stock status and the feed channels save together in one press (feeds-facts-consistency-060). */
 function productForm(id: string, values: ProductFields, action = "save:" + id): Block {
-  return { type: "form", block_id: fresh("p"), fields: [
+  return panelForm([
       input("regular", "Regular", values.regular),
       input("sale", "Sale", values.sale),
       ...(values.sku === undefined ? [] : [input("sku", "SKU", values.sku)]),
       ...(values.manageStock === false ? [radio("stockStatus", "Stock status", STOCK_OPTIONS, values.stockStatus ?? undefined)] : []),
-      ...(values.feedChannels === undefined ? [] : FEEDS.map(([channel, label]) =>
-        toggle("feed:" + channel, label, values.feedChannels!.includes(channel)))),
-    ], submit: submit("Save", action) };
+      ...feedFields(values.feedChannels),
+    ], "Save", action);
 }
 const IDENTIFIERS = [["gtin", "GTIN"], ["mpn", "MPN"], ["brand", "Brand"]] as const;
 const FULFILLMENT = [{ label: "Physical", value: "physical" }, { label: "Digital", value: "digital" }];
@@ -85,8 +88,8 @@ function shippingCard(selected: CatalogProductListItem, open: boolean): Block[] 
     : [[selected, "Weight (oz)"] as const];
   const fields = items.filter(([item]) => item.fulfillment === "physical").map(([item, l]) =>
     input("w:" + item.catalogItemId, l, item.weightOz === undefined ? "" : String(item.weightOz)));
-  return fields.length ? [card("shipping:" + selected.catalogItemId, "Shipping", [{ type: "form", block_id: fresh("w"), fields,
-    submit: submit("Save weight", "weight:" + JSON.stringify([selected.catalogItemId, selected.revision])) }], open)] : [];
+  return fields.length ? [card("shipping:" + selected.catalogItemId, "Shipping", [panelForm(fields,
+    "Save weight", "weight:" + JSON.stringify([selected.catalogItemId, selected.revision]))], open)] : [];
 }
 /**
  * The Variants card. A product is simple until it has an option (product-variant-model-20261008): the card stays
@@ -108,13 +111,13 @@ function variantsCard(id: string, selected: CatalogProductListItem, focus?: stri
       manageStockNotice(m.manageStock),
       productForm(m.catalogItemId, { ...m, regular: m.regular ?? "", sale: m.sale ?? "" }, "variant:" + JSON.stringify(["price", id, m.catalogItemId, m.priceRevision, m.sku])),
     ], focus === m.catalogItemId || !i && !variant.members.some(x => x.catalogItemId === focus))),
-    card("options:" + id, "Edit options", [{ type: "form", block_id: fresh("d"), fields: [
+    card("options:" + id, "Edit options", [panelForm([
       ...variant.options.flatMap((o, i) => [
         input(i ? "option:" + o.optionId : "optionLabel", "Option: " + o.label, o.label),
         ...o.values.map(v => input("label:" + JSON.stringify([o.optionId, v.valueId]), "Value: " + v.label, v.label)),
       ]),
       ...variant.members.map(m => radio("fulfillment:" + m.catalogItemId, label(m) + " fulfillment", FULFILLMENT, m.fulfillment)),
-    ], submit: submit("Save options", "variant:" + JSON.stringify(["details", id, variant.revision])) }], focus === "details"),
+    ], "Save options", "variant:" + JSON.stringify(["details", id, variant.revision]))], focus === "details"),
     ...(variant.options.length < 3 ? [card("add-option:" + id, "Add another option", [{ type: "form" as const, block_id: fresh("o"), fields: [
       input("optionLabel", "Option name", ["Color", "Material"][variant.options.length - 1]),
       input("values", "Option values"),
@@ -167,11 +170,12 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
     ...(simple ? [header("Pricing & stock"), manageStockNotice(values.manageStock),
       productForm(id, { ...values, sku: form?.sku ?? selected.sku, stockStatus: values.stockStatus ?? status }, "save:" + JSON.stringify([id, selected.revision]))] : []),
     variantsCard(id, selected, focus),
+    ...(!simple && feedChannels ? [card("feeds:" + id, "Feeds", [panelForm(feedFields(feedChannels),
+      "Save feeds", "variant:" + JSON.stringify(["feeds", id, selected.revision]))], focus === "feeds")] : []),
     ...shippingCard(selected, focus === "weight"),
     // Barcode and brand for shopping feeds and the product page's structured data; empty clears one.
-    card("identifiers:" + id, "Identifiers", [{ type: "form", block_id: fresh("i"), fields: IDENTIFIERS.map(([key, l]) =>
-        input(key, l, selected[key] ?? "")),
-        submit: submit("Save identifiers", "ids:" + id) }], focus === "ids"),
+    card("identifiers:" + id, "Identifiers", [panelForm(IDENTIFIERS.map(([key, l]) =>
+        input(key, l, selected[key] ?? "")), "Save identifiers", "ids:" + id)], focus === "ids"),
     // Archive is the page's own Move to trash: the store's publish check takes the product off sale and keeps it (catalog-archive-is-page-trash-20261115).
   ], ...(toast ? { toast: { type: toast === NO_PRICE ? "info" : "success", message: toast } } : {}) };
 }
@@ -415,6 +419,10 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
           }),
           members: Object.entries(values).filter(([k]) => k.startsWith("fulfillment:")).map(([k, v]) => ({ catalogItemId: k.slice(12), fulfillment: v as never })),
         });
+        else if (operation === "feeds") {
+          await setProductFeedEligibility(feedEligibility(ctx)!, store.catalog, { catalogItemId: id, channels: feeds()! }, args[0]);
+          committed = { id, message: "Changes saved" };
+        }
         else throw new Error("Unknown action");
         return await product(ctx, id, undefined, "Changes saved", operation === "price" ? args[0] : operation);
       }
