@@ -33,7 +33,17 @@ function csv(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
 }
 
-function price(product: ProductFeedFacts): string {
+type FeedRow = Pick<ProductFeedFacts, "content" | "shipping"> & {
+  product: Pick<ProductFeedFacts["product"], "id" | "price" | "availability" | "brand" | "gtin" | "mpn">;
+  groupId?: string;
+  groupTitle?: string;
+  attributes?: ReadonlyMap<string, string>;
+  variantOptions?: readonly { name: string; value: string }[];
+};
+
+const VARIANT_ATTRIBUTES = ["color", "size", "material", "pattern", "age_group", "gender"] as const;
+
+function price(product: FeedRow): string {
   const money = product.product.price;
   return money ? `${formatMinorUnitsAsDecimal(money)} ${money.currency}` : "";
 }
@@ -44,7 +54,7 @@ const AVAILABILITY_VALUES: Record<ProductFeedChannel, { inStock: string; backord
   "meta-catalog": { inStock: "in stock", backorder: "available for order", outOfStock: "out of stock" },
 };
 
-function availability(product: ProductFeedFacts, channel: ProductFeedChannel): string {
+function availability(product: FeedRow, channel: ProductFeedChannel): string {
   const values = AVAILABILITY_VALUES[channel];
   switch (product.product.availability.status) {
     case "in-stock":
@@ -56,12 +66,32 @@ function availability(product: ProductFeedFacts, channel: ProductFeedChannel): s
   }
 }
 
-function eligible(product: ProductFeedFacts, channel: ProductFeedChannel): boolean {
-  return product.eligibility.includes(channel) &&
-    product.product.availability.listable &&
-    product.product.price !== undefined &&
-    product.content.canonicalUrl.length > 0 &&
-    product.content.title.length > 0;
+function channelRows(products: readonly ProductFeedFacts[], channel: ProductFeedChannel): FeedRow[] {
+  return products.flatMap((row): FeedRow[] => {
+    if (!row.eligibility.includes(channel) || !row.product.availability.listable ||
+        !row.content.canonicalUrl.length || !row.content.title.length) return [];
+    const variants = row.product.variants;
+    // Older storefront adapters retain selections but omit the option definitions.
+    const hasChoices = variants && (variants.options.length > 0 || variants.members.some((member) => member.selections.length > 0));
+    if (!hasChoices) return row.product.price ? [row] : [];
+    // A family is not a purchasable offer, even if a caller supplied a root/from price.
+    return variants.members.flatMap((member): FeedRow[] => {
+      if (!member.availability.listable || !member.price) return [];
+      const canonicalUrl = row.content.variantUrls?.[member.catalogItemId] ?? row.content.canonicalUrl;
+      if (!canonicalUrl.length) return [];
+      const selections = member.selections.map((s) => `${s.optionLabel}: ${s.valueLabel}`).join(", ");
+      const attributes = new Map(member.selections.map((s) => [s.optionLabel.trim().toLowerCase().replace(/\s+/g, "_"), s.valueLabel]));
+      return [{
+        product: { id: member.catalogItemId, price: member.price, availability: member.availability,
+          ...(row.product.brand ? { brand: row.product.brand } : {}) },
+        // Public members have no GTIN/MPN; never copy the default member's identifiers.
+        content: { ...row.content, canonicalUrl, title: selections ? `${row.content.title} — ${selections}` : row.content.title },
+        ...(row.shipping ? { shipping: row.shipping } : {}),
+        groupId: variants.productId, groupTitle: row.content.title, attributes,
+        variantOptions: member.selections.map((s) => ({ name: s.optionLabel, value: s.valueLabel })),
+      }];
+    });
+  });
 }
 
 export function pageProductFeedRows(
@@ -79,13 +109,18 @@ export function pageProductFeedRows(
 }
 
 export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): string {
-  const rows = products.filter((product) => eligible(product, "google-merchant"));
+  const rows = channelRows(products, "google-merchant");
   const items = rows.map((product) => {
     const image = product.content.imageUrls?.[0];
     return [
       "<item>",
       `<g:id>${escapeXml(product.product.id)}</g:id>`,
       `<g:title>${escapeXml(product.content.title)}</g:title>`,
+      product.groupId ? `<g:item_group_id>${escapeXml(product.groupId)}</g:item_group_id>` : "",
+      product.groupTitle ? `<g:item_group_title>${escapeXml(product.groupTitle)}</g:item_group_title>` : "",
+      ...(product.variantOptions ?? []).map((option) => `<g:variant_option><g:name>${escapeXml(option.name)}</g:name><g:value>${escapeXml(option.value)}</g:value></g:variant_option>`),
+      ...VARIANT_ATTRIBUTES.flatMap((key) => product.attributes?.has(key)
+        ? [`<g:${key}>${escapeXml(product.attributes.get(key)!)}</g:${key}>`] : []),
       product.content.description ? `<g:description>${escapeXml(product.content.description)}</g:description>` : "",
       `<g:link>${escapeXml(product.content.canonicalUrl)}</g:link>`,
       image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : "",
@@ -107,8 +142,10 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
 }
 
 export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): string {
-  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "additional_image_link", "brand", "gtin", "mpn", "shipping"];
-  const rows = products.filter((product) => eligible(product, "meta-catalog")).map((product) => [
+  const projected = channelRows(products, "meta-catalog");
+  const variantColumns = projected.some((row) => row.groupId) ? ["item_group_id", ...VARIANT_ATTRIBUTES] : [];
+  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "additional_image_link", "brand", "gtin", "mpn", "shipping", ...variantColumns];
+  const rows = projected.map((product) => [
     product.product.id,
     product.product.id,
     product.content.title,
@@ -123,6 +160,7 @@ export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): str
     product.product.gtin ?? "",
     product.product.mpn ?? "",
     product.shipping ?? "",
+    ...variantColumns.map((key) => key === "item_group_id" ? product.groupId ?? "" : product.attributes?.get(key) ?? ""),
   ].map(csv).join(","));
   return [columns.map(csv).join(","), ...rows].join("\n") + "\n";
 }
