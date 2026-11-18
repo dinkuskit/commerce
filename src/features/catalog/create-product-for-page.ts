@@ -2,7 +2,6 @@ import type { StorageCollection } from "emdash";
 import { createCatalogItem } from "./create-catalog-item.js";
 import { CatalogError } from "./errors.js";
 import { saveCatalogProductPrices, type CatalogProductPriceForm } from "./product-admin.js";
-import { setCatalogProductArchived } from "./product-edit.js";
 import { claimProductPage, pageProduct, type ProductPages } from "./product-pages.js";
 import type { CatalogManualAvailabilityRecord, CatalogPriceRecord, CatalogStorageRecord } from "./types.js";
 import { normalizeWeightOz, setCatalogItemWeight } from "./weight.js";
@@ -55,8 +54,7 @@ export async function createProductForPage(
     { commandId: raw.commandId, name: raw.name, sku: raw.sku, fulfillment }, { ...options, offSale: true });
   if (sold) { if (item.itemId !== sold) throw taken(); }
   else if (!(await claimProductPage(storage, entryId, item.itemId) || await pageProduct(storage.pages, entryId) === item.itemId)) {
-    // Another create took the page first: the Draft this one just made is archived, never left off every page.
-    if (created) await setCatalogProductArchived(storage.catalog, { catalogItemId: item.itemId, archived: true });
+    // Another create took the page first: the Draft this one just made stays a Draft with no page, off the shop.
     throw taken();
   }
   const price = priced ? await saveCatalogProductPrices(storage, { catalogItemId: item.itemId, regular, sale,

@@ -35,7 +35,7 @@ export interface UpdateCatalogVariantLabelsInput {
   values?: readonly { optionId?: string; valueId: string; label: string }[];
   members?: readonly { catalogItemId: string; fulfillment: CatalogFulfillment }[];
 }
-/** parent is the product record a choice belongs to; its name and archive state speak for every choice. */
+/** parent is the product record a choice belongs to; its name and Draft state speak for every choice. */
 export interface CatalogVariantResolution { item: CatalogItemRecord; product: CatalogVariantProduct | null; member: CatalogVariantMember | null; parent?: CatalogItemRecord }
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9:_-]{0,159}$/;

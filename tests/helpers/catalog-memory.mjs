@@ -1,5 +1,5 @@
 import { productPanel } from '../../dist/admin/index.js';
-import { addCatalogVariantOption, createCatalogItem, setCatalogProductArchived } from '../../dist/features/catalog/kernel/index.js';
+import { addCatalogVariantOption, createCatalogItem, setCatalogProductOnSale } from '../../dist/features/catalog/kernel/index.js';
 const EMDASH_DEFAULT = 10;
 const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
 export class Collection {
@@ -53,8 +53,8 @@ export async function bigShop(count = 50) {
     const id = 'p' + String(i).padStart(3, '0');
     await createCatalogItem(catalog, { commandId: 'create-' + id, name: 'Product ' + id, sku: 'SKU-' + id, fulfillment: 'physical' }, { createId: () => id });
     storage.catalog_prices.records.set(id, { recordKind: 'catalog-price', recordId: id, catalogItemId: id, regular: { currency: 'USD', minor: '1000' } });
-    // Every Manage products run leaves an archived product behind; they still cost a read.
-    if (i % 3 === 0) await setCatalogProductArchived(catalog, { catalogItemId: id, archived: true });
+    // Every Manage products run leaves a Draft product behind; they still cost a read.
+    if (i % 3 === 0) await setCatalogProductOnSale(catalog, { catalogItemId: id, onSale: false });
   }
   await addCatalogVariantOption({ catalog }, { productId: 'p001', optionId: 'size', optionLabel: 'Size', values: [
     { valueId: 'small', label: 'Small', member: { catalogItemId: 'p001', fulfillment: 'physical' } },

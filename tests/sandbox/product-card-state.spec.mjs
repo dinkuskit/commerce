@@ -78,9 +78,9 @@ for (const width of [1440, 390]) for (const variants of [false, true]) {
 }
 
 // Archive is the page's own Move to trash (catalog-archive-is-page-trash-20261115): the panel offers no Archive or
-// Restore, the publish check takes the product off sale and back, and publishing also sells a product 0.8.0's
-// Archive button left archived. COMMERCE_ARCHIVE_PROOF_DIR keeps a screenshot of each state.
-test('the panel has no Archive or Restore, and publishing sells a product archived before', async ({ page }) => {
+// Restore, and the publish check takes the product off sale and back. COMMERCE_ARCHIVE_PROOF_DIR keeps a screenshot
+// of each state.
+test('the panel has no Archive or Restore, and the page trash takes the product off sale and back', async ({ page }) => {
   const fixture = await productCardFixture(false);
   const shots = process.env.COMMERCE_ARCHIVE_PROOF_DIR;
   if (shots) mkdirSync(shots, { recursive: true });
@@ -106,12 +106,4 @@ test('the panel has no Archive or Restore, and publishing sells a product archiv
   // Restore brings the page back as a Draft; publishing it sells the product again.
   await publishCheck(true);
   await show('4-restored-and-published', 'On sale');
-  // A product 0.8.0's Archive button archived stays archived through the trash, and publishing sells it.
-  const stored = await fixture.store.catalog.get(fixture.id);
-  await fixture.store.catalog.put(fixture.id, { ...stored, archivedAt: '2026-11-01T00:00:00.000Z' });
-  await show('5-archived-on-0.8.0', 'Archived: off the shop');
-  await publishCheck(false);
-  await show('6-archived-page-in-trash', 'Archived: off the shop');
-  await publishCheck(true);
-  await show('7-archived-then-published', 'On sale');
 });

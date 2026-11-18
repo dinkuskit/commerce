@@ -4,11 +4,11 @@ import { productPanel } from '../../../dist/admin/index.js';
 
 // Product editing lives in the Dinkus Commerce panel on each Content > Products page.
 const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
-import { addCatalogVariantOption, createCatalogItem, listCatalogProducts, loadCatalogProduct, setCatalogProductArchived } from '../../../dist/features/catalog/kernel/index.js';
+import { addCatalogVariantOption, createCatalogItem, listCatalogProducts, loadCatalogProduct, setCatalogProductOnSale } from '../../../dist/features/catalog/kernel/index.js';
 
 // Every storage call from a Registry plugin is one subrequest, and the sandbox allows only a
 // few per call: EmDash's default is 10, Template Store raises it to 32. A product screen must
-// cost the same in a big catalog as in a small one, archived products included (archive itself is the page's trash).
+// cost the same in a big catalog as in a small one, Draft products included (archive itself is the page's trash).
 const EMDASH_DEFAULT = 10;
 const TEMPLATE_STORE = 32;
 

@@ -4,7 +4,7 @@ import { productPanel } from '../../../dist/admin/index.js';
 
 // Product editing lives in the Dinkus Commerce panel on each Content > Products page.
 const commerceAdmin = (route, ctx) => productPanel({ ...route, ui: { surface: 'content-editor-panel', locale: 'en', direction: 'ltr', extensionId: 'product', entry: { collection: 'products', id: 'page-1', locale: null, version: 1 } } }, ctx);
-import { addCatalogVariantOption, createCatalogItem, renameCatalogProduct, setCatalogProductArchived, setCatalogProductOnSale, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
+import { addCatalogVariantOption, createCatalogItem, renameCatalogProduct, setCatalogProductOnSale, listCatalogProducts } from '../../../dist/features/catalog/kernel/index.js';
 import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 import { quoteCatalogBasket, resolveManagedStorefrontAvailability } from '../../../dist/features/storefront-availability/kernel/index.js';
 
@@ -65,23 +65,22 @@ test('renaming a product renames it for every choice, so cart and new orders car
   await assert.rejects(renameCatalogProduct(catalog, { catalogItemId: 'missing', name: 'X' }), (error) => error.code === 'CATALOG_ITEM_NOT_FOUND');
 });
 
-test('an archived product leaves the shop and checkout refuses it until the archive is cleared', async () => {
+test('a Draft product leaves the shop and checkout refuses it until it is on sale again', async () => {
   const { catalog, ctx, quote } = await shop();
-  assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true }, () => new Date('2026-10-17T21:00:00Z')), true);
-  assert.equal((await catalog.get('shirt')).archivedAt, '2026-10-17T21:00:00.000Z');
-  assert.equal('archivedAt' in await catalog.get('shirt-large'), false, 'only the product record holds the state');
+  assert.equal(await setCatalogProductOnSale(catalog, { catalogItemId: 'shirt', onSale: false }), true);
+  assert.equal((await catalog.get('shirt')).offSale, true);
+  assert.equal('offSale' in await catalog.get('shirt-large'), false, 'only the product record holds the state');
   assert.deepEqual((await readPublicCatalog(ctx)).products.map((product) => product.id), ['mug']);
   assert.equal(await readPublicCatalogItem(ctx, 'shirt'), null);
   assert.equal(await readPublicCatalogItem(ctx, 'shirt-large'), null);
   assert.deepEqual(await quote(['mug', 'shirt-large']), { ok: false, reason: 'unavailable' });
   const listed = (await listCatalogProducts({ catalog, prices: ctx.storage.catalog_prices, availability: ctx.storage.catalog_manual_availability })).products;
-  assert.equal(listed.find((product) => product.catalogItemId === 'shirt').archivedAt, '2026-10-17T21:00:00.000Z', 'the owner still finds it');
-  assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: true }), false);
-  assert.equal(await setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: false }), true);
-  assert.equal('archivedAt' in await catalog.get('shirt'), false);
+  assert.equal(listed.find((product) => product.catalogItemId === 'shirt').offSale, true, 'the owner still finds it');
+  assert.equal(await setCatalogProductOnSale(catalog, { catalogItemId: 'shirt', onSale: false }), false);
+  assert.equal(await setCatalogProductOnSale(catalog, { catalogItemId: 'shirt', onSale: true }), true);
   assert.equal((await catalog.get('shirt')).offSale, undefined);
   assert.equal((await quote(['shirt-large'])).ok, true);
-  await assert.rejects(setCatalogProductArchived(catalog, { catalogItemId: 'shirt', archived: 'yes' }), (error) => error.code === 'INVALID_INPUT');
+  await assert.rejects(setCatalogProductOnSale(catalog, { catalogItemId: 'shirt', onSale: 'yes' }), (error) => error.code === 'INVALID_INPUT');
 });
 
 // The panel draws its cards as accordions; forms and notes sit inside them.
@@ -102,9 +101,9 @@ test('the product page panel names the product from the page title and leaves ar
   assert.equal(stateOf(await commerceAdmin({ input: { type: 'block_action', action_id: 'open', value: 'mug' } }, ctx)), 'On sale');
 });
 
-test('a choice added to an archived product stays off the shop and out of checkout', async () => {
+test('a choice added to a Draft product stays off the shop and out of checkout', async () => {
   const { catalog, ctx, quote } = await shop();
-  await setCatalogProductArchived(catalog, { catalogItemId: 'mug', archived: true });
+  await setCatalogProductOnSale(catalog, { catalogItemId: 'mug', onSale: false });
   await addCatalogVariantOption({ catalog }, { productId: 'mug', optionId: 'size', optionLabel: 'Size', values: [
     { valueId: 'small', label: 'Small', member: { catalogItemId: 'mug', fulfillment: 'physical' } },
     { valueId: 'large', label: 'Large', member: { commandId: 'create-mug-large', name: 'Proof mug', sku: 'MUG-L', fulfillment: 'physical' } },
@@ -112,15 +111,14 @@ test('a choice added to an archived product stays off the shop and out of checko
   ctx.storage.catalog_prices.records.set('mug-large', price('mug-large', '1500'));
   assert.deepEqual(await quote(['mug-large']), { ok: false, reason: 'unavailable' });
   assert.equal(await readPublicCatalogItem(ctx, 'mug-large'), null);
-  await setCatalogProductArchived(catalog, { catalogItemId: 'mug', archived: false });
   await setCatalogProductOnSale(catalog, { catalogItemId: 'mug', onSale: true });
   assert.equal((await quote(['mug-large'])).ok, true);
 });
 
-test('the managed-stock availability entry refuses an archived product before asking Inventory', async () => {
+test('the managed-stock availability entry refuses a Draft product before asking Inventory', async () => {
   const catalog = new Catalog(), empty = new Catalog();
   await catalog.put('kit', { recordKind: 'catalog-item', itemId: 'kit', commandId: 'create-kit', kind: 'simple-product', name: 'Kit', sku: 'KIT', skuKey: 'KIT',
-    state: 'draft', createdAt: '2026-10-01T00:00:00.000Z', creationIntent: { manageStock: true }, archivedAt: '2026-10-17T21:00:00.000Z',
+    state: 'draft', createdAt: '2026-10-01T00:00:00.000Z', creationIntent: { manageStock: true }, offSale: true,
     stockManagement: { mode: 'managed', status: 'active', inventorySku: 'KIT' } });
   const result = await resolveManagedStorefrontAvailability({ catalog, prices: empty, backorderPolicies: empty, configurations: empty, settings: empty },
     { catalogItemId: 'kit' }, { resolveProvider: () => { throw new Error('Inventory must not be asked'); } });
@@ -128,15 +126,15 @@ test('the managed-stock availability entry refuses an archived product before as
   assert.equal(result.listable, false);
 });
 
-test('an existing product without a creation record keeps create replay working after rename and archive', async () => {
+test('an existing product without a creation record keeps create replay working after rename and Draft', async () => {
   const { catalog } = await shop();
   await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Proof cap', sku: 'CAP' }, { createId: () => 'cap' });
   const legacy = await catalog.get('cap');
   delete legacy.creationPayload;
   await catalog.put('cap', legacy);
   await renameCatalogProduct(catalog, { catalogItemId: 'cap', name: 'Proof hat' });
-  await setCatalogProductArchived(catalog, { catalogItemId: 'cap', archived: true });
-  await setCatalogProductArchived(catalog, { catalogItemId: 'cap', archived: false });
+  await setCatalogProductOnSale(catalog, { catalogItemId: 'cap', onSale: false });
+  await setCatalogProductOnSale(catalog, { catalogItemId: 'cap', onSale: true });
   assert.equal((await catalog.get('cap')).creationPayload.name, 'Proof cap');
   const replay = await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Proof cap', sku: 'CAP' }, { createId: () => 'other' });
   assert.equal(replay.item.itemId, 'cap');

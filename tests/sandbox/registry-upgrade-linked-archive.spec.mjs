@@ -7,8 +7,9 @@ import { BLOCK_FORM, ok, openPanel, openProductPage, setOnSale } from "./product
 // Run by scripts/registry-upgrade-proof.mjs with COMMERCE_UPGRADE_FROM=v0.8.0 and
 // COMMERCE_UPGRADE_SPEC=registry-upgrade-linked-archive.spec.mjs. The "old" phase runs Commerce 0.8.0's Registry
 // build: a product page sells a priced product, then 0.8.0's own Archive product button archives it while its page
-// stays published. The "new" phase restarts on this build against the same database, where archiving is moving the
-// page to the trash (catalog-archive-is-page-trash-20261115), and recovers that product the way an owner would.
+// stays published. The "new" phase restarts on this build against the same database. This build keeps no archive
+// mark of its own (commerce-archive-state-removed-20261118), so, as Ronald accepted, that product is on sale again
+// after the update, with the same id, SKU, prices and page; moving its page to the trash archives it again.
 const phase = process.env.COMMERCE_UPGRADE_PHASE;
 const headers = { "X-EmDash-Request": "1" };
 const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
@@ -85,35 +86,42 @@ test("Commerce 0.8.0 archives a product its published page sells", async ({ page
   database.close();
 });
 
-test("this build recovers 0.8.0's archived product through its page: trash, restore, publish", async ({ page, request }) => {
+test("this build ignores 0.8.0's archive mark: the product sells again, and the page's trash archives it", async ({ page, request }) => {
   test.skip(phase !== "new");
   const before = JSON.parse(readFileSync(snapshotFile(), "utf8"));
   const { id, pageId } = before;
+  const sameAsBefore = (listed) => ({ ...listed, variants: { ...listed.variants, members: listed.variants.members.map(({ sku: _sku, ...member }) => member) } });
   await signIn(page, request);
   const { database, rows } = storage();
-  // 1. The upgrade rewrites nothing 0.8.0 stored: the product, its prices, its page link, the settings.
+  // 1. The upgrade rewrites nothing 0.8.0 stored: the product (archivedAt included), its prices, its page link, the settings.
   for (const name of COLLECTIONS) expect(rows(name), name).toEqual(before.storage[name]);
   expect(rows("storefront_availability_settings")).toEqual(before.settingsRows);
-  expect((await publicCatalog(page.request)).some((item) => item.id === id)).toBe(false);
   await page.goto("/_emdash/admin/plugins/dinkus-commerce/settings");
   await expect(page.getByRole("switch", { name: "Hide out-of-stock products", exact: true })).toBeChecked({ timeout: 30000 });
 
-  // 2. The page's panel says it is archived, with no Archive or Restore of Commerce's own.
+  // 2. The accepted change: archivedAt is no longer read, and the page is still published, so the product is on the
+  // shop again exactly as 0.8.0 sold it (this build also says each variant member's own SKU, which 0.8.0 did not).
+  const listed = (await publicCatalog(page.request)).find((item) => item.id === id);
+  expect(listed.variants.members.map((member) => member.sku)).toEqual(["LINKED-CAP"]);
+  expect(sameAsBefore(listed)).toEqual(before.sold);
+
+  // 3. The page's panel says On sale with 0.8.0's prices, and has no Archive or Restore of Commerce's own.
   await page.goto("/_emdash/admin/content/products/" + pageId);
   const panel = await openPanel(page);
-  await expect(panel.getByText("Archived: off the shop", { exact: true })).toBeVisible();
+  await expect(panel.getByText("On sale", { exact: true })).toBeVisible();
   for (const name of ["Archive product", "Restore"]) await expect(panel.getByRole("button", { name, exact: true })).toHaveCount(0);
   await expect(panel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("15.00");
   await expect(panel.getByRole("textbox", { name: "Sale", exact: true })).toHaveValue("12.00");
-  await capture(page, "linked-archived");
+  await capture(page, "linked-on-sale-after-upgrade");
 
-  // 3. Archive is now Move to trash; the store's publish check sends onSale false, and the archive stays.
+  // 4. Archive is Move to trash: the store's publish check takes the product off sale and keeps its page link.
   await ok(await page.request.delete(content(pageId), { headers }));
-  expect(await setOnSale(page.request, { entryId: pageId, onSale: false })).toEqual({ changed: false });
-  expect(rows("catalog_items")[id].archivedAt).toBe(before.storage.catalog_items[id].archivedAt);
+  expect(await setOnSale(page.request, { entryId: pageId, onSale: false })).toEqual({ changed: true });
+  const trashed = rows("catalog_items")[id];
+  expect([trashed.itemId, trashed.sku, trashed.pageId, trashed.offSale]).toEqual([id, "LINKED-CAP", pageId, true]);
   expect((await publicCatalog(page.request)).some((item) => item.id === id)).toBe(false);
 
-  // 4. Restore from EmDash's Trash tab brings the page back as a Draft; nothing is sold yet.
+  // 5. Restore from EmDash's Trash tab brings the page back as a Draft; nothing is sold yet.
   await page.goto("/_emdash/admin/content/products");
   await page.getByRole("tab", { name: /^Trash/ }).click();
   const row = page.getByRole("table").getByRole("row").filter({ has: page.getByText(TITLE, { exact: true }) }).first();
@@ -124,25 +132,20 @@ test("this build recovers 0.8.0's archived product through its page: trash, rest
   await page.getByRole("menu", { name: "Actions for " + TITLE, exact: true }).getByRole("menuitem", { name: "Restore", exact: true }).click();
   expect((await restored).ok()).toBe(true);
   expect((await ok(await page.request.get(content(pageId), { headers }))).item.status).toBe("draft");
-  expect(rows("catalog_items")[id].archivedAt).toBe(before.storage.catalog_items[id].archivedAt);
+  expect((await publicCatalog(page.request)).some((item) => item.id === id)).toBe(false);
 
-  // 5. Publishing the page is the owner's word to sell it: the same product, SKU, page and prices go back on sale.
+  // 6. Publishing the page sells the same product, SKU, page and prices again.
   await ok(await page.request.post(content(pageId, "/publish"), { headers }));
   expect(await setOnSale(page.request, { entryId: pageId, onSale: true })).toEqual({ changed: true });
-  const recovered = rows("catalog_items")[id];
-  expect(recovered).not.toHaveProperty("archivedAt");
-  expect(recovered).not.toHaveProperty("offSale");
-  expect([recovered.itemId, recovered.sku, recovered.pageId]).toEqual([id, "LINKED-CAP", pageId]);
+  const sold = rows("catalog_items")[id];
+  expect(sold).not.toHaveProperty("offSale");
+  expect([sold.itemId, sold.sku, sold.pageId]).toEqual([id, "LINKED-CAP", pageId]);
   expect(rows("catalog_prices")).toEqual(before.storage.catalog_prices);
   expect(rows("storefront_out_of_stock_listing")).toEqual(before.storage.storefront_out_of_stock_listing);
-  // This build also says each variant member's own SKU, which 0.8.0 did not; nothing else may differ.
-  const listed = (await publicCatalog(page.request)).find((item) => item.id === id);
-  expect(listed.variants.members.map((member) => member.sku)).toEqual(["LINKED-CAP"]);
-  expect({ ...listed, variants: { ...listed.variants, members: listed.variants.members.map(({ sku: _sku, ...member }) => member) } }).toEqual(before.sold);
+  expect(sameAsBefore((await publicCatalog(page.request)).find((item) => item.id === id))).toEqual(before.sold);
   await page.goto("/_emdash/admin/content/products/" + pageId);
   const soldPanel = await openPanel(page);
   await expect(soldPanel.getByText("On sale", { exact: true })).toBeVisible();
-  await expect(soldPanel.getByRole("textbox", { name: "Regular", exact: true })).toHaveValue("15.00");
   await capture(page, "linked-published");
   database.close();
 });

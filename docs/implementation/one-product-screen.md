@@ -155,8 +155,9 @@ from the trash brings the page back as a draft (EmDash sets `status = 'draft'`),
 so the product stays off sale until the page is published again, like Shopify's
 unarchive and WooCommerce's untrash. Only **Delete permanently** releases the
 link. Commerce has no Archive or Restore of its own, so its Draft can never
-sit under a live page with no Publish button (commerce#276). `archivedAt`
-remains only for the Draft that loses a create race for a page.
+sit under a live page with no Publish button (commerce#276). Commerce keeps
+no archive state of its own (`commerce-archive-state-removed-20261118`): the
+Draft that loses a create race for a page simply stays a Draft with no page.
 
 The store's publish check calls the private route `catalog-items/set-on-sale`
 (`content:publish_any`, POST) with the page alone; Commerce finds its product

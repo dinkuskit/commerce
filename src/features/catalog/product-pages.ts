@@ -104,13 +104,11 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     const { pageId: _page, pageClaim: _claim, ...rest } = item;
     return { ...rest, offSale: true };
   });
-  // Publishing the page is the owner's word to sell it, so it also ends an archive Commerce 0.8.0's own button
-  // stored (catalog-archive-is-page-trash-20261115); anything else keeps that archive.
   await editProduct(catalog, catalogItemId, item => {
     if (item.pageId && item.pageId !== entryId) throw conflict();
-    const { offSale: _off, pageId: _page, pageClaim: _claim, archivedAt, ...rest } = item;
+    const { offSale: _off, pageId: _page, pageClaim: _claim, ...rest } = item;
     changed = !offShop(item) !== onSale;
-    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const, ...(archivedAt ? { archivedAt } : {}) }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
+    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
   });
   // A check that stopped after selling the panel's pick, before moving the pointer, left that pick on sale under this
   // page; taking the page off the shop withdraws it too (catalog-archive-is-page-trash-20261115).

@@ -119,8 +119,8 @@ function normalizeCatalogItem(
   };
 }
 
-/** An archived or Draft product, or a choice of one, is off the shop and refused at checkout. Only the product record holds the state. */
-async function archived(storage: StorefrontAvailabilityStorage, item: CatalogItemRecord): Promise<boolean> {
+/** A Draft product, or a choice of one, is off the shop and refused at checkout. Only the product record holds the state. */
+async function inDraft(storage: StorefrontAvailabilityStorage, item: CatalogItemRecord): Promise<boolean> {
   if (offShop(item) || !item.variantProductId) return offShop(item);
   try {
     const parent = await storage.catalog.get(item.variantProductId);
@@ -343,7 +343,7 @@ export async function resolveManagedStorefrontAvailability(
     input.catalogItemId,
   );
   if (!item) return unavailable(input.catalogItemId);
-  if (await archived(storage, item)) return unavailable(item.itemId, false);
+  if (await inDraft(storage, item)) return unavailable(item.itemId, false);
   if (!isManagedCatalogItem(item)) {
     throw new StorefrontAvailabilityError(
       "MANAGE_STOCK_REQUIRED",
@@ -369,7 +369,7 @@ export async function resolveStorefrontAvailability(
     input.catalogItemId,
   );
   if (!item) return unavailable(input.catalogItemId);
-  if (await archived(storage, item)) return unavailable(item.itemId, false);
+  if (await inDraft(storage, item)) return unavailable(item.itemId, false);
   const unlisted = await unlistIfUnpriced(storage, item.itemId);
   if (unlisted) return unlisted;
   if (isManagedCatalogItem(item)) {

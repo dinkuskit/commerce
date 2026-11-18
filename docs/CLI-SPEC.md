@@ -106,7 +106,7 @@ Every route is served at
   CLI reports that as `not_found` and exits `1`.
 - `products list` sends `{ "op": "list" }` to `POST catalog` with the
   credential (Commerce 0.7.0+): each product's `catalogItemId`,
-  `name`, `sku` and `archivedAt`; `products show` has its prices and stock. A
+  `name` and `sku`; `products show` has its prices and stock. A
   Commerce older than 0.7.0 has no `catalog` route and exits `1` with
   `route_not_available`.
 - `products show <item-id>` sends `{ "op": "get", "catalogItemId" }` to

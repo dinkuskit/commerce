@@ -99,10 +99,6 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
   const hat = await make("Red hat", "RED-HAT", { regular: "12", sale: "10", stockStatus: "in-stock" });
   await admin({ type: "form_submit", action_id: submit(hat.blocks, "Save weight"), values: { ["w:" + hat.id]: "6" } });
   const scarf = await make("Blue scarf", "BLUE-SCARF", { regular: "18", sale: "", stockStatus: "out-of-stock" });
-  const cap = await make("Old cap", "OLD-CAP", { regular: "9", sale: "", stockStatus: "in-stock" });
-  // As the owner does it: open the product, then Archive product.
-  await admin({ type: "block_action", action_id: "open", value: cap.id });
-  await admin({ type: "block_action", action_id: "archive", value: { id: cap.id, a: true } });
   // Commerce settings: hide out-of-stock products.
   // 0.5.0 saves the toggle first, then redraws the page with its DinkusKit Connect status; that redraw can fail
   // offline, so the proof checks the stored setting rather than the toast.
@@ -131,13 +127,12 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
   }
   const oldPolicies = await (await page.request.get("/_emdash/api/plugins/dinkus-commerce/policies/public")).json();
   expect(oldPolicies.data).toEqual({ shipping: policyRecords().store_shipping_policy, returns: policyRecords().store_return_policy });
-  const snapshot = { from: process.env.COMMERCE_UPGRADE_FROM, ids: { hat: hat.id, scarf: scarf.id, cap: cap.id }, pageId, shop,
+  const snapshot = { from: process.env.COMMERCE_UPGRADE_FROM, ids: { hat: hat.id, scarf: scarf.id }, pageId, shop,
     storage: Object.fromEntries(COLLECTIONS.map((name) => [name, rows(name)])), settingsRows: rows("storefront_availability_settings"),
     policyRows: rawPolicyRows(database), nativeRows: rawRows(database, NATIVE_COLLECTIONS) };
   expect(snapshot.policyRows).toHaveLength(4);
   expect(snapshot.nativeRows).toHaveLength(NATIVE_COLLECTIONS.length);
-  expect(Object.keys(snapshot.storage.catalog_prices)).toHaveLength(3);
-  expect(items(snapshot.storage.catalog_items).find((row) => row.itemId === cap.id).archivedAt).toBeTruthy();
+  expect(Object.keys(snapshot.storage.catalog_prices)).toHaveLength(2);
   writeFileSync(snapshotFile(), JSON.stringify(snapshot, null, 2));
   database.close();
 });
@@ -145,7 +140,7 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
 test("this build keeps the upgraded store's products, settings, page and sellability", async ({ page, request }) => {
   test.skip(phase !== "new");
   const before = JSON.parse(readFileSync(snapshotFile(), "utf8"));
-  const { hat, scarf, cap } = before.ids;
+  const { hat, scarf } = before.ids;
   await signIn(page, request);
   const { database, rows } = storage();
   // 1. Nothing stored by the earlier release is rewritten by the upgrade.
@@ -156,7 +151,7 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
     expect(row).not.toHaveProperty("pageId");
   }
   expect(rows("product_pages")).toEqual({});
-  // 2. Products sold before the upgrade stay on sale with the same prices; hidden and archived ones stay off.
+  // 2. Products sold before the upgrade stay on sale with the same prices; hidden ones stay off.
   // This build also says each variant member's own SKU, which the earlier release did not; nothing else may differ.
   const withoutMemberSku = (products) => products.map((product) => product.variants
     ? { ...product, variants: { ...product.variants, members: product.variants.members.map(({ sku: _sku, ...member }) => member) } } : product);
@@ -203,8 +198,8 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   expect(rows("catalog_items")[hat].offSale).toBe(true);
   expect(await publicCatalog(page.request)).toEqual([]);
 
-  // 6. Products no page sells were left exactly as they were.
-  for (const id of [scarf, cap]) expect(rows("catalog_items")[id]).toEqual(before.storage.catalog_items[id]);
+  // 6. A product no page sells was left exactly as it was.
+  for (const id of [scarf]) expect(rows("catalog_items")[id]).toEqual(before.storage.catalog_items[id]);
 
   // 7. Commerce keeps no policy records: the public read is gone, and the earlier release's policy rows, Registry
   // and native alike, stay in the database exactly as they were, recoverable by anyone who wants them.
@@ -217,27 +212,5 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   expect(rawRows(database, NATIVE_COLLECTIONS)).toEqual(before.nativeRows);
   expect((await publicCatalog(page.request)).some((item) => item.id === "native-mug")).toBe(false);
 
-  // 9. The product the earlier release's Archive product button archived: this build has no Archive or Restore of
-  // its own (catalog-archive-is-page-trash-20261115). Given a page, moving that page to the trash keeps the
-  // archive, and publishing the page is the owner's word to sell it again, with the same id, SKU and price.
-  const capPage = await ok(await page.request.post("/_emdash/api/content/products", { headers, data: { data: { title: "Old cap" } } }));
-  const capPageId = (capPage.item ?? capPage).id;
-  expect(await setOnSale(page.request, { catalogItemId: cap, entryId: capPageId, onSale: false })).toEqual({ changed: false });
-  expect(rows("catalog_items")[cap].archivedAt).toBe(before.storage.catalog_items[cap].archivedAt);
-  expect((await publicCatalog(page.request)).some((item) => item.id === cap)).toBe(false);
-  await page.goto("/_emdash/admin/content/products/" + capPageId);
-  const archivedPanel = await openPanel(page);
-  await expect(archivedPanel.getByText("Archived: off the shop", { exact: true })).toBeVisible();
-  for (const name of ["Archive product", "Restore"]) await expect(archivedPanel.getByRole("button", { name, exact: true })).toHaveCount(0);
-  await capture(page, "archived-cap");
-  expect(await setOnSale(page.request, { catalogItemId: cap, entryId: capPageId, onSale: true })).toEqual({ changed: true });
-  const sold = rows("catalog_items")[cap];
-  expect(sold).not.toHaveProperty("archivedAt");
-  expect([sold.itemId, sold.sku, sold.pageId]).toEqual([cap, "OLD-CAP", capPageId]);
-  expect(rows("catalog_prices")[cap]).toEqual(before.storage.catalog_prices[cap]);
-  expect((await publicCatalog(page.request)).find((item) => item.id === cap)?.name).toBe("Old cap");
-  await page.goto("/_emdash/admin/content/products/" + capPageId);
-  await expect((await openPanel(page)).getByText("On sale", { exact: true })).toBeVisible();
-  await capture(page, "published-cap");
   database.close();
 });

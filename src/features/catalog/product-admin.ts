@@ -74,7 +74,7 @@ export interface CatalogProductListStorage {
 }
 
 /** What the Products list shows for each product. */
-export type CatalogProductSummary = Pick<CatalogProductListItem, "catalogItemId" | "name" | "sku" | "archivedAt">;
+export type CatalogProductSummary = Pick<CatalogProductListItem, "catalogItemId" | "name" | "sku">;
 
 export interface CatalogProductListItem {
   revision?: string;
@@ -90,8 +90,6 @@ export interface CatalogProductListItem {
   brand?: string;
   fulfillment: "physical" | "digital";
   weightOz?: number;
-  /** Present when the product is archived: off the shop and not for sale. */
-  archivedAt?: string;
   /** Present while the product is a Draft, until its page is published. */
   offSale?: true;
   variantProduct?: {
@@ -266,7 +264,6 @@ async function describeCatalogProducts(
       ...(record.brand ? { brand: record.brand } : {}),
       fulfillment: record.fulfillment ?? "physical",
       ...(weightOz ? { weightOz } : {}),
-      ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
       ...(record.offSale ? { offSale: true as const } : {}),
     };
     if (record.variantProduct) {
@@ -346,7 +343,6 @@ export async function listCatalogProductSummaries(
     catalogItemId: record.itemId,
     name: record.name,
     sku: record.sku,
-    ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}),
   })).sort(byNameThenSku);
 }
 

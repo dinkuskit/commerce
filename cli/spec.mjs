@@ -154,7 +154,7 @@ async function catalogShow(ctx) {
 // ---------------------------------------------------------------------------
 // products
 
-// Every store lists ids, names, SKUs and archive state through the catalog route (Commerce 0.7.0+);
+// Every store lists ids, names and SKUs through the catalog route (Commerce 0.7.0+);
 // products show has one product's prices and stock.
 async function listAnyProducts(client) {
 	return client.listProducts();
@@ -198,7 +198,7 @@ async function productsList(ctx) {
 // prints a hash of what it read; the change carries that hash as `expected`, and
 // Commerce saves it only while the product still hashes the same.
 const productState = (current) => createHash("sha256").update(JSON.stringify(current)).digest("hex").slice(0, 12);
-const stateWord = (product) => (product.archivedAt ? "Archived" : product.offSale ? "Draft" : "On sale");
+const stateWord = (product) => (product.offSale ? "Draft" : "On sale");
 const DOLLARS = /^\d{1,7}(\.\d{1,2})?$/;
 const STOCK_STATUSES = ["in-stock", "out-of-stock", "on-backorder"];
 
@@ -714,7 +714,7 @@ export const spec = {
 				summary: `Read and change products, with the product page panel checks. Needs ${TOKEN_ENV}.`,
 				commands: {
 					list: {
-						summary: "List products: ids, names, SKUs and archive state (archive a product by trashing its page: emdash content delete).",
+						summary: "List products: ids, names and SKUs (archive a product by trashing its page: emdash content delete).",
 						usage: "products list",
 						description: `Sends {op: list} to POST catalog with ${TOKEN_ENV} (Commerce 0.7.0+); use products show for one product's prices and stock.`,
 						examples: ["dinkus-commerce --url https://shop.example products list --json"],

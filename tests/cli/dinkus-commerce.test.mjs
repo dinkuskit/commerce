@@ -239,7 +239,7 @@ test("products list sends the bearer token with {op: list} to the catalog route 
 });
 
 test("products list uses the one catalog route on every build and needs a credential", async () => {
-  const listed = { products: [{ catalogItemId: "item_a", name: "Demo", sku: "A-1" }, { catalogItemId: "item_b", name: "Old", sku: "B-1", archivedAt: "2026-10-01T00:00:00Z" }] };
+  const listed = { products: [{ catalogItemId: "item_a", name: "Demo", sku: "A-1" }, { catalogItemId: "item_b", name: "Old", sku: "B-1" }] };
   const registry = await run(["--url", SITE, "products", "list", "--json"], { env: { EMDASH_TOKEN: TOKEN }, routes: { catalog: (body) => (assert.deepEqual(body, { op: "list" }), ok(listed)) } });
   assert.equal(registry.code, 0, registry.stderr);
   assert.deepEqual(singleJson(registry.stdout).data, listed);
