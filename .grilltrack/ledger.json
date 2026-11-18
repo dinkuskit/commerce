@@ -17073,10 +17073,24 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-18T15:50:07+00:00",
+          "choice": "No. Commerce drops archivedAt everywhere: it never writes it, and the shop, checkout, product panel, product list, catalog API and CLI never read it. The Draft that loses a create race for a page stays a Draft (offSale) with no page instead of being archived. Archive stays what catalog-archive-is-page-trash-20261115 says: the page's Move to trash, Restore from trash, then publish. A product archived with the Archive button of Commerce 0.8.0 or older is no longer held off the shop by that mark after the update; there are no stores to carry over, so no upgrade code is kept, and the 0.5.0 and 0.8.0 upgrade proofs drop their archive steps. Frees 394 bytes of the Registry backend.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
         }
       ],
       "id": "commerce-archive-state-removed-20261118",
-      "implementation_ref": null,
+      "implementation_ref": "git:f1ca2cd",
       "question": "Does Commerce keep an archive mark of its own (archivedAt) now that archiving a product is moving its page to EmDash's trash?",
       "rationale": "Ronald on 18 Nov 2026: 'lets prune this if its not needed', then, told that products archived with 0.8.0's Archive button come back on sale after the update, 'understood please proceed'.",
       "repair_required": false,
@@ -17085,9 +17099,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "implemented",
       "superseded_by": null,
-      "updated_at": "2026-11-18T15:48:11+00:00",
+      "updated_at": "2026-11-18T15:50:07+00:00",
       "verification_ref": null
     }
   ],
@@ -17125,5 +17139,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-18T15:48:11+00:00"
+  "updated_at": "2026-11-18T15:50:07+00:00"
 }
