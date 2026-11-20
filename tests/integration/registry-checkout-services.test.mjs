@@ -231,8 +231,8 @@ test('actual compiled default workerd zero-priced cart writes one payment-free o
   assert.equal(state.requests.length, 0);
   const repeat = await state.invoke(STATUS, {}, token);
   // A cart read adds where Orders has the order now (commerce-guest-order-status-20261115); the receipt is the same.
-  const { status, completed, ...receipt } = repeat.checkout.order;
-  assert.deepEqual({ status, completed }, { status: 'processing', completed: null });
+  const { status, completed, number, ...receipt } = repeat.checkout.order;
+  assert.deepEqual({ status, completed, number }, { status: 'processing', completed: null, number: 1001 });
   assert.deepEqual(receipt, result.checkout.order);
   assert.equal(state.counts.transport, 0);
   assertOnlyBackgroundCheck(state);
@@ -353,9 +353,9 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   assert.equal(paid.checkout.state, 'paid');
   assert.equal(paid.checkout.order.total.minor, '600');
   const replay = await state.invoke(START, input, token);
-  // Only a cart read carries Orders' status (commerce-guest-order-status-20261115); a replayed start keeps the receipt.
-  const { status, completed, ...receipt } = paid.checkout.order;
-  assert.deepEqual({ status, completed }, { status: 'processing', completed: null });
+  // Only a cart read carries Orders' status and number (commerce-guest-order-status-20261115, #283); a replayed start keeps the receipt.
+  const { status, completed, number, ...receipt } = paid.checkout.order;
+  assert.deepEqual({ status, completed, number }, { status: 'processing', completed: null, number: 1001 });
   assert.deepEqual(replay.checkout.order, receipt);
   const stored = (await state.cartRecords())[0];
   assert.equal(stored.attempts.length, 1);
@@ -468,17 +468,22 @@ test('a store set to live records live orders only while Payments says its bindi
       state.setPaid();
       const paid = await state.invoke(STATUS, {}, token);
       assert.equal(paid.checkout.state, 'paid');
-      // Checkout's own copy and the copy Orders keeps agree; the shopper's view does not carry it.
+      // Checkout's own copy and the copy Orders keeps agree; the shopper's receipt exposes test and number, never internal mode.
       const kept = (await state.collections.orders.query()).items.map(item => item.data.paidOrder);
       assert.equal(kept.length, 1);
       assert.equal(kept[0].mode, (await state.cartRecords())[0].attempts[0].order.mode);
       assert.equal(Object.hasOwn(paid.checkout.order, 'mode'), false);
-      return kept[0];
+      assert.equal(paid.checkout.order.number, 1001);
+      assert.equal(paid.checkout.order.test, kept[0].mode !== 'live');
+      return { kept: kept[0], order: paid.checkout.order };
     } finally { await state.close(); }
   };
-  assert.equal((await paidOrder({ config: { ...configuration(), mode: 'live' }, bindingMode: 'live' })).mode, 'live');
-  assert.equal((await paidOrder({})).mode, 'test');
-  assert.equal((await paidOrder({ config: legacyStripeConfiguration() })).mode, 'test');
+  const live = await paidOrder({ config: { ...configuration(), mode: 'live' }, bindingMode: 'live' });
+  assert.deepEqual([live.kept.mode, live.order.test, live.order.number], ['live', false, 1001]);
+  const testOrder = await paidOrder({});
+  assert.deepEqual([testOrder.kept.mode, testOrder.order.test, testOrder.order.number], ['test', true, 1001]);
+  const legacy = await paidOrder({ config: legacyStripeConfiguration() });
+  assert.deepEqual([legacy.kept.mode, legacy.order.test, legacy.order.number], ['test', true, 1001]);
   // Either side alone set to live takes no payment.
   for (const [config, bindingMode] of [[{ ...configuration(), mode: 'live' }, 'test'], [configuration(), 'live'], [legacyStripeConfiguration(), 'live']]) {
     const state = await runtimeFixture({ config, bindingMode });
@@ -488,6 +493,63 @@ test('a store set to live records live orders only while Payments says its bindi
       assert.deepEqual((await state.collections.orders.query()).items, []);
     } finally { await state.close(); }
   }
+});
+
+test('compiled guest receipt preserves frozen test/live fact across store setting flips, missing-number fallback, and forged/foreign refusal', async () => {
+  for (const [mode, expectedTest] of [['test', true], ['live', false]]) {
+    const state = await runtimeFixture({ config: { ...configuration(), mode }, bindingMode: mode });
+    try {
+      const { token, result } = await start(state);
+      assert.equal(result.ok, true);
+      state.setPaid();
+      const paid = await state.invoke(STATUS, {}, token);
+      assert.equal(paid.checkout.state, 'paid');
+      assert.equal(paid.checkout.order.number, 1001);
+      assert.equal(paid.checkout.order.test, expectedTest);
+      // Switching the store's current mode setting never changes the paid order's test/live fact.
+      const flipped = mode === 'live' ? 'test' : 'live';
+      await state.settings.set('installedCheckout', JSON.stringify({ ...configuration(), mode: flipped }));
+      state.setBindingMode(flipped);
+      const afterFlip = await state.invoke(STATUS, {}, token);
+      assert.equal(afterFlip.checkout.order.test, expectedTest);
+      assert.equal(afterFlip.checkout.order.number, 1001);
+      // Missing, forged, foreign-origin, and another shopper's keys expose no order identity.
+      assert.equal((await state.invoke(STATUS, {}, undefined)).error.code, 'CAPABILITY_DENIED');
+      assert.equal((await state.invoke(STATUS, {}, 'forged.secret')).error.code, 'CAPABILITY_DENIED');
+      assert.equal((await state.invoke(STATUS, {}, token, 'https://foreign.example.test')).error.code, 'ORIGIN_DENIED');
+      const other = await state.invoke(PREPARE);
+      assert.equal((await state.invoke(STATUS, {}, other.capability.capability)).checkout.order, null);
+    } finally { await state.close(); }
+  }
+
+  // Historical unnumbered order + omitted Orders read keep the frozen receipt without renumbering.
+  const state = await runtimeFixture();
+  try {
+    const { token } = await start(state);
+    state.setPaid();
+    const paid = await state.invoke(STATUS, {}, token);
+    const { orderId } = paid.checkout.order;
+    await state.collections.order_numbers.put('next', { next: 1005 });
+    const kept = await state.collections.orders.get(orderId);
+    const { mode: _omittedMode, ...legacyPaidOrder } = kept.paidOrder;
+    await state.collections.orders.put(orderId, { ...kept, paidOrder: legacyPaidOrder, number: undefined });
+    const unnumbered = await state.invoke(STATUS, {}, token);
+    assert.equal(unnumbered.checkout.order.orderId, orderId);
+    assert.equal(unnumbered.checkout.order.receiptId, paid.checkout.order.receiptId);
+    assert.deepEqual(unnumbered.checkout.order.total, paid.checkout.order.total);
+    assert.equal(unnumbered.checkout.order.number, null);
+    assert.equal(unnumbered.checkout.order.test, true);
+    assert.equal((await state.collections.order_numbers.get('next')).next, 1005);
+    // When Orders has no kept copy at all (e.g. Orders has not received it and Payments is unconfigured),
+    // the receipt stays valid with its frozen test mark and no number or status.
+    await state.collections.orders.delete(orderId);
+    await state.settings.set('installedCheckout', JSON.stringify({ schema: configuration().schema, enabled: false }));
+    const missingOrders = await state.invoke(STATUS, {}, token);
+    assert.equal(missingOrders.checkout.order.orderId, orderId);
+    assert.equal(missingOrders.checkout.order.test, true);
+    assert.equal('number' in missingOrders.checkout.order, false);
+    assert.equal('status' in missingOrders.checkout.order, false);
+  } finally { await state.close(); }
 });
 
 test('a checkout keeps the mode it started in when the store and Payments switch before the payment is looked up', async () => {

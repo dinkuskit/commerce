@@ -34,4 +34,4 @@ export type {
   OrderPackOutcome,
 } from "./pack.js";
 export { PAID_ORDER_SCHEMA } from "../../handoffs/paid-order.js";
-export type { PaidOrder, PaidOrderLine, PaidOrderReceipt, PaidOrderReceiver } from "../../handoffs/paid-order.js";
+export type { PaidOrder, PaidOrderLine, PaidOrderReceipt, PaidOrderReceiver, PaidOrderStatus } from "../../handoffs/paid-order.js";
