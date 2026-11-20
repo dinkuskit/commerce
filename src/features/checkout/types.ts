@@ -342,7 +342,10 @@ export interface GuestCheckoutOrderSummary {
   /** The order's email, phone and addresses, for the thank-you page of the browser holding the cart key. */
   contact?: NormalizedCheckoutContact;
   pricing?: GuestCheckoutPricingSummary;
-  /** Orders' current status, carrier and tracking, read for the cart key's holder only (commerce-guest-order-status-20261115). */
+  /** Whether this paid order is a test order (`true` unless recorded in live mode). */
+  test: boolean;
+  /** Orders' current short number (`null` until numbered), status, carrier and tracking, read for the cart key's holder only (commerce-guest-order-status-20261115). */
+  number?: PaidOrderStatus["number"];
   status?: PaidOrderStatus["status"];
   completed?: PaidOrderStatus["completed"];
 }
