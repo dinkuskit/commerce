@@ -12,6 +12,7 @@ export interface CatalogVariantStorage { catalog: {
   get(id: string): Promise<CatalogStorageRecord | null>;
   getVersioned(id: string): Promise<{ value: CatalogStorageRecord; revision: string } | null>;
   compareAndSet(id: string, revision: string, value: CatalogStorageRecord): Promise<{ applied: boolean }>;
+  delete?(id: string): Promise<unknown>;
 } }
 export interface VariantSelectionInput { optionId: string; valueId: string; label?: string }
 export interface VariantMemberInput {
@@ -123,6 +124,16 @@ export async function resolveCatalogVariantMember(
     ? { item, product, member: found, parent: parent as CatalogItemRecord } : null;
 }
 
+/**
+ * A variant write that lost its commit keeps the variants it made, so the same command resumes them, unless the product
+ * is gone or being deleted for good: then none is kept, so their SKUs stay free (catalog-permanent-delete-20261122).
+ */
+async function uncommitted(storage: CatalogVariantStorage, productId: string, made: string[]): Promise<never> {
+  const now = (await storage.catalog.get(productId)) as CatalogItemRecord | null;
+  if (!now || now.deleting) for (const itemId of made) await storage.catalog.delete?.(itemId);
+  catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
+}
+
 export async function addCatalogVariantMember(
   storage: CatalogVariantStorage, raw: AddCatalogVariantMemberInput,
   options: { createId?: () => string; now?: () => Date; collection?: string; pluginId?: string } = {},
@@ -169,7 +180,7 @@ export async function addCatalogVariantMember(
   };
   valid(next, productId);
   if (!(await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: next })).applied)
-    catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
+    await uncommitted(storage, productId, [created.item.itemId]);
   return { changed: true, product: next };
 }
 
@@ -316,7 +327,7 @@ export async function addCatalogVariantOption(
   };
   valid(product, productId);
   const committed = await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: product });
-  if (!committed.applied) catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
+  if (!committed.applied) await uncommitted(storage, productId, createdMembers.map(m => m.catalogItemId));
   return { changed: true, product };
 }
 
