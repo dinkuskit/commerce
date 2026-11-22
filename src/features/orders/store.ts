@@ -305,9 +305,16 @@ export async function findOrderByNumberAndEmail(
   emailKey: string,
 ): Promise<OrderRecord | null> {
   let found: OrderRecord | null = null;
-  await scanAll(collection, item => {
+  const match = (item: { id: string; data: OrderRecord }) => {
     const record = checkOrder(item);
     if (record.number === number && emailKeyOf(record.paidOrder) === emailKey) found = record;
-  }, { emailKey });
+  };
+  try {
+    // Orders kept before the email index have no emailKey; their checkout email still matches (commerce#248).
+    for (const where of [{ emailKey }, { emailKey: null }]) if (!found) await scanAll(collection, match, where);
+  } catch (error) {
+    if ((error as { name?: unknown })?.name !== "StorageQueryError") throw error;
+    await scanAll(collection, match);
+  }
   return found;
 }

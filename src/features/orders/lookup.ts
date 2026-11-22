@@ -8,7 +8,8 @@ import { ORDERS_COLLECTION, findOrderByNumberAndEmail, projectShopperOrder, type
  * The order lookup page, like WooCommerce's Track your order (templates/order/form-tracking.php): order number
  * plus checkout email shows that one order, and the not-found answer never says which box was wrong
  * (accounts-v1-scope-20261121). Wrong guesses are limited: 5 for one email or one order number, then that
- * box is refused for an hour after its last wrong try (order-lookup-guess-limit-20261122).
+ * box is refused for an hour after its last try (order-lookup-guess-limit-20261122). A try is claimed before the
+ * order is read and given back when the guess is right.
  */
 export const ORDER_LOOKUP_ROUTE = "orders/lookup";
 export const ORDER_LOOKUP_GUESSES_COLLECTION = "order_lookup_guesses";
@@ -50,12 +51,26 @@ function admitInput(input: unknown): { number: number; emailKey: string } {
 const limited = (row: { value: GuessRecord } | null, now: number) =>
   row !== null && row.value.tries >= ORDER_LOOKUP_TRIES && now < row.value.expiresAt;
 
-/** Counts one wrong try against a box; a few retries ride out a lookup at the same moment. */
-async function countWrongTry(guesses: Guesses, id: string, now: number): Promise<void> {
+/**
+ * Claims one try against a box before any order is read, so a burst of lookups at the same moment gets no more
+ * than 5 reads; a used-up box is refused, and a claim that cannot be kept fails closed.
+ */
+async function claimTry(guesses: Guesses, id: string, now: number): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const row = await guesses.getVersioned(id);
+    if (limited(row, now)) refuse("LOOKUP_LIMITED");
     const tries = row && now < row.value.expiresAt ? row.value.tries + 1 : 1;
     if ((await guesses.compareAndSet(id, row?.revision ?? null, { tries, expiresAt: now + ORDER_LOOKUP_WAIT_SECONDS })).applied) return;
+  }
+  refuse("UNAVAILABLE");
+}
+
+/** Gives a claimed try back: the guess was right, or the lookup stopped before reading an order. */
+async function returnTry(guesses: Guesses, id: string): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const row = await guesses.getVersioned(id);
+    if (!row || row.value.tries < 1) return;
+    if ((await guesses.compareAndSet(id, row.revision, { ...row.value, tries: row.value.tries - 1 })).applied) return;
   }
 }
 
@@ -71,13 +86,18 @@ export async function lookUpOrder(route: { input: unknown; request: { url: strin
     const { number, emailKey } = admitInput(route.input);
     // Neither box is kept as typed: an email is kept only as its hash.
     const ids = [`email:${await sha256Hex(emailKey)}`, `number:${number}`];
-    const rows = await Promise.all(ids.map(id => guesses!.getVersioned(id)));
-    if (rows.some(row => limited(row, now))) refuse("LOOKUP_LIMITED");
-    const record = await findOrderByNumberAndEmail(orders!, number, emailKey);
-    if (!record) {
-      for (const id of ids) await countWrongTry(guesses!, id, now);
-      refuse("ORDER_NOT_FOUND");
+    // Each box's try is claimed first and stays counted when the guess is wrong.
+    const claimed: string[] = [];
+    let record;
+    try {
+      for (const id of ids) { await claimTry(guesses!, id, now); claimed.push(id); }
+      record = await findOrderByNumberAndEmail(orders!, number, emailKey);
+    } catch (error) {
+      for (const id of claimed) await returnTry(guesses!, id).catch(() => undefined);
+      throw error;
     }
+    if (!record) refuse("ORDER_NOT_FOUND");
+    for (const id of claimed) await returnTry(guesses!, id).catch(() => undefined);
     return { ok: true, order: projectShopperOrder(record!) };
   } catch (error) {
     const code = error instanceof Refused ? error.code : "UNAVAILABLE";

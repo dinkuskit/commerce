@@ -185,7 +185,7 @@ A new checkout that ships a physical order to the United States needs a supporte
 
 ## Order lookup
 
-Shoppers find an order with its order number and the email used at checkout, like WooCommerce's Track your order. The store's own server page sends both to `orders/lookup` and shows that one order: its status, items, totals, delivery address and phone, and the carrier and tracking number once it has shipped. If nothing matches, the answer is "No order matches that order number and email" and never says which box was wrong. After 5 wrong tries for one email, or for one order number, that box is refused for an hour after its last wrong try.
+Shoppers find an order with its order number and the email used at checkout, like WooCommerce's Track your order. The store's own server page sends both to `orders/lookup` and shows that one order: its status, items, totals, delivery address and phone, and the carrier and tracking number once it has shipped. If nothing matches, the answer is "No order matches that order number and email" and never says which box was wrong. After 5 wrong tries for one email, or for one order number, that box is refused for an hour after its last try. Each try is counted before any order is read, so lookups sent all at once get no more than 5 reads; a right guess gives its try back.
 
 Shopper sign-in and saved addresses are in DinkusKit Accounts, a separate plugin. Commerce has no shopper accounts.
 

@@ -113,3 +113,51 @@ test('the 5-minute background check clears guess counts whose hour is over, and 
   await clearOldLookupGuesses(ctx, 1_800_000_000 + ORDER_LOOKUP_WAIT_SECONDS);
   assert.deepEqual([...guesses.rows.values()].map(row => row.value.expiresAt), [1_800_001_000 + ORDER_LOOKUP_WAIT_SECONDS, 1_800_001_000 + ORDER_LOOKUP_WAIT_SECONDS]);
 });
+
+test('a burst of lookups at the same moment gets no more than 5 order reads for one order number', async () => {
+  const { ask, ctx } = await shop();
+  let reads = 0;
+  const query = ctx.storage.orders.query.bind(ctx.storage.orders);
+  ctx.storage.orders.query = options => { if (typeof options.where?.emailKey === 'string') reads += 1; return query(options); };
+  // Twelve guesses at #1001's email at once; the right one is last.
+  const emails = [...Array.from({ length: 11 }, (_, i) => `guess${i}@example.test`), 'pat@example.test'];
+  const answers = await Promise.all(emails.map(email => ask({ orderNumber: '1001', email })));
+  assert.ok(reads <= ORDER_LOOKUP_TRIES, `${reads} order reads`);
+  assert.equal(answers.filter(answer => answer.ok || answer.error.code === 'ORDER_NOT_FOUND').length, reads);
+  for (const answer of answers.filter(answer => !answer.ok)) assert.ok(['ORDER_NOT_FOUND', 'LOOKUP_LIMITED', 'UNAVAILABLE'].includes(answer.error.code));
+  // Once 5 wrong tries are in, the right email is refused too.
+  if (answers.filter(answer => !answer.ok && answer.error.code === 'ORDER_NOT_FOUND').length === ORDER_LOOKUP_TRIES) {
+    assert.equal((await ask({ orderNumber: '1001', email: 'pat@example.test' })).error.code, 'LOOKUP_LIMITED');
+  }
+});
+
+test('a try that cannot be recorded reads no order, and a right guess gives its tries back', async () => {
+  const { ask, guesses, ctx } = await shop();
+  let reads = 0;
+  const query = ctx.storage.orders.query.bind(ctx.storage.orders);
+  ctx.storage.orders.query = options => { reads += 1; return query(options); };
+  const compareAndSet = guesses.compareAndSet;
+  guesses.compareAndSet = async () => ({ applied: false });
+  assert.equal((await ask({ orderNumber: '1001', email: 'pat@example.test' })).error.code, 'UNAVAILABLE');
+  assert.equal(reads, 0);
+  guesses.compareAndSet = compareAndSet;
+  for (let i = 1; i < ORDER_LOOKUP_TRIES; i += 1) await ask({ orderNumber: String(1100 + i), email: 'pat@example.test' });
+  // 4 wrong, then right ones as often as wanted: the right guesses never use up the box.
+  for (let i = 0; i < 3; i += 1) assert.equal((await ask({ orderNumber: '1001', email: 'pat@example.test' })).ok, true);
+  assert.deepEqual(await ask({ orderNumber: '1999', email: 'pat@example.test' }), notFound);
+  assert.equal((await ask({ orderNumber: '1001', email: 'pat@example.test' })).error.code, 'LOOKUP_LIMITED');
+});
+
+test('an order kept before the email index (no emailKey) is still found by its number and checkout email', async () => {
+  const { ask, ctx } = await shop();
+  const orders = ctx.storage.orders;
+  const [id, row] = [...orders.rows].find(([, value]) => value.value.number === 1001);
+  const legacy = structuredClone(row);
+  delete legacy.value.emailKey;
+  legacy.value.number = 1602;
+  orders.rows.set(id, legacy);
+  const answer = await ask({ orderNumber: '1602', email: 'pat@example.test' });
+  assert.equal(answer.ok, true);
+  assert.equal(answer.order.number, 1602);
+  assert.deepEqual(await ask({ orderNumber: '1602', email: 'sam@example.test' }), notFound);
+});

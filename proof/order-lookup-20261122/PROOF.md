@@ -4,7 +4,7 @@ GrillTrack `commerce-order-lookup-20261122` (supersedes `shopper-accounts-v1-202
 
 ## Size
 
-The Registry backend falls from 130,739 bytes (the EmDash 1.5 branch this builds on, at 7514034) to 124,202 bytes, 6,870 below the 131,072 cap: the shopper-account code leaves (about 8.8 KB) and the order lookup adds about 2.2 KB.
+The Registry backend falls from 130,739 bytes (the EmDash 1.5 branch this builds on, at 7514034) to 124,531 bytes, 6,541 below the 131,072 cap (`main` at c9b24fc, after the review fixes): the shopper-account code leaves (about 8.8 KB) and the order lookup adds about 2.5 KB.
 
 ## Real EmDash store
 
@@ -24,6 +24,6 @@ The guess rows hold no email: ids are `email:<sha256>` and `number:<n>`.
 
 ## Commands (Node 24.22.0)
 
-- `npm run test:unit` files: 875 of 875 pass, including `tests/features/orders/lookup.test.mjs` (1-hour wait to the second, lock by order number, origin and input refusals, background clean-up). `tests/features/checkout/checkout-contact-integration.test.mjs` starts workerd, which cannot start in the cloud container used here (`miniposix::write ... Bad file descriptor`); CI runs it.
+- `npm run test:unit` files: 880 of 880 pass, including `tests/features/orders/lookup.test.mjs` (1-hour wait to the second, lock by order number, origin and input refusals, background clean-up; a burst of 12 lookups at once for one order number reads orders 5 times and answers the rest `LOOKUP_LIMITED`; a try that cannot be recorded reads no order; right guesses give their tries back; an order kept before the email index, with no `emailKey`, is still found). `tests/features/checkout/checkout-contact-integration.test.mjs` starts workerd, which cannot start in the cloud container used here (`miniposix::write ... Bad file descriptor`); CI runs it.
 - Sandbox Playwright suite: 12 of 12 pass, with the order lookup spec in place of the retired shopper profile spec.
 - `tsc`, `check-features` and `repo-contract`: clean.
