@@ -1,0 +1,103 @@
+// The built Registry bundle of Commerce, run in-process by a real EmDash runtime on Node's built-in SQLite: an Editor's
+// and an Author's schedules go through EmDash's own schedule policy, and EmDash's own timer sweep publishes the page.
+// Only the final catalog record decides whether the product sells (scheduled-sale-in-commerce-20261122).
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { registerHooks } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import test from 'node:test';
+import { createDialect } from 'emdash/db/sqlite';
+import { adaptSandboxEntry } from 'emdash/internal/plugins/adapt-sandbox-entry';
+
+// EmDash's runtime imports modules Astro generates for a real site, and reads Vite's import.meta.env; this test builds
+// the runtime itself, as a production site would run it.
+registerHooks({
+  resolve: (specifier, context, next) => specifier.startsWith('virtual:emdash/') ? { url: 'data:text/javascript,export default undefined;', shortCircuit: true } : next(specifier, context),
+  load(url, context, next) {
+    const loaded = next(url, context);
+    if (!url.includes('/node_modules/emdash/dist/') || !loaded.source) return loaded;
+    return { ...loaded, source: String(loaded.source).replaceAll('import.meta.env', '({ DEV: false, PROD: true })') };
+  },
+});
+const { EmDashRuntime } = await import('emdash/internal/plugin-test-runtime');
+const { PluginStorageRepository, SchemaRegistry } = await import('emdash');
+import descriptor from '../../../dist/sandbox/index.mjs';
+import definition from '../../../dist/sandbox/plugin.mjs';
+import { createCatalogItem, linkProductPage } from '../../../dist/features/catalog/kernel/index.js';
+
+const ID = 'dinkus-commerce';
+const EDITOR = { id: 'editor', role: 40 }, AUTHOR = { id: 'author', role: 30 };
+
+async function store() {
+  const dir = mkdtempSync(join(tmpdir(), 'commerce-schedule-'));
+  const url = `file:${join(dir, 'store.db')}`;
+  const runtime = await EmDashRuntime.create({
+    config: { database: { entrypoint: `commerce-schedule-${crypto.randomUUID()}`, type: 'sqlite', config: { url } } },
+    plugins: [adaptSandboxEntry(definition, descriptor)],
+    createDialect: () => createDialect({ url }),
+    createStorage: null,
+    createScheduler: null,
+    sandboxEnabled: false,
+    sandboxedPluginEntries: [],
+  });
+  await runtime.ensureStorageIndexesSynced();
+  const schema = new SchemaRegistry(runtime.db);
+  await schema.createCollection({ slug: 'products', label: 'Products', labelSingular: 'Product', supports: ['drafts', 'scheduling'] });
+  await schema.createField('products', { slug: 'title', label: 'Title', type: 'string' });
+  const storage = (name) => new PluginStorageRepository(runtime.db, ID, name, [...(descriptor.storage[name].indexes ?? []), ...(descriptor.storage[name].uniqueIndexes ?? [])]);
+  const catalog = storage('catalog_items'), pages = storage('product_pages');
+  return {
+    runtime, catalog,
+    /** A draft Products page whose panel picked a new product, as the page's first Save does. */
+    async page(sku) {
+      const created = await runtime.handleContentCreate('products', { data: { title: `${sku} mug` }, slug: sku.toLowerCase() });
+      assert.equal(created.success, true, JSON.stringify(created.error));
+      const entryId = created.data.item.id;
+      await createCatalogItem(catalog, { commandId: `create-${sku}`, name: sku, sku, fulfillment: 'physical' }, { createId: () => sku, collection: 'catalog_items' });
+      await storage('catalog_prices').put(sku, { recordKind: 'catalog-price', recordId: sku, catalogItemId: sku, regular: { currency: 'USD', minor: '900' } });
+      await linkProductPage({ catalog, pages }, entryId, sku);
+      return entryId;
+    },
+    schedule: (entryId, at, actor) => runtime.handleContentSchedule('products', entryId, at, { actor, origin: { source: 'api' } }),
+    async sold(sku) { const item = await catalog.get(sku); return Boolean(item?.pageId) && !item.offSale; },
+    async stop() { try { await runtime.db.destroy(); } catch {} rmSync(dir, { recursive: true, force: true }); },
+  };
+}
+
+test('EmDash\'s timer publishing the built Commerce sells only an Editor\'s schedule, even with an Author asking at the same moment', async () => {
+  const shop = await store();
+  try {
+    const at = new Date(Date.now() + 1500).toISOString();
+    const editors = await shop.page('EDIT'), authors = await shop.page('AUTH'), together = await shop.page('BOTH');
+    const forwards = await shop.page('FORW'), backwards = await shop.page('BACK');
+    const ok = (result) => assert.equal(result.success, true, JSON.stringify(result.error));
+    ok(await shop.schedule(editors, at, EDITOR));
+    ok(await shop.schedule(authors, at, AUTHOR));
+    // One after the other, in each order.
+    ok(await shop.schedule(forwards, at, EDITOR));
+    ok(await shop.schedule(forwards, at, AUTHOR));
+    ok(await shop.schedule(backwards, at, AUTHOR));
+    ok(await shop.schedule(backwards, at, EDITOR));
+    // At once: EmDash keeps one and may refuse the other as changed meanwhile, after both asked Commerce.
+    const both = await Promise.all([shop.schedule(together, at, EDITOR), shop.schedule(together, at, AUTHOR)]);
+    assert.ok(both.some((result) => result.success), JSON.stringify(both.map((result) => result.error ?? 'kept')));
+    console.log('overlapping schedules', JSON.stringify(both.map((result) => (result.success ? 'kept' : result.error.code))));
+    await new Promise((resolve) => setTimeout(resolve, 1700));
+    const published = await shop.runtime.publishScheduled();
+    assert.equal(published.length, 5, 'EmDash published every scheduled page');
+    for (const entryId of [editors, authors, together, forwards, backwards]) {
+      assert.equal((await shop.runtime.handleContentGet('products', entryId)).data.item.status, 'published');
+    }
+    assert.equal(await shop.sold('EDIT'), true, "an Editor's schedule sells");
+    assert.equal((await shop.catalog.get('EDIT')).name, 'EDIT mug', 'under the published title');
+    assert.equal(await shop.sold('AUTH'), false, "an Author's schedule leaves a Draft");
+    assert.equal(await shop.sold('BOTH'), false, 'an Author asking at the same moment withdraws the sale');
+    assert.equal(await shop.sold('FORW'), false, 'one after the other');
+    assert.equal(await shop.sold('BACK'), false, 'in either order');
+    console.log('scheduled-sale proof', JSON.stringify(Object.fromEntries(await Promise.all(['EDIT', 'AUTH', 'BOTH', 'FORW', 'BACK']
+      .map(async (sku) => [sku, { pageId: (await shop.catalog.get(sku)).pageId ?? null, offSale: (await shop.catalog.get(sku)).offSale ?? false }])))));
+  } finally {
+    await shop.stop();
+  }
+});
