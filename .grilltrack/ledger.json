@@ -17229,10 +17229,24 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T20:31:48+00:00",
+          "choice": "Copy Shopify. (1) Who: the checkout page gets an 'Email me with news and offers' tick box, unticked by default; the email goes only to shoppers who ticked it, unless the owner picks All customers. (2) Control: one setting in Commerce > Settings with three choices: Off, Shoppers who ticked the box (default), All customers. (3) Link: the store's own cart pick-up link /cart/c/<id>?key=<secret> with a fresh secret made for that email; it opens the real cart with current prices and checkout starts again from the store's checkout page; it lasts as long as the cart, 30 days; Stripe's recovery link is not used. (4) When: one email, 10 hours after the shopper gave an email at checkout and left without paying; checked again just before sending and skipped if paid, cart emptied, unsubscribed or the setting is Off; at most one per cart. (5) Sender: Commerce, through the store's EmDash email (email:send, already granted), found by the existing 5-minute background check; not Payments or Ship. (6) No Stripe or Payments change: no checkout.session.expired webhook and no Stripe recovery setting. (7) An admin list of abandoned checkouts like Shopify's comes later, not in the first build. The build waits until the Accounts move frees Registry bytes.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
         }
       ],
       "id": "commerce-abandoned-cart-email-20261122",
-      "implementation_ref": null,
+      "implementation_ref": "file:src/features/checkout/remind.ts file:src/features/checkout/guest.ts file:src/features/checkout/capability.ts file:src/admin/settings.ts file:tests/features/checkout/abandoned-cart-email.test.mjs file:docs/website/reference/commerce.md",
       "question": "How do abandoned-cart emails work?",
       "rationale": "The owner approved on 2026-11-22.",
       "repair_required": false,
@@ -17241,9 +17255,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
+      "status": "implemented",
       "superseded_by": null,
-      "updated_at": "2026-11-22T16:28:59+00:00",
+      "updated_at": "2026-11-22T20:31:48+00:00",
       "verification_ref": null
     },
     {
@@ -17379,15 +17393,15 @@
       "candidate_refs": [],
       "choice": "A private courier/outbox route (POST, refuses anyone signed in) answers the store's courier with order.shipped: one item per order marked Completed (Complete order or a Ship label), id <orderId>:shipped, with orderId, shippedAt, the checkout email, the delivery (else billing) name and each line's product ID (a variant's product, as the product page shows it) and name. Read oldest first by a new orders index shippedKey (<completed.at> <orderId>, set on completion, cleared on Move back to Processing), only once the order has been Completed for a minute. Completing again after a reopen gives the same id. Test orders count; orders Completed before this version do not.",
       "context_ref": null,
-      "created_at": "2026-11-22T20:38:03+00:00",
+      "created_at": "2026-11-22T21:00:05+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-22T20:51:10+00:00",
-          "choice": "A private courier/outbox route (POST, refuses anyone signed in) answers the store's courier with order.shipped: one item per order marked Completed (Complete order or a Ship label), id <orderId>:shipped, with orderId, shippedAt, the checkout email, the delivery (else billing) name and each line's catalog ID and name. Read oldest first by a new orders index shippedKey (<completed.at> <orderId>, set on completion, cleared on Move back to Processing), only once the order has been Completed for a minute. Completing again after a reopen gives the same id. Test orders count; orders Completed before this version do not.",
+          "at": "2026-11-22T21:00:05+00:00",
+          "choice": "A private courier/outbox route (POST, refuses anyone signed in) answers the store's courier with order.shipped: one item per order marked Completed (Complete order or a Ship label), id <orderId>:shipped, with orderId, shippedAt, the checkout email, the delivery (else billing) name and each line's product ID (a variant's product, as the product page shows it) and name. Read oldest first by a new orders index shippedKey (<completed.at> <orderId>, set on completion, cleared on Move back to Processing), only once the order has been Completed for a minute. Completing again after a reopen gives the same id. Test orders count; orders Completed before this version do not.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -17412,7 +17426,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-22T20:51:10+00:00",
+      "updated_at": "2026-11-22T21:00:05+00:00",
       "verification_ref": null
     }
   ],
@@ -17450,5 +17464,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T20:51:10+00:00"
+  "updated_at": "2026-11-22T21:00:05+00:00"
 }

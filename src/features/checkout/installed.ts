@@ -5,6 +5,7 @@ import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.
 
 import { GuestCheckoutError } from "./errors.js";
 import { clearExpiredCarts } from "./storage.js";
+import { CART_EMAIL_STOPS, remindCarts } from "./remind.js";
 import {
   guestCheckoutFailure,
   prepareGuestCheckout,
@@ -257,13 +258,14 @@ export function createInstalledCheckoutHandlers(
   return {
     prepare: (route, ctx) => guest(route, ctx, runtime => prepareGuestCheckout(runtime, route.input)),
     start: (route, ctx) => guest(route, ctx, runtime => startGuestCheckout(runtime, route.input, route.request.headers)),
-    cart: (route, ctx) => guest(route, ctx, runtime => cartGuestCheckout(runtime, route.input, route.request.headers)),
+    cart: (route, ctx) => guest(route, ctx, runtime => cartGuestCheckout(runtime, route.input, route.request.headers, ctx.storage[CART_EMAIL_STOPS] as never)),
     readiness,
     reconcileWakes,
     cron: async (event, ctx) => {
       if (event.name !== COMMERCE_CHECKOUT_WAKES_TASK) return;
       await clearExpiredCarts(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts] as never, Math.floor(Date.now() / 1000)).catch(() => {});
       await reconcileWakes(ctx);
+      await remindCarts(ctx, Math.floor(Date.now() / 1000)).catch(() => {});
     },
   };
 }

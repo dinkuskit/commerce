@@ -9,7 +9,7 @@ import { merchantStoreSettingsBlocks } from "../features/store-settings/kernel/i
 import { adminAuthorized, navigation } from "../shared/admin-blocks.js";
 import { connectedTo, connectState, type ConnectState } from "../features/checkout/kernel/index.js";
 import { connectBlocks, finishedConnect } from "./connect.js";
-import { alert, bool, button, failed, fresh, header, message, note, object, refused, submit, text } from "./common.js";
+import { alert, bool, button, failed, fresh, header, message, note, object, radio, refused, submit, text } from "./common.js";
 import { library, preview, target } from "./media.js";
 
 function placeholderStorage(ctx: PluginContext) {
@@ -29,7 +29,8 @@ async function placeholderBlocks(ctx: PluginContext): Promise<Block[]> {
     ] },
   ];
 }
-function settingsResponse(hideOutOfStock: boolean, catalog: boolean, failure?: string): BlockResponse {
+const CART_EMAIL = [{ label: "Off", value: "off" }, { label: "Shoppers who ticked the box", value: "ticked" }, { label: "All customers", value: "all" }];
+function settingsResponse(hideOutOfStock: boolean, catalog: boolean, cartEmail: unknown, failure?: string): BlockResponse {
   return { blocks: [
     header("Commerce settings"), navigation(), header("Catalog"),
     ...(failure ? [alert(failure), note("Save not confirmed; choice kept.")] : []),
@@ -37,12 +38,14 @@ function settingsResponse(hideOutOfStock: boolean, catalog: boolean, failure?: s
       { type: "toggle", action_id: "hideOutOfStock", label: "Hide out-of-stock products", initial_value: hideOutOfStock },
       // Off empties the store's catalog feed, so the cross-store catalog drops it (agent-catalog-toggle-home-20261113).
       { type: "toggle", action_id: "catalog", label: "List my products in the DinkusKit catalog", initial_value: catalog },
+      // One email 10 hours after an unpaid checkout, with a link back to the cart (commerce-abandoned-cart-email-20261122).
+      radio("cartEmail", "Abandoned cart email", CART_EMAIL, String(cartEmail ?? "ticked")),
     ], submit: submit("Save", "settings.save") },
   ] };
 }
 export async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse, load = false): Promise<BlockResponse> {
   const listing = await loadOutOfStockListing(listingStorage(ctx));
-  const response = settingsResponse(listing.hideOutOfStock, !listing.offCatalog);
+  const response = settingsResponse(listing.hideOutOfStock, !listing.offCatalog, listing.cartEmail);
   // A waiting Connect is checked here, so the owner's return from DinkusKit.com's Approve lands connected.
   const state = await connectState(ctx).catch((): ConnectState => ({ state: "disconnected" }));
   // Connect finished on this load: fetch the checkout settings now and answer with the DinkusKit section alone, as its buttons do.
@@ -68,7 +71,7 @@ export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginCon
     if (input.type === "form_submit") {
       values = object(input.values);
       // A form drawn before the catalog switch existed sends no catalog value; the stored choice is kept.
-      await setOutOfStockListing(listingStorage(ctx), { hideOutOfStock: bool(values.hideOutOfStock), ...("catalog" in values ? { offCatalog: !bool(values.catalog) } : {}) });
+      await setOutOfStockListing(listingStorage(ctx), { hideOutOfStock: bool(values.hideOutOfStock), ...("catalog" in values ? { offCatalog: !bool(values.catalog) } : {}), ...("cartEmail" in values ? { cartEmail: values.cartEmail } : {}) });
       return await settings(ctx, route, "Settings saved");
     }
     throw new Error("Unknown interaction");
@@ -80,7 +83,7 @@ export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginCon
       catch { /* fall through to the generic alert */ }
     }
     if (input.type === "form_submit" && typeof values.hideOutOfStock === "boolean") {
-      return refused(failure, settingsResponse(values.hideOutOfStock, values.catalog !== false, failure).blocks);
+      return refused(failure, settingsResponse(values.hideOutOfStock, values.catalog !== false, values.cartEmail, failure).blocks);
     }
     return failed(failure);
   }
