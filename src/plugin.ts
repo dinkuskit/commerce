@@ -21,46 +21,15 @@ import {
   storeProof,
   withBackgroundCheck,
 } from "./features/checkout/kernel/index.js";
-import { ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, createPaidOrderReceiver, listOrdersForEmail, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
-import {
-  createInstalledShopperAccountHandlers,
-  SHOPPER_ACCOUNT_ORDERS_ROUTE,
-  SHOPPER_ACCOUNT_PROFILE_ROUTE,
-  SHOPPER_ACCOUNT_SESSION_HEADERS,
-  SHOPPER_ACCOUNT_WRITE_HEADERS,
-  SHOPPER_SIGN_IN_START_ROUTE,
-  SHOPPER_SIGN_IN_VERIFY_ROUTE,
-  SHOPPER_SIGN_OUT_ROUTE,
-} from "./features/customers/kernel/index.js";
+import { ORDER_LOOKUP_ROUTE, ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, clearOldLookupGuesses, createPaidOrderReceiver, lookUpOrder, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
 
 const guestRequest = {
   body: "json" as const,
   headers: [...GUEST_CHECKOUT_DECLARED_HEADERS],
 };
-const shopperWriteRequest = {
-  body: "json" as const,
-  headers: [...SHOPPER_ACCOUNT_WRITE_HEADERS],
-};
-const shopperSessionBodyRequest = {
-  body: "json" as const,
-  headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS],
-};
-// GET account/profile has no body, so the route takes text and parses a POST's JSON itself (commerce#256).
-const shopperProfileRequest = { ...shopperSessionBodyRequest, body: "text" as const };
-const profileInput = (input: unknown) => {
-  if (typeof input != "string") return input;
-  try { return input ? JSON.parse(input) : undefined; } catch { return null; }
-};
 // Checkout hands each paid order to Orders, which keeps its own copy.
 const installedCheckout = createInstalledCheckoutHandlers(resolveRegistryCheckoutServices,
   ctx => createPaidOrderReceiver(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, ctx.storage[ORDER_NUMBERS_COLLECTION] as OrderNumbers));
-const installedShopperAccounts = createInstalledShopperAccountHandlers(
-  (ctx, emailKey) => listOrdersForEmail(ctx.storage[ORDERS_COLLECTION] as OrdersCollection, emailKey),
-);
-function shopperRoute<T>(methods: ("GET" | "POST")[], request: { body: "json" | "none" | "text"; headers: string[] },
-  handler: (route: Parameters<typeof installedShopperAccounts.orders>[0], ctx: Parameters<typeof installedShopperAccounts.orders>[1]) => Promise<T>) {
-  return pluginRoute({ public: true, methods, request, cacheControl: "no-store", handler });
-}
 function guestRoute(handler: typeof installedCheckout.prepare) {
   return pluginRoute({ public: true, methods: ["POST"], request: guestRequest, handler });
 }
@@ -125,7 +94,10 @@ const plugin: SandboxedPlugin = {
         // A change made at DinkusKit.com reaches checkout within one run (store-connect-checkout-settings-083).
         if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await refreshCheckoutSettings(ctx);
         await installedCheckout.cron(event, ctx);
-        if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await syncOrdersWithShip(ctx).catch(() => {});
+        if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) {
+          await syncOrdersWithShip(ctx).catch(() => {});
+          await clearOldLookupGuesses(ctx).catch(() => {});
+        }
       },
     },
   },
@@ -158,12 +130,8 @@ const plugin: SandboxedPlugin = {
     [GUEST_CHECKOUT_START_ROUTE]: guestRoute(installedCheckout.start),
     [GUEST_CHECKOUT_CART_ROUTE]: guestRoute(installedCheckout.cart),
     [GUEST_CHECKOUT_READINESS_ROUTE]: publicRead((route, ctx) => installedCheckout.readiness(route, ctx), ["origin"]),
-    [SHOPPER_SIGN_IN_START_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.startSignIn),
-    [SHOPPER_SIGN_IN_VERIFY_ROUTE]: shopperRoute(["POST"], shopperWriteRequest, installedShopperAccounts.verifySignIn),
-    [SHOPPER_SIGN_OUT_ROUTE]: shopperRoute(["POST"], shopperSessionBodyRequest, installedShopperAccounts.signOut),
-    [SHOPPER_ACCOUNT_ORDERS_ROUTE]: shopperRoute(["GET"], { body: "none", headers: [...SHOPPER_ACCOUNT_SESSION_HEADERS] }, installedShopperAccounts.orders),
-    [SHOPPER_ACCOUNT_PROFILE_ROUTE]: shopperRoute(["GET", "POST"], shopperProfileRequest,
-      (route, ctx) => installedShopperAccounts.profile({ ...route, input: profileInput(route.input) }, ctx)),
+    // The order lookup page: order number plus checkout email, from the store's own server page.
+    [ORDER_LOOKUP_ROUTE]: pluginRoute({ public: true, methods: ["POST"], request: { body: "json", headers: ["origin", "sec-fetch-site"] }, cacheControl: "no-store", handler: lookUpOrder }),
   },
 };
 // Every route also registers the background check if switching on could not; after that it costs nothing.

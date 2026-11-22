@@ -14118,6 +14118,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
+        },
+        {
+          "at": "2026-11-22T16:03:33+00:00",
+          "choice": "Shopper accounts live in @dinkuskit/commerce plugin storage, never in EmDash CMS users; staff roles map to EmDash Role.EDITOR (40, content:edit_any) for clerks/shop managers and Role.ADMIN (50, plugins:manage) for store owners. Shoppers sign in via a 6-digit passwordless email code sent through EmDash email:send and authenticate to public Commerce account routes with an origin-bound x-commerce-customer-session capability token. Past and future orders matching the shopper's verified email (case-folded) auto-link to their account view, and each customer record holds one default saved shipping address + optional phone (auto-seeded from their latest order when unset and editable in Account and Checkout).",
+          "from": "verified",
+          "implementation_ref": "file:src/features/customers/account.ts",
+          "note": "Shopper accounts moved to their own plugin, DinkusKit Accounts (accounts-v1-scope-20261121, approved by the owner on 2026-11-21); Commerce keeps only an order lookup.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
         }
       ],
       "id": "shopper-accounts-v1-20261020",
@@ -14149,9 +14163,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-21T02:21:53+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-order-lookup-20261122",
+      "updated_at": "2026-11-22T16:03:33+00:00",
       "verification_ref": ".grilltrack/proof/shopper-accounts-v1-20261020/PROOF.md"
     },
     {
@@ -15907,6 +15921,20 @@
           "review_source_identity": null,
           "to": "implemented",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T16:03:33+00:00",
+          "choice": "Editors (EmDash role 40) and Administrators work Orders: the Orders page (list, inspect, bring in, Complete order, Move back to Processing, Correct address) and the private orders route for agents and the CLI, which now declares content:edit_any instead of plugins:manage; the API token still needs EmDash's admin scope. Both handlers check the role again (an Editor or above; a forged body changes nothing). Connecting DinkusKit and checkout setup stay Administrator-only. Orders still has no refund, cancel or payment action. The reference tells owners Editors see customers' email, phone and addresses.",
+          "from": "implemented",
+          "implementation_ref": "file:src/plugin.ts file:src/features/orders/api.ts file:src/features/orders/admin/page.ts file:src/shared/admin-blocks.ts file:docs/website/reference/commerce.md",
+          "note": "dependency shopper-accounts-v1-20261020 changed: Shopper accounts moved to their own plugin, DinkusKit Accounts (accounts-v1-scope-20261121, approved by the owner on 2026-11-21); Commerce keeps only an order lookup.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
         }
       ],
       "id": "commerce-orders-staff-access-001",
@@ -15919,9 +15947,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-31T12:32:24+00:00",
+      "updated_at": "2026-11-22T16:03:33+00:00",
       "verification_ref": null
     },
     {
@@ -17221,9 +17249,50 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
+      "choice": "Commerce drops all its shopper-account code: the account sign-in, sign-out, orders and profile routes, the customers, customer_login_codes and customer_sessions storage, the email:send capability and the ./features/customers package entry. Shopper accounts live in DinkusKit Accounts (accounts-v1-scope-20261121 in dinkuskit/accounts). Staff roles are unchanged: Editors and Administrators (content:edit_any) run the store. Commerce instead has an order lookup like WooCommerce's Track your order: the public orders/lookup route takes an order number and the checkout email from the store's own server page (same-origin write), reads only that email's orders through the orders emailKey index, and answers that one order (number, status, lines, totals, delivery address, phone, completion) without payment or checkout identities. The not-found answer never says which box was wrong. After 5 wrong tries for one email, or for one order number, that box is refused for 1 hour after its last wrong try, even for a right guess. Guess counts are kept in order_lookup_guesses under a SHA-256 of the email or the order number, and the 5-minute background check deletes counts whose hour is over. Nothing moves from existing stores, since none has shopper accounts.",
+      "context_ref": "src/features/orders/lookup.ts",
+      "created_at": "2026-11-22T16:03:27+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-22T16:03:33+00:00",
+          "choice": "Commerce drops all its shopper-account code: the account sign-in, sign-out, orders and profile routes, the customers, customer_login_codes and customer_sessions storage, the email:send capability and the ./features/customers package entry. Shopper accounts live in DinkusKit Accounts (accounts-v1-scope-20261121 in dinkuskit/accounts). Staff roles are unchanged: Editors and Administrators (content:edit_any) run the store. Commerce instead has an order lookup like WooCommerce's Track your order: the public orders/lookup route takes an order number and the checkout email from the store's own server page (same-origin write), reads only that email's orders through the orders emailKey index, and answers that one order (number, status, lines, totals, delivery address, phone, completion) without payment or checkout identities. The not-found answer never says which box was wrong. After 5 wrong tries for one email, or for one order number, that box is refused for 1 hour after its last wrong try, even for a right guess. Guess counts are kept in order_lookup_guesses under a SHA-256 of the email or the order number, and the 5-minute background check deletes counts whose hour is over. Nothing moves from existing stores, since none has shopper accounts.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-order-lookup-20261122",
+      "implementation_ref": null,
+      "question": "With shopper accounts moving to DinkusKit Accounts, what does Commerce keep for shoppers to see their orders, and how are wrong guesses limited?",
+      "rationale": "The owner approved the Accounts v1 scope, including this lookup page and dropping Commerce's shopper code, on 2026-11-21, and the guess limit (5 per email and per order number, then a 1-hour wait) on 2026-11-22. WooCommerce source: templates/order/form-tracking.php and includes/shortcodes/class-wc-shortcode-order-tracking.php (order ID plus billing email, case-insensitive, one generic not-found message; WooCommerce has no guess limit). Order numbers count up from 1001, so both boxes are limited. Removing the shopper code frees Registry backend room under the 128 KiB cap.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T16:03:33+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
       "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
       "context_ref": null,
-      "created_at": "2026-11-22T17:18:03+00:00",
+      "created_at": "2026-11-22T17:39:38+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -17232,7 +17301,7 @@
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-22T17:18:04+00:00",
+          "at": "2026-11-22T17:39:38+00:00",
           "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
           "from": "proposed",
           "implementation_ref": null,
@@ -17258,7 +17327,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-22T17:18:04+00:00",
+      "updated_at": "2026-11-22T17:39:38+00:00",
       "verification_ref": null
     }
   ],
@@ -17296,5 +17365,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T17:18:04+00:00"
+  "updated_at": "2026-11-22T17:39:38+00:00"
 }

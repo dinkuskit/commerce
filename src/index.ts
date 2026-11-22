@@ -23,6 +23,5 @@ export * from "./features/checkout/index.js";
 export * from "./features/orders/index.js";
 export { CATALOG_API_ROUTE } from "./admin/index.js";
 
-export * from "./features/customers/index.js";
 
 export * from "./features/fixed-bundles/index.js";

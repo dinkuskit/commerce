@@ -116,7 +116,7 @@ test("compiled installed export and sandbox metadata expose fixed public seam", 
   assert.equal(sandboxManifest.id, "dinkus-commerce");
   // The product page panel reads only the page's title and never changes the page; Commerce holds the link. Content
   // read is only for hearing EmDash publish a scheduled product page (scheduled-sale-in-commerce-20261122).
-  assert.deepEqual(sandboxManifest.capabilities, ["content:read", "admin.editor-draft:read", "hooks.content-policy:register", "media:read", "network:request", "email:send"]);
+  assert.deepEqual(sandboxManifest.capabilities, ["content:read", "admin.editor-draft:read", "hooks.content-policy:register", "media:read", "network:request"]);
   assert.deepEqual(sandboxManifest.allowedHosts, ['payments.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   assert.equal(typeof sandboxPlugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE].handler, "function");
 });

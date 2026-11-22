@@ -12,7 +12,7 @@ export const FIRST_ORDER_NUMBER = 1001;
 /** Orders' own record. Later order facts sit beside the copy, never inside it. */
 export interface OrderRecord {
   paidOrder: PaidOrder;
-  /** Case-folded checkout email (`""` when absent) so shopper order reads query by index. */
+  /** Case-folded checkout email (`""` when absent) so the order lookup reads by index. */
   emailKey?: string;
   /** Short number for people; absent until numbered. */
   number?: number;
@@ -244,7 +244,7 @@ function later(a: string, b: string): number {
   return a < b ? 1 : a > b ? -1 : 0;
 }
 
-/** Shopper-safe order summary for a verified customer email. */
+/** Shopper-safe order summary, shown by the order lookup page. */
 export interface ShopperOrderSummary {
   orderId: string;
   receiptId: string;
@@ -266,7 +266,7 @@ export interface ShopperOrderSummary {
   completed: OrderCompletion | null;
 }
 
-/** Projects one order record for its verified shopper; omits internal IDs, test flags and provider bindings. */
+/** Projects one order record for the shopper; omits internal IDs, test flags and provider bindings. */
 export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
   const order = record.paidOrder;
   const p = order.pricing, phone = order.contactSnapshot?.contact?.phone;
@@ -295,38 +295,26 @@ export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
   });
 }
 
-function paidAtMillis(paidAt: string | undefined): number {
-  const parsed = Date.parse(paidAt ?? "");
-  return Number.isFinite(parsed) ? parsed : -Infinity;
-}
-
-/** Every kept order whose frozen checkout email matches the verified email (case-folded), newest first. */
-export async function listOrdersForEmail(
+/**
+ * The kept order with this number whose frozen checkout email is this email (case-folded), or null.
+ * Reads only that email's orders through the emailKey index.
+ */
+export async function findOrderByNumberAndEmail(
   collection: Pick<OrdersCollection, "query">,
-  email: string,
-): Promise<ShopperOrderSummary[]> {
-  const target = email.trim().toLowerCase();
-  if (!target) return [];
-  const orders: OrderRecord[] = [], seen = new Set<string>();
-  let unfiltered = false;
-  const collect = (item: { id: string; data: OrderRecord }) => {
-    if (seen.has(item.id)) return;
-    seen.add(item.id);
+  number: number,
+  emailKey: string,
+): Promise<OrderRecord | null> {
+  let found: OrderRecord | null = null;
+  const match = (item: { id: string; data: OrderRecord }) => {
     const record = checkOrder(item);
-    if (record.emailKey !== target) unfiltered = true;
-    if (emailKeyOf(record.paidOrder) === target) orders.push(record);
+    if (record.number === number && emailKeyOf(record.paidOrder) === emailKey) found = record;
   };
   try {
-    await scanAll(collection, collect, { emailKey: target });
-    if (!unfiltered) await scanAll(collection, collect, { emailKey: null });
+    // Orders kept before the email index have no emailKey; their checkout email still matches (commerce#248).
+    for (const where of [{ emailKey }, { emailKey: null }]) if (!found) await scanAll(collection, match, where);
   } catch (error) {
     if ((error as { name?: unknown })?.name !== "StorageQueryError") throw error;
-    await scanAll(collection, collect);
+    await scanAll(collection, match);
   }
-  return orders
-    // Newest paid first; two unparseable times compare as NaN and fall through to the next key.
-    .sort((a, b) => paidAtMillis(b.paidOrder.paidAt) - paidAtMillis(a.paidOrder.paidAt) ||
-      later(a.paidOrder.paidAt ?? "", b.paidOrder.paidAt ?? "") || (b.number ?? -1) - (a.number ?? -1) ||
-      later(a.paidOrder.orderId, b.paidOrder.orderId))
-    .map(projectShopperOrder);
+  return found;
 }

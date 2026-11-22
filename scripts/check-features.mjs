@@ -101,8 +101,7 @@ export const STORAGE_OWNERS = {
   storefront_out_of_stock_listing: "storefront-availability",
   storefront_placeholder_image: "storefront-availability",
   checkout_carts: "checkout", checkout_guest_capabilities: "checkout", checkout_payment_associations: "checkout",
-  orders: "orders", order_numbers: "orders",
-  customers: "customers", customer_login_codes: "customers", customer_sessions: "customers",
+  orders: "orders", order_numbers: "orders", order_lookup_guesses: "orders",
 };
 const STORAGE_COMPOSITION = ["src/plugin.ts", "src/index.ts"];
 /**
@@ -143,7 +142,6 @@ export async function auditFeatures(repositoryRoot = root) {
     "`dinkus.storefront-availability`",
     "`dinkus.checkout`",
     "`dinkus.orders`",
-    "`dinkus.customers`",
     "`dinkus.structured-data`",
     "`src/features/catalog/`",
     "`src/features/inventory-provider/`",
@@ -151,7 +149,6 @@ export async function auditFeatures(repositoryRoot = root) {
     "`src/features/storefront-availability/`",
     "`src/features/checkout/`",
     "`src/features/orders/`",
-    "`src/features/customers/`",
     "`src/features/coupons/`",
     "`src/features/structured-data/`",
     "`bin/verify-commerce quick`",
@@ -214,13 +211,9 @@ export async function auditFeatures(repositoryRoot = root) {
       "package export ./features/structured-data must resolve to the structured-data public entry",
     );
   }
-  if (
-    manifest.exports?.["./features/customers"]?.default !==
-    "./dist/features/customers/index.js"
-  ) {
-    findings.push(
-      "package export ./features/customers must resolve to the customers public entry",
-    );
+  // Shopper accounts moved to their own plugin, DinkusKit Accounts (accounts-v1-scope-20261121).
+  if (manifest.exports?.["./features/customers"] !== undefined) {
+    findings.push("package export ./features/customers is retired: shopper accounts live in DinkusKit Accounts");
   }
   if (manifest.devDependencies?.emdash !== "1.5.0") {
     findings.push("catalog pilot must remain pinned to exact emdash 1.5.0");
