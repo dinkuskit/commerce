@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 
-import { namesIndex, uniqueIndexNames } from "../../shared/unique-index.js";
+import { namesUniqueIndex } from "../../shared/unique-index.js";
 import { normalizeManagedSkuRegistrationClaimRecord } from "./claim.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
@@ -89,8 +89,7 @@ async function isNamedUniqueViolation(
 ): Promise<boolean> {
   const text = errorText(error);
   const properties = errorProperties(error);
-  const names = await uniqueIndexNames(COMMERCE_PLUGIN_ID, MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION, field);
-  if (!namesIndex(text, properties, names)) return false;
+  if (!(await namesUniqueIndex(text, properties, COMMERCE_PLUGIN_ID, MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION, field))) return false;
 
   const hasPostgresCode = properties.some(
     (entry) => String(entry.code ?? "") === "23505",

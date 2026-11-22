@@ -11,5 +11,5 @@ Taken 22 Nov 2026 by `npx playwright test` (sandbox suite) on a new EmDash
 
 Runs on this branch: `npm test` 885 of 885, `npm run test:integration` 113 of
 113, sandbox suite 12 of 12, orders-blocks suite 5 of 5. Registry backend
-130758 bytes, 314 below the cap. See
+130730 bytes, 342 below the cap. See
 [the compatibility record](../../docs/implementation/emdash-1-5-compatibility.md).

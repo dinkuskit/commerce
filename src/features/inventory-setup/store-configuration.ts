@@ -1,5 +1,5 @@
 import { isRecord } from "../../shared/record.js";
-import { namesIndex, uniqueIndexNames } from "../../shared/unique-index.js";
+import { namesUniqueIndex } from "../../shared/unique-index.js";
 import {
   InventoryProviderBindingError,
   normalizeInventoryProviderBinding,
@@ -91,7 +91,7 @@ async function isConfigurationKeyViolation(error: unknown): Promise<boolean> {
       );
     }
   }
-  const named = namesIndex(text, properties, await uniqueIndexNames(COMMERCE_PLUGIN_ID, STORE_INVENTORY_CONFIGURATIONS_COLLECTION, "configurationKey"));
+  const named = await namesUniqueIndex(text, properties, COMMERCE_PLUGIN_ID, STORE_INVENTORY_CONFIGURATIONS_COLLECTION, "configurationKey");
   return (
     named &&
     (coded ||

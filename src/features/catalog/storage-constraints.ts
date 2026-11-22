@@ -1,4 +1,4 @@
-import { namesIndex, uniqueIndexNames } from "../../shared/unique-index.js";
+import { namesUniqueIndex } from "../../shared/unique-index.js";
 import { CatalogError } from "./errors.js";
 import {
   CATALOG_COLLECTION,
@@ -92,7 +92,7 @@ export async function isConfirmedUniqueViolation(
 ): Promise<boolean> {
   const text = errorText(error);
   const properties = errorProperties(error);
-  if (!namesIndex(text, properties, await uniqueIndexNames(pluginId, collection, field))) return false;
+  if (!(await namesUniqueIndex(text, properties, pluginId, collection, field))) return false;
 
   const hasPostgresCode = properties.some((entry) => String(entry.code ?? "") === "23505");
   const hasSqliteCode = properties.some((entry) =>
