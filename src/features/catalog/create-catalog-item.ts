@@ -2,7 +2,7 @@ import { CatalogError, catalogStorage } from "./errors.js";
 import { normalizeCreateCatalogItemInput } from "./normalize.js";
 import {
   assertCatalogStorageConstraints,
-  identifyConfirmedUniqueViolation,
+  findUniqueViolation,
 } from "./storage-constraints.js";
 import type {
   CatalogItemRecord,
@@ -161,7 +161,7 @@ export async function createCatalogItem(
     await storage.put(item.itemId, item);
     return { created: true, item };
   } catch (error) {
-    const uniqueField = await identifyConfirmedUniqueViolation(error, options.collection, options.pluginId);
+    const uniqueField = await findUniqueViolation(error, options.collection, options.pluginId);
     if (!uniqueField) {
       throw new CatalogError("STORAGE_UNAVAILABLE", "catalog item create failed", {
         cause: error,

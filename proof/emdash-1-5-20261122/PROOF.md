@@ -25,7 +25,7 @@ Taken 22 Nov 2026 by `npx playwright test` (sandbox suite) on a new EmDash
    Commerce on 1.5.0) keeps products, settings, policy and native rows and refuses a
    duplicate SKU after the upgrade.
 
-Runs on this branch: `npm test` 885 of 885, `npm run test:integration` 113 of
+Runs on this branch: `npm test` 887 of 887, `npm run test:integration` 113 of
 113, sandbox suite 12 of 12, orders-blocks suite 5 of 5, both Registry upgrade proofs above. Registry backend
-130730 bytes, 342 below the cap. See
+130739 bytes, 333 below the cap. See
 [the compatibility record](../../docs/implementation/emdash-1-5-compatibility.md).

@@ -187,7 +187,7 @@ test("two local Wrangler/D1 processes enforce the EmDash JSON-expression SKU ind
   const rejected = results.find((result) => result.code !== 0);
   assert.match(rejected.output, new RegExp(skuIndex.replaceAll("/", "\\/")));
   assert.match(rejected.output, /SQLITE_CONSTRAINT_UNIQUE/);
-  assert.equal(await identifyConfirmedUniqueViolation(new Error(rejected.output)), "skuKey");
+  assert.equal(identifyConfirmedUniqueViolation(new Error(rejected.output)), "skuKey");
 
   const count = await runD1(
     persistTo,

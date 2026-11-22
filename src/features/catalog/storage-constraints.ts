@@ -1,4 +1,4 @@
-import { namesUniqueIndex } from "../../shared/unique-index.js";
+import { namesIndex, uniqueIndexNames, uniqueIndexNamesAsync } from "../../shared/unique-index.js";
 import { CatalogError } from "./errors.js";
 import {
   CATALOG_COLLECTION,
@@ -84,15 +84,10 @@ function errorProperties(error: unknown): Array<Record<string, unknown>> {
   );
 }
 
-export async function isConfirmedUniqueViolation(
-  error: unknown,
-  field: CatalogUniqueField,
-  collection: string = CATALOG_COLLECTION,
-  pluginId: string = COMMERCE_PLUGIN_ID,
-): Promise<boolean> {
+function namesUniqueViolation(error: unknown, names: string[]): boolean {
   const text = errorText(error);
   const properties = errorProperties(error);
-  if (!(await namesUniqueIndex(text, properties, pluginId, collection, field))) return false;
+  if (!namesIndex(text, properties, names)) return false;
 
   const hasPostgresCode = properties.some((entry) => String(entry.code ?? "") === "23505");
   const hasSqliteCode = properties.some((entry) =>
@@ -106,9 +101,29 @@ export async function isConfirmedUniqueViolation(
   return hasPostgresCode || hasSqliteCode || namesUniqueFailure;
 }
 
-export async function identifyConfirmedUniqueViolation(error: unknown, collection: string = CATALOG_COLLECTION, pluginId: string = COMMERCE_PLUGIN_ID): Promise<CatalogUniqueField | null> {
-  if (await isConfirmedUniqueViolation(error, "commandId", collection, pluginId)) return "commandId";
-  if (await isConfirmedUniqueViolation(error, "skuKey", collection, pluginId)) return "skuKey";
+export function isConfirmedUniqueViolation(
+  error: unknown,
+  field: CatalogUniqueField,
+  collection: string = CATALOG_COLLECTION,
+  pluginId: string = COMMERCE_PLUGIN_ID,
+): boolean {
+  return namesUniqueViolation(error, uniqueIndexNames(pluginId, collection, field));
+}
+
+export function identifyConfirmedUniqueViolation(error: unknown, collection: string = CATALOG_COLLECTION, pluginId: string = COMMERCE_PLUGIN_ID): CatalogUniqueField | null {
+  if (isConfirmedUniqueViolation(error, "commandId", collection, pluginId)) return "commandId";
+  if (isConfirmedUniqueViolation(error, "skuKey", collection, pluginId)) return "skuKey";
+  return null;
+}
+
+/**
+ * identifyConfirmedUniqueViolation through Web Crypto, for Commerce's own
+ * writes, which keeps the script SHA-256 out of the Registry backend.
+ */
+export async function findUniqueViolation(error: unknown, collection = CATALOG_COLLECTION, pluginId = COMMERCE_PLUGIN_ID): Promise<CatalogUniqueField | null> {
+  for (const field of ["commandId", "skuKey"] as const) {
+    if (namesUniqueViolation(error, await uniqueIndexNamesAsync(pluginId, collection, field))) return field;
+  }
   return null;
 }
 
@@ -121,7 +136,7 @@ async function proveUniqueIndex(storage: CatalogStorage, field: CatalogUniqueFie
       try {
         await storage.put(probe.itemId, probe);
       } catch (error) {
-        if (await isConfirmedUniqueViolation(error, field, collection, pluginId)) return;
+        if (namesUniqueViolation(error, await uniqueIndexNamesAsync(pluginId, collection, field))) return;
         throw new CatalogError(
           "STORAGE_CONSTRAINTS_UNAVAILABLE",
           `catalog ${field} uniqueness unproven`,

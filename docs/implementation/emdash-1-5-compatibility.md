@@ -22,8 +22,8 @@ otherwise.
 
 ## What 1.5 changes for Commerce
 
-- **Registry bundle:** 130730 bytes, 342 bytes below the 131072-byte file
-  cap (130494 on 1.4.0; the 236 bytes are the index-name fix below).
+- **Registry bundle:** 130739 bytes, 333 bytes below the 131072-byte file
+  cap (130494 on 1.4.0; the 245 bytes are the index-name fix below).
 - **Block Kit:** `@emdash-cms/blocks` 1.5.0 changes only chart and button
   rendering. A toggle still has no `disabled` field and plugin pages still
   render no `media_picker`, so Commerce's own image chooser and its
@@ -45,10 +45,17 @@ otherwise.
   `database/plugin-storage-index-name.ts`), and step 095 renames existing
   indexes. Commerce proves each unique index by reading the index name out of
   the duplicate error, so on a 1.5 store a 1.4 Commerce reports "uniqueness
-  unproven" and refuses to add a product. `namesUniqueIndex` in
-  `src/shared/unique-index.ts` now checks an error against both names, and
-  every matcher uses it. A store must therefore
-  run this Commerce before it moves to EmDash 1.5.
+  unproven" and refuses to add a product. `uniqueIndexNames` in
+  `src/shared/unique-index.ts` gives both names and every matcher checks an
+  error against them. The published classifiers (`isConfirmedUniqueViolation`,
+  `identifyConfirmedUniqueViolation`,
+  `identifyManagedSkuRegistrationClaimUniqueViolation`) still answer
+  synchronously, so they use a small script SHA-256, since Web Crypto's digest
+  only returns a Promise. Commerce's own catalog writes use the Web Crypto
+  version (`uniqueIndexNamesAsync`, `findUniqueViolation`) because the script
+  digest would not fit the Registry file cap; a test checks both give the same
+  names. A store must therefore run this Commerce before it moves to EmDash
+  1.5, and the reference article says so.
 - **Plugin memory (store database step 092).** Sandboxed `ctx.kv` values move
   to the shared options table. Commerce keeps only short-lived connect-flow
   notes there (`state:connect:<flow>`); the store key and connection live in

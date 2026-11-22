@@ -4,7 +4,7 @@ import { CatalogError } from "./errors.js";
 import { normalizeSku } from "./normalize.js";
 import {
   assertCatalogStorageConstraints,
-  identifyConfirmedUniqueViolation,
+  findUniqueViolation,
 } from "./storage-constraints.js";
 import type {
   CatalogItemReadStorage,
@@ -80,11 +80,7 @@ export async function setCatalogItemSku(
       if (result.applied) return { changed: true, item };
     } catch (error) {
       if (
-        (await identifyConfirmedUniqueViolation(
-          error,
-          options.collection,
-          options.pluginId,
-        )) === "skuKey"
+        (await findUniqueViolation(error, options.collection, options.pluginId)) === "skuKey"
       ) {
         throw new CatalogError("SKU_CONFLICT", "sku is already assigned to another catalog item");
       }
