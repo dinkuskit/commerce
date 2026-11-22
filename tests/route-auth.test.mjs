@@ -18,11 +18,7 @@ const SANDBOX_PUBLIC = [
   "checkout/guest/start POST",
   "checkout/guest/cart POST",
   "checkout/guest/readiness GET",
-  "account/sign-in/start POST",
-  "account/sign-in/verify POST",
-  "account/sign-out POST",
-  "account/orders GET",
-  "account/profile GET,POST",
+  "orders/lookup POST",
 ];
 
 function publicSet(routes) {
@@ -43,7 +39,7 @@ for (const [label, routes, expected] of [
       else assert.equal(typeof route.permission, "string", `${name} is admin but names no EmDash permission`);
     }
   });
-  test(`${label}: public routes are exactly the shopper routes`, () => {
+  test(`${label}: public routes are exactly the storefront routes`, () => {
     assert.deepEqual(publicSet(routes), [...expected].sort());
   });
 }

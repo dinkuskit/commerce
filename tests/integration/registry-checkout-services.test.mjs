@@ -1,6 +1,5 @@
 // This SDK uses one workerd port; keep the readiness and service cases in one test process.
 import './registry-checkout-readiness-cases.mjs';
-import './shopper-accounts-runtime-cases.mjs';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, mkdir, writeFile, copyFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -95,7 +94,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
-  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'media:read', 'network:request', 'email:send']);
+  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'media:read', 'network:request']);
   assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
@@ -108,7 +107,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
 });
 
-test('EmDash 1.4 SDK storage preserves checkout records across runtime restart without reseed', async t => {
+test('EmDash 1.5 SDK storage preserves checkout records across runtime restart without reseed', async t => {
   const directory = await mkdtemp('/tmp/commerce-emdash-1-2-restart-');
   const databasePath = join(directory, 'runtime.db');
   t.after(() => rm(directory, { recursive: true, force: true }));
@@ -267,7 +266,7 @@ test('compiled digital-only basket pays no flat shipping and Payments gets no sh
     charge: { currency: 'USD', minor: '0' } });
 });
 
-test('EmDash 1.4 original storage shares admin prices, storefront helpers and canonical checkout', async t => {
+test('EmDash 1.5 original storage shares admin prices, storefront helpers and canonical checkout', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
   const prepared = await state.invoke(PREPARE);

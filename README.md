@@ -36,12 +36,12 @@ an EmDash site installs it from the Registry or from `@dinkuskit/commerce/sandbo
 with `@dinkuskit/commerce/descriptor`. It serves Block Kit admin only (no React
 admin screens; `commerce-admin-block-kit-only-20261024`): the product panels,
 the Orders and Commerce settings pages, the private `catalog` and `orders`
-routes, the store's publish check, the public catalog reads, checkout, shopper
-accounts and `store-proof`. The Template Store's local dev, demo, playground and
+routes, the store's publish check, the public catalog reads, checkout, the order
+lookup and `store-proof`. The Template Store's local dev, demo, playground and
 browser tests all install it.
 
 The package root (`@dinkuskit/commerce`) is a library, not an EmDash plugin
-entry: it exports Commerce's feature libraries (catalog, checkout, customers,
+entry: it exports Commerce's feature libraries (catalog, checkout,
 orders, feeds, structured data, store settings, storefront availability,
 inventory provider and setup, fixed bundles) for host apps such as storefronts
 and feed builders, and the `./features/*` subpaths export the same libraries one
@@ -80,7 +80,7 @@ next beta and then a final release, each on the owner's go; see
 [docs/implementation/releases.md](docs/implementation/releases.md).
 
 Development and the private package's runtime peer are pinned to exact
-`emdash@1.4.0`. The first feature is the `dinkus.catalog` draft-item creation
+`emdash@1.5.0`. The first feature is the `dinkus.catalog` draft-item creation
 pilot, registered under the EmDash runtime slug `dinkus-commerce`. It refuses
 writes unless the live EmDash storage collection proves unique `commandId`
 and site-wide canonical `skuKey` constraints.
@@ -156,7 +156,7 @@ unmanaged and do not need Inventory. Existing managed products stay managed:
 clerks can edit prices, but omitted tracking fields preserve claims, bindings,
 and fail-closed sellability. The kernel still accepts future Manage stock
 transitions; the panels and the `catalog` route refuse them in v1. Registry/sandbox
-Block Kit 1.4.0 cannot render a true disabled slider, so the Coming-soon notice
+Block Kit 1.5.0 cannot render a true disabled slider, so the Coming-soon notice
 is a temporary fallback pending host support. Commerce still stores Money.
 Commerce → Settings → Catalog lets the shop owner show out-of-stock products on the
 live site or hide them. The default is to show them. Hide is opt-in and
@@ -167,7 +167,7 @@ Product images follow WooCommerce's model on EmDash's Media Library: a product
 references one primary image and an ordered gallery (up to 8) by media id, a
 store placeholder lives in Commerce → Settings → Catalog, and Commerce stores
 no file, URL, alt text or size. The sandbox admin lists the library itself
-(Block Kit 1.4.0 renders no `media_picker` on plugin pages) through the
+(Block Kit 1.5.0 renders no `media_picker` on plugin pages) through the
 `media:read` capability; `GET catalog/public` returns image ids with alt
 (media alt, caption, then product name) and dimensions read live, and the
 storefront maps ids to public URLs and `srcset` with the exported preset
@@ -176,7 +176,7 @@ helpers. See
 
 Mounted-site work remains a private pilot; this package does not publish
 Commerce or claim a trusted Registry installation. This migration targets the
-official public `emdash@1.4.0` package and verifies the local
+official public `emdash@1.5.0` package and verifies the local
 workerd/sandbox host with synthetic SQLite fixtures. A real Registry
 publication/install remains separately authorized. Commerce still fails
 managed-stock writes closed when its configured provider is unavailable.
@@ -269,9 +269,9 @@ bin/verify-commerce full
 ```
 
 The quick verifier covers types, unit contracts, feature boundaries, public
-repository hygiene, and the official published EmDash 1.4.0 package with its
+repository hygiene, and the official published EmDash 1.5.0 package with its
 recorded npm integrity. The full verifier additionally runs cross-process SQLite atomicity
-proof against EmDash's real 1.4.0 storage repository and a two-process local
+proof against EmDash's real 1.5.0 storage repository and a two-process local
 Wrangler/D1 expression-index proof, plus the real workerd + SQLite
 admin/browser flow (`npm run test:sandbox` to run that boundary alone). Install Chromium first with
 `npx playwright install chromium`. No live site or Registry publication is used.

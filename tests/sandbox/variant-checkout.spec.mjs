@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import {writeFileSync} from "node:fs";
-import { BLOCK_FORM, openCard, openPanel, openProductPage } from './product-page.mjs';
+import { BLOCK_FORM, openCard, openPanel, openProductPage, uniqueIndexName } from './product-page.mjs';
 
 function proofDb() {
   const url = process.env.COMMERCE_PROOF_DB;
@@ -101,7 +101,7 @@ test('merchant edits choices and independent prices on desktop and phone', async
     await getStarted.or(ready).first().waitFor({state:'visible',timeout:60000});
     if (await getStarted.isVisible()) await getStarted.click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect.poll(() => db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(`uidx_plugin_dinkus-commerce_${catalog}_skuKey`), {timeout:90000}).toBeTruthy();
+    await expect.poll(() => db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(uniqueIndexName("skuKey", catalog)), {timeout:90000}).toBeTruthy();
     const opened = await openProductPage(page, name), ui = opened.panel;
     await ui.getByRole('textbox',{name:'SKU',exact:true}).fill('MERCHANT-PROOF-SMALL');
     await ui.getByRole('button',{name:'Save',exact:true}).click();

@@ -2,11 +2,13 @@ import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { BLOCK_FORM, ensureProductsCollection, ok, openPanel, setOnSale } from "./product-page.mjs";
+import { BLOCK_FORM, ensureProductsCollection, findUniqueIndex, legacyUniqueIndexName, ok, openPanel, openProductPage, setOnSale, uniqueIndexName } from "./product-page.mjs";
 
 // Run by scripts/registry-upgrade-proof.mjs. The "old" phase runs an earlier
-// release's Registry build and stocks the store through that release's own
-// admin; the "new" phase restarts on this build against the same database.
+// release's Registry build on that release's own EmDash and stocks the store
+// through its admin; "bridge" (0.8.0 and later) runs this build on that same
+// EmDash; "new" restarts on this build and this checkout's EmDash against the
+// same database.
 const phase = process.env.COMMERCE_UPGRADE_PHASE;
 const headers = { "X-EmDash-Request": "1" };
 const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
@@ -80,7 +82,7 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
   test.skip(phase !== "old");
   await signIn(page, request);
   const { database, rows } = storage();
-  await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey"), { timeout: 90000 }).toBeTruthy();
+  await expect.poll(() => findUniqueIndex(database, "skuKey"), { timeout: 90000 }).toBeTruthy();
   const admin = async (input) => {
     const response = await page.request.post(endpoint, { data: input, headers });
     const body = await response.json();
@@ -137,6 +139,33 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
   database.close();
 });
 
+const withoutMemberSku = (products) => products.map((product) => product.variants
+  ? { ...product, variants: { ...product.variants, members: product.variants.members.map(({ sku: _sku, ...member }) => member) } } : product);
+
+// Another page tries the hat's SKU: refused as a duplicate, which needs the unique-index proof to pass first.
+async function duplicateSkuRefused(page, rows, title) {
+  const count = items(rows("catalog_items")).length;
+  const another = await openProductPage(page, title);
+  await another.panel.getByRole("textbox", { name: "SKU", exact: true }).fill("RED-HAT");
+  await another.panel.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(another.panel.getByText("sku is already assigned to another catalog item", { exact: true }).first()).toBeVisible({ timeout: 30000 });
+  expect(items(rows("catalog_items"))).toHaveLength(count);
+}
+
+test("this build runs on the earlier release's EmDash before the store's EmDash upgrades", async ({ page, request }) => {
+  test.skip(phase !== "bridge");
+  const before = JSON.parse(readFileSync(snapshotFile(), "utf8"));
+  await signIn(page, request);
+  const { database, rows } = storage();
+  // The old EmDash still names the index the old way; this build proves and reads it under that name.
+  expect(findUniqueIndex(database, "skuKey")?.name).toBe(legacyUniqueIndexName("skuKey"));
+  for (const name of COLLECTIONS) expect(rows(name), name).toEqual(before.storage[name]);
+  expect(withoutMemberSku(await publicCatalog(page.request))).toEqual(before.shop);
+  await duplicateSkuRefused(page, rows, "Bridge hat");
+  await capture(page, "duplicate-refused");
+  database.close();
+});
+
 test("this build keeps the upgraded store's products, settings, page and sellability", async ({ page, request }) => {
   test.skip(phase !== "new");
   const before = JSON.parse(readFileSync(snapshotFile(), "utf8"));
@@ -153,8 +182,6 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   expect(rows("product_pages")).toEqual({});
   // 2. Products sold before the upgrade stay on sale with the same prices; hidden ones stay off.
   // This build also says each variant member's own SKU, which the earlier release did not; nothing else may differ.
-  const withoutMemberSku = (products) => products.map((product) => product.variants
-    ? { ...product, variants: { ...product.variants, members: product.variants.members.map(({ sku: _sku, ...member }) => member) } } : product);
   expect(withoutMemberSku(await publicCatalog(page.request))).toEqual(before.shop);
 
   // 3. Commerce settings keeps the saved setting; every product is made for its page, so there is no list of
@@ -211,6 +238,11 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   // (commerce-remove-native-entry-20261101). The Registry build never reads them: the native mug is not on sale.
   expect(rawRows(database, NATIVE_COLLECTIONS)).toEqual(before.nativeRows);
   expect((await publicCatalog(page.request)).some((item) => item.id === "native-mug")).toBe(false);
+
+  // 9. The upgrade renamed the index to EmDash 1.5's digest name (core migration 095), and a duplicate SKU is still refused.
+  expect(findUniqueIndex(database, "skuKey")?.name).toBe(uniqueIndexName("skuKey"));
+  await duplicateSkuRefused(page, rows, "Upgraded hat");
+  await capture(page, "duplicate-refused");
 
   database.close();
 });

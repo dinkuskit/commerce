@@ -33,7 +33,6 @@
   "capabilities": [
     "media:read",
     "network:request",
-    "email:send",
     "admin.editor-draft:read"
   ],
   "allowedHosts": [
@@ -122,16 +121,10 @@
       "indexes": [],
       "uniqueIndexes": []
     },
-    "customers": {
-      "indexes": [],
-      "uniqueIndexes": []
-    },
-    "customer_login_codes": {
-      "indexes": [],
-      "uniqueIndexes": []
-    },
-    "customer_sessions": {
-      "indexes": [],
+    "order_lookup_guesses": {
+      "indexes": [
+        "expiresAt"
+      ],
       "uniqueIndexes": []
     },
     "product_pages": {

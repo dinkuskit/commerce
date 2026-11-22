@@ -16,7 +16,8 @@ for the exact public shopper paths listed here.
   routes accept only whitelisted input: catalog reads accept only `cursor` or
   one `itemId`; the guest cart accepts only whole-cart writes of
   `catalogItemId`/`quantity` (or `productId`/`options`/`quantity`) lines with
-  the version it read; start accepts only contact and an optional coupon code. Prices and totals always come
+  the version it read; start accepts only contact and an optional coupon code;
+  the order lookup accepts only `orderNumber` and `email`. Prices and totals always come
   from Commerce catalog storage, never from the browser.
 - `tests/route-auth.test.mjs` fails if any route lacks a declaration, if an
   admin route has no permission, or if the public set changes.
@@ -54,11 +55,7 @@ Public Registry/sandbox paths today:
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/start` |
 | `POST` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/cart` |
 | `GET` | `/_emdash/api/plugins/dinkus-commerce/checkout/guest/readiness` |
-| `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-in/start` |
-| `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-in/verify` |
-| `POST` | `/_emdash/api/plugins/dinkus-commerce/account/sign-out` |
-| `GET` | `/_emdash/api/plugins/dinkus-commerce/account/orders` |
-| `GET,POST` | `/_emdash/api/plugins/dinkus-commerce/account/profile` |
+| `POST` | `/_emdash/api/plugins/dinkus-commerce/orders/lookup` |
 
 Never open a
 `/_emdash/api/plugins/dinkus-commerce/*` wildcard.
