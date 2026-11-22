@@ -18,6 +18,7 @@ class Store {
     this.records.set(id, structuredClone(row)); this.revisions.set(id, String(Number(this.revisions.get(id) ?? 0) + 1));
   }
   async delete(id) { this.records.delete(id); this.revisions.delete(id); }
+  async deleteMany(ids) { for (const id of ids) await this.delete(id); return ids.length; }
   async query({ where = {}, limit = 50 } = {}) {
     const rows = [...this.records].filter(([, row]) => Object.entries(where).every(([key, value]) => row[key] === value));
     return { items: rows.slice(0, limit).map(([id, data]) => ({ id, data: structuredClone(data) })), hasMore: rows.length > limit };
@@ -227,6 +228,50 @@ test('deleting a page for good deletes its product, every variant and their rows
   assert.ok(await catalog.get('cap'));
 });
 
+test('a permanent delete that stops halfway holds its product until the same request finishes it', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const names = ['catalog_prices', 'catalog_manual_availability', 'catalog_backorder_policies', 'catalog_media', 'product_feed_eligibility'];
+  const rows = names.map(() => new Store());
+  for (const row of rows) await row.put('mug', { catalogItemId: 'mug' });
+  const storage = { catalog, pages, rows };
+  await pick(ctx, 'mug');
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: true });
+  const media = rows[3], deleteMany = media.deleteMany.bind(media);
+  media.deleteMany = async () => { throw new Error('worker stopped'); };
+  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true }), /worker stopped/);
+  assert.deepEqual([(await catalog.get('mug')).pageId, (await catalog.get('mug')).offSale], ['page-1', true], 'the deleted page still holds it, off the shop');
+  // No other page can take a product halfway deleted.
+  await assert.rejects(setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale: true }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
+  media.deleteMany = deleteMany;
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true });
+  assert.equal(await catalog.get('mug'), null);
+  assert.ok(rows.every((row) => row.records.size === 0));
+  assert.equal(pages.records.size, 0, 'the page\'s links go last');
+});
+
+test('deleting the biggest product for good stays within the sandbox call budget', async () => {
+  const { ctx, catalog, pages } = await shop();
+  await addCatalogVariantOption({ catalog }, { productId: 'mug', optionId: 'size', optionLabel: 'Size', values: [
+    { valueId: 'v0', label: 'V0', member: { catalogItemId: 'mug', fulfillment: 'physical' } },
+    { valueId: 'v1', label: 'V1', member: { commandId: 'create-mug-1', name: 'Mug', sku: 'MUG-1', fulfillment: 'physical' } },
+  ] }, { createId: () => 'mug-1', collection: 'catalog_items' });
+  // Fifty variants, the most a product may have.
+  const mug = await catalog.get('mug'), one = await catalog.get('mug-1'), [first, second] = mug.variantProduct.members;
+  for (let n = 2; n < 50; n += 1) await catalog.put('mug-' + n, { ...one, itemId: 'mug-' + n, recordId: 'mug-' + n, commandId: 'create-mug-' + n, sku: 'MUG-' + n, skuKey: 'mug-' + n });
+  await catalog.put('mug', { ...mug, variantProduct: { ...mug.variantProduct, members: [first, second, ...Array.from({ length: 48 }, (_, n) => ({ ...second, catalogItemId: 'mug-' + (n + 2) }))] } });
+  const rows = Array.from({ length: 5 }, () => new Store());
+  for (const row of rows) for (const id of catalog.records.keys()) await row.put(id, { catalogItemId: id });
+  await pick(ctx, 'mug');
+  await setProductPageOnSale({ catalog, pages, rows }, { entryId: 'page-1', onSale: true });
+  assert.equal((await catalog.get('mug')).variantProduct.members.length, 50);
+  let calls = 0;
+  const counted = (store) => new Proxy(store, { get: (target, key) => typeof target[key] === 'function' ? (...args) => (calls += 1, target[key](...args)) : target[key] });
+  await setProductPageOnSale({ catalog: counted(catalog), pages: counted(pages), rows: rows.map(counted) }, { entryId: 'page-1', onSale: false, deleted: true });
+  assert.equal(catalog.records.size, 0, 'every variant is gone');
+  assert.ok(rows.every((row) => row.records.size === 0));
+  assert.ok(calls <= 32, `a permanent delete of fifty variants made ${calls} storage calls`);
+});
+
 test('publishing names the product from the page title, and only a publish does', async () => {
   const { ctx, catalog, pages } = await shop();
   const storage = { catalog, pages };
@@ -270,8 +315,9 @@ test('the page that sells a product can always take it off sale, whatever other 
   assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: false }), { changed: true });
   await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: false, deleted: true });
   assert.equal(await pageProduct(pages, 'page-1'), undefined);
-  // Once its page is gone, another page may sell it.
-  assert.deepEqual(await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale: true }), { changed: true });
+  // Once its page is gone for good, so is the product (catalog-permanent-delete-20261122).
+  assert.equal(await catalog.get('mug'), null);
+  await assert.rejects(setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale: true }), (error) => error.code === 'CATALOG_ITEM_NOT_FOUND');
 });
 
 test('upgrade: a published page with no link can still withdraw its product after another page linked it in the panel', async () => {
@@ -384,11 +430,9 @@ test('a check that sold the panel\'s pick and stopped before moving the pointer:
   assert.deepEqual([(await catalog.get('cap')).offSale, (await catalog.get('cap')).pageId], [true, 'page-1']);
   assert.equal(await readPublicCatalogItem(ctx, 'cap'), null);
   assert.equal(await readPublicCatalogItem(ctx, 'mug'), null);
-  // Trashed for good: the cap is given back with no page, so another page may sell it.
+  // Deleted for good: the page's products go with it, the stray pick too.
   await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true });
-  assert.deepEqual([(await catalog.get('cap')).offSale, (await catalog.get('cap')).pageId], [true, undefined]);
-  await setProductPageOnSale(storage, { catalogItemId: 'cap', entryId: 'page-2', onSale: true });
-  assert.equal((await catalog.get('cap')).pageId, 'page-2');
+  assert.deepEqual([await catalog.get('cap'), await catalog.get('mug')], [null, null]);
 });
 
 test('a variant member is refused before any link changes', async () => {

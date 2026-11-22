@@ -27,9 +27,9 @@ export interface ProductPageRecord {
   claim?: string;
 }
 export type ProductPages = Pick<StorageCollection<ProductPageRecord>, "get" | "put" | "getVersioned" | "compareAndSet" | "compareAndDelete" | "delete" | "query">;
-type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet" | "delete">;
+type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet" | "delete" | "deleteMany">;
 /** A product's own rows outside catalog_items, each keyed by its item id: prices, stock, backorders, media, feeds. */
-type ProductRows = Pick<StorageCollection<unknown>, "delete">[];
+type ProductRows = Pick<StorageCollection<unknown>, "deleteMany">[];
 
 function id(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim() || value.length > 1024) throw new CatalogError("INVALID_INPUT", field + " must be a valid id");
@@ -110,42 +110,42 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     if (item.pageId && item.pageId !== entryId) throw conflict();
     const { offSale: _off, pageId: _page, pageClaim: _claim, ...rest } = item;
     changed = !offShop(item) !== onSale;
-    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const }), ...(deleted ? {} : { pageId: entryId, pageClaim: claim }) };
+    // A page deleted for good keeps its products until they are gone, so no other page can take one halfway.
+    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const }), pageId: entryId, pageClaim: claim };
   });
   // A check that stopped after selling the panel's pick, before moving the pointer, left that pick on sale under this
   // page; taking the page off the shop withdraws it too (catalog-archive-is-page-trash-20261115).
   const pick = input.catalogItemId === undefined && !onSale ? await pageProduct(pages, entryId) : undefined;
   if (pick && pick !== catalogItemId) await editProduct(catalog, pick, item => {
     if (item.pageId !== entryId || item.offSale && !deleted) return null;
-    const { pageId: _page, pageClaim: _claim, ...rest } = item;
     changed ||= !offShop(item);
-    return { ...(deleted ? rest : item), offSale: true };
+    return { ...item, offSale: true };
   });
   // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
   if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);
+  // The page is gone for good, so its products are too, freeing their SKUs (catalog-permanent-delete-20261122). Its
+  // links go only after them, so the same request finishes a delete that stopped.
+  if (deleted) for (const itemId of new Set([catalogItemId, pick])) if (itemId) await forgetProduct(catalog, storage.rows, itemId, entryId);
   const moved = deleted ? !mine || (await pages.compareAndDelete(key, mine.revision)).applied
     : (await pages.compareAndSet(key, mine?.revision ?? null, { entryId, catalogItemId, claim })).applied;
   if (!moved && (await pages.get(key))?.catalogItemId !== catalogItemId) {
     await release(catalogItemId, claim);
     throw conflict();
   }
-  if (deleted) {
-    await pages.delete("e:" + entryId);
-    // The page is gone for good, so its products are too, freeing their SKUs (catalog-permanent-delete-20261122).
-    for (const itemId of new Set([catalogItemId, pick])) if (itemId && storage.rows) await forgetProduct(catalog, storage.rows, itemId);
-  }
+  if (deleted) await pages.delete("e:" + entryId);
   return { changed };
 }
 
 /**
- * Deletes a product no page sells, with every variant and their own rows; orders keep their own copy.
- * The product's own item goes last, so a delete that stops halfway leaves it to be deleted again.
+ * Deletes a product the deleted page still holds, with every variant and their own rows, in one call per collection
+ * whatever its size; orders keep their own copy. The product's own item goes last, so a delete that stops halfway
+ * leaves it, still held by the page, to be deleted again.
  */
-async function forgetProduct(catalog: Catalog, rows: ProductRows, itemId: string) {
+async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: string, entryId: string) {
   const item = (await catalog.getVersioned(itemId))?.value as CatalogItemRecord | undefined;
-  if (!item || item.pageId) return;
-  for (const id of [...(item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId), itemId]) {
-    for (const row of rows) await row.delete(id);
-    await catalog.delete(id);
-  }
+  if (item?.pageId !== entryId) return;
+  const variants = (item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId);
+  for (const row of rows) await row.deleteMany([...variants, itemId]);
+  if (variants.length) await catalog.deleteMany(variants);
+  await catalog.delete(itemId);
 }
