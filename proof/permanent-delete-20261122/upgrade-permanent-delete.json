@@ -1,0 +1,25 @@
+{
+  "from": "v0.8.0",
+  "cap": {
+    "rowsBefore": [
+      "catalog_prices",
+      "catalog_manual_availability",
+      "catalog_backorder_policies",
+      "catalog_media",
+      "product_feed_eligibility"
+    ],
+    "itemAfter": null,
+    "rowsAfter": []
+  },
+  "scarfUnchanged": true,
+  "keptRowsUnchanged": [
+    "orders",
+    "order_numbers",
+    "storefront_out_of_stock_listing",
+    "storefront_availability_settings",
+    "managed_sku_claims"
+  ],
+  "shopAfter": [
+    "Kept scarf"
+  ]
+}

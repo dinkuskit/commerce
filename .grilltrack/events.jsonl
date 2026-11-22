@@ -755,3 +755,5 @@
 {"action": "decision_proposed", "at": "2026-11-22T16:03:27+00:00", "data": {"decision_id": "commerce-order-lookup-20261122"}, "event_id": "958726db-42c1-4ca3-8d33-f0f264ab953d"}
 {"action": "decision_locked", "at": "2026-11-22T16:03:33+00:00", "data": {"decision_id": "commerce-order-lookup-20261122"}, "event_id": "84d7d64d-9ea1-494d-9a18-5650be8173b0"}
 {"action": "decision_superseded", "at": "2026-11-22T16:03:33+00:00", "data": {"affected": ["commerce-orders-staff-access-001"], "decision_id": "shopper-accounts-v1-20261020", "replacement_id": "commerce-order-lookup-20261122"}, "event_id": "67f6310a-4fad-4237-87ce-1bca378ffb97"}
+{"action": "decision_proposed", "at": "2026-11-22T17:39:28+00:00", "data": {"decision_id": "catalog-permanent-delete-20261122"}, "event_id": "febbf834-0331-43cf-855d-1fd35f6bfc91"}
+{"action": "decision_locked", "at": "2026-11-22T17:39:29+00:00", "data": {"decision_id": "catalog-permanent-delete-20261122"}, "event_id": "b92c2897-0aa9-45e4-b34c-cbf3593f0200"}
