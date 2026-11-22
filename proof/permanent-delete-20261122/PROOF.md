@@ -2,7 +2,7 @@
 
 Pull request: `dinkuskit/commerce#288`
 Decision: `catalog-permanent-delete-20261122` (the owner approved on 2026-11-22)
-Base: `origin/main` `1e1d1a1`
+Base: `origin/main` `8afcbbb` (first measured on `1e1d1a1`)
 
 ## Real store run (workerd + SQLite, `npm run test:sandbox`, 12/12)
 
@@ -52,7 +52,7 @@ No schema, collection or index change. The delete reads and removes existing rec
 
 ## Results (Node v24.22.0)
 
-- `npm run build`: `registry_bundle=pass backend_bytes=130961 headroom_bytes=111`
+- `npm run build`: `registry_bundle=pass backend_bytes=124997 headroom_bytes=6075` (main `8afcbbb`: 124,531, so +466)
 - `npx tsc --noEmit`: pass
-- `npm run test:unit`: 890/890 pass
+- `npm run test:unit`: 894/894 pass
 - `npm run test:sandbox`: 12/12 pass
