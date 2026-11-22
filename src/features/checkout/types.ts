@@ -222,7 +222,11 @@ export interface CheckoutAttempt {
  * The shopper's cart lives beside its checkout attempts (commerce-server-cart-20261113). `cartExpires` is
  * Unix seconds as a string, 30 days after the last change, indexed so the background check can find old carts.
  */
-export interface CheckoutRecord { attempts: CheckoutAttempt[]; cart?: { lines: CartLine[]; key?: string }; cartExpires?: string }
+export interface CheckoutRecord {
+  attempts: CheckoutAttempt[]; cart?: { lines: CartLine[]; key?: string }; cartExpires?: string;
+  /** The abandoned-cart email (commerce-abandoned-cart-email-20261122): when to look (Unix seconds, indexed), the shopper's tick, and once sent. */
+  remindAt?: string; news?: true; emailed?: true;
+}
 export interface CheckoutPaymentAssociation {
   recordKind: "checkout-payment-association";
   attemptId: string;

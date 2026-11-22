@@ -8,7 +8,7 @@ import { handOffPaidOrder } from "./paid-orders.js";
 import { cut, lineOptions } from "../../shared/line-text.js";
 import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
-import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
+import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutRecord, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
 import {
   captureCheckoutContact,
   CheckoutContactError,
@@ -105,7 +105,9 @@ const normalizedCoupon = (code: string) => REGISTRY_BUILD ? code : normalizeCoup
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 /** `saved`: the lines were read from the saved cart, which must still hold them (the guest route). */
-export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string, saved?: boolean): Promise<CheckoutAttempt> {
+/** `remind`: the abandoned-cart email's fields, saved with the new attempt unless that cart was already emailed. */
+export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string, saved?: boolean,
+  remind?: Pick<CheckoutRecord, "remindAt" | "news">): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
   if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
   const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
@@ -147,7 +149,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
       continue;
     }
     if (stored?.record.attempts.some(a => a.attemptId === attempt.attemptId)) fail("Attempt identity reused");
-    if (await e.store.compareAndSet(cartId, stored?.version ?? null, { ...stored?.record, attempts: [...(stored?.record.attempts ?? []), attempt] })) {
+    if (await e.store.compareAndSet(cartId, stored?.version ?? null, { ...stored?.record, ...!stored?.record.emailed && remind, attempts: [...(stored?.record.attempts ?? []), attempt] })) {
       return drive(e, cartId, attempt.attemptId, true);
     }
   }

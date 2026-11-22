@@ -115,7 +115,8 @@ test("compiled installed export and sandbox metadata expose fixed public seam", 
   assert.equal(typeof createInstalledCheckoutHandlers, "function");
   assert.equal(sandboxManifest.id, "dinkus-commerce");
   // The product page panel reads only the page's title and never changes the page; Commerce holds the link.
-  assert.deepEqual(sandboxManifest.capabilities, ["admin.editor-draft:read", "media:read", "network:request"]);
+  // email:send is for the abandoned-cart email (commerce-abandoned-cart-email-20261122).
+  assert.deepEqual(sandboxManifest.capabilities, ["admin.editor-draft:read", "media:read", "network:request", "email:send"]);
   assert.deepEqual(sandboxManifest.allowedHosts, ['payments.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   assert.equal(typeof sandboxPlugin.routes[GUEST_CHECKOUT_PREPARE_ROUTE].handler, "function");
 });

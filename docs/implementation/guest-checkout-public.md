@@ -178,13 +178,27 @@ read (`null` for a cart never saved):
   the cart
   (`commerce-cart-expiry-20261113`). A paid cart also reads as empty.
 
+- `{ "stop": true }` stops cart reminder emails to the email on the cart's
+  last checkout. It is sent with the key from the abandoned cart email's
+  link and answers like a read (`commerce-abandoned-cart-email-20261122`).
+
 The answer carries `data.cart`:
 `{ lines: [{ catalogItemId, quantity }], version, expiresAt }`, with
 `expiresAt` in Unix seconds, beside the usual `checkout` projection.
 
 `POST checkout/guest/start` starts checkout from the saved cart. The browser
 sends no lines. The body is `{}` or `{ "contact": { ... } }` (plus
-`couponCode` on self-hosted stores). An empty cart answers `INVALID_CART`.
+`couponCode` on self-hosted stores), with `"news": true` when the shopper
+ticked "Email me with news and offers". An empty cart answers `INVALID_CART`.
+
+The start saves `remindAt` (10 hours on, indexed) and the tick on the cart
+record. The 5-minute background check reads up to 5 carts past `remindAt` a
+run: a checkout still open is put back an hour; otherwise `remindAt` is
+removed and, when the owner's setting, the tick, an unpaid ended checkout, a
+non-empty cart and no stop for the email all allow it, the cart is marked
+`emailed` in the same write and one email goes through EmDash email with a
+freshly minted capability for the same cart as the `/cart/c/<id>?key=<secret>`
+link. A cart marked `emailed` never gets `remindAt` again.
 Extra fields, including `lines`, `price`, `total`, `paymentState`,
 `provider`, `binding`, `redirect`, `cartId`, `paid`, and `attemptId`, are
 rejected.

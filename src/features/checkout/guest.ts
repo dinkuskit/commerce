@@ -7,6 +7,7 @@ import { CouponUnavailableError } from "./pricing.js";
 import { authorizeGuestCapability, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
+import { sha256Hex } from "../../shared/secret.js";
 import { reconcilePaymentWakes } from "./wake.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
 import {
@@ -22,6 +23,7 @@ import type {
   GuestCheckoutRuntime,
 } from "./types.js";
 import type { CommercePaymentWakePort } from "./wake.js";
+import type { StorageCollection } from "emdash";
 
 function fail(code: GuestCheckoutError["code"]): never {
   throw new GuestCheckoutError(code);
@@ -38,9 +40,11 @@ export function admitGuestCheckoutPrepareInput(raw: unknown): void {
 }
 
 /** Checkout starts from the cart record; the browser sends no lines (commerce-server-cart-20261113). */
+/** `news`: the shopper ticked "Email me with news and offers" (commerce-abandoned-cart-email-20261122). */
 export function admitGuestCheckoutStartInput(raw: unknown, pricing?: boolean): { couponCode?: string } {
-  const input = asObject(raw);
-  if (!["", "contact", ...(pricing ? ["couponCode", "contact,couponCode"] : [])].includes(sortedKeys(input))) fail("INVALID_CART");
+  const { news, ...input } = asObject(raw);
+  if (news !== undefined && news !== true ||
+      !["", "contact", ...(pricing ? ["couponCode", "contact,couponCode"] : [])].includes(sortedKeys(input))) fail("INVALID_CART");
   if (!Object.hasOwn(input, "couponCode")) return {};
   if (typeof input.couponCode !== "string" || !input.couponCode.trim() ||
       input.couponCode.length > 128) fail("INVALID_CART");
@@ -48,6 +52,8 @@ export function admitGuestCheckoutStartInput(raw: unknown, pricing?: boolean): {
 }
 
 const CART_SECONDS = 30 * 86_400;
+/** A shopper who stopped cart reminder emails is kept by their email's hash. */
+export const stopKey = (email: string) => sha256Hex(email.trim().toLowerCase());
 
 /** Live lines: none once the cart is 30 days untouched (commerce-cart-expiry-20261113) or its order is paid. */
 export function cartLines(record: CheckoutRecord | undefined, now: number): CartLine[] {
@@ -75,11 +81,12 @@ export async function cartGuestCheckout(
   runtime: GuestCheckoutRuntime,
   input: unknown,
   headers?: Headers | Record<string, string>,
+  stops?: Pick<StorageCollection<{ at: string }>, "put">,
 ): Promise<GuestCheckoutResult> {
   try {
     const raw = input === undefined ? {} : asObject(input);
     const keys = sortedKeys(raw);
-    if (!["", "lines,version", "key,lines,version"].includes(keys)) fail("INVALID_CART");
+    if (!["", "stop", "lines,version", "key,lines,version"].includes(keys) || keys === "stop" && raw.stop !== true) fail("INVALID_CART");
     const authorized = await authorizeGuestCapability(runtime, readGuestCapabilityHeader(headers));
     const store = createCheckoutStore(runtime.carts);
     const now = nowSeconds(runtime);
@@ -89,6 +96,10 @@ export async function cartGuestCheckout(
     if (!keys) {
       // A read is also the status check: it runs Commerce's payment check on the current attempt.
       if (attempt && paymentsReady(runtime.host)) attempt = await reconcileCheckout(executionOf(runtime), authorized.cartId, attempt.attemptId);
+    } else if (keys === "stop") {
+      // The reminder email's stop link: no more cart reminders to this checkout's email.
+      const email = attempt?.contactSnapshot?.contact.email;
+      await stops!.put(await stopKey(email ?? fail("CHECKOUT_NOT_FOUND")), { at: String(now) });
     } else if (key === undefined || key !== stored?.record.cart?.key) {
       if (attempt && attempt.phase !== "released") fail("CHECKOUT_FROZEN");
       if (!Array.isArray(lines) || key !== undefined && (typeof key !== "string" || key.length > 128)) fail("INVALID_CART");
@@ -98,7 +109,7 @@ export async function cartGuestCheckout(
       if (!(await quoteCatalogBasket(runtime.catalog, merged.map(line => line.catalogItemId),
         { resolveProvider: runtime.host.resolveAvailabilityProvider })).ok) fail("PRODUCT_UNAVAILABLE");
       if (!await store.compareAndSet(authorized.cartId, stored?.version ?? null, {
-        attempts: stored?.record.attempts ?? [], cart: { lines: merged, ...(key ? { key } : {}) }, cartExpires: String(now + CART_SECONDS),
+        ...stored?.record, attempts: stored?.record.attempts ?? [], cart: { lines: merged, ...(key ? { key } : {}) }, cartExpires: String(now + CART_SECONDS),
       })) fail("CONTENTION");
     }
     const saved = await store.read(authorized.cartId);
@@ -272,6 +283,7 @@ export async function startGuestCheckout(
 ): Promise<GuestCheckoutResult> {
   try {
     admitGuestCheckoutStartInput(input, Boolean(runtime.host.pricing));
+    const { news, ...rest } = input as Record<string, unknown>;
     const authorized = await authorizeGuestCapability(
       runtime,
       readGuestCapabilityHeader(headers),
@@ -289,9 +301,10 @@ export async function startGuestCheckout(
     const attempt = await startCheckout(
       executionOf(runtime),
       authorized.cartId,
-      { ...(input as Record<string, unknown>), lines },
+      { ...rest, lines },
       retryAfter,
       true,
+      { remindAt: String(currentNow + 36_000), news: news as true | undefined },
     );
     return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {

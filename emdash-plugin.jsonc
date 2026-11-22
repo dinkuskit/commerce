@@ -33,7 +33,8 @@
   "capabilities": [
     "media:read",
     "network:request",
-    "admin.editor-draft:read"
+    "admin.editor-draft:read",
+    "email:send"
   ],
   "allowedHosts": [
     "payments.dinkuskit.com",
@@ -96,7 +97,7 @@
       "uniqueIndexes": []
     },
     "checkout_carts": {
-      "indexes": ["cartExpires"],
+      "indexes": ["cartExpires", "remindAt"],
       "uniqueIndexes": []
     },
     "checkout_guest_capabilities": {
@@ -104,6 +105,10 @@
       "uniqueIndexes": []
     },
     "checkout_payment_associations": {
+      "indexes": [],
+      "uniqueIndexes": []
+    },
+    "cart_email_stops": {
       "indexes": [],
       "uniqueIndexes": []
     },
