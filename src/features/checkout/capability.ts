@@ -54,7 +54,7 @@ function parsePresentedCapability(token: string): { capabilityId: string; secret
 
 export async function mintGuestCapability(
   runtime: GuestCheckoutRuntime,
-  emailHash?: string,
+  email?: Pick<GuestCapabilityRecord, "emailHash" | "emailAttempt">,
 ): Promise<{ record: GuestCapabilityRecord; presentation: GuestCapabilityPresentation }> {
   const siteBinding = requireTrustedSiteOrigin(runtime);
   const capabilityId = (runtime.host.createCapabilityId ?? (() => crypto.randomUUID()))();
@@ -70,7 +70,7 @@ export async function mintGuestCapability(
     verifier: await hashGuestCapabilitySecret(secret),
     siteBinding,
     createdAt: new Date((runtime.host.now ?? (() => Date.now() / 1000))() * 1000).toISOString(),
-    ...emailHash ? { emailHash } : {},
+    ...email,
   };
   if (!(await runtime.capabilities.compareAndSet(capabilityId, null, record)).applied) {
     throw new GuestCheckoutError("CONTENTION");
@@ -110,9 +110,11 @@ export async function authorizeGuestCapability(
   if (!timingSafeEqual(stored.verifier, await hashGuestCapabilitySecret(secret))) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
-  // The cart email's key lasts only as long as its cart, and never brings back a deleted one.
-  const cart = stored.emailHash && (await runtime.carts.getVersioned(stored.cartId))?.value;
-  if (stored.emailHash && !(cart && cart.cart && (runtime.host.now?.() ?? Date.now() / 1000) < +cart.cartExpires!)) {
+  // The cart email's key lasts only while its cart lives and still holds the emailed checkout: never past the
+  // cart's 30 days, and never for a cart made again under the same id.
+  const cart = stored.emailHash ? (await runtime.carts.getVersioned(stored.cartId))?.value : null;
+  if (stored.emailHash && !(cart?.cart && (runtime.host.now?.() ?? Date.now() / 1000) < +cart.cartExpires! &&
+    cart.attempts.some(attempt => attempt.attemptId === stored.emailAttempt))) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
   return stored;

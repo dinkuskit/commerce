@@ -200,10 +200,12 @@ removed and, when the owner's setting, the tick, an unpaid ended checkout, a
 non-empty cart and no stop for the email all allow it, the cart is marked
 `emailed` in the same write and one email goes through EmDash email with a
 freshly minted capability for the same cart as the `/cart/c/<id>?key=<secret>`
-link. That capability keeps the hash of the address it was sent to, and it
-lasts only as long as its cart: once the cart's `cartExpires` has passed, or
-the cart is gone, every guest route refuses it with `CAPABILITY_DENIED`, so it
-can neither read a kept paid order nor bring back a deleted cart. The
+link. That capability keeps the hash of the address it was sent to and the
+checkout attempt the email was about, and it lasts only while its cart lives
+and still holds that attempt: once the cart's `cartExpires` has passed, the
+cart is gone, or a new cart was made under the same id, every guest route
+refuses it with `CAPABILITY_DENIED`. It can neither read a kept paid order,
+bring back a deleted cart, nor reach a cart made again later. The
 shopper's own capability is unchanged. A cart marked `emailed` never gets
 `remindAt` again.
 Extra fields, including `lines`, `price`, `total`, `paymentState`,

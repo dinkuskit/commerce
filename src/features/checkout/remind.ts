@@ -30,7 +30,7 @@ export async function remindCarts(ctx: PluginContext, now: number): Promise<void
     // Claimed before sending, so a second run never sends it again.
     if (!(await carts.compareAndSet(id, found.revision, open ? { ...record, remindAt: String(now + 3600) } : { ...rest, ...send ? { emailed: true } : {} })).applied || !send) continue;
     const [capabilityId, key] = (await mintGuestCapability({ runtimeSiteUrl: origin, host: { createCartId: () => id },
-      capabilities: ctx.storage.checkout_guest_capabilities } as never, hash!)).presentation.capability.split(".");
+      capabilities: ctx.storage.checkout_guest_capabilities } as never, { emailHash: hash!, emailAttempt: attempt!.attemptId })).presentation.capability.split(".");
     const link = `${origin}/cart/c/${capabilityId}?key=${key}`, name = ctx.site.name || new URL(origin).host;
     // The items are listed when the cart still holds what the shopper took to checkout.
     const same = JSON.stringify(record.cart!.lines) === JSON.stringify(attempt!.cart);

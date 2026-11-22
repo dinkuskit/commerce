@@ -27,6 +27,8 @@ merged in.
   the SHA-256 of the address the email went to, not the later checkout's.
 - With the cart's `cartExpires` moved into the past, the same email link opened an empty cart and the browser
   got no cart key.
+- The cleanup's delete of that cart was then applied, and the shopper's own browser filled a new cart under the
+  same id with its own key. The old email link still opened an empty cart and set no cart key.
 
 | Owner's setting | Checkout tick box (starts unticked) |
 | --- | --- |
@@ -43,6 +45,8 @@ merged in.
 | Stop after another link swapped the cart | The link after the cart's 30 days |
 | --- | --- |
 | ![changed](stop-link-changed-cart.png) | ![expired](link-after-cart-expired.png) |
+
+The link after the shopper made a new cart under the same id: `link-after-cart-made-again.png`.
 
 Desktop view of the link: `link-opens-cart-desktop.png`.
 
@@ -75,12 +79,12 @@ Traces: `upgrade-trace-bridge.json`, `upgrade-trace-new.json`. Settings after th
   checkout; the stop link stops later carts for that email in any letter case and needs the link's key; the
   three settings; paid, emptied and still-open checkouts get none and an open one is looked at an hour on;
   the tick must be `true`; a cart change keeps the reminder and drops the item list; the email's key is refused
-  once its cart's 30 days pass while the shopper's own key still answers, cannot bring back a deleted cart, and
+  once its cart's 30 days pass while the shopper's own key still answers, cannot bring back a deleted cart or reach one made again under the same id by the shopper's own key, and
   its stop stops the address it was sent to after a retry with another email, while the shopper's own key stops
   nothing).
 - `node --test tests/integration/*.test.mjs`: 111 pass.
 - `bin/verify-commerce checks`: passed.
-- Registry backend: 127,754 bytes on base `f8a0c0b` (was 125,973), 3,318 bytes left under 131,072.
+- Registry backend: 127,808 bytes on base `f8a0c0b` (was 125,973), 3,264 bytes left under 131,072.
 
 ## Not proved here
 

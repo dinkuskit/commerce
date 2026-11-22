@@ -382,8 +382,12 @@ export interface GuestCapabilityRecord {
   verifier: string;
   siteBinding: string;
   createdAt: string;
-  /** Set on the cart email's key: the emailed address's stop key. That key lasts only as long as its cart. */
-  emailHash?: string;
+  /**
+   * Set on the cart email's key: the emailed address's stop key and the checkout the email was about. That key
+   * lasts only while its cart lives and still holds that checkout, so a cart made again under the same id never
+   * revives it.
+   */
+  emailHash?: string; emailAttempt?: string;
 }
 
 export interface GuestCheckoutHostOptions {

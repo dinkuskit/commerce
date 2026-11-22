@@ -241,4 +241,8 @@ test("the email's key lasts only as long as its cart, and its stop link stops th
   const recreate = await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, emailed);
   assert.equal(recreate.error.code, "CAPABILITY_DENIED");
   assert.equal(await f.carts.get(cartId), null);
+  // The shopper's own key makes a new cart under the same id; the old emailed key stays refused for it.
+  assert.equal((await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, headers)).ok, true);
+  assert.equal((await cartGuestCheckout(f.runtime, {}, emailed)).error.code, "CAPABILITY_DENIED");
+  assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, emailed, f.stops)).error.code, "CAPABILITY_DENIED");
 });
