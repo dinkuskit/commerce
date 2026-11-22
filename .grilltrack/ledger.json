@@ -17144,6 +17144,20 @@
           "review_source_identity": null,
           "to": "implemented",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T14:55:13+00:00",
+          "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json file:scripts/repo-contract.mjs file:scripts/check-features.mjs file:docs/implementation/emdash-1-5-compatibility.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
         }
       ],
       "id": "emdash-1-5-compatibility-20261122",
@@ -17156,10 +17170,10 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
+      "status": "verified",
       "superseded_by": null,
-      "updated_at": "2026-11-22T14:39:54+00:00",
-      "verification_ref": null
+      "updated_at": "2026-11-22T14:55:13+00:00",
+      "verification_ref": "file:docs/implementation/emdash-1-5-compatibility.md;test:tests/features/catalog/catalog.test.mjs;test:tests/features/inventory-provider/registration-claim-storage.test.mjs;cmd:npm test;cmd:npm run test:integration;cmd:npx playwright test"
     }
   ],
   "last_activation": {
@@ -17196,5 +17210,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T14:39:54+00:00"
+  "updated_at": "2026-11-22T14:55:13+00:00"
 }
