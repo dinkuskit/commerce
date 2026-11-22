@@ -100,7 +100,7 @@ export const STORAGE_OWNERS = {
   storefront_availability_settings: "storefront-availability",
   storefront_out_of_stock_listing: "storefront-availability",
   storefront_placeholder_image: "storefront-availability",
-  checkout_carts: "checkout", checkout_guest_capabilities: "checkout", checkout_payment_associations: "checkout",
+  checkout_carts: "checkout", checkout_guest_capabilities: "checkout", checkout_payment_associations: "checkout", cart_email_stops: "checkout",
   orders: "orders", order_numbers: "orders", order_lookup_guesses: "orders",
 };
 const STORAGE_COMPOSITION = ["src/plugin.ts", "src/index.ts"];

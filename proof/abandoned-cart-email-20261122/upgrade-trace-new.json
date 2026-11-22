@@ -1,0 +1,30 @@
+{
+  "phase": "new",
+  "trace": [
+    {
+      "label": "0.8.0 key reads its cart",
+      "ok": true,
+      "state": "released-retry",
+      "lines": []
+    },
+    {
+      "label": "0.8.0 key asks to stop emails",
+      "ok": false,
+      "code": "CHECKOUT_NOT_FOUND"
+    },
+    {
+      "label": "made-up key",
+      "ok": false,
+      "code": "CAPABILITY_DENIED"
+    },
+    {
+      "label": "5-minute check ran",
+      "lastRunAt": "2026-11-22T19:24:27.746Z",
+      "emails": 0
+    },
+    {
+      "label": "remindAt index",
+      "index": "idx_plugin_dinkus-commerce_checkout_carts_remindAt"
+    }
+  ]
+}

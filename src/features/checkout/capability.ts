@@ -7,6 +7,7 @@ import {
   type GuestCapabilityPresentation,
   type GuestCapabilityRecord,
   type GuestCheckoutRuntime,
+  type CheckoutRecord,
 } from "./types.js";
 
 export const hashGuestCapabilitySecret = sha256Hex;
@@ -54,6 +55,7 @@ function parsePresentedCapability(token: string): { capabilityId: string; secret
 
 export async function mintGuestCapability(
   runtime: GuestCheckoutRuntime,
+  email?: Pick<GuestCapabilityRecord, "emailHash" | "emailAttempt">,
 ): Promise<{ record: GuestCapabilityRecord; presentation: GuestCapabilityPresentation }> {
   const siteBinding = requireTrustedSiteOrigin(runtime);
   const capabilityId = (runtime.host.createCapabilityId ?? (() => crypto.randomUUID()))();
@@ -69,6 +71,7 @@ export async function mintGuestCapability(
     verifier: await hashGuestCapabilitySecret(secret),
     siteBinding,
     createdAt: new Date((runtime.host.now ?? (() => Date.now() / 1000))() * 1000).toISOString(),
+    ...email,
   };
   if (!(await runtime.capabilities.compareAndSet(capabilityId, null, record)).applied) {
     throw new GuestCheckoutError("CONTENTION");
@@ -109,4 +112,16 @@ export async function authorizeGuestCapability(
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
   return stored;
+}
+
+/**
+ * The cart email's key lasts only while its cart lives and still holds the emailed checkout: never past the
+ * cart's 30 days, never for a missing cart, and never for a cart made again under the same id. Checked against
+ * the very record an operation reads, answers from and conditionally writes.
+ */
+export function fenceEmailedKey(capability: GuestCapabilityRecord, record: CheckoutRecord | undefined, now: number): void {
+  if (capability.emailHash && !(record?.cart && now < +record.cartExpires! &&
+    record.attempts.some(attempt => attempt.attemptId === capability.emailAttempt))) {
+    throw new GuestCheckoutError("CAPABILITY_DENIED");
+  }
 }

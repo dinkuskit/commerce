@@ -1,0 +1,21 @@
+{
+  "phase": "bridge",
+  "trace": [
+    {
+      "label": "0.8.0 key reads its cart",
+      "ok": true,
+      "state": "released-retry",
+      "lines": []
+    },
+    {
+      "label": "0.8.0 key asks to stop emails",
+      "ok": false,
+      "code": "CHECKOUT_NOT_FOUND"
+    },
+    {
+      "label": "made-up key",
+      "ok": false,
+      "code": "CAPABILITY_DENIED"
+    }
+  ]
+}

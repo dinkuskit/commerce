@@ -178,13 +178,39 @@ read (`null` for a cart never saved):
   the cart
   (`commerce-cart-expiry-20261113`). A paid cart also reads as empty.
 
+- `{ "stop": true }` stops cart reminder emails to the address the abandoned
+  cart email went to. Only the email's own key can send it (any other key
+  answers `CHECKOUT_NOT_FOUND`), and a later checkout with another email does
+  not change which address it stops. It answers like a read
+  (`commerce-abandoned-cart-email-20261122`).
+
 The answer carries `data.cart`:
 `{ lines: [{ catalogItemId, quantity }], version, expiresAt }`, with
 `expiresAt` in Unix seconds, beside the usual `checkout` projection.
 
 `POST checkout/guest/start` starts checkout from the saved cart. The browser
 sends no lines. The body is `{}` or `{ "contact": { ... } }` (plus
-`couponCode` on self-hosted stores). An empty cart answers `INVALID_CART`.
+`couponCode` on self-hosted stores), with `"news": true` when the shopper
+ticked "Email me with news and offers". An empty cart answers `INVALID_CART`.
+
+The start saves `remindAt` (10 hours on, indexed) and the tick on the cart
+record. The 5-minute background check reads up to 5 carts past `remindAt` a
+run: a checkout still open is put back an hour; otherwise `remindAt` is
+removed and, when the owner's setting, the tick, an unpaid ended checkout, a
+non-empty cart and no stop for the email all allow it, the cart is marked
+`emailed` in the same write and one email goes through EmDash email with a
+freshly minted capability for the same cart as the `/cart/c/<id>?key=<secret>`
+link. That capability keeps the hash of the address it was sent to and the
+checkout attempt the email was about, and it lasts only while its cart lives
+and still holds that attempt: once the cart's `cartExpires` has passed, the
+cart is gone, or a new cart was made under the same id, every guest route
+refuses it with `CAPABILITY_DENIED`. The check runs on the very record each
+request reads, answers from and conditionally writes (and inside checkout
+start's own read), so a cleanup or a new cart in the middle of a request
+changes nothing, and the email's key never takes the new-cart path. It can neither read a kept paid order,
+bring back a deleted cart, nor reach a cart made again later. The
+shopper's own capability is unchanged. A cart marked `emailed` never gets
+`remindAt` again.
 Extra fields, including `lines`, `price`, `total`, `paymentState`,
 `provider`, `binding`, `redirect`, `cartId`, `paid`, and `attemptId`, are
 rejected.

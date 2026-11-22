@@ -30,7 +30,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds two
 | Page | What it does |
 | --- | --- |
 | **Orders** | Lists orders. **Inspect #N** opens one: when it was paid and its status, then **Ship to** (with **Correct address**) beside **Customer** (email and phone) and **Bill to**. Below them, a line such as "3 items ready to ship" carries **Create shipping label** (when the store has Ship) or **Complete order**. Then comes the items table, with each item's recorded variant choices (such as Size: M; later option renames do not change them), price, quantity and line total, and then items subtotal, coupon, shipping and order total. Order ID, version, receipt, checkout attempt, provider payment and catalog IDs are in the **Order record** fold. Times show in UTC. |
-| **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, list the store's products in the DinkusKit catalog that AI shopping assistants search, a placeholder image for products without one). |
+| **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, list the store's products in the DinkusKit catalog that AI shopping assistants search, who gets the abandoned cart email, a placeholder image for products without one). |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 
@@ -128,8 +128,8 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 | `catalog/public/item?itemId=…` or `?pageId=…` | GET | One projected product or `null`; no canonical page URL. With `pageId`, the product that published page sells. |
 | `checkout/guest/readiness` | GET | The installed checkout readiness response. |
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
-| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. |
-| `checkout/guest/start` | POST | Required contact details, authorized by that capability. Checkout starts from the saved cart; the browser sends no lines. |
+| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. `{ stop: true }`, sent with the abandoned cart email's key, stops cart reminders to the address that email went to. |
+| `checkout/guest/start` | POST | Required contact details, authorized by that capability. Checkout starts from the saved cart; the browser sends no lines. `news: true` records that the shopper ticked **Email me with news and offers**. |
 | `orders/lookup` | POST | `{ orderNumber, email }` from the store's own page: that one order, or one not-found answer. |
 
 A store's shipping and returns policies are its own EmDash pages; Commerce keeps no policy records and has no policy route.
@@ -192,6 +192,20 @@ A new checkout that ships a physical order to the United States needs a supporte
 Shoppers find an order with its order number and the email used at checkout, like WooCommerce's Track your order. The store's own server page sends both to `orders/lookup` and shows that one order: its status, items, totals, delivery address and phone, and the carrier and tracking number once it has shipped. If nothing matches, the answer is "No order matches that order number and email" and never says which box was wrong. After 5 wrong tries for one email, or for one order number, that box is refused for an hour after its last try. Each try is counted before any order is read, so lookups sent all at once get no more than 5 reads; a right guess gives its try back.
 
 Shopper sign-in and saved addresses are in DinkusKit Accounts, a separate plugin. Commerce has no shopper accounts.
+
+## Abandoned cart email
+
+When a shopper gives their email at checkout and leaves without paying, Commerce sends them one email 10 hours later, like Shopify's abandoned checkout email. It names the items when the cart still holds what went to checkout and links back to the cart at `/cart/c/<id>?key=<secret>`. That link is a fresh key to the same cart, never the shopper's own cookie key and never the payment page. It works only while the cart lasts (30 days from its last change); after that the link opens an empty cart. The email goes from the 5-minute background check through the site's EmDash email, so the store needs an email provider set up in EmDash; without one nothing is sent.
+
+Choose who gets it under **Commerce settings > Abandoned cart email**:
+
+- **Shoppers who ticked the box** (the default): only shoppers who ticked the unticked **Email me with news and offers** box at checkout.
+- **All customers**: every shopper who gave an email at checkout.
+- **Off**: nobody.
+
+Just before sending, Commerce checks again: no email goes if the order was paid, the cart was emptied or has expired, the setting is now Off, or that email address stopped cart reminders. A checkout still open is looked at again an hour later. Each cart gets at most one email, even after another unpaid checkout. Every email has a stop link (`&stop=1` on the same link); the store asks the shopper to confirm, and from then on that address gets no cart reminders from this store. Commerce keeps only a hash of a stopped address.
+
+Commerce needs EmDash's `email:send` permission for this email. Commerce `0.8.0` already asked for it (for the shopper sign-in codes that moved to DinkusKit Accounts), so a store upgrading from `0.8.0` is not asked again. Stripe and DinkusKit Payments are not involved.
 
 ## Installed checkout and orders
 
