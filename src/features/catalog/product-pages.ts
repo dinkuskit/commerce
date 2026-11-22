@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
-import { CatalogError } from "./errors.js";
+import { CatalogError, catalogFail } from "./errors.js";
 import { normalizeProductName } from "./normalize.js";
 import { editProduct, named, offShop } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
@@ -27,7 +27,7 @@ export interface ProductPageRecord {
   claim?: string;
 }
 export type ProductPages = Pick<StorageCollection<ProductPageRecord>, "get" | "put" | "getVersioned" | "compareAndSet" | "compareAndDelete" | "delete" | "query">;
-type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet" | "delete" | "deleteMany">;
+type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet" | "compareAndDelete" | "deleteMany">;
 /** A product's own rows outside catalog_items, each keyed by its item id: prices, stock, backorders, media, feeds. */
 type ProductRows = Pick<StorageCollection<unknown>, "deleteMany">[];
 
@@ -100,6 +100,8 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
   const name = onSale && input.name !== undefined ? normalizeProductName(input.name) : undefined;
   const mine = await pages.getVersioned(key), claim = crypto.randomUUID(), old = mine?.value;
   let changed = false;
+  // A permanent delete that stopped after deleting a product finds it gone; it goes on with the rest.
+  const gone = (error: unknown) => { if (!deleted || (error as CatalogError).code !== "CATALOG_ITEM_NOT_FOUND") throw error; };
   // Only while the claim that took it still holds: give a product back, off the shop with no page.
   const release = (itemId: string, token?: string) => editProduct(catalog, itemId, item => {
     if (!token || item.pageClaim !== token) return null;
@@ -112,7 +114,7 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     changed = !offShop(item) !== onSale;
     // A page deleted for good keeps its products until they are gone, so no other page can take one halfway.
     return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const }), pageId: entryId, pageClaim: claim };
-  });
+  }).catch(gone);
   // A check that stopped after selling the panel's pick, before moving the pointer, left that pick on sale under this
   // page; taking the page off the shop withdraws it too (catalog-archive-is-page-trash-20261115).
   const pick = input.catalogItemId === undefined && !onSale ? await pageProduct(pages, entryId) : undefined;
@@ -120,7 +122,7 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     if (item.pageId !== entryId || item.offSale && !deleted) return null;
     changed ||= !offShop(item);
     return { ...item, offSale: true };
-  });
+  }).catch(gone);
   // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
   if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);
   // The page is gone for good, so its products are too, freeing their SKUs (catalog-permanent-delete-20261122). Its
@@ -138,14 +140,17 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
 
 /**
  * Deletes a product the deleted page still holds, with every variant and their own rows, in one call per collection
- * whatever its size; orders keep their own copy. The product's own item goes last, so a delete that stops halfway
- * leaves it, still held by the page, to be deleted again.
+ * whatever its size; orders keep their own copy. The product's own item goes last, and only while it is as read, so a
+ * variant added meanwhile is deleted too, and a delete that stops halfway leaves it, still held by the page, to delete again.
  */
 async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: string, entryId: string) {
-  const item = (await catalog.getVersioned(itemId))?.value as CatalogItemRecord | undefined;
-  if (item?.pageId !== entryId) return;
-  const variants = (item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId);
-  for (const row of rows) await row.deleteMany([...variants, itemId]);
-  if (variants.length) await catalog.deleteMany(variants);
-  await catalog.delete(itemId);
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const stored = await catalog.getVersioned(itemId), item = stored?.value as CatalogItemRecord | undefined;
+    if (!stored || item?.pageId !== entryId) return;
+    const variants = (item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId);
+    for (const row of rows) await row.deleteMany([...variants, itemId]);
+    if (variants.length) await catalog.deleteMany(variants);
+    if ((await catalog.compareAndDelete(itemId, stored.revision)).applied) return;
+  }
+  catalogFail("STORAGE_UNAVAILABLE", "The product kept changing. Try again.");
 }

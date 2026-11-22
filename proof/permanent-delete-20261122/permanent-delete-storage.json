@@ -1,0 +1,37 @@
+{
+  "competingPageRefused": {
+    "status": 400,
+    "redItemUnchanged": true,
+    "redRows": [
+      {
+        "collection": "catalog_media",
+        "id": "6c71b307-a5ac-4184-b0f3-7e149e611597"
+      }
+    ]
+  },
+  "blueRowsBefore": [
+    {
+      "collection": "catalog_prices",
+      "id": "67bab88d-4bbc-491b-aaba-11ac2b9e5bb6"
+    },
+    {
+      "collection": "catalog_manual_availability",
+      "id": "67bab88d-4bbc-491b-aaba-11ac2b9e5bb6"
+    },
+    {
+      "collection": "catalog_backorder_policies",
+      "id": "67bab88d-4bbc-491b-aaba-11ac2b9e5bb6"
+    },
+    {
+      "collection": "catalog_media",
+      "id": "67bab88d-4bbc-491b-aaba-11ac2b9e5bb6"
+    },
+    {
+      "collection": "product_feed_eligibility",
+      "id": "67bab88d-4bbc-491b-aaba-11ac2b9e5bb6"
+    }
+  ],
+  "blueRowsAfter": [],
+  "blueItemAfter": null,
+  "blueLinksAfter": []
+}

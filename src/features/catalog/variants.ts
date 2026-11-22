@@ -12,6 +12,7 @@ export interface CatalogVariantStorage { catalog: {
   get(id: string): Promise<CatalogStorageRecord | null>;
   getVersioned(id: string): Promise<{ value: CatalogStorageRecord; revision: string } | null>;
   compareAndSet(id: string, revision: string, value: CatalogStorageRecord): Promise<{ applied: boolean }>;
+  delete?(id: string): Promise<unknown>;
 } }
 export interface VariantSelectionInput { optionId: string; valueId: string; label?: string }
 export interface VariantMemberInput {
@@ -168,8 +169,11 @@ export async function addCatalogVariantMember(
     members: [...p.members, { catalogItemId: created.item.itemId, selections, fulfillment: f }],
   };
   valid(next, productId);
-  if (!(await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: next })).applied)
+  if (!(await storage.catalog.compareAndSet(productId, parent.revision, { ...(parent.value as CatalogItemRecord), variantProduct: next })).applied) {
+    // The product was deleted meanwhile (its page deleted for good): its new variant goes too, so its SKU stays free.
+    if (!await storage.catalog.get(productId)) await storage.catalog.delete?.(created.item.itemId);
     catalogFail("STORAGE_UNAVAILABLE", "options changed; reload first");
+  }
   return { changed: true, product: next };
 }
 
