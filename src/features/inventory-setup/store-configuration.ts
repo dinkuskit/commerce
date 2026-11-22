@@ -1,5 +1,5 @@
 import { isRecord } from "../../shared/record.js";
-import { namesUniqueIndex } from "../../shared/unique-index.js";
+import { namesIndex, uniqueIndexNames } from "../../shared/unique-index.js";
 import {
   InventoryProviderBindingError,
   normalizeInventoryProviderBinding,
@@ -76,7 +76,7 @@ function errorChain(error: unknown): unknown[] {
   return chain;
 }
 
-async function isConfigurationKeyViolation(error: unknown): Promise<boolean> {
+function isConfigurationKeyViolation(error: unknown): boolean {
   let text = "";
   let coded = false;
   const properties: Array<Record<string, unknown>> = [];
@@ -91,7 +91,7 @@ async function isConfigurationKeyViolation(error: unknown): Promise<boolean> {
       );
     }
   }
-  const named = await namesUniqueIndex(text, properties, COMMERCE_PLUGIN_ID, STORE_INVENTORY_CONFIGURATIONS_COLLECTION, "configurationKey");
+  const named = namesIndex(text, properties, uniqueIndexNames(COMMERCE_PLUGIN_ID, STORE_INVENTORY_CONFIGURATIONS_COLLECTION, "configurationKey"));
   return (
     named &&
     (coded ||
@@ -144,7 +144,7 @@ async function assertConfigurationKeyConstraint(
       try {
         await storage.put(record.recordId, record);
       } catch (error) {
-        if (await isConfigurationKeyViolation(error)) return;
+        if (isConfigurationKeyViolation(error)) return;
         throw fail(
           "STORAGE_CONSTRAINTS_UNAVAILABLE",
           "store inventory configuration uniqueness could not be proven",
@@ -238,7 +238,7 @@ export async function createStoreInventoryConfiguration(
     await storage.put(configuration.recordId, configuration);
     return { outcome: "created", configuration };
   } catch (error) {
-    if (!(await isConfigurationKeyViolation(error))) {
+    if (!isConfigurationKeyViolation(error)) {
       throw fail("STORAGE_UNAVAILABLE", "store inventory configuration write failed", error);
     }
     const winner = await loadStoreInventoryConfiguration(storage);

@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 
-import { namesUniqueIndex } from "../../shared/unique-index.js";
+import { namesIndex, uniqueIndexNames } from "../../shared/unique-index.js";
 import { normalizeManagedSkuRegistrationClaimRecord } from "./claim.js";
 import {
   MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION,
@@ -83,13 +83,13 @@ function errorProperties(error: unknown): Array<Record<string, unknown>> {
   );
 }
 
-async function isNamedUniqueViolation(
+function isNamedUniqueViolation(
   error: unknown,
   field: ManagedSkuRegistrationClaimUniqueField,
-): Promise<boolean> {
+): boolean {
   const text = errorText(error);
   const properties = errorProperties(error);
-  if (!(await namesUniqueIndex(text, properties, COMMERCE_PLUGIN_ID, MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION, field))) return false;
+  if (!namesIndex(text, properties, uniqueIndexNames(COMMERCE_PLUGIN_ID, MANAGED_SKU_REGISTRATION_CLAIMS_COLLECTION, field))) return false;
 
   const hasPostgresCode = properties.some(
     (entry) => String(entry.code ?? "") === "23505",
@@ -107,11 +107,11 @@ async function isNamedUniqueViolation(
   return hasPostgresCode || hasSqliteCode || namesUniqueFailure;
 }
 
-export async function identifyManagedSkuRegistrationClaimUniqueViolation(
+export function identifyManagedSkuRegistrationClaimUniqueViolation(
   error: unknown,
-): Promise<ManagedSkuRegistrationClaimUniqueField | null> {
-  if (await isNamedUniqueViolation(error, "claimKey")) return "claimKey";
-  if (await isNamedUniqueViolation(error, "operationId")) return "operationId";
+): ManagedSkuRegistrationClaimUniqueField | null {
+  if (isNamedUniqueViolation(error, "claimKey")) return "claimKey";
+  if (isNamedUniqueViolation(error, "operationId")) return "operationId";
   return null;
 }
 
@@ -172,7 +172,7 @@ async function proveUniqueIndex(
     try {
       await storage.put(left.recordId, left);
     } catch (error) {
-      if (await isNamedUniqueViolation(error, field)) return;
+      if (isNamedUniqueViolation(error, field)) return;
       throw unavailable(`registration claim ${field} uniqueness could not be proven`, error);
     }
 
@@ -180,7 +180,7 @@ async function proveUniqueIndex(
     try {
       await storage.put(right.recordId, right);
     } catch (error) {
-      if (await isNamedUniqueViolation(error, field)) return;
+      if (isNamedUniqueViolation(error, field)) return;
       throw unavailable(`registration claim ${field} uniqueness could not be proven`, error);
     }
 
@@ -281,7 +281,7 @@ export function createManagedSkuRegistrationClaimPort(
         await storage.put(record.recordId, record);
         return { outcome: "claimed", claim: record };
       } catch (error) {
-        const uniqueField = await identifyManagedSkuRegistrationClaimUniqueViolation(error);
+        const uniqueField = identifyManagedSkuRegistrationClaimUniqueViolation(error);
         if (!uniqueField) {
           throw unavailable("registration claim write failed", error);
         }

@@ -84,6 +84,13 @@ cleared. This transition retains old records but does not write changes back to
 them. Run one Commerce version at a time; downgrading after these saves requires
 an explicit data conversion. Do not run old and new binaries as concurrent writers.
 
+To move a store from EmDash 1.4 to 1.5, update Commerce first, while the store
+still runs EmDash 1.4, then upgrade EmDash. EmDash 1.5's database step renames
+the store's unique indexes, and earlier Commerce releases cannot recognize the
+new names, so they refuse to add a product ("uniqueness unproven"). This
+release accepts both names, and its upgrade proof checks a duplicate SKU is
+still refused before and after the EmDash upgrade.
+
 For direct kernel consumers, price, manual-availability and feed-eligibility
 readers now require the catalog reader as their third argument. Use these
 readers or the catalog API, rather than reading the legacy collections directly;

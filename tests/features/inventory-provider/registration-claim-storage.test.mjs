@@ -160,7 +160,7 @@ test("ambiguous winner recovery fails closed", async () => {
   assert.equal(claimRows(storage).length, 1);
 });
 
-test("only exact named claim constraints are accepted as atomic proof", async () => {
+test("only exact named claim constraints are accepted as atomic proof", () => {
   const named = Object.assign(
     new Error(
       `duplicate key value violates unique constraint "${managedSkuRegistrationClaimUniqueIndexName("claimKey")}"`,
@@ -170,16 +170,16 @@ test("only exact named claim constraints are accepted as atomic proof", async ()
       constraint: managedSkuRegistrationClaimUniqueIndexName("claimKey"),
     },
   );
-  assert.equal(await identifyManagedSkuRegistrationClaimUniqueViolation(named), "claimKey");
+  assert.equal(identifyManagedSkuRegistrationClaimUniqueViolation(named), "claimKey");
   assert.equal(
-    await identifyManagedSkuRegistrationClaimUniqueViolation(new Error("UNIQUE constraint failed")),
+    identifyManagedSkuRegistrationClaimUniqueViolation(new Error("UNIQUE constraint failed")),
     null,
   );
   assert.equal(
-    await identifyManagedSkuRegistrationClaimUniqueViolation(new Error("SQLITE_BUSY")),
+    identifyManagedSkuRegistrationClaimUniqueViolation(new Error("SQLITE_BUSY")),
     null,
   );
   // EmDash 1.5's digest name for the same index (migration 095) classifies too.
   const renamed = "uidx_plugin_" + createHash("sha256").update(JSON.stringify(["dinkus-commerce", "managedSkuClaims", ["operationId"]])).digest("hex").slice(0, 32);
-  assert.equal(await identifyManagedSkuRegistrationClaimUniqueViolation(new Error(`UNIQUE constraint failed: index '${renamed}'`)), "operationId");
+  assert.equal(identifyManagedSkuRegistrationClaimUniqueViolation(new Error(`UNIQUE constraint failed: index '${renamed}'`)), "operationId");
 });

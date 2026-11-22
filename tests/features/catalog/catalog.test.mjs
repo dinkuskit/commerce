@@ -477,11 +477,11 @@ test("creation fails closed when an integrity probe cannot be cleaned up", async
   );
 });
 
-test("only an exact named unique violation is classified as atomic proof", async () => {
+test("only an exact named unique violation is classified as atomic proof", () => {
   const d1 = new Error(
     `D1_ERROR: UNIQUE constraint failed: index '${catalogUniqueIndexName("skuKey")}' at offset 7: SQLITE_CONSTRAINT`,
   );
-  assert.equal(await identifyConfirmedUniqueViolation(d1), "skuKey");
+  assert.equal(identifyConfirmedUniqueViolation(d1), "skuKey");
 
   const postgres = Object.assign(
     new Error(
@@ -489,20 +489,20 @@ test("only an exact named unique violation is classified as atomic proof", async
     ),
     { code: "23505", constraint: catalogUniqueIndexName("commandId") },
   );
-  assert.equal(await identifyConfirmedUniqueViolation(postgres), "commandId");
-  assert.equal(await identifyConfirmedUniqueViolation(new Error("SQLITE_BUSY")), null);
-  assert.equal(await identifyConfirmedUniqueViolation(new Error("UNIQUE constraint failed")), null);
+  assert.equal(identifyConfirmedUniqueViolation(postgres), "commandId");
+  assert.equal(identifyConfirmedUniqueViolation(new Error("SQLITE_BUSY")), null);
+  assert.equal(identifyConfirmedUniqueViolation(new Error("UNIQUE constraint failed")), null);
   const installed = new Error("UNIQUE constraint failed: index 'uidx_plugin_r_gshdrqaldna3r7sn_catalog_items_skuKey'");
-  assert.equal(await identifyConfirmedUniqueViolation(installed, 'catalog_items'), null);
-  assert.equal(await identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_gshdrqaldna3r7sn'), 'skuKey');
-  assert.equal(await identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_othernamespace'), null);
+  assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items'), null);
+  assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_gshdrqaldna3r7sn'), 'skuKey');
+  assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_othernamespace'), null);
   // EmDash 1.5 names the same index by a digest of [plugin, collection, [field]]
   // (migration 095 renames 1.4's indexes), so both names classify.
   const digest = (plugin, field) => "uidx_plugin_" + createHash("sha256").update(JSON.stringify([plugin, "catalog_items", [field]])).digest("hex").slice(0, 32);
   const renamed = new Error(`UNIQUE constraint failed: index '${digest("r_gshdrqaldna3r7sn", "skuKey")}'`);
-  assert.equal(await identifyConfirmedUniqueViolation(renamed, 'catalog_items', 'r_gshdrqaldna3r7sn'), 'skuKey');
-  assert.equal(await identifyConfirmedUniqueViolation(renamed, 'catalog_items', 'r_othernamespace'), null);
-  assert.equal(await identifyConfirmedUniqueViolation(new Error(`UNIQUE constraint failed: index '${digest("dinkus-commerce", "commandId")}'`), 'catalog_items'), 'commandId');
+  assert.equal(identifyConfirmedUniqueViolation(renamed, 'catalog_items', 'r_gshdrqaldna3r7sn'), 'skuKey');
+  assert.equal(identifyConfirmedUniqueViolation(renamed, 'catalog_items', 'r_othernamespace'), null);
+  assert.equal(identifyConfirmedUniqueViolation(new Error(`UNIQUE constraint failed: index '${digest("dinkus-commerce", "commandId")}'`), 'catalog_items'), 'commandId');
 });
 
 test("the Registry build exposes the private catalog route and both unique declarations", () => {
