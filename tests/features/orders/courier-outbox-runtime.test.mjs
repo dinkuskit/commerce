@@ -129,7 +129,8 @@ test('order.paid gives each order this version stored, with what the order confi
     // Paid on a version before this one: no paid-news key, so no confirmation is ever sent for it.
     await shop.keep('order-6', 'bo@buyer.test', 'Bo Buyer', [['mug', 'Mug']]);
     // A 60-line order: 50 lines and a count of the rest, so the item stays under the courier's 8 KB.
-    await shop.keep('order-7', 'cy@buyer.test', 'Cy Buyer', Array.from({ length: 60 }, (_, i) => ['item-' + i, 'Item ' + i + ' ' + 'x'.repeat(300)]), { paidKey: `${paidAt} order-7` });
+    // Long names in a script of three bytes a character are the worst case the courier's 8 KB sees.
+    await shop.keep('order-7', 'cy@buyer.test', 'Cy Buyer', Array.from({ length: 60 }, (_, i) => ['item-' + i, 'Item ' + i + ' ' + '茶'.repeat(300)]), { paidKey: `${paidAt} order-7` });
 
     const paid = (await shop.since(null, 50, { topic: 'order.paid' })).data;
     assert.deepEqual(paid.items.map(item => item.id), ['order-5:paid', 'order-7:paid']);
@@ -137,18 +138,25 @@ test('order.paid gives each order this version stored, with what the order confi
       orderId: 'order-5', number: 1005, test: true, email: 'ana@buyer.test', name: 'Ana Buyer', shipTo: delivery('Ana Buyer'),
       lines: [{ name: 'Smoky Mountain Tee', options: 'Size: M', quantity: 2, unitPrice: usd('2400') }],
       subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400') } });
+    const bytes = item => new TextEncoder().encode(JSON.stringify(item)).length;
     const big = paid.items[1].data;
-    assert.ok(big.lines.length <= 50 && big.lines.length + big.moreLines === 60, JSON.stringify({ kept: big.lines.length, more: big.moreLines }));
+    assert.ok(big.lines.length >= 1 && big.lines.length + big.moreLines === 60, JSON.stringify({ kept: big.lines.length, more: big.moreLines }));
     assert.equal(big.lines[0].name.length, 200, 'a name is cut to 200 characters');
-    assert.ok(new TextEncoder().encode(JSON.stringify(paid.items[1])).length < 8192);
+    assert.ok(bytes(paid.items[1]) <= 7500, String(bytes(paid.items[1])));
+    assert.ok(bytes({ ...paid.items[1], data: { ...big, lines: big.lines.concat(big.lines[0]) } }) > 7500, 'only lines that would not fit are left out');
     assert.equal(paid.next, `${paidAt} order-7`);
     assert.deepEqual((await shop.since(paid.next, 50, { topic: 'order.paid' })).data.items, []);
 
     await shop.owner('complete', 'order-5', { carrier: 'USPS', tracking: '9400 1000 0000 0000 0000 00' });
+    await new Promise(resolve => setTimeout(resolve, 5));
+    await shop.owner('complete', 'order-7');
     skew = 61_000;
-    const [shipped] = (await shop.since(null, 50)).data.items;
+    const [shipped, bigShipped] = (await shop.since(null, 50)).data.items;
+    assert.equal(bigShipped.id, 'order-7:shipped');
+    assert.ok(bytes(bigShipped) <= 7500 && bigShipped.data.lines.length + bigShipped.data.moreLines === 60, JSON.stringify({ bytes: bytes(bigShipped), kept: bigShipped.data.lines.length }));
     assert.deepEqual([shipped.data.number, shipped.data.carrier, shipped.data.tracking, shipped.data.lines], [1005, 'USPS', '9400 1000 0000 0000 0000 00', [{ productId: 'tee', productName: 'Smoky Mountain Tee', quantity: 2 }]]);
-    console.log('order.paid proof', JSON.stringify({ paid: paid.items[0], big: { kept: big.lines.length, moreLines: big.moreLines }, neverAnnounced: ['order-6'], shipped }));
+    console.log('order.paid proof', JSON.stringify({ paid: paid.items[0], bigPaid: { bytes: bytes(paid.items[1]), kept: big.lines.length, moreLines: big.moreLines },
+      bigShipped: { bytes: bytes(bigShipped), kept: bigShipped.data.lines.length, moreLines: bigShipped.data.moreLines }, neverAnnounced: ['order-6'], shipped }));
   } finally {
     skew = 0;
     await shop.stop();

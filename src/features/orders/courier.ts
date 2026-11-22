@@ -21,43 +21,46 @@ const refuse = (code: string, words: string, status: number) =>
   Object.assign(new Error(`${code}: ${words}`), { name: "PluginRouteError", code, status });
 
 /**
- * At most 50 lines and about 6 KB of them, so an item stays under the courier's 8 KB: a bigger item would stop the
- * topic for good. `moreLines` counts the lines left out.
+ * The courier refuses a whole batch when one item is over 8 KB of JSON, and the receiver's bookmark then never moves, so
+ * that topic would stop for good. An item keeps at most 50 lines, and drops lines from the end while the whole item is
+ * over 7,500 bytes; `moreLines` counts the lines left out.
  */
-function fit<T>(lines: T[]): { lines: T[]; moreLines?: number } {
-  let size = 0, kept = 0;
-  while (kept < lines.length && kept < 50 && (size += new TextEncoder().encode(JSON.stringify(lines[kept])).length) < 6000) kept++;
-  return { lines: lines.slice(0, kept), ...kept < lines.length && { moreLines: lines.length - kept } };
+function fit<T extends { data: { lines: unknown[] | null; moreLines?: number } }>(item: T): T {
+  const lines = item.data.lines, all = lines?.length ?? 0;
+  lines?.splice(50);
+  while (lines?.length && new TextEncoder().encode(JSON.stringify(item)).length > 7500) lines.pop();
+  if (lines && lines.length < all) item.data.moreLines = all - lines.length;
+  return item;
 }
 
 function shipped(record: OrderRecord) {
   const order = record.paidOrder, at = record.completed!.at, { email, shipTo, number, test } = orderFacts(record);
-  return { id: `${order.orderId}:shipped`, at, data: {
+  return fit({ id: `${order.orderId}:shipped`, at, data: {
     orderId: order.orderId, number, test, shippedAt: at, email, name: (shipTo ?? billingOf(record))?.name ?? null,
     carrier: record.completed!.carrier ?? null, tracking: record.completed!.tracking ?? null,
     // A size or colour is reviewed as its product, under the id the product page shows.
-    lines: order.lines.map(line => ({ productId: order.variantSelections?.find(v => v.catalogItemId === line.catalogItemId)?.productId ?? line.catalogItemId, productName: line.name, quantity: line.quantity })),
-  } };
+    lines: order.lines.map(line => ({ productId: order.variantSelections?.find(v => v.catalogItemId === line.catalogItemId)?.productId ?? line.catalogItemId, productName: cut(line.name), quantity: line.quantity })),
+  } as { lines: unknown[]; moreLines?: number } });
 }
 
 function paid(record: OrderRecord) {
   const order = record.paidOrder, pricing = order.pricing, { email, shipTo, number, test } = orderFacts(record);
-  return { id: `${order.orderId}:paid`, at: record.paidKey!.split(" ")[0]!, data: {
+  return fit({ id: `${order.orderId}:paid`, at: record.paidKey!.split(" ")[0]!, data: {
     orderId: order.orderId, number, test, email, name: (shipTo ?? billingOf(record))?.name ?? null, shipTo,
-    ...fit(order.lines.map(line => ({ name: cut(line.name), options: cut(lineOptions(order, line.catalogItemId)), quantity: line.quantity, unitPrice: line.unitPrice }))),
+    lines: order.lines.map(line => ({ name: cut(line.name), options: cut(lineOptions(order, line.catalogItemId)), quantity: line.quantity, unitPrice: line.unitPrice })),
     subtotal: pricing?.merchandiseSubtotal ?? null, discount: pricing?.coupon ? pricing.couponDiscount : null,
     shipping: pricing?.shipping.charge ?? null, total: order.total,
-  } };
+  } as { lines: unknown[]; moreLines?: number } });
 }
 
 function left(id: string, record: CheckoutRecord) {
   const attempt = record.attempts.at(-1)!, link = record.leftLink!;
   // The items are listed when the cart still holds what the shopper took to checkout.
   const same = JSON.stringify(record.cart?.lines) === JSON.stringify(attempt.cart);
-  return { id: `${id}:left`, at: record.leftKey!.split(" ")[0]!, data: {
+  return fit({ id: `${id}:left`, at: record.leftKey!.split(" ")[0]!, data: {
     email: attempt.contactSnapshot!.contact.email, ticked: !!record.news, link, stopLink: `${link}&stop=1`,
-    ...same ? fit(attempt.payment.lines.map(line => ({ name: cut(line.name), quantity: line.quantity, options: cut(line.options ?? "") }))) : { lines: null },
-  } };
+    lines: same ? attempt.payment.lines.map(line => ({ name: cut(line.name), quantity: line.quantity, options: cut(line.options ?? "") })) : null,
+  } as { lines: unknown[] | null; moreLines?: number } });
 }
 
 /** `POST courier/outbox`: a topic's news after the courier's bookmark, oldest first. */
