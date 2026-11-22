@@ -226,7 +226,7 @@ Projection schema `dinkuskit.commerce.guest-checkout-projection/v1`:
 | `attemptId` | Server-issued current attempt, not authority; null before start |
 | `lines`, `total` | Frozen Commerce USD minor-unit amounts |
 | `redirectUrl` | Hosted-payment handoff URL when a session exists; never proof of paid/unpaid |
-| `order` | `{ orderId, receiptId, lines, total, contact }` only after a persisted paid Commerce order; `contact` is the order's frozen email, phone and addresses (`commerce-thank-you-contact-20261113`). A cart read also adds `status` (`processing` or `completed`) and `completed` (`{ at, carrier?, tracking? }` or `null`) from Orders as the order stands now (`commerce-guest-order-status-20261115`) |
+| `order` | `{ orderId, receiptId, lines, total, contact, test }` only after a persisted paid Commerce order; `contact` is the order's frozen email, phone and addresses (`commerce-thank-you-contact-20261113`), and `test` is `true` unless the paid order was recorded in live mode (`false`). A cart read also adds `number` (Orders' short number when assigned, or `null` before numbering), `status` (`processing` or `completed`), and `completed` (`{ at, carrier?, tracking? }` or `null`) from Orders as the order stands now (`commerce-guest-order-status-20261115`) |
 | `retryAfter` | Released attempt id required to start the next attempt |
 | `unavailable` | Guest-safe code/message for genuine unavailable attempt state; never raw provider errors |
 
@@ -258,13 +258,14 @@ coupon and the shopper starts again without it, which is their explicit
 acceptance of the full price. Raw coupon service messages never reach the
 shopper.
 
-`order` never includes `paymentId` or provider secrets. Its only shopper data is
-the paid order's own `contact` and, on a cart read, Orders' current `status`
+`order` never includes `paymentId`, internal `mode`, or provider secrets. Its only shopper data is
+the paid order's own `contact`, its frozen `test` flag (`true` unless the order was paid in live mode),
+and, on a cart read, Orders' current `number` (the assigned short number or `null`, never parsed from UUIDs or assigned by a guest read), `status`,
 and `completed` (carrier and tracking when the owner recorded them; cleared
 again when the order is reopened), all read only by the holder of that cart's
 key. `completed` means the owner marked the order shipped, never that it was
 delivered. When Orders cannot answer, the receipt is still returned without
-`status`. The payment and receipt facts stay the frozen checkout copy.
+`number` or `status`. The payment, `test` fact, and receipt facts stay the frozen checkout copy.
 Unexpected provider or storage failures return guest-safe `UNAVAILABLE` and
 never raw provider, storage, or secret strings. A pre-retained capability
 keeps a durable recoverable attempt; terminal failures are not swallowed

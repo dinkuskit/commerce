@@ -92,7 +92,14 @@ export function createPaidOrderReceiver(collection: Pick<OrdersCollection, "get"
     },
     async status(orderId) {
       const kept = await collection.get(orderId);
-      return kept ? { status: kept.completed ? "completed" : "processing", completed: kept.completed ?? null } : null;
+      return kept
+        ? {
+            status: kept.completed ? "completed" : "processing",
+            completed: kept.completed ?? null,
+            number: kept.number ?? null,
+            test: kept.paidOrder?.mode !== "live",
+          }
+        : null;
     },
   };
 }
