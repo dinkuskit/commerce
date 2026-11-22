@@ -61,7 +61,7 @@ refuses to start a patch branch until that release is promoted.
 
 `npm run changeset` for shipped behavior, `npx changeset --empty` for docs,
 tests, or CI only. On 0.x, bug fixes are `patch` and everything else is
-`minor`. CI (`changeset-check.yml`) rejects a missing changeset and any
+`minor`. CI (the package-drift job in `repo-contract.yml`) rejects a missing changeset and any
 `major` bump. Every change, including a fix for a beta on test, is a normal
 PR to `main` that ClawSweeper reviews. No PR ever targets a release branch.
 
