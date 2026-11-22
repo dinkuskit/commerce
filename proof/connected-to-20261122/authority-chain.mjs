@@ -214,6 +214,7 @@ try {
   const reconnected = await connect(again, acmeOwner);
   check('the reinstalled Commerce connects to the same store', reconnected.siteId === acmeConnected.siteId, reconnected.siteId === acmeConnected.siteId ? 'same Store ID' : 'other Store ID');
   check('and its line names Commerce and Payments again', /plugins on this store: Commerce and Payments\./.test(await again.line()), await again.line());
+  check('the pass from the cancelled key still reads nothing now that Commerce has a new key', (await readCall(acmePassBefore)).body?.error === 'invalid_pass');
   say('');
   say('## 5. Upgrade from Commerce main');
   const old = install('https://upgrade-shop.example', base);
@@ -226,7 +227,7 @@ try {
   await upgraded.uninstall();
   check("its uninstall cancels the key saved by Commerce main", (await trade(JSON.parse(before).storeKey, JSON.parse(before).siteId, 'commerce:settings', 'dinkuskit')) === 'invalid_store_key');
   say('');
-  say('## 6. An owner\'s Disconnect stops a pass issued before it');
+  say('## 6. An owner\'s Disconnect stops a pass issued before it, also after a new Approve');
   const commerceKey = (await again.key()).key;
   const commercePass = await passFor(commerceKey, acmeSite), paymentsPass = await passFor(paymentsKey, acmeSite);
   check("before the Disconnect, Payments' pass reads the store", (await readCall(paymentsPass)).status === 200);
@@ -237,6 +238,9 @@ try {
   const commerceRead = await readCall(commercePass);
   check("Commerce's pass still reads, listing only Commerce", commerceRead.status === 200 && commerceRead.body.plugins.join() === 'commerce');
   check('and the line names only Commerce', /plugins on this store: Commerce\./.test(await again.line()), await again.line());
+  const paymentsAgain = await connectPayments(acme.origin, acmeOwner);
+  check("after the owner's Approve gives Payments a new key, the old Payments pass still reads nothing", (await readCall(paymentsPass)).body?.error === 'invalid_pass');
+  check('while a pass from the new key reads both plugins', (await readCall(await passFor(paymentsAgain, acmeSite))).body?.plugins?.join() === 'commerce,payments');
   say('');
   say(`${lines.filter(l => l.startsWith('- PASS')).length} checks passed.`);
 } finally {

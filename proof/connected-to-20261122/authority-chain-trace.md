@@ -1,6 +1,6 @@
 # Commerce authority chain: connected-to line and uninstall cancel
 
-Commerce 201840e (built), Commerce main d8d654c for the upgrade, DinkusKit.com Worker from 905359b under its merchant harness with local D1 and KV. Keys are redacted and ids replaced with <id>.
+Commerce aa4ce03 (built), Commerce main d8d654c for the upgrade, DinkusKit.com Worker from 484d7a2 under its merchant harness with local D1 and KV. Keys are redacted and ids replaced with <id>.
 
 ## 1. Connected-to line
 - PASS: Commerce connects with its own Connect and the owner's Approve
@@ -39,6 +39,8 @@ Commerce 201840e (built), Commerce main d8d654c for the upgrade, DinkusKit.com W
 ## 4. A reinstall connects again
 - PASS: the reinstalled Commerce connects to the same store (same Store ID)
 - PASS: and its line names Commerce and Payments again (Connected to Acme Goods on DinkusKit, store <id>. DinkusKit plugins on this store: Commerce and Payments. To disconnect one, open Your stores at DinkusKit.com.)
+  - GET /api/store-connection (Bearer [pass redacted]) → 401 {"error":"invalid_pass"}
+- PASS: the pass from the cancelled key still reads nothing now that Commerce has a new key
 
 ## 5. Upgrade from Commerce main
 - PASS: a store connected with Commerce main shows only the Store ID there (Connected to DinkusKit.com, store <id>.)
@@ -46,7 +48,7 @@ Commerce 201840e (built), Commerce main d8d654c for the upgrade, DinkusKit.com W
 - PASS: the saved connection is unchanged by the upgrade and the page load
 - PASS: its uninstall cancels the key saved by Commerce main
 
-## 6. An owner's Disconnect stops a pass issued before it
+## 6. An owner's Disconnect stops a pass issued before it, also after a new Approve
   - GET /api/store-connection (Bearer [pass redacted]) → 200 {"business":"Acme Goods","site_origin":"https://acme-goods.example","plugins":["commerce","payments"]}
 - PASS: before the Disconnect, Payments' pass reads the store
   - the owner presses Disconnect for Payments under Your stores → 303
@@ -56,5 +58,9 @@ Commerce 201840e (built), Commerce main d8d654c for the upgrade, DinkusKit.com W
   - GET /api/store-connection (Bearer [pass redacted]) → 200 {"business":"Acme Goods","site_origin":"https://acme-goods.example","plugins":["commerce"]}
 - PASS: Commerce's pass still reads, listing only Commerce
 - PASS: and the line names only Commerce (Connected to Acme Goods on DinkusKit, store <id>. DinkusKit plugins on this store: Commerce. To disconnect one, open Your stores at DinkusKit.com.)
+  - GET /api/store-connection (Bearer [pass redacted]) → 401 {"error":"invalid_pass"}
+- PASS: after the owner's Approve gives Payments a new key, the old Payments pass still reads nothing
+  - GET /api/store-connection (Bearer [pass redacted]) → 200 {"business":"Acme Goods","site_origin":"https://acme-goods.example","plugins":["commerce","payments"]}
+- PASS: while a pass from the new key reads both plugins
 
-28 checks passed.
+31 checks passed.
