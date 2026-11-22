@@ -247,6 +247,8 @@ never reads the CMS: the page id is the one its publish check sent.
 
 ## Sidebar folders
 
-Commerce pages carry `group: "Dinkus Commerce"`, and Settings is labelled
-"Commerce settings". Payments (`Dinkus Payments` > Payment settings) and Ship
-(`Dinkus Ship` > Shipments) adopt their folders in their own repositories.
+Commerce pages carry `group: "Store"`, and Settings is labelled
+"Commerce settings". Payments (Store > Payment settings) and Ship
+(Store > Shipments) use the same group, so all three share one Store folder
+with the template store's Products and Product categories
+(admin-one-store-folder-128 in dinkuskit/dinkuskit).
