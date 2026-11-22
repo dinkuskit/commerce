@@ -150,12 +150,12 @@
       }
     },
     "pages": [
-      { "path": "/orders", "label": "Orders", "icon": "storefront", "group": "Dinkus Commerce" },
+      { "path": "/orders", "label": "Orders", "icon": "storefront", "group": "Store" },
       {
         "path": "/settings",
         "label": "Commerce settings",
         "icon": "settings",
-        "group": "Dinkus Commerce"
+        "group": "Store"
       }
     ],
     "editorPanels": [
