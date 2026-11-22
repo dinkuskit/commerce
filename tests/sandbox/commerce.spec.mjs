@@ -111,21 +111,6 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     // The product records the page that sells it; product_pages keeps the panel's note and the page's pointer.
     expect(raw("catalog_items")[0].pageId).toBe(pageId);
     expect(raw("product_pages").map(({ claim, ...row }) => row)).toEqual([{ entryId: pageId, catalogItemId: id }, { entryId: pageId, catalogItemId: id }]);
-    // Reassignment: once the page is deleted, another page takes the product, and the old page's delayed request is refused.
-    const competingPage = "01COMPETINGPAGE000000000000";
-    const post = (body) => page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { data: { catalogItemId: id, ...body }, headers: { "X-EmDash-Request": "1" } });
-    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: false, deleted: true })).toEqual({ changed: true });
-    expect(raw("catalog_items")[0]).toMatchObject({ offSale: true });
-    expect(raw("catalog_items")[0]).not.toHaveProperty("pageId");
-    expect(await setOnSale(page.request, { catalogItemId: id, entryId: competingPage, onSale: true })).toEqual({ changed: true });
-    const stale = await post({ entryId: pageId, onSale: false });
-    expect(stale.status()).toBe(400);
-    expect(JSON.stringify(await stale.json())).toContain("Another page sells this product");
-    expect(raw("catalog_items")[0].pageId).toBe(competingPage);
-    expect(raw("catalog_items")[0]).not.toHaveProperty("offSale");
-    // Hand it back for the rest of the walk.
-    await setOnSale(page.request, { catalogItemId: id, entryId: competingPage, onSale: false, deleted: true });
-    expect(await setOnSale(page.request, { catalogItemId: id, entryId: pageId, onSale: true })).toEqual({ changed: true });
     await page.reload();
     panel = await openPanel(page);
     // Published but with no Regular price yet: off the shop, and the panel names the missing price.
@@ -465,6 +450,21 @@ test("clerk sets product images from the Media Library and the storefront render
     expect(chosen).toContain("/_image?href=");
     await storefront.screenshot({ path: process.env.COMMERCE_PROOF_ARTIFACTS + "/storefront-images.png", animations: "disabled", fullPage: true });
     await shopper.close();
+
+    // Delete permanently: the store's publish check reports the page gone, and Commerce deletes its product with the
+    // product's own rows, so the SKU is free; the other product is untouched (catalog-permanent-delete-20261122).
+    const own = () => ["catalog_prices", "catalog_manual_availability", "catalog_backorder_policies", "catalog_media", "product_feed_eligibility"]
+      .flatMap((name) => database.prepare("SELECT id FROM _plugin_storage WHERE plugin_id = 'dinkus-commerce' AND collection = ? AND id = ?").all(name, blueId));
+    expect(await setOnSale(page.request, { entryId: bluePage.id, onSale: false, deleted: true })).toEqual({ changed: true });
+    expect(raw("catalog_items").some((row) => row.itemId === blueId || row.sku === "BLUE-HAT")).toBe(false);
+    expect(own()).toEqual([]);
+    expect(raw("product_pages").some((row) => row.entryId === bluePage.id)).toBe(false);
+    expect(raw("catalog_items").some((row) => row.sku === "RED-HAT")).toBe(true);
+    expect((await publicCatalog()).products.some((product) => product.sku === "BLUE-HAT")).toBe(false);
+    // A late publish check for the deleted page finds no product to sell.
+    const late = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { data: { entryId: bluePage.id, onSale: true }, headers: { "X-EmDash-Request": "1" } });
+    expect(late.status()).toBe(400);
+    expect(JSON.stringify(await late.json())).toContain("Product not found");
     console.log("media_proof=pass chooser gallery-reorder placeholder public-ids storefront-srcset; DB=" + filename);
   } finally { database.close(); }
 });
