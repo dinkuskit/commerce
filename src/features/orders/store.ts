@@ -22,6 +22,8 @@ export interface OrderRecord {
   delivery?: CheckoutDeliveryAddress;
   /** Present once the order is Completed (shipped, never "delivered"); absent means Processing. */
   completed?: OrderCompletion;
+  /** `<completed.at> <orderId>` while Completed, set by this version on: the indexed order of the courier's `order.shipped` news. */
+  shippedKey?: string;
   /** The version Ship last took, or refused for good. Recording it never raises the version. */
   shipVersion?: number;
   /** Left by the retired isolated Ship TEST profile (0.3.0-beta.0 to beta.2): such an order never goes to Ship. */
@@ -182,7 +184,7 @@ export function completeOrder(
     const values = isRecord(raw) ? raw : {};
     const carrier = note(values.carrier), tracking = note(values.tracking);
     if (carrier === null || tracking === null) return "invalid";
-    return { ...record, completed: { at, ...(carrier && { carrier }), ...(tracking && { tracking }) } };
+    return { ...record, shippedKey: `${at} ${orderId}`, completed: { at, ...(carrier && { carrier }), ...(tracking && { tracking }) } };
   });
 }
 
@@ -190,7 +192,7 @@ export function completeOrder(
 export function reopenOrder(
   collection: Pick<OrdersCollection, "getVersioned" | "compareAndSet">, orderId: string, revision: number,
 ): Promise<OwnerChange> {
-  return change(collection, orderId, revision, ({ completed, ...record }) => completed ? record : "outdated");
+  return change(collection, orderId, revision, ({ completed, shippedKey, ...record }) => completed ? record : "outdated");
 }
 
 /** Where the order goes now: the owner's correction, else the address typed at checkout. */

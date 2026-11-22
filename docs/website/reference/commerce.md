@@ -237,6 +237,19 @@ and are marked **TEST**; do not use them for real fulfillment or postage.
 If an order changed after you opened its form, the stale save changes nothing.
 Open the order again and check its current details before retrying.
 
+When an order is marked Completed, by **Complete order** or by a Ship label,
+Commerce tells the store's other plugins that it shipped, for Reviews to ask the
+buyer for a review. The store's courier reads the news from Commerce's private
+`courier/outbox` route about once a minute, with nobody signed in. Commerce
+refuses anyone who is signed in, the Administrator included. The news is
+`order.shipped`, one item per order with the id `<order id>:shipped`, the time
+it was marked Completed, the checkout email, the name on the delivery address
+(or the billing address), and each product's catalog ID and name. It never
+leaves the store. An order is news once it has been Completed for a minute.
+Moving it back to Processing and completing it again sends the same id again,
+which a receiving plugin already has. Test orders are news like live orders.
+An order Completed before the version of Commerce that added this is not news.
+
 ## Package for host apps
 
 EmDash sites install Commerce only as the Registry build: from the Registry, or from the npm package's `@dinkuskit/commerce/sandbox` entry with its `@dinkuskit/commerce/descriptor`. The package root, `@dinkuskit/commerce`, is a library for host apps such as storefronts and feed builders: it exports Commerce's catalog, checkout, orders, feeds, structured data, store settings, storefront availability, inventory and fixed-bundle functions and types (shopper accounts live in the DinkusKit Accounts plugin), and the `@dinkuskit/commerce/features/*` entries export the same libraries one feature at a time. It is not an EmDash plugin: the native entry earlier packages carried (`createPlugin`, its default export, and `dinkusCommerce`) is removed, so a site that mounted it installs the Registry build instead. Its camelCase storage is not migrated.

@@ -22,7 +22,7 @@ import {
   storeProof,
   withBackgroundCheck,
 } from "./features/checkout/kernel/index.js";
-import { ORDER_LOOKUP_ROUTE, ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, clearOldLookupGuesses, createPaidOrderReceiver, lookUpOrder, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import { COURIER_OUTBOX_ROUTE, courierOutbox, ORDER_LOOKUP_ROUTE, ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, clearOldLookupGuesses, createPaidOrderReceiver, lookUpOrder, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
 
 const guestRequest = {
   body: "json" as const,
@@ -170,6 +170,8 @@ const plugin: SandboxedPlugin = {
     [GUEST_CHECKOUT_CART_ROUTE]: guestRoute(installedCheckout.cart),
     [GUEST_CHECKOUT_READINESS_ROUTE]: publicRead((route, ctx) => installedCheckout.readiness(route, ctx), ["origin"]),
     // The order lookup page: order number plus checkout email, from the store's own server page.
+    // The store's courier reads shipped orders here for Reviews (order-shipped-outbox-20261122); it refuses anyone signed in.
+    [COURIER_OUTBOX_ROUTE]: privatePost("plugins:manage", courierOutbox),
     [ORDER_LOOKUP_ROUTE]: pluginRoute({ public: true, methods: ["POST"], request: { body: "json", headers: ["origin", "sec-fetch-site"] }, cacheControl: "no-store", handler: lookUpOrder }),
   },
 };
