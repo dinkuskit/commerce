@@ -31,6 +31,7 @@
   },
   "repo": "https://github.com/dinkuskit/commerce",
   "capabilities": [
+    "content:read",
     "media:read",
     "network:request",
     "email:send",

@@ -62,6 +62,8 @@ billing address or determine taxes or currency.
 
 Publishing the page puts the product on sale, and unpublishing or deleting the page takes it off. A new product is a Draft, not buyable, until its page is published. The store's publish check makes this change through a private Commerce route; Commerce itself never reads the CMS.
 
+When EmDash publishes a scheduled product page on its own timer, Commerce puts the page's product on sale then, with nobody signed in. To hear that, Commerce asks for the `content:read` permission when it is installed or upgraded.
+
 To show this panel, Commerce asks for the `admin.editor-draft:read` permission when it is installed or upgraded, to read the page's title. Commerce `0.6.0` also asked for `admin.editor-draft:patch`, to fill the page's **Commerce product** field; later versions keep the link themselves and no longer ask for it. Update the store's template along with Commerce: a template that still reads the page's **Commerce product** field when it publishes puts only pages with that field filled on sale, and new pages no longer get it.
 
 ## Saving and upgrading catalog data

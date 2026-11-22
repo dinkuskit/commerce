@@ -399,3 +399,23 @@ test('Commerce settings has no Products without a page list: every product has i
   const body = texts(out.blocks);
   assert.doesNotMatch(body, /Products without a page|Make a page/);
 });
+
+test('EmDash\'s timer publishing a scheduled product page puts its product on sale, with nobody signed in', async () => {
+  const { default: plugin } = await import('../../../dist/plugin.js');
+  const published = plugin.hooks['content:afterPublish'];
+  const { ctx, catalog } = await shop();
+  ctx.storage.catalog_prices = new Store();
+  await ctx.storage.catalog_prices.put('mug', { recordKind: 'catalog-price', recordId: 'mug', catalogItemId: 'mug', regular: { currency: 'USD', minor: '900' } });
+  // A page Commerce sells nothing for, or a page outside Products, is left alone.
+  await published({ collection: 'products', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
+  await pick(ctx, 'mug');
+  await published({ collection: 'posts', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
+  assert.equal((await catalog.get('mug')).pageId, undefined, 'only a Products page sells');
+  await published({ collection: 'products', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
+  const shown = await readPublicCatalogItem(ctx, 'page-1', true);
+  assert.deepEqual([shown?.id, shown?.name], ['mug', 'Blue mug']);
+  assert.equal((await catalog.get('mug')).pageId, 'page-1');
+  // The store's publish check ran too, or EmDash ran the hook twice: nothing changes.
+  await published({ collection: 'products', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
+  assert.equal((await readPublicCatalogItem(ctx, 'page-1', true))?.name, 'Blue mug');
+});

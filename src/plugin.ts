@@ -80,6 +80,14 @@ const privatePost = (permission: PrivateRoute["permission"], handler: PrivateRou
 
 const plugin: SandboxedPlugin = {
   hooks: {
+    // EmDash's own timer publishes a scheduled product page with nobody signed in, so the page's product goes on sale
+    // here (scheduled-sale-in-commerce-20261122). A person's publish also ran the store's publish check; a repeat
+    // changes nothing, and a page that sells nothing is left alone.
+    "content:afterPublish": async ({ content, collection }, ctx) => {
+      const title = (content.data as { title?: unknown } | undefined)?.title;
+      if (collection === "products") await setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never,
+        pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, { entryId: content.id, onSale: true, ...(title ? { name: title } : {}) }).catch(() => {});
+    },
     // Switched on: the site's EmDash scheduler runs the background check every 5 minutes. If the
     // scheduler fails or stalls here, the next request registers it instead (see routes below).
     "plugin:activate": async (_event, ctx) => {

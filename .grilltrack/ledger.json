@@ -17174,6 +17174,34 @@
       "superseded_by": null,
       "updated_at": "2026-11-22T14:55:13+00:00",
       "verification_ref": "file:docs/implementation/emdash-1-5-compatibility.md;test:tests/features/catalog/catalog.test.mjs;test:tests/features/inventory-provider/registration-claim-storage.test.mjs;cmd:npm test;cmd:npm run test:integration;cmd:npx playwright test"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
+      "context_ref": null,
+      "created_at": "2026-11-22T16:47:35+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-product-states-20261023"
+      ],
+      "domain": "Server-side cart",
+      "history": [],
+      "id": "scheduled-sale-in-commerce-20261122",
+      "implementation_ref": null,
+      "question": "When EmDash publishes a scheduled product page on its own timer, what puts the page's product on sale?",
+      "rationale": "EmDash 1.4.0 and 1.5.0 run content:afterPublish when their scheduler publishes, on the Cloudflare timer and on Node. EmDash already checked the person when they scheduled the page, and it publishes the page on time regardless; this sells what the live page shows. Waits for the owner's approval.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "proposed",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T16:47:35+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17210,5 +17238,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T14:55:13+00:00"
+  "updated_at": "2026-11-22T16:47:35+00:00"
 }
