@@ -178,9 +178,11 @@ read (`null` for a cart never saved):
   the cart
   (`commerce-cart-expiry-20261113`). A paid cart also reads as empty.
 
-- `{ "stop": true }` stops cart reminder emails to the email on the cart's
-  last checkout. It is sent with the key from the abandoned cart email's
-  link and answers like a read (`commerce-abandoned-cart-email-20261122`).
+- `{ "stop": true }` stops cart reminder emails to the address the abandoned
+  cart email went to. Only the email's own key can send it (any other key
+  answers `CHECKOUT_NOT_FOUND`), and a later checkout with another email does
+  not change which address it stops. It answers like a read
+  (`commerce-abandoned-cart-email-20261122`).
 
 The answer carries `data.cart`:
 `{ lines: [{ catalogItemId, quantity }], version, expiresAt }`, with
@@ -198,7 +200,12 @@ removed and, when the owner's setting, the tick, an unpaid ended checkout, a
 non-empty cart and no stop for the email all allow it, the cart is marked
 `emailed` in the same write and one email goes through EmDash email with a
 freshly minted capability for the same cart as the `/cart/c/<id>?key=<secret>`
-link. A cart marked `emailed` never gets `remindAt` again.
+link. That capability keeps the hash of the address it was sent to, and it
+lasts only as long as its cart: once the cart's `cartExpires` has passed, or
+the cart is gone, every guest route refuses it with `CAPABILITY_DENIED`, so it
+can neither read a kept paid order nor bring back a deleted cart. The
+shopper's own capability is unchanged. A cart marked `emailed` never gets
+`remindAt` again.
 Extra fields, including `lines`, `price`, `total`, `paymentState`,
 `provider`, `binding`, `redirect`, `cartId`, `paid`, and `attemptId`, are
 rejected.

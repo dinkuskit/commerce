@@ -126,7 +126,7 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 | `catalog/public/item?itemId=…` or `?pageId=…` | GET | One projected product or `null`; no canonical page URL. With `pageId`, the product that published page sells. |
 | `checkout/guest/readiness` | GET | The installed checkout readiness response. |
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
-| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. `{ stop: true }`, sent with the abandoned cart email's key, stops cart reminders to that checkout's email. |
+| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. `{ stop: true }`, sent with the abandoned cart email's key, stops cart reminders to the address that email went to. |
 | `checkout/guest/start` | POST | Required contact details, authorized by that capability. Checkout starts from the saved cart; the browser sends no lines. `news: true` records that the shopper ticked **Email me with news and offers**. |
 | `orders/lookup` | POST | `{ orderNumber, email }` from the store's own page: that one order, or one not-found answer. |
 
@@ -193,7 +193,7 @@ Shopper sign-in and saved addresses are in DinkusKit Accounts, a separate plugin
 
 ## Abandoned cart email
 
-When a shopper gives their email at checkout and leaves without paying, Commerce sends them one email 10 hours later, like Shopify's abandoned checkout email. It names the items when the cart still holds what went to checkout and links back to the cart at `/cart/c/<id>?key=<secret>`. That link is a fresh key to the same cart, never the shopper's own cookie key and never the payment page. It works while the cart lasts: 30 days from its last change. The email goes from the 5-minute background check through the site's EmDash email, so the store needs an email provider set up in EmDash; without one nothing is sent.
+When a shopper gives their email at checkout and leaves without paying, Commerce sends them one email 10 hours later, like Shopify's abandoned checkout email. It names the items when the cart still holds what went to checkout and links back to the cart at `/cart/c/<id>?key=<secret>`. That link is a fresh key to the same cart, never the shopper's own cookie key and never the payment page. It works only while the cart lasts (30 days from its last change); after that the link opens an empty cart. The email goes from the 5-minute background check through the site's EmDash email, so the store needs an email provider set up in EmDash; without one nothing is sent.
 
 Choose who gets it under **Commerce settings > Abandoned cart email**:
 

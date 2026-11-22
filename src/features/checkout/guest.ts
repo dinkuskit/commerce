@@ -97,9 +97,8 @@ export async function cartGuestCheckout(
       // A read is also the status check: it runs Commerce's payment check on the current attempt.
       if (attempt && paymentsReady(runtime.host)) attempt = await reconcileCheckout(executionOf(runtime), authorized.cartId, attempt.attemptId);
     } else if (keys === "stop") {
-      // The reminder email's stop link: no more cart reminders to this checkout's email.
-      const email = attempt?.contactSnapshot?.contact.email;
-      await stops!.put(await stopKey(email ?? fail("CHECKOUT_NOT_FOUND")), { at: String(now) });
+      // The reminder email's stop link: no more cart reminders to the address that email went to.
+      await stops!.put(authorized.emailHash ?? fail("CHECKOUT_NOT_FOUND"), { at: String(now) });
     } else if (key === undefined || key !== stored?.record.cart?.key) {
       if (attempt && attempt.phase !== "released") fail("CHECKOUT_FROZEN");
       if (!Array.isArray(lines) || key !== undefined && (typeof key !== "string" || key.length > 128)) fail("INVALID_CART");

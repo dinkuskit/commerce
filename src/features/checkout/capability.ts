@@ -54,6 +54,7 @@ function parsePresentedCapability(token: string): { capabilityId: string; secret
 
 export async function mintGuestCapability(
   runtime: GuestCheckoutRuntime,
+  emailHash?: string,
 ): Promise<{ record: GuestCapabilityRecord; presentation: GuestCapabilityPresentation }> {
   const siteBinding = requireTrustedSiteOrigin(runtime);
   const capabilityId = (runtime.host.createCapabilityId ?? (() => crypto.randomUUID()))();
@@ -69,6 +70,7 @@ export async function mintGuestCapability(
     verifier: await hashGuestCapabilitySecret(secret),
     siteBinding,
     createdAt: new Date((runtime.host.now ?? (() => Date.now() / 1000))() * 1000).toISOString(),
+    ...emailHash ? { emailHash } : {},
   };
   if (!(await runtime.capabilities.compareAndSet(capabilityId, null, record)).applied) {
     throw new GuestCheckoutError("CONTENTION");
@@ -106,6 +108,11 @@ export async function authorizeGuestCapability(
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
   if (!timingSafeEqual(stored.verifier, await hashGuestCapabilitySecret(secret))) {
+    throw new GuestCheckoutError("CAPABILITY_DENIED");
+  }
+  // The cart email's key lasts only as long as its cart, and never brings back a deleted one.
+  const cart = stored.emailHash && (await runtime.carts.getVersioned(stored.cartId))?.value;
+  if (stored.emailHash && !(cart && cart.cart && (runtime.host.now?.() ?? Date.now() / 1000) < +cart.cartExpires!)) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
   return stored;

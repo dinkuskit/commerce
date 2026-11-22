@@ -382,6 +382,8 @@ export interface GuestCapabilityRecord {
   verifier: string;
   siteBinding: string;
   createdAt: string;
+  /** Set on the cart email's key: the emailed address's stop key. That key lasts only as long as its cart. */
+  emailHash?: string;
 }
 
 export interface GuestCheckoutHostOptions {
