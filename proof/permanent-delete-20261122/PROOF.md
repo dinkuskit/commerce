@@ -19,7 +19,8 @@ The media test in `tests/sandbox/commerce.spec.mjs` drives the real `catalog-ite
 - **Bounded:** `forgetProduct` deletes each row collection with one `deleteMany` over the product and all its variants, then the variants with one `deleteMany`, then the product item. The cost no longer grows with the number of variants.
 - **Fenced:** a permanent delete keeps `pageId` (and a fresh `pageClaim`) on the product and on a stray pick until they are deleted. The existing conditional write in `editProduct` refuses any other page with `PRODUCT_PAGE_CONFLICT` while cleanup runs, so no other page can claim a product halfway through deletion. `forgetProduct` only deletes a product whose `pageId` is still the deleted page.
 - **Resumable:** the page's `p:` and `e:` rows are removed only after its products are gone. A delete that stops partway leaves the product held by the page and off the shop, and the same `{entryId, onSale:false, deleted:true}` request finishes it. A product the stopped request already deleted counts as done: the retry goes on to the page's other product and its links instead of answering "Product not found".
-- **Variants added meanwhile:** the product's own item is deleted with `compareAndDelete` against the revision that was read. A variant appended after that read changes the revision, so the cleanup reads again and deletes the new variant too. A variant add that read the product just before it was deleted is refused, and its new item is deleted when the product is gone, so its SKU stays free.
+- **Variants added meanwhile:** the product's own item is deleted with `compareAndDelete` against the revision that was read; a variant appended after that read changes the revision, so the cleanup reads again and deletes it too. The delete's first write marks the product `deleting`. A variant write (Add a variant or a first option) that loses its commit keeps the variants it made so the same command can resume them, as before, unless the product is gone or marked `deleting`: then it deletes them, so their SKUs stay free.
+- **Stray pick:** a panel pick left on sale under the page by an interrupted publish check is taken off the shop before any cleanup, as unpublish and trash already do (catalog-archive-is-page-trash-20261115), so a delete that stops halfway leaves nothing on sale.
 - **Claim-fenced release kept:** `release` still gives an old product back only while its claim holds. Interrupted publish checks still leave the pointer for the next check to finish. The only change is that a deleted page no longer releases its product, because that product is deleted.
 
 ## Data model
@@ -32,13 +33,14 @@ No schema, collection or index change. The delete reads and removes existing rec
   - deleting a page for good deletes its product, every variant and their rows, so the SKU can be used again
   - a permanent delete that stops halfway holds its product until the same request finishes it (row delete throws; another page is refused; the identical request completes; links go last)
   - a permanent delete that stopped after deleting one product finishes the rest on the same request (the first product gone, the stray pick still held; and a stop after the last product, before the links)
-  - a variant added while its product is deleted for good is deleted too, or refused with nothing left
+  - a variant added while its product is deleted for good is deleted too, or refused with nothing left (Add a variant before and after the delete's first write, and a first option)
+  - a stopped delete has already taken the stray pick off the shop
   - deleting the biggest product for good stays within the sandbox call budget (50 variants, 5 row collections: 15 storage calls, under Template Store's 32)
 - `tests/sandbox/commerce.spec.mjs` (real workerd + SQLite): the run above.
 
 ## Results (Node v24.22.0)
 
-- `npm run build`: `registry_bundle=pass backend_bytes=130820 headroom_bytes=252`
+- `npm run build`: `registry_bundle=pass backend_bytes=130938 headroom_bytes=134`
 - `npx tsc --noEmit`: pass
 - `npm run test:unit`: 890/890 pass
 - `npm run test:sandbox`: 12/12 pass

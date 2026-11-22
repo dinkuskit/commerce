@@ -255,11 +255,16 @@ test('a permanent delete that stopped after deleting one product finishes the re
   const rows = Array.from({ length: 5 }, () => new Store());
   for (const row of rows) for (const id of ['mug', 'cap']) await row.put(id, { catalogItemId: id });
   const storage = { catalog, pages, rows };
-  // page-1 sold the mug, and a stopped check left the panel's pick, the cap, held by page-1 too.
+  // page-1 sold the mug, and a stopped check left the panel's pick, the cap, on sale under page-1 too.
   await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
-  await catalog.put('cap', { ...(await catalog.get('cap')), pageId: 'page-1' });
+  const { offSale: _draft, ...cap } = await catalog.get('cap');
+  await catalog.put('cap', { ...cap, pageId: 'page-1' });
   await pick(ctx, 'cap');
   const deleteMany = rows[0].deleteMany.bind(rows[0]);
+  // Stopped before anything is deleted: the cap is already off the shop, still held by the page.
+  rows[0].deleteMany = async () => { throw new Error('worker stopped'); };
+  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true }), /worker stopped/);
+  assert.deepEqual([(await catalog.get('cap')).offSale, (await catalog.get('cap')).pageId, (await catalog.get('mug')).offSale], [true, 'page-1', true]);
   rows[0].deleteMany = async (ids) => { if (ids.includes('cap')) throw new Error('worker stopped'); return deleteMany(ids); };
   await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true }), /worker stopped/);
   assert.deepEqual([await catalog.get('mug'), (await catalog.get('cap')).pageId], [null, 'page-1'], 'the mug is gone, the cap still held');
@@ -299,6 +304,41 @@ test('a variant added while its product is deleted for good is deleted too, or r
   await addCatalogVariantOption({ catalog }, { productId: 'mug', optionId: 'size', optionLabel: 'Size', values: [
     { valueId: 'small', label: 'Small', member: { catalogItemId: 'mug', fulfillment: 'physical' } },
     { valueId: 'large', label: 'Large', member: { commandId: 'create-mug-large-2', name: 'Mug', sku: 'MUG-L', fulfillment: 'physical' } },
+  ] }, { createId: () => 'mug-large', collection: 'catalog_items' });
+  // An add that read the product before the delete began loses its commit to the delete and keeps nothing.
+  await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-2', onSale: true });
+  const stopped = rows[0].deleteMany;
+  rows[0].deleteMany = async () => { throw new Error('worker stopped'); };
+  const early = Object.create(catalog);
+  early.getVersioned = async (id) => {
+    const read = await catalog.getVersioned(id);
+    if (id === 'mug') await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-2', onSale: false, deleted: true }), /worker stopped/);
+    return read;
+  };
+  await assert.rejects(addXl(early, 'MUG-3XL'), (error) => error.code === 'STORAGE_UNAVAILABLE');
+  assert.equal(await catalog.get('MUG-3XL'), null, 'the lost variant is not kept while its product is being deleted');
+  // The same for the first option of a product with none yet.
+  await createCatalogItem(catalog, { commandId: 'create-tee', name: 'Tee', sku: 'TEE', fulfillment: 'physical' }, { createId: () => 'tee', collection: 'catalog_items' });
+  await setProductPageOnSale(storage, { catalogItemId: 'tee', entryId: 'page-3', onSale: true });
+  const teeEarly = Object.create(catalog);
+  teeEarly.getVersioned = async (id) => {
+    const read = await catalog.getVersioned(id);
+    if (id === 'tee') await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-3', onSale: false, deleted: true }), /worker stopped/);
+    return read;
+  };
+  await assert.rejects(addCatalogVariantOption({ catalog: teeEarly }, { productId: 'tee', optionId: 'size', optionLabel: 'Size', values: [
+    { valueId: 'small', label: 'Small', member: { catalogItemId: 'tee', fulfillment: 'physical' } },
+    { valueId: 'large', label: 'Large', member: { commandId: 'create-tee-large', name: 'Tee', sku: 'TEE-L', fulfillment: 'physical' } },
+  ] }, { createId: () => 'tee-large', collection: 'catalog_items' }), (error) => error.code === 'STORAGE_UNAVAILABLE');
+  assert.equal(await catalog.get('tee-large'), null);
+  rows[0].deleteMany = stopped;
+  await setProductPageOnSale(storage, { entryId: 'page-3', onSale: false, deleted: true });
+  await setProductPageOnSale(storage, { entryId: 'page-2', onSale: false, deleted: true });
+  assert.equal(catalog.records.size, 0);
+  await createCatalogItem(catalog, { commandId: 'create-mug-third', name: 'Mug', sku: 'MUG', fulfillment: 'physical' }, { createId: () => 'mug', collection: 'catalog_items' });
+  await addCatalogVariantOption({ catalog }, { productId: 'mug', optionId: 'size', optionLabel: 'Size', values: [
+    { valueId: 'small', label: 'Small', member: { catalogItemId: 'mug', fulfillment: 'physical' } },
+    { valueId: 'large', label: 'Large', member: { commandId: 'create-mug-large-3', name: 'Mug', sku: 'MUG-L', fulfillment: 'physical' } },
   ] }, { createId: () => 'mug-large', collection: 'catalog_items' });
   const racing = Object.create(catalog);
   racing.getVersioned = async (id) => { const read = await catalog.getVersioned(id); if (id === 'mug') { for (const gone of ['mug', 'mug-large']) await catalog.delete(gone); } return read; };
