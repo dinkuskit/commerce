@@ -21,6 +21,9 @@
 import assert from 'node:assert/strict';
 import { createHash, randomBytes } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const DK = process.env.DINKUSKIT_DIR, BASE = process.env.COMMERCE_BASE_DIR;
@@ -41,8 +44,25 @@ const lines = [], say = text => lines.push(text);
 let runtime;
 const redact = value => String(value).replaceAll(runtime?.origin ?? '\u0000', PROD)
   .replace(/dk_store_[A-Za-z0-9_-]{43}/g, 'dk_store_[redacted]')
+  .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '[pass redacted]')
   .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, '<id>');
 const check = (label, ok, seen) => { say(`- ${ok ? 'PASS' : 'FAIL'}: ${label}${seen === undefined ? '' : ` (${redact(typeof seen === 'string' ? seen : JSON.stringify(seen))})`}`); assert.ok(ok, label); };
+
+// The Worker's local D1 file, read directly (read-only) to show which keys remain.
+let sqlite;
+function d1() {
+  if (sqlite) return sqlite;
+  const Database = createRequire(`${DK}/package.json`)('better-sqlite3');
+  const dir = join(runtime.persistTo, 'v3', 'd1', 'miniflare-D1DatabaseObject');
+  for (const file of readdirSync(dir).filter(name => name.endsWith('.sqlite'))) {
+    const db = new Database(join(dir, file), { readonly: true, fileMustExist: true });
+    if (db.prepare("SELECT 1 FROM sqlite_master WHERE name = 'dinkuskit_plugin_key'").get()) return (sqlite = db);
+    db.close();
+  }
+  throw new Error('merchant D1 not found');
+}
+const keyRows = siteId => d1().prepare('SELECT plugin FROM dinkuskit_plugin_key WHERE site_id = ? ORDER BY plugin').all(siteId).map(r => r.plugin);
+const rows = (label, sites) => say(`  - D1 plugin keys ${label}: ${sites.map(([name, id]) => `${name} [${keyRows(id).join(', ') || 'none'}]`).join('; ')}`);
 
 const owners = new Map();
 function transport() {
@@ -128,6 +148,18 @@ try {
     return (await (await harness.request(runtime, new Map(), '/api/store-connections/token', { method: 'POST',
       body: JSON.stringify({ client_id: 'dinkus-payments-emdash', connection_id: started.connection_id, code_verifier: verifier }) })).json()).store_key;
   }
+  // One recorded request to DinkusKit.com's Worker, redacted, with its answer.
+  const call = async (path, init = {}, jar = new Map()) => {
+    const response = await harness.request(runtime, jar, path, init);
+    const text = response.status === 303 ? '' : await response.text();
+    const auth = init.headers?.authorization ? ` (Bearer ${redact(init.headers.authorization.slice(7))})` : ' (no Authorization)';
+    say(`  - ${init.method ?? 'GET'} ${path}${auth}${typeof init.body === 'string' && init.body.startsWith('{') ? ` ${redact(init.body)}` : ''} → ${response.status}${text ? ` ${redact(text)}` : ''}`);
+    return { status: response.status, body: text ? JSON.parse(text) : null };
+  };
+  const cancelCall = (bearer, siteId) => call('/api/store-keys/cancel', { method: 'POST', headers: bearer ? { authorization: `Bearer ${bearer}` } : {}, body: JSON.stringify({ site_id: siteId }) });
+  const readCall = pass => call('/api/store-connection', { headers: { authorization: `Bearer ${pass}` } });
+  const passFor = async (key, siteId) => (await (await harness.request(runtime, new Map(), '/api/store-passes', { method: 'POST', headers: { authorization: `Bearer ${key}` },
+    body: JSON.stringify({ site_id: siteId, scope: 'store:connection', audience: 'dinkuskit' }) })).json()).access_token;
   const trade = async (key, siteId, scope, audience) => {
     const r = await harness.request(runtime, new Map(), '/api/store-passes', { method: 'POST', headers: { authorization: `Bearer ${key}` },
       body: JSON.stringify({ site_id: siteId, scope, audience }) });
@@ -152,21 +184,38 @@ try {
   check("Acme's Commerce key cannot get a store:connection pass for the other store", (await trade(acmeKey, otherSite, 'store:connection', 'dinkuskit')) !== 200,
     await trade(acmeKey, otherSite, 'store:connection', 'dinkuskit'));
   say('');
-  say('## 2. Uninstall cancels only Commerce\'s key');
+  say('## 2. A cancel for another store, or without a key, cancels nothing');
+  const acmeSite = acmeConnected.siteId;
+  rows('before', [['Acme', acmeSite], ['Other Shop', otherSite]]);
+  check("Acme's Commerce key cannot cancel at the other store", (await cancelCall(acmeKey, otherSite)).body?.error === 'site_mismatch');
+  check("the other store's Commerce key cannot cancel at Acme", (await cancelCall(otherKey, acmeSite)).body?.error === 'site_mismatch');
+  const acmePassBefore = await passFor(acmeKey, acmeSite), paymentsPassBefore = await passFor(paymentsKey, acmeSite);
+  check('a store:connection pass is not a key and cancels nothing', (await cancelCall(acmePassBefore, acmeSite)).body?.error === 'invalid_store_key');
+  check('no key cancels nothing', (await cancelCall(null, acmeSite)).body?.error === 'invalid_store_key');
+  rows('after the refused cancels', [['Acme', acmeSite], ['Other Shop', otherSite]]);
+  check('every key is still there', keyRows(acmeSite).join() === 'commerce,payments' && keyRows(otherSite).join() === 'commerce');
+  check("and Acme's and the other store's Commerce keys still trade", (await trade(acmeKey, acmeSite, 'commerce:settings', 'dinkuskit')) === 200 && (await trade(otherKey, otherSite, 'commerce:settings', 'dinkuskit')) === 200);
+  say('');
+  say('## 3. Uninstall cancels only Commerce\'s key');
+  check("before the uninstall, Acme's Commerce pass reads the store", (await readCall(acmePassBefore)).status === 200);
   await acme.uninstall();
+  rows('after the uninstall', [['Acme', acmeSite], ['Other Shop', otherSite]]);
   check("Acme's Commerce key no longer trades any pass", (await trade(acmeKey, acmeConnected.siteId, 'commerce:settings', 'dinkuskit')) === 'invalid_store_key',
     await trade(acmeKey, acmeConnected.siteId, 'commerce:settings', 'dinkuskit'));
   check("Acme's Payments key still trades its checkout pass", (await trade(paymentsKey, acmeConnected.siteId, 'payments:checkout', 'dinkus-payments')) === 200);
   check("the other store's Commerce key still works", (await trade(otherKey, otherSite, 'store:connection', 'dinkuskit')) === 200);
   check('a page load with the cancelled key leaves the line at the Store ID alone', /^Connected to DinkusKit\.com, store /.test(await acme.line()), await acme.line());
+  check("the store:connection pass Commerce got before the uninstall reads nothing after it", (await readCall(acmePassBefore)).body?.error === 'invalid_pass');
+  const paymentsRead = await readCall(paymentsPassBefore);
+  check("Payments' pass from before still reads, and no longer lists Commerce", paymentsRead.status === 200 && paymentsRead.body.plugins.join() === 'payments');
   say('');
-  say('## 3. A reinstall connects again');
+  say('## 4. A reinstall connects again');
   const again = install(acme.origin);
   const reconnected = await connect(again, acmeOwner);
   check('the reinstalled Commerce connects to the same store', reconnected.siteId === acmeConnected.siteId, reconnected.siteId === acmeConnected.siteId ? 'same Store ID' : 'other Store ID');
   check('and its line names Commerce and Payments again', /plugins on this store: Commerce and Payments\./.test(await again.line()), await again.line());
   say('');
-  say('## 4. Upgrade from Commerce main');
+  say('## 5. Upgrade from Commerce main');
   const old = install('https://upgrade-shop.example', base);
   await connect(old, await business('upgrade-owner@example.test', 'Upgrade Shop'));
   const before = old.store.settings.get('connection').value;
@@ -177,8 +226,21 @@ try {
   await upgraded.uninstall();
   check("its uninstall cancels the key saved by Commerce main", (await trade(JSON.parse(before).storeKey, JSON.parse(before).siteId, 'commerce:settings', 'dinkuskit')) === 'invalid_store_key');
   say('');
+  say('## 6. An owner\'s Disconnect stops a pass issued before it');
+  const commerceKey = (await again.key()).key;
+  const commercePass = await passFor(commerceKey, acmeSite), paymentsPass = await passFor(paymentsKey, acmeSite);
+  check("before the Disconnect, Payments' pass reads the store", (await readCall(paymentsPass)).status === 200);
+  const disconnected = await harness.request(runtime, acmeOwner, '/account/sites', await form(acmeOwner, { action: 'disconnect_plugin', site_id: acmeSite, plugin: 'payments' }));
+  say(`  - the owner presses Disconnect for Payments under Your stores → ${disconnected.status}`);
+  rows('after the Disconnect', [['Acme', acmeSite]]);
+  check("the Payments pass issued before the Disconnect reads nothing after it", (await readCall(paymentsPass)).body?.error === 'invalid_pass');
+  const commerceRead = await readCall(commercePass);
+  check("Commerce's pass still reads, listing only Commerce", commerceRead.status === 200 && commerceRead.body.plugins.join() === 'commerce');
+  check('and the line names only Commerce', /plugins on this store: Commerce\./.test(await again.line()), await again.line());
+  say('');
   say(`${lines.filter(l => l.startsWith('- PASS')).length} checks passed.`);
 } finally {
+  sqlite?.close();
   if (runtime) await harness.stopRuntime(runtime);
   process.stdout.write(`${lines.join('\n')}\n`);
 }

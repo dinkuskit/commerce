@@ -20,19 +20,35 @@ Two things stand in:
 - **Store address.** The receipt comes from the real `store-proof` route of the
   installation that owns that address.
 
-`authority-chain-trace.md` is the run's output (15 checks):
+`authority-chain-trace.md` is the run's output (28 checks), against DinkusKit.com at
+`905359b` (dinkuskit/dinkuskit#145) and Commerce main `d8d654c` for the upgrade. Each
+request to the cancel and read routes is printed with its answer, redacted, and the
+Worker's local D1 file is read after each step to show which plugin keys remain.
 1. **Connected-to line.** After Commerce's own Connect, the line names the business and
    Commerce. After Payments joins, it names both. Another business's store shows its
    own business. Acme's key cannot get a `store:connection` pass for the other store
    (`site_mismatch`).
-2. **Uninstall.** The uninstall cancels only Commerce's key, which then trades no pass
+2. **Forbidden cancels.** At `POST /api/store-keys/cancel`, Acme's Commerce key with the
+   other store's ID, and the other store's key with Acme's ID, both get 403
+   `site_mismatch`. A `store:connection` pass in place of a key, and no key at all, get
+   401 `invalid_store_key`. D1 still holds every key, and both Commerce keys still trade.
+3. **Uninstall.** The uninstall cancels only Commerce's key, which then trades no pass
    (`invalid_store_key`). Acme's Payments key and the other store's Commerce key keep
-   working. A page load with the cancelled key shows the Store ID alone.
-3. **Reinstall.** A reinstalled Commerce connects to the same store, and the line names
+   working. A page load with the cancelled key shows the Store ID alone. The
+   `store:connection` pass Commerce got before the uninstall answers 401 `invalid_pass`
+   at `GET /api/store-connection`, while Payments' pass still reads and lists Payments only.
+4. **Reinstall.** A reinstalled Commerce connects to the same store, and the line names
    Commerce and Payments again.
-4. **Upgrade.** A store connected with Commerce main shows the Store ID line. After the
+5. **Upgrade.** A store connected with Commerce main shows the Store ID line. After the
    upgrade, the same saved connection shows the business line and stays unchanged, and
    the uninstall cancels the key that main saved.
+6. **Disconnect.** After the owner disconnects Payments under Your stores, a Payments
+   pass issued before it answers 401 `invalid_pass`. Commerce's pass still reads, and the
+   line names Commerce only.
+
+The read stops at once because DinkusKit.com's `store:connection` pass names the plugin
+whose key traded for it, and the read answers 401 once that plugin has no key
+(dinkuskit/dinkuskit#145 at `905359b`).
 
 ## Pictures
 
