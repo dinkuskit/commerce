@@ -626,7 +626,9 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
     await hook('content:beforePublish')({ collection: 'products', content: content(when), origin: { source } }, ctx);
     await hook('content:afterPublish')({ collection: 'products', content: content(null, 'Old title') }, ctx);
   };
-  const sold = async () => (await catalog.get('mug')).pageId === 'page-1';
+  const sold = async () => { const item = await catalog.get('mug'); return item.pageId === 'page-1' && !item.offSale; };
+  // EmDash's timer has just published the page when Commerce sells it.
+  ctx.content = { get: async (collection, id) => (collection === 'products' && id === 'page-1' ? { status: 'published' } : null) };
   // An Author's own publish and an Author's schedule sell nothing; the store's publish check decides a person's publish.
   await publish('user');
   assert.equal(await sold(), false);
@@ -685,6 +687,33 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
   // An Editor's schedule, published by EmDash's timer with nobody signed in, sells under the title it published.
   assert.equal(await sold(), true);
   assert.equal((await readPublicCatalogItem(ctx, 'page-1', true))?.name, 'Blue mug');
+  assert.deepEqual(waiting(), []);
+  // The owner takes the page off the shop while the background check is selling it, and the store's off-sale check
+  // finishes first: the check finds the page gone after its sale and withdraws it again, so nothing stays buyable.
+  await setProductPageOnSale({ catalog, pages: ctx.storage.product_pages }, { entryId: 'page-1', onSale: false });
+  await schedule(40);
+  catalog.put = async () => { throw new Error('D1 is busy'); };
+  await publish('scheduler');
+  catalog.put = put;
+  let reads = 0;
+  await plugin.hooks.cron.handler({ name: 'commerce-checkout-wakes' }, { ...ctx, content: { get: async () => {
+    if ((reads += 1) > 1) return { status: 'draft' };
+    await setProductPageOnSale({ catalog, pages: ctx.storage.product_pages }, { entryId: 'page-1', onSale: false });
+    return { status: 'published' };
+  } } }).catch(() => {});
+  assert.equal(reads, 2);
+  assert.equal(await sold(), false, 'a page withdrawn during the retry stays off sale');
+  assert.deepEqual(waiting(), []);
+  // Thirty requests for other moments are cleared in one call, so the publish stays inside the sandbox's call limit.
+  for (let n = 0; n < 30; n += 1) await schedule(30, new Date(Date.parse(at) + (n + 1) * 60_000).toISOString());
+  await schedule(40);
+  let calls = 0;
+  const counted = new Proxy(ctx.storage.scheduled_sales, { get: (store, name) => typeof store[name] === 'function' ? (...args) => { calls += 1; return store[name](...args); } : store[name] });
+  await hook('content:beforePublish')({ collection: 'products', content: content(at), origin: { source: 'scheduler' } }, { ...ctx, storage: { ...ctx.storage, scheduled_sales: counted } });
+  assert.equal(calls, 5);
+  assert.deepEqual(waiting(), ['page-1:go']);
+  await hook('content:afterPublish')({ collection: 'products', content: content(null) }, ctx);
+  assert.equal(await sold(), true);
   assert.deepEqual(waiting(), []);
   // A page that sells nothing leaves no record behind to retry.
   await hook('content:beforeSchedule')({ collection: 'products', content: { id: 'page-9' }, actor: { id: 'u', role: 40 }, scheduledAt: at }, ctx);

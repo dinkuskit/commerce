@@ -50,22 +50,29 @@ function queryValue(url: string, key: string, refusal: string, required = false)
  * published, with the title to sell under, kept until the sale is saved.
  */
 type ScheduledSale = { page: string; go?: true; name?: unknown };
-type SaleContext = { storage: Record<string, unknown>; log: { warn(message: string, data?: unknown): void } };
+type SaleContext = { storage: Record<string, unknown>; log: { warn(message: string, data?: unknown): void };
+  content?: { get(collection: string, id: string): Promise<{ status: string } | null> } };
 const schedules = (ctx: SaleContext) => ctx.storage["scheduled_sales"] as {
   get(id: string): Promise<ScheduledSale | null>; put(id: string, data: ScheduledSale): Promise<void>; delete(id: string): Promise<boolean>;
+  deleteMany(ids: string[]): Promise<number>;
   query(options: { where: Partial<ScheduledSale>; limit: number }): Promise<{ items: { id: string; data: ScheduledSale }[] }>;
 };
 const EDITOR = 40;
 const moment = (at: unknown) => `@${Date.parse(String(at))}:`;
 /**
- * Sells a page EmDash's timer published. Its record goes once the sale is written, or when Commerce refuses it (the page
- * sells nothing, or another page sells its product), which leaves a Draft for a person's publish to settle. Any other
- * failure keeps the record for the background check to try again.
+ * Sells a page EmDash's timer published, while the page is still published. A page taken off the shop meanwhile may
+ * have had its product withdrawn before this sale was written, so a page found off the shop after it is withdrawn
+ * again: whichever finishes last, an unpublished page never stays on sale. Its record goes once that is written, or
+ * when Commerce refuses it (the page sells nothing, or another page sells its product), which leaves a Draft for a
+ * person's publish to settle. Any other failure keeps the record for the background check to try again.
  */
 async function sellScheduled(ctx: SaleContext, held: ScheduledSale) {
+  const published = async () => (await ctx.content?.get("products", held.page))?.status === "published";
+  const sell = (onSale: boolean) => setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never, pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages },
+    { entryId: held.page, onSale, ...(onSale && held.name ? { name: held.name } : {}) });
   try {
-    await setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never, pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages },
-      { entryId: held.page, onSale: true, ...(held.name ? { name: held.name } : {}) });
+    if (await published()) await sell(true);
+    if (!await published()) await sell(false);
   } catch (error) {
     const code = (error as { code?: unknown })?.code;
     ctx.log.warn("Scheduled product page not put on sale", { pageId: held.page, code });
@@ -78,12 +85,9 @@ type PrivateRoute = Extract<NonNullable<SandboxedPlugin["routes"]>[string], { ha
 /** A private POST route for signed-in users holding the permission. */
 const privatePost = (permission: PrivateRoute["permission"], handler: PrivateRoute["handler"]): PrivateRoute => ({ public: false, permission, methods: ["POST"], handler });
 
-/** Tries again each sale EmDash's timer published and Commerce could not save, while its page is still published. */
-async function retryScheduledSales(ctx: SaleContext & { content?: { get(collection: string, id: string): Promise<{ status: string } | null> } }) {
-  for (const { data } of (await schedules(ctx).query({ where: { go: true }, limit: 50 })).items) {
-    if ((await ctx.content?.get("products", data.page))?.status === "published") await sellScheduled(ctx, data);
-    else await schedules(ctx).delete(data.page + ":go");
-  }
+/** Tries again one sale EmDash's timer published and Commerce could not save, each run, so a run stays small. */
+async function retryScheduledSales(ctx: SaleContext) {
+  for (const { data } of (await schedules(ctx).query({ where: { go: true }, limit: 1 })).items) await sellScheduled(ctx, data);
 }
 
 const plugin: SandboxedPlugin = {
@@ -101,7 +105,8 @@ const plugin: SandboxedPlugin = {
       // Anyone else's request for the same moment, which may be the one EmDash kept, withdraws the sale.
       const go = origin.source === "scheduler" && !!await asked("e") && !await asked("a");
       // Every request for the page ends with this publish.
-      for (const { id, data } of (await schedules(ctx).query({ where: { page }, limit: 100 })).items) if (!data.go) await schedules(ctx).delete(id);
+      // One call however many requests there were, so the publish stays inside the sandbox's call limit.
+      await schedules(ctx).deleteMany((await schedules(ctx).query({ where: { page }, limit: 100 })).items.filter(({ data }) => !data.go).map(({ id }) => id));
       if (go) await schedules(ctx).put(page + ":go", { page, go, name: (content.data as { title?: unknown } | undefined)?.title });
       else await schedules(ctx).delete(page + ":go");
     },
