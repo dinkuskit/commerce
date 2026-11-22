@@ -11,7 +11,7 @@ version_scope: "Commerce {{version}}"
 
 Commerce adds products, prices, cart and checkout orchestration, receipts, orders and shopper accounts to an EmDash site. The storefront supplies the customer-facing pages; installing Commerce does not create those pages automatically. Commerce owns product identity and the amount a customer pays. [Payments](/docs/reference/payments) owns processor connections, [Ship](/docs/reference/ship) owns shipping labels, and [Inventory](/docs/reference/inventory) owns physical stock when a product is managed.
 
-This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It requires EmDash `1.4.0`. Changes merged after that release are not described here until they ship in a stable release.
+This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It requires EmDash `1.5.0`. Changes merged after that release are not described here until they ship in a stable release.
 
 ## Connect to DinkusKit
 
@@ -83,6 +83,13 @@ read until each field is saved in the new product record. Cleared values stay
 cleared. This transition retains old records but does not write changes back to
 them. Run one Commerce version at a time; downgrading after these saves requires
 an explicit data conversion. Do not run old and new binaries as concurrent writers.
+
+To move a store from EmDash 1.4 to 1.5, update Commerce first, while the store
+still runs EmDash 1.4, then upgrade EmDash. EmDash 1.5's database step renames
+the store's unique indexes, and earlier Commerce releases cannot recognize the
+new names, so they refuse to add a product ("uniqueness unproven"). This
+release accepts both names, and its upgrade proof checks a duplicate SKU is
+still refused before and after the EmDash upgrade.
 
 For direct kernel consumers, price, manual-availability and feed-eligibility
 readers now require the catalog reader as their third argument. Use these

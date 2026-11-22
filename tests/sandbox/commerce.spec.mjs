@@ -4,7 +4,7 @@ import { writeFileSync } from "node:fs";
 import { Kysely, SqliteDialect } from "kysely";
 import { PluginStorageRepository } from "emdash";
 import { resolveStorefrontAvailability } from "../../dist/features/storefront-availability/index.js";
-import { openCard, openMediaPanel, openPanel, openProductPage, openProductPageTitled, readProductPage, setOnSale } from "./product-page.mjs";
+import { openCard, openMediaPanel, openPanel, openProductPage, openProductPageTitled, readProductPage, setOnSale, uniqueIndexName } from "./product-page.mjs";
 
 // Primary owner for transport/rendering: real workerd, host authorization and SQLite.
 // Kernel unit tests cannot detect broken sandbox RPC, invalid Block Kit, or lost form state.
@@ -37,13 +37,13 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     return body.data;
   };
   try {
-    const indexBefore = database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey");
+    const indexBefore = database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(uniqueIndexName("skuKey"));
     // Drive EmDash's genuine maintenance once instead of waiting for its first timer tick.
     const maintenance = await request.post("/__proof/maintenance");
     expect(maintenance.status()).toBe(200);
     expect((await maintenance.json()).published).toEqual([]);
-    await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey"), { timeout: 90000 }).toBeTruthy();
-    const indexAfter = database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey");
+    await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(uniqueIndexName("skuKey")), { timeout: 90000 }).toBeTruthy();
+    const indexAfter = database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(uniqueIndexName("skuKey"));
     expect(indexAfter).toBeTruthy();
     console.log("fixture_schema_index=" + JSON.stringify({ before: Boolean(indexBefore), after: Boolean(indexAfter) }));
     const anonymous = await browser.newContext();
@@ -328,7 +328,7 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
 });
 
 // Product media: a clerk chooses images from the Media Library through the
-// Commerce-rendered chooser (Block Kit 1.4.0 renders no media_picker on plugin
+// Commerce-rendered chooser (Block Kit 1.5.0 renders no media_picker on plugin
 // pages); the public catalog carries media ids and alt read live; the
 // server-rendered storefront resolves public URLs and srcset through EmDash.
 test("clerk sets product images from the Media Library and the storefront renders them", async ({ page, request, browser }) => {

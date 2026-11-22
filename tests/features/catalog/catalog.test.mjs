@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createHash } from "node:crypto";
 import { PluginRouteError } from "emdash";
 
 import {
@@ -495,6 +496,13 @@ test("only an exact named unique violation is classified as atomic proof", () =>
   assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items'), null);
   assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_gshdrqaldna3r7sn'), 'skuKey');
   assert.equal(identifyConfirmedUniqueViolation(installed, 'catalog_items', 'r_othernamespace'), null);
+  // EmDash 1.5 names the same index by a digest of [plugin, collection, [field]]
+  // (migration 095 renames 1.4's indexes), so both names classify.
+  const digest = (plugin, field) => "uidx_plugin_" + createHash("sha256").update(JSON.stringify([plugin, "catalog_items", [field]])).digest("hex").slice(0, 32);
+  const renamed = new Error(`UNIQUE constraint failed: index '${digest("r_gshdrqaldna3r7sn", "skuKey")}'`);
+  assert.equal(identifyConfirmedUniqueViolation(renamed, 'catalog_items', 'r_gshdrqaldna3r7sn'), 'skuKey');
+  assert.equal(identifyConfirmedUniqueViolation(renamed, 'catalog_items', 'r_othernamespace'), null);
+  assert.equal(identifyConfirmedUniqueViolation(new Error(`UNIQUE constraint failed: index '${digest("dinkus-commerce", "commandId")}'`), 'catalog_items'), 'commandId');
 });
 
 test("the Registry build exposes the private catalog route and both unique declarations", () => {

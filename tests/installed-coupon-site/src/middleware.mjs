@@ -59,10 +59,11 @@ export async function onRequest(context, next) {
   // Astro locals expose a runtime facade. This pinned test-only observer uses
   // the host's documented source singleton to invoke its genuine index sync.
   const instance = globalThis[Symbol.for('emdash:runtime-holder')]?.instance;
-  if (instance?.db !== runtime.db || typeof instance.syncPluginStorageIndexesOnce !== 'function') {
+  // EmDash 1.5 renamed the seam ensureStorageIndexesSynced (emdash-cms/emdash#4095).
+  if (instance?.db !== runtime.db || typeof instance.ensureStorageIndexesSynced !== 'function') {
     throw new Error('Pinned installed-host index-sync seam changed');
   }
-  await instance.syncPluginStorageIndexesOnce();
+  if (!await instance.ensureStorageIndexesSynced(pluginId)) throw new Error('Registry runtime failed to sync storage indexes');
   if (!runtime.getPluginRouteMeta(pluginId, '/admin')) throw new Error('Registry runtime failed to load coupon admin');
   return Response.json({ pluginId, source: 'registry', configuredCommerce: false,
     backendSha256: createHash('sha256').update(backend).digest('hex'),

@@ -1,4 +1,5 @@
 import { isRecord } from "../../shared/record.js";
+import { namesIndex, uniqueIndexNames } from "../../shared/unique-index.js";
 import {
   InventoryProviderBindingError,
   normalizeInventoryProviderBinding,
@@ -77,20 +78,20 @@ function errorChain(error: unknown): unknown[] {
 
 function isConfigurationKeyViolation(error: unknown): boolean {
   let text = "";
-  let named = false;
   let coded = false;
+  const properties: Array<Record<string, unknown>> = [];
   for (const entry of errorChain(error)) {
     if (entry instanceof Error) text += `\n${entry.message}`;
     if (typeof entry === "object" && entry !== null) {
       const object = entry as Record<string, unknown>;
+      properties.push(object);
       text += `\n${String(object.message ?? "")}`;
-      named ||= object.constraint === INDEX_NAME || object.index === INDEX_NAME;
       coded ||= ["23505", "SQLITE_CONSTRAINT", "SQLITE_CONSTRAINT_UNIQUE"].includes(
         String(object.code ?? ""),
       );
     }
   }
-  named ||= text.includes(INDEX_NAME);
+  const named = namesIndex(text, properties, uniqueIndexNames(COMMERCE_PLUGIN_ID, STORE_INVENTORY_CONFIGURATIONS_COLLECTION, "configurationKey"));
   return (
     named &&
     (coded ||

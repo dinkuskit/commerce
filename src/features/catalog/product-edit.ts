@@ -2,7 +2,7 @@ import type { StorageCollection } from "emdash";
 import { catalogFail } from "./errors.js";
 import { PRODUCT_MOVED } from "./product-state.js";
 import { normalizeProductName, normalizeSku } from "./normalize.js";
-import { identifyConfirmedUniqueViolation } from "./storage-constraints.js";
+import { findUniqueViolation } from "./storage-constraints.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet">;
@@ -90,7 +90,7 @@ export async function changeCatalogItemSku(catalog: Catalog & Pick<StorageCollec
       return { ...named(item, item.name), sku, skuKey: sku };
     }, true, fence);
   } catch (error) {
-    if (identifyConfirmedUniqueViolation(error, options.collection, options.pluginId) === "skuKey") catalogFail("SKU_CONFLICT", TAKEN);
+    if (await findUniqueViolation(error, options.collection, options.pluginId) === "skuKey") catalogFail("SKU_CONFLICT", TAKEN);
     throw error;
   }
 }

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createHash } from "node:crypto";
 
 import {
   ManagedSkuRegistrationError,
@@ -178,4 +179,7 @@ test("only exact named claim constraints are accepted as atomic proof", () => {
     identifyManagedSkuRegistrationClaimUniqueViolation(new Error("SQLITE_BUSY")),
     null,
   );
+  // EmDash 1.5's digest name for the same index (migration 095) classifies too.
+  const renamed = "uidx_plugin_" + createHash("sha256").update(JSON.stringify(["dinkus-commerce", "managedSkuClaims", ["operationId"]])).digest("hex").slice(0, 32);
+  assert.equal(identifyManagedSkuRegistrationClaimUniqueViolation(new Error(`UNIQUE constraint failed: index '${renamed}'`)), "operationId");
 });

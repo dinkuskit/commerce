@@ -17107,9 +17107,80 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
+      "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+      "context_ref": null,
+      "created_at": "2026-11-22T14:39:53+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "emdash-1-4-compatibility-20261030"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-22T14:39:53+00:00",
+          "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T14:39:54+00:00",
+          "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T14:55:13+00:00",
+          "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+          "from": "implemented",
+          "implementation_ref": "file:package.json file:scripts/repo-contract.mjs file:scripts/check-features.mjs file:docs/implementation/emdash-1-5-compatibility.md",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-1-5-compatibility-20261122",
+      "implementation_ref": "file:package.json file:scripts/repo-contract.mjs file:scripts/check-features.mjs file:docs/implementation/emdash-1-5-compatibility.md",
+      "question": "Which EmDash release do Commerce development, tests and the runtime peer pin before v1 launch?",
+      "rationale": "Ronald approved the EmDash 1.5 upgrade plan in the dinkus project thread 'Plan the EmDash 1.5 upgrade' on 22 Nov 2026 (answers 1 and 2 'agreed').",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T14:55:13+00:00",
+      "verification_ref": "file:docs/implementation/emdash-1-5-compatibility.md;test:tests/features/catalog/catalog.test.mjs;test:tests/features/inventory-provider/registration-claim-storage.test.mjs;cmd:npm test;cmd:npm run test:integration;cmd:npx playwright test"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
       "choice": "Copy Shopify. (1) Who: the checkout page gets an 'Email me with news and offers' tick box, unticked by default; the email goes only to shoppers who ticked it, unless the owner picks All customers. (2) Control: one setting in Commerce > Settings with three choices: Off, Shoppers who ticked the box (default), All customers. (3) Link: the store's own cart pick-up link /cart/c/<id>?key=<secret> with a fresh secret made for that email; it opens the real cart with current prices and checkout starts again from the store's checkout page; it lasts as long as the cart, 30 days; Stripe's recovery link is not used. (4) When: one email, 10 hours after the shopper gave an email at checkout and left without paying; checked again just before sending and skipped if paid, cart emptied, unsubscribed or the setting is Off; at most one per cart. (5) Sender: Commerce, through the store's EmDash email (email:send, already granted), found by the existing 5-minute background check; not Payments or Ship. (6) No Stripe or Payments change: no checkout.session.expired webhook and no Stripe recovery setting. (7) An admin list of abandoned checkouts like Shopify's comes later, not in the first build. The build waits until the Accounts move frees Registry bytes.",
       "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
-      "created_at": "2026-11-22T15:39:44+00:00",
+      "created_at": "2026-11-22T16:28:59+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
@@ -17118,7 +17189,7 @@
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-22T15:39:44+00:00",
+          "at": "2026-11-22T16:28:59+00:00",
           "choice": "Copy Shopify. (1) Who: the checkout page gets an 'Email me with news and offers' tick box, unticked by default; the email goes only to shoppers who ticked it, unless the owner picks All customers. (2) Control: one setting in Commerce > Settings with three choices: Off, Shoppers who ticked the box (default), All customers. (3) Link: the store's own cart pick-up link /cart/c/<id>?key=<secret> with a fresh secret made for that email; it opens the real cart with current prices and checkout starts again from the store's checkout page; it lasts as long as the cart, 30 days; Stripe's recovery link is not used. (4) When: one email, 10 hours after the shopper gave an email at checkout and left without paying; checked again just before sending and skipped if paid, cart emptied, unsubscribed or the setting is Off; at most one per cart. (5) Sender: Commerce, through the store's EmDash email (email:send, already granted), found by the existing 5-minute background check; not Payments or Ship. (6) No Stripe or Payments change: no checkout.session.expired webhook and no Stripe recovery setting. (7) An admin list of abandoned checkouts like Shopify's comes later, not in the first build. The build waits until the Accounts move frees Registry bytes.",
           "from": "proposed",
           "implementation_ref": null,
@@ -17144,7 +17215,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-22T15:39:44+00:00",
+      "updated_at": "2026-11-22T16:28:59+00:00",
       "verification_ref": null
     }
   ],
@@ -17182,5 +17253,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T15:39:44+00:00"
+  "updated_at": "2026-11-22T16:28:59+00:00"
 }
