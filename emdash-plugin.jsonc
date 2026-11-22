@@ -31,6 +31,8 @@
   },
   "repo": "https://github.com/dinkuskit/commerce",
   "capabilities": [
+    "content:read",
+    "hooks.content-policy:register",
     "media:read",
     "network:request",
     "admin.editor-draft:read"
@@ -125,6 +127,10 @@
       "indexes": [
         "expiresAt"
       ],
+      "uniqueIndexes": []
+    },
+    "scheduled_sales": {
+      "indexes": ["page", "go"],
       "uniqueIndexes": []
     },
     "product_pages": {

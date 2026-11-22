@@ -17330,6 +17330,49 @@
       "superseded_by": null,
       "updated_at": "2026-11-22T17:39:29+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
+      "context_ref": null,
+      "created_at": "2026-11-22T18:09:29+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-product-states-20261023"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-22T18:09:29+00:00",
+          "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "scheduled-sale-in-commerce-20261122",
+      "implementation_ref": null,
+      "question": "When EmDash publishes a scheduled product page on its own timer, what puts the page's product on sale?",
+      "rationale": "The owner approved on 22 Nov 2026 (two new permissions, no re-check). EmDash 1.4.0 and 1.5.0 run these hooks when their scheduler publishes, on the Cloudflare timer and on Node; content:afterPublish alone names no actor, so it cannot tell an Author's own publish from the timer.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T18:09:29+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17366,5 +17409,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T17:39:29+00:00"
+  "updated_at": "2026-11-22T18:09:29+00:00"
 }
