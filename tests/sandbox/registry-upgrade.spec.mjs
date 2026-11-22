@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { BLOCK_FORM, ensureProductsCollection, ok, openPanel, setOnSale } from "./product-page.mjs";
+import { BLOCK_FORM, ensureProductsCollection, ok, openPanel, setOnSale, uniqueIndexName } from "./product-page.mjs";
 
 // Run by scripts/registry-upgrade-proof.mjs. The "old" phase runs an earlier
 // release's Registry build and stocks the store through that release's own
@@ -80,7 +80,7 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
   test.skip(phase !== "old");
   await signIn(page, request);
   const { database, rows } = storage();
-  await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey"), { timeout: 90000 }).toBeTruthy();
+  await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(uniqueIndexName("skuKey")), { timeout: 90000 }).toBeTruthy();
   const admin = async (input) => {
     const response = await page.request.post(endpoint, { data: input, headers });
     const body = await response.json();

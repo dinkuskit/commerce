@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import Database from "better-sqlite3";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { ensureProductsCollection, openPanel, openProductPage } from "./product-page.mjs";
+import { ensureProductsCollection, openPanel, openProductPage, uniqueIndexName } from "./product-page.mjs";
 
 // Every product is made for its page (catalog-product-needs-page-20261031), on the Registry build in real workerd:
 // the catalog API refuses a product without a page and has no op to give one a page later, the CLI makes the page and
@@ -32,7 +32,7 @@ test("every product is made for its page: catalog API, CLI, panel and settings",
   const pages = () => database.prepare("SELECT id, data FROM _plugin_storage WHERE plugin_id = 'dinkus-commerce' AND collection = 'product_pages'").all().map((row) => [row.id, JSON.parse(row.data)]);
   const items = () => database.prepare("SELECT count(*) AS n FROM _plugin_storage WHERE plugin_id = 'dinkus-commerce' AND collection = 'catalog_items'").get().n;
   try {
-    await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey"), { timeout: 90000 }).toBeTruthy();
+    await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(uniqueIndexName("skuKey")), { timeout: 90000 }).toBeTruthy();
     await page.goto("/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/settings");
     const started = page.getByRole("button", { name: "Get Started" });
     await started.or(page.getByRole("heading", { name: "Commerce settings" })).first().waitFor({ state: "visible", timeout: 60000 });

@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { createHash } from "node:crypto";
 
 // The Dinkus Commerce panel lives on each Content > Products page. Stores get
 // that collection from their template; the proof site makes it here, with the
@@ -9,6 +10,11 @@ const headers = { "X-EmDash-Request": "1" };
 // EmDash 1.4 renders a Block Kit form block as a group of fields named after
 // its submit button, not an HTML <form> (emdash-cms/emdash#4183).
 export const BLOCK_FORM = '[role="group"]';
+
+// EmDash 1.5 names a plugin storage unique index after a digest of
+// [plugin, collection, [field]] (emdash database/plugin-storage-index-name.ts).
+export const uniqueIndexName = (field, collection = "catalog_items", plugin = "dinkus-commerce") =>
+  "uidx_plugin_" + createHash("sha256").update(JSON.stringify([plugin, collection, [field]])).digest("hex").slice(0, 32);
 
 export async function ok(response) {
   const body = await response.json().catch(() => ({}));

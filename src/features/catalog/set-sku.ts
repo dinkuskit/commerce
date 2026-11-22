@@ -80,11 +80,11 @@ export async function setCatalogItemSku(
       if (result.applied) return { changed: true, item };
     } catch (error) {
       if (
-        identifyConfirmedUniqueViolation(
+        (await identifyConfirmedUniqueViolation(
           error,
           options.collection,
           options.pluginId,
-        ) === "skuKey"
+        )) === "skuKey"
       ) {
         throw new CatalogError("SKU_CONFLICT", "sku is already assigned to another catalog item");
       }

@@ -17103,6 +17103,63 @@
       "superseded_by": null,
       "updated_at": "2026-11-18T15:50:07+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+      "context_ref": null,
+      "created_at": "2026-11-22T14:39:53+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "emdash-1-4-compatibility-20261030"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-22T14:39:53+00:00",
+          "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T14:39:54+00:00",
+          "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-1-5-compatibility-20261122",
+      "implementation_ref": "file:package.json file:scripts/repo-contract.mjs file:scripts/check-features.mjs file:docs/implementation/emdash-1-5-compatibility.md",
+      "question": "Which EmDash release do Commerce development, tests and the runtime peer pin before v1 launch?",
+      "rationale": "Ronald approved the EmDash 1.5 upgrade plan in the dinkus project thread 'Plan the EmDash 1.5 upgrade' on 22 Nov 2026 (answers 1 and 2 'agreed').",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T14:39:54+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17139,5 +17196,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-18T15:50:07+00:00"
+  "updated_at": "2026-11-22T14:39:54+00:00"
 }

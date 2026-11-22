@@ -187,7 +187,7 @@ test("two local Wrangler/D1 processes enforce the EmDash JSON-expression SKU ind
   const rejected = results.find((result) => result.code !== 0);
   assert.match(rejected.output, new RegExp(skuIndex.replaceAll("/", "\\/")));
   assert.match(rejected.output, /SQLITE_CONSTRAINT_UNIQUE/);
-  assert.equal(identifyConfirmedUniqueViolation(new Error(rejected.output)), "skuKey");
+  assert.equal(await identifyConfirmedUniqueViolation(new Error(rejected.output)), "skuKey");
 
   const count = await runD1(
     persistTo,
@@ -248,7 +248,7 @@ test("two local Wrangler/D1 processes enforce one managed-SKU registration claim
     "LIVE_PROOF " +
       JSON.stringify({
         case: "wrangler-d1-atomic-managed-sku-registration-claim",
-        emdash: "1.4.0",
+        emdash: "1.5.0",
         processes: results.length,
         writesSucceeded: results.filter((result) => result.code === 0).length,
         writesRejected: results.filter((result) => result.code !== 0).length,
@@ -306,7 +306,7 @@ test("two local Wrangler/D1 processes enforce one permanent store identity", asy
     "LIVE_PROOF " +
       JSON.stringify({
         case: "wrangler-d1-atomic-store-inventory-configuration",
-        emdash: "1.4.0",
+        emdash: "1.5.0",
         processes: results.length,
         writesSucceeded: results.filter((result) => result.code === 0).length,
         writesRejected: results.filter((result) => result.code !== 0).length,

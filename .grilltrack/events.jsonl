@@ -746,3 +746,6 @@
 {"action": "decision_proposed", "at": "2026-11-18T15:48:10+00:00", "data": {"decision_id": "commerce-archive-state-removed-20261118"}, "event_id": "ba0d01bb-8003-418f-b4ea-6d1610f22ed8"}
 {"action": "decision_locked", "at": "2026-11-18T15:48:11+00:00", "data": {"decision_id": "commerce-archive-state-removed-20261118"}, "event_id": "cfa1f1c0-1c02-4e3d-8dda-88ccc5500a89"}
 {"action": "decision_implemented", "at": "2026-11-18T15:50:07+00:00", "data": {"decision_id": "commerce-archive-state-removed-20261118"}, "event_id": "aae28365-755e-4556-ab21-87b7e3674ea9"}
+{"action": "decision_proposed", "at": "2026-11-22T14:39:53+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "94bd6353-48d6-4719-98f7-d712d70fd1a2"}
+{"action": "decision_locked", "at": "2026-11-22T14:39:53+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "348acc74-5d4e-435e-b3b9-b4ba41dd2f62"}
+{"action": "decision_implemented", "at": "2026-11-22T14:39:54+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "67f04347-5740-43de-9136-a458f5f02a87"}

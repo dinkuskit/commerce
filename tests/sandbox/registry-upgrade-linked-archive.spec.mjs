@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { BLOCK_FORM, ok, openPanel, openProductPage, setOnSale } from "./product-page.mjs";
+import { BLOCK_FORM, ok, openPanel, openProductPage, setOnSale, uniqueIndexName } from "./product-page.mjs";
 
 // Run by scripts/registry-upgrade-proof.mjs with COMMERCE_UPGRADE_FROM=v0.8.0 and
 // COMMERCE_UPGRADE_SPEC=registry-upgrade-linked-archive.spec.mjs. The "old" phase runs Commerce 0.8.0's Registry
@@ -51,7 +51,7 @@ test("Commerce 0.8.0 archives a product its published page sells", async ({ page
   test.skip(phase !== "old");
   await signIn(page, request);
   const { database, rows } = storage();
-  await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get("uidx_plugin_dinkus-commerce_catalog_items_skuKey"), { timeout: 90000 }).toBeTruthy();
+  await expect.poll(() => database.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name=?").get(uniqueIndexName("skuKey")), { timeout: 90000 }).toBeTruthy();
   // As 0.8.0's owner does it: a product page, the panel's first Save makes its product, then prices.
   const { id: pageId, panel } = await openProductPage(page, TITLE);
   await panel.getByRole("textbox", { name: "SKU", exact: true }).fill("LINKED-CAP");

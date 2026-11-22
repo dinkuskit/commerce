@@ -90,7 +90,7 @@ export async function changeCatalogItemSku(catalog: Catalog & Pick<StorageCollec
       return { ...named(item, item.name), sku, skuKey: sku };
     }, true, fence);
   } catch (error) {
-    if (identifyConfirmedUniqueViolation(error, options.collection, options.pluginId) === "skuKey") catalogFail("SKU_CONFLICT", TAKEN);
+    if (await identifyConfirmedUniqueViolation(error, options.collection, options.pluginId) === "skuKey") catalogFail("SKU_CONFLICT", TAKEN);
     throw error;
   }
 }

@@ -1,4 +1,5 @@
 import { isRecord } from "../../shared/record.js";
+import { namesIndex, uniqueIndexNames } from "../../shared/unique-index.js";
 import {
   InventoryProviderBindingError,
   normalizeInventoryProviderBinding,
@@ -75,22 +76,22 @@ function errorChain(error: unknown): unknown[] {
   return chain;
 }
 
-function isConfigurationKeyViolation(error: unknown): boolean {
+async function isConfigurationKeyViolation(error: unknown): Promise<boolean> {
   let text = "";
-  let named = false;
   let coded = false;
+  const properties: Array<Record<string, unknown>> = [];
   for (const entry of errorChain(error)) {
     if (entry instanceof Error) text += `\n${entry.message}`;
     if (typeof entry === "object" && entry !== null) {
       const object = entry as Record<string, unknown>;
+      properties.push(object);
       text += `\n${String(object.message ?? "")}`;
-      named ||= object.constraint === INDEX_NAME || object.index === INDEX_NAME;
       coded ||= ["23505", "SQLITE_CONSTRAINT", "SQLITE_CONSTRAINT_UNIQUE"].includes(
         String(object.code ?? ""),
       );
     }
   }
-  named ||= text.includes(INDEX_NAME);
+  const named = namesIndex(text, properties, await uniqueIndexNames(COMMERCE_PLUGIN_ID, STORE_INVENTORY_CONFIGURATIONS_COLLECTION, "configurationKey"));
   return (
     named &&
     (coded ||
@@ -143,7 +144,7 @@ async function assertConfigurationKeyConstraint(
       try {
         await storage.put(record.recordId, record);
       } catch (error) {
-        if (isConfigurationKeyViolation(error)) return;
+        if (await isConfigurationKeyViolation(error)) return;
         throw fail(
           "STORAGE_CONSTRAINTS_UNAVAILABLE",
           "store inventory configuration uniqueness could not be proven",
@@ -237,7 +238,7 @@ export async function createStoreInventoryConfiguration(
     await storage.put(configuration.recordId, configuration);
     return { outcome: "created", configuration };
   } catch (error) {
-    if (!isConfigurationKeyViolation(error)) {
+    if (!(await isConfigurationKeyViolation(error))) {
       throw fail("STORAGE_UNAVAILABLE", "store inventory configuration write failed", error);
     }
     const winner = await loadStoreInventoryConfiguration(storage);
