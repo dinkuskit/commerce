@@ -120,7 +120,8 @@
     },
     "orders": {
       "indexes": [
-        "emailKey"
+        "emailKey",
+        "shippedKey"
       ],
       "uniqueIndexes": []
     },

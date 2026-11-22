@@ -17387,6 +17387,47 @@
       "superseded_by": null,
       "updated_at": "2026-11-22T18:09:29+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "A private courier/outbox route (POST, refuses anyone signed in) answers the store's courier with order.shipped: one item per order marked Completed (Complete order or a Ship label), id <orderId>:shipped, with orderId, shippedAt, the checkout email, the delivery (else billing) name and each line's product ID (a variant's product, as the product page shows it) and name. Read oldest first by a new orders index shippedKey (<completed.at> <orderId>, set on completion, cleared on Move back to Processing), only once the order has been Completed for a minute. Completing again after a reopen gives the same id. Test orders count; orders Completed before this version do not.",
+      "context_ref": null,
+      "created_at": "2026-11-22T21:00:05+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-22T21:00:05+00:00",
+          "choice": "A private courier/outbox route (POST, refuses anyone signed in) answers the store's courier with order.shipped: one item per order marked Completed (Complete order or a Ship label), id <orderId>:shipped, with orderId, shippedAt, the checkout email, the delivery (else billing) name and each line's product ID (a variant's product, as the product page shows it) and name. Read oldest first by a new orders index shippedKey (<completed.at> <orderId>, set on completion, cleared on Move back to Processing), only once the order has been Completed for a minute. Completing again after a reopen gives the same id. Test orders count; orders Completed before this version do not.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "order-shipped-outbox-20261122",
+      "implementation_ref": null,
+      "question": "What does Commerce tell the store's other plugins when an order ships, and when?",
+      "rationale": "The owner approved on 22 Nov 2026. Reviews (dinkuskit/reviews) asks each buyer from this news, and the plugin-communication rule (dinkuskit/dinkuskit plugin-communication-rule-20261122) carries it on the courier. One index on the existing orders records, no new collection; the minute's wait keeps a completion saved a moment late under an earlier time from being skipped.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T21:00:05+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17423,5 +17464,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T20:31:48+00:00"
+  "updated_at": "2026-11-22T21:00:05+00:00"
 }
