@@ -50,10 +50,12 @@ export interface PaidOrder {
  */
 export type PaidOrderReceipt = "stored" | "duplicate" | "conflict";
 
-/** Where Orders has the order now: Completed (shipped, never "delivered") with what the owner recorded, or Processing. */
+/** Where Orders has the order now: Completed (shipped, never "delivered") with what the owner recorded, or Processing, plus its assigned short number and test mark. */
 export interface PaidOrderStatus {
   status: "processing" | "completed";
   completed: { at: string; carrier?: string; tracking?: string } | null;
+  number: number | null;
+  test: boolean;
 }
 
 export interface PaidOrderReceiver {
