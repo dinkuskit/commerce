@@ -17187,20 +17187,35 @@
         "catalog-product-states-20261023"
       ],
       "domain": "Server-side cart",
-      "history": [],
+      "history": [
+        {
+          "at": "2026-11-22T16:51:08+00:00",
+          "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
       "id": "scheduled-sale-in-commerce-20261122",
       "implementation_ref": null,
       "question": "When EmDash publishes a scheduled product page on its own timer, what puts the page's product on sale?",
-      "rationale": "EmDash 1.4.0 and 1.5.0 run content:afterPublish when their scheduler publishes, on the Cloudflare timer and on Node. EmDash already checked the person when they scheduled the page, and it publishes the page on time regardless; this sells what the live page shows. Waits for the owner's approval.",
+      "rationale": "The owner approved on 22 Nov 2026. EmDash 1.4.0 and 1.5.0 run content:afterPublish when their scheduler publishes, on the Cloudflare timer and on Node. EmDash already checked the person when they scheduled the page and publishes it on time regardless, so no re-check: one new permission, content:read.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "proposed",
+      "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-22T16:47:35+00:00",
+      "updated_at": "2026-11-22T16:51:08+00:00",
       "verification_ref": null
     }
   ],
@@ -17238,5 +17253,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T16:47:35+00:00"
+  "updated_at": "2026-11-22T16:51:08+00:00"
 }

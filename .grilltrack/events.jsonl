@@ -751,3 +751,4 @@
 {"action": "decision_implemented", "at": "2026-11-22T14:39:54+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "67f04347-5740-43de-9136-a458f5f02a87"}
 {"action": "decision_verified", "at": "2026-11-22T14:55:13+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "fb065023-b8ba-42b8-b859-642fb69240be"}
 {"action": "decision_proposed", "at": "2026-11-22T16:47:35+00:00", "data": {"decision_id": "scheduled-sale-in-commerce-20261122"}, "event_id": "9c4d1352-f502-4b3e-b468-494468741073"}
+{"action": "decision_locked", "at": "2026-11-22T16:51:08+00:00", "data": {"decision_id": "scheduled-sale-in-commerce-20261122"}, "event_id": "5ea430f4-afd7-4f8f-a6e7-d9d5385101a5"}
