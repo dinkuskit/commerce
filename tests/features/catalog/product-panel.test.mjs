@@ -688,21 +688,21 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
   assert.equal(await sold(), true);
   assert.equal((await readPublicCatalogItem(ctx, 'page-1', true))?.name, 'Blue mug');
   assert.deepEqual(waiting(), []);
-  // The owner takes the page off the shop while the background check is selling it, and the store's off-sale check
-  // finishes first: the check finds the page gone after its sale and withdraws it again, so nothing stays buyable.
+  // The background check has read a held sale when the owner takes the page off the shop and an Author publishes it
+  // again: the product changed after EmDash's timer published the page, so the held sale is refused and nothing sells.
   await setProductPageOnSale({ catalog, pages: ctx.storage.product_pages }, { entryId: 'page-1', onSale: false });
   await schedule(40);
   catalog.put = async () => { throw new Error('D1 is busy'); };
   await publish('scheduler');
   catalog.put = put;
-  let reads = 0;
+  assert.deepEqual(waiting(), ['page-1:go']);
   await plugin.hooks.cron.handler({ name: 'commerce-checkout-wakes' }, { ...ctx, content: { get: async () => {
-    if ((reads += 1) > 1) return { status: 'draft' };
     await setProductPageOnSale({ catalog, pages: ctx.storage.product_pages }, { entryId: 'page-1', onSale: false });
+    await publish('user');
     return { status: 'published' };
   } } }).catch(() => {});
-  assert.equal(reads, 2);
-  assert.equal(await sold(), false, 'a page withdrawn during the retry stays off sale');
+  assert.equal(await sold(), false, "an Editor's held sale does not survive a later withdrawal and an Author's publish");
+  assert.equal(warnings.at(-1).data.code, 'COMMAND_CONFLICT');
   assert.deepEqual(waiting(), []);
   // Thirty requests for other moments are cleared in one call, so the publish stays inside the sandbox's call limit.
   for (let n = 0; n < 30; n += 1) await schedule(30, new Date(Date.parse(at) + (n + 1) * 60_000).toISOString());

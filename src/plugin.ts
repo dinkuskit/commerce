@@ -1,6 +1,6 @@
 import { pluginRoute, type SandboxedPlugin } from "emdash/plugin";
 import { CATALOG_API_ROUTE, catalogApi, commerceAdmin, productMediaPanel, productPanel, syncOrdersWithShip } from "./admin/index.js";
-import { PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
+import { pageProduct, PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
   PUBLIC_CATALOG_ITEM_ROUTE,
@@ -47,9 +47,9 @@ function queryValue(url: string, key: string, refusal: string, required = false)
 /**
  * Each schedule request for a Products page is its own record, `<page>@<moment>:e` from an Editor or Admin and
  * `<page>@<moment>:a` from anyone else, so no request can overwrite another. `<page>:go` is a sale EmDash's timer
- * published, with the title to sell under, kept until the sale is saved.
+ * published: the product the page sold then, that product's revision then, and the title to sell under.
  */
-type ScheduledSale = { page: string; go?: true; name?: unknown };
+type ScheduledSale = { page: string; go?: true; name?: unknown; item?: string; fence?: string };
 type SaleContext = { storage: Record<string, unknown>; log: { warn(message: string, data?: unknown): void };
   content?: { get(collection: string, id: string): Promise<{ status: string } | null> } };
 const schedules = (ctx: SaleContext) => ctx.storage["scheduled_sales"] as {
@@ -57,26 +57,24 @@ const schedules = (ctx: SaleContext) => ctx.storage["scheduled_sales"] as {
   deleteMany(ids: string[]): Promise<number>;
   query(options: { where: Partial<ScheduledSale>; limit: number }): Promise<{ items: { id: string; data: ScheduledSale }[] }>;
 };
+const shelf = (ctx: SaleContext) => ({ catalog: ctx.storage["catalog_items"] as Parameters<typeof setProductPageOnSale>[0]["catalog"], pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages });
 const EDITOR = 40;
 const moment = (at: unknown) => `@${Date.parse(String(at))}:`;
 /**
- * Sells a page EmDash's timer published, while the page is still published. A page taken off the shop meanwhile may
- * have had its product withdrawn before this sale was written, so a page found off the shop after it is withdrawn
- * again: whichever finishes last, an unpublished page never stays on sale. Its record goes once that is written, or
- * when Commerce refuses it (the page sells nothing, or another page sells its product), which leaves a Draft for a
- * person's publish to settle. Any other failure keeps the record for the background check to try again.
+ * Sells a page EmDash's timer published, while the page is still published, and only if nothing has changed its
+ * product since the timer published it: a withdrawal, a person's sale or any other edit since moves the product's
+ * revision, and the sale is refused at the write, so a later decision always wins. Its record goes once the sale is
+ * written or refused (the product changed, the page sells nothing, or another page sells it), which leaves a Draft for
+ * a person's publish to settle. Any other failure keeps the record for the background check to try again.
  */
 async function sellScheduled(ctx: SaleContext, held: ScheduledSale) {
-  const published = async () => (await ctx.content?.get("products", held.page))?.status === "published";
-  const sell = (onSale: boolean) => setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never, pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages },
-    { entryId: held.page, onSale, ...(onSale && held.name ? { name: held.name } : {}) });
   try {
-    if (await published()) await sell(true);
-    if (!await published()) await sell(false);
+    if ((await ctx.content?.get("products", held.page))?.status === "published") await setProductPageOnSale(shelf(ctx),
+      { entryId: held.page, catalogItemId: held.item, onSale: true, ...(held.name ? { name: held.name } : {}) }, { revision: held.fence! });
   } catch (error) {
     const code = (error as { code?: unknown })?.code;
     ctx.log.warn("Scheduled product page not put on sale", { pageId: held.page, code });
-    if (code !== "CATALOG_ITEM_NOT_FOUND" && code !== "PRODUCT_PAGE_CONFLICT" && code !== "INVALID_INPUT") return;
+    if (!["CATALOG_ITEM_NOT_FOUND", "PRODUCT_PAGE_CONFLICT", "INVALID_INPUT", "COMMAND_CONFLICT"].includes(code as string)) return;
   }
   await schedules(ctx).delete(held.page + ":go");
 }
@@ -104,10 +102,11 @@ const plugin: SandboxedPlugin = {
       const page = content.id as string, asked = (kind: string) => schedules(ctx).get(page + moment(content.scheduledAt) + kind);
       // Anyone else's request for the same moment, which may be the one EmDash kept, withdraws the sale.
       const go = origin.source === "scheduler" && !!await asked("e") && !await asked("a");
-      // Every request for the page ends with this publish.
-      // One call however many requests there were, so the publish stays inside the sandbox's call limit.
+      // Every request for the page ends with this publish, cleared in one call however many there were.
       await schedules(ctx).deleteMany((await schedules(ctx).query({ where: { page }, limit: 100 })).items.filter(({ data }) => !data.go).map(({ id }) => id));
-      if (go) await schedules(ctx).put(page + ":go", { page, go, name: (content.data as { title?: unknown } | undefined)?.title });
+      // The sale is of the product the page picks now, at its revision now.
+      const item = go ? await pageProduct(shelf(ctx).pages, page) : undefined, stored = item && await shelf(ctx).catalog.getVersioned(item);
+      if (stored) await schedules(ctx).put(page + ":go", { page, go: true, item, fence: "catalog:" + stored.revision, name: (content.data as { title?: unknown } | undefined)?.title });
       else await schedules(ctx).delete(page + ":go");
     },
     "content:afterPublish": async ({ collection, content }, ctx) => {

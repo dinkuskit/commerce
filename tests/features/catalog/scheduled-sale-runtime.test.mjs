@@ -62,6 +62,9 @@ async function store() {
       return entryId;
     },
     schedule: (entryId, at, actor) => runtime.handleContentSchedule('products', entryId, at, { actor, origin: { source: 'api' } }),
+    /** The store's off-sale check, as the template's publish check calls it for a signed-in Editor. */
+    withdraw: (entryId) => runtime.handlePluginApiRoute(ID, 'POST', 'catalog-items/set-on-sale', new Request('https://shop.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entryId, onSale: false }) }),
+      { id: 'editor', email: 'editor@shop.test', name: 'Editor', role: 40, createdAt: new Date() }),
     async sold(sku) { const item = await catalog.get(sku); return Boolean(item?.pageId) && !item.offSale; },
     async stop() { try { await runtime.db.destroy(); } catch {} rmSync(dir, { recursive: true, force: true }); },
   };
@@ -134,6 +137,40 @@ test('a scheduled sale the store could not save is saved by the background check
     assert.equal(await shop.sold('MUG'), true, 'the background check saved it');
     assert.equal(await shop.sold('WAIT0'), false);
     console.log('retried sale', JSON.stringify({ MUG: await shop.sold('MUG'), waiting: 60 }));
+  } finally {
+    await shop.stop();
+  }
+});
+
+test('a held sale the background check resumes after the owner withdrew the page and an Author published it sells nothing', async () => {
+  const shop = await store();
+  try {
+    const at = new Date(Date.now() + 1500).toISOString();
+    const page = await shop.page('LATE');
+    const sales = new PluginStorageRepository(shop.runtime.db, ID, 'scheduled_sales', ['page', 'go']);
+    assert.equal((await shop.schedule(page, at, EDITOR)).success, true);
+    await sql`CREATE TRIGGER busy BEFORE UPDATE ON _plugin_storage WHEN NEW.collection = 'catalog_items' BEGIN SELECT RAISE(ABORT, 'database is busy'); END`.execute(shop.runtime.db);
+    await new Promise((resolve) => setTimeout(resolve, 1700));
+    assert.equal((await shop.runtime.publishScheduled()).length, 1);
+    await sql`DROP TRIGGER busy`.execute(shop.runtime.db);
+    assert.equal(await shop.sold('LATE'), false, 'the sale is held for the background check');
+    // The background check has read this held sale when it pauses: meanwhile the owner unpublishes the page, the
+    // store's off-sale check runs, and an Author publishes the page again, which clears the record.
+    const loaded = await sales.get(page + ':go');
+    assert.ok(loaded?.fence, JSON.stringify(loaded));
+    const steps = [];
+    steps.push((await shop.runtime.handleContentUnpublish('products', page, { actor: EDITOR, origin: { source: 'api' } })).success && 'unpublished');
+    steps.push((await shop.withdraw(page)).success && 'withdrawn');
+    steps.push((await shop.runtime.handleContentPublish('products', page, { actor: AUTHOR, origin: { source: 'api' } })).success && 'Author published');
+    assert.equal(await sales.get(page + ':go'), null, "the Author's publish cleared the held sale");
+    // The check resumes with the record it had read, as EmDash runs it.
+    await sales.put(page + ':go', loaded);
+    await shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
+    assert.deepEqual(steps, ['unpublished', 'withdrawn', 'Author published']);
+    assert.equal((await shop.runtime.handleContentGet('products', page)).data.item.status, 'published');
+    assert.equal(await shop.sold('LATE'), false, "the Editor's held sale does not outlive the withdrawal");
+    assert.equal(await sales.get(page + ':go'), null, 'and is not tried again');
+    console.log('resumed sale', JSON.stringify({ steps, LATE: { sold: await shop.sold('LATE'), fence: loaded.fence, held: await sales.get(page + ':go') } }));
   } finally {
     await shop.stop();
   }
