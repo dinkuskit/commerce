@@ -238,14 +238,102 @@ test("a paid cart reads where Orders has the order now: Processing, Completed wi
   assert.equal(reopened.status, "processing");
   assert.equal(reopened.completed, null, "a reopened order shows no cleared tracking");
 
-  // Orders failing to answer never costs the shopper the receipt; the status is just left out.
+  // Orders failing to answer never costs the shopper the receipt; the status and number are just left out,
+  // while the frozen test mark stays.
   const broken = { ...rt, paidOrders: { receive: rt.paidOrders.receive, status: async () => { throw new Error("storage down"); } } };
   const still = await f.cart({}, broken);
   assert.equal(still.checkout.state, "paid");
   assert.equal(still.checkout.order.orderId, orderId);
+  assert.equal(still.checkout.order.test, true);
   assert.equal("status" in still.checkout.order, false);
-  // Without a status port (no Orders bound), the receipt carries no status.
-  assert.equal("status" in (await f.cart()).checkout.order, false);
+  assert.equal("number" in still.checkout.order, false);
+  // Without a status port (no Orders bound), the receipt carries no status or number, and keeps its frozen test mark.
+  const unbound = await f.cart();
+  assert.equal(unbound.checkout.order.test, true);
+  assert.equal("status" in unbound.checkout.order, false);
+  assert.equal("number" in unbound.checkout.order, false);
+});
+
+test("authorized paid cart reads expose canonical Orders short number and frozen test/live fact without renumbering or leaking", async (t) => {
+  // 1. Numbered TEST order: stays test even if host mode later changes to live.
+  const fTest = await setup(t);
+  const testOrders = memory(), testNumbers = memory();
+  const testRt = { ...fTest.runtime, paidOrders: createPaidOrderReceiver(testOrders, testNumbers) };
+  await fTest.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, testRt);
+  await startGuestCheckout(testRt, { contact }, fTest.headers);
+  fTest.synth.setPayment("paid");
+  const testPaid = await fTest.cart({}, testRt);
+  assert.equal(testPaid.checkout.state, "paid");
+  assert.equal(testPaid.checkout.order.number, 1001);
+  assert.equal(testPaid.checkout.order.test, true);
+  assert.equal(Object.hasOwn(testPaid.checkout.order, "mode"), false);
+  assert.deepEqual(testPaid.checkout.order.contact, contact);
+  // Switching host mode after payment never alters the paid order's test fact.
+  const flippedToLiveRt = { ...testRt, host: { ...testRt.host, paymentMode: "live" } };
+  const afterFlip = await fTest.cart({}, flippedToLiveRt);
+  assert.equal(afterFlip.checkout.order.test, true);
+  assert.equal(afterFlip.checkout.order.number, 1001);
+
+  // Forged, missing, and another shopper's capability keys expose no order, number, or test fact.
+  for (const headers of [{}, { [GUEST_CAPABILITY_HEADER]: "forged.secret" }]) {
+    const denied = await cartGuestCheckout(testRt, {}, headers);
+    assert.equal(denied.ok, false);
+    assert.equal(denied.error.code, "CAPABILITY_DENIED");
+    assert.equal(denied.checkout, undefined);
+  }
+  const otherPrepared = await prepareGuestCheckout(testRt);
+  const otherRead = await cartGuestCheckout(testRt, {}, { [GUEST_CAPABILITY_HEADER]: otherPrepared.capability.capability });
+  assert.equal(otherRead.ok, true);
+  assert.equal(otherRead.checkout.order, null);
+
+  // 2. Numbered LIVE order: test is false, and stays false even if host mode later switches to test.
+  const fLive = await setup(t);
+  const liveOrders = memory(), liveNumbers = memory();
+  const liveHost = { ...fLive.runtime.host, paymentMode: "live" };
+  const liveRt = { ...fLive.runtime, host: liveHost, paidOrders: createPaidOrderReceiver(liveOrders, liveNumbers) };
+  await fLive.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, liveRt);
+  await startGuestCheckout(liveRt, { contact }, fLive.headers);
+  fLive.synth.setPayment("paid");
+  const livePaid = await fLive.cart({}, liveRt);
+  assert.equal(livePaid.checkout.state, "paid");
+  assert.equal(livePaid.checkout.order.number, 1001);
+  assert.equal(livePaid.checkout.order.test, false);
+  assert.equal(Object.hasOwn(livePaid.checkout.order, "mode"), false);
+  const flippedToTestRt = { ...liveRt, host: { ...liveHost, paymentMode: "test" } };
+  const liveAfterFlip = await fLive.cart({}, flippedToTestRt);
+  assert.equal(liveAfterFlip.checkout.order.test, false);
+  assert.equal(liveAfterFlip.checkout.order.number, 1001);
+
+  // 3. Missing-number fallback (historical unnumbered order and absent mode): keeps valid receipt, never parses UUID digits or renumbers.
+  const fHist = await setup(t);
+  const histOrders = memory(), histNumbers = memory();
+  await histNumbers.compareAndSet("next", null, { next: 1005 });
+  const histRt = { ...fHist.runtime, paidOrders: createPaidOrderReceiver(histOrders) };
+  await fHist.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, histRt);
+  await startGuestCheckout(histRt, { contact }, fHist.headers);
+  fHist.synth.setPayment("paid");
+  // Simulate a historical unnumbered order in Orders with digits in its orderId and omitted mode.
+  const paidHist = await fHist.cart({}, histRt);
+  const { orderId } = paidHist.checkout.order;
+  const keptRecord = await histOrders.getVersioned(orderId);
+  const { mode: _omittedMode, ...legacyPaidOrder } = keptRecord.value.paidOrder;
+  await histOrders.compareAndSet(orderId, keptRecord.revision, { ...keptRecord.value, paidOrder: legacyPaidOrder, number: undefined });
+  // Also omit mode from Checkout's stored attempt order to mirror pre-mode-field historical records.
+  const carts = fHist.storage[CHECKOUT_COLLECTION];
+  const [{ id: cartId, data: cartRecord }] = (await carts.query()).items;
+  const legacyAttemptOrder = { ...cartRecord.attempts[0].order };
+  delete legacyAttemptOrder.mode;
+  await carts.put(cartId, { ...cartRecord, attempts: [{ ...cartRecord.attempts[0], order: legacyAttemptOrder }] });
+  const histRead = await fHist.cart({}, { ...histRt, paidOrders: createPaidOrderReceiver(histOrders, histNumbers) });
+  assert.equal(histRead.ok, true);
+  assert.equal(histRead.checkout.state, "paid");
+  assert.equal(histRead.checkout.order.orderId, orderId);
+  assert.equal(histRead.checkout.order.receiptId, paidHist.checkout.order.receiptId);
+  assert.deepEqual(histRead.checkout.order.total, paidHist.checkout.order.total);
+  assert.deepEqual(histRead.checkout.order.contact, contact);
+  assert.equal(histRead.checkout.order.number, null);
+  assert.equal(histRead.checkout.order.test, true);
+  assert.equal((await histNumbers.getVersioned("next")).value.next, 1005, "guest read must never renumber order_numbers");
 });
 
 test("the cart needs the shopper's own key", async (t) => {

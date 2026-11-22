@@ -170,11 +170,13 @@ test("beta routing sends only prereleases to the beta package", () => {
 	assert.throws(() => betaManifest(beta), /stable slug/);
 });
 
-test("changeset check workflow runs the audit script on pull requests", async () => {
-	const source = await read("../../.github/workflows/changeset-check.yml");
+test("repository contract runs the changeset audit on pull requests", async () => {
+	const source = await read("../../.github/workflows/repo-contract.yml");
 	assert.match(source, /pull_request:/);
-	assert.match(source, /check-changeset\.mjs/);
 	assert.match(source, /^permissions:\n  contents: read$/m);
+	const drift = source.slice(source.indexOf("\n  package-drift:"));
+	assert.match(drift, /if: github\.event_name == 'pull_request'\n(?:.*\n){0,6}?\s+run: node \.github\/scripts\/check-changeset\.mjs/);
+	await assert.rejects(read("../../.github/workflows/changeset-check.yml"), { code: "ENOENT" });
 });
 
 test("registry verifier computes the recorded package checksum", () => {

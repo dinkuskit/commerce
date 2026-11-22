@@ -33,6 +33,9 @@ test('each kept order gets the next short number and version 1; a repeat takes n
   const kept = await listOrders(orders);
   assert.deepEqual(kept.map(r => [r.paidOrder.orderId, r.number, r.revision]), [['a', 1002, 1], ['b', 1001, 1]]);
   assert.equal(await takeOrderNumber(numbers), 1003);
+  assert.deepEqual(await receiver.status('b'), { status: 'processing', completed: null, number: 1001, test: true });
+  assert.equal(await receiver.status('missing'), null);
+  assert.equal(await takeOrderNumber(numbers), 1004, 'status reads never consume order numbers');
 });
 
 test('orders kept before numbering are numbered oldest paid first when Orders opens', async () => {
