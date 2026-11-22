@@ -36,12 +36,12 @@ an EmDash site installs it from the Registry or from `@dinkuskit/commerce/sandbo
 with `@dinkuskit/commerce/descriptor`. It serves Block Kit admin only (no React
 admin screens; `commerce-admin-block-kit-only-20261024`): the product panels,
 the Orders and Commerce settings pages, the private `catalog` and `orders`
-routes, the store's publish check, the public catalog reads, checkout, shopper
-accounts and `store-proof`. The Template Store's local dev, demo, playground and
+routes, the store's publish check, the public catalog reads, checkout, the order
+lookup and `store-proof`. The Template Store's local dev, demo, playground and
 browser tests all install it.
 
 The package root (`@dinkuskit/commerce`) is a library, not an EmDash plugin
-entry: it exports Commerce's feature libraries (catalog, checkout, customers,
+entry: it exports Commerce's feature libraries (catalog, checkout,
 orders, feeds, structured data, store settings, storefront availability,
 inventory provider and setup, fixed bundles) for host apps such as storefronts
 and feed builders, and the `./features/*` subpaths export the same libraries one

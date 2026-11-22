@@ -752,3 +752,6 @@
 {"action": "decision_verified", "at": "2026-11-22T14:55:13+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "fb065023-b8ba-42b8-b859-642fb69240be"}
 {"action": "decision_proposed", "at": "2026-11-22T16:28:59+00:00", "data": {"decision_id": "commerce-abandoned-cart-email-20261122"}, "event_id": "7e7b9636-2d8b-44ee-87d3-ee7839dfab65"}
 {"action": "decision_locked", "at": "2026-11-22T16:28:59+00:00", "data": {"decision_id": "commerce-abandoned-cart-email-20261122"}, "event_id": "8b60f11e-68cf-4029-af74-f1e8d6f2487b"}
+{"action": "decision_proposed", "at": "2026-11-22T16:03:27+00:00", "data": {"decision_id": "commerce-order-lookup-20261122"}, "event_id": "958726db-42c1-4ca3-8d33-f0f264ab953d"}
+{"action": "decision_locked", "at": "2026-11-22T16:03:33+00:00", "data": {"decision_id": "commerce-order-lookup-20261122"}, "event_id": "84d7d64d-9ea1-494d-9a18-5650be8173b0"}
+{"action": "decision_superseded", "at": "2026-11-22T16:03:33+00:00", "data": {"affected": ["commerce-orders-staff-access-001"], "decision_id": "shopper-accounts-v1-20261020", "replacement_id": "commerce-order-lookup-20261122"}, "event_id": "67f6310a-4fad-4237-87ce-1bca378ffb97"}

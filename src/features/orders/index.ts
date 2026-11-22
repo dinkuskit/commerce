@@ -7,7 +7,7 @@ export {
   createPaidOrderReceiver,
   deliveryOf,
   listOrders,
-  listOrdersForEmail,
+  findOrderByNumberAndEmail,
   numberOrders,
   orderFacts,
   projectShopperOrder,
@@ -17,6 +17,8 @@ export {
 export type { OrderCompletion, OrderNumbers, OrderRecord, OrdersCollection, ShopperOrderSummary } from "./store.js";
 export { ordersBlocks, ordersInteraction } from "./admin/page.js";
 export { ORDERS_API_ROUTE, ordersApi } from "./api.js";
+export { ORDER_LOOKUP_GUESSES_COLLECTION, ORDER_LOOKUP_ROUTE, ORDER_LOOKUP_TRIES, ORDER_LOOKUP_WAIT_SECONDS, clearOldLookupGuesses, lookUpOrder } from "./lookup.js";
+export type { OrderLookupResult } from "./lookup.js";
 export { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, shipLabelPage, syncShip } from "./ship.js";
 export type { ShipConnection, ShipItemLookup } from "./ship.js";
 export type { OrdersServices } from "./admin/page.js";
