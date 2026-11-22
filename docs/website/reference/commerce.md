@@ -9,7 +9,7 @@ version_scope: "Commerce {{version}}"
 
 ## What Commerce owns
 
-Commerce adds products, prices, cart and checkout orchestration, receipts, orders and shopper accounts to an EmDash site. The storefront supplies the customer-facing pages; installing Commerce does not create those pages automatically. Commerce owns product identity and the amount a customer pays. [Payments](/docs/reference/payments) owns processor connections, [Ship](/docs/reference/ship) owns shipping labels, and [Inventory](/docs/reference/inventory) owns physical stock when a product is managed.
+Commerce adds products, prices, cart and checkout orchestration, receipts, orders and an order lookup to an EmDash site. The storefront supplies the customer-facing pages; installing Commerce does not create those pages automatically. Commerce owns product identity and the amount a customer pays. [Payments](/docs/reference/payments) owns processor connections, [Ship](/docs/reference/ship) owns shipping labels, and [Inventory](/docs/reference/inventory) owns physical stock when a product is managed.
 
 This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It requires EmDash `1.5.0`. Changes merged after that release are not described here until they ship in a stable release.
 
@@ -119,11 +119,7 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
 | `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. |
 | `checkout/guest/start` | POST | Required contact details, authorized by that capability. Checkout starts from the saved cart; the browser sends no lines. |
-| `account/sign-in/start` | POST | Emails a shopper a 6-digit sign-in code. |
-| `account/sign-in/verify` | POST | Exchanges the code for a shopper session. |
-| `account/sign-out` | POST | Ends the shopper session. |
-| `account/orders` | GET | The signed-in shopper's orders. |
-| `account/profile` | GET, POST | The signed-in shopper's saved delivery address and phone. |
+| `orders/lookup` | POST | `{ orderNumber, email }` from the store's own page: that one order, or one not-found answer. |
 
 A store's shipping and returns policies are its own EmDash pages; Commerce keeps no policy records and has no policy route.
 
@@ -180,13 +176,11 @@ Every checkout needs a billing address. The storefront asks for it with "Billing
 
 A new checkout that ships a physical order to the United States needs a supported US state or the District of Columbia. Commerce accepts the two-letter abbreviation or the full name. Destinations outside the United States that the merchant configured, saved addresses and checkouts already started are not affected.
 
-## Shopper accounts
+## Order lookup
 
-Shoppers can sign in to the storefront with their email address and a 6-digit code, with no password. Commerce sends the code through the site's EmDash email service, so the site needs working email for sign-in. A code lasts 10 minutes, allows 5 tries, and a new one can be requested after 30 seconds.
+Shoppers find an order with its order number and the email used at checkout, like WooCommerce's Track your order. The store's own server page sends both to `orders/lookup` and shows that one order: its status, items, totals, delivery address and phone, and the carrier and tracking number once it has shipped. If nothing matches, the answer is "No order matches that order number and email" and never says which box was wrong. After 5 wrong tries for one email, or for one order number, that box is refused for an hour after its last wrong try.
 
-A signed-in shopper sees every order placed with the same email address, newest first, including its status, carrier and tracking number when the order has shipped. The account keeps one saved delivery address and phone number, filled in from the shopper's latest order until the shopper changes or clears them.
-
-Shopper accounts are stored by Commerce. They are not EmDash users and give no access to the EmDash admin. The storefront sends the session in the `x-commerce-customer-session` header; the session works only on the site that issued it.
+Shopper sign-in and saved addresses are in DinkusKit Accounts, a separate plugin. Commerce has no shopper accounts.
 
 ## Installed checkout and orders
 
@@ -222,8 +216,8 @@ and are marked **TEST**; do not use them for real fulfillment or postage.
 - Without Ship, use **Complete order** to record shipment by hand. Carrier and
   tracking number are optional, at most 64 characters each. Commerce records the
   completion time and shows the order as Completed; this does not buy a label or
-  send a shipping email. Signed-in shoppers can see the status, carrier and
-  tracking number in their order history when the storefront provides it.
+  send a shipping email. Shoppers can see the status, carrier and tracking
+  number on the order lookup page when the storefront provides it.
 - A Completed order's address is locked. To correct a mistake, choose **Move back
   to Processing** and confirm. This clears the completion time, carrier and
   tracking number, but keeps any corrected delivery address. It does not cancel
@@ -249,7 +243,7 @@ This article lives in the Commerce repository, is reviewed with the code it desc
 - [Registry routes and background check](https://github.com/dinkuskit/commerce/blob/v{{version}}/src/plugin.ts)
 - [One product screen](https://github.com/dinkuskit/commerce/blob/v{{version}}/docs/implementation/one-product-screen.md)
 - [Connect to DinkusKit](https://github.com/dinkuskit/commerce/blob/v{{version}}/src/features/checkout/registry-connect.ts)
-- [Shopper accounts contract](https://github.com/dinkuskit/commerce/blob/v{{version}}/docs/contracts/shopper-accounts.md)
+- [Order lookup](https://github.com/dinkuskit/commerce/blob/v{{version}}/src/features/orders/lookup.ts)
 - [Product variant model](https://github.com/dinkuskit/commerce/blob/v{{version}}/docs/contracts/product-variant-model.md)
 - [Public catalog projection](https://github.com/dinkuskit/commerce/blob/v{{version}}/src/features/catalog/public.ts)
 - [Price rules](https://github.com/dinkuskit/commerce/blob/v{{version}}/src/features/catalog/price.ts)

@@ -1,0 +1,204 @@
+[
+  {
+    "request": {
+      "orderNumber": "#4001",
+      "email": "pat.lookup@EXAMPLE.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": true,
+      "order": {
+        "orderId": "lookup-pat",
+        "receiptId": "r-lookup-pat",
+        "number": 4001,
+        "status": "processing",
+        "paidAt": "2026-11-20T10:00:00Z",
+        "total": {
+          "currency": "USD",
+          "minor": "2500"
+        },
+        "lines": [
+          {
+            "catalogItemId": "hat",
+            "quantity": 1,
+            "name": "Hat",
+            "unitPrice": {
+              "currency": "USD",
+              "minor": "2500"
+            }
+          }
+        ],
+        "choices": [],
+        "pricing": null,
+        "delivery": {
+          "name": "Fixture Shopper",
+          "line1": "1 Example Way",
+          "city": "Testville",
+          "postalCode": "00000",
+          "country": "US"
+        },
+        "phone": null,
+        "completed": null
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4002",
+      "email": "pat.lookup@example.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": false,
+      "error": {
+        "code": "ORDER_NOT_FOUND",
+        "message": "No order matches that order number and email. Check both and try again."
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4999",
+      "email": "pat.lookup@example.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": false,
+      "error": {
+        "code": "ORDER_NOT_FOUND",
+        "message": "No order matches that order number and email. Check both and try again."
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4001",
+      "email": "pat.lookup@example.test"
+    },
+    "origin": "https://evil.example.test",
+    "status": 403,
+    "cache": "private, no-store",
+    "answer": {
+      "success": false,
+      "error": {
+        "code": "CSRF_REJECTED",
+        "message": "Cross-origin request blocked"
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4990",
+      "email": "pat.lookup@example.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": false,
+      "error": {
+        "code": "ORDER_NOT_FOUND",
+        "message": "No order matches that order number and email. Check both and try again."
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4991",
+      "email": "pat.lookup@example.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": false,
+      "error": {
+        "code": "ORDER_NOT_FOUND",
+        "message": "No order matches that order number and email. Check both and try again."
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4992",
+      "email": "pat.lookup@example.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": false,
+      "error": {
+        "code": "ORDER_NOT_FOUND",
+        "message": "No order matches that order number and email. Check both and try again."
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4001",
+      "email": "pat.lookup@example.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": false,
+      "error": {
+        "code": "LOOKUP_LIMITED",
+        "message": "Too many tries. Try again in an hour."
+      }
+    }
+  },
+  {
+    "request": {
+      "orderNumber": "4002",
+      "email": "sam.lookup@example.test"
+    },
+    "origin": "store origin (same-origin)",
+    "status": 200,
+    "cache": "private, no-store",
+    "answer": {
+      "ok": true,
+      "order": {
+        "orderId": "lookup-sam",
+        "receiptId": "r-lookup-sam",
+        "number": 4002,
+        "status": "processing",
+        "paidAt": "2026-11-20T10:00:00Z",
+        "total": {
+          "currency": "USD",
+          "minor": "2500"
+        },
+        "lines": [
+          {
+            "catalogItemId": "hat",
+            "quantity": 1,
+            "name": "Hat",
+            "unitPrice": {
+              "currency": "USD",
+              "minor": "2500"
+            }
+          }
+        ],
+        "choices": [],
+        "pricing": null,
+        "delivery": {
+          "name": "Fixture Shopper",
+          "line1": "1 Example Way",
+          "city": "Testville",
+          "postalCode": "00000",
+          "country": "US"
+        },
+        "phone": null,
+        "completed": null
+      }
+    }
+  }
+]
