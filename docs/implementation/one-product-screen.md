@@ -153,8 +153,12 @@ is not published is a Draft, and **Move to trash** archives it. Trashing the
 page takes its product off sale and keeps the page's link to it; **Restore**
 from the trash brings the page back as a draft (EmDash sets `status = 'draft'`),
 so the product stays off sale until the page is published again, like Shopify's
-unarchive and WooCommerce's untrash. Only **Delete permanently** releases the
-link. Commerce has no Archive or Restore of its own, so its Draft can never
+unarchive and WooCommerce's untrash. **Delete permanently** deletes the
+product for good, like WooCommerce's Delete Permanently
+(`catalog-permanent-delete-20261122`): the store's publish check already tells
+Commerce, which drops the link and deletes the product, every variant and their
+prices, stock, backorder, media and feed rows, so the SKU is free again. Orders
+keep their own copy; a product another page sells is left alone. Commerce has no Archive or Restore of its own, so its Draft can never
 sit under a live page with no Publish button (commerce#276). Commerce keeps
 no archive state of its own (`commerce-archive-state-removed-20261118`): the
 Draft that loses a create race for a page simply stays a Draft with no page.

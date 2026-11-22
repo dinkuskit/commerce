@@ -75,6 +75,8 @@ export interface CatalogItemRecord extends NormalizedCreateCatalogItemInput {
   pageId?: string;
   /** The claim that check wrote; only that claim may give the product back. */
   pageClaim?: string;
+  /** Set when its page is deleted for good: the product is being deleted (catalog-permanent-delete-20261122). */
+  deleting?: true;
   /** Atomic product-scoped saved values. Missing fields still read legacy storage. */
   catalogData?: CatalogData;
 }
