@@ -1,6 +1,6 @@
 # Commerce authority chain: connected-to line and uninstall cancel
 
-Commerce 8afcbbb (built), Commerce main 8afcbbb for the upgrade, DinkusKit.com Worker from bb67aac under its merchant harness with local D1 and KV. Keys are redacted and ids replaced with <id>.
+Commerce 13ff22d (built), Commerce main 8afcbbb for the upgrade, DinkusKit.com Worker from bb67aac under its merchant harness with local D1 and KV. Keys are redacted and ids replaced with <id>.
 
 ## 1. Connected-to line
 - PASS: Commerce connects with its own Connect and the owner's Approve
