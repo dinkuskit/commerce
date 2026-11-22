@@ -346,6 +346,40 @@ test('a variant added while its product is deleted for good is deleted too, or r
   assert.equal(catalog.records.size, 0, 'the refused variant was not kept, so its SKU is free');
 });
 
+test('a variant added to the stray pick while its page is deleted for good is not kept', async () => {
+  const { ctx, catalog, pages } = await shop();
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  const rows = Array.from({ length: 5 }, () => new Store());
+  const storage = { catalog, pages, rows };
+  // page-1 sells the mug, and a stopped check left the panel's pick, the cap, under page-1 too: on sale, then already off.
+  await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
+  await pick(ctx, 'cap');
+  const deleteMany = rows[0].deleteMany.bind(rows[0]);
+  for (const offSale of [undefined, true]) {
+    const { offSale: _draft, ...cap } = await catalog.get('cap');
+    await catalog.put('cap', { ...cap, pageId: 'page-1', offSale });
+    // An agent's Add a variant read the cap just before the delete withdrew it, so its commit loses to the delete.
+    rows[0].deleteMany = async () => { throw new Error('worker stopped'); };
+    const early = Object.create(catalog);
+    early.getVersioned = async (id) => {
+      const read = await catalog.getVersioned(id);
+      if (id === 'cap') await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true }), /worker stopped/);
+      return read;
+    };
+    await assert.rejects(addCatalogVariantOption({ catalog: early }, { productId: 'cap', optionId: 'size', optionLabel: 'Size', values: [
+      { valueId: 'small', label: 'Small', member: { catalogItemId: 'cap', fulfillment: 'physical' } },
+      { valueId: 'large', label: 'Large', member: { commandId: 'create-cap-xl-' + offSale, name: 'Cap', sku: 'CAP-XL', fulfillment: 'physical' } },
+    ] }, { createId: () => 'cap-xl', collection: 'catalog_items' }), (error) => error.code === 'STORAGE_UNAVAILABLE');
+    assert.equal(await catalog.get('cap-xl'), null, 'the lost variant is not kept, so its SKU is not left taken');
+    assert.equal((await catalog.get('cap')).deleting, true);
+    const { deleting: _held, ...held } = await catalog.get('cap');
+    await catalog.put('cap', held);
+  }
+  rows[0].deleteMany = deleteMany;
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true });
+  assert.equal(catalog.records.size, 0, 'no product or variant is left behind');
+});
+
 test('deleting the biggest product for good stays within the sandbox call budget', async () => {
   const { ctx, catalog, pages } = await shop();
   await addCatalogVariantOption({ catalog }, { productId: 'mug', optionId: 'size', optionLabel: 'Size', values: [

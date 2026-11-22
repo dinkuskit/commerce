@@ -119,9 +119,10 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
   // good withdraws it before deleting it below, so a delete that stops halfway leaves nothing on sale.
   const pick = input.catalogItemId === undefined && !onSale ? await pageProduct(pages, entryId) : undefined;
   if (pick && pick !== catalogItemId) await editProduct(catalog, pick, item => {
-    if (item.pageId !== entryId || item.offSale) return null;
+    // Deleted for good, it is held like the page's own product, so a variant added meanwhile is not kept.
+    if (item.pageId !== entryId || item.offSale && item.deleting === deleted) return null;
     changed ||= !offShop(item);
-    return { ...item, offSale: true };
+    return { ...item, offSale: true, deleting: deleted };
   }).catch(gone);
   // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
   if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);
