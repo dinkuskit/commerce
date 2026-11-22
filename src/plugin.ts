@@ -1,6 +1,6 @@
 import { pluginRoute, type SandboxedPlugin } from "emdash/plugin";
 import { CATALOG_API_ROUTE, catalogApi, commerceAdmin, productMediaPanel, productPanel, syncOrdersWithShip } from "./admin/index.js";
-import { PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
+import { pageProduct, PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
   PUBLIC_CATALOG_ITEM_ROUTE,
@@ -44,12 +44,75 @@ function queryValue(url: string, key: string, refusal: string, required = false)
   return values[0];
 }
 
+/**
+ * Each schedule request for a Products page is its own record, `<page>@<moment>:e` from an Editor or Admin and
+ * `<page>@<moment>:a` from anyone else, so no request can overwrite another. `<page>:go` is a sale EmDash's timer
+ * published: the product the page sold then, that product's revision then, and the title to sell under.
+ */
+type ScheduledSale = { page: string; go?: true; name?: unknown; item?: string; fence?: string };
+type SaleContext = { storage: Record<string, unknown>; log: { warn(message: string, data?: unknown): void };
+  content?: { get(collection: string, id: string): Promise<{ status: string } | null> } };
+const schedules = (ctx: SaleContext) => ctx.storage["scheduled_sales"] as {
+  get(id: string): Promise<ScheduledSale | null>; put(id: string, data: ScheduledSale): Promise<void>; delete(id: string): Promise<boolean>;
+  deleteMany(ids: string[]): Promise<number>;
+  query(options: { where: Partial<ScheduledSale>; limit: number }): Promise<{ items: { id: string; data: ScheduledSale }[] }>;
+};
+const shelf = (ctx: SaleContext) => ({ catalog: ctx.storage["catalog_items"] as Parameters<typeof setProductPageOnSale>[0]["catalog"], pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages });
+const EDITOR = 40;
+const moment = (at: unknown) => `@${Date.parse(String(at))}:`;
+/**
+ * Sells a page EmDash's timer published, while the page is still published, and only if nothing has changed its
+ * product since the timer published it: a withdrawal, a person's sale or any other edit since moves the product's
+ * revision, and the sale is refused at the write, so a later decision always wins. Its record goes once the sale is
+ * written or refused (the product changed, the page sells nothing, or another page sells it), which leaves a Draft for
+ * a person's publish to settle. Any other failure keeps the record for the background check to try again.
+ */
+async function sellScheduled(ctx: SaleContext, held: ScheduledSale) {
+  try {
+    if ((await ctx.content?.get("products", held.page))?.status === "published") await setProductPageOnSale(shelf(ctx),
+      { entryId: held.page, catalogItemId: held.item, onSale: true, ...(held.name ? { name: held.name } : {}) }, { revision: held.fence! });
+  } catch (error) {
+    const code = (error as { code?: unknown })?.code;
+    ctx.log.warn("Scheduled product page not put on sale", { pageId: held.page, code });
+    if (!["CATALOG_ITEM_NOT_FOUND", "PRODUCT_PAGE_CONFLICT", "INVALID_INPUT", "COMMAND_CONFLICT"].includes(code as string)) return;
+  }
+  await schedules(ctx).delete(held.page + ":go");
+}
+
 type PrivateRoute = Extract<NonNullable<SandboxedPlugin["routes"]>[string], { handler: unknown }>;
 /** A private POST route for signed-in users holding the permission. */
 const privatePost = (permission: PrivateRoute["permission"], handler: PrivateRoute["handler"]): PrivateRoute => ({ public: false, permission, methods: ["POST"], handler });
 
+/** Tries again one sale EmDash's timer published and Commerce could not save, each run, so a run stays small. */
+async function retryScheduledSales(ctx: SaleContext) {
+  for (const { data } of (await schedules(ctx).query({ where: { go: true }, limit: 1 })).items) await sellScheduled(ctx, data);
+}
+
 const plugin: SandboxedPlugin = {
   hooks: {
+    // EmDash's own timer publishes a scheduled product page with nobody signed in, so Commerce sells it here, only on a
+    // schedule an Editor or Admin set (scheduled-sale-in-commerce-20261122). A person's own publish goes through the
+    // store's publish check instead. Every doubt leaves the product a Draft.
+    "content:beforeSchedule": async ({ collection, content, actor, scheduledAt }, ctx) => {
+      const page = content.id as string;
+      if (collection === "products") await schedules(ctx).put(page + moment(scheduledAt) + ((actor?.role ?? 0) >= EDITOR ? "e" : "a"), { page });
+    },
+    "content:beforePublish": async ({ collection, content, origin }, ctx) => {
+      if (collection !== "products") return;
+      const page = content.id as string, asked = (kind: string) => schedules(ctx).get(page + moment(content.scheduledAt) + kind);
+      // Anyone else's request for the same moment, which may be the one EmDash kept, withdraws the sale.
+      const go = origin.source === "scheduler" && !!await asked("e") && !await asked("a");
+      // Every request for the page ends with this publish, cleared in one call however many there were.
+      await schedules(ctx).deleteMany((await schedules(ctx).query({ where: { page }, limit: 100 })).items.filter(({ data }) => !data.go).map(({ id }) => id));
+      // The sale is of the product the page picks now, at its revision now.
+      const item = go ? await pageProduct(shelf(ctx).pages, page) : undefined, stored = item && await shelf(ctx).catalog.getVersioned(item);
+      if (stored) await schedules(ctx).put(page + ":go", { page, go: true, item, fence: "catalog:" + stored.revision, name: (content.data as { title?: unknown } | undefined)?.title });
+      else await schedules(ctx).delete(page + ":go");
+    },
+    "content:afterPublish": async ({ collection, content }, ctx) => {
+      const held = collection === "products" ? await schedules(ctx).get(content.id + ":go") : null;
+      if (held) await sellScheduled(ctx, held);
+    },
     // Switched on: the site's EmDash scheduler runs the background check every 5 minutes. If the
     // scheduler fails or stalls here, the next request registers it instead (see routes below).
     "plugin:activate": async (_event, ctx) => {
@@ -64,7 +127,10 @@ const plugin: SandboxedPlugin = {
       timeout: 25_000,
       handler: async (event, ctx) => {
         // A change made at DinkusKit.com reaches checkout within one run (store-connect-checkout-settings-083).
-        if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) await refreshCheckoutSettings(ctx);
+        if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) {
+          await retryScheduledSales(ctx).catch(() => {});
+          await refreshCheckoutSettings(ctx);
+        }
         await installedCheckout.cron(event, ctx);
         if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) {
           await syncOrdersWithShip(ctx).catch(() => {});

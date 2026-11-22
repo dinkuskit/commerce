@@ -94,7 +94,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
-  assert.deepEqual(state.artifact.capabilities, ['admin.editor-draft:read', 'media:read', 'network:request', 'email:send']);
+  assert.deepEqual(state.artifact.capabilities, ['content:read', 'admin.editor-draft:read', 'hooks.content-policy:register', 'media:read', 'network:request', 'email:send']);
   assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');
@@ -775,8 +775,9 @@ test('switching Commerce on registers its 5-minute background check with the sit
   const state = await runtimeFixture();
   t.after(() => state.close());
   // EmDash stops a hook after 5 seconds unless the manifest says otherwise; the check needs longer to reach Ship.
-  // Uninstall cancels Commerce's key at DinkusKit.com (connect-uninstall-cancels-key-134).
-  assert.deepEqual(state.manifest.hooks, ['plugin:activate', 'plugin:uninstall', { name: 'cron', timeout: 25000 }]);
+  // The content hooks sell a scheduled product page when EmDash's timer publishes it (scheduled-sale-in-commerce-20261122);
+  // uninstall cancels Commerce's key at DinkusKit.com (connect-uninstall-cancels-key-134).
+  assert.deepEqual(state.manifest.hooks, ['content:beforeSchedule', 'content:beforePublish', 'content:afterPublish', 'plugin:activate', 'plugin:uninstall', { name: 'cron', timeout: 25000 }]);
   assert.deepEqual(state.cronTasks(), []);
   await state.plugin.invokeHook('plugin:activate', {});
   assertOnlyBackgroundCheck(state);

@@ -76,7 +76,7 @@ Traces: `upgrade-trace-bridge.json`, `upgrade-trace-new.json`. Settings after th
 
 ## Checks
 
-- `npm test`: 905 pass, 0 fail (8 new in `tests/features/checkout/abandoned-cart-email.test.mjs`:
+- `npm test`: 909 pass, 0 fail (8 new in `tests/features/checkout/abandoned-cart-email.test.mjs`:
   one email after 10 hours whose link opens the same cart; at most one per cart even after a second unpaid
   checkout; the stop link stops later carts for that email in any letter case and needs the link's key; the
   three settings; paid, emptied and still-open checkouts get none and an open one is looked at an hour on;
@@ -88,7 +88,7 @@ Traces: `upgrade-trace-bridge.json`, `upgrade-trace-new.json`. Settings after th
   checkout start. That last test fails on the previous head and passes now).
 - `node --test tests/integration/*.test.mjs`: 111 pass.
 - `bin/verify-commerce checks`: passed.
-- Registry backend: 127,824 bytes on base `f8a0c0b` (was 125,973), 3,248 bytes left under 131,072.
+- Registry backend: 129,120 bytes on base `86ea2d9` (was 127,270), 1,952 bytes left under 131,072.
 
 ## Not proved here
 

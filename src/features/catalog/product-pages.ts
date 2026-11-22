@@ -2,7 +2,7 @@ import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
 import { normalizeProductName } from "./normalize.js";
-import { editProduct, named, offShop } from "./product-edit.js";
+import { editProduct, named, offShop, type ProductFence } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
@@ -82,7 +82,8 @@ export async function linkProductPage(storage: { catalog: Catalog; pages: Produc
  * page title is the product's one name (catalog-page-title-is-name-20261026),
  * saved in that same write.
  */
-export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages; rows?: ProductRows }, input: unknown): Promise<{ changed: boolean }> {
+/** `fence`, the product's revision when its sale was decided, refuses the sale once anything has changed the product since. */
+export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages; rows?: ProductRows }, input: unknown, fence?: ProductFence): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
   const { onSale, deleted } = input, entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
   // Commerce holds the page's link (catalog-page-link-in-commerce-20261029): a publish sells the panel's pick, and
@@ -113,7 +114,7 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     changed = !offShop(item) !== onSale;
     // A page deleted for good keeps its products until they are gone, so no other page can take one halfway.
     return { ...(name ? named(item, name) : item), offSale: onSale ? undefined : true, pageId: entryId, pageClaim: claim, deleting: deleted };
-  }).catch(gone);
+  }, false, fence).catch(gone);
   // A check that stopped after selling the panel's pick, before moving the pointer, left that pick on sale under this
   // page; taking the page off the shop withdraws it too (catalog-archive-is-page-trash-20261115), and deleting it for
   // good withdraws it before deleting it below, so a delete that stops halfway leaves nothing on sale.
