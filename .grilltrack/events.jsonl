@@ -750,7 +750,7 @@
 {"action": "decision_locked", "at": "2026-11-22T14:39:53+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "348acc74-5d4e-435e-b3b9-b4ba41dd2f62"}
 {"action": "decision_implemented", "at": "2026-11-22T14:39:54+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "67f04347-5740-43de-9136-a458f5f02a87"}
 {"action": "decision_verified", "at": "2026-11-22T14:55:13+00:00", "data": {"decision_id": "emdash-1-5-compatibility-20261122"}, "event_id": "fb065023-b8ba-42b8-b859-642fb69240be"}
-{"action": "decision_proposed", "at": "2026-11-22T16:47:35+00:00", "data": {"decision_id": "scheduled-sale-in-commerce-20261122"}, "event_id": "9c4d1352-f502-4b3e-b468-494468741073"}
-{"action": "decision_locked", "at": "2026-11-22T16:51:08+00:00", "data": {"decision_id": "scheduled-sale-in-commerce-20261122"}, "event_id": "5ea430f4-afd7-4f8f-a6e7-d9d5385101a5"}
-{"action": "decision_reopened", "at": "2026-11-22T16:59:02+00:00", "data": {"affected": [], "decision_id": "scheduled-sale-in-commerce-20261122", "reason": "content:afterPublish names no actor, so an Author's own publish would also sell; the sale must be limited to EmDash's scheduler publishing a schedule an Editor or Admin set."}, "event_id": "37d0efe4-0a13-42a6-b021-5caaa680ae26"}
-{"action": "decision_locked", "at": "2026-11-22T16:59:02+00:00", "data": {"decision_id": "scheduled-sale-in-commerce-20261122"}, "event_id": "852fb3d5-9145-45aa-869f-acd95d4a6a91"}
+{"action": "decision_proposed", "at": "2026-11-22T16:28:59+00:00", "data": {"decision_id": "commerce-abandoned-cart-email-20261122"}, "event_id": "7e7b9636-2d8b-44ee-87d3-ee7839dfab65"}
+{"action": "decision_locked", "at": "2026-11-22T16:28:59+00:00", "data": {"decision_id": "commerce-abandoned-cart-email-20261122"}, "event_id": "8b60f11e-68cf-4029-af74-f1e8d6f2487b"}
+{"action": "decision_proposed", "at": "2026-11-22T17:18:04+00:00", "data": {"decision_id": "scheduled-sale-in-commerce-20261122"}, "event_id": "1d36dc67-fd0b-4653-be57-724e53dc27b6"}
+{"action": "decision_locked", "at": "2026-11-22T17:18:04+00:00", "data": {"decision_id": "scheduled-sale-in-commerce-20261122"}, "event_id": "db136471-1aa8-42a9-8e4b-da27012e5634"}

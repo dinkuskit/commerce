@@ -2,12 +2,13 @@
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
-    "cadence": "sequential",
-    "confirmed": false,
+    "cadence": "frontier-batch",
+    "confirmed": true,
+    "confirmed_at": "2026-11-15T03:30:25+00:00",
     "domain": "Server-side cart",
-    "started_at": "2026-11-22T16:59:02+00:00",
-    "status": "grilling",
-    "summary": "Reopen scheduled-sale-in-commerce-20261122: content:afterPublish names no actor, so an Author's own publish would also sell; the sale must be limited to EmDash's scheduler publishing a schedule an Editor or Admin set."
+    "started_at": "2026-11-15T03:30:24+00:00",
+    "status": "confirmed",
+    "summary": "Ronald answered each cart question in the cart thread on 13 Nov 2026: server cart in Commerce 'agreed' (16:08 UTC), agents on the same cart 'yeah' with the Shopify check (14:06), 30 days 'agreed' (16:10), build before the first real order (14:05). Store-site parts (forms, cookie, size picker, count cookie, thank-you page, agent links) are in template-store's ledger."
   },
   "decisions": [
     {
@@ -17177,19 +17178,19 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
-      "context_ref": null,
-      "created_at": "2026-11-22T16:47:35+00:00",
+      "choice": "Copy Shopify. (1) Who: the checkout page gets an 'Email me with news and offers' tick box, unticked by default; the email goes only to shoppers who ticked it, unless the owner picks All customers. (2) Control: one setting in Commerce > Settings with three choices: Off, Shoppers who ticked the box (default), All customers. (3) Link: the store's own cart pick-up link /cart/c/<id>?key=<secret> with a fresh secret made for that email; it opens the real cart with current prices and checkout starts again from the store's checkout page; it lasts as long as the cart, 30 days; Stripe's recovery link is not used. (4) When: one email, 10 hours after the shopper gave an email at checkout and left without paying; checked again just before sending and skipped if paid, cart emptied, unsubscribed or the setting is Off; at most one per cart. (5) Sender: Commerce, through the store's EmDash email (email:send, already granted), found by the existing 5-minute background check; not Payments or Ship. (6) No Stripe or Payments change: no checkout.session.expired webhook and no Stripe recovery setting. (7) An admin list of abandoned checkouts like Shopify's comes later, not in the first build. The build waits until the Accounts move frees Registry bytes.",
+      "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
+      "created_at": "2026-11-22T16:28:59+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [
-        "catalog-product-states-20261023"
+        "commerce-server-cart-20261113"
       ],
       "domain": "Server-side cart",
       "history": [
         {
-          "at": "2026-11-22T16:51:08+00:00",
-          "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
+          "at": "2026-11-22T16:28:59+00:00",
+          "choice": "Copy Shopify. (1) Who: the checkout page gets an 'Email me with news and offers' tick box, unticked by default; the email goes only to shoppers who ticked it, unless the owner picks All customers. (2) Control: one setting in Commerce > Settings with three choices: Off, Shoppers who ticked the box (default), All customers. (3) Link: the store's own cart pick-up link /cart/c/<id>?key=<secret> with a fresh secret made for that email; it opens the real cart with current prices and checkout starts again from the store's checkout page; it lasts as long as the cart, 30 days; Stripe's recovery link is not used. (4) When: one email, 10 hours after the shopper gave an email at checkout and left without paying; checked again just before sending and skipped if paid, cart emptied, unsubscribed or the setting is Off; at most one per cart. (5) Sender: Commerce, through the store's EmDash email (email:send, already granted), found by the existing 5-minute background check; not Payments or Ship. (6) No Stripe or Payments change: no checkout.session.expired webhook and no Stripe recovery setting. (7) An admin list of abandoned checkouts like Shopify's comes later, not in the first build. The build waits until the Accounts move frees Registry bytes.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -17200,25 +17201,40 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
-        },
+        }
+      ],
+      "id": "commerce-abandoned-cart-email-20261122",
+      "implementation_ref": null,
+      "question": "How do abandoned-cart emails work?",
+      "rationale": "The owner approved on 2026-11-22.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T16:28:59+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
+      "context_ref": null,
+      "created_at": "2026-11-22T17:18:03+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-product-states-20261023"
+      ],
+      "domain": "Server-side cart",
+      "history": [
         {
-          "at": "2026-11-22T16:59:02+00:00",
-          "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
-          "from": "locked",
-          "implementation_ref": null,
-          "note": "content:afterPublish names no actor, so an Author's own publish would also sell; the sale must be limited to EmDash's scheduler publishing a schedule an Editor or Admin set.",
-          "repair_required": false,
-          "review_classifications": [],
-          "review_ref": null,
-          "review_result": null,
-          "review_source_identity": null,
-          "to": "reopened",
-          "verification_ref": null
-        },
-        {
-          "at": "2026-11-22T16:59:02+00:00",
-          "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
-          "from": "reopened",
+          "at": "2026-11-22T17:18:04+00:00",
+          "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
+          "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
           "repair_required": false,
@@ -17242,12 +17258,12 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-22T16:59:02+00:00",
+      "updated_at": "2026-11-22T17:18:04+00:00",
       "verification_ref": null
     }
   ],
   "last_activation": {
-    "at": "2026-11-22T16:59:02+00:00",
+    "at": "2026-10-29T21:25:23+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -17280,5 +17296,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T16:59:02+00:00"
+  "updated_at": "2026-11-22T17:18:04+00:00"
 }
