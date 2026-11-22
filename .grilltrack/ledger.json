@@ -17206,6 +17206,49 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
+      "choice": "Copy Shopify. (1) Who: the checkout page gets an 'Email me with news and offers' tick box, unticked by default; the email goes only to shoppers who ticked it, unless the owner picks All customers. (2) Control: one setting in Commerce > Settings with three choices: Off, Shoppers who ticked the box (default), All customers. (3) Link: the store's own cart pick-up link /cart/c/<id>?key=<secret> with a fresh secret made for that email; it opens the real cart with current prices and checkout starts again from the store's checkout page; it lasts as long as the cart, 30 days; Stripe's recovery link is not used. (4) When: one email, 10 hours after the shopper gave an email at checkout and left without paying; checked again just before sending and skipped if paid, cart emptied, unsubscribed or the setting is Off; at most one per cart. (5) Sender: Commerce, through the store's EmDash email (email:send, already granted), found by the existing 5-minute background check; not Payments or Ship. (6) No Stripe or Payments change: no checkout.session.expired webhook and no Stripe recovery setting. (7) An admin list of abandoned checkouts like Shopify's comes later, not in the first build. The build waits until the Accounts move frees Registry bytes.",
+      "context_ref": "/mnt/project-files/server-cart/server-cart-design.md",
+      "created_at": "2026-11-22T16:28:59+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-server-cart-20261113"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-22T16:28:59+00:00",
+          "choice": "Copy Shopify. (1) Who: the checkout page gets an 'Email me with news and offers' tick box, unticked by default; the email goes only to shoppers who ticked it, unless the owner picks All customers. (2) Control: one setting in Commerce > Settings with three choices: Off, Shoppers who ticked the box (default), All customers. (3) Link: the store's own cart pick-up link /cart/c/<id>?key=<secret> with a fresh secret made for that email; it opens the real cart with current prices and checkout starts again from the store's checkout page; it lasts as long as the cart, 30 days; Stripe's recovery link is not used. (4) When: one email, 10 hours after the shopper gave an email at checkout and left without paying; checked again just before sending and skipped if paid, cart emptied, unsubscribed or the setting is Off; at most one per cart. (5) Sender: Commerce, through the store's EmDash email (email:send, already granted), found by the existing 5-minute background check; not Payments or Ship. (6) No Stripe or Payments change: no checkout.session.expired webhook and no Stripe recovery setting. (7) An admin list of abandoned checkouts like Shopify's comes later, not in the first build. The build waits until the Accounts move frees Registry bytes.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-abandoned-cart-email-20261122",
+      "implementation_ref": null,
+      "question": "How do abandoned-cart emails work?",
+      "rationale": "The owner approved on 2026-11-22.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T16:28:59+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
       "choice": "Commerce drops all its shopper-account code: the account sign-in, sign-out, orders and profile routes, the customers, customer_login_codes and customer_sessions storage, the email:send capability and the ./features/customers package entry. Shopper accounts live in DinkusKit Accounts (accounts-v1-scope-20261121 in dinkuskit/accounts). Staff roles are unchanged: Editors and Administrators (content:edit_any) run the store. Commerce instead has an order lookup like WooCommerce's Track your order: the public orders/lookup route takes an order number and the checkout email from the store's own server page (same-origin write), reads only that email's orders through the orders emailKey index, and answers that one order (number, status, lines, totals, delivery address, phone, completion) without payment or checkout identities. The not-found answer never says which box was wrong. After 5 wrong tries for one email, or for one order number, that box is refused for 1 hour after its last wrong try, even for a right guess. Guess counts are kept in order_lookup_guesses under a SHA-256 of the email or the order number, and the 5-minute background check deletes counts whose hour is over. Nothing moves from existing stores, since none has shopper accounts.",
       "context_ref": "src/features/orders/lookup.ts",
       "created_at": "2026-11-22T16:03:27+00:00",
@@ -17279,5 +17322,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T16:03:33+00:00"
+  "updated_at": "2026-11-22T16:28:59+00:00"
 }
