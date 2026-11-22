@@ -16,7 +16,7 @@ export async function POST({ request }) {
   });
   if (action !== 'bootstrap' || seeded) return new Response(null, { status: 409 });
   return withEmDashRuntime(async runtime => {
-    await runtime.syncPluginStorageIndexesOnce();
+    if (!await runtime.ensureStorageIndexesSynced('dinkus-commerce')) return new Response(null, { status: 503 });
     const schema = { installedCheckout: { type: 'string', label: 'Checkout' }, connection: { type: 'secret', label: 'DinkusKit connection' } };
     const settings = createSettingsAccess(new OptionsRepository(runtime.db), 'dinkus-commerce', schema);
     await settings.set('installedCheckout', JSON.stringify({ schema: 'dinkuskit.commerce.registry-checkout/v1', enabled: true,
