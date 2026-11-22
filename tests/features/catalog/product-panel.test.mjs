@@ -643,6 +643,12 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
   await Promise.all([schedule(40), schedule(30)]);
   await publish('scheduler');
   assert.equal(await sold(), false);
+  // An Author's request for another moment, written after an Author's request for the Editor's moment, cannot hide it:
+  // every request keeps its own record, whichever EmDash keeps.
+  await schedule(40);
+  await Promise.all([schedule(30), schedule(30, '2026-11-22T17:00:00.000Z')]);
+  await publish('scheduler');
+  assert.equal(await sold(), false);
   // An Author's request for another moment is not the one the timer publishes, so the Editor's schedule stands.
   await schedule(30, '2026-11-22T17:00:00.000Z');
   await schedule(40);
@@ -654,7 +660,9 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
   await schedule(40);
   await publish('scheduler', '2026-11-22T19:00:00.000Z');
   assert.equal(await sold(), false);
-  // A sale Commerce could not write stays noted, and the background check tries it again while the page is published.
+  // A sale Commerce could not write stays noted, and the background check tries it again while the page is published,
+  // however many other pages have schedules waiting.
+  for (let n = 0; n < 60; n += 1) await hook('content:beforeSchedule')({ collection: 'products', content: { id: `later-${n}` }, actor: { id: 'u', role: 40 }, scheduledAt: at }, ctx);
   await schedule(40);
   const put = catalog.put;
   catalog.put = async () => { throw new Error('D1 is busy'); };
@@ -664,9 +672,11 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
   catalog.put = put;
   const background = (status) => plugin.hooks.cron.handler({ name: 'commerce-checkout-wakes' }, { ...ctx,
     content: { get: async (collection, id) => (collection === 'products' && id === 'page-1' && status ? { status } : null) } });
+  const waiting = () => [...ctx.storage.scheduled_sales.records.keys()].filter((key) => !key.startsWith('later-'));
+  assert.deepEqual(waiting(), ['page-1:go']);
   await background('draft').catch(() => {});
   assert.equal(await sold(), false, 'a page taken off the shop meanwhile is not sold');
-  assert.equal(ctx.storage.scheduled_sales.records.size, 0);
+  assert.deepEqual(waiting(), []);
   await schedule(40);
   catalog.put = async () => { throw new Error('D1 is busy'); };
   await publish('scheduler');
@@ -675,13 +685,13 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
   // An Editor's schedule, published by EmDash's timer with nobody signed in, sells under the title it published.
   assert.equal(await sold(), true);
   assert.equal((await readPublicCatalogItem(ctx, 'page-1', true))?.name, 'Blue mug');
-  assert.equal(ctx.storage.scheduled_sales.records.size, 0);
+  assert.deepEqual(waiting(), []);
   // A page that sells nothing leaves no record behind to retry.
   await hook('content:beforeSchedule')({ collection: 'products', content: { id: 'page-9' }, actor: { id: 'u', role: 40 }, scheduledAt: at }, ctx);
   await hook('content:beforePublish')({ collection: 'products', content: { id: 'page-9', scheduledAt: at, data: {} }, origin: { source: 'scheduler' } }, ctx);
   await hook('content:afterPublish')({ collection: 'products', content: { id: 'page-9', data: {} } }, ctx);
-  assert.equal(ctx.storage.scheduled_sales.records.size, 0);
+  assert.deepEqual(waiting(), []);
   // A page outside Products is never looked at.
   await hook('content:beforeSchedule')({ collection: 'posts', content: content(null), actor: { id: 'u', role: 50 }, scheduledAt: at }, ctx);
-  assert.equal(ctx.storage.scheduled_sales.records.size, 0);
+  assert.deepEqual(waiting(), []);
 });

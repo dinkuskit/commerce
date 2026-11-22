@@ -130,7 +130,7 @@
       "uniqueIndexes": []
     },
     "scheduled_sales": {
-      "indexes": [],
+      "indexes": ["page", "go"],
       "uniqueIndexes": []
     },
     "product_pages": {
