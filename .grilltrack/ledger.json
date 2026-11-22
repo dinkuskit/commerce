@@ -2,13 +2,12 @@
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
-    "cadence": "frontier-batch",
-    "confirmed": true,
-    "confirmed_at": "2026-11-15T03:30:25+00:00",
+    "cadence": "sequential",
+    "confirmed": false,
     "domain": "Server-side cart",
-    "started_at": "2026-11-15T03:30:24+00:00",
-    "status": "confirmed",
-    "summary": "Ronald answered each cart question in the cart thread on 13 Nov 2026: server cart in Commerce 'agreed' (16:08 UTC), agents on the same cart 'yeah' with the Shopify check (14:06), 30 days 'agreed' (16:10), build before the first real order (14:05). Store-site parts (forms, cookie, size picker, count cookie, thank-you page, agent links) are in template-store's ledger."
+    "started_at": "2026-11-22T16:59:02+00:00",
+    "status": "grilling",
+    "summary": "Reopen scheduled-sale-in-commerce-20261122: content:afterPublish names no actor, so an Author's own publish would also sell; the sale must be limited to EmDash's scheduler publishing a schedule an Editor or Admin set."
   },
   "decisions": [
     {
@@ -17178,7 +17177,7 @@
     {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
+      "choice": "Commerce sells a scheduled Products page itself: content:beforeSchedule notes the moment and whether the person holds content:publish_any (Editor or Admin; any other request for that moment withdraws it), content:beforePublish marks it only when EmDash's scheduler publishes that same moment (a person's publish drops the note and goes through the store's publish check), and content:afterPublish then runs the publish check with nobody signed in under the page's title. No re-check of the person at publish time. Commerce asks for content:read and hooks.content-policy:register; notes live in scheduled_sales. The template's visitor sweep and pending-sale plugin go away.",
       "context_ref": null,
       "created_at": "2026-11-22T16:47:35+00:00",
       "deferred_reason": null,
@@ -17201,12 +17200,40 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T16:59:02+00:00",
+          "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "content:afterPublish names no actor, so an Author's own publish would also sell; the sale must be limited to EmDash's scheduler publishing a schedule an Editor or Admin set.",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "reopened",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-22T16:59:02+00:00",
+          "choice": "Commerce's own content:afterPublish hook: for a Products page it runs the same publish check a person's publish runs (the page's product goes on sale under the page's title), with nobody signed in; a page that sells nothing is left alone and a repeat changes nothing. Commerce asks for the content:read permission to hear it. The template's visitor sweep and its pending-sale tracking go away in the template change that ships with it.",
+          "from": "reopened",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
         }
       ],
       "id": "scheduled-sale-in-commerce-20261122",
       "implementation_ref": null,
       "question": "When EmDash publishes a scheduled product page on its own timer, what puts the page's product on sale?",
-      "rationale": "The owner approved on 22 Nov 2026. EmDash 1.4.0 and 1.5.0 run content:afterPublish when their scheduler publishes, on the Cloudflare timer and on Node. EmDash already checked the person when they scheduled the page and publishes it on time regardless, so no re-check: one new permission, content:read.",
+      "rationale": "The owner approved on 22 Nov 2026 (two new permissions, no re-check). EmDash 1.4.0 and 1.5.0 run these hooks when their scheduler publishes, on the Cloudflare timer and on Node; content:afterPublish alone names no actor, so it cannot tell an Author's own publish from the timer.",
       "repair_required": false,
       "review_classifications": [],
       "review_history": [],
@@ -17215,12 +17242,12 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-22T16:51:08+00:00",
+      "updated_at": "2026-11-22T16:59:02+00:00",
       "verification_ref": null
     }
   ],
   "last_activation": {
-    "at": "2026-10-29T21:25:23+00:00",
+    "at": "2026-11-22T16:59:02+00:00",
     "mechanism": "implicit"
   },
   "last_pause": {
@@ -17253,5 +17280,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T16:51:08+00:00"
+  "updated_at": "2026-11-22T16:59:02+00:00"
 }

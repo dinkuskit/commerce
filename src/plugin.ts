@@ -74,19 +74,42 @@ function queryValue(url: string, key: string, refusal: string, required = false)
   return values[0];
 }
 
+/** A Products page's pending schedule: when, whether an Editor or Admin set it, and whether EmDash's timer is publishing it. */
+type ScheduledSale = { at: unknown; ok: boolean; go?: boolean };
+const schedules = (ctx: { storage: Record<string, unknown> }) =>
+  ctx.storage["scheduled_sales"] as { get(id: string): Promise<ScheduledSale | null>; put(id: string, data: ScheduledSale): Promise<void>; delete(id: string): Promise<boolean> };
+const EDITOR = 40;
+const sameTime = (a: unknown, b: unknown) => typeof a === "string" && typeof b === "string" && Date.parse(a) === Date.parse(b);
+
 type PrivateRoute = Extract<NonNullable<SandboxedPlugin["routes"]>[string], { handler: unknown }>;
 /** A private POST route for signed-in users holding the permission. */
 const privatePost = (permission: PrivateRoute["permission"], handler: PrivateRoute["handler"]): PrivateRoute => ({ public: false, permission, methods: ["POST"], handler });
 
 const plugin: SandboxedPlugin = {
   hooks: {
-    // EmDash's own timer publishes a scheduled product page with nobody signed in, so the page's product goes on sale
-    // here (scheduled-sale-in-commerce-20261122). A person's publish also ran the store's publish check; a repeat
-    // changes nothing, and a page that sells nothing is left alone.
-    "content:afterPublish": async ({ content, collection }, ctx) => {
+    // EmDash's own timer publishes a scheduled product page with nobody signed in, so Commerce sells it here, only on a
+    // schedule an Editor or Admin set (scheduled-sale-in-commerce-20261122). A person's own publish goes through the
+    // store's publish check instead. Every doubt leaves the product a Draft.
+    "content:beforeSchedule": async ({ collection, content, actor, scheduledAt }, ctx) => {
+      if (collection !== "products") return;
+      const held = await schedules(ctx).get(content.id as string);
+      // Another request for the same moment, which may be the one EmDash keeps, can only withdraw the sale.
+      await schedules(ctx).put(content.id as string, { at: scheduledAt,
+        ok: (actor?.role ?? 0) >= EDITOR && (!sameTime(held?.at, scheduledAt) || held?.ok === true) });
+    },
+    "content:beforePublish": async ({ collection, content, origin }, ctx) => {
+      if (collection !== "products") return;
+      const held = await schedules(ctx).get(content.id as string);
+      if (origin.source === "scheduler" && held?.ok && sameTime(held.at, content.scheduledAt)) await schedules(ctx).put(content.id as string, { ...held, go: true });
+      else if (held) await schedules(ctx).delete(content.id as string);
+    },
+    "content:afterPublish": async ({ collection, content }, ctx) => {
+      const held = collection === "products" ? await schedules(ctx).get(content.id as string) : null;
+      if (!held?.go) return;
+      await schedules(ctx).delete(content.id as string);
       const title = (content.data as { title?: unknown } | undefined)?.title;
-      if (collection === "products") await setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never,
-        pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, { entryId: content.id, onSale: true, ...(title ? { name: title } : {}) }).catch(() => {});
+      await setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never, pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages },
+        { entryId: content.id, onSale: true, ...(title ? { name: title } : {}) }).catch(() => {});
     },
     // Switched on: the site's EmDash scheduler runs the background check every 5 minutes. If the
     // scheduler fails or stalls here, the next request registers it instead (see routes below).

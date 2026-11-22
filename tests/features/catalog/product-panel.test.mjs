@@ -400,22 +400,49 @@ test('Commerce settings has no Products without a page list: every product has i
   assert.doesNotMatch(body, /Products without a page|Make a page/);
 });
 
-test('EmDash\'s timer publishing a scheduled product page puts its product on sale, with nobody signed in', async () => {
+test('EmDash\'s timer publishing a product page sells its product only on a schedule an Editor or Admin set', async () => {
   const { default: plugin } = await import('../../../dist/plugin.js');
-  const published = plugin.hooks['content:afterPublish'];
+  const hook = (name) => plugin.hooks[name];
   const { ctx, catalog } = await shop();
+  ctx.storage.scheduled_sales = new Store();
   ctx.storage.catalog_prices = new Store();
   await ctx.storage.catalog_prices.put('mug', { recordKind: 'catalog-price', recordId: 'mug', catalogItemId: 'mug', regular: { currency: 'USD', minor: '900' } });
-  // A page Commerce sells nothing for, or a page outside Products, is left alone.
-  await published({ collection: 'products', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
   await pick(ctx, 'mug');
-  await published({ collection: 'posts', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
-  assert.equal((await catalog.get('mug')).pageId, undefined, 'only a Products page sells');
-  await published({ collection: 'products', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
-  const shown = await readPublicCatalogItem(ctx, 'page-1', true);
-  assert.deepEqual([shown?.id, shown?.name], ['mug', 'Blue mug']);
-  assert.equal((await catalog.get('mug')).pageId, 'page-1');
-  // The store's publish check ran too, or EmDash ran the hook twice: nothing changes.
-  await published({ collection: 'products', content: { id: 'page-1', data: { title: 'Blue mug' } } }, ctx);
+  const content = (at) => ({ id: 'page-1', scheduledAt: at, data: { title: 'Blue mug' } });
+  const at = '2026-11-22T18:00:00.000Z';
+  const schedule = (role, when = at) => hook('content:beforeSchedule')({ collection: 'products', content: content(null), actor: role ? { id: 'u', role } : undefined, scheduledAt: when }, ctx);
+  const publish = async (source, when = at) => {
+    await hook('content:beforePublish')({ collection: 'products', content: content(when), origin: { source } }, ctx);
+    await hook('content:afterPublish')({ collection: 'products', content: content(null) }, ctx);
+  };
+  const sold = async () => (await catalog.get('mug')).pageId === 'page-1';
+  // An Author's own publish and an Author's schedule sell nothing; the store's publish check decides a person's publish.
+  await publish('user');
+  assert.equal(await sold(), false);
+  await schedule(30);
+  await publish('scheduler');
+  assert.equal(await sold(), false);
+  // An Editor's schedule that an Author asks for again at the same moment sells nothing: either may be the one kept.
+  await schedule(40);
+  await schedule(30);
+  await publish('scheduler');
+  assert.equal(await sold(), false);
+  // A person's publish of a page an Editor scheduled ends the schedule's sale.
+  await schedule(40);
+  await publish('user');
+  await publish('scheduler');
+  assert.equal(await sold(), false);
+  // The timer publishing a different moment than the Editor scheduled sells nothing.
+  await schedule(40);
+  await publish('scheduler', '2026-11-22T19:00:00.000Z');
+  assert.equal(await sold(), false);
+  // An Editor's schedule, published by EmDash's timer with nobody signed in, sells under the page's title, once.
+  await schedule(40);
+  await publish('scheduler');
+  assert.equal(await sold(), true);
   assert.equal((await readPublicCatalogItem(ctx, 'page-1', true))?.name, 'Blue mug');
+  assert.equal(ctx.storage.scheduled_sales.records.size, 0);
+  // A page outside Products is never looked at.
+  await hook('content:beforeSchedule')({ collection: 'posts', content: content(null), actor: { id: 'u', role: 50 }, scheduledAt: at }, ctx);
+  assert.equal(ctx.storage.scheduled_sales.records.size, 0);
 });
