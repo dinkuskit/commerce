@@ -100,8 +100,6 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
   const name = onSale && input.name !== undefined ? normalizeProductName(input.name) : undefined;
   const mine = await pages.getVersioned(key), claim = crypto.randomUUID(), old = mine?.value;
   let changed = false;
-  // A permanent delete that stopped after deleting a product finds it gone; it goes on with the rest.
-  const gone = (error: unknown) => { if (!deleted || (error as CatalogError).code !== "CATALOG_ITEM_NOT_FOUND") throw error; };
   // Only while the claim that took it still holds: give a product back, off the shop with no page.
   const release = (itemId: string, token?: string) => editProduct(catalog, itemId, item => {
     if (!token || item.pageClaim !== token) return null;
@@ -110,19 +108,20 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
   });
   await editProduct(catalog, catalogItemId, item => {
     if (item.pageId && item.pageId !== entryId) throw conflict();
-    const { offSale: _off, pageId: _page, pageClaim: _claim, ...rest } = item;
     changed = !offShop(item) !== onSale;
     // A page deleted for good keeps its products until they are gone, so no other page can take one halfway.
-    return { ...(name ? named(rest as CatalogItemRecord, name) : rest), ...(onSale ? {} : { offSale: true as const }), pageId: entryId, pageClaim: claim };
-  }).catch(gone);
+    return { ...(name ? named(item, name) : item), offSale: onSale ? undefined : true, pageId: entryId, pageClaim: claim };
+    // A permanent delete that stopped after deleting this product finds it gone, and goes on with the rest.
+  }).catch((error: CatalogError) => { if (!deleted || error.code !== "CATALOG_ITEM_NOT_FOUND") throw error; });
   // A check that stopped after selling the panel's pick, before moving the pointer, left that pick on sale under this
-  // page; taking the page off the shop withdraws it too (catalog-archive-is-page-trash-20261115).
+  // page; taking the page off the shop withdraws it too (catalog-archive-is-page-trash-20261115), and deleting it for
+  // good deletes it below.
   const pick = input.catalogItemId === undefined && !onSale ? await pageProduct(pages, entryId) : undefined;
-  if (pick && pick !== catalogItemId) await editProduct(catalog, pick, item => {
-    if (item.pageId !== entryId || item.offSale && !deleted) return null;
+  if (pick && pick !== catalogItemId && !deleted) await editProduct(catalog, pick, item => {
+    if (item.pageId !== entryId || item.offSale) return null;
     changed ||= !offShop(item);
     return { ...item, offSale: true };
-  }).catch(gone);
+  });
   // Give the old product up before the pointer moves, so a check that stops halfway is finished by the next one.
   if (old && old.catalogItemId !== catalogItemId) await release(old.catalogItemId, old.claim);
   // The page is gone for good, so its products are too, freeing their SKUs (catalog-permanent-delete-20261122). Its
@@ -145,10 +144,10 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
  */
 async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: string, entryId: string): Promise<void> {
   const stored = await catalog.getVersioned(itemId), item = stored?.value as CatalogItemRecord | undefined;
-  if (!stored || item?.pageId !== entryId) return;
+  if (item?.pageId !== entryId) return;
   const variants = (item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId);
   for (const row of rows) await row.deleteMany([...variants, itemId]);
   await catalog.deleteMany(variants);
   // Changed since it was read, such as a variant added: read it again.
-  if (!(await catalog.compareAndDelete(itemId, stored.revision)).applied) await forgetProduct(catalog, rows, itemId, entryId);
+  if (!(await catalog.compareAndDelete(itemId, stored!.revision)).applied) await forgetProduct(catalog, rows, itemId, entryId);
 }

@@ -38,7 +38,7 @@ No schema, collection or index change. The delete reads and removes existing rec
 
 ## Results (Node v24.22.0)
 
-- `npm run build`: `registry_bundle=pass backend_bytes=130875 headroom_bytes=197`
+- `npm run build`: `registry_bundle=pass backend_bytes=130820 headroom_bytes=252`
 - `npx tsc --noEmit`: pass
 - `npm run test:unit`: 890/890 pass
 - `npm run test:sandbox`: 12/12 pass
