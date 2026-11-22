@@ -46,7 +46,9 @@ merged in.
 | --- | --- |
 | ![changed](stop-link-changed-cart.png) | ![expired](link-after-cart-expired.png) |
 
-The link after the shopper made a new cart under the same id: `link-after-cart-made-again.png`.
+The link after the shopper made a new cart under the same id: `link-after-cart-made-again.png`. A stop page
+opened while the cart lived but confirmed after its 30 days: Commerce refused the key at the stop and nothing was
+stopped (`stop-after-cart-expired.png`).
 
 Desktop view of the link: `link-opens-cart-desktop.png`.
 
@@ -74,17 +76,19 @@ Traces: `upgrade-trace-bridge.json`, `upgrade-trace-new.json`. Settings after th
 
 ## Checks
 
-- `npm test`: 904 pass, 0 fail (7 new in `tests/features/checkout/abandoned-cart-email.test.mjs`:
+- `npm test`: 905 pass, 0 fail (8 new in `tests/features/checkout/abandoned-cart-email.test.mjs`:
   one email after 10 hours whose link opens the same cart; at most one per cart even after a second unpaid
   checkout; the stop link stops later carts for that email in any letter case and needs the link's key; the
   three settings; paid, emptied and still-open checkouts get none and an open one is looked at an hour on;
   the tick must be `true`; a cart change keeps the reminder and drops the item list; the email's key is refused
   once its cart's 30 days pass while the shopper's own key still answers, cannot bring back a deleted cart or reach one made again under the same id by the shopper's own key, and
   its stop stops the address it was sent to after a retry with another email, while the shopper's own key stops
-  nothing).
+  nothing; and a cleanup that deletes the cart between the email key's read and its write does not let a
+  `version: null` write make the cart again, nor does a cart made again mid-request reach that key, by read or
+  checkout start. That last test fails on the previous head and passes now).
 - `node --test tests/integration/*.test.mjs`: 111 pass.
 - `bin/verify-commerce checks`: passed.
-- Registry backend: 127,808 bytes on base `f8a0c0b` (was 125,973), 3,264 bytes left under 131,072.
+- Registry backend: 127,824 bytes on base `f8a0c0b` (was 125,973), 3,248 bytes left under 131,072.
 
 ## Not proved here
 

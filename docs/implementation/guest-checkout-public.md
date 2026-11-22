@@ -204,7 +204,10 @@ link. That capability keeps the hash of the address it was sent to and the
 checkout attempt the email was about, and it lasts only while its cart lives
 and still holds that attempt: once the cart's `cartExpires` has passed, the
 cart is gone, or a new cart was made under the same id, every guest route
-refuses it with `CAPABILITY_DENIED`. It can neither read a kept paid order,
+refuses it with `CAPABILITY_DENIED`. The check runs on the very record each
+request reads, answers from and conditionally writes (and inside checkout
+start's own read), so a cleanup or a new cart in the middle of a request
+changes nothing, and the email's key never takes the new-cart path. It can neither read a kept paid order,
 bring back a deleted cart, nor reach a cart made again later. The
 shopper's own capability is unchanged. A cart marked `emailed` never gets
 `remindAt` again.

@@ -7,6 +7,7 @@ import {
   type GuestCapabilityPresentation,
   type GuestCapabilityRecord,
   type GuestCheckoutRuntime,
+  type CheckoutRecord,
 } from "./types.js";
 
 export const hashGuestCapabilitySecret = sha256Hex;
@@ -110,12 +111,17 @@ export async function authorizeGuestCapability(
   if (!timingSafeEqual(stored.verifier, await hashGuestCapabilitySecret(secret))) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
-  // The cart email's key lasts only while its cart lives and still holds the emailed checkout: never past the
-  // cart's 30 days, and never for a cart made again under the same id.
-  const cart = stored.emailHash ? (await runtime.carts.getVersioned(stored.cartId))?.value : null;
-  if (stored.emailHash && !(cart?.cart && (runtime.host.now?.() ?? Date.now() / 1000) < +cart.cartExpires! &&
-    cart.attempts.some(attempt => attempt.attemptId === stored.emailAttempt))) {
+  return stored;
+}
+
+/**
+ * The cart email's key lasts only while its cart lives and still holds the emailed checkout: never past the
+ * cart's 30 days, never for a missing cart, and never for a cart made again under the same id. Checked against
+ * the very record an operation reads, answers from and conditionally writes.
+ */
+export function fenceEmailedKey(capability: GuestCapabilityRecord, record: CheckoutRecord | undefined, now: number): void {
+  if (capability.emailHash && !(record?.cart && now < +record.cartExpires! &&
+    record.attempts.some(attempt => attempt.attemptId === capability.emailAttempt))) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
-  return stored;
 }

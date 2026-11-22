@@ -107,7 +107,7 @@ const normalizedCoupon = (code: string) => REGISTRY_BUILD ? code : normalizeCoup
 /** `saved`: the lines were read from the saved cart, which must still hold them (the guest route). */
 /** `remind`: the abandoned-cart email's fields, saved with the new attempt unless that cart was already emailed. */
 export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string, saved?: boolean,
-  remind?: Pick<CheckoutRecord, "remindAt" | "news">): Promise<CheckoutAttempt> {
+  remind?: Pick<CheckoutRecord, "remindAt" | "news">, fence?: (record?: CheckoutRecord) => void): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
   if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
   const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
@@ -121,6 +121,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   const cart = cartInput(Array.isArray(rawCart) ? rawCart : (rawCart as { lines: unknown }).lines);
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
+    fence?.(stored?.record);
     const previous = stored?.record.attempts.at(-1);
     if (previous && previous.phase !== "released") {
       if (JSON.stringify(previous.cart) !== JSON.stringify(cart)) fail("Active checkout cart is frozen");

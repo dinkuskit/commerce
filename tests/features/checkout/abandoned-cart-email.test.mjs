@@ -246,3 +246,31 @@ test("the email's key lasts only as long as its cart, and its stop link stops th
   assert.equal((await cartGuestCheckout(f.runtime, {}, emailed)).error.code, "CAPABILITY_DENIED");
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, emailed, f.stops)).error.code, "CAPABILITY_DENIED");
 });
+
+test("the email's key is checked against the cart each request reads, so cleanup in between changes nothing", async (t) => {
+  const f = await setup(t);
+  const { headers, cartId } = await f.abandoned();
+  await f.release(headers);
+  await f.sweep(1000 + 11 * HOURS);
+  const emailed = { [GUEST_CAPABILITY_HEADER]: linkKey(f.sent[0].text) };
+  const expires = +(await f.carts.get(cartId)).cartExpires;
+  // The request is let in just before the cart's 30 days end; the cleanup deletes the cart right after the
+  // request reads it, before the request writes.
+  let race = null;
+  const carts = {
+    get: id => f.carts.get(id), query: q => f.carts.query(q), compareAndSet: (...a) => f.carts.compareAndSet(...a),
+    async getVersioned(id) { const read = await f.carts.getVersioned(id); if (race) { const run = race; race = null; await run(); } return read; },
+  };
+  const racing = { ...f.runtime, carts, host: { ...f.runtime.host, now: () => expires - 1 } };
+  assert.equal((await cartGuestCheckout(racing, {}, emailed)).ok, true);
+  race = () => clearExpiredCarts(f.carts, expires + 1);
+  // A write sent as if the cart were new (version null) must not make the deleted cart again.
+  const write = await cartGuestCheckout(racing, { version: null, lines: [{ catalogItemId: "hat", quantity: 2 }] }, emailed);
+  assert.equal(write.ok, false, JSON.stringify(write));
+  assert.equal(await f.carts.get(cartId), null, "the deleted cart is not made again");
+  // A cart the shopper's own key makes again between the email key's read and its answer is never shown to it.
+  assert.equal((await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, headers)).ok, true);
+  assert.equal((await cartGuestCheckout(racing, {}, emailed)).error.code, "CAPABILITY_DENIED");
+  f.synth.setPayment("open");
+  assert.equal((await startGuestCheckout({ ...racing, host: { ...racing.host, now: () => 1000 } }, { contact }, emailed)).error.code, "CAPABILITY_DENIED");
+});

@@ -4,7 +4,7 @@ import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
 import { CouponUnavailableError } from "./pricing.js";
-import { authorizeGuestCapability, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
+import { authorizeGuestCapability, fenceEmailedKey, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
 import { sha256Hex } from "../../shared/secret.js";
@@ -91,6 +91,8 @@ export async function cartGuestCheckout(
     const store = createCheckoutStore(runtime.carts);
     const now = nowSeconds(runtime);
     const stored = await store.read(authorized.cartId);
+    // The cart email's key answers and writes only for the record read here; its writes are conditional on it.
+    fenceEmailedKey(authorized, stored?.record, now);
     const { lines, version, key } = raw as { lines: unknown; version: unknown; key?: unknown };
     let attempt = stored?.record.attempts.at(-1);
     if (!keys) {
@@ -112,6 +114,7 @@ export async function cartGuestCheckout(
       })) fail("CONTENTION");
     }
     const saved = await store.read(authorized.cartId);
+    fenceEmailedKey(authorized, saved?.record, now);
     const checkout = attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout();
     // The cart key's holder also sees where Orders has the order now (commerce-guest-order-status-20261115).
     const kept = checkout.order && await runtime.paidOrders?.status?.(checkout.order.orderId).catch(() => null);
@@ -304,6 +307,7 @@ export async function startGuestCheckout(
       retryAfter,
       true,
       { remindAt: String(currentNow + 36_000), news: news as true | undefined },
+      record => fenceEmailedKey(authorized, record, currentNow),
     );
     return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {
@@ -323,11 +327,11 @@ export async function statusGuestCheckout(
       readGuestCapabilityHeader(headers),
     );
     const currentNow = nowSeconds(runtime);
+    const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
+    fenceEmailedKey(authorized, stored?.record, currentNow);
     if (!paymentsReady(runtime.host)) {
-      const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
       return projected(authorized.capabilityId, currentAttempt(stored?.record.attempts ?? []), currentNow);
     }
-    const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
     // Validation can reject start before any attempt is saved. Observe that
     // absence without minting a new capability or creating a payment session.
     if (!stored?.record.attempts.length && admitted.attemptId === undefined) {
