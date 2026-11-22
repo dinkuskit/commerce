@@ -57,8 +57,6 @@ export interface StorefrontOutOfStockListingRecord {
   hideOutOfStock: boolean;
   /** True once the owner turned off "List my products in the DinkusKit catalog". Absent means listed. */
   offCatalog?: boolean;
-  /** The abandoned-cart email: absent sends it only to shoppers who ticked the box (commerce-abandoned-cart-email-20261122). */
-  cartEmail?: "off" | "all";
   updatedAt: string;
 }
 

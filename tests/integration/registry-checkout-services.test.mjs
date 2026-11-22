@@ -94,7 +94,7 @@ test('actual compiled default workerd profile preserves empty-grants/unconfigure
   const state = await runtimeFixture({ grants: false, config: null, token: null, storeKey: null });
   t.after(() => state.close());
   assert.equal(state.manifest.id, COMMERCE_REGISTRY_RUNTIME_ID);
-  assert.deepEqual(state.artifact.capabilities, ['content:read', 'admin.editor-draft:read', 'hooks.content-policy:register', 'media:read', 'network:request', 'email:send']);
+  assert.deepEqual(state.artifact.capabilities, ['content:read', 'admin.editor-draft:read', 'hooks.content-policy:register', 'media:read', 'network:request']);
   assert.deepEqual(state.artifact.allowedHosts, ['payments.dinkuskit.com', 'ship.dinkuskit.com', 'dinkuskit.com']);
   const { result } = await start(state);
   assert.equal(result.error.code, 'PAYMENTS_UNAVAILABLE');

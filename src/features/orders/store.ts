@@ -24,6 +24,8 @@ export interface OrderRecord {
   completed?: OrderCompletion;
   /** `<completed.at> <orderId>` while Completed, set by this version on: the indexed order of the courier's `order.shipped` news. */
   shippedKey?: string;
+  /** `<stored at> <orderId>`, set when this version on stores the paid order: the indexed order of the courier's `order.paid` news. */
+  paidKey?: string;
   /** The version Ship last took, or refused for good. Recording it never raises the version. */
   shipVersion?: number;
   /** Left by the retired isolated Ship TEST profile (0.3.0-beta.0 to beta.2): such an order never goes to Ship. */
@@ -89,7 +91,7 @@ export function createPaidOrderReceiver(collection: Pick<OrdersCollection, "get"
       if (kept) return same(kept, order);
       // A number taken for an order that lost the race is skipped, never reused.
       const number = numbers ? { number: await takeOrderNumber(numbers) } : {};
-      if ((await collection.compareAndSet(order.orderId, null, { paidOrder: structuredClone(order), emailKey: emailKeyOf(order), ...number, revision: 1 })).applied) return "stored";
+      if ((await collection.compareAndSet(order.orderId, null, { paidOrder: structuredClone(order), emailKey: emailKeyOf(order), ...number, revision: 1, paidKey: `${new Date().toISOString()} ${order.orderId}` })).applied) return "stored";
       return same(await collection.get(order.orderId), order);
     },
     async status(orderId) {

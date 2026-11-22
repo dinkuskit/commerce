@@ -35,8 +35,7 @@
     "hooks.content-policy:register",
     "media:read",
     "network:request",
-    "admin.editor-draft:read",
-    "email:send"
+    "admin.editor-draft:read"
   ],
   "allowedHosts": [
     "payments.dinkuskit.com",
@@ -99,7 +98,7 @@
       "uniqueIndexes": []
     },
     "checkout_carts": {
-      "indexes": ["cartExpires", "remindAt"],
+      "indexes": ["cartExpires", "remindAt", "leftKey"],
       "uniqueIndexes": []
     },
     "checkout_guest_capabilities": {
@@ -121,7 +120,8 @@
     "orders": {
       "indexes": [
         "emailKey",
-        "shippedKey"
+        "shippedKey",
+        "paidKey"
       ],
       "uniqueIndexes": []
     },

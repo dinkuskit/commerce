@@ -224,8 +224,12 @@ export interface CheckoutAttempt {
  */
 export interface CheckoutRecord {
   attempts: CheckoutAttempt[]; cart?: { lines: CartLine[]; key?: string }; cartExpires?: string;
-  /** The abandoned-cart email (commerce-abandoned-cart-email-20261122): when to look (Unix seconds, indexed), the shopper's tick, and once sent. */
-  remindAt?: string; news?: true; emailed?: true;
+  /**
+   * The left cart (store-emails-plugin-20261122): when to look (Unix seconds, indexed) and the shopper's tick. Once left,
+   * `leftKey` (`<time> <cartId>`, indexed) orders the courier's `cart.left` news and `leftLink` is the cart link made for it.
+   * `emailed` was set by 0.9.0 betas that sent the email themselves; like `leftKey`, it keeps a cart from being left twice.
+   */
+  remindAt?: string; news?: true; emailed?: true; leftKey?: string; leftLink?: string;
 }
 export interface CheckoutPaymentAssociation {
   recordKind: "checkout-payment-association";
