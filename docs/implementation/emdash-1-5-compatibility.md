@@ -67,6 +67,12 @@ On Node 24.22.0 with the repinned lockfile:
 
 - `npm test`: 885 of 885 pass.
 - `npx playwright test`: 12 of 12 pass, and the orders-blocks suite 5 of 5.
+- `npm run test:registry-upgrade` from v0.8.0 (linked-archive spec) and from
+  v0.5.0 (default spec) pass. The old release now seeds the store on its own
+  EmDash (1.4.0 and 1.2.0), since on 1.5 its index matcher cannot prove
+  uniqueness. From 0.8.0 the proof also runs this Commerce on EmDash 1.4.0
+  ("bridge") before the store's EmDash moves to 1.5.0, the order stores must
+  follow, and checks a duplicate SKU is refused under each index name.
 - `npm run test:integration`: 113 of 113 pass, including the two-process
   Wrangler/D1 unique-claim proofs.
 - `npx tsc --noEmit`, `node scripts/repo-contract.mjs` and
