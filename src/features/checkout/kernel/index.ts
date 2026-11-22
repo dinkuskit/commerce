@@ -173,7 +173,7 @@ export {
   resolveRegistryShip,
 } from "../registry-services.js";
 export type { RegistryCheckoutConfig } from "../registry-services.js";
-export { cancelConnect, connectState, refreshCheckoutSettings, startConnect, storeProof, type ConnectState } from "../registry-connect.js";
+export { cancelConnect, cancelKey, connectedTo, connectState, refreshCheckoutSettings, startConnect, storeProof, type ConnectState } from "../registry-connect.js";
 export { createHostedCouponPort } from "../registry-coupons.js";
 export type { HostedCouponServiceConfig } from "../registry-coupons.js";
 export {

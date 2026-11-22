@@ -102,6 +102,15 @@ name another store or web address, are refused and the saved ones stay; unchange
 settings are not written again. So a change made in Set up Commerce reaches checkout
 within one background check, with nothing to paste.
 
+On a plain Settings page load (not after a save, nor when Connect has just finished)
+Commerce trades the key for a `store:connection` pass (audience `dinkuskit`) and reads
+`GET https://dinkuskit.com/api/store-connection`. The business name and the plugin list
+(`commerce`, `payments`, `ship`) become the connected line on Settings
+(connect-shows-siblings-133). Any failure leaves the line off, and nothing is saved.
+The `plugin:uninstall` hook sends the key to `POST https://dinkuskit.com/api/store-keys/cancel`
+with `{ "site_id" }` (connect-uninstall-cancels-key-134). That cancels only Commerce's key;
+the store, its Store ID and the other plugins' keys stay, and a failure changes nothing.
+
 Each Payments, Coupons or Ship call trades the key for a short pass scoped to
 that one service: `POST https://dinkuskit.com/api/store-passes`, an address
 fixed in Commerce that no setting changes, with `Authorization: Bearer <store
