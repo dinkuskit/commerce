@@ -94,7 +94,7 @@ for (const path of Object.values(pkg.bin ?? {})) {
 // The package root is a library: no EmDash plugin entry (commerce-remove-native-entry-20261101).
 for (const name of ['createPlugin', 'dinkusCommerce', 'default']) assert.equal(commerce[name], undefined, name);
 for (const name of ['COMMERCE_PLUGIN_ID', 'CATALOG_API_ROUTE', 'createCatalogItem', 'resolveCatalogItemPrice',
- 'resolveStorefrontAvailability', 'loadMerchantStoreSettings', 'PAID_ORDER_SCHEMA', 'listOrdersForEmail']) {
+ 'resolveStorefrontAvailability', 'loadMerchantStoreSettings', 'PAID_ORDER_SCHEMA', 'lookUpOrder']) {
  assert.notEqual(commerce[name], undefined, name);
 }
 writeFileSync(resolve('package-result.json'), JSON.stringify({ entrypoints, packageRootInsideExternalNodeModules: true,
