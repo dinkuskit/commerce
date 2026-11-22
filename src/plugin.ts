@@ -16,6 +16,7 @@ import {
   GUEST_CHECKOUT_READINESS_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_CART_ROUTE,
+  cancelKey,
   refreshCheckoutSettings,
   resolveRegistryCheckoutServices,
   storeProof,
@@ -54,6 +55,8 @@ const plugin: SandboxedPlugin = {
     "plugin:activate": async (_event, ctx) => {
       await ensureBackgroundCheck(ctx, true);
     },
+    // Uninstall cancels only Commerce's DinkusKit key (connect-uninstall-cancels-key-134); the store and the other plugins' keys stay.
+    "plugin:uninstall": async (_event, ctx) => { await cancelKey(ctx); },
     // The background check settles payments, then brings Orders and Ship up to date. Its passes from
     // DinkusKit.com and calls to Payments and Ship outlast EmDash's default 5-second hook limit, which
     // stopped it before Ship, so it gets 25 seconds (inside the sandbox's 30-second wall-time limit).

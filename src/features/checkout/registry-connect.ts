@@ -147,6 +147,28 @@ export async function storeProof(input: unknown, ctx: PluginContext) {
   } catch { return reply(503, { error: "connection_unavailable" }); }
 }
 
+/** What DinkusKit.com has this store under (connect-shows-siblings-133): the business and its plugins here, or nothing on any failure. */
+export async function connectedTo(ctx: PluginContext, found: { siteId: string; key: string }): Promise<{ business: string; plugins: string[] } | undefined> {
+  try {
+    const pass = await post(ctx, DINKUS + "/api/store-passes", { site_id: found.siteId, scope: "store:connection", audience: "dinkuskit" }, found.key);
+    if (!pass.ok || !text(pass.body.access_token, 16384)) return;
+    const response = await ctx.http!.fetch(DINKUS + "/api/store-connection", { cache: "no-store", redirect: "error",
+      headers: { accept: "application/json", authorization: "Bearer " + pass.body.access_token } });
+    const body: unknown = response.ok ? await response.json() : null;
+    if (object(body) && text(body.business, 200) && Array.isArray(body.plugins) && body.plugins.every(p => ["commerce", "payments", "ship"].includes(p))) {
+      return { business: body.business, plugins: body.plugins };
+    }
+  } catch { /* the line is left off */ }
+}
+
+/** The plugin:uninstall hook (connect-uninstall-cancels-key-134): cancels only Commerce's key; a failure changes nothing, and Disconnect still works. */
+export async function cancelKey(ctx: PluginContext): Promise<boolean> {
+  try {
+    const found = await storeKey(ctx);
+    return !!found && !!ctx.http && (await post(ctx, DINKUS + "/api/store-keys/cancel", { site_id: found.siteId }, found.key)).ok;
+  } catch { return false; }
+}
+
 /**
  * Fetches this store's checkout settings from DinkusKit.com with a commerce:settings pass and saves them
  * when they changed. Settings made for another store or web address are refused. Returns a refusal code.
