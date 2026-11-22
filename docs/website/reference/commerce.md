@@ -19,6 +19,8 @@ Commerce connects to DinkusKit.com with a button, and nothing is pasted. An Admi
 
 Commerce connects first: its Connect makes the store at DinkusKit.com, and Payments and Ship then join that store with their own Connect. After Connect, Commerce fetches its checkout settings from DinkusKit.com itself, when you press **Get checkout settings** and again on every background check. Choose shipping and TEST or live mode in **Set up Commerce** on DinkusKit.com. Shipping is free or a flat charge; a flat charge can also be free once an order's goods, after any discount, reach an amount you set there. A checkout with only digital items pays no shipping, whichever you choose; one physical item in the basket brings the charge back, once per checkout. If DinkusKit.com no longer knows the store key, the page asks you to Connect again.
 
+Once connected, Commerce settings names the business the store is connected to on DinkusKit and the DinkusKit plugins on this store. To disconnect one, open Your stores at DinkusKit.com. Uninstalling Commerce cancels only Commerce's store key at DinkusKit.com; the store, its Store ID and the other plugins' keys stay.
+
 Stores that upgraded from `0.4.0` press Connect once; the old Checkout settings and Store key boxes are gone. Connect accepts only Registry installs.
 
 ## Admin screens

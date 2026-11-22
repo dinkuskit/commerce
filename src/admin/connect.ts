@@ -14,7 +14,14 @@ const REFUSED: Record<string, string> = {
 const ACTIONS = ["connect", "connect.check", "connect.cancel", "connect.refresh"];
 
 /** The DinkusKit section of Settings: Connect, the owner's Approve link, and the checkout settings fetch. */
-export function connectBlocks(state: ConnectState, admin: boolean, failure?: string): Block[] {
+const NAMES: Record<string, string> = { commerce: "Commerce", payments: "Payments", ship: "Ship" };
+/** The connected line: the business and the DinkusKit plugins on this store when DinkusKit.com said, else the Store ID alone. */
+const connectedLine = (siteId: string, shared?: { business: string; plugins: string[] }) => {
+  const names = shared?.plugins.map(p => NAMES[p]) ?? [];
+  return names.length ? `Connected to ${shared!.business.trim()} on DinkusKit, store ${siteId}. DinkusKit plugins on this store: ${names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names.at(-1) : names[0]}. To disconnect one, open Your stores at DinkusKit.com.`
+    : `Connected to DinkusKit.com, store ${siteId}.`;
+};
+export function connectBlocks(state: ConnectState, admin: boolean, failure?: string, shared?: { business: string; plugins: string[] }): Block[] {
   const banner = (title: string, description: string, variant: "default" | "error" = "default"): Block => ({ type: "banner", variant, title, description });
   const actions = (...elements: object[]): Block[] => admin ? [{ type: "actions", elements } as Block] : [note("An Administrator connects Commerce on this page.")];
   if (state.state === "pending") return [header("DinkusKit"),
@@ -22,7 +29,7 @@ export function connectBlocks(state: ConnectState, admin: boolean, failure?: str
     ...(state.checked ? [note("Not approved yet.")] : []),
     ...actions({ type: "link", label: "Approve at DinkusKit.com", target: { kind: "external", url: state.uri }, appearance: "primary" },
       button("Check", "connect.check"), button("Cancel", "connect.cancel"))];
-  if (state.state === "connected") return [header("DinkusKit"), note(`Connected to DinkusKit.com, store ${state.siteId}.`),
+  if (state.state === "connected") return [header("DinkusKit"), note(connectedLine(state.siteId, shared)),
     ...(failure ? [banner("Checkout settings not updated", failure, "error")] : []),
     ...actions(button("Get checkout settings", "connect.refresh"), button("Connect again", "connect"))];
   return [header("DinkusKit"), state.failure || failure ? banner("Connect Commerce", state.failure ?? failure!, "error")

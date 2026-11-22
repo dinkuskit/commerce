@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
-import { cancelConnect, connectState, refreshCheckoutSettings, startConnect, storeKey, storeProof } from "../../../dist/features/checkout/registry-connect.js";
-import { finishedConnect } from "../../../dist/admin/connect.js";
+import { cancelConnect, cancelKey, connectedTo, connectState, refreshCheckoutSettings, startConnect, storeKey, storeProof } from "../../../dist/features/checkout/registry-connect.js";
+import { connectBlocks, finishedConnect } from "../../../dist/admin/connect.js";
+import plugin from "../../../dist/plugin.js";
+import { settingsAdmin } from "../../../dist/admin/settings.js";
 
 // Connect to DinkusKit from Commerce (GrillTrack 080 to 083) against a stand-in DinkusKit.com.
 const SITE = "https://shop.example.test", SITE_ID = "site_demo", CONNECTION = "conn_1";
@@ -271,4 +273,71 @@ test("a store set up with released 0.4.0 keeps its saved settings, never sends t
   await finishedConnect(h.ctx, state, true);
   assert.equal(JSON.parse(h.stored.get("installedCheckout").value).shipping.revision, 2, "Connect brings the current settings");
   assert.equal(h.calls.some(c => c.authorization === "Bearer " + pasted), false, "the pasted key never leaves the store");
+});
+
+// connect-shows-siblings-133: what this store is connected to, read with a store:connection pass.
+test("Settings names the business and the DinkusKit plugins on this store, and leaves the line off on any failure", async () => {
+  const PASS = "store-connection-pass";
+  let reply = { business: "Acme Goods", site_origin: SITE, plugins: ["commerce", "payments", "ship"] };
+  const h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: {
+    "/api/store-passes": { access_token: PASS },
+    "/api/store-connection": () => typeof reply === "number" ? Response.json({ error: "x" }, { status: reply }) : Response.json(reply),
+  } });
+  const found = await storeKey(h.ctx);
+  assert.deepEqual(await connectedTo(h.ctx, found), { business: "Acme Goods", plugins: ["commerce", "payments", "ship"] });
+  assert.deepEqual(h.calls.map(c => [c.url, c.method, c.authorization, c.body]), [
+    ["https://dinkuskit.com/api/store-passes", "POST", "Bearer " + KEY, { site_id: SITE_ID, scope: "store:connection", audience: "dinkuskit" }],
+    ["https://dinkuskit.com/api/store-connection", "GET", "Bearer " + PASS, undefined],
+  ], "the key goes only to the pass trade; the read carries the pass");
+  const text = blocks => blocks.filter(b => b.type === "context").map(b => b.text).join(" ");
+  const connected = { state: "connected", siteId: SITE_ID, key: KEY };
+  assert.match(text(connectBlocks(connected, true, undefined, await connectedTo(h.ctx, found))),
+    /Connected to Acme Goods on DinkusKit, store site_demo\. DinkusKit plugins on this store: Commerce, Payments and Ship\. To disconnect one, open Your stores at DinkusKit\.com\./);
+  assert.match(text(connectBlocks(connected, true)), /^Connected to DinkusKit\.com, store site_demo\.$/, "without the read, the Store ID alone");
+  for (const bad of [401, { business: "", plugins: [] }, { business: "Acme", plugins: ["commerce", "other"] }, { plugins: ["commerce"] }]) {
+    reply = bad;
+    assert.equal(await connectedTo(h.ctx, found), undefined, `left off for ${JSON.stringify(bad)}`);
+  }
+  const refused = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-passes": () => Response.json({ error: "invalid_store_key" }, { status: 401 }) } });
+  assert.equal(await connectedTo(refused.ctx, found), undefined);
+  assert.equal(refused.calls.length, 1, "no read without a pass");
+});
+
+// connect-uninstall-cancels-key-134: uninstall sends only Commerce's key to be cancelled.
+test("uninstalling Commerce cancels only its own key at DinkusKit.com, and a failure changes nothing", async () => {
+  const h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-keys/cancel": { cancelled: true } } });
+  await plugin.hooks["plugin:uninstall"]({}, h.ctx);
+  assert.deepEqual(h.calls.map(c => [c.url, c.method, c.authorization, c.body]),
+    [["https://dinkuskit.com/api/store-keys/cancel", "POST", "Bearer " + KEY, { site_id: SITE_ID }]]);
+  assert.equal(await cancelKey(h.ctx), true);
+  const none = host({ dinkus: {} });
+  assert.equal(await cancelKey(none.ctx), false);
+  assert.equal(none.calls.length, 0, "a store that never connected calls nothing");
+  const down = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-keys/cancel": () => { throw new Error("offline"); } } });
+  assert.equal(await cancelKey(down.ctx), false);
+  const gone = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: { "/api/store-keys/cancel": () => Response.json({ error: "invalid_store_key" }, { status: 401 }) } });
+  assert.equal(await cancelKey(gone.ctx), false);
+  assert.deepEqual(gone.saved(), { siteId: SITE_ID, storeKey: KEY }, "nothing here is changed by the cancel");
+});
+
+// Every storage, setting and fetch call is one of the sandbox's calls (EmDash's default is 10).
+test("a Settings page load with the connected line stays within EmDash's default calls, and a save skips the read", async () => {
+  const calls = [];
+  const counted = (name, fn) => async (...args) => { calls.push(name); return fn(...args); };
+  const h = host({ connection: { siteId: SITE_ID, storeKey: KEY }, dinkus: {
+    "/api/store-passes": { access_token: "pass" }, "/api/store-connection": { business: "Acme Goods", plugins: ["commerce", "payments"] } } });
+  const ctx = { ...h.ctx,
+    settings: Object.fromEntries(Object.entries(h.ctx.settings).map(([k, fn]) => [k, counted("settings." + k, fn)])),
+    http: { fetch: counted("fetch", h.ctx.http.fetch) },
+    storage: new Proxy({}, { get: (_, name) => new Proxy({}, { get: (_, op) => counted(`${String(name)}.${String(op)}`, async () => op === "query" ? { items: [] } : null) }) }),
+  };
+  const route = input => ({ ui: { surface: "admin-page" }, user: { id: "admin", role: 50 }, input });
+  const loaded = await settingsAdmin(route({ type: "page_load", page: "/settings" }), ctx);
+  assert.ok(loaded.blocks.some(b => b.type === "context" && /Connected to Acme Goods on DinkusKit/.test(b.text)));
+  assert.equal(calls.filter(c => c === "fetch").length, 2);
+  assert.ok(calls.length <= 8, `a page load made ${calls.length} calls: ${calls.join(", ")}`);
+  calls.length = 0;
+  const saved = await settingsAdmin(route({ type: "form_submit", values: { hideOutOfStock: false, catalog: true } }), ctx);
+  assert.equal(saved.toast?.message, "Settings saved");
+  assert.equal(calls.filter(c => c === "fetch").length, 0, "a save shows the Store ID alone");
 });

@@ -775,7 +775,8 @@ test('switching Commerce on registers its 5-minute background check with the sit
   const state = await runtimeFixture();
   t.after(() => state.close());
   // EmDash stops a hook after 5 seconds unless the manifest says otherwise; the check needs longer to reach Ship.
-  assert.deepEqual(state.manifest.hooks, ['plugin:activate', { name: 'cron', timeout: 25000 }]);
+  // Uninstall cancels Commerce's key at DinkusKit.com (connect-uninstall-cancels-key-134).
+  assert.deepEqual(state.manifest.hooks, ['plugin:activate', 'plugin:uninstall', { name: 'cron', timeout: 25000 }]);
   assert.deepEqual(state.cronTasks(), []);
   await state.plugin.invokeHook('plugin:activate', {});
   assertOnlyBackgroundCheck(state);

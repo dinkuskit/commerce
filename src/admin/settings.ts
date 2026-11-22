@@ -7,7 +7,7 @@ import {
 } from "../features/storefront-availability/kernel/index.js";
 import { merchantStoreSettingsBlocks } from "../features/store-settings/kernel/index.js";
 import { adminAuthorized, navigation } from "../shared/admin-blocks.js";
-import { connectState, type ConnectState } from "../features/checkout/kernel/index.js";
+import { connectedTo, connectState, type ConnectState } from "../features/checkout/kernel/index.js";
 import { connectBlocks, finishedConnect } from "./connect.js";
 import { alert, bool, button, failed, fresh, header, message, note, object, radio, refused, submit, text } from "./common.js";
 import { library, preview, target } from "./media.js";
@@ -43,14 +43,15 @@ function settingsResponse(hideOutOfStock: boolean, catalog: boolean, cartEmail: 
     ], submit: submit("Save", "settings.save") },
   ] };
 }
-export async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse): Promise<BlockResponse> {
+export async function settings(ctx: PluginContext, route: SandboxedRouteContext, toast?: string, merchant?: BlockResponse, load = false): Promise<BlockResponse> {
   const listing = await loadOutOfStockListing(listingStorage(ctx));
   const response = settingsResponse(listing.hideOutOfStock, !listing.offCatalog, listing.cartEmail);
   // A waiting Connect is checked here, so the owner's return from DinkusKit.com's Approve lands connected.
   const state = await connectState(ctx).catch((): ConnectState => ({ state: "disconnected" }));
   // Connect finished on this load: fetch the checkout settings now and answer with the DinkusKit section alone, as its buttons do.
   if (state.state === "connected" && state.finished) return finishedConnect(ctx, state, adminAuthorized(route));
-  const dinkus = connectBlocks(state, adminAuthorized(route));
+  // A plain page load also says what the store is connected to; saves skip it to stay within the sandbox's calls.
+  const dinkus = connectBlocks(state, adminAuthorized(route), undefined, load && state.state === "connected" ? await connectedTo(ctx, state) : undefined);
   return { blocks: [...response.blocks.slice(0, 2), ...dinkus, ...response.blocks.slice(2), ...await placeholderBlocks(ctx), ...(merchant ?? await merchantStoreSettingsBlocks({ ...route, input: { type: "page_load", page: "/settings" } }, ctx)).blocks], ...(toast ? { toast: { type: "success", message: toast } } : {}) };
 }
 
@@ -58,7 +59,7 @@ export async function settingsAdmin(route: SandboxedRouteContext, ctx: PluginCon
   const input = route.input as Record<string, unknown>;
   let values: Record<string, unknown> = {};
   try {
-    if (input.type === "page_load" || (input.type === "block_action" && input.action_id === "settings")) return await settings(ctx, route);
+    if (input.type === "page_load" || (input.type === "block_action" && input.action_id === "settings")) return await settings(ctx, route, undefined, undefined, true);
     if (input.type === "block_action") {
       const v = object(input.value);
       if (target(v).t !== "placeholder") throw new Error("Unknown interaction");
