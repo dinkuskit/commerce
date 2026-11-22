@@ -58,8 +58,8 @@ test("fresh sandbox installation preserves the clerk workflow and storefront pol
     await page.goto("/_emdash/api/auth/dev-bypass?redirect=" + adminPath + "settings");
     await page.getByRole("button", { name: "Get Started" }).click({ timeout: 60000 });
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    // The Commerce pages sit in their own sidebar folder; the Products page is gone.
-    const folder = page.getByLabel("Admin navigation").getByRole("button", { name: "Dinkus Commerce", exact: true });
+    // The Commerce pages sit in the Store sidebar folder; the Products page is gone.
+    const folder = page.getByLabel("Admin navigation").getByRole("button", { name: "Store", exact: true });
     await expect(folder).toBeVisible();
     await expect(page.getByLabel("Admin navigation").getByRole("link", { name: "Commerce settings", exact: true })).toHaveCount(1);
     let opened = await openProductPage(page, "Red hat");
