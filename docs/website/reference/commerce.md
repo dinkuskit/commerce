@@ -235,7 +235,7 @@ Open the order again and check its current details before retrying.
 
 ## Package for host apps
 
-EmDash sites install Commerce only as the Registry build: from the Registry, or from the npm package's `@dinkuskit/commerce/sandbox` entry with its `@dinkuskit/commerce/descriptor`. The package root, `@dinkuskit/commerce`, is a library for host apps such as storefronts and feed builders: it exports Commerce's catalog, checkout, customers, orders, feeds, structured data, store settings, storefront availability, inventory and fixed-bundle functions and types, and the `@dinkuskit/commerce/features/*` entries export the same libraries one feature at a time. It is not an EmDash plugin: the native entry earlier packages carried (`createPlugin`, its default export, and `dinkusCommerce`) is removed, so a site that mounted it installs the Registry build instead. Its camelCase storage is not migrated.
+EmDash sites install Commerce only as the Registry build: from the Registry, or from the npm package's `@dinkuskit/commerce/sandbox` entry with its `@dinkuskit/commerce/descriptor`. The package root, `@dinkuskit/commerce`, is a library for host apps such as storefronts and feed builders: it exports Commerce's catalog, checkout, orders, feeds, structured data, store settings, storefront availability, inventory and fixed-bundle functions and types (shopper accounts live in the DinkusKit Accounts plugin), and the `@dinkuskit/commerce/features/*` entries export the same libraries one feature at a time. It is not an EmDash plugin: the native entry earlier packages carried (`createPlugin`, its default export, and `dinkusCommerce`) is removed, so a site that mounted it installs the Registry build instead. Its camelCase storage is not migrated.
 
 ## Next steps
 

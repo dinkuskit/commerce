@@ -27,3 +27,32 @@ The guess rows hold no email: ids are `email:<sha256>` and `number:<n>`.
 - `npm run test:unit` files: 880 of 880 pass, including `tests/features/orders/lookup.test.mjs` (1-hour wait to the second, lock by order number, origin and input refusals, background clean-up; a burst of 12 lookups at once for one order number reads orders 5 times and answers the rest `LOOKUP_LIMITED`; a try that cannot be recorded reads no order; right guesses give their tries back; an order kept before the email index, with no `emailKey`, is still found). `tests/features/checkout/checkout-contact-integration.test.mjs` starts workerd, which cannot start in the cloud container used here (`miniposix::write ... Bad file descriptor`); CI runs it.
 - Sandbox Playwright suite: 12 of 12 pass, with the order lookup spec in place of the retired shopper profile spec.
 - `tsc`, `check-features` and `repo-contract`: clean.
+
+## Upgrade from v0.8.0 (existing orders and shopper accounts)
+
+Command, run on Node 24.22.0:
+
+```
+npm run build
+COMMERCE_UPGRADE_FROM=v0.8.0 COMMERCE_UPGRADE_SPEC=registry-upgrade-order-lookup.spec.mjs node scripts/registry-upgrade-proof.mjs
+registry_upgrade=pass from=v0.8.0 phases=old,bridge,new
+```
+
+`tests/sandbox/registry-upgrade-order-lookup.spec.mjs` runs against one SQLite database in three phases:
+
+- **old**: v0.8.0's Registry build on v0.8.0's own EmDash.
+  - It keeps three paid orders in the shape v0.8.0's receiver stores (`{ paidOrder, emailKey, number, revision }`). The third, #1003, comes from before the `emailKey` index and has no `emailKey`.
+  - It also keeps the order counter and a customer, a used login code and a session in the shopper-account collections.
+  - v0.8.0 has no `orders/lookup` route.
+- **bridge**: this build on v0.8.0's EmDash (`order-lookup-upgrade-bridge.json`).
+  - It finds #1001 by `#1001` + `PAT@example.test`, and #1003, the order without an index entry, by its email.
+  - #1003 with Pat's email is `ORDER_NOT_FOUND`.
+  - After five wrong emails for #1002, Sam's right email is `LOOKUP_LIMITED`, and `number:1002` holds 5 tries.
+- **new**: this build on this checkout's EmDash 1.5 (`order-lookup-upgrade-new.json`).
+  - The order, order-number and removed shopper-account rows equal v0.8.0's rows byte for byte, both before and after the lookups.
+  - #1002 is still `LOOKUP_LIMITED`: the lock made before the EmDash upgrade holds.
+  - #1001 and #1003 are found, and #1001 with Lee's email is not.
+  - The old `account/orders` route no longer answers.
+  - No answer carries a payment id.
+
+Guess rows hold only `email:<sha256>` and `number:<n>` ids.
