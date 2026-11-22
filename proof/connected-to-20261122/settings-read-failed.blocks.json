@@ -1,0 +1,145 @@
+[
+  {
+    "type": "header",
+    "text": "Commerce settings"
+  },
+  {
+    "type": "actions",
+    "elements": [
+      {
+        "type": "link",
+        "label": "Orders",
+        "target": {
+          "kind": "plugin-page",
+          "path": "/orders"
+        }
+      },
+      {
+        "type": "link",
+        "label": "Settings",
+        "target": {
+          "kind": "plugin-page",
+          "path": "/settings"
+        }
+      }
+    ]
+  },
+  {
+    "type": "header",
+    "text": "DinkusKit"
+  },
+  {
+    "type": "context",
+    "text": "Connected to DinkusKit.com, store 8b2f0c1e-acme."
+  },
+  {
+    "type": "actions",
+    "elements": [
+      {
+        "type": "button",
+        "label": "Get checkout settings",
+        "action_id": "connect.refresh"
+      },
+      {
+        "type": "button",
+        "label": "Connect again",
+        "action_id": "connect"
+      }
+    ]
+  },
+  {
+    "type": "header",
+    "text": "Catalog"
+  },
+  {
+    "type": "form",
+    "block_id": "catalog-settings-9dc65746-2a8a-44e8-9bdd-e9ac233e4029",
+    "fields": [
+      {
+        "type": "toggle",
+        "action_id": "hideOutOfStock",
+        "label": "Hide out-of-stock products",
+        "initial_value": false
+      },
+      {
+        "type": "toggle",
+        "action_id": "catalog",
+        "label": "List my products in the DinkusKit catalog",
+        "initial_value": true
+      }
+    ],
+    "submit": {
+      "label": "Save",
+      "action_id": "settings.save"
+    }
+  },
+  {
+    "type": "header",
+    "text": "Placeholder image"
+  },
+  {
+    "type": "context",
+    "text": "Shown for products without an image."
+  },
+  {
+    "type": "context",
+    "text": "No image"
+  },
+  {
+    "type": "actions",
+    "elements": [
+      {
+        "type": "button",
+        "label": "Choose placeholder",
+        "action_id": "media.pick",
+        "value": {
+          "t": "placeholder",
+          "id": ""
+        }
+      }
+    ]
+  },
+  {
+    "type": "header",
+    "text": "Merchant store settings"
+  },
+  {
+    "type": "context",
+    "text": "Checkout refuses a physical delivery outside your shipping destinations."
+  },
+  {
+    "type": "context",
+    "text": "Choose your store country. On the first country save, blank destinations default to that country. Extra destinations must be added explicitly. You can save the phone setting before choosing a country."
+  },
+  {
+    "type": "form",
+    "block_id": "merchant-store-settings:null",
+    "fields": [
+      {
+        "type": "text_input",
+        "action_id": "storeCountry",
+        "label": "Store country (ISO alpha-2 code)",
+        "placeholder": "e.g. CA",
+        "initial_value": ""
+      },
+      {
+        "type": "text_input",
+        "action_id": "shippingCountries",
+        "label": "Allowed physical shipping destinations (comma-separated codes)",
+        "placeholder": "Leave empty for no enabled destinations",
+        "initial_value": ""
+      },
+      {
+        "type": "toggle",
+        "action_id": "requirePhoneNumber",
+        "label": "Require a phone number",
+        "description": "Require customers to include a phone number at checkout.",
+        "initial_value": false
+      }
+    ],
+    "submit": {
+      "label": "Save merchant settings",
+      "action_id": "merchant-store-settings.save"
+    }
+  }
+]
