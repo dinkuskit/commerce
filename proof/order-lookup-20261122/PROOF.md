@@ -4,7 +4,7 @@ GrillTrack `commerce-order-lookup-20261122` (supersedes `shopper-accounts-v1-202
 
 ## Size
 
-The Registry backend falls from 130,730 bytes (the EmDash 1.5 branch this builds on) to 124,193 bytes, 6,879 below the 131,072 cap: the shopper-account code leaves (about 8.8 KB) and the order lookup adds about 2.2 KB.
+The Registry backend falls from 130,739 bytes (the EmDash 1.5 branch this builds on, at 7514034) to 124,202 bytes, 6,870 below the 131,072 cap: the shopper-account code leaves (about 8.8 KB) and the order lookup adds about 2.2 KB.
 
 ## Real EmDash store
 
