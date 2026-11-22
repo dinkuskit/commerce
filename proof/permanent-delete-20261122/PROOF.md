@@ -2,7 +2,7 @@
 
 Pull request: `dinkuskit/commerce#288`
 Decision: `catalog-permanent-delete-20261122` (the owner approved on 2026-11-22)
-Base: `origin/main` `86c2c19`
+Base: `origin/main` `1e1d1a1`
 
 ## Real store run (workerd + SQLite, `npm run test:sandbox`, 12/12)
 
@@ -19,7 +19,7 @@ The media test in `tests/sandbox/commerce.spec.mjs` drives the real `catalog-ite
 - **Bounded:** `forgetProduct` deletes each row collection with one `deleteMany` over the product and all its variants, then the variants with one `deleteMany`, then the product item. The cost no longer grows with the number of variants.
 - **Fenced:** a permanent delete keeps `pageId` (and a fresh `pageClaim`) on the product and on a stray pick until they are deleted. The existing conditional write in `editProduct` refuses any other page with `PRODUCT_PAGE_CONFLICT` while cleanup runs, so no other page can claim a product halfway through deletion. `forgetProduct` only deletes a product whose `pageId` is still the deleted page.
 - **Resumable:** the page's `p:` and `e:` rows are removed only after its products are gone. A delete that stops partway leaves the product held by the page and off the shop, and the same `{entryId, onSale:false, deleted:true}` request finishes it. A product the stopped request already deleted counts as done: the retry goes on to the page's other product and its links instead of answering "Product not found".
-- **Variants added meanwhile:** the product's own item is deleted with `compareAndDelete` against the revision that was read. A variant appended after that read changes the revision, so the cleanup reads again and deletes the new variant too (up to four rounds, like `editProduct`). A variant add that read the product just before it was deleted is refused, and its new item is deleted when the product is gone, so its SKU stays free.
+- **Variants added meanwhile:** the product's own item is deleted with `compareAndDelete` against the revision that was read. A variant appended after that read changes the revision, so the cleanup reads again and deletes the new variant too. A variant add that read the product just before it was deleted is refused, and its new item is deleted when the product is gone, so its SKU stays free.
 - **Claim-fenced release kept:** `release` still gives an old product back only while its claim holds. Interrupted publish checks still leave the pointer for the next check to finish. The only change is that a deleted page no longer releases its product, because that product is deleted.
 
 ## Data model
@@ -38,7 +38,7 @@ No schema, collection or index change. The delete reads and removes existing rec
 
 ## Results (Node v24.22.0)
 
-- `npm run build`: `registry_bundle=pass backend_bytes=130909 headroom_bytes=163`
+- `npm run build`: `registry_bundle=pass backend_bytes=130875 headroom_bytes=197`
 - `npx tsc --noEmit`: pass
 - `npm run test:unit`: 890/890 pass
 - `npm run test:sandbox`: 12/12 pass

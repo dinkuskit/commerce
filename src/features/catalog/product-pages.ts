@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
-import { CatalogError, catalogFail } from "./errors.js";
+import { CatalogError } from "./errors.js";
 import { normalizeProductName } from "./normalize.js";
 import { editProduct, named, offShop } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
@@ -143,14 +143,12 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
  * whatever its size; orders keep their own copy. The product's own item goes last, and only while it is as read, so a
  * variant added meanwhile is deleted too, and a delete that stops halfway leaves it, still held by the page, to delete again.
  */
-async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: string, entryId: string) {
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const stored = await catalog.getVersioned(itemId), item = stored?.value as CatalogItemRecord | undefined;
-    if (!stored || item?.pageId !== entryId) return;
-    const variants = (item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId);
-    for (const row of rows) await row.deleteMany([...variants, itemId]);
-    if (variants.length) await catalog.deleteMany(variants);
-    if ((await catalog.compareAndDelete(itemId, stored.revision)).applied) return;
-  }
-  catalogFail("STORAGE_UNAVAILABLE", "The product kept changing. Try again.");
+async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: string, entryId: string): Promise<void> {
+  const stored = await catalog.getVersioned(itemId), item = stored?.value as CatalogItemRecord | undefined;
+  if (!stored || item?.pageId !== entryId) return;
+  const variants = (item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId);
+  for (const row of rows) await row.deleteMany([...variants, itemId]);
+  await catalog.deleteMany(variants);
+  // Changed since it was read, such as a variant added: read it again.
+  if (!(await catalog.compareAndDelete(itemId, stored.revision)).applied) await forgetProduct(catalog, rows, itemId, entryId);
 }
