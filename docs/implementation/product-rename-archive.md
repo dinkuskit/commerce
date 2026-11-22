@@ -71,7 +71,9 @@ permanently deleted.
 order lines that keep their own names. **Defer** permanent delete. Orders,
 Ship labels, feeds and product pages all point at the id, and Ronald does not
 want ordered products deletable. A delete for never-ordered products can come
-later as its own decision. **Adapt** Shopify's single title: the Commerce name
+later as its own decision. (Superseded on 2026-11-22 by
+`catalog-permanent-delete-20261122`: EmDash's **Delete permanently** on the
+product page deletes the product; orders keep their own copy.) **Adapt** Shopify's single title: the Commerce name
 is the shopper-facing name and the product page heading
 (`block-admin-create-002`). Template Store showing the Commerce name as its
 heading is a separate Template Store change.

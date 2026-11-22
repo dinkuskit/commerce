@@ -27,7 +27,9 @@ export interface ProductPageRecord {
   claim?: string;
 }
 export type ProductPages = Pick<StorageCollection<ProductPageRecord>, "get" | "put" | "getVersioned" | "compareAndSet" | "compareAndDelete" | "delete" | "query">;
-type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet">;
+type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet" | "delete">;
+/** A product's own rows outside catalog_items, each keyed by its item id: prices, stock, backorders, media, feeds. */
+type ProductRows = Pick<StorageCollection<unknown>, "delete">[];
 
 function id(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim() || value.length > 1024) throw new CatalogError("INVALID_INPUT", field + " must be a valid id");
@@ -80,7 +82,7 @@ export async function linkProductPage(storage: { catalog: Catalog; pages: Produc
  * page title is the product's one name (catalog-page-title-is-name-20261026),
  * saved in that same write.
  */
-export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages }, input: unknown): Promise<{ changed: boolean }> {
+export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages; rows?: ProductRows }, input: unknown): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
   const { onSale, deleted } = input, entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
   // Commerce holds the page's link (catalog-page-link-in-commerce-20261029): a publish sells the panel's pick, and
@@ -127,6 +129,23 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
     await release(catalogItemId, claim);
     throw conflict();
   }
-  if (deleted) await pages.delete("e:" + entryId);
+  if (deleted) {
+    await pages.delete("e:" + entryId);
+    // The page is gone for good, so its products are too, freeing their SKUs (catalog-permanent-delete-20261122).
+    for (const itemId of new Set([catalogItemId, pick])) if (itemId && storage.rows) await forgetProduct(catalog, storage.rows, itemId);
+  }
   return { changed };
+}
+
+/**
+ * Deletes a product no page sells, with every variant and their own rows; orders keep their own copy.
+ * The product's own item goes last, so a delete that stops halfway leaves it to be deleted again.
+ */
+async function forgetProduct(catalog: Catalog, rows: ProductRows, itemId: string) {
+  const item = (await catalog.getVersioned(itemId))?.value as CatalogItemRecord | undefined;
+  if (!item || item.pageId) return;
+  for (const id of [...(item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId), itemId]) {
+    for (const row of rows) await row.delete(id);
+    await catalog.delete(id);
+  }
 }

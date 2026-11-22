@@ -17103,6 +17103,50 @@
       "superseded_by": null,
       "updated_at": "2026-11-18T15:50:07+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce deletes the product for good, like WooCommerce's Delete Permanently. Moving the page to the Trash stays Archive (catalog-archive-is-page-trash-20261115) and keeps the product. A permanent delete already reaches Commerce through the store's publish check (set-on-sale with deleted: true), which drops the page link; Commerce then also deletes the product that page sold, and for a product with variants every variant, with their prices, manual availability, backorder policies, media and feed channels, so the SKU can be used again. A product another page now sells is left alone. Orders keep their own copy of what was bought and are never touched. A cart still holding the product is refused like one holding any product off the shop. There is no separate Delete button and no new capability.",
+      "context_ref": null,
+      "created_at": "2026-11-22T13:41:27+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "catalog-archive-is-page-trash-20261115",
+        "catalog-page-link-in-commerce-20261029"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-22T13:41:27+00:00",
+          "choice": "Commerce deletes the product for good, like WooCommerce's Delete Permanently. Moving the page to the Trash stays Archive (catalog-archive-is-page-trash-20261115) and keeps the product. A permanent delete already reaches Commerce through the store's publish check (set-on-sale with deleted: true), which drops the page link; Commerce then also deletes the product that page sold, and for a product with variants every variant, with their prices, manual availability, backorder policies, media and feed channels, so the SKU can be used again. A product another page now sells is left alone. Orders keep their own copy of what was bought and are never touched. A cart still holding the product is refused like one holding any product off the shop. There is no separate Delete button and no new capability.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "catalog-permanent-delete-20261122",
+      "implementation_ref": null,
+      "question": "When the owner deletes a product page permanently from EmDash's Trash, what happens to its Commerce product?",
+      "rationale": "The owner approved on 2026-11-22.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-22T13:41:27+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17139,5 +17183,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-18T15:50:07+00:00"
+  "updated_at": "2026-11-22T13:41:27+00:00"
 }

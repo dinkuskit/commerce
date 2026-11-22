@@ -113,7 +113,8 @@ const plugin: SandboxedPlugin = {
     "product-media-panel": privatePost("content:edit_any", productMediaPanel),
     // The store's publish check: a published product page puts its product on sale (catalog-product-states-20261023).
     [PRODUCT_PAGE_ON_SALE_ROUTE]: privatePost("content:publish_any", (route, ctx) => setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never,
-      pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, route.input)),
+      pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages, rows: ["catalog_prices", "catalog_manual_availability", "catalog_backorder_policies",
+        "catalog_media", "product_feed_eligibility"].map(name => ctx.storage[name]!) }, route.input)),
     // Agents and the CLI manage products here with an EmDash API token (catalog-api-20261027).
     [CATALOG_API_ROUTE]: privatePost("content:edit_any", catalogApi),
     // Agents and the CLI work orders here with an EmDash API token of an Editor or Administrator.

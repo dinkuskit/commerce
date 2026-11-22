@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { validateBlockResponse } from '@emdash-cms/blocks/server';
 import { commerceAdmin, productPanel } from '../../../dist/admin/index.js';
-import { createCatalogItem, linkProductPage, pageProduct, setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
+import { addCatalogVariantOption, createCatalogItem, linkProductPage, pageProduct, setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
 import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
 class Store {
@@ -191,6 +191,40 @@ test('the publish check finds the page\'s product in Commerce, and the shop find
   assert.equal(await pageProduct(pages, 'page-1'), undefined);
   assert.equal(await readPublicCatalogItem(ctx, 'page-1', true), null);
   await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: true }), (error) => error.code === 'CATALOG_ITEM_NOT_FOUND', 'a deleted page names nothing');
+});
+
+test('deleting a page for good deletes its product, every variant and their rows, so the SKU can be used again', async () => {
+  const { ctx, catalog, pages } = await shop();
+  const names = ['catalog_prices', 'catalog_manual_availability', 'catalog_backorder_policies', 'catalog_media', 'product_feed_eligibility'];
+  const rows = names.map(() => new Store());
+  await addCatalogVariantOption({ catalog }, { productId: 'mug', optionId: 'size', optionLabel: 'Size', values: [
+    { valueId: 'small', label: 'Small', member: { catalogItemId: 'mug', fulfillment: 'physical' } },
+    { valueId: 'large', label: 'Large', member: { commandId: 'create-mug-large', name: 'Mug', sku: 'MUG-L', fulfillment: 'physical' } },
+  ] }, { createId: () => 'mug-large', collection: 'catalog_items' });
+  await createCatalogItem(catalog, { commandId: 'create-cap', name: 'Cap', sku: 'CAP', fulfillment: 'physical' }, { createId: () => 'cap', collection: 'catalog_items' });
+  for (const row of rows) for (const id of ['mug', 'mug-large', 'cap']) await row.put(id, { catalogItemId: id });
+  const storage = { catalog, pages, rows };
+  await pick(ctx, 'mug');
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: true });
+  await pick(ctx, 'cap', 'page-2');
+  await setProductPageOnSale(storage, { entryId: 'page-2', onSale: true });
+  // Moving the page to the trash keeps the product, to restore it.
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false });
+  assert.ok(await catalog.get('mug'));
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true });
+  for (const id of ['mug', 'mug-large']) {
+    assert.equal(await catalog.get(id), null, `${id} is deleted`);
+    rows.forEach((row, n) => assert.equal(row.records.has(id), false, `${id} keeps no ${names[n]} row`));
+  }
+  assert.equal((await catalog.get('cap')).pageId, 'page-2', 'a product another page sells is left alone');
+  assert.ok(rows.every((row) => row.records.has('cap')));
+  await createCatalogItem(catalog, { commandId: 'create-mug-again', name: 'Mug', sku: 'MUG', fulfillment: 'physical' }, { createId: () => 'mug-2', collection: 'catalog_items' });
+  assert.equal((await catalog.get('mug-2')).sku, 'MUG', 'the SKU is free again');
+  // A product a page lost to another page before it was deleted stays with that page.
+  await catalog.put('cap', { ...(await catalog.get('cap')), pageId: 'page-3' });
+  await pages.put('p:page-2', { entryId: 'page-2', catalogItemId: 'cap' });
+  await setProductPageOnSale(storage, { entryId: 'page-2', onSale: false, deleted: true }).catch(() => {});
+  assert.ok(await catalog.get('cap'));
 });
 
 test('publishing names the product from the page title, and only a publish does', async () => {
