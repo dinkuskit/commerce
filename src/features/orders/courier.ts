@@ -36,7 +36,7 @@ function shipped(record: OrderRecord) {
     orderId: order.orderId, number, test, shippedAt: at, email, name: (shipTo ?? billingOf(record))?.name ?? null,
     carrier: record.completed!.carrier ?? null, tracking: record.completed!.tracking ?? null,
     // A size or colour is reviewed as its product, under the id the product page shows.
-    lines: order.lines.map(line => ({ productId: order.variantSelections?.find(v => v.catalogItemId === line.catalogItemId)?.productId ?? line.catalogItemId, productName: line.name })),
+    lines: order.lines.map(line => ({ productId: order.variantSelections?.find(v => v.catalogItemId === line.catalogItemId)?.productId ?? line.catalogItemId, productName: line.name, quantity: line.quantity })),
   } };
 }
 

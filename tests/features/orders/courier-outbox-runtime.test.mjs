@@ -91,7 +91,7 @@ test('the courier reads each Completed order once it is a minute old, oldest fir
     const completedAt = (await shop.orders.get('order-1')).completed.at;
     assert.deepEqual(one, { id: 'order-1:shipped', at: completedAt, data: {
       orderId: 'order-1', number: 1001, test: true, shippedAt: completedAt, email: 'ana@buyer.test', name: 'Ana Buyer', carrier: null, tracking: null,
-      lines: [{ productId: 'mug', productName: 'Mug' }, { productId: 'hat', productName: 'Hat' }] } }, 'the size M hat is news for the hat');
+      lines: [{ productId: 'mug', productName: 'Mug', quantity: 1 }, { productId: 'hat', productName: 'Hat', quantity: 1 }] } }, 'the size M hat is news for the hat');
     assert.equal(first.next, `${completedAt} order-1`);
 
     const second = (await shop.since(first.next, 50)).data;
@@ -147,7 +147,7 @@ test('order.paid gives each order this version stored, with what the order confi
     await shop.owner('complete', 'order-5', { carrier: 'USPS', tracking: '9400 1000 0000 0000 0000 00' });
     skew = 61_000;
     const [shipped] = (await shop.since(null, 50)).data.items;
-    assert.deepEqual([shipped.data.number, shipped.data.carrier, shipped.data.tracking], [1005, 'USPS', '9400 1000 0000 0000 0000 00']);
+    assert.deepEqual([shipped.data.number, shipped.data.carrier, shipped.data.tracking, shipped.data.lines], [1005, 'USPS', '9400 1000 0000 0000 0000 00', [{ productId: 'tee', productName: 'Smoky Mountain Tee', quantity: 2 }]]);
     console.log('order.paid proof', JSON.stringify({ paid: paid.items[0], big: { kept: big.lines.length, moreLines: big.moreLines }, neverAnnounced: ['order-6'], shipped }));
   } finally {
     skew = 0;
