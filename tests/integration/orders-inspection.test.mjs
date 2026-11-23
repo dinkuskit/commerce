@@ -14,7 +14,7 @@ test('Orders keeps its own copies of paid orders and reads only them across SQLi
   database.exec('CREATE TABLE _plugin_storage (plugin_id TEXT, collection TEXT, id TEXT, data TEXT, revision TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY(plugin_id,collection,id))');
   const db = new Kysely({ dialect: new SqliteDialect({ database }) });
   const carts = new PluginStorageRepository(db, 'orders-proof', 'checkout_carts', []);
-  const orders = new PluginStorageRepository(db, 'orders-proof', 'orders', []);
+  const orders = new PluginStorageRepository(db, 'orders-proof', 'orders', ['emailKey', 'shippedKey', 'paidKey']);
   let sequence = 0;
   const insert = async data => { const id='fixture-'+sequence++; assert.equal((await carts.compareAndSet(id,null,data)).applied,true); return {id}; };
   const route = input => ({ user: { role: 50 }, ui: { surface: 'admin-page' }, input });
@@ -89,7 +89,7 @@ test('Orders brings in paid orders automatically the first time it has no copies
   database.exec('CREATE TABLE _plugin_storage (plugin_id TEXT, collection TEXT, id TEXT, data TEXT, revision TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY(plugin_id,collection,id))');
   const db = new Kysely({ dialect: new SqliteDialect({ database }) });
   const carts = new PluginStorageRepository(db, 'orders-proof', 'checkout_carts', []);
-  const orders = new PluginStorageRepository(db, 'orders-proof', 'orders', []);
+  const orders = new PluginStorageRepository(db, 'orders-proof', 'orders', ['emailKey', 'shippedKey', 'paidKey']);
   try {
     const f = fixture(createCheckoutStore(carts), false);
     f.setPayment('paid');

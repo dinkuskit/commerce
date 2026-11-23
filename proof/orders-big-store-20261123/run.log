@@ -1,0 +1,23 @@
+$ node --test tests/features/orders/orders-paging-runtime.test.mjs
+orders paging proof {"kept":10050,"agentFirst":"order-00001","agentLast":"order-10050","ownerFirst":"order-10050"}
+✔ Orders lists a store of 10,050 kept orders a page at a time, newest first, on EmDash storage (4848.687303ms)
+✔ the status filter and orders kept before paidKey existed both work on EmDash storage (222.461308ms)
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0
+ℹ duration_ms 7621.729289
+
+$ npx playwright test --config=tests/orders-blocks.playwright.config.mjs --trace off
+[WebServer] EmDash: Sandboxed plugin route error: Error: Plugin r_gshdrqaldna3r7sn:0.8.0 route catalog failed: Weight must be a number of ounces above 0 and up to 2400, with at most 2 decimals.
+[WebServer] EmDash: Sandboxed plugin route error: Error: Plugin r_gshdrqaldna3r7sn:0.8.0 route catalog failed: The product changed since that preview. Nothing changed; preview again.
+  ✓  1 tests/sandbox/orders-blocks.spec.mjs:85:1 › installed Orders lists and inspects canonical orders and denies non-managers (22.1s)
+  ✓  2 tests/sandbox/orders-blocks.spec.mjs:348:1 › installed Orders records frozen item choices on desktop and phone (8.5s)
+  ✓  3 tests/sandbox/orders-blocks.spec.mjs:352:1 › installed Orders shows the latest payment before pagination on desktop and phone (8.9s)
+ORDER_BIG_STORE_PROOF {"width":1440,"keptOrders":10079,"first":"Inspect #910050 (TEST)","last":"Inspect #910026 (TEST)"}
+ORDER_BIG_STORE_PROOF {"width":390,"keptOrders":10079,"first":"Inspect #910050 (TEST)","last":"Inspect #910026 (TEST)"}
+  ✓  4 tests/sandbox/orders-blocks.spec.mjs:422:1 › installed Orders opens a store with more than 10,000 orders on desktop and phone (9.3s)
+  ✓  5 tests/sandbox/packaged-consumers.spec.mjs:23:1 › extracted Registry settings persist and anonymous writes leave canonical settings unchanged (8.3s)
+  ✓  6 tests/sandbox/packaged-consumers.spec.mjs:58:1 › extracted Registry guest checkout prepares and fails closed without Payments, denying foreign origins before storage (139ms)
+  6 passed (1.1m)
+
+registry_bundle=pass backend_bytes=130999 headroom_bytes=73 backend_sha256=66217f4d9d191b90b7367a8a2e07143a4161f9783893c5cfd76b747fd5b50e13

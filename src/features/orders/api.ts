@@ -1,7 +1,7 @@
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 import { isRecord } from "../../shared/record.js";
 import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
-import { billingMatchesDelivery, billingOf, completeOrder, correctDelivery, listOrders, orderFacts, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
+import { billingMatchesDelivery, billingOf, completeOrder, correctDelivery, orderFacts, pageOrders, ORDERS_COLLECTION, reopenOrder, type OrderRecord, type OrdersCollection } from "./store.js";
 
 /** Private JSON route for agents and the CLI: the Orders page's reads and owner changes. */
 export const ORDERS_API_ROUTE = "orders";
@@ -40,10 +40,8 @@ export async function ordersApi(route: SandboxedRouteContext, ctx: PluginContext
     const { status, offset = 0 } = input;
     if ((status !== undefined && status !== "processing" && status !== "completed") || !Number.isSafeInteger(offset) || (offset as number) < 0) invalid();
     const start = offset as number;
-    const orders = (await listOrders(collection)).filter(record => !status || (status === "completed") === !!record.completed)
-      .sort((a, b) => (a.number ?? Infinity) - (b.number ?? Infinity));
-    return { orders: orders.slice(start, start + PAGE).map(apiOrder), total: orders.length,
-      ...(start + PAGE < orders.length ? { next: start + PAGE } : {}) };
+    const { orders, total } = await pageOrders(collection, start, status && { shippedKey: status === "completed" ? { gt: "" } : null }, PAGE, "asc");
+    return { orders: orders.map(apiOrder), total, ...(start + PAGE < total ? { next: start + PAGE } : {}) };
   }
   const id = input.orderId, version = input.version as number;
   if (typeof id !== "string" || !id || id.length > 1024) invalid();

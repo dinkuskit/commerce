@@ -12,7 +12,7 @@ test('Orders denies forged caller privileges before reading storage', async () =
  }
 });
 test('Orders distinguishes empty storage from unavailable storage', async()=>{
- const empty=await ordersBlocks(route,{storage:{orders:{query:async()=>({items:[],hasMore:false})}}});
+ const empty=await ordersBlocks(route,{storage:{orders:{query:async()=>({items:[],hasMore:false}),count:async()=>0}}});
  assert.ok(JSON.stringify(empty).includes('No orders recorded yet.'));
  const unavailable=await ordersBlocks(route,{storage:{orders:{query:async()=>{throw Error('offline');}}}});
  assert.ok(JSON.stringify(unavailable).includes('Orders unavailable'));
@@ -24,9 +24,11 @@ function packFixture(ticketIds) {
   total: { currency: 'USD', minor: '300' }, ticketIds,
  };
  const state = { writes: 0 };
+ const data = { paidOrder: { schema: 'dinkuskit.commerce.paid-order/v1', ...order } };
  const storage = { orders: {
-  query: async () => ({ items: [{ id: order.orderId, data: { paidOrder: { schema: 'dinkuskit.commerce.paid-order/v1', ...order } } }], hasMore: false }),
-  get() { throw new Error('must not read for a write'); },
+  query: async () => ({ items: [{ id: order.orderId, data: structuredClone(data) }], hasMore: false }),
+  count: async () => 1,
+  get: async () => structuredClone(data),
   put() { state.writes += 1; throw new Error('must not write'); },
   compareAndSet() { state.writes += 1; throw new Error('must not write'); },
  }};
@@ -114,7 +116,7 @@ test('copies kept before the contact check still list, showing No ship-to addres
  const usd = { currency: 'USD', minor: '100' };
  const paidOrder = { schema: 'dinkuskit.commerce.paid-order/v1', orderId: 'order:old', receiptId: 'r', attemptId: 'a',
   lines: [{ catalogItemId: 'hat', quantity: 1, name: 'Hat', unitPrice: usd }], total: usd, contactSnapshot: {} };
- const orders = { query: async () => ({ items: [{ id: 'order:old', data: { paidOrder } }], hasMore: false }) };
+ const orders = { query: async () => ({ items: [{ id: 'order:old', data: { paidOrder } }], hasMore: false }), count: async () => 1, get: async () => ({ paidOrder }) };
  assert.equal((await listOrders(orders)).length, 1);
  const detail = JSON.stringify(await ordersBlocks({ ...route, input: { type: 'block_action', action_id: 'orders.open:order:old' } }, { storage: { orders } }));
  assert.ok(!detail.includes('Orders unavailable'));

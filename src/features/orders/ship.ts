@@ -1,5 +1,5 @@
 import { isRecord } from "../../shared/record.js";
-import { completeOrder, listOrders, orderFacts, type OrdersCollection } from "./store.js";
+import { completeOrder, orderFacts, walkOrders, type OrdersCollection } from "./store.js";
 import { cut, lineOptions, oneLine } from "../../shared/line-text.js";
 
 /** One order version as Orders sends it to Ship's hosted service (docs/contracts/commerce-handoffs.md). */
@@ -74,10 +74,11 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
   // without splitting a character, and left out when nothing is left.
   const storeName = cut(ship.name ?? "");
   let room = SHIP_ORDERS_PER_SYNC;
-  for (const record of await listOrders(collection)) {
+  // Oldest payment first, so the longest-waiting orders reach Ship first.
+  await walkOrders(collection, async record => {
     const facts = orderFacts(record);
-    if (!facts.shipTo || record.shipPin || record.shipVersion === facts.version) continue;
-    if (!room--) break;
+    if (!facts.shipTo || record.shipPin || record.shipVersion === facts.version) return;
+    if (!room--) return false;
     const lines = [];
     for (const { catalogItemId, name, quantity, unitPrice } of record.paidOrder.lines) {
       // Digital items never go in the box; an item since removed from the catalog goes without a weight.
@@ -102,5 +103,5 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     if (current && (current.value.revision ?? 1) === facts.version) {
       await collection.compareAndSet(facts.orderId, current.revision, { ...current.value, shipVersion: facts.version });
     }
-  }
+  }, undefined, "asc");
 }
