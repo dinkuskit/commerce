@@ -93,9 +93,11 @@ const privatePost = (permission: PrivateRoute["permission"], handler: PrivateRou
  */
 async function finishDeletes(ctx: SaleContext) {
   const items = ctx.storage["catalog_items"] as { query(options: { where: { deleting: true }; limit: number }): Promise<{ items: { id: string; data: { pageId: string } }[] }> };
-  for (const { id, data: { pageId } } of (await items.query({ where: { deleting: true }, limit: 1 })).items) {
+  for (const { id, data: { pageId } } of (await items.query({ where: { deleting: true }, limit: 5 })).items) {
+    // Only for a page EmDash no longer has.
+    if (await ctx.content?.get("products", pageId)) continue;
     const linked = (await shelf(ctx).pages.query({ where: { entryId: pageId }, limit: 10 })).items.some(row => row.data.catalogItemId === id);
-    await setProductPageOnSale(shelf(ctx), { ...linked ? {} : { catalogItemId: id }, entryId: pageId, onSale: false, deleted: true });
+    return setProductPageOnSale(shelf(ctx), { ...linked ? {} : { catalogItemId: id }, entryId: pageId, onSale: false, deleted: true });
   }
 }
 

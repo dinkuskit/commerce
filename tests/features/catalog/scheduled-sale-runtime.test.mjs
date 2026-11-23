@@ -49,7 +49,7 @@ async function store() {
   const storage = (name) => new PluginStorageRepository(runtime.db, ID, name, [...(descriptor.storage[name].indexes ?? []), ...(descriptor.storage[name].uniqueIndexes ?? [])]);
   const catalog = storage('catalog_items'), pages = storage('product_pages');
   return {
-    runtime, catalog, pages,
+    runtime, catalog, pages, prices: storage('catalog_prices'),
     /** A draft Products page whose panel picked a new product, as the page's first Save does. */
     async page(sku) {
       const created = await runtime.handleContentCreate('products', { data: { title: `${sku} mug` }, slug: sku.toLowerCase() });
@@ -247,6 +247,41 @@ test('the background check finishes one stopped delete a run, so a run stays sma
     assert.equal(await left(), 1, 'one delete a run');
     await run();
     assert.equal(await left(), 0, 'the next run finishes the other');
+  } finally {
+    await shop.stop();
+  }
+});
+
+test('the background check deletes nothing another page owns, nor a product whose page still exists', async () => {
+  const shop = await store();
+  try {
+    const setOnSale = (body) => shop.runtime.handlePluginApiRoute(ID, 'POST', 'catalog-items/set-on-sale', new Request('https://shop.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      { id: 'editor', email: 'editor@shop.test', name: 'Editor', role: 40, createdAt: new Date() });
+    const live = await shop.page('ALIVE'), gone = await shop.page('GONE'), other = await shop.page('OTHER');
+    for (const page of [gone, other, live]) assert.equal((await setOnSale({ entryId: page, onSale: true })).success, true);
+    // The deleted page's panel last picked OTHER, which another page owns and sells; its delete stopped before anything went.
+    await linkProductPage({ catalog: shop.catalog, pages: shop.pages }, gone, 'OTHER').catch(() => {});
+    await shop.pages.put('e:' + gone, { entryId: gone, catalogItemId: 'OTHER' });
+    assert.equal((await shop.runtime.handleContentDelete('products', gone)).success, true);
+    assert.equal((await shop.runtime.handleContentPermanentDelete('products', gone)).success, true);
+    await shop.catalog.put('GONE', { ...await shop.catalog.get('GONE'), offSale: true, deleting: true });
+    // A product marked deleting whose page EmDash still has (a stale mark, say a delete sent for a live page that stopped):
+    // its page is live and sells it.
+    await shop.catalog.put('ALIVE', { ...await shop.catalog.get('ALIVE'), deleting: true });
+    const snapshot = async () => ({
+      items: { OTHER: await shop.catalog.get('OTHER'), ALIVE: await shop.catalog.get('ALIVE') },
+      links: (await shop.pages.query({ where: {}, limit: 100 })).items.filter(row => row.data.entryId !== gone).map(row => [row.id, row.data]).sort(),
+      prices: (await shop.prices.query({ where: {}, limit: 100 })).items.filter(row => row.id !== 'GONE').map(row => [row.id, row.data]).sort(),
+    });
+    const before = await snapshot();
+    // EmDash runs the 5-minute check once: it passes over ALIVE (the stale mark, read first) and finishes the deleted page.
+    await shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
+    const after = await snapshot();
+    assert.deepEqual(after, before, 'OTHER and ALIVE, their prices and their pages\' links are exactly as they were');
+    assert.equal(await shop.sold('OTHER'), true);
+    assert.equal(await shop.sold('ALIVE'), true);
+    assert.equal(await shop.catalog.get('GONE'), null, 'the deleted page\'s own product is finished in the same run');
+    console.log('forbidden products kept', JSON.stringify({ other: { pageId: after.items.OTHER.pageId === other, onSale: !after.items.OTHER.offSale }, live: { pageId: after.items.ALIVE.pageId === live, deleting: after.items.ALIVE.deleting }, gone: await shop.catalog.get('GONE') }));
   } finally {
     await shop.stop();
   }
