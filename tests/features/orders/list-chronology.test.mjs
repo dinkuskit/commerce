@@ -117,3 +117,30 @@ test('a store with more than 10,000 orders still opens Orders, reading only what
   assert.equal(reads, 101);
   assert.equal(elements(last).find(e => e.label === 'Next'), undefined);
 });
+
+test('orders kept before numbering are numbered oldest paid first across every page, not page by page', async () => {
+  const orders = collection(), numbers = collection();
+  // 26 orders kept before numbering and before paidKey: ids and payment dates rise together, so the page,
+  // newest-id first among missing paidKeys, shows order-00026 down to order-00002 and leaves order-00001 for page 2.
+  for (let i = 1; i <= 26; i++) {
+    const id = 'order-' + String(i).padStart(5, '0');
+    await orders.compareAndSet(id, null, { paidOrder: paidOrder(id, new Date(Date.UTC(2026, 0, i)).toISOString()), revision: 1 });
+  }
+  // One numbered order kept later, with paidKey, keeps its number.
+  await orders.compareAndSet('order-new', null, { paidOrder: paidOrder('order-new', '2026-11-23T00:00:00Z'), number: 1001, revision: 1,
+    paidKey: '2026-11-23T00:00:00.000Z order-new' });
+  await numbers.compareAndSet('next', null, { next: 1002 });
+  const ctx = { storage: { orders, order_numbers: numbers } };
+  const first = await ordersBlocks(route(load), ctx);
+  const number = id => orders.rows.get(id).value.number;
+  assert.equal(number('order-00001'), 1002, 'the oldest payment gets the first new number although it is on page 2');
+  assert.equal(number('order-00026'), 1027);
+  assert.deepEqual(Array.from({ length: 26 }, (_, k) => number('order-' + String(k + 1).padStart(5, '0'))), Array.from({ length: 26 }, (_, k) => 1002 + k));
+  assert.equal(number('order-new'), 1001);
+  assert.equal(ids(first).length, 25);
+  // Opening the order left for page 2 shows it with its number, and a second visit numbers nothing again.
+  const writes = orders.writes;
+  const opened = await ordersBlocks(route({ type: 'block_action', action_id: 'orders.open:order-00001' }), ctx);
+  assert.match(JSON.stringify(opened), /#1002/);
+  assert.equal(orders.writes, writes);
+});

@@ -20,4 +20,14 @@ ORDER_BIG_STORE_PROOF {"width":390,"keptOrders":10079,"first":"Inspect #910050 (
   ✓  6 tests/sandbox/packaged-consumers.spec.mjs:58:1 › extracted Registry guest checkout prepares and fails closed without Payments, denying foreign origins before storage (139ms)
   6 passed (1.1m)
 
-registry_bundle=pass backend_bytes=130999 headroom_bytes=73 backend_sha256=66217f4d9d191b90b7367a8a2e07143a4161f9783893c5cfd76b747fd5b50e13
+
+$ COMMERCE_UPGRADE_FROM=v0.8.0 COMMERCE_UPGRADE_SPEC=registry-upgrade-orders-paging.spec.mjs node scripts/registry-upgrade-proof.mjs
+  ✓  1 tests/sandbox/registry-upgrade-orders-paging.spec.mjs:64:1 › Commerce 0.8.0 keeps 56 orders, 26 of them from before numbering (85ms)
+  1 passed (16.2s)
+  ✓  2 tests/sandbox/registry-upgrade-orders-paging.spec.mjs:78:1 › this build on 0.8.0's EmDash lists all 56 through the orders route and rewrites nothing (330ms)
+  1 passed (15.0s)
+orders paging upgrade proof {"from":"v0.8.0","indexes":["idx_plugin_dinkus-commerce_orders_paidKey"],"firstShown":["Inspect #1030 (TEST)","Inspect #1029 (TEST)","Inspect #1028 (TEST)"],"numbered":[1031,1056]}
+  ✓  3 tests/sandbox/registry-upgrade-orders-paging.spec.mjs:92:1 › after the EmDash upgrade the Orders page numbers the 26 oldest payment first across pages and keeps 0.8.0's orders (10.2s)
+  1 passed (25.0s)
+registry_upgrade=pass from=v0.8.0 phases=old,bridge,new evidence=/home/user/commerce/.tmp/registry-upgrade/1795444692511
+registry_bundle=pass backend_bytes=131031 headroom_bytes=41 backend_sha256=ebe24205fbe97a18c50b527b6ddbfb4eb84d86612bd094d3bf2b7ebb54ec546d

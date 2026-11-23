@@ -2,7 +2,7 @@ import { adminAuthorized, pagination } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PluginContext, SandboxedRouteContext } from 'emdash/plugin';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
-import { completeOrder, correctDelivery, createPaidOrderReceiver, deliveryOf, checkOrder, numberOrders, pageOrders, ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, reopenOrder, type OrderNumbers, type OrderRecord, type OrdersCollection } from '../store.js';
+import { completeOrder, correctDelivery, createPaidOrderReceiver, deliveryOf, checkOrder, numberOrders, pageOrders, walkOrders, ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, reopenOrder, type OrderNumbers, type OrderRecord, type OrdersCollection } from '../store.js';
 import { addressForm, completeForm, ordersView } from './view.js';
 import { orderPackBody, type InventoryPackPort } from '../pack.js';
 import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
@@ -101,8 +101,15 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
       await bringIn(collection, services, numbers);
       ({ orders, total } = await pageOrders(collection, offset));
     } else if (notices.length) ({ orders, total } = await pageOrders(collection, offset));
-    // Orders kept before numbering get their numbers here; a busy counter leaves them for the next visit.
-    if (numbers && orders.some(record => record.number === undefined) && await numberOrders(collection, numbers, orders).catch(() => 0)) ({ orders, total } = await pageOrders(collection, offset));
+    // Orders kept before numbering get their numbers here, oldest payment first across all of them, whichever page
+    // is open. Every one was kept before paidKey existed, so the paidKey: null read finds them all (a fixed set
+    // that never grows); orders on the page are included for hosts that keep orders without numbers. A busy
+    // counter leaves them for the next visit.
+    if (numbers) {
+      const kept = [...orders];
+      await walkOrders(collection, record => { kept.push(record); }, { paidKey: null });
+      if (await numberOrders(collection, numbers, kept).catch(() => 0)) ({ orders, total } = await pageOrders(collection, offset));
+    }
     if (selected !== undefined) {
       const data = await collection.get(selected), record = data ? checkOrder({ id: selected, data }) : undefined;
       // A Completed order offers neither form; its address is locked until it is moved back to Processing.
