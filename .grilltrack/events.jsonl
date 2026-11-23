@@ -762,3 +762,5 @@
 {"action": "decision_implemented", "at": "2026-11-22T20:31:48+00:00", "data": {"decision_id": "commerce-abandoned-cart-email-20261122"}, "event_id": "dd151a85-3d10-4076-922a-13f80d57b637"}
 {"action": "decision_proposed", "at": "2026-11-22T21:00:05+00:00", "data": {"decision_id": "order-shipped-outbox-20261122"}, "event_id": "4fd7e05a-5638-4f07-b579-b08b00e73ec2"}
 {"action": "decision_locked", "at": "2026-11-22T21:00:05+00:00", "data": {"decision_id": "order-shipped-outbox-20261122"}, "event_id": "9bc40f3d-80db-4d67-a0c4-7f61b2d3834d"}
+{"action": "decision_proposed", "at": "2026-11-23T01:14:46+00:00", "data": {"decision_id": "cart-email-stop-at-send-20261123"}, "event_id": "f736f8b8-dcba-4db3-b1eb-4396e39ebc56"}
+{"action": "decision_locked", "at": "2026-11-23T01:14:46+00:00", "data": {"decision_id": "cart-email-stop-at-send-20261123"}, "event_id": "06c97def-4bfb-4b7d-a812-a85d68d10b5b"}
