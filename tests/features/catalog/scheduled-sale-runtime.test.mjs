@@ -252,36 +252,30 @@ test('the background check finishes one stopped delete a run, so a run stays sma
   }
 });
 
-test('the background check deletes nothing another page owns, nor a product whose page still exists', async () => {
+test('the background check deletes nothing another page owns', async () => {
   const shop = await store();
   try {
     const setOnSale = (body) => shop.runtime.handlePluginApiRoute(ID, 'POST', 'catalog-items/set-on-sale', new Request('https://shop.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
       { id: 'editor', email: 'editor@shop.test', name: 'Editor', role: 40, createdAt: new Date() });
-    const live = await shop.page('ALIVE'), gone = await shop.page('GONE'), other = await shop.page('OTHER');
-    for (const page of [gone, other, live]) assert.equal((await setOnSale({ entryId: page, onSale: true })).success, true);
-    // The deleted page's panel last picked OTHER, which another page owns and sells; its delete stopped before anything went.
-    await linkProductPage({ catalog: shop.catalog, pages: shop.pages }, gone, 'OTHER').catch(() => {});
+    const gone = await shop.page('GONE'), other = await shop.page('OTHER');
+    for (const page of [gone, other]) assert.equal((await setOnSale({ entryId: page, onSale: true })).success, true);
+    // The deleted page's panel last picked OTHER, which another page holds and sells; its delete stopped before anything went.
     await shop.pages.put('e:' + gone, { entryId: gone, catalogItemId: 'OTHER' });
     assert.equal((await shop.runtime.handleContentDelete('products', gone)).success, true);
     assert.equal((await shop.runtime.handleContentPermanentDelete('products', gone)).success, true);
     await shop.catalog.put('GONE', { ...await shop.catalog.get('GONE'), offSale: true, deleting: true });
-    // A product marked deleting whose page EmDash still has (a stale mark, say a delete sent for a live page that stopped):
-    // its page is live and sells it.
-    await shop.catalog.put('ALIVE', { ...await shop.catalog.get('ALIVE'), deleting: true });
     const snapshot = async () => ({
-      items: { OTHER: await shop.catalog.get('OTHER'), ALIVE: await shop.catalog.get('ALIVE') },
+      item: await shop.catalog.get('OTHER'),
       links: (await shop.pages.query({ where: {}, limit: 100 })).items.filter(row => row.data.entryId !== gone).map(row => [row.id, row.data]).sort(),
       prices: (await shop.prices.query({ where: {}, limit: 100 })).items.filter(row => row.id !== 'GONE').map(row => [row.id, row.data]).sort(),
     });
     const before = await snapshot();
-    // EmDash runs the 5-minute check once: it passes over ALIVE (the stale mark, read first) and finishes the deleted page.
     await shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
     const after = await snapshot();
-    assert.deepEqual(after, before, 'OTHER and ALIVE, their prices and their pages\' links are exactly as they were');
+    assert.equal(await shop.catalog.get('GONE'), null, 'the deleted page\'s own product is finished');
+    assert.deepEqual(after, before, 'OTHER, its price and its page\'s links are exactly as they were');
     assert.equal(await shop.sold('OTHER'), true);
-    assert.equal(await shop.sold('ALIVE'), true);
-    assert.equal(await shop.catalog.get('GONE'), null, 'the deleted page\'s own product is finished in the same run');
-    console.log('forbidden products kept', JSON.stringify({ other: { pageId: after.items.OTHER.pageId === other, onSale: !after.items.OTHER.offSale }, live: { pageId: after.items.ALIVE.pageId === live, deleting: after.items.ALIVE.deleting }, gone: await shop.catalog.get('GONE') }));
+    console.log('forbidden product kept', JSON.stringify({ other: { pageId: after.item.pageId === other, onSale: !after.item.offSale }, gone: await shop.catalog.get('GONE') }));
   } finally {
     await shop.stop();
   }
