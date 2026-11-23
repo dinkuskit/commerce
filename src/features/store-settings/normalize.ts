@@ -60,7 +60,7 @@ export function normalizeStoredSettings(value: unknown): MerchantStoreSettings {
   if (record.recordKind !== MERCHANT_STORE_SETTINGS_RECORD_KIND) storageInvalid("stored merchant store settings are invalid");
   const expectedKeys = ["recordKind", "storeCountry", "sellingCountries", "shippingCountries", "requirePhoneNumber"];
   if (Object.keys(record).length !== expectedKeys.length || expectedKeys.some((key) => !Object.hasOwn(record, key))) {
-    storageInvalid("stored merchant store settings have an invalid shape");
+    storageInvalid("stored merchant store settings are invalid");
   }
   try {
     const storeCountry = record.storeCountry === null ? null : country(record.storeCountry, "storeCountry");
