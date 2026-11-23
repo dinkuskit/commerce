@@ -2,7 +2,7 @@ import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
 import { normalizeProductName } from "./normalize.js";
-import { editProduct, named, offShop, type ProductFence } from "./product-edit.js";
+import { editProduct, keptChanging, named, offShop, type ProductFence } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
@@ -153,7 +153,7 @@ async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: s
   await catalog.deleteMany(variants);
   // Changed since it was read, such as a variant added: read it again.
   if (!(await catalog.compareAndDelete(itemId, stored!.revision)).applied) {
-    if (!tries) throw conflict();
+    if (!tries) keptChanging();
     await forgetProduct(catalog, rows, itemId, entryId, tries - 1);
   }
 }

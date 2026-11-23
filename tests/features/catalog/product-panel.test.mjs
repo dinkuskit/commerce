@@ -734,7 +734,7 @@ test('a permanent delete whose product keeps changing gives up after 4 tries, an
   const compareAndDelete = catalog.compareAndDelete.bind(catalog);
   let tries = 0;
   catalog.compareAndDelete = async (id, revision) => id === 'mug' ? (tries++, { applied: false }) : compareAndDelete(id, revision);
-  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true }), (error) => error.code === 'PRODUCT_PAGE_CONFLICT');
+  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true }), (error) => error.code === 'STORAGE_UNAVAILABLE' && error.message === 'The product kept changing. Try again.');
   assert.equal(tries, 4, 'it stops instead of trying forever');
   assert.deepEqual([(await catalog.get('mug')).pageId, (await catalog.get('mug')).offSale], ['page-1', true], 'the deleted page still holds it, off the shop');
   assert.equal(await pageProduct(pages, 'page-1'), 'mug', 'the page keeps its link to finish the delete');
