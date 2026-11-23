@@ -45,7 +45,9 @@
   ],
   "storage": {
     "catalog_items": {
-      "indexes": [],
+      "indexes": [
+        "deleting"
+      ],
       "uniqueIndexes": [
         "commandId",
         "skuKey"

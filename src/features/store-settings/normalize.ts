@@ -90,7 +90,7 @@ export function normalizeSettingsInput(
   if (!isRecord(raw)) invalid("settings input must be an object");
   const keys = Object.keys(raw as object);
   const allowed = new Set(["storeCountry", "sellingCountries", "shippingCountries", "requirePhoneNumber"]);
-  if (keys.some((key) => !allowed.has(key))) invalid("settings input contains an unknown field");
+  if (keys.some((key) => !allowed.has(key))) invalid("request body has an invalid field");
   const input = raw as Record<string, unknown>;
   const hasCountry = Object.hasOwn(input, "storeCountry");
   const storeCountry = hasCountry ? country(input.storeCountry, "storeCountry") : current.storeCountry;

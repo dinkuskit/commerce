@@ -175,3 +175,30 @@ test('a held sale the background check resumes after the owner withdrew the page
     await shop.stop();
   }
 });
+
+test('a permanent delete that stopped halfway is finished by the background check, so the SKU can be used again', async () => {
+  const shop = await store();
+  try {
+    const page = await shop.page('GONE');
+    const setOnSale = (body) => shop.runtime.handlePluginApiRoute(ID, 'POST', 'catalog-items/set-on-sale', new Request('https://shop.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      { id: 'editor', email: 'editor@shop.test', name: 'Editor', role: 40, createdAt: new Date() });
+    assert.equal((await setOnSale({ entryId: page, onSale: true })).success, true);
+    // The owner moves the page to the trash and deletes it for good; EmDash deletes it, then the store's publish check
+    // tells Commerce, and the Worker stops while Commerce is deleting the product's price.
+    assert.equal((await shop.runtime.handleContentDelete('products', page)).success, true);
+    assert.equal((await shop.runtime.handleContentPermanentDelete('products', page)).success, true);
+    await sql`CREATE TRIGGER stopped BEFORE DELETE ON _plugin_storage WHEN OLD.collection = 'catalog_prices' BEGIN SELECT RAISE(ABORT, 'worker stopped'); END`.execute(shop.runtime.db);
+    assert.equal((await setOnSale({ entryId: page, onSale: false, deleted: true })).success, false);
+    await sql`DROP TRIGGER stopped`.execute(shop.runtime.db);
+    const held = await shop.catalog.get('GONE');
+    assert.deepEqual([held?.pageId, held?.offSale, held?.deleting], [page, true, true], 'held off the shop by the deleted page');
+    // Nothing else would ever send that delete again. EmDash runs Commerce's five-minute background check.
+    await shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
+    assert.equal(await shop.catalog.get('GONE'), null, 'the background check finished the delete');
+    await createCatalogItem(shop.catalog, { commandId: 'create-GONE-again', name: 'GONE', sku: 'GONE', fulfillment: 'physical' }, { createId: () => 'GONE-2', collection: 'catalog_items' });
+    assert.equal((await shop.catalog.get('GONE-2')).sku, 'GONE', 'the SKU is free again');
+    console.log('finished delete', JSON.stringify({ before: { pageId: held.pageId === page, offSale: held.offSale, deleting: held.deleting }, after: await shop.catalog.get('GONE') }));
+  } finally {
+    await shop.stop();
+  }
+});

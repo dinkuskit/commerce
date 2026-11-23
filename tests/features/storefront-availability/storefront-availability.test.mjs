@@ -904,8 +904,8 @@ test("the store listing defaults to show out-of-stock and persists hide", async 
   const on = await setOutOfStockListing(listing, { hideOutOfStock: false, offCatalog: false });
   assert.equal(on.changed, true);
   assert.equal("offCatalog" in on.listing, false);
-  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: false, offCatalog: "no" }), /hideOutOfStock and offCatalog only/);
-  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: false, extra: 1 }), /hideOutOfStock and offCatalog only/);
+  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: false, offCatalog: "no" }), /invalid field/);
+  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: false, extra: 1 }), /invalid field/);
   // A record saved by a release before the switch (no offCatalog field) loads as listed and is not rewritten by reading.
   const older = new MemoryCollection();
   const saved = { recordKind: "storefront-out-of-stock-listing", recordId: "active", hideOutOfStock: true, updatedAt: "2026-10-19T00:00:00.000Z" };

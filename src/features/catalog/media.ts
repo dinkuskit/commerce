@@ -122,7 +122,7 @@ export async function saveCatalogItemMedia(
     !catalogItemId ||
     Object.keys(input).some((key) => !["catalogItemId", "gallery", "image"].includes(key))
   ) {
-    invalid("media save accepts only catalogItemId, image and gallery");
+    invalid("request body has an invalid field");
   }
   const image =
     input.image === undefined
