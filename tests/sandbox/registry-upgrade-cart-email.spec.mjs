@@ -5,14 +5,15 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 // Run by scripts/registry-upgrade-proof.mjs with COMMERCE_UPGRADE_FROM=v0.8.0 and
-// COMMERCE_UPGRADE_SPEC=registry-upgrade-cart-email.spec.mjs (commerce-abandoned-cart-email-20261122).
-// "old": Commerce 0.8.0 keeps a shopper's cart key, that cart's unpaid checkout and a saved catalog setting, in
-// 0.8.0's own shapes. "bridge" and "new": this build on 0.8.0's EmDash, then on this checkout's EmDash, leaves
-// every row as it was, still answers the old cart key, lets that key stop nothing, shows the new setting at its
-// default beside the kept one, and its 5-minute check sends no email for the old cart.
+// COMMERCE_UPGRADE_SPEC=registry-upgrade-cart-email.spec.mjs (commerce-abandoned-cart-email-20261122,
+// store-emails-plugin-20261122). "old": Commerce 0.8.0 keeps a shopper's cart key, that cart's unpaid checkout, a
+// paid order and a saved catalog setting, in 0.8.0's own shapes. "bridge" and "new": this build on 0.8.0's EmDash,
+// then on this checkout's EmDash, leaves every row as it was, still answers the old cart key, lets that key stop
+// nothing, shows no cart email setting (it lives in Store emails) beside the kept catalog choice, and its 5-minute
+// check sends no email and notes no old cart as left, so no old order or cart becomes courier news.
 const phase = process.env.COMMERCE_UPGRADE_PHASE;
 const CART = "/_emdash/api/plugins/dinkus-commerce/checkout/guest/cart";
-const COLLECTIONS = ["checkout_carts", "checkout_guest_capabilities", "storefront_out_of_stock_listing"];
+const COLLECTIONS = ["checkout_carts", "checkout_guest_capabilities", "orders", "storefront_out_of_stock_listing"];
 const snapshotFile = () => resolve(process.env.COMMERCE_PROOF_ARTIFACTS, "cart-email-before-upgrade.json");
 const traceFile = () => resolve(process.env.COMMERCE_PROOF_ARTIFACTS, "cart-email-upgrade-" + phase + ".json");
 const origin = () => "http://127.0.0.1:" + (process.env.COMMERCE_PROOF_PORT ?? 64561);
@@ -33,6 +34,12 @@ const legacyRows = () => ({
       total: { currency: "USD", minor: "1200" }, paymentWindow: { minSeconds: 1800, maxSeconds: 1860 }, paymentMethods: ["card"] },
     phase: "released", session: { sessionId: "cs_upgrade", redirectUrl: "https://checkout.stripe.com/c/pay/cs_upgrade", createdAt: 1_793_000_000, expiresAt: 1_793_001_800 },
     paymentReleaseReason: "expired-unpaid" }] } },
+  orders: { "order-upgrade": { paidOrder: { schema: "dinkuskit.commerce.paid-order/v1", orderId: "order-upgrade", receiptId: "receipt-upgrade",
+    attemptId: "attempt-paid", paymentId: "pi_upgrade", paidAt: "2026-11-01T14:00:00.000Z", mode: "test",
+    lines: [{ catalogItemId: "item-hat", quantity: 1, name: "Red hat", unitPrice: { currency: "USD", minor: "1200" } }], total: { currency: "USD", minor: "1200" },
+    contactSnapshot: { schema: "dinkuskit.commerce.checkout-contact/v1", requirePhoneNumber: false, revision: null,
+      contact: { email: "kim@example.test", delivery: { name: "Kim Buyer", line1: "2 Upgrade Way", city: "Springfield", region: "IL", postalCode: "62701", country: "US" } } } },
+    emailKey: "kim@example.test", number: 1001, revision: 1 } },
   storefront_out_of_stock_listing: { active: { recordKind: "storefront-out-of-stock-listing", recordId: "active", hideOutOfStock: true, updatedAt: "2026-11-01T15:00:00.000Z" } },
 });
 
@@ -70,7 +77,7 @@ test("Commerce 0.8.0 keeps a cart key, its unpaid checkout and a catalog setting
     }
   }
   const snapshot = { from: process.env.COMMERCE_UPGRADE_FROM, rows: rawRows(database, COLLECTIONS) };
-  expect(snapshot.rows).toHaveLength(3);
+  expect(snapshot.rows).toHaveLength(4);
   writeFileSync(snapshotFile(), JSON.stringify(snapshot, null, 2));
   database.close();
 });
@@ -98,18 +105,19 @@ for (const step of ["bridge", "new"]) {
     expect(stops(database)).toBe(0);
     expect(rawRows(database, COLLECTIONS)).toEqual(before.rows);
     if (step === "new") {
-      // 4. The new setting shows its default (Shoppers who ticked the box) beside the kept Hide out-of-stock choice.
+      // 4. The kept Hide out-of-stock choice shows, and there is no cart email setting: it lives in Store emails.
       await page.goto("/_emdash/api/auth/dev-bypass?redirect=/_emdash/admin/plugins/dinkus-commerce/settings");
       const welcome = page.getByRole("button", { name: "Get Started" });
       await welcome.or(page.getByRole("heading", { name: "Commerce settings" })).first().waitFor({ state: "visible", timeout: 90000 });
       if (await welcome.isVisible()) await welcome.click();
       await expect(page.getByRole("dialog")).toHaveCount(0);
       await expect(page.getByRole("switch", { name: "Hide out-of-stock products" })).toBeChecked();
-      await expect(page.getByRole("radio", { name: "Shoppers who ticked the box" })).toBeChecked();
+      await expect(page.getByRole("radio", { name: "Shoppers who ticked the box" })).toHaveCount(0);
+      await expect(page.getByText("Abandoned cart email")).toHaveCount(0);
       await page.waitForTimeout(500);
       await page.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, "new-cart-email-settings.png"), fullPage: true });
-      // 5. The 5-minute check runs on the upgraded store and sends no email for the 0.8.0 cart, which has no
-      //    reminder time; the cart row stays as it was.
+      // 5. The 5-minute check runs on the upgraded store, sends no email, and notes no 0.8.0 cart as left (it has no
+      //    reminder time); no row changes, so the 0.8.0 order gets no paid-news key and is never order.paid news.
       const force = () => database.prepare("UPDATE _emdash_cron_tasks SET next_run_at = '2000-01-01T00:00:00.000Z' WHERE plugin_id = ? AND task_name = 'commerce-checkout-wakes' AND status = 'idle'").run("dinkus-commerce");
       const ran = () => database.prepare("SELECT last_run_at FROM _emdash_cron_tasks WHERE plugin_id = ? AND task_name = 'commerce-checkout-wakes'").get("dinkus-commerce")?.last_run_at ?? null;
       const forcedAt = new Date().toISOString();
@@ -119,9 +127,10 @@ for (const step of ["bridge", "new"]) {
       trace.push({ label: "5-minute check ran", lastRunAt: ran(), emails: mail.length });
       expect(mail).toHaveLength(0);
       expect(rawRows(database, COLLECTIONS)).toEqual(before.rows);
-      const index = database.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE '%checkout_carts%remindAt%'").get()?.name;
-      trace.push({ label: "remindAt index", index: index ?? null });
-      expect(index).toBeTruthy();
+      const indexes = ["checkout_carts%remindAt", "checkout_carts%leftKey", "orders%paidKey"].map((like) =>
+        database.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE ?").get("%" + like + "%")?.name ?? null);
+      trace.push({ label: "courier news indexes", indexes });
+      expect(indexes.every(Boolean)).toBe(true);
     }
     writeFileSync(traceFile(), JSON.stringify({ phase, trace }, null, 2));
     database.close();

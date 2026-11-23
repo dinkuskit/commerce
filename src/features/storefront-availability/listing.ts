@@ -27,7 +27,6 @@ function normalizeStoredListing(
     value.recordId !== STOREFRONT_OUT_OF_STOCK_LISTING_RECORD_ID ||
     typeof value.hideOutOfStock !== "boolean" ||
     typeof (value.offCatalog ?? false) !== "boolean" ||
-    ![undefined, "off", "all"].includes(value.cartEmail) ||
     typeof value.updatedAt !== "string" ||
     value.updatedAt.trim().length === 0
   ) {
@@ -70,21 +69,19 @@ export async function setOutOfStockListing(
   }
   const listing = await loadOutOfStockListing(storage);
   // offCatalog left out keeps the owner's catalog choice.
-  // So does cartEmail ("off", "ticked" or "all").
-  const was = listing.cartEmail ?? "ticked";
-  const { hideOutOfStock, offCatalog = !!listing.offCatalog, cartEmail = was, ...rest } = rawInput as Record<string, unknown>;
+  const { hideOutOfStock, offCatalog = !!listing.offCatalog, ...rest } = rawInput as Record<string, unknown>;
   if (
     Object.keys(rest).length ||
     typeof hideOutOfStock !== "boolean" ||
-    typeof offCatalog !== "boolean" ||
-    !["off", "ticked", "all"].includes(cartEmail as string)
+    typeof offCatalog !== "boolean"
   ) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "out-of-stock listing accepts hideOutOfStock, offCatalog and cartEmail only",
+      "out-of-stock listing accepts hideOutOfStock and offCatalog only",
     );
   }
-  if (listing.hideOutOfStock === hideOutOfStock && !!listing.offCatalog === offCatalog && was === cartEmail) {
+  // A 0.9.0 beta's cart email choice is dropped on the next save, even one that changes nothing else.
+  if (listing.hideOutOfStock === hideOutOfStock && !!listing.offCatalog === offCatalog && !("cartEmail" in listing)) {
     return { changed: false, listing };
   }
   const updated: StorefrontOutOfStockListingRecord = {
@@ -92,7 +89,6 @@ export async function setOutOfStockListing(
     recordId: STOREFRONT_OUT_OF_STOCK_LISTING_RECORD_ID,
     hideOutOfStock,
     ...(offCatalog ? { offCatalog } : {}),
-    ...(cartEmail !== "ticked" ? { cartEmail: cartEmail as "off" | "all" } : {}),
     updatedAt: (options.now ?? (() => new Date()))().toISOString(),
   };
   try {

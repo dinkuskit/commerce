@@ -105,7 +105,7 @@ const normalizedCoupon = (code: string) => REGISTRY_BUILD ? code : normalizeCoup
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 /** `saved`: the lines were read from the saved cart, which must still hold them (the guest route). */
-/** `remind`: the abandoned-cart email's fields, saved with the new attempt unless that cart was already emailed. */
+/** `remind`: the left cart's fields, saved with the new attempt unless that cart was already left (or emailed by a 0.9.0 beta). */
 export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string, saved?: boolean,
   remind?: Pick<CheckoutRecord, "remindAt" | "news">, fence?: (record?: CheckoutRecord) => void): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
@@ -150,7 +150,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
       continue;
     }
     if (stored?.record.attempts.some(a => a.attemptId === attempt.attemptId)) fail("Attempt identity reused");
-    if (await e.store.compareAndSet(cartId, stored?.version ?? null, { ...stored?.record, ...!stored?.record.emailed && remind, attempts: [...(stored?.record.attempts ?? []), attempt] })) {
+    if (await e.store.compareAndSet(cartId, stored?.version ?? null, { ...stored?.record, ...!stored?.record.emailed && !stored?.record.leftKey && remind, attempts: [...(stored?.record.attempts ?? []), attempt] })) {
       return drive(e, cartId, attempt.attemptId, true);
     }
   }

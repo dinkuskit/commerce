@@ -178,11 +178,13 @@ read (`null` for a cart never saved):
   the cart
   (`commerce-cart-expiry-20261113`). A paid cart also reads as empty.
 
-- `{ "stop": true }` stops cart reminder emails to the address the abandoned
-  cart email went to. Only the email's own key can send it (any other key
-  answers `CHECKOUT_NOT_FOUND`), and a later checkout with another email does
-  not change which address it stops. It answers like a read
-  (`commerce-abandoned-cart-email-20261122`).
+- `{ "stop": true }` stops cart emails to the address the left cart's link
+  was made for. Only that link's own key can send it (any other key answers
+  `CHECKOUT_NOT_FOUND`), and a later checkout with another email does not
+  change which address it stops. It answers like a read
+  (`commerce-abandoned-cart-email-20261122`; since
+  `store-emails-plugin-20261122` the link reaches the shopper through the
+  Store emails plugin's abandoned cart email, from the courier's `cart.left`).
 
 The answer carries `data.cart`:
 `{ lines: [{ catalogItemId, quantity }], version, expiresAt }`, with

@@ -1,6 +1,6 @@
 // The built Registry bundle of Commerce, run in-process by a real EmDash runtime on Node's built-in SQLite: orders are
 // marked Completed through Commerce's own orders route, and the store's courier reads them from `courier/outbox` the way
-// it does, through EmDash's route dispatch with nobody signed in (order-shipped-outbox-20261122).
+// it does, through EmDash's route dispatch with nobody signed in (order-shipped-outbox-20261122, store-emails-plugin-20261122).
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { registerHooks } from 'node:module';
@@ -53,9 +53,9 @@ async function store() {
       schema: 'dinkuskit.commerce.checkout-variant-selection/v1', ...variant, fulfillment: 'physical', selections: [{ optionId: 'size', optionLabel: 'Size', valueId: 'm', valueLabel: 'M' }] }] }) },
       emailKey: email, number: 1000 + Number(id.slice(-1)), revision: 1, ...extra }),
     /** The owner, on the Orders page's route, marks an order Completed or moves it back to Processing. */
-    async owner(action, orderId) {
+    async owner(action, orderId, extra = {}) {
       const shown = await call('orders', { action: 'show', orderId }, EDITOR);
-      const answer = await call('orders', { action, orderId, version: shown.data.order.version }, EDITOR);
+      const answer = await call('orders', { action, orderId, version: shown.data.order.version, ...extra }, EDITOR);
       assert.equal(answer.data?.result, 'saved', JSON.stringify(answer));
     },
     /** The store's courier, from the store's own code: no person. */
@@ -90,8 +90,8 @@ test('the courier reads each Completed order once it is a minute old, oldest fir
     const [one] = first.items;
     const completedAt = (await shop.orders.get('order-1')).completed.at;
     assert.deepEqual(one, { id: 'order-1:shipped', at: completedAt, data: {
-      orderId: 'order-1', shippedAt: completedAt, email: 'ana@buyer.test', name: 'Ana Buyer',
-      lines: [{ productId: 'mug', productName: 'Mug' }, { productId: 'hat', productName: 'Hat' }] } }, 'the size M hat is news for the hat');
+      orderId: 'order-1', number: 1001, test: true, shippedAt: completedAt, email: 'ana@buyer.test', name: 'Ana Buyer', carrier: null, tracking: null,
+      lines: [{ productId: 'mug', productName: 'Mug', quantity: 1 }, { productId: 'hat', productName: 'Hat', quantity: 1 }] } }, 'the size M hat is news for the hat');
     assert.equal(first.next, `${completedAt} order-1`);
 
     const second = (await shop.since(first.next, 50)).data;
@@ -115,6 +115,54 @@ test('the courier reads each Completed order once it is a minute old, oldest fir
   }
 });
 
+test('order.paid gives each order this version stored, with what the order confirmation shows, and order.shipped its carrier and tracking', async () => {
+  const shop = await store();
+  try {
+    skew = 0;
+    const paidAt = new Date(Date.now() - 120_000).toISOString();
+    const pricing = { schema: 'dinkuskit.commerce.checkout-pricing/v1', merchandiseSubtotal: usd('4800'), couponDiscount: usd('0'), netMerchandise: usd('4800'),
+      shipping: { configurationId: 'flat', revision: 1, mode: 'flat', charge: usd('600') }, finalTotal: usd('5400'), lines: [] };
+    // Two size M tees, paid on this version: a paid-news key and the pricing the checkout froze.
+    await shop.keep('order-5', 'ana@buyer.test', 'Ana Buyer', [['tee-m', 'Smoky Mountain Tee']], { variant: { productId: 'tee', catalogItemId: 'tee-m' }, paidKey: `${paidAt} order-5` });
+    await shop.orders.put('order-5', { ...(await shop.orders.get('order-5')), paidOrder: { ...(await shop.orders.get('order-5')).paidOrder,
+      lines: [{ catalogItemId: 'tee-m', quantity: 2, name: 'Smoky Mountain Tee', unitPrice: usd('2400') }], total: usd('5400'), pricing } });
+    // Paid on a version before this one: no paid-news key, so no confirmation is ever sent for it.
+    await shop.keep('order-6', 'bo@buyer.test', 'Bo Buyer', [['mug', 'Mug']]);
+    // A 60-line order: 50 lines and a count of the rest, so the item stays under the courier's 8 KB.
+    // Long names in a script of three bytes a character are the worst case the courier's 8 KB sees.
+    await shop.keep('order-7', 'cy@buyer.test', 'Cy Buyer', Array.from({ length: 60 }, (_, i) => ['item-' + i, 'Item ' + i + ' ' + '茶'.repeat(300)]), { paidKey: `${paidAt} order-7` });
+
+    const paid = (await shop.since(null, 50, { topic: 'order.paid' })).data;
+    assert.deepEqual(paid.items.map(item => item.id), ['order-5:paid', 'order-7:paid']);
+    assert.deepEqual(paid.items[0], { id: 'order-5:paid', at: paidAt, data: {
+      orderId: 'order-5', number: 1005, test: true, email: 'ana@buyer.test', name: 'Ana Buyer', shipTo: delivery('Ana Buyer'),
+      lines: [{ name: 'Smoky Mountain Tee', options: 'Size: M', quantity: 2, unitPrice: usd('2400') }],
+      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400') } });
+    const bytes = item => new TextEncoder().encode(JSON.stringify(item)).length;
+    const big = paid.items[1].data;
+    assert.ok(big.lines.length >= 1 && big.lines.length + big.moreLines === 60, JSON.stringify({ kept: big.lines.length, more: big.moreLines }));
+    assert.equal(big.lines[0].name.length, 200, 'a name is cut to 200 characters');
+    assert.ok(bytes(paid.items[1]) <= 7500, String(bytes(paid.items[1])));
+    assert.ok(bytes({ ...paid.items[1], data: { ...big, lines: big.lines.concat(big.lines[0]) } }) > 7500, 'only lines that would not fit are left out');
+    assert.equal(paid.next, `${paidAt} order-7`);
+    assert.deepEqual((await shop.since(paid.next, 50, { topic: 'order.paid' })).data.items, []);
+
+    await shop.owner('complete', 'order-5', { carrier: 'USPS', tracking: '9400 1000 0000 0000 0000 00' });
+    await new Promise(resolve => setTimeout(resolve, 5));
+    await shop.owner('complete', 'order-7');
+    skew = 61_000;
+    const [shipped, bigShipped] = (await shop.since(null, 50)).data.items;
+    assert.equal(bigShipped.id, 'order-7:shipped');
+    assert.ok(bytes(bigShipped) <= 7500 && bigShipped.data.lines.length + bigShipped.data.moreLines === 60, JSON.stringify({ bytes: bytes(bigShipped), kept: bigShipped.data.lines.length }));
+    assert.deepEqual([shipped.data.number, shipped.data.carrier, shipped.data.tracking, shipped.data.lines], [1005, 'USPS', '9400 1000 0000 0000 0000 00', [{ productId: 'tee', productName: 'Smoky Mountain Tee', quantity: 2 }]]);
+    console.log('order.paid proof', JSON.stringify({ paid: paid.items[0], bigPaid: { bytes: bytes(paid.items[1]), kept: big.lines.length, moreLines: big.moreLines },
+      bigShipped: { bytes: bytes(bigShipped), kept: bigShipped.data.lines.length, moreLines: bigShipped.data.moreLines }, neverAnnounced: ['order-6'], shipped }));
+  } finally {
+    skew = 0;
+    await shop.stop();
+  }
+});
+
 test('anyone signed in, the store\'s administrator included, and a request that is not the courier\'s are refused', async () => {
   const shop = await store();
   try {
@@ -122,7 +170,7 @@ test('anyone signed in, the store\'s administrator included, and a request that 
     const asPerson = await shop.call('courier/outbox', { courier: 1, op: 'since', topic: 'order.shipped', after: null, limit: 50 }, admin);
     assert.equal(asPerson.success, false);
     assert.match(`${asPerson.error.code} ${asPerson.error.message}`, /COURIER_ONLY/);
-    const topic = await shop.since(null, 50, { topic: 'order.paid' });
+    const topic = await shop.since(null, 50, { topic: 'order.refunded' });
     assert.match(`${topic.error.code} ${topic.error.message}`, /UNKNOWN_TOPIC/);
     const notCourier = await shop.call('courier/outbox', { op: 'since', topic: 'order.shipped' });
     assert.match(`${notCourier.error.code} ${notCourier.error.message}`, /BAD_COURIER_REQUEST/);

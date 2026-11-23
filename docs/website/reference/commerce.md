@@ -30,7 +30,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds two
 | Page | What it does |
 | --- | --- |
 | **Orders** | Lists orders. **Inspect #N** opens one: when it was paid and its status, then **Ship to** (with **Correct address**) beside **Customer** (email and phone) and **Bill to**. Below them, a line such as "3 items ready to ship" carries **Create shipping label** (when the store has Ship) or **Complete order**. Then comes the items table, with each item's recorded variant choices (such as Size: M; later option renames do not change them), price, quantity and line total, and then items subtotal, coupon, shipping and order total. Order ID, version, receipt, checkout attempt, provider payment and catalog IDs are in the **Order record** fold. Times show in UTC. |
-| **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, list the store's products in the DinkusKit catalog that AI shopping assistants search, who gets the abandoned cart email, a placeholder image for products without one). |
+| **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, list the store's products in the DinkusKit catalog that AI shopping assistants search, a placeholder image for products without one). |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
 
@@ -128,7 +128,7 @@ Prefix these routes with `/_emdash/api/plugins/<installed-plugin-id>/`. Resolve 
 | `catalog/public/item?itemId=…` or `?pageId=…` | GET | One projected product or `null`; no canonical page URL. With `pageId`, the product that published page sells. |
 | `checkout/guest/readiness` | GET | The installed checkout readiness response. |
 | `checkout/guest/prepare` | POST | An empty request creates a server-issued guest capability. |
-| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. `{ stop: true }`, sent with the abandoned cart email's key, stops cart reminders to the address that email went to. |
+| `checkout/guest/cart` | POST | The shopper's cart, held by Commerce. `{}` reads it and runs the payment check, returning the cart and the current checkout projection. `{ version, lines }` replaces it whole: a stale version changes nothing, and every line is checked against the catalog. A line names a `catalogItemId`, or a `productId` with the chosen option labels. A cart lasts 30 days from its last change; the background check then deletes it. `{ stop: true }`, sent with the abandoned cart link's key, stops cart emails to the address that link was made for. |
 | `checkout/guest/start` | POST | Required contact details, authorized by that capability. Checkout starts from the saved cart; the browser sends no lines. `news: true` records that the shopper ticked **Email me with news and offers**. |
 | `orders/lookup` | POST | `{ orderNumber, email }` from the store's own page: that one order, or one not-found answer. |
 
@@ -193,19 +193,17 @@ Shoppers find an order with its order number and the email used at checkout, lik
 
 Shopper sign-in and saved addresses are in DinkusKit Accounts, a separate plugin. Commerce has no shopper accounts.
 
-## Abandoned cart email
+## Abandoned carts
 
-When a shopper gives their email at checkout and leaves without paying, Commerce sends them one email 10 hours later, like Shopify's abandoned checkout email. It names the items when the cart still holds what went to checkout and links back to the cart at `/cart/c/<id>?key=<secret>`. That link is a fresh key to the same cart, never the shopper's own cookie key and never the payment page. It works only while the cart lasts (30 days from its last change); after that the link opens an empty cart. The email goes from the 5-minute background check through the site's EmDash email, so the store needs an email provider set up in EmDash; without one nothing is sent.
+When a shopper gives their email at checkout and leaves without paying, Commerce notes the cart as left 10 hours later, like Shopify's abandoned checkout. Commerce sends no email itself: the **Store emails** plugin sends the abandoned cart email from the store's own sender, and its page holds the **Off / Shoppers who ticked the box / All customers** choice, which starts Off.
 
-Choose who gets it under **Commerce settings > Abandoned cart email**:
+Commerce still owns everything the email points at:
 
-- **Shoppers who ticked the box** (the default): only shoppers who ticked the unticked **Email me with news and offers** box at checkout.
-- **All customers**: every shopper who gave an email at checkout.
-- **Off**: nobody.
+- The unticked **Email me with news and offers** box at checkout. Commerce records the tick with the cart.
+- The cart link `/cart/c/<id>?key=<secret>`. Commerce makes a fresh key to the same cart once, when the cart is left. It is never the shopper's own cookie key and never the payment page. It works only while the cart lasts (30 days from its last change); after that the link opens an empty cart.
+- The stop list. The stop link (`&stop=1` on the same link) asks the shopper to confirm, and from then on that address's carts are never noted as left by this store. Commerce keeps only a hash of a stopped address.
 
-Just before sending, Commerce checks again: no email goes if the order was paid, the cart was emptied or has expired, the setting is now Off, or that email address stopped cart reminders. A checkout still open is looked at again an hour later. Each cart gets at most one email, even after another unpaid checkout. Every email has a stop link (`&stop=1` on the same link); the store asks the shopper to confirm, and from then on that address gets no cart reminders from this store. Commerce keeps only a hash of a stopped address.
-
-Commerce needs EmDash's `email:send` permission for this email. Commerce `0.8.0` already asked for it (for the shopper sign-in codes that moved to DinkusKit Accounts), so a store upgrading from `0.8.0` is not asked again. Stripe and DinkusKit Payments are not involved.
+A cart is noted as left only once the checkout ended unpaid, the cart still holds something, and the address has not stopped cart emails. A checkout still open is looked at again an hour later. Each cart is noted at most once, even after another unpaid checkout. Commerce hands the news to Store emails through the store's courier as `cart.left` (see [News for other plugins](#news-for-other-plugins)). Stripe and DinkusKit Payments are not involved, and Commerce does not ask for EmDash's `email:send` permission.
 
 ## Installed checkout and orders
 
@@ -240,9 +238,11 @@ and are marked **TEST**; do not use them for real fulfillment or postage.
   already has get them the next time the order changes.
 - Without Ship, use **Complete order** to record shipment by hand. Carrier and
   tracking number are optional, at most 64 characters each. Commerce records the
-  completion time and shows the order as Completed; this does not buy a label or
-  send a shipping email. Shoppers can see the status, carrier and tracking
-  number on the order lookup page when the storefront provides it.
+  completion time and shows the order as Completed; this does not buy a label.
+  Commerce sends no email itself: with the Store emails plugin installed, the
+  shopper gets its shipping confirmation, with the carrier and tracking number.
+  Shoppers can also see the status, carrier and tracking number on the order
+  lookup page when the storefront provides it.
 - A Completed order's address is locked. To correct a mistake, choose **Move back
   to Processing** and confirm. This clears the completion time, carrier and
   tracking number, but keeps any corrected delivery address. It does not cancel
@@ -251,18 +251,20 @@ and are marked **TEST**; do not use them for real fulfillment or postage.
 If an order changed after you opened its form, the stale save changes nothing.
 Open the order again and check its current details before retrying.
 
-When an order is marked Completed, by **Complete order** or by a Ship label,
-Commerce tells the store's other plugins that it shipped, for Reviews to ask the
-buyer for a review. The store's courier reads the news from Commerce's private
-`courier/outbox` route about once a minute, with nobody signed in. Commerce
-refuses anyone who is signed in, the Administrator included. The news is
-`order.shipped`, one item per order with the id `<order id>:shipped`, the time
-it was marked Completed, the checkout email, the name on the delivery address
-(or the billing address), and each product's catalog ID and name. It never
-leaves the store. An order is news once it has been Completed for a minute.
-Moving it back to Processing and completing it again sends the same id again,
-which a receiving plugin already has. Test orders are news like live orders.
-An order Completed before the version of Commerce that added this is not news.
+## News for other plugins
+
+EmDash plugins cannot call each other, so Commerce hands news to the store's other plugins through the store's courier, which reads Commerce's private `courier/outbox` route about once a minute with nobody signed in. Commerce refuses anyone who is signed in, the Administrator included. The news never leaves the store. An item is news once it is a minute old, and each topic is read oldest first from the reader's bookmark. Test orders are news like live orders, marked `test`.
+
+| Topic | When | Who reads it | Item id |
+| --- | --- | --- | --- |
+| `order.paid` | Commerce stored a paid order | Store emails, for the order confirmation | `<order id>:paid` |
+| `order.shipped` | An order was marked Completed, by **Complete order** or by a Ship label | Reviews, and Store emails for the shipping confirmation | `<order id>:shipped` |
+| `cart.left` | A cart was noted as left (see [Abandoned carts](#abandoned-carts)) | Store emails, for the abandoned cart email | `<cart id>:left` |
+
+- `order.paid` carries the order number, the checkout email, the name and delivery address, each item's name, chosen options (such as "Size: M"), quantity and price, and the subtotal, coupon discount, shipping and total. An order paid before the version of Commerce that added it is not news, so upgrading sends no confirmations for old orders.
+- `order.shipped` carries the order number, the time it was marked Completed, the checkout email, the name on the delivery address (or the billing address), the carrier and tracking number when the owner gave them, and each product's catalog ID, name and quantity. Moving an order back to Processing and completing it again sends the same id again, which a receiving plugin already has. An order Completed before the version of Commerce that added this is not news.
+- `cart.left` carries the checkout email, whether the shopper ticked the box, the cart link and its stop link, and the items when the cart still holds what went to checkout. All of these come from the checkout the cart was noted for. A later checkout of the same cart under another email changes neither the address in the news nor the address its stop link stops.
+- An item of any topic lists at most 50 items, and drops items from the end while the whole item is over 7,500 bytes, so it stays under the courier's 8 KB; `moreLines` counts the ones left out.
 
 ## Package for host apps
 
