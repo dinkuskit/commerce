@@ -69,6 +69,7 @@ export function openGuestCollections(path) {
       [CHECKOUT_COLLECTION]: collection(CHECKOUT_COLLECTION, ["cartExpires", "remindAt", "leftKey"]),
       [CHECKOUT_GUEST_CAPABILITY_COLLECTION]: collection(CHECKOUT_GUEST_CAPABILITY_COLLECTION),
       [CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION]: collection(CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION),
+      cart_email_stops: collection("cart_email_stops"),
     },
   };
 }

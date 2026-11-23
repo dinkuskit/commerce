@@ -30,15 +30,6 @@ import {
 const HOURS = 3600;
 const contact = { email: "Cart-Shopper@Example.test", billing: { name: "Bill Payer", line1: "9 Billing Way", city: "Billtown", postalCode: "00009", country: "US" } };
 
-function memory() {
-  const records = new Map();
-  return {
-    async get(id) { return structuredClone(records.get(id) ?? null); },
-    async put(id, value) { records.set(id, structuredClone(value)); },
-    records,
-  };
-}
-
 async function setup(t) {
   const dir = mkdtempSync(join(tmpdir(), "cart-email-"));
   const path = join(dir, "commerce.sqlite");
@@ -62,7 +53,10 @@ async function setup(t) {
     constructorSiteUrl: TRUSTED_SITE,
     host: synth.host,
   };
-  const stops = memory();
+  // The stop list is EmDash's own plugin storage on SQLite, as in a store.
+  const stops = opened.storage.cart_email_stops;
+  /** The stop list's keys, read back from SQLite. */
+  const stopped = async () => (await stops.query({ limit: 100 })).items.map(item => item.id);
   const ctx = {
     storage: {
       checkout_carts: opened.storage[CHECKOUT_COLLECTION],
@@ -86,7 +80,7 @@ async function setup(t) {
   const sweep = at => remindCarts(ctx, at);
   /** What the store's courier reads from Commerce's outbox for cart.left, from the start. */
   const left = async () => (await courierOutbox({ input: { courier: 1, op: "since", topic: "cart.left", after: null, limit: 100 } }, ctx)).items;
-  return { runtime, synth, ctx, stops, abandoned, release, sweep, left, carts: opened.storage[CHECKOUT_COLLECTION] };
+  return { runtime, synth, ctx, stops, stopped, abandoned, release, sweep, left, carts: opened.storage[CHECKOUT_COLLECTION] };
 }
 
 /** The pick-up link's capability, as the store's /cart/c/ page sets it in the cart cookie. */
@@ -156,7 +150,7 @@ test("the stop link stops cart news for that email, for every later cart", async
   assert.equal((await cartGuestCheckout(f.runtime, { stop: "yes" }, { [GUEST_CAPABILITY_HEADER]: key }, f.stops)).error.code, "INVALID_CART");
   const stopped = await cartGuestCheckout(f.runtime, { stop: true }, { [GUEST_CAPABILITY_HEADER]: key }, f.stops);
   assert.equal(stopped.ok, true, JSON.stringify(stopped));
-  assert.equal(f.stops.records.size, 1);
+  assert.deepEqual(await f.stopped(), [await stopKey(contact.email)]);
   // A stop needs the link's key.
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, {}, f.stops)).error.code, "CAPABILITY_DENIED");
   // Kept by the email's hash, whatever its case.
@@ -228,6 +222,10 @@ test("a store that saved the 0.9.0 beta cart email setting still loads its setti
   await listing.put("active", { recordKind: "storefront-out-of-stock-listing", recordId: "active",
     hideOutOfStock: false, cartEmail: "all", updatedAt: "2026-11-22T00:00:00.000Z" });
   assert.equal((await loadOutOfStockListing(listing)).hideOutOfStock, false);
+  // Saving the same Catalog choices still drops it.
+  const same = await setOutOfStockListing(listing, { hideOutOfStock: false });
+  assert.equal(same.changed, true);
+  assert.equal("cartEmail" in (await listing.get("active")), false);
   const saved = await setOutOfStockListing(listing, { hideOutOfStock: true });
   assert.equal("cartEmail" in saved.listing, false);
   await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: true, cartEmail: "all" }), /hideOutOfStock and offCatalog only/);
@@ -251,15 +249,21 @@ test("the email's key lasts only as long as its cart, and its stop link stops th
   assert.equal(again.data.email, contact.email);
   assert.equal(again.data.ticked, true);
   console.log("cart.left after a changed-email retry", JSON.stringify({ email: again.data.email, ticked: again.data.ticked, sameLink: again.data.link === news.data.link }));
-  // The email's stop link stops the address it was sent to, not the latest checkout's; the shopper's own key stops nothing.
+  // The email's stop link stops the address it was sent to, not the latest checkout's. The shopper's own key and a
+  // made-up key stop nothing.
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, headers, f.stops)).error.code, "CHECKOUT_NOT_FOUND");
+  const madeUp = { [GUEST_CAPABILITY_HEADER]: `${emailed[GUEST_CAPABILITY_HEADER].split(".")[0]}.${"0".repeat(64)}` };
+  assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, madeUp, f.stops)).error.code, "CAPABILITY_DENIED");
+  assert.deepEqual(await f.stopped(), []);
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, emailed, f.stops)).ok, true);
-  assert.deepEqual([...f.stops.records.keys()], [await stopKey(contact.email)]);
+  const stoppedAfterRetry = await f.stopped();
+  assert.deepEqual(stoppedAfterRetry, [await stopKey(contact.email)]);
   // Past the cart's 30 days the emailed key is refused, while the shopper's own key still answers.
   const expires = +(await f.carts.get(cartId)).cartExpires;
   const at = now => ({ ...f.runtime, host: { ...f.runtime.host, now: () => now } });
   assert.equal((await cartGuestCheckout(at(expires - 1), {}, emailed)).ok, true);
   assert.equal((await cartGuestCheckout(at(expires), {}, emailed)).error.code, "CAPABILITY_DENIED");
+  assert.equal((await cartGuestCheckout(at(expires), { stop: true }, emailed, f.stops)).error.code, "CAPABILITY_DENIED");
   assert.equal((await cartGuestCheckout(at(expires), {}, headers)).ok, true);
   // Once the cleanup deletes the cart, the emailed key cannot bring it back.
   await clearExpiredCarts(f.carts, expires + 1);
@@ -271,6 +275,9 @@ test("the email's key lasts only as long as its cart, and its stop link stops th
   assert.equal((await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, headers)).ok, true);
   assert.equal((await cartGuestCheckout(f.runtime, {}, emailed)).error.code, "CAPABILITY_DENIED");
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, emailed, f.stops)).error.code, "CAPABILITY_DENIED");
+  assert.deepEqual(await f.stopped(), stoppedAfterRetry, "a refused key writes nothing");
+  console.log("cart.left stop proof", JSON.stringify({ stopRows: stoppedAfterRetry.length, stopsFirstAddress: stoppedAfterRetry[0] === await stopKey(contact.email),
+    stopsSam: stoppedAfterRetry.includes(await stopKey("sam@example.test")), afterExpiry: "CAPABILITY_DENIED", afterCartMadeAgain: "CAPABILITY_DENIED", madeUpKey: "CAPABILITY_DENIED" }));
 });
 
 test("the email's key is checked against the cart each request reads, so cleanup in between changes nothing", async (t) => {

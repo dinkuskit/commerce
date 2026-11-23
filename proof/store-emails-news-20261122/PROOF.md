@@ -6,9 +6,16 @@ GrillTrack `store-emails-plugin-20261122` in dinkuskit/dinkuskit. The owner appr
   redacted). It covers `order.paid`, `order.shipped` with a carrier and tracking number, the 7,500-byte item budget
   on 60-line orders, and `cart.left`. The `cart.left after a changed-email retry` line shows that news is bound to
   the checkout its link was made for. After the shopper retried the same cart, unticked, under another email,
-  rereading the outbox still names the first address with its tick and the same link. The same test then uses
-  that link's stop and gets exactly one `cart_email_stops` row, for the first address
-  (`tests/features/checkout/cart-left-news.test.mjs`, "the email's key lasts only as long as its cart").
+  rereading the outbox still names the first address with its tick and the same link. The `cart.left stop proof`
+  line comes from the same test, which runs Commerce's own cart route, background check and outbox over EmDash's plugin
+  storage on SQLite, the stop list included:
+  - the shopper's own key stops nothing;
+  - a made-up key is refused and writes nothing;
+  - the emailed link's stop writes exactly one `cart_email_stops` row, for the first address, and none for the second;
+  - past the cart's 30 days, and after the cart is deleted and made again under the same id, the old link is
+    refused and the stop list is unchanged.
+
+  (`tests/features/checkout/cart-left-news.test.mjs`, "the email's key lasts only as long as its cart".)
 - `cart-email-upgrade-bridge.json` and `cart-email-upgrade-new.json`: the 0.8.0 upgrade traces
   (`tests/sandbox/registry-upgrade-cart-email.spec.mjs`).
 - `new-cart-email-settings.png`: Commerce settings after the upgrade, with both Catalog switches kept and no cart email setting.

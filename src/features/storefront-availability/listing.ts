@@ -80,7 +80,8 @@ export async function setOutOfStockListing(
       "out-of-stock listing accepts hideOutOfStock and offCatalog only",
     );
   }
-  if (listing.hideOutOfStock === hideOutOfStock && !!listing.offCatalog === offCatalog) {
+  // A 0.9.0 beta's cart email choice is dropped on the next save, even one that changes nothing else.
+  if (listing.hideOutOfStock === hideOutOfStock && !!listing.offCatalog === offCatalog && !("cartEmail" in listing)) {
     return { changed: false, listing };
   }
   const updated: StorefrontOutOfStockListingRecord = {
