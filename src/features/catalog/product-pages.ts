@@ -2,7 +2,7 @@ import type { StorageCollection } from "emdash";
 import { isRecord } from "../../shared/record.js";
 import { CatalogError } from "./errors.js";
 import { normalizeProductName } from "./normalize.js";
-import { editProduct, named, offShop, type ProductFence } from "./product-edit.js";
+import { editProduct, keptChanging, named, offShop, type ProductFence } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
 /**
@@ -145,12 +145,15 @@ export async function setProductPageOnSale(storage: { catalog: Catalog; pages: P
  * whatever its size; orders keep their own copy. The product's own item goes last, and only while it is as read, so a
  * variant added meanwhile is deleted too, and a delete that stops halfway leaves it, still held by the page, to delete again.
  */
-async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: string, entryId: string): Promise<void> {
+async function forgetProduct(catalog: Catalog, rows: ProductRows = [], itemId: string, entryId: string, tries = 3): Promise<void> {
   const stored = await catalog.getVersioned(itemId), item = stored?.value as CatalogItemRecord | undefined;
   if (item?.pageId !== entryId) return;
   const variants = (item.variantProduct?.members ?? []).map(member => member.catalogItemId).filter(id => id !== itemId);
   for (const row of rows) await row.deleteMany([...variants, itemId]);
   await catalog.deleteMany(variants);
   // Changed since it was read, such as a variant added: read it again.
-  if (!(await catalog.compareAndDelete(itemId, stored!.revision)).applied) await forgetProduct(catalog, rows, itemId, entryId);
+  if (!(await catalog.compareAndDelete(itemId, stored!.revision)).applied) {
+    if (!tries) keptChanging();
+    await forgetProduct(catalog, rows, itemId, entryId, tries - 1);
+  }
 }

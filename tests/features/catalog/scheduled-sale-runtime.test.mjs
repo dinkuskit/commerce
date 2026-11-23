@@ -49,7 +49,7 @@ async function store() {
   const storage = (name) => new PluginStorageRepository(runtime.db, ID, name, [...(descriptor.storage[name].indexes ?? []), ...(descriptor.storage[name].uniqueIndexes ?? [])]);
   const catalog = storage('catalog_items'), pages = storage('product_pages');
   return {
-    runtime, catalog,
+    runtime, catalog, pages, prices: storage('catalog_prices'),
     /** A draft Products page whose panel picked a new product, as the page's first Save does. */
     async page(sku) {
       const created = await runtime.handleContentCreate('products', { data: { title: `${sku} mug` }, slug: sku.toLowerCase() });
@@ -171,6 +171,111 @@ test('a held sale the background check resumes after the owner withdrew the page
     assert.equal(await shop.sold('LATE'), false, "the Editor's held sale does not outlive the withdrawal");
     assert.equal(await sales.get(page + ':go'), null, 'and is not tried again');
     console.log('resumed sale', JSON.stringify({ steps, LATE: { sold: await shop.sold('LATE'), fence: loaded.fence, held: await sales.get(page + ':go') } }));
+  } finally {
+    await shop.stop();
+  }
+});
+
+test('a permanent delete that stopped halfway is finished by the background check, so the SKU can be used again', async () => {
+  const shop = await store();
+  try {
+    const page = await shop.page('GONE');
+    const setOnSale = (body) => shop.runtime.handlePluginApiRoute(ID, 'POST', 'catalog-items/set-on-sale', new Request('https://shop.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      { id: 'editor', email: 'editor@shop.test', name: 'Editor', role: 40, createdAt: new Date() });
+    assert.equal((await setOnSale({ entryId: page, onSale: true })).success, true);
+    // The owner moves the page to the trash and deletes it for good; EmDash deletes it, then the store's publish check
+    // tells Commerce, and the Worker stops while Commerce is deleting the product's price.
+    assert.equal((await shop.runtime.handleContentDelete('products', page)).success, true);
+    assert.equal((await shop.runtime.handleContentPermanentDelete('products', page)).success, true);
+    await sql`CREATE TRIGGER stopped BEFORE DELETE ON _plugin_storage WHEN OLD.collection = 'catalog_prices' BEGIN SELECT RAISE(ABORT, 'worker stopped'); END`.execute(shop.runtime.db);
+    assert.equal((await setOnSale({ entryId: page, onSale: false, deleted: true })).success, false);
+    await sql`DROP TRIGGER stopped`.execute(shop.runtime.db);
+    const held = await shop.catalog.get('GONE');
+    assert.deepEqual([held?.pageId, held?.offSale, held?.deleting], [page, true, true], 'held off the shop by the deleted page');
+    // Nothing else would ever send that delete again. EmDash runs Commerce's five-minute background check.
+    await shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
+    assert.equal(await shop.catalog.get('GONE'), null, 'the background check finished the delete');
+    await createCatalogItem(shop.catalog, { commandId: 'create-GONE-again', name: 'GONE', sku: 'GONE', fulfillment: 'physical' }, { createId: () => 'GONE-2', collection: 'catalog_items' });
+    assert.equal((await shop.catalog.get('GONE-2')).sku, 'GONE', 'the SKU is free again');
+    console.log('finished delete', JSON.stringify({ before: { pageId: held.pageId === page, offSale: held.offSale, deleting: held.deleting }, after: await shop.catalog.get('GONE') }));
+  } finally {
+    await shop.stop();
+  }
+});
+
+test('the background check finishes a stopped delete through the page, so a panel pick it had on sale goes too', async () => {
+  const shop = await store();
+  try {
+    const page = await shop.page('MUG');
+    const setOnSale = (body) => shop.runtime.handlePluginApiRoute(ID, 'POST', 'catalog-items/set-on-sale', new Request('https://shop.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      { id: 'editor', email: 'editor@shop.test', name: 'Editor', role: 40, createdAt: new Date() });
+    assert.equal((await setOnSale({ entryId: page, onSale: true })).success, true);
+    // The panel then picked CUP, and a publish check stopped after selling it under this page, before moving the pointer.
+    await createCatalogItem(shop.catalog, { commandId: 'create-CUP', name: 'CUP', sku: 'CUP', fulfillment: 'physical' }, { createId: () => 'CUP', collection: 'catalog_items' });
+    await linkProductPage({ catalog: shop.catalog, pages: shop.pages }, page, 'CUP');
+    await shop.catalog.put('CUP', { ...await shop.catalog.get('CUP'), pageId: page, offSale: undefined });
+    assert.equal(await shop.sold('CUP'), true);
+    assert.equal((await shop.runtime.handleContentDelete('products', page)).success, true);
+    assert.equal((await shop.runtime.handleContentPermanentDelete('products', page)).success, true);
+    // The delete stops after holding MUG, before it reaches the pick.
+    await sql`CREATE TRIGGER stopped BEFORE UPDATE ON _plugin_storage WHEN OLD.collection = 'catalog_items' AND OLD.id = 'CUP' BEGIN SELECT RAISE(ABORT, 'worker stopped'); END`.execute(shop.runtime.db);
+    assert.equal((await setOnSale({ entryId: page, onSale: false, deleted: true })).success, false);
+    await sql`DROP TRIGGER stopped`.execute(shop.runtime.db);
+    assert.equal((await shop.catalog.get('MUG'))?.deleting, true);
+    assert.equal(await shop.sold('CUP'), true, 'the pick is still on sale under the deleted page');
+    await shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
+    assert.deepEqual([await shop.catalog.get('MUG'), await shop.catalog.get('CUP')], [null, null], 'both products are gone');
+    assert.deepEqual((await shop.pages.query({ where: { entryId: page }, limit: 10 })).items, [], 'and the page links after them');
+  } finally {
+    await shop.stop();
+  }
+});
+
+test('the background check finishes one stopped delete a run, so a run stays small', async () => {
+  const shop = await store();
+  try {
+    const pages = [await shop.page('ONE'), await shop.page('TWO')];
+    for (const page of pages) {
+      assert.equal((await shop.runtime.handleContentDelete('products', page)).success, true);
+      assert.equal((await shop.runtime.handleContentPermanentDelete('products', page)).success, true);
+    }
+    // Both deletes stop before deleting anything: each product is held, off the shop, by its deleted page.
+    for (const [sku, page] of [['ONE', pages[0]], ['TWO', pages[1]]]) await shop.catalog.put(sku, { ...await shop.catalog.get(sku), pageId: page, offSale: true, deleting: true });
+    const run = () => shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
+    const left = async () => (await Promise.all(['ONE', 'TWO'].map(sku => shop.catalog.get(sku)))).filter(Boolean).length;
+    await run();
+    assert.equal(await left(), 1, 'one delete a run');
+    await run();
+    assert.equal(await left(), 0, 'the next run finishes the other');
+  } finally {
+    await shop.stop();
+  }
+});
+
+test('the background check deletes nothing another page owns', async () => {
+  const shop = await store();
+  try {
+    const setOnSale = (body) => shop.runtime.handlePluginApiRoute(ID, 'POST', 'catalog-items/set-on-sale', new Request('https://shop.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      { id: 'editor', email: 'editor@shop.test', name: 'Editor', role: 40, createdAt: new Date() });
+    const gone = await shop.page('GONE'), other = await shop.page('OTHER');
+    for (const page of [gone, other]) assert.equal((await setOnSale({ entryId: page, onSale: true })).success, true);
+    // The deleted page's panel last picked OTHER, which another page holds and sells; its delete stopped before anything went.
+    await shop.pages.put('e:' + gone, { entryId: gone, catalogItemId: 'OTHER' });
+    assert.equal((await shop.runtime.handleContentDelete('products', gone)).success, true);
+    assert.equal((await shop.runtime.handleContentPermanentDelete('products', gone)).success, true);
+    await shop.catalog.put('GONE', { ...await shop.catalog.get('GONE'), offSale: true, deleting: true });
+    const snapshot = async () => ({
+      item: await shop.catalog.get('OTHER'),
+      links: (await shop.pages.query({ where: {}, limit: 100 })).items.filter(row => row.data.entryId !== gone).map(row => [row.id, row.data]).sort(),
+      prices: (await shop.prices.query({ where: {}, limit: 100 })).items.filter(row => row.id !== 'GONE').map(row => [row.id, row.data]).sort(),
+    });
+    const before = await snapshot();
+    await shop.runtime.hooks.invokeCronHook(ID, { name: 'commerce-checkout-wakes', scheduledAt: new Date().toISOString() });
+    const after = await snapshot();
+    assert.equal(await shop.catalog.get('GONE'), null, 'the deleted page\'s own product is finished');
+    assert.deepEqual(after, before, 'OTHER, its price and its page\'s links are exactly as they were');
+    assert.equal(await shop.sold('OTHER'), true);
+    console.log('forbidden product kept', JSON.stringify({ other: { pageId: after.item.pageId === other, onSale: !after.item.offSale }, gone: await shop.catalog.get('GONE') }));
   } finally {
     await shop.stop();
   }

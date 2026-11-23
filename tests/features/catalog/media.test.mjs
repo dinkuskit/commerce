@@ -76,9 +76,9 @@ test("save media keeps omitted fields, clears with null or empty, and refuses ba
     [{ catalogItemId: "hat", gallery: [SIDE, SIDE] }, /already in the gallery/],
     [{ catalogItemId: "hat", gallery: "nope" }, /list of Media Library/],
     [{ catalogItemId: "hat", image: "https://elsewhere.test/a.png" }, /media id/],
-    [{ catalogItemId: "hat", alt: "x" }, /accepts only/],
-    [{ image: HAT }, /accepts only/],
-    ["hat", /accepts only/],
+    [{ catalogItemId: "hat", alt: "x" }, /invalid field/],
+    [{ image: HAT }, /invalid field/],
+    ["hat", /invalid field/],
   ]) {
     await assert.rejects(() => saveCatalogItemMedia(storage, input), pattern);
   }

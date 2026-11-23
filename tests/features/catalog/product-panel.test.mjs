@@ -724,3 +724,22 @@ test('EmDash\'s timer publishing a product page sells its product only on a sche
   await hook('content:beforeSchedule')({ collection: 'posts', content: content(null), actor: { id: 'u', role: 50 }, scheduledAt: at }, ctx);
   assert.deepEqual(waiting(), []);
 });
+
+test('a permanent delete whose product keeps changing gives up after 4 tries, and the next delete finishes it', async () => {
+  const { catalog, pages } = await shop();
+  const rows = Array.from({ length: 5 }, () => new Store());
+  const storage = { catalog, pages, rows };
+  await setProductPageOnSale(storage, { catalogItemId: 'mug', entryId: 'page-1', onSale: true });
+  // The product changes after every read, so its own item never deletes as read.
+  const compareAndDelete = catalog.compareAndDelete.bind(catalog);
+  let tries = 0;
+  catalog.compareAndDelete = async (id, revision) => id === 'mug' ? (tries++, { applied: false }) : compareAndDelete(id, revision);
+  await assert.rejects(setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true }), (error) => error.code === 'STORAGE_UNAVAILABLE' && error.message === 'The product kept changing. Try again.');
+  assert.equal(tries, 4, 'it stops instead of trying forever');
+  assert.deepEqual([(await catalog.get('mug')).pageId, (await catalog.get('mug')).offSale], ['page-1', true], 'the deleted page still holds it, off the shop');
+  assert.equal(await pageProduct(pages, 'page-1'), 'mug', 'the page keeps its link to finish the delete');
+  catalog.compareAndDelete = compareAndDelete;
+  await setProductPageOnSale(storage, { entryId: 'page-1', onSale: false, deleted: true });
+  assert.equal(await catalog.get('mug'), null);
+  assert.equal(pages.records.size, 0);
+});

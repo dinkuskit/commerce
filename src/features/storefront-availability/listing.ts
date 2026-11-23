@@ -64,7 +64,7 @@ export async function setOutOfStockListing(
   if (!isRecord(rawInput)) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "out-of-stock listing input must be an object",
+      "request body must be an object",
     );
   }
   const listing = await loadOutOfStockListing(storage);
@@ -77,7 +77,7 @@ export async function setOutOfStockListing(
   ) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "out-of-stock listing accepts hideOutOfStock and offCatalog only",
+      "request body has an invalid field",
     );
   }
   // A 0.9.0 beta's cart email choice is dropped on the next save, even one that changes nothing else.

@@ -58,7 +58,8 @@ const schedules = (ctx: SaleContext) => ctx.storage["scheduled_sales"] as {
   deleteMany(ids: string[]): Promise<number>;
   query(options: { where: Partial<ScheduledSale>; limit: number }): Promise<{ items: { id: string; data: ScheduledSale }[] }>;
 };
-const shelf = (ctx: SaleContext) => ({ catalog: ctx.storage["catalog_items"] as Parameters<typeof setProductPageOnSale>[0]["catalog"], pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages });
+const shelf = (ctx: SaleContext) => ({ catalog: ctx.storage["catalog_items"] as Parameters<typeof setProductPageOnSale>[0]["catalog"], pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages,
+  rows: ["catalog_prices", "catalog_manual_availability", "catalog_backorder_policies", "catalog_media", "product_feed_eligibility"].map(name => ctx.storage[name]!) as never });
 const EDITOR = 40;
 const moment = (at: unknown) => `@${Date.parse(String(at))}:`;
 /**
@@ -83,6 +84,20 @@ async function sellScheduled(ctx: SaleContext, held: ScheduledSale) {
 type PrivateRoute = Extract<NonNullable<SandboxedPlugin["routes"]>[string], { handler: unknown }>;
 /** A private POST route for signed-in users holding the permission. */
 const privatePost = (permission: PrivateRoute["permission"], handler: PrivateRoute["handler"]): PrivateRoute => ({ public: false, permission, methods: ["POST"], handler });
+
+/**
+ * Finishes one permanent delete that stopped halfway each run, after checkout's own work: its product is still held,
+ * off the shop, by the page that is gone for good. It goes through the page, as the delete itself does, so a panel pick
+ * the page held is finished too. Shopify likewise finishes a product delete in the background, and WooCommerce leaves
+ * the owner a tool to clear what a stopped delete left (catalog-permanent-delete-20261122).
+ */
+async function finishDeletes(ctx: SaleContext) {
+  const items = ctx.storage["catalog_items"] as { query(options: { where: { deleting: true }; limit: number }): Promise<{ items: { id: string; data: { pageId: string } }[] }> };
+  for (const { id, data: { pageId } } of (await items.query({ where: { deleting: true }, limit: 1 })).items) {
+    const linked = (await shelf(ctx).pages.query({ where: { entryId: pageId }, limit: 10 })).items.some(row => row.data.catalogItemId === id);
+    await setProductPageOnSale(shelf(ctx), { ...linked ? {} : { catalogItemId: id }, entryId: pageId, onSale: false, deleted: true });
+  }
+}
 
 /** Tries again one sale EmDash's timer published and Commerce could not save, each run, so a run stays small. */
 async function retryScheduledSales(ctx: SaleContext) {
@@ -139,6 +154,7 @@ const plugin: SandboxedPlugin = {
         if (event.name === COMMERCE_CHECKOUT_WAKES_TASK) {
           await syncOrdersWithShip(ctx).catch(() => {});
           await clearOldLookupGuesses(ctx).catch(() => {});
+          await finishDeletes(ctx).catch(() => {});
         }
       },
     },
@@ -157,9 +173,7 @@ const plugin: SandboxedPlugin = {
     "product-panel": privatePost("content:edit_any", productPanel),
     "product-media-panel": privatePost("content:edit_any", productMediaPanel),
     // The store's publish check: a published product page puts its product on sale (catalog-product-states-20261023).
-    [PRODUCT_PAGE_ON_SALE_ROUTE]: privatePost("content:publish_any", (route, ctx) => setProductPageOnSale({ catalog: ctx.storage["catalog_items"] as never,
-      pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages, rows: ["catalog_prices", "catalog_manual_availability", "catalog_backorder_policies",
-        "catalog_media", "product_feed_eligibility"].map(name => ctx.storage[name]!) }, route.input)),
+    [PRODUCT_PAGE_ON_SALE_ROUTE]: privatePost("content:publish_any", (route, ctx) => setProductPageOnSale(shelf(ctx as never), route.input)),
     // Agents and the CLI manage products here with an EmDash API token (catalog-api-20261027).
     [CATALOG_API_ROUTE]: privatePost("content:edit_any", catalogApi),
     // Agents and the CLI work orders here with an EmDash API token of an Editor or Administrator.

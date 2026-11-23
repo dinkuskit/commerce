@@ -41,6 +41,11 @@ export async function editProduct(catalog: Catalog, catalogItemId: unknown,
     }
     if (fence) moved();
   }
+  keptChanging();
+}
+
+/** A write that lost to another change every time it tried: the same request can be sent again. */
+export function keptChanging(): never {
   catalogFail("STORAGE_UNAVAILABLE", "The product kept changing. Try again.");
 }
 

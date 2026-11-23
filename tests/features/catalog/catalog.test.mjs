@@ -510,7 +510,7 @@ test("the Registry build exposes the private catalog route and both unique decla
   assert.equal(registryDescriptor.id, "dinkus-commerce");
   assert.equal(registryDescriptor.entrypoint, "@dinkuskit/commerce/sandbox");
   assert.deepEqual(registryDescriptor.storage.catalog_items, {
-    indexes: [],
+    indexes: ["deleting"],
     uniqueIndexes: ["commandId", "skuKey"],
   });
   // Products are made through the private catalog route and the product panel.

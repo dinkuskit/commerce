@@ -228,7 +228,7 @@ test("a store that saved the 0.9.0 beta cart email setting still loads its setti
   assert.equal("cartEmail" in (await listing.get("active")), false);
   const saved = await setOutOfStockListing(listing, { hideOutOfStock: true });
   assert.equal("cartEmail" in saved.listing, false);
-  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: true, cartEmail: "all" }), /hideOutOfStock and offCatalog only/);
+  await assert.rejects(() => setOutOfStockListing(listing, { hideOutOfStock: true, cartEmail: "all" }), /invalid field/);
 });
 
 test("the email's key lasts only as long as its cart, and its stop link stops the address it went to", async (t) => {

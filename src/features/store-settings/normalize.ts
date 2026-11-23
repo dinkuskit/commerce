@@ -60,7 +60,7 @@ export function normalizeStoredSettings(value: unknown): MerchantStoreSettings {
   if (record.recordKind !== MERCHANT_STORE_SETTINGS_RECORD_KIND) storageInvalid("stored merchant store settings are invalid");
   const expectedKeys = ["recordKind", "storeCountry", "sellingCountries", "shippingCountries", "requirePhoneNumber"];
   if (Object.keys(record).length !== expectedKeys.length || expectedKeys.some((key) => !Object.hasOwn(record, key))) {
-    storageInvalid("stored merchant store settings have an invalid shape");
+    storageInvalid("stored merchant store settings are invalid");
   }
   try {
     const storeCountry = record.storeCountry === null ? null : country(record.storeCountry, "storeCountry");
@@ -90,7 +90,7 @@ export function normalizeSettingsInput(
   if (!isRecord(raw)) invalid("settings input must be an object");
   const keys = Object.keys(raw as object);
   const allowed = new Set(["storeCountry", "sellingCountries", "shippingCountries", "requirePhoneNumber"]);
-  if (keys.some((key) => !allowed.has(key))) invalid("settings input contains an unknown field");
+  if (keys.some((key) => !allowed.has(key))) invalid("request body has an invalid field");
   const input = raw as Record<string, unknown>;
   const hasCountry = Object.hasOwn(input, "storeCountry");
   const storeCountry = hasCountry ? country(input.storeCountry, "storeCountry") : current.storeCountry;

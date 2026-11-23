@@ -9,7 +9,8 @@ import { BLOCK_FORM, ok, openPanel, openProductPage, setOnSale } from "./product
 // build: two product pages sell two priced products, a setting is saved, and an order buys the first product. The
 // "new" phase restarts on this build against the same database and deletes the first page for good: its product
 // and the product's own rows go, freeing its SKU (catalog-permanent-delete-20261122), while the other product, the
-// order and the settings stay exactly as 0.8.0 stored them.
+// order and the settings stay exactly as 0.8.0 stored them. Then a delete of the other product stops partway, and
+// this build's 5-minute check finishes it through the new catalog_items "deleting" index.
 const phase = process.env.COMMERCE_UPGRADE_PHASE;
 const headers = { "X-EmDash-Request": "1" };
 const endpoint = "/_emdash/api/plugins/dinkus-commerce/admin";
@@ -155,5 +156,34 @@ test("this build deletes an upgraded store's product for good and keeps the rest
   await panel.getByRole("button", { name: "Save", exact: true }).click();
   await expect(panel.getByText(/^Draft/).first()).toBeVisible({ timeout: 30000 });
   expect(items(rows("catalog_items")).filter((row) => row.sku === "DELETE-CAP")).toHaveLength(1);
+
+  // 7. A permanent delete of the scarf, as 0.8.0 stored it, stops partway: the Worker stops while deleting its price.
+  //    The product stays off the shop, held by the deleted page, and this build's 5-minute check finishes it through
+  //    the catalog_items "deleting" index this build adds to the upgraded store.
+  const index = database.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE ?").get("%catalog_items%deleting%")?.name ?? null;
+  expect(index).toBeTruthy();
+  await ok(await page.request.delete(content(scarf.pageId), { headers }));
+  expect(await setOnSale(page.request, { entryId: scarf.pageId, onSale: false })).toEqual({ changed: true });
+  await ok(await page.request.delete(content(scarf.pageId, "/permanent"), { headers }));
+  database.exec("CREATE TRIGGER stopped BEFORE DELETE ON _plugin_storage WHEN OLD.collection = 'catalog_prices' BEGIN SELECT RAISE(ABORT, 'worker stopped'); END");
+  const stopped = await page.request.post("/_emdash/api/plugins/dinkus-commerce/catalog-items/set-on-sale", { headers, data: { entryId: scarf.pageId, onSale: false, deleted: true } });
+  database.exec("DROP TRIGGER stopped");
+  expect(stopped.ok()).toBe(false);
+  const held = rows("catalog_items")[scarf.id];
+  expect([held?.pageId, held?.offSale, held?.deleting]).toEqual([scarf.pageId, true, true]);
+  expect(await publicCatalog(page.request)).toEqual([]);
+  const force = () => database.prepare("UPDATE _emdash_cron_tasks SET next_run_at = '2000-01-01T00:00:00.000Z' WHERE plugin_id = ? AND task_name = 'commerce-checkout-wakes' AND status = 'idle'").run("dinkus-commerce");
+  const ran = () => database.prepare("SELECT last_run_at FROM _emdash_cron_tasks WHERE plugin_id = ? AND task_name = 'commerce-checkout-wakes'").get("dinkus-commerce")?.last_run_at ?? null;
+  const forcedAt = new Date().toISOString();
+  force();
+  await expect.poll(() => { const last = ran(); if (!(last > forcedAt)) force(); return last > forcedAt; }, { timeout: 180000, intervals: [5000] }).toBe(true);
+  await expect.poll(() => rows("catalog_items")[scarf.id] ?? null, { timeout: 30000 }).toBeNull();
+  expect(own(scarf.id)).toEqual([]);
+  expect(Object.values(rows("product_pages")).some((link) => link.entryId === scarf.pageId)).toBe(false);
+  expect(raw(KEPT)).toEqual(before.kept);
+  writeFileSync(resolve(process.env.COMMERCE_PROOF_ARTIFACTS, "stopped-delete-after-upgrade.json"), JSON.stringify({ from: before.from, index,
+    held: { pageId: held.pageId === scarf.pageId, offSale: held.offSale, deleting: held.deleting }, checkRanAt: ran(),
+    itemAfter: rows("catalog_items")[scarf.id] ?? null, rowsAfter: own(scarf.id), keptRowsUnchanged: KEPT }, null, 2));
+  console.log("stopped delete upgrade proof", JSON.stringify({ from: before.from, index, held: held.deleting, finished: !rows("catalog_items")[scarf.id] }));
   database.close();
 });

@@ -45,7 +45,7 @@ function normalizeInput(value: unknown): ResolveManagedStorefrontAvailabilityInp
   if (!isRecord(value)) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "storefront availability input must be an object",
+      "request body must be an object",
     );
   }
   const input = value as Record<string, unknown>;
@@ -56,7 +56,7 @@ function normalizeInput(value: unknown): ResolveManagedStorefrontAvailabilityInp
   ) {
     throw new StorefrontAvailabilityError(
       "INVALID_INPUT",
-      "storefront availability accepts catalogItemId only",
+      "request body has an invalid field",
     );
   }
   return { catalogItemId: input.catalogItemId.trim() };
