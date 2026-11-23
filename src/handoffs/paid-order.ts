@@ -42,6 +42,8 @@ export interface PaidOrder {
    * "test" or absent is a test order: no money moved and no postage is bought.
    */
   mode?: "test" | "live";
+  /** The payment was confirmed after Checkout had let the checkout go as ended and unpaid. */
+  paidAfterEnd?: true;
 }
 
 /**

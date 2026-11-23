@@ -163,3 +163,11 @@ test('the detail shows the customer and both addresses as parcel lines; billing 
  assert.equal(column(view(contact({})), 1).at(-1), 'Not recorded');
  assert.deepEqual(column(view(paid), 0), ['Ship to', 'No ship-to address']);
 });
+test('orders stored before the late-payment flag show no alert; a late-paid order shows Paid after checkout ended', () => {
+ const late = { ...paid, orderId: 'order:late', paidAfterEnd: true };
+ const orders = [kept(paid), kept(late)];
+ assert.doesNotMatch(JSON.stringify(ordersView({ status: 'available', orders }, paid.orderId)), /Paid after checkout ended/);
+ const detail = ordersView({ status: 'available', orders }, late.orderId);
+ assert.equal(validateBlocks(detail.blocks).valid, true);
+ assert.ok(detail.blocks.some(b => b.type === 'banner' && b.variant === 'alert' && b.title === 'Paid after checkout ended'));
+});

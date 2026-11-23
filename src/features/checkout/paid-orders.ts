@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 import { scanAll } from "../../shared/scan.js";
-import { PAID_ORDER_SCHEMA, type PaidOrder } from "../../handoffs/paid-order.js";
+import { PAID_ORDER_SCHEMA, type PaidOrder, type PaidOrderReceipt } from "../../handoffs/paid-order.js";
 import type { CheckoutAttempt, CheckoutExecution, CheckoutRecord, CommerceOrder } from "./types.js";
 
 /** The Checkout to Orders message for one paid order, built from Checkout's own record. */
@@ -8,10 +8,13 @@ export function paidOrderOf(order: CommerceOrder): PaidOrder {
   return { schema: PAID_ORDER_SCHEMA, ...structuredClone(order) };
 }
 
-/** Hands a paid attempt's order to Orders. Never changes the shopper's outcome. */
-export async function handOffPaidOrder(e: CheckoutExecution, attempt: CheckoutAttempt): Promise<void> {
-  if (!e.paidOrders || attempt.phase !== "paid" || !attempt.order) return;
-  try { await e.paidOrders.receive(paidOrderOf(attempt.order)); } catch { /* the next status check retries */ }
+/** What Orders answered, or "unavailable" when it could not be reached. Without an Orders receiver there is nothing to hand to. */
+export type PaidOrderHandoffResult = PaidOrderReceipt | "unavailable";
+
+/** Hands a paid attempt's order to Orders. Never changes the shopper's outcome; reports whether Orders durably accepted it. */
+export async function handOffPaidOrder(e: CheckoutExecution, attempt: CheckoutAttempt): Promise<PaidOrderHandoffResult> {
+  if (!e.paidOrders || !attempt.order) return "stored";
+  try { return await e.paidOrders.receive(paidOrderOf(attempt.order)); } catch { return "unavailable"; }
 }
 
 /**

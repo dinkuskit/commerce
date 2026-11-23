@@ -4,7 +4,7 @@ import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import { composeCheckoutPricing } from "./pricing.js";
-import { handOffPaidOrder } from "./paid-orders.js";
+import { handOffPaidOrder, type PaidOrderHandoffResult } from "./paid-orders.js";
 import { cut, lineOptions } from "../../shared/line-text.js";
 import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
@@ -17,6 +17,7 @@ import {
 
 export class CheckoutError extends Error {}
 function fail(message: string): never { throw new CheckoutError(message); }
+
 const QUOTE_FAILURES = {
   unavailable: "Product unavailable",
   unpriced: "Product unpriced",
@@ -157,9 +158,20 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   return fail("Checkout contention; retry");
 }
 
+/**
+ * What a payment wake learns from one pass: whether Orders took the paid order, and whether Payments
+ * still answered unpaid for a checkout that had ended unpaid.
+ */
+export interface WakeProbe { handoff: PaidOrderHandoffResult; unpaid?: boolean }
+
 /** An authenticated webhook consumer passes only identity; payloads/success pages are never authority. */
-export async function reconcileCheckout(e: CheckoutExecution, cartId: string, attemptId: string): Promise<CheckoutAttempt> {
-  return drive(e, cartId, attemptId, false);
+export async function reconcileCheckout(
+  e: CheckoutExecution,
+  cartId: string,
+  attemptId: string,
+  wake?: WakeProbe,
+): Promise<CheckoutAttempt> {
+  return drive(e, cartId, attemptId, false, wake);
 }
 
 function samePaymentSession(left: PaymentSession, right: PaymentSession): boolean {
@@ -260,8 +272,14 @@ async function persistCouponStatus(
   return null;
 }
 
-async function finishPaid(e: CheckoutExecution, cartId: string, attempt: CheckoutAttempt): Promise<CheckoutAttempt> {
-  await handOffPaidOrder(e, attempt);
+async function finishPaid(
+  e: CheckoutExecution,
+  cartId: string,
+  attempt: CheckoutAttempt,
+  wake?: WakeProbe,
+): Promise<CheckoutAttempt> {
+  const handoff = await handOffPaidOrder(e, attempt);
+  if (wake) wake.handoff = handoff;
   if (!REGISTRY_BUILD && attempt.coupon?.status === "pending") {
     try {
       await reconcileCoupon(e, attempt, "paid");
@@ -299,18 +317,26 @@ function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: Che
     ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
     ...(attempt.ticketIds ? { ticketIds: [...attempt.ticketIds] } : {}),
     ...(next.contactSnapshot ? { contactSnapshot: next.contactSnapshot } : {}),
+    ...(attempt.phase === "released" ? { paidAfterEnd: true as const } : {}),
   };
 }
 
-async function drive(e: CheckoutExecution, cartId: string, attemptId: string, create: boolean): Promise<CheckoutAttempt> {
+async function drive(
+  e: CheckoutExecution,
+  cartId: string,
+  attemptId: string,
+  create: boolean,
+  wake?: WakeProbe,
+): Promise<CheckoutAttempt> {
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
     if (!stored) fail("Checkout not found");
     const index = stored.record.attempts.findIndex(a => a.attemptId === attemptId);
     const attempt = stored.record.attempts[index];
     if (!attempt) fail("Checkout not found");
-    if (attempt.phase === "paid") return finishPaid(e, cartId, attempt);
-    if (attempt.phase === "released") return attempt;
+    if (attempt.phase === "paid") return finishPaid(e, cartId, attempt, wake);
+    // Only a payment wake asks again about a checkout that ended unpaid (commerce-late-payment-makes-order-20261123).
+    if (attempt.phase === "released" && !(wake && attempt.paymentReleaseReason === "expired-unpaid")) return attempt;
     const next = structuredClone(attempt);
     if (attempt.contactSnapshot) {
       next.contactSnapshot = freezeCheckoutContactSnapshot(attempt.contactSnapshot);
@@ -388,6 +414,10 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
           outcome = await (create ? payments.ensureSession(structuredClone(attempt.payment)) : payments.lookup(structuredClone(attempt.payment)));
         } catch { return attempt; }
         validateOutcome(outcome, attempt);
+        if (attempt.phase === "released" && outcome.outcome !== "paid") {
+          if (outcome.outcome === "expired-unpaid") wake!.unpaid = true;
+          return attempt;
+        }
         if (outcome.outcome === "unknown") return attempt;
         if (outcome.outcome === "not-created") {
           release(next, "not-created");
@@ -398,7 +428,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
               const owner = couponOwner(e);
               await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);
             } catch {
-              return attempt;
+              if (outcome.outcome !== "paid") return attempt;
             }
           }
           next.session = outcome.session;
@@ -418,7 +448,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
         return next;
       }
-      if (next.phase === "paid") return finishPaid(e, cartId, next);
+      if (next.phase === "paid") return finishPaid(e, cartId, next, wake);
       if (next.phase === "released") return next;
     }
   }

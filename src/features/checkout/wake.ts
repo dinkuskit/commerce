@@ -1,5 +1,7 @@
 import { isRecord } from "../../shared/record.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { reconcileCheckout } from "./orchestrate.js";
+import type { WakeProbe } from "./orchestrate.js";
 import type {
   CheckoutExecution,
   CheckoutPaymentAssociationPort,
@@ -46,24 +48,15 @@ export async function reconcilePaymentWakes(
     return results;
   }
   for (const wake of pending) {
-    if (!isWake(wake)) {
-      retain(wake, "unknown");
-      continue;
-    }
     let association;
     try {
-      association = await associations.get(wake.attemptId);
+      association = isWake(wake) ? await associations.get(wake.attemptId) : undefined;
     } catch {
       retain(wake, "unavailable");
       continue;
     }
-    if (!association) {
-      retain(wake, "missing");
-      continue;
-    }
-    if (association.attemptId !== wake.attemptId ||
-        association.bindingRef !== wake.bindingRef) {
-      retain(wake, "mismatch");
+    if (!association || association.attemptId !== wake.attemptId || association.bindingRef !== wake.bindingRef) {
+      retain(wake, !isWake(wake) ? "unknown" : association ? "mismatch" : "missing");
       continue;
     }
     try {
@@ -75,26 +68,20 @@ export async function reconcilePaymentWakes(
         retain(wake, "mismatch");
         continue;
       }
-      const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId);
-      if (attempt.phase !== "paid" && attempt.phase !== "released") {
-        retain(wake, "unknown");
-        continue;
-      }
-      if (attempt.coupon && attempt.coupon.status !==
-          (attempt.phase === "paid" ? "consumed" : "released")) {
-        retain(wake, "unknown");
-        continue;
-      }
-      if (attempt.phase === "paid" &&
-          (!attempt.order || attempt.order.attemptId !== wake.attemptId)) {
-        retain(wake, "mismatch");
-        continue;
-      }
-      if (!await wakes.acknowledge(wake)) {
-        retain(wake, "unavailable");
-        continue;
-      }
-      results.push({ wake, status: "acknowledged", attempt });
+      // A wake may be the late payment for a checkout that ended unpaid: that makes the order (commerce-late-payment-makes-order-20261123).
+      const probe: WakeProbe = { handoff: "stored" };
+      const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId, probe);
+      const paid = attempt.phase === "paid";
+      // Not settled yet, its coupon not settled, or a checkout that ended unpaid that Payments has not answered
+      // unpaid again; then a paid order that is not this wake's or that Orders refused; then Orders or the ack unreachable.
+      // A late-paid order keeps the coupon its checkout already gave back: the order keeps its discount, the use is not counted again.
+      const reason = !paid && attempt.phase !== "released" ||
+        !REGISTRY_BUILD && attempt.coupon && attempt.coupon.status !== (paid && !attempt.order?.paidAfterEnd ? "consumed" : "released") ||
+        !paid && attempt.paymentReleaseReason === "expired-unpaid" && !probe.unpaid ? "unknown"
+        : paid && (!attempt.order || attempt.order.attemptId !== wake.attemptId || probe.handoff === "conflict") ? "mismatch"
+        : probe.handoff === "unavailable" || !await wakes.acknowledge(wake) ? "unavailable" : null;
+      if (reason) retain(wake, reason);
+      else results.push({ wake, status: "acknowledged", attempt });
     } catch {
       retain(wake, "unavailable");
     }

@@ -101,6 +101,7 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     const finish = { type: 'button' as const, label: 'Complete order', action_id: 'orders.finish:' + id, ...(label_ ? {} : { style: 'primary' as const }) };
     blocks.push({ type: 'header', text: 'Order ' + label(record) }, { type: 'context', text: [order.paidAt ? 'Paid ' + when(order.paidAt) : 'Paid', status(record)].join(' · ') },
     ...(order.mode === 'live' ? [] : [{ type: 'banner', variant: 'alert', title: 'Test order', description: 'No money moved. Postage is never bought for a test order.' } as Block]),
+    ...(order.paidAfterEnd ? [{ type: 'banner', variant: 'alert', title: 'Paid after checkout ended', description: 'Check you can still fill it, or refund it by hand.' } as Block] : []),
     // Two columns, not three: EmDash's columns never stack, and three crush addresses on a phone.
     { type: 'columns', columns: [shipToColumn,
       [{ type: 'header', text: 'Customer' }, text(contact?.email ?? 'No email'), text(contact?.phone ?? 'No phone'),
