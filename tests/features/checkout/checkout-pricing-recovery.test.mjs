@@ -512,3 +512,32 @@ test('transient coupon provider-session attachment failure does not block author
   assert.equal(paid.coupon.status, 'consumed');
   assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 1);
 });
+
+test('a late payment on a coupon checkout that ended unpaid makes the order and repeated wakes converge', async t => {
+  const f = await pricingFixture(t);
+  const a = await startCheckout(f.execution, 'cart', f.input);
+  f.setPayment('expired-unpaid');
+  assert.equal((await reconcileCheckout(f.execution, 'cart', a.attemptId)).phase, 'released');
+  assert.equal((await f.owner.get(f.coupon.couponId, a.attemptId)).state, 'released');
+  const received = [];
+  f.execution.paidOrders = { async receive(order) { received.push(structuredClone(order)); return received.length === 1 ? 'stored' : 'duplicate'; } };
+  f.setPayment('paid');
+  let acknowledgments = 0;
+  const wake = { eventId: 'late', attemptId: a.attemptId, bindingRef: a.payment.bindingRef, deliveryGeneration: 1, wokeAt: 1791288000 };
+  const associations = { get: async () => ({ attemptId: a.attemptId, cartId: 'cart', bindingRef: a.payment.bindingRef }) };
+  const wakes = { list: async () => [wake], acknowledge: async () => { acknowledgments++; return true; } };
+  for (let run = 0; run < 2; run++) {
+    const [result] = await reconcilePaymentWakes(f.execution, associations, wakes);
+    assert.equal(result.status, 'acknowledged');
+    assert.equal(result.attempt.phase, 'paid');
+    assert.equal(result.attempt.order.paidAfterEnd, true);
+    // The order keeps its discount; the coupon use the checkout gave back is not counted again.
+    assert.equal(result.attempt.coupon.status, 'released');
+  }
+  assert.equal(acknowledgments, 2);
+  assert.equal(received.length, 2);
+  assert.deepEqual(received[1], received[0]);
+  assert.equal(received[0].paidAfterEnd, true);
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 0);
+  assert.equal(f.sessions.size, 1);
+});

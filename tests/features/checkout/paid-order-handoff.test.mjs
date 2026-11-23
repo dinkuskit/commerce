@@ -151,3 +151,27 @@ test('a wake for a checkout that ended unpaid is acknowledged once Payments stil
   assert.equal(acked[0].attempt.phase, 'released');
   assert.equal(acks, 1);
 });
+
+// A released checkout exactly as Commerce main 1771912 (before this change) stored it.
+const STORED_RELEASED = {"attempts":[{"attemptId":"stored-before-late-paid","cart":[{"catalogItemId":"one","quantity":2},{"catalogItemId":"two","quantity":1}],"contactSnapshot":{"schema":"dinkuskit.commerce.checkout-contact/v1","contact":{"email":"checkout-fixture@example.test","delivery":{"name":"Fixture Shopper","line1":"1 Example Way","city":"Testville","region":"CA","postalCode":"00000","country":"US"},"billing":{"name":"Fixture Shopper","line1":"1 Example Way","city":"Testville","region":"CA","postalCode":"00000","country":"US"}},"requirePhoneNumber":false,"revision":null},"payment":{"attemptId":"stored-before-late-paid","bindingRef":"stripe-test-binding","lines":[{"catalogItemId":"one","quantity":2,"name":"one","unitPrice":{"currency":"USD","minor":"75"}},{"catalogItemId":"two","quantity":1,"name":"two","unitPrice":{"currency":"USD","minor":"100"}}],"total":{"currency":"USD","minor":"250"},"paymentWindow":{"minSeconds":1800,"maxSeconds":1860},"paymentMethods":["card"]},"phase":"released","session":{"sessionId":"session-stored-before-late-paid","redirectUrl":"https://checkout.stripe.com/test","createdAt":1000,"expiresAt":2800},"paymentReleaseReason":"expired-unpaid"}]};
+
+test('a checkout stored before this change that ended unpaid still loads, and a late payment makes its order', async () => {
+  const { db, store } = openStore(join(mkdtempSync(join(tmpdir(), 'stored-released-')), 'db'));
+  db.prepare('INSERT INTO checkout VALUES (?,?,?)').run('cart', 'before', JSON.stringify(STORED_RELEASED));
+  const f = fixture(store, false);
+  const stored = STORED_RELEASED.attempts[0];
+  f.sessions.set(stored.attemptId, { request: { attemptId: stored.attemptId, total: stored.payment.total }, session: stored.session });
+  const received = [];
+  f.execution.paidOrders = { async receive(order) { received.push(structuredClone(order)); return 'stored'; } };
+  f.setPayment('paid');
+  assert.equal((await reconcileCheckout(f.execution, 'cart', stored.attemptId)).phase, 'released');
+  const wake = { eventId: 'evt-stored', attemptId: stored.attemptId, bindingRef: stored.payment.bindingRef, deliveryGeneration: 1, wokeAt: 3000 };
+  const associations = { get: async () => ({ attemptId: stored.attemptId, cartId: 'cart', bindingRef: stored.payment.bindingRef }) };
+  const [made] = await reconcilePaymentWakes(f.execution, associations, { list: async () => [wake], acknowledge: async () => true });
+  assert.equal(made.status, 'acknowledged');
+  assert.equal(made.attempt.phase, 'paid');
+  assert.equal(received.length, 1);
+  assert.equal(received[0].paidAfterEnd, true);
+  assert.deepEqual(received[0].total, stored.payment.total);
+  assert.deepEqual(received[0].lines.map(l => [l.catalogItemId, l.quantity]), stored.payment.lines.map(l => [l.catalogItemId, l.quantity]));
+});
