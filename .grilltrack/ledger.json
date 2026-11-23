@@ -17428,6 +17428,49 @@
       "superseded_by": null,
       "updated_at": "2026-11-22T21:00:05+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce checks again at the moment of sending. It registers EmDash's email:beforeSend hook (new capability hooks.email-events:register). Any email carrying the store's cart stop link (/cart/c/...?key=...&stop=1) whose recipient is on cart_email_stops (hash of the trimmed, lowercased address) is refused by throwing CART_EMAIL_STOPPED, so the plugin that sent it records it as not sent and never retries; returning false is not used because EmDash then reports the email as sent. Every other email passes untouched. No new collection, route or setting.",
+      "context_ref": null,
+      "created_at": "2026-11-23T01:14:46+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-abandoned-cart-email-20261122"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-23T01:14:46+00:00",
+          "choice": "Commerce checks again at the moment of sending. It registers EmDash's email:beforeSend hook (new capability hooks.email-events:register). Any email carrying the store's cart stop link (/cart/c/...?key=...&stop=1) whose recipient is on cart_email_stops (hash of the trimmed, lowercased address) is refused by throwing CART_EMAIL_STOPPED, so the plugin that sent it records it as not sent and never retries; returning false is not used because EmDash then reports the email as sent. Every other email passes untouched. No new collection, route or setting.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "cart-email-stop-at-send-20261123",
+      "implementation_ref": null,
+      "question": "When a shopper stops cart emails while a cart email is still waiting to go, or being retried, what stops it?",
+      "rationale": "The owner approved on 23 Nov 2026. Klaviyo re-checks a flow's filters before each send and Shopify skips a recovery email once the sale completes; CAN-SPAM allows no email more than ten business days after an opt-out. Store emails (dinkuskit/email) queues and retries cart emails from the courier's cart.left news, so the stop list Commerce keeps must be read when the email leaves, not only when the cart is marked left. Measured: 242 bytes of the Registry backend.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-23T01:14:46+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17464,5 +17507,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-22T21:00:05+00:00"
+  "updated_at": "2026-11-23T01:14:46+00:00"
 }

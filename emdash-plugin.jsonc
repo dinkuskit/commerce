@@ -33,6 +33,7 @@
   "capabilities": [
     "content:read",
     "hooks.content-policy:register",
+    "hooks.email-events:register",
     "media:read",
     "network:request",
     "admin.editor-draft:read"

@@ -1,4 +1,4 @@
-import type { PluginContext, StorageCollection } from "emdash";
+import type { EmailBeforeSendEvent, EmailMessage, PluginContext, StorageCollection } from "emdash";
 import { mintGuestCapability } from "./capability.js";
 import { cartLines, stopKey } from "./guest.js";
 import { canonicalizeHttpOrigin } from "./site-scope.js";
@@ -41,4 +41,15 @@ export async function remindCarts(ctx: PluginContext, now: number): Promise<void
     // A lost write leaves only an unused key behind, which dies with the cart.
     await carts.compareAndSet(id, found.revision, { ...rest, ...link && { leftKey: `${new Date(now * 1000).toISOString()} ${id}`, leftLink: link, leftAttempt: attempt.attemptId } });
   }
+}
+
+/**
+ * A cart email still waiting or being retried when its shopper stops cart emails is refused at send time
+ * (cart-email-stop-at-send-20261123), as Klaviyo re-checks before each send. Only an email carrying the store's
+ * cart stop link is looked at. It throws rather than returning false, which EmDash would report as sent.
+ */
+export async function refuseStoppedCartEmail({ message }: EmailBeforeSendEvent, ctx: PluginContext): Promise<EmailMessage> {
+  if (/\/cart\/c\/[^\s"'<>]*?[?&](?:amp;)?stop=1(?![0-9A-Za-z])/.test(message.text + message.html) && await ctx.storage[CART_EMAIL_STOPS]!.get(await stopKey(message.to)))
+    throw Error("CART_EMAIL_STOPPED: This shopper stopped cart emails.");
+  return message;
 }

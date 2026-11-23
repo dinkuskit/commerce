@@ -11,6 +11,7 @@ export {
 } from "../test-payments.js";
 export { reconcileGuestPaymentWakes } from "../guest.js";
 export { reconcilePaymentWakes } from "../wake.js";
+export { refuseStoppedCartEmail } from "../remind.js";
 export type {
   CommercePaymentWake,
   CommercePaymentWakePort,

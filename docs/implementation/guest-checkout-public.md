@@ -185,6 +185,10 @@ read (`null` for a cart never saved):
   (`commerce-abandoned-cart-email-20261122`; since
   `store-emails-plugin-20261122` the link reaches the shopper through the
   Store emails plugin's abandoned cart email, from the courier's `cart.left`).
+  Since `cart-email-stop-at-send-20261123` Commerce's `email:beforeSend` hook
+  also refuses, with `CART_EMAIL_STOPPED`, any email carrying a cart stop link
+  to a stopped address, so a cart email already waiting or being retried when
+  the shopper stops is never sent.
 
 The answer carries `data.cart`:
 `{ lines: [{ catalogItemId, quantity }], version, expiresAt }`, with
