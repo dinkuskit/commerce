@@ -263,7 +263,7 @@ EmDash plugins cannot call each other, so Commerce hands news to the store's oth
 
 - `order.paid` carries the order number, the checkout email, the name and delivery address, each item's name, chosen options (such as "Size: M"), quantity and price, and the subtotal, coupon discount, shipping and total. An order paid before the version of Commerce that added it is not news, so upgrading sends no confirmations for old orders.
 - `order.shipped` carries the order number, the time it was marked Completed, the checkout email, the name on the delivery address (or the billing address), the carrier and tracking number when the owner gave them, and each product's catalog ID, name and quantity. Moving an order back to Processing and completing it again sends the same id again, which a receiving plugin already has. An order Completed before the version of Commerce that added this is not news.
-- `cart.left` carries the checkout email, whether the shopper ticked the box, the cart link and its stop link, and the items when the cart still holds what went to checkout.
+- `cart.left` carries the checkout email, whether the shopper ticked the box, the cart link and its stop link, and the items when the cart still holds what went to checkout. All of these come from the checkout the cart was noted for. A later checkout of the same cart under another email changes neither the address in the news nor the address its stop link stops.
 - An item of any topic lists at most 50 items, and drops items from the end while the whole item is over 7,500 bytes, so it stays under the courier's 8 KB; `moreLines` counts the ones left out.
 
 ## Package for host apps

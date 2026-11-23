@@ -14,6 +14,8 @@ export const CART_EMAIL_STOPS = "cart_email_stops";
  *
  * The emailed cart link's key is made here, once, and kept on the cart beside `leftKey`: the courier may read the
  * same news again, and a key made at each read would leave an email already sent with a link that no longer works.
+ * `leftAttempt` names the checkout that key was made for: a later checkout under another email changes neither the
+ * news's address nor the address its stop link stops.
  */
 export async function remindCarts(ctx: PluginContext, now: number): Promise<void> {
   const carts = ctx.storage.checkout_carts as StorageCollection<CheckoutRecord>;
@@ -37,6 +39,6 @@ export async function remindCarts(ctx: PluginContext, now: number): Promise<void
       link = `${origin}/cart/c/${capabilityId}?key=${key}`;
     }
     // A lost write leaves only an unused key behind, which dies with the cart.
-    await carts.compareAndSet(id, found.revision, { ...rest, ...link && { leftKey: `${new Date(now * 1000).toISOString()} ${id}`, leftLink: link } });
+    await carts.compareAndSet(id, found.revision, { ...rest, ...link && { leftKey: `${new Date(now * 1000).toISOString()} ${id}`, leftLink: link, leftAttempt: attempt.attemptId } });
   }
 }

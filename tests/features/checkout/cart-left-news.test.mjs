@@ -238,11 +238,19 @@ test("the email's key lasts only as long as its cart, and its stop link stops th
   const { headers, cartId } = await f.abandoned();
   await f.release(headers);
   await f.sweep(1000 + 11 * HOURS);
-  const emailed = { [GUEST_CAPABILITY_HEADER]: linkKey((await f.left())[0].data.link) };
-  // The shopper tries the same cart again with another email, which also ends unpaid.
+  const [news] = await f.left();
+  const emailed = { [GUEST_CAPABILITY_HEADER]: linkKey(news.data.link) };
+  // The shopper tries the same cart again with another email, unticked, which also ends unpaid.
   f.synth.setPayment("open");
   assert.equal((await startGuestCheckout(f.runtime, { contact: { ...contact, email: "sam@example.test" } }, headers)).ok, true);
   await f.release(headers);
+  // The courier may read the news again after that: it still names the address and tick the link was made for.
+  const [again, ...more] = await f.left();
+  assert.equal(more.length, 0);
+  assert.deepEqual(again, news);
+  assert.equal(again.data.email, contact.email);
+  assert.equal(again.data.ticked, true);
+  console.log("cart.left after a changed-email retry", JSON.stringify({ email: again.data.email, ticked: again.data.ticked, sameLink: again.data.link === news.data.link }));
   // The email's stop link stops the address it was sent to, not the latest checkout's; the shopper's own key stops nothing.
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, headers, f.stops)).error.code, "CHECKOUT_NOT_FOUND");
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, emailed, f.stops)).ok, true);

@@ -54,7 +54,8 @@ function paid(record: OrderRecord) {
 }
 
 function left(id: string, record: CheckoutRecord) {
-  const attempt = record.attempts.at(-1)!, link = record.leftLink!;
+  // The checkout the link was made for, never a later one: its key stops that checkout's email only.
+  const attempt = record.attempts.find(a => a.attemptId === record.leftAttempt)!, link = record.leftLink!;
   // The items are listed when the cart still holds what the shopper took to checkout.
   const same = JSON.stringify(record.cart?.lines) === JSON.stringify(attempt.cart);
   return fit({ id: `${id}:left`, at: record.leftKey!.split(" ")[0]!, data: {
