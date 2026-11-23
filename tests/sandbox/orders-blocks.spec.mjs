@@ -416,3 +416,52 @@ test('installed Orders shows the latest payment before pagination on desktop and
     }
   } finally { await db.destroy(); }
 });
+
+// deepsec G1-02: before, Orders read every kept order and stopped with an error past 10,000. Seeded straight into
+// the installed store's SQLite (synthetic orders only), the page now reads only the page it shows.
+test('installed Orders opens a store with more than 10,000 orders on desktop and phone', async ({ page, request }) => {
+  expect((await request.get('/_emdash/api/setup/dev-bypass')).status()).toBe(200);
+  expect((await request.post('/__proof/install')).status()).toBe(200);
+  const pluginId = process.env.COMMERCE_COUPON_PLUGIN_ID;
+  const database = new Database(process.env.COMMERCE_PROOF_DB.slice(5));
+  const path = `/_emdash/admin/plugins/${pluginId}/orders`;
+  const usd = { currency: 'USD', minor: '100' };
+  const count = 10_050, base = Date.UTC(2091, 0, 1);
+  const id = i => 'big-store-' + String(i).padStart(5, '0');
+  try {
+    const put = database.prepare("INSERT OR REPLACE INTO _plugin_storage (plugin_id, collection, id, data, revision, created_at, updated_at) VALUES (?, 'orders', ?, ?, '1', ?, ?)");
+    database.transaction(() => {
+      for (let i = 1; i <= count; i++) {
+        const at = new Date(base + i * 1000).toISOString();
+        put.run(pluginId, id(i), JSON.stringify({ paidOrder: { schema: 'dinkuskit.commerce.paid-order/v1', orderId: id(i),
+          receiptId: 'receipt-' + id(i), attemptId: 'attempt-' + id(i), mode: 'test', paymentId: 'synthetic-payment-' + id(i), paidAt: at,
+          lines: [{ catalogItemId: 'synthetic-hat', name: 'Synthetic hat', quantity: 1, unitPrice: usd }], total: usd },
+          number: 900_000 + i, revision: 1, paidKey: at + ' ' + id(i) }), at, at);
+      }
+    })();
+    const total = database.prepare("SELECT COUNT(*) AS n FROM _plugin_storage WHERE plugin_id=? AND collection='orders'").get(pluginId).n;
+    expect(total).toBeGreaterThan(10_000);
+    const expected = Array.from({ length: 25 }, (_, k) => 'Inspect #' + (900_000 + count - k) + ' (TEST)');
+    await page.goto('/_emdash/api/auth/dev-bypass?redirect=' + path);
+    const welcome = page.getByRole('button', { name: 'Get Started', exact: true });
+    const newest = page.getByRole('button', { name: expected[0], exact: true });
+    await expect(welcome.or(newest)).toBeVisible({ timeout: 60000 });
+    if (await welcome.isVisible()) await welcome.click();
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(path);
+      const rows = page.getByRole('button', { name: /^Inspect / });
+      await expect(rows.first()).toBeVisible({ timeout: 60000 });
+      await expect(page.getByText('Orders unavailable')).toHaveCount(0);
+      await expect(rows).toHaveText(expected);
+      await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeVisible();
+      await page.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, `orders-big-store-${width}.png`), fullPage: true, animations: 'disabled' });
+      await newest.focus(); await page.keyboard.press('Enter');
+      await page.getByRole('button', { name: 'Order record', exact: true }).click();
+      await expect(page.getByText('Receipt: receipt-' + id(count))).toBeVisible();
+      const evidence = { width, keptOrders: total, firstPage: expected, opened: id(count) };
+      console.log('ORDER_BIG_STORE_PROOF ' + JSON.stringify({ width, keptOrders: total, first: expected[0], last: expected.at(-1) }));
+      await test.info().attach(`orders-big-store-${width}.json`, { body: JSON.stringify(evidence, null, 2), contentType: 'application/json' });
+    }
+  } finally { database.close(); }
+});

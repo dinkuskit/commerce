@@ -38,7 +38,7 @@ export interface OrderCompletion {
   tracking?: string;
 }
 
-export type OrdersCollection = Pick<StorageCollection<OrderRecord>, "get" | "getVersioned" | "compareAndSet" | "query">;
+export type OrdersCollection = Pick<StorageCollection<OrderRecord>, "get" | "getVersioned" | "compareAndSet" | "query" | "count">;
 export type OrderNumbers = Pick<StorageCollection<{ next: number }>, "getVersioned" | "compareAndSet">;
 
 function text(value: unknown): value is string {
@@ -227,7 +227,7 @@ export function orderFacts(record: OrderRecord) {
 const count = (v: unknown, min: number) => v === undefined || (Number.isSafeInteger(v) && (v as number) >= min);
 const completion = (v: unknown) => isRecord(v) && text(v.at) && optional(v.carrier, c => note(c) === c) && optional(v.tracking, t => note(t) === t);
 
-function checkOrder(item: { id: string; data: OrderRecord }): OrderRecord {
+export function checkOrder(item: { id: string; data: OrderRecord }): OrderRecord {
   const record = item.data;
   const order = admit(record?.paidOrder, true);
   if (order.orderId !== item.id || !count(record.number, FIRST_ORDER_NUMBER) || !count(record.revision, 1) ||
@@ -241,6 +241,29 @@ export async function listOrders(collection: Pick<OrdersCollection, "query">): P
   const orders: OrderRecord[] = [];
   await scanAll(collection, item => orders.push(checkOrder(item)));
   return orders.sort((a, b) => later(b.paidOrder.orderId, a.paidOrder.orderId));
+}
+
+type OrdersWhere = Record<string, string | null | { gt: string }>;
+
+/**
+ * Visits kept orders through the paidKey index, newest payment first (or oldest with "asc"), 100 a read, until visit
+ * answers false. Orders kept before paidKey sort as EmDash sorts a missing value. Fails closed on a repeated cursor.
+ */
+export async function walkOrders(collection: Pick<OrdersCollection, "query">, visit: (record: OrderRecord) => unknown, where?: OrdersWhere, order: "asc" | "desc" = "desc"): Promise<void> {
+  let cursor: string | undefined;
+  do {
+    const result = await collection.query({ ...(where && { where }), orderBy: { paidKey: order }, limit: 100, cursor });
+    for (const item of result.items) if (await visit(checkOrder(item)) === false) return;
+    cursor = result.hasMore ? result.cursor : undefined;
+  } while (cursor);
+}
+
+/** One page of kept orders from offset in walkOrders order, and how many match; never reads past the page. */
+export async function pageOrders(collection: Pick<OrdersCollection, "query" | "count">, offset: number, where?: OrdersWhere, size = 25, order?: "asc"): Promise<{ orders: OrderRecord[]; total: number }> {
+  const orders: OrderRecord[] = [];
+  let skip = offset;
+  await walkOrders(collection, record => skip-- > 0 || orders.push(record) < size, where, order);
+  return { orders, total: await collection.count(where) };
 }
 
 /** Sorts the later of two strings first. */

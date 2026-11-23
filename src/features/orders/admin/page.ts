@@ -1,8 +1,8 @@
-import { adminAuthorized, pageOffset, pagination } from '../../../shared/admin-blocks.js';
+import { adminAuthorized, pagination } from '../../../shared/admin-blocks.js';
 import type { Block, BlockResponse } from '@emdash-cms/blocks/server';
 import type { PluginContext, SandboxedRouteContext } from 'emdash/plugin';
 import type { PaidOrder } from '../../../handoffs/paid-order.js';
-import { completeOrder, correctDelivery, createPaidOrderReceiver, deliveryOf, listOrders, numberOrders, ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, reopenOrder, type OrderNumbers, type OrderRecord, type OrdersCollection } from '../store.js';
+import { completeOrder, correctDelivery, createPaidOrderReceiver, deliveryOf, checkOrder, numberOrders, pageOrders, walkOrders, ORDER_NUMBERS_COLLECTION, ORDERS_COLLECTION, reopenOrder, type OrderNumbers, type OrderRecord, type OrdersCollection } from '../store.js';
 import { addressForm, completeForm, ordersView } from './view.js';
 import { orderPackBody, type InventoryPackPort } from '../pack.js';
 import { REGISTRY_BUILD } from '../../../shared/registry-build.js';
@@ -48,11 +48,6 @@ async function bringIn(collection: OrdersCollection, services: OrdersServices, n
   ];
 }
 
-/** Unknown legacy payment times follow dated orders; do not infer a date from an ID or number. */
-function paidTime(record: OrderRecord): number {
-  const time = Date.parse(record.paidOrder.paidAt ?? '');
-  return Number.isFinite(time) ? time : -Infinity;
-}
 
 export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginContext, services: OrdersServices = {}): Promise<BlockResponse> {
   // Staff (Editors) work orders as well as the owner (commerce-orders-staff-access-001).
@@ -100,21 +95,28 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
     } else throw new Error('Invalid interaction');
     // Labels bought in Ship complete their orders, and Ship gets each change, when the page opens and after a saved change.
     if (input.type === 'page_load' || saved === 'saved') await services.ship?.().catch(() => {});
-    let orders = await listOrders(collection);
+    let { orders, total } = await pageOrders(collection, offset);
     // Orders paid before Orders kept its own copies come over the first time the page finds none.
-    if (!orders.length && services.paidOrders && !notices.length) {
+    if (!total && services.paidOrders && !notices.length) {
       await bringIn(collection, services, numbers);
-      orders = await listOrders(collection);
-    } else if (notices.length) orders = await listOrders(collection);
-    // Orders kept before numbering get their numbers here; a busy counter leaves them for the next visit.
-    if (numbers && orders.some(record => record.number === undefined) && await numberOrders(collection, numbers, orders).catch(() => 0)) orders = await listOrders(collection);
+      ({ orders, total } = await pageOrders(collection, offset));
+    } else if (notices.length) ({ orders, total } = await pageOrders(collection, offset));
+    // Orders kept before numbering get their numbers here, oldest payment first across all of them, whichever page
+    // is open. Every one was kept before paidKey existed, so the paidKey: null read finds them all (a fixed set
+    // that never grows); orders on the page are included for hosts that keep orders without numbers. A busy
+    // counter leaves them for the next visit.
+    if (numbers) {
+      const kept = [...orders];
+      await walkOrders(collection, record => { kept.push(record); }, { paidKey: null });
+      if (await numberOrders(collection, numbers, kept).catch(() => 0)) ({ orders, total } = await pageOrders(collection, offset));
+    }
     if (selected !== undefined) {
-      const record = orders.find(item => item.paidOrder.orderId === selected);
+      const data = await collection.get(selected), record = data ? checkOrder({ id: selected, data }) : undefined;
       // A Completed order offers neither form; its address is locked until it is moved back to Processing.
       if (form && record && !record.completed && (form === completeForm || (services.shippingCountries && deliveryOf(record)))) return form(record, saved && (form === addressForm
         ? 'Fill in every required field and use a country this store ships to.'
         : 'Carrier and tracking number must each be 64 characters or fewer.'), typed);
-      const view = ordersView({ status: 'available', orders }, selected, await services.labelPage?.(selected).catch(() => undefined));
+      const view = ordersView({ status: 'available', orders: record ? [record] : [] }, selected, await services.labelPage?.(selected).catch(() => undefined));
       const [done, doneText, refused, refusedText] = OUTCOMES[kind] ?? [];
       if (saved) view.blocks.splice(2, 0, saved === 'saved'
         ? { type: 'banner', variant: 'default', title: done, description: doneText }
@@ -134,14 +136,10 @@ export async function ordersBlocks(route: SandboxedRouteContext, ctx: PluginCont
           : 'Inventory Pack is not connected for this store. The order is not marked packed.' });
       return view;
     }
-    // Native presentation only: newest payment first, before slicing pages. Keep listOrders' ID order for other consumers.
-    orders.sort((a, b) => paidTime(b) - paidTime(a) || (b.number ?? -1) - (a.number ?? -1) ||
-      (a.paidOrder.orderId < b.paidOrder.orderId ? -1 : a.paidOrder.orderId > b.paidOrder.orderId ? 1 : 0));
-    offset = pageOffset(offset, orders.length);
-    const response = ordersView({ status: 'available', orders: orders.slice(offset, offset + 25) });
+    const response = ordersView({ status: 'available', orders });
     response.blocks.splice(1, 0, ...notices);
     if (services.paidOrders) response.blocks.push({ type: 'actions', elements: [{ type: 'button', label: 'Bring in missing orders', action_id: 'orders.import' }] });
-    pagination(response.blocks, offset, orders.length, 'orders.list');
+    pagination(response.blocks, offset, total, 'orders.list');
     return response;
   } catch { return ordersView({ status: 'unavailable' }, selected); }
 }

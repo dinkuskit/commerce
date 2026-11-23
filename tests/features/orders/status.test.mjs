@@ -2,20 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateBlocks } from '@emdash-cms/blocks/server';
 import { completeOrder, correctDelivery, createPaidOrderReceiver, listOrders, ordersBlocks, reopenOrder } from '../../../dist/features/orders/index.js';
+import { ordersMemory } from '../../helpers/orders-memory.mjs';
 
-// In-memory storage with revisions, enough for compare-and-set.
-function collection() {
-  const rows = new Map(); let n = 0;
-  return { rows,
-    async get(id) { return rows.get(id)?.value ?? null; },
-    async getVersioned(id) { return rows.get(id) ? structuredClone(rows.get(id)) : null; },
-    async compareAndSet(id, expected, value) {
-      if ((rows.get(id)?.revision ?? null) !== expected) return { applied: false };
-      rows.set(id, { value: structuredClone(value), revision: 'r' + ++n }); return { applied: true, revision: 'r' + n };
-    },
-    async query() { return { items: [...rows].map(([id, row]) => ({ id, data: structuredClone(row.value) })), hasMore: false }; },
-  };
-}
+const collection = ordersMemory;
 const usd = minor => ({ currency: 'USD', minor });
 const delivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', postalCode: '00000', country: 'US' };
 const order = (id, withAddress = true) => ({ schema: 'dinkuskit.commerce.paid-order/v1', orderId: id, receiptId: 'r-' + id, attemptId: 'a-' + id, paidAt: '2026-10-10T01:00:00Z',

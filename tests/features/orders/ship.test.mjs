@@ -1,20 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SHIP_ORDER_SCHEMA, SHIP_ORDERS_PER_SYNC, completeOrder, correctDelivery, createPaidOrderReceiver, reopenOrder, shipLabelPage, syncShip } from '../../../dist/features/orders/index.js';
+import { ordersMemory } from '../../helpers/orders-memory.mjs';
 
-// In-memory storage with revisions, enough for compare-and-set.
-function collection() {
-  const rows = new Map(); let n = 0;
-  return { rows,
-    async get(id) { return rows.get(id)?.value ?? null; },
-    async getVersioned(id) { return rows.get(id) ? structuredClone(rows.get(id)) : null; },
-    async compareAndSet(id, expected, value) {
-      if ((rows.get(id)?.revision ?? null) !== expected) return { applied: false };
-      rows.set(id, { value: structuredClone(value), revision: 'r' + ++n }); return { applied: true, revision: 'r' + n };
-    },
-    async query() { return { items: [...rows].map(([id, row]) => ({ id, data: structuredClone(row.value) })), hasMore: false }; },
-  };
-}
+const collection = ordersMemory;
 const usd = minor => ({ currency: 'USD', minor });
 const delivery = { name: 'Fixture Shopper', line1: '1 Example Way', city: 'Testville', region: 'CA', postalCode: '00000', country: 'US' };
 const line = (catalogItemId, quantity = 1) => ({ catalogItemId, quantity, name: catalogItemId.toUpperCase(), unitPrice: usd('100') });
