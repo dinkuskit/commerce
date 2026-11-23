@@ -18,6 +18,7 @@ import {
   GUEST_CHECKOUT_CART_ROUTE,
   cancelKey,
   refreshCheckoutSettings,
+  refuseStoppedCartEmail,
   resolveRegistryCheckoutServices,
   storeProof,
   withBackgroundCheck,
@@ -113,6 +114,9 @@ const plugin: SandboxedPlugin = {
       const held = collection === "products" ? await schedules(ctx).get(content.id + ":go") : null;
       if (held) await sellScheduled(ctx, held);
     },
+    // A cart email that was waiting or being retried when its shopper stopped cart emails is refused at send time
+    // (cart-email-stop-at-send-20261123). Throwing, not returning false, lets the sender see it was not sent.
+    "email:beforeSend": refuseStoppedCartEmail,
     // Switched on: the site's EmDash scheduler runs the background check every 5 minutes. If the
     // scheduler fails or stalls here, the next request registers it instead (see routes below).
     "plugin:activate": async (_event, ctx) => {

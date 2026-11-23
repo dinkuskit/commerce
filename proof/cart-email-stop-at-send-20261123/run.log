@@ -1,0 +1,11 @@
+EmDash: Loaded sandboxed plugin dinkus-commerce:0.8.0 with capabilities: [content:read, admin.editor-draft:read, hooks.content-policy:register, media:read, network:request, hooks.email-events:register]
+cart email stop at send proof {"refused":"Plugin dinkus-commerce:0.8.0 hook email:beforeSend failed: CART_EMAIL_STOPPED: This shopper stopped cart emails.","delivered":[["ana@buyer.test","You left something in your cart"],["ana@buyer.test","Order #1041 confirmed"],["bo@buyer.test","You left something in your cart"]]}
+✔ a waiting cart email is refused once its shopper stops cart emails; other emails go (367.205274ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2935.582197
