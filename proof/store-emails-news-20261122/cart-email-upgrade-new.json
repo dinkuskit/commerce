@@ -1,0 +1,34 @@
+{
+  "phase": "new",
+  "trace": [
+    {
+      "label": "0.8.0 key reads its cart",
+      "ok": true,
+      "state": "released-retry",
+      "lines": []
+    },
+    {
+      "label": "0.8.0 key asks to stop emails",
+      "ok": false,
+      "code": "CHECKOUT_NOT_FOUND"
+    },
+    {
+      "label": "made-up key",
+      "ok": false,
+      "code": "CAPABILITY_DENIED"
+    },
+    {
+      "label": "5-minute check ran",
+      "lastRunAt": "2026-11-22T23:47:36.466Z",
+      "emails": 0
+    },
+    {
+      "label": "courier news indexes",
+      "indexes": [
+        "idx_plugin_dinkus-commerce_checkout_carts_remindAt",
+        "idx_plugin_dinkus-commerce_checkout_carts_leftKey",
+        "idx_plugin_dinkus-commerce_orders_paidKey"
+      ]
+    }
+  ]
+}
