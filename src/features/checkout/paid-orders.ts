@@ -8,10 +8,16 @@ export function paidOrderOf(order: CommerceOrder): PaidOrder {
   return { schema: PAID_ORDER_SCHEMA, ...structuredClone(order) };
 }
 
-/** Hands a paid attempt's order to Orders. Never changes the shopper's outcome. */
-export async function handOffPaidOrder(e: CheckoutExecution, attempt: CheckoutAttempt): Promise<void> {
-  if (!e.paidOrders || attempt.phase !== "paid" || !attempt.order) return;
-  try { await e.paidOrders.receive(paidOrderOf(attempt.order)); } catch { /* the next status check retries */ }
+export type PaidOrderHandoffResult = "ok" | "conflict" | "unavailable";
+
+/** Hands a paid attempt's order to Orders. Never changes the shopper's outcome; reports whether Orders durably accepted it. */
+export async function handOffPaidOrder(e: CheckoutExecution, attempt: CheckoutAttempt): Promise<PaidOrderHandoffResult> {
+  if (!e.paidOrders) return "ok";
+  if (attempt.phase !== "paid" || !attempt.order) return "unavailable";
+  try {
+    const r = await e.paidOrders.receive(paidOrderOf(attempt.order));
+    return r === "stored" || r === "duplicate" ? "ok" : r === "conflict" ? "conflict" : "unavailable";
+  } catch { return "unavailable"; }
 }
 
 /**

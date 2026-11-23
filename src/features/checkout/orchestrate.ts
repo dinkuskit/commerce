@@ -4,7 +4,7 @@ import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
 import { composeCheckoutPricing } from "./pricing.js";
-import { handOffPaidOrder } from "./paid-orders.js";
+import { handOffPaidOrder, type PaidOrderHandoffResult } from "./paid-orders.js";
 import { cut, lineOptions } from "../../shared/line-text.js";
 import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
@@ -17,6 +17,24 @@ import {
 
 export class CheckoutError extends Error {}
 function fail(message: string): never { throw new CheckoutError(message); }
+
+/** Explicit legal checkout attempt phase transitions enforced before every CAS write. */
+export const CHECKOUT_PHASE_TRANSITIONS: Readonly<
+  Record<CheckoutAttempt["phase"], readonly CheckoutAttempt["phase"][]>
+> = {
+  reserving: ["paying", "releasing", "released"],
+  paying: ["paying", "paid", "releasing"],
+  releasing: ["released"],
+  paid: [],
+  released: [],
+};
+
+export function assertCheckoutPhaseTransition(
+  from: CheckoutAttempt["phase"],
+  to: CheckoutAttempt["phase"],
+): void {
+  if (!CHECKOUT_PHASE_TRANSITIONS[from].includes(to)) fail("Illegal checkout phase transition");
+}
 const QUOTE_FAILURES = {
   unavailable: "Product unavailable",
   unpriced: "Product unpriced",
@@ -158,8 +176,13 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
 }
 
 /** An authenticated webhook consumer passes only identity; payloads/success pages are never authority. */
-export async function reconcileCheckout(e: CheckoutExecution, cartId: string, attemptId: string): Promise<CheckoutAttempt> {
-  return drive(e, cartId, attemptId, false);
+export async function reconcileCheckout(
+  e: CheckoutExecution,
+  cartId: string,
+  attemptId: string,
+  onHandoff?: (result: PaidOrderHandoffResult) => void,
+): Promise<CheckoutAttempt> {
+  return drive(e, cartId, attemptId, false, onHandoff);
 }
 
 function samePaymentSession(left: PaymentSession, right: PaymentSession): boolean {
@@ -260,8 +283,14 @@ async function persistCouponStatus(
   return null;
 }
 
-async function finishPaid(e: CheckoutExecution, cartId: string, attempt: CheckoutAttempt): Promise<CheckoutAttempt> {
-  await handOffPaidOrder(e, attempt);
+async function finishPaid(
+  e: CheckoutExecution,
+  cartId: string,
+  attempt: CheckoutAttempt,
+  onHandoff?: (result: PaidOrderHandoffResult) => void,
+): Promise<CheckoutAttempt> {
+  const handoff = await handOffPaidOrder(e, attempt);
+  onHandoff?.(handoff);
   if (!REGISTRY_BUILD && attempt.coupon?.status === "pending") {
     try {
       await reconcileCoupon(e, attempt, "paid");
@@ -302,14 +331,20 @@ function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: Che
   };
 }
 
-async function drive(e: CheckoutExecution, cartId: string, attemptId: string, create: boolean): Promise<CheckoutAttempt> {
+async function drive(
+  e: CheckoutExecution,
+  cartId: string,
+  attemptId: string,
+  create: boolean,
+  onHandoff?: (result: PaidOrderHandoffResult) => void,
+): Promise<CheckoutAttempt> {
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
     if (!stored) fail("Checkout not found");
     const index = stored.record.attempts.findIndex(a => a.attemptId === attemptId);
     const attempt = stored.record.attempts[index];
     if (!attempt) fail("Checkout not found");
-    if (attempt.phase === "paid") return finishPaid(e, cartId, attempt);
+    if (attempt.phase === "paid") return finishPaid(e, cartId, attempt, onHandoff);
     if (attempt.phase === "released") return attempt;
     const next = structuredClone(attempt);
     if (attempt.contactSnapshot) {
@@ -398,7 +433,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
               const owner = couponOwner(e);
               await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);
             } catch {
-              return attempt;
+              if (outcome.outcome !== "paid") return attempt;
             }
           }
           next.session = outcome.session;
@@ -410,6 +445,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         }
       }
     }
+    assertCheckoutPhaseTransition(attempt.phase, next.phase);
     const attempts = [...stored.record.attempts];
     attempts[index] = next;
     if (await e.store.compareAndSet(cartId, stored.version, { ...stored.record, attempts })) {
@@ -418,7 +454,7 @@ async function drive(e: CheckoutExecution, cartId: string, attemptId: string, cr
         if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
         return next;
       }
-      if (next.phase === "paid") return finishPaid(e, cartId, next);
+      if (next.phase === "paid") return finishPaid(e, cartId, next, onHandoff);
       if (next.phase === "released") return next;
     }
   }

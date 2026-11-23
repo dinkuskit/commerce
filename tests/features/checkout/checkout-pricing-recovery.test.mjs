@@ -489,3 +489,26 @@ test('coupon support is entry-bound and never falls back to host-supplied coupon
   });
   assert.equal(missing.pricing.coupons, undefined);
 });
+
+test('transient coupon provider-session attachment failure does not block authoritative paid order completion', async t => {
+  const f = await pricingFixture(t);
+  const cas = f.coupons.compareAndSet.bind(f.coupons);
+  let failAttach = true;
+  f.coupons.compareAndSet = async (id, revision, value) => {
+    if (failAttach && value.attempts.some(a => a.providerSessionId && a.state === 'pending')) {
+      throw new Error('transient attachProviderSession error');
+    }
+    return cas(id, revision, value);
+  };
+  const started = await startCheckout(f.execution, 'cart', f.input);
+  assert.equal(started.phase, 'paying');
+  assert.equal(started.session, undefined);
+
+  // Authoritative paid outcome must complete the order even while attachProviderSession still fails.
+  f.setPayment('paid');
+  const paid = await reconcileCheckout(f.execution, 'cart', started.attemptId);
+  assert.equal(paid.phase, 'paid');
+  assert.ok(paid.order);
+  assert.equal(paid.coupon.status, 'consumed');
+  assert.equal((await f.owner.getCounts(f.coupon.couponId)).consumed, 1);
+});

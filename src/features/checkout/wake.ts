@@ -1,5 +1,7 @@
 import { isRecord } from "../../shared/record.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { reconcileCheckout } from "./orchestrate.js";
+import type { PaidOrderHandoffResult } from "./paid-orders.js";
 import type {
   CheckoutExecution,
   CheckoutPaymentAssociationPort,
@@ -75,20 +77,37 @@ export async function reconcilePaymentWakes(
         retain(wake, "mismatch");
         continue;
       }
-      const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId);
+      const handoff = { result: "ok" as PaidOrderHandoffResult };
+      const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId, r => { handoff.result = r; });
       if (attempt.phase !== "paid" && attempt.phase !== "released") {
         retain(wake, "unknown");
         continue;
       }
-      if (attempt.coupon && attempt.coupon.status !==
+      if (!REGISTRY_BUILD && attempt.coupon && attempt.coupon.status !==
           (attempt.phase === "paid" ? "consumed" : "released")) {
         retain(wake, "unknown");
         continue;
       }
-      if (attempt.phase === "paid" &&
-          (!attempt.order || attempt.order.attemptId !== wake.attemptId)) {
-        retain(wake, "mismatch");
-        continue;
+      if (attempt.phase === "paid") {
+        if (!attempt.order || attempt.order.attemptId !== wake.attemptId || handoff.result === "conflict") {
+          retain(wake, "mismatch");
+          continue;
+        }
+        if (handoff.result !== "ok") {
+          retain(wake, "unavailable");
+          continue;
+        }
+      } else if (attempt.payment.total.minor !== "0") {
+        if ((attempt.paymentMode ?? "test") !== (execution.paymentMode ?? "test")) {
+          retain(wake, "mismatch");
+          continue;
+        }
+        const payments = await execution.resolvePayments(attempt.payment.bindingRef);
+        const o = payments ? (await payments.lookup(structuredClone(attempt.payment))).outcome : null;
+        if (!o || o === "paid" || o === "unknown" || o === "open") {
+          retain(wake, !o ? "unavailable" : o === "paid" ? "mismatch" : "unknown");
+          continue;
+        }
       }
       if (!await wakes.acknowledge(wake)) {
         retain(wake, "unavailable");
