@@ -1,7 +1,7 @@
 import { isRecord } from "../../shared/record.js";
 import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { reconcileCheckout } from "./orchestrate.js";
-import type { PaidOrderHandoffResult } from "./paid-orders.js";
+import type { WakeProbe } from "./orchestrate.js";
 import type {
   CheckoutExecution,
   CheckoutPaymentAssociationPort,
@@ -48,24 +48,15 @@ export async function reconcilePaymentWakes(
     return results;
   }
   for (const wake of pending) {
-    if (!isWake(wake)) {
-      retain(wake, "unknown");
-      continue;
-    }
     let association;
     try {
-      association = await associations.get(wake.attemptId);
+      association = isWake(wake) ? await associations.get(wake.attemptId) : undefined;
     } catch {
       retain(wake, "unavailable");
       continue;
     }
-    if (!association) {
-      retain(wake, "missing");
-      continue;
-    }
-    if (association.attemptId !== wake.attemptId ||
-        association.bindingRef !== wake.bindingRef) {
-      retain(wake, "mismatch");
+    if (!association || association.attemptId !== wake.attemptId || association.bindingRef !== wake.bindingRef) {
+      retain(wake, !isWake(wake) ? "unknown" : association ? "mismatch" : "missing");
       continue;
     }
     try {
@@ -77,43 +68,19 @@ export async function reconcilePaymentWakes(
         retain(wake, "mismatch");
         continue;
       }
-      const handoff = { result: "ok" as PaidOrderHandoffResult };
-      const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId, r => { handoff.result = r; });
-      if (attempt.phase !== "paid" && attempt.phase !== "released") {
-        retain(wake, "unknown");
-        continue;
-      }
-      if (!REGISTRY_BUILD && attempt.coupon && attempt.coupon.status !==
-          (attempt.phase === "paid" ? "consumed" : "released")) {
-        retain(wake, "unknown");
-        continue;
-      }
-      if (attempt.phase === "paid") {
-        if (!attempt.order || attempt.order.attemptId !== wake.attemptId || handoff.result === "conflict") {
-          retain(wake, "mismatch");
-          continue;
-        }
-        if (handoff.result !== "ok") {
-          retain(wake, "unavailable");
-          continue;
-        }
-      } else if (attempt.payment.total.minor !== "0") {
-        if ((attempt.paymentMode ?? "test") !== (execution.paymentMode ?? "test")) {
-          retain(wake, "mismatch");
-          continue;
-        }
-        const payments = await execution.resolvePayments(attempt.payment.bindingRef);
-        const o = payments ? (await payments.lookup(structuredClone(attempt.payment))).outcome : null;
-        if (!o || o === "paid" || o === "unknown" || o === "open") {
-          retain(wake, !o ? "unavailable" : o === "paid" ? "mismatch" : "unknown");
-          continue;
-        }
-      }
-      if (!await wakes.acknowledge(wake)) {
-        retain(wake, "unavailable");
-        continue;
-      }
-      results.push({ wake, status: "acknowledged", attempt });
+      // A wake may be the late payment for a checkout that ended unpaid: that makes the order (commerce-late-payment-makes-order-20261123).
+      const probe: WakeProbe = { handoff: "stored" };
+      const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId, probe);
+      const paid = attempt.phase === "paid";
+      // Not settled yet, its coupon not settled, or a checkout that ended unpaid that Payments has not answered
+      // unpaid again; then a paid order that is not this wake's or that Orders refused; then Orders or the ack unreachable.
+      const reason = !paid && attempt.phase !== "released" ||
+        !REGISTRY_BUILD && attempt.coupon && attempt.coupon.status !== (paid ? "consumed" : "released") ||
+        !paid && attempt.paymentReleaseReason === "expired-unpaid" && !probe.unpaid ? "unknown"
+        : paid && (!attempt.order || attempt.order.attemptId !== wake.attemptId || probe.handoff === "conflict") ? "mismatch"
+        : probe.handoff === "unavailable" || !await wakes.acknowledge(wake) ? "unavailable" : null;
+      if (reason) retain(wake, reason);
+      else results.push({ wake, status: "acknowledged", attempt });
     } catch {
       retain(wake, "unavailable");
     }

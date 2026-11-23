@@ -189,6 +189,8 @@ interface CommerceOrderBase {
   paidAt?: string;
   /** Only "live" is a real order; test or absent is a test order. */
   mode?: PaymentMode;
+  /** Payments confirmed the payment after Commerce had let the checkout go as ended and unpaid. */
+  paidAfterEnd?: true;
 }
 export type CommerceOrder =
   | (CommerceOrderBase & { paymentId: string })

@@ -214,7 +214,9 @@ Each item Commerce sends Payments carries the shopper's choices as the order pag
 
 Commerce runs a background check every five minutes while it is switched on. It settles payments a shopper never returned from, refreshes the checkout settings, then brings Orders and Ship up to date. If the site's scheduler fails or stalls when Commerce is switched on, the next request to Commerce registers the check instead, so the plugin does not need switching off and on.
 
-Reconciliation requires a persisted paid checkout order before acknowledging its payment notice. The separate handoff to the Orders module catches receiver failures so it can be retried; acknowledgement alone is therefore not independent proof that the Orders screen displays the order. A browser return cannot establish payment success. Use the [test-order checks](/docs/store-owners/test-order) and confirm the order in Commerce's Orders screen.
+Commerce keeps a payment notice from Payments until Orders has stored the paid order. If Orders cannot be reached, or refuses the order, the notice stays and the next background check tries again, so a paid order is not lost when Orders is briefly unavailable. A browser return cannot establish payment success. Use the [test-order checks](/docs/store-owners/test-order) and confirm the order in Commerce's Orders screen.
+
+A shopper can finish paying after their checkout ended unpaid, for example when a Stripe payment page was left open past its time. When Payments confirms that payment, Commerce makes the order anyway, with the same items and total, and the order page shows **Paid after checkout ended**. Check you can still fill it, or refund it by hand. WooCommerce does the same: a late payment moves a cancelled unpaid order to Processing. The shopper's own status check still shows the checkout as ended; only the payment notice from Payments makes the order.
 
 Coupon codes are refused at checkout on Registry stores in this release.
 

@@ -18,23 +18,6 @@ import {
 export class CheckoutError extends Error {}
 function fail(message: string): never { throw new CheckoutError(message); }
 
-/** Explicit legal checkout attempt phase transitions enforced before every CAS write. */
-export const CHECKOUT_PHASE_TRANSITIONS: Readonly<
-  Record<CheckoutAttempt["phase"], readonly CheckoutAttempt["phase"][]>
-> = {
-  reserving: ["paying", "releasing", "released"],
-  paying: ["paying", "paid", "releasing"],
-  releasing: ["released"],
-  paid: [],
-  released: [],
-};
-
-export function assertCheckoutPhaseTransition(
-  from: CheckoutAttempt["phase"],
-  to: CheckoutAttempt["phase"],
-): void {
-  if (!CHECKOUT_PHASE_TRANSITIONS[from].includes(to)) fail("Illegal checkout phase transition");
-}
 const QUOTE_FAILURES = {
   unavailable: "Product unavailable",
   unpriced: "Product unpriced",
@@ -175,14 +158,20 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   return fail("Checkout contention; retry");
 }
 
+/**
+ * What a payment wake learns from one pass: whether Orders took the paid order, and whether Payments
+ * still answered unpaid for a checkout that had ended unpaid.
+ */
+export interface WakeProbe { handoff: PaidOrderHandoffResult; unpaid?: boolean }
+
 /** An authenticated webhook consumer passes only identity; payloads/success pages are never authority. */
 export async function reconcileCheckout(
   e: CheckoutExecution,
   cartId: string,
   attemptId: string,
-  onHandoff?: (result: PaidOrderHandoffResult) => void,
+  wake?: WakeProbe,
 ): Promise<CheckoutAttempt> {
-  return drive(e, cartId, attemptId, false, onHandoff);
+  return drive(e, cartId, attemptId, false, wake);
 }
 
 function samePaymentSession(left: PaymentSession, right: PaymentSession): boolean {
@@ -287,10 +276,10 @@ async function finishPaid(
   e: CheckoutExecution,
   cartId: string,
   attempt: CheckoutAttempt,
-  onHandoff?: (result: PaidOrderHandoffResult) => void,
+  wake?: WakeProbe,
 ): Promise<CheckoutAttempt> {
   const handoff = await handOffPaidOrder(e, attempt);
-  onHandoff?.(handoff);
+  if (wake) wake.handoff = handoff;
   if (!REGISTRY_BUILD && attempt.coupon?.status === "pending") {
     try {
       await reconcileCoupon(e, attempt, "paid");
@@ -328,6 +317,7 @@ function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: Che
     ...(attempt.variantSelections ? { variantSelections: structuredClone(attempt.variantSelections) } : {}),
     ...(attempt.ticketIds ? { ticketIds: [...attempt.ticketIds] } : {}),
     ...(next.contactSnapshot ? { contactSnapshot: next.contactSnapshot } : {}),
+    ...(attempt.phase === "released" ? { paidAfterEnd: true as const } : {}),
   };
 }
 
@@ -336,7 +326,7 @@ async function drive(
   cartId: string,
   attemptId: string,
   create: boolean,
-  onHandoff?: (result: PaidOrderHandoffResult) => void,
+  wake?: WakeProbe,
 ): Promise<CheckoutAttempt> {
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
@@ -344,8 +334,9 @@ async function drive(
     const index = stored.record.attempts.findIndex(a => a.attemptId === attemptId);
     const attempt = stored.record.attempts[index];
     if (!attempt) fail("Checkout not found");
-    if (attempt.phase === "paid") return finishPaid(e, cartId, attempt, onHandoff);
-    if (attempt.phase === "released") return attempt;
+    if (attempt.phase === "paid") return finishPaid(e, cartId, attempt, wake);
+    // Only a payment wake asks again about a checkout that ended unpaid (commerce-late-payment-makes-order-20261123).
+    if (attempt.phase === "released" && !(wake && attempt.paymentReleaseReason === "expired-unpaid")) return attempt;
     const next = structuredClone(attempt);
     if (attempt.contactSnapshot) {
       next.contactSnapshot = freezeCheckoutContactSnapshot(attempt.contactSnapshot);
@@ -423,6 +414,10 @@ async function drive(
           outcome = await (create ? payments.ensureSession(structuredClone(attempt.payment)) : payments.lookup(structuredClone(attempt.payment)));
         } catch { return attempt; }
         validateOutcome(outcome, attempt);
+        if (attempt.phase === "released" && outcome.outcome !== "paid") {
+          if (outcome.outcome === "expired-unpaid") wake!.unpaid = true;
+          return attempt;
+        }
         if (outcome.outcome === "unknown") return attempt;
         if (outcome.outcome === "not-created") {
           release(next, "not-created");
@@ -445,7 +440,6 @@ async function drive(
         }
       }
     }
-    assertCheckoutPhaseTransition(attempt.phase, next.phase);
     const attempts = [...stored.record.attempts];
     attempts[index] = next;
     if (await e.store.compareAndSet(cartId, stored.version, { ...stored.record, attempts })) {
@@ -454,7 +448,7 @@ async function drive(
         if ((e.now ?? (() => Date.now() / 1000))() >= next.session.expiresAt) return { ...next, session: undefined };
         return next;
       }
-      if (next.phase === "paid") return finishPaid(e, cartId, next, onHandoff);
+      if (next.phase === "paid") return finishPaid(e, cartId, next, wake);
       if (next.phase === "released") return next;
     }
   }

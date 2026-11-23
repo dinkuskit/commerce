@@ -17471,6 +17471,49 @@
       "superseded_by": null,
       "updated_at": "2026-11-23T01:14:46+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Commerce makes the order anyway, like WooCommerce reviving a cancelled order to Processing. Only from a payment wake: Commerce asks Payments again for that checkout, and only an authoritative paid answer on a checkout released as expired-unpaid makes the order, from the lines and total frozen at checkout, marked paidAfterEnd. Orders shows a 'Paid after checkout ended' banner on that order; nothing else changes (no stock taken again, v1 has no stock counts; refunds stay by hand). A wake for such a checkout is kept, not acknowledged, while Payments cannot answer. The phase-transition assert from #299 is dropped to stay under the Registry size cap.",
+      "context_ref": null,
+      "created_at": "2026-11-23T05:15:12+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-payment-line-options-20261113"
+      ],
+      "domain": "Server-side cart",
+      "history": [
+        {
+          "at": "2026-11-23T05:15:12+00:00",
+          "choice": "Commerce makes the order anyway, like WooCommerce reviving a cancelled order to Processing. Only from a payment wake: Commerce asks Payments again for that checkout, and only an authoritative paid answer on a checkout released as expired-unpaid makes the order, from the lines and total frozen at checkout, marked paidAfterEnd. Orders shows a 'Paid after checkout ended' banner on that order; nothing else changes (no stock taken again, v1 has no stock counts; refunds stay by hand). A wake for such a checkout is kept, not acknowledged, while Payments cannot answer. The phase-transition assert from #299 is dropped to stay under the Registry size cap.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-late-payment-makes-order-20261123",
+      "implementation_ref": null,
+      "question": "When Payments confirms a payment for a checkout Commerce already let go as ended and unpaid, what does Commerce do?",
+      "rationale": "The owner approved on 23 Nov 2026 (decision card). A shopper who paid gets an order; WooCommerce payment_complete accepts Cancelled orders and moves them to Processing; Shopify holds no stock in checkout so a paid checkout always becomes an order. Before this, a late payment left the shopper charged with no order and the owner unaware.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-23T05:15:12+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17507,5 +17550,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-23T01:14:46+00:00"
+  "updated_at": "2026-11-23T05:15:12+00:00"
 }

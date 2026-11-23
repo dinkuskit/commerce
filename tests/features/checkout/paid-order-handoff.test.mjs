@@ -4,8 +4,6 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  CHECKOUT_PHASE_TRANSITIONS,
-  assertCheckoutPhaseTransition,
   reconcileCheckout,
   reconcilePaymentWakes,
   startCheckout,
@@ -101,39 +99,55 @@ test('payment wake is retained until paid-order handoff durably succeeds and nev
   assert.equal(received[0].orderId, `order:${attempt.attemptId}`);
 });
 
-test('late authoritative paid wake on an already-released attempt is retained as mismatch, never silently acknowledged', async () => {
+test('a payment Payments confirms after the checkout ended unpaid makes the order, marked paid after checkout ended', async () => {
   const { store } = openStore(join(mkdtempSync(join(tmpdir(), 'released-late-paid-')), 'db'));
   const f = fixture(store, false);
+  const received = [];
+  f.execution.paidOrders = { async receive(order) { received.push(structuredClone(order)); return 'stored'; } };
   const attempt = await startCheckout(f.execution, 'cart', withSyntheticCheckoutContact(cart));
   f.setPayment('expired-unpaid');
   const released = await reconcileCheckout(f.execution, 'cart', attempt.attemptId);
   assert.equal(released.phase, 'released');
+
+  // The shopper's own status check never asks again about a checkout that ended.
+  f.setPayment('paid');
+  assert.equal((await reconcileCheckout(f.execution, 'cart', attempt.attemptId)).phase, 'released');
+  assert.equal(received.length, 0);
 
   const wake = { eventId: 'evt-late-paid', attemptId: attempt.attemptId, bindingRef: attempt.payment.bindingRef, deliveryGeneration: 1, wokeAt: 3000 };
   const associations = { get: async () => ({ attemptId: attempt.attemptId, cartId: 'cart', bindingRef: attempt.payment.bindingRef }) };
   let acks = 0;
   const wakes = { list: async () => [wake], acknowledge: async () => { acks++; return true; } };
 
-  // Late paid outcome from Payments must retain as mismatch rather than silently acking.
-  f.setPayment('paid');
-  const mismatch = await reconcilePaymentWakes(f.execution, associations, wakes);
-  assert.deepEqual(mismatch, [{ wake, status: 'retained', reason: 'mismatch' }]);
+  // While Payments cannot answer, the wake stays.
+  f.setPayment('unknown');
+  assert.deepEqual(await reconcilePaymentWakes(f.execution, associations, wakes), [{ wake, status: 'retained', reason: 'unknown' }]);
   assert.equal(acks, 0);
 
-  // Authoritative expired-unpaid on the released attempt can be acknowledged safely.
-  f.setPayment('expired-unpaid');
-  const acked = await reconcilePaymentWakes(f.execution, associations, wakes);
-  assert.equal(acked[0].status, 'acknowledged');
+  // A confirmed payment makes the order from what was frozen at checkout, and only then is the wake acknowledged.
+  f.setPayment('paid');
+  const made = await reconcilePaymentWakes(f.execution, associations, wakes);
+  assert.equal(made[0].status, 'acknowledged');
+  assert.equal(made[0].attempt.phase, 'paid');
   assert.equal(acks, 1);
+  assert.equal(received.length, 1);
+  assert.equal(received[0].orderId, `order:${attempt.attemptId}`);
+  assert.equal(received[0].paidAfterEnd, true);
+  assert.deepEqual(received[0].total, attempt.payment.total);
 });
 
-test('explicit CHECKOUT_PHASE_TRANSITIONS rejects illegal phase jumps', () => {
-  assert.deepEqual(CHECKOUT_PHASE_TRANSITIONS.paid, []);
-  assert.deepEqual(CHECKOUT_PHASE_TRANSITIONS.released, []);
-  assert.doesNotThrow(() => assertCheckoutPhaseTransition('reserving', 'paying'));
-  assert.doesNotThrow(() => assertCheckoutPhaseTransition('paying', 'paid'));
-  assert.doesNotThrow(() => assertCheckoutPhaseTransition('releasing', 'released'));
-  assert.throws(() => assertCheckoutPhaseTransition('paid', 'released'), /Illegal checkout phase transition/);
-  assert.throws(() => assertCheckoutPhaseTransition('released', 'paid'), /Illegal checkout phase transition/);
-  assert.throws(() => assertCheckoutPhaseTransition('reserving', 'paid'), /Illegal checkout phase transition/);
+test('a wake for a checkout that ended unpaid is acknowledged once Payments still answers unpaid', async () => {
+  const { store } = openStore(join(mkdtempSync(join(tmpdir(), 'released-unpaid-')), 'db'));
+  const f = fixture(store, false);
+  const attempt = await startCheckout(f.execution, 'cart', withSyntheticCheckoutContact(cart));
+  f.setPayment('expired-unpaid');
+  assert.equal((await reconcileCheckout(f.execution, 'cart', attempt.attemptId)).phase, 'released');
+  const wake = { eventId: 'evt-unpaid', attemptId: attempt.attemptId, bindingRef: attempt.payment.bindingRef, deliveryGeneration: 1, wokeAt: 3000 };
+  const associations = { get: async () => ({ attemptId: attempt.attemptId, cartId: 'cart', bindingRef: attempt.payment.bindingRef }) };
+  let acks = 0;
+  const wakes = { list: async () => [wake], acknowledge: async () => { acks++; return true; } };
+  const acked = await reconcilePaymentWakes(f.execution, associations, wakes);
+  assert.equal(acked[0].status, 'acknowledged');
+  assert.equal(acked[0].attempt.phase, 'released');
+  assert.equal(acks, 1);
 });

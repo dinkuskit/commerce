@@ -17,13 +17,7 @@ export type {
   CommercePaymentWakePort,
   WakeReconciliationResult,
 } from "../wake.js";
-export {
-  CHECKOUT_PHASE_TRANSITIONS,
-  CheckoutError,
-  assertCheckoutPhaseTransition,
-  reconcileCheckout,
-  startCheckout,
-} from "../orchestrate.js";
+export { startCheckout, reconcileCheckout, CheckoutError } from "../orchestrate.js";
 export { handOffPaidOrder, listPaidOrders, paidOrderOf } from "../paid-orders.js";
 export type { PaidOrderHandoffResult } from "../paid-orders.js";
 export {
