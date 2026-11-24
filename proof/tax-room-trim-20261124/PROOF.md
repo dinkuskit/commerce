@@ -25,3 +25,18 @@ In the compiled runtime (`registry-checkout-services.test.mjs`), a store saving 
 ## Stored data after the upgrade
 
 `COMMERCE_UPGRADE_FROM=v0.9.0-beta.6 COMMERCE_UPGRADE_SPEC=registry-upgrade-cart-email.spec.mjs node scripts/registry-upgrade-proof.mjs`, with Playwright pointed at the container's installed Chromium ([upgrade-trace.txt](upgrade-trace.txt); the spec's titles say 0.8.0, its first release, but this run started from v0.9.0-beta.6). The latest beta wrote a shopper's cart key, that cart's unpaid checkout, a paid order and a saved setting. This build then ran on that release's EmDash and on this checkout's EmDash against the same database. All 3 phases passed, and every row stayed as it was (`upgrade-new-settings.jpg`, the settings page after the upgrade).
+
+## A checkout open on Commerce 0.8.0's payment page, paid after the upgrade
+
+`tests/upgrade/payment-window-upgrade.test.mjs` runs two compiled Registry runtimes, one after the other, against one SQLite database ([payment-window-upgrade-trace.txt](payment-window-upgrade-trace.txt)). The first is Commerce v0.8.0's own build, from its tag with its own lockfile. The second is this branch's build. Payments is the synthetic Payments from `tests/features/checkout/registry-runtime.mjs`.
+
+1. **On 0.8.0.** A shopper started checkout for the $2.50 hat with the store's normal checkout setting and store key. The attempt was saved at the payment page (`phase: paying`), frozen with `paymentWindow: { minSeconds: 1800, maxSeconds: 1860 }` and a 1,830-second Stripe session.
+2. **On this build.** It opened the same database without writing the checkout setting, which read back exactly as 0.8.0 left it.
+   - Payments answered paid for that same session.
+   - The shopper's next cart read checked it through `providerSessionWindowIsValid` and made the paid order, `order:<attemptId>`, $2.50.
+   - A new shopper on the kept setting then reached the payment page.
+3. **An older attempt.** Releases before checkout pricing froze `paymentWindowSeconds: 1800` with no pricing and an exact 1,800-second session, so the second test rewrites 0.8.0's attempt into that shape.
+   - After the upgrade, a 1,830-second session for it is refused: `UNAVAILABLE`, and no order is made.
+   - The exact 1,800-second session it was frozen with makes the paid order.
+
+Run it with `COMMERCE_UPGRADE_FROM_SANDBOX=<v0.8.0 checkout>/dist/sandbox node --test tests/upgrade/*.test.mjs`; the file's header gives the build steps. Without that variable both tests are skipped.
