@@ -98,20 +98,23 @@ async function freeze(
 
 
 
-const TEXT = (value: unknown, max: number) => typeof value === "string" && value.length > 0 && value.length <= max;
+/** Printable ASCII only, so a character is a byte and the paid news stays under the courier's 8 KB. */
+const TEXT = (value: unknown, max: number) => typeof value === "string" && /^[!-~]+$/.test(value) && value.length <= max;
 const CENTS = (value: unknown) => typeof value === "string" && /^\d{1,10}$/.test(value) && +value <= 1e9;
 
 /**
  * The add-ons' answers, as the store's own code hands them to the add-ons door (commerce-addons-door-20261124):
  * at most 4, one per add-on, each naming at most 100 lines and 6 codes; amounts are whole cents up to $10,000,000.
- * Anything malformed, including what makes a check throw, leaves checkout unavailable.
+ * What the order keeps of them (each one's from, ref and codes) is at most 1,500 characters, so the paid news fits the
+ * courier's 8 KB beside the largest address. Anything malformed, including what makes a check throw, leaves checkout unavailable.
  */
 function addonAnswers(list: AddonAnswer[]): AddonAnswer[] {
   if (!list.length || list.length > 4 || new Set(list.map(answer => answer.from)).size < list.length ||
     !list.every(answer => /^(codes,)?from,lines(,ref)?(,ship)?$/.test(sortedKeys(answer)) && TEXT(answer.from, 64) &&
       (answer.ref === undefined || TEXT(answer.ref, 200)) && (answer.ship ?? "free") === "free" &&
       (answer.codes ?? []).length <= 6 && (answer.codes ?? []).every(code => TEXT(code, 64)) && answer.lines.length <= 100 &&
-      answer.lines.every(line => sortedKeys(line) === "item,off,price" && TEXT(line.item, 200) && CENTS(line.price) && CENTS(line.off)))) {
+      answer.lines.every(line => sortedKeys(line) === "item,off,price" && TEXT(line.item, 200) && CENTS(line.price) && CENTS(line.off))) ||
+    JSON.stringify(list.map(answer => [answer.from, answer.ref, answer.codes])).length > 1500) {
     fail("Invalid add-on answer");
   }
   return list;

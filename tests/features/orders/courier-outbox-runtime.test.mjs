@@ -173,8 +173,24 @@ test('order.paid names the discount and the add-ons whose answers priced the ord
     const addons = [{ from: 'dinkus-coupons', ref: 'hold-8', codes: ['SAVE3', 'FREESHIP'] }];
     await shop.keep('order-8', 'ana@buyer.test', 'Ana Buyer', [['mug', 'Mug']], { paidKey: `${paidAt} order-8` });
     await shop.orders.put('order-8', { ...(await shop.orders.get('order-8')), paidOrder: { ...(await shop.orders.get('order-8')).paidOrder, total: usd('600'), pricing, addons } });
-    const [item] = (await shop.since(null, 50, { topic: 'order.paid' })).data.items;
+    // The most the add-ons door keeps (1,500 characters of from, ref and codes, ASCII) beside the longest address Commerce
+    // takes, in a script of three bytes a character: the item still fits the courier's 8 KB with every code and ref.
+    const most = ['a', 'b', 'c', 'd'].map(from => ({ from: from.repeat(64), ref: 'r'.repeat(150), codes: Array(2).fill('C'.repeat(64)) }));
+    assert.ok(JSON.stringify(most.map(a => [a.from, a.ref, a.codes])).length <= 1500);
+    const far = '茶'.repeat(200);
+    const longest = { name: far, line1: far, line2: far, city: far, region: 'DISTRICT OF COLUMBIA', postalCode: far, country: 'US' };
+    await shop.keep('order-9', 'a'.repeat(64) + '@' + 'b'.repeat(185) + '.test', far, [['mug', far]], { paidKey: `${paidAt} order-9` });
+    const nine = (await shop.orders.get('order-9')).paidOrder;
+    await shop.orders.put('order-9', { ...(await shop.orders.get('order-9')), paidOrder: { ...nine, pricing, addons: most,
+      contactSnapshot: { ...nine.contactSnapshot, contact: { ...nine.contactSnapshot.contact, delivery: longest } } } });
+    const [item, biggest] = (await shop.since(null, 50, { topic: 'order.paid' })).data.items;
     assert.deepEqual([item.data.subtotal, item.data.discount, item.data.shipping, item.data.total, item.data.addons], [usd('900'), usd('300'), usd('0'), usd('600'), addons]);
+    assert.equal(biggest.id, 'order-9:paid');
+    assert.deepEqual(biggest.data.addons, most);
+    assert.equal(biggest.data.shipTo.line2, far);
+    const size = new TextEncoder().encode(JSON.stringify(biggest)).length;
+    assert.ok(size <= 7500 && biggest.data.lines.length === 1, String(size));
+    console.log('largest add-ons paid news', JSON.stringify({ bytes: size, addons: most.length, lines: biggest.data.lines.length }));
   } finally {
     await shop.stop();
   }

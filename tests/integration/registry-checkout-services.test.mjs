@@ -174,7 +174,10 @@ test('the add-ons door prices checkout with an add-on answer, and the order and 
   // Nothing malformed or out of bounds prices a checkout.
   for (const bad of [[], [answer('251')], [answer('1.5')], [answer('100', { ship: 'half' })], [answer('100', { tax: '1' })],
     [answer('100', { codes: Array(7).fill('X') })], [answer('100', { from: '' })], [answer(), answer()], [answer('100', { lines: [] })],
-    [answer('100', { lines: [{ item: 'hat', price: '250', off: '1', extra: 1 }] })], [answer('1000000001')], null]) {
+    [answer('100', { lines: [{ item: 'hat', price: '250', off: '1', extra: 1 }] })], [answer('1000000001')], null,
+    // Only printable ASCII, and at most 1,500 characters of from, ref and codes in all, so the paid news fits the courier's 8 KB.
+    [answer('100', { ref: 'h\u00e9' })], [answer('100', { codes: ['SAVE 10'] })],
+    ['a', 'b', 'c', 'd'].map(from => answer('0', { from, ref: 'r'.repeat(200), codes: Array(6).fill('C'.repeat(64)) }))]) {
     assert.notEqual((await state.invoke(ADDONS, { contact, addons: bad }, token)).ok, true, JSON.stringify(bad));
   }
   assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
