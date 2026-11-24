@@ -262,7 +262,8 @@ test('compiled digital-only basket pays no flat shipping and Payments gets no sh
   assert.equal(result.checkout.total.minor, '250');
   assert.equal(state.requests.length, 1);
   assert.equal(state.requests[0].total.minor, '250');
-  assert.deepEqual(state.requests[0].pricing.shipping, { configurationId: 'ship-flat', revision: 2, mode: 'free',
+  // The store's flat configuration is not read for it (issue 302), so its id is not the one frozen.
+  assert.deepEqual(state.requests[0].pricing.shipping, { configurationId: 'not-shipped', revision: 1, mode: 'free',
     charge: { currency: 'USD', minor: '0' } });
 });
 

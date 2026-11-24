@@ -5,6 +5,9 @@ import { openStore, fixture, cart } from "./fixture.mjs";
 import { createCheckoutCouponPort, createCouponAdmin } from "../../../dist/features/coupons/index.js";
 import { startCheckout } from "../../../dist/features/checkout/index.js";
 
+// What a checkout with nothing to ship freezes as its shipping, whatever the store's configuration says.
+const NOT_SHIPPED = { configurationId: "not-shipped", revision: 1, mode: "free", charge: { currency: "USD", minor: "0" } };
+
 function couponCollection() {
   const records = new Map();
   return {
@@ -182,7 +185,7 @@ test("a checkout with only digital items pays no shipping; one physical item bri
   mark("one", "digital");
   mark("two", "digital");
   const digital = await startCheckout(state.execution, "digital-only", withSyntheticCheckoutContact({ lines: cart }));
-  assert.deepEqual(digital.payment.pricing.shipping, { configurationId: "ship-1", revision: 7, mode: "free", charge: { currency: "USD", minor: "0" } });
+  assert.deepEqual(digital.payment.pricing.shipping, NOT_SHIPPED);
   assert.equal(digital.payment.pricing.finalTotal.minor, "250");
   assert.equal(digital.payment.total.minor, "250");
   assert.equal(digital.contactSnapshot.contact.delivery, undefined);
@@ -199,8 +202,58 @@ test("a checkout with only digital items pays no shipping; one physical item bri
   assert.equal(waived.payment.pricing.shipping.mode, "free");
   assert.equal(waived.payment.pricing.finalTotal.minor, "250");
 
-  // A broken shipping configuration still stops a digital-only checkout.
-  mark("two", "digital");
+  // A broken shipping configuration stops the basket that ships, never the digital-only one (issue 302).
   freeOver = "0";
-  await assert.rejects(() => startCheckout(state.execution, "digital-bad-config", withSyntheticCheckoutContact({ lines: cart })), /Invalid shipping configuration/);
+  await assert.rejects(() => startCheckout(state.execution, "mixed-bad-config", withSyntheticCheckoutContact({ lines: cart })), /Invalid shipping configuration/);
+  mark("two", "digital");
+  const unread = await startCheckout(state.execution, "digital-bad-config", withSyntheticCheckoutContact({ lines: cart }));
+  assert.deepEqual(unread.payment.pricing.shipping, NOT_SHIPPED);
+});
+
+// Issue 302: a store that ships nothing needs no shipping configuration, and checkout never reads it.
+test("a digital-only checkout neither reads nor needs the shipping configuration, with or without a coupon", async (t) => {
+  const state = await setup();
+  t.after(() => state.opened.db.close());
+  let reads = 0;
+  state.execution.pricing = {
+    coupons: createCheckoutCouponPort(state.coupons),
+    resolveShippingConfiguration: async () => { reads += 1; return null; },
+    paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+  };
+  const requests = [];
+  state.execution.resolvePayments = async () => ({
+    pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+    ensureSession: async (request) => {
+      requests.push(request);
+      return { outcome: "open", attemptId: request.attemptId, total: request.total,
+        session: { sessionId: `session-${request.attemptId}`, redirectUrl: "https://pay.example/session", createdAt: 1000, expiresAt: 2800 } };
+    },
+    lookup: async () => ({ outcome: "unknown" }),
+  });
+  const items = state.execution.catalog.catalog.records;
+  const mark = (id, fulfillment) => items.set(id, { ...items.get(id), fulfillment });
+  mark("one", "digital");
+  mark("two", "digital");
+
+  const plain = await startCheckout(state.execution, "digital-no-config", withSyntheticCheckoutContact({ lines: cart }));
+  assert.deepEqual(plain.payment.pricing.shipping, NOT_SHIPPED);
+  assert.equal(plain.payment.pricing.finalTotal.minor, "250");
+  assert.equal(plain.payment.total.minor, "250");
+
+  const couponed = await startCheckout(state.execution, "digital-no-config-coupon", withSyntheticCheckoutContact({ lines: cart, couponCode: "save10" }));
+  assert.deepEqual(couponed.payment.pricing.shipping, NOT_SHIPPED);
+  assert.equal(couponed.payment.pricing.coupon.code, "SAVE10");
+  assert.equal(couponed.payment.pricing.couponDiscount.minor, "100");
+  assert.equal(couponed.payment.pricing.finalTotal.minor, "150");
+  assert.equal(couponed.payment.total.minor, "150");
+  assert.equal(requests.length, 2);
+  assert.equal(reads, 0);
+
+  // One physical item needs the configuration again, and nothing is frozen or sent without it.
+  mark("two", undefined);
+  await assert.rejects(() => startCheckout(state.execution, "physical-no-config", withSyntheticCheckoutContact({ lines: cart })), /Pricing configuration unavailable/);
+  await assert.rejects(() => startCheckout(state.execution, "physical-no-config-coupon", withSyntheticCheckoutContact({ lines: cart, couponCode: "save10" })), /Shipping configuration unavailable/);
+  assert.equal(reads, 2);
+  assert.equal(requests.length, 2);
+  assert.equal(await state.execution.store.read("physical-no-config"), null);
 });

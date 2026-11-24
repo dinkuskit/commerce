@@ -62,6 +62,12 @@ function shippingCharge(config: TrustedShippingConfiguration, goods: bigint): Mo
   return over && goods >= BigInt(over.minor) ? usd(0n) : amount;
 }
 
+/**
+ * What a checkout with nothing to ship records as its shipping: free, under an id no store's
+ * configuration uses, so the frozen pricing keeps its shape for Payments.
+ */
+const NOT_SHIPPED: TrustedShippingConfiguration = { configurationId: "not-shipped", revision: 1, mode: "free" };
+
 function quoteSnapshot(quote: CouponQuote, total: Money): CouponQuoteSnapshot {
   return Object.freeze({
     ...structuredClone(quote),
@@ -159,7 +165,9 @@ export async function composeCheckoutPricing(
 ): Promise<ComposedPricing> {
   const pricing = execution.pricing;
   if (!pricing) fail("Pricing composition is unavailable");
-  const config = await pricing.resolveShippingConfiguration();
+  // A checkout with nothing physical ships nothing: it pays no shipping, and the store's shipping
+  // configuration is neither read nor needed (checkout-digital-only-no-shipping-20261031, issue 302).
+  const config = shipsGoods ? await pricing.resolveShippingConfiguration() : NOT_SHIPPED;
   if (!config) fail(couponCode ? "Shipping configuration unavailable" : "Pricing configuration unavailable");
   let quoted: QuotedCoupon | undefined;
   if (couponCode !== undefined) {
@@ -174,10 +182,7 @@ export async function composeCheckoutPricing(
   const merchandiseSubtotal = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n));
   const couponDiscount = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.discount.minor), 0n));
   const netMerchandise = usd(BigInt(merchandiseSubtotal.minor) - BigInt(couponDiscount.minor));
-  // A checkout with nothing physical ships nothing, so it pays no shipping
-  // (checkout-digital-only-no-shipping-20261031); the configuration is still checked.
-  const owed = shippingCharge(config, BigInt(netMerchandise.minor));
-  const charge = shipsGoods ? owed : usd(0n);
+  const charge = shippingCharge(config, BigInt(netMerchandise.minor));
   const finalTotal = usd(BigInt(netMerchandise.minor) + BigInt(charge.minor));
   const snapshot: CheckoutPricingSnapshot = Object.freeze({
     schema: CHECKOUT_PRICING_SCHEMA,
@@ -187,7 +192,7 @@ export async function composeCheckoutPricing(
     shipping: {
       configurationId: config.configurationId.trim(),
       revision: config.revision,
-      mode: !shipsGoods || config.freeOver && charge.minor === "0" ? "free" : config.mode,
+      mode: config.freeOver && charge.minor === "0" ? "free" : config.mode,
       charge,
     },
     finalTotal,
