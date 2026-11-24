@@ -4,10 +4,10 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": false,
-    "domain": "Order lookup reads only indexed orders",
-    "started_at": "2026-11-24T22:16:18+00:00",
+    "domain": "Checkout readiness budget",
+    "started_at": "2026-11-24T22:28:10+00:00",
     "status": "grilling",
-    "summary": "Audit finding: a missed lookup also read every order without an emailKey, which a script could repeat with fresh emails."
+    "summary": "Audit finding: 15-minute refreshes use about 96 of the 100 daily attempts, so a few settings changes close checkout."
   },
   "decisions": [
     {
@@ -13116,6 +13116,20 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-11-24T22:28:10+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 100 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "needs_reverification",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "Daily budget raised from 100 to 300 (the owner approved on 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
         }
       ],
       "id": "installed-checkout-readiness-bounds-001",
@@ -13138,9 +13152,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-22T13:25:04+00:00",
+      "status": "superseded",
+      "superseded_by": "checkout-readiness-budget-300-20261124",
+      "updated_at": "2026-11-24T22:28:10+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
     },
     {
@@ -17820,6 +17834,47 @@
       "superseded_by": null,
       "updated_at": "2026-11-24T22:16:19+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 300 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+      "context_ref": null,
+      "created_at": "2026-11-24T22:28:10+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Checkout readiness budget",
+      "history": [
+        {
+          "at": "2026-11-24T22:28:10+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 300 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-readiness-budget-300-20261124",
+      "implementation_ref": null,
+      "question": "How many readiness attempts may one store make in a rolling 24 hours?",
+      "rationale": "The owner approved on 24 Nov 2026.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-24T22:28:10+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17856,5 +17911,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-24T22:16:19+00:00"
+  "updated_at": "2026-11-24T22:28:10+00:00"
 }

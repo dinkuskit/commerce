@@ -215,6 +215,12 @@ test("weight, identifiers, pictures and feeds go through the CLI; archive is the
   const missing = await cli("products", "show", "nope", "--json");
   assert.equal(missing.code, 1);
   assert.equal(missing.json().error.code, "not_found");
+  // A weight Commerce would refuse is refused before the preview, so no confirmation is ever printed for it.
+  for (const argv of [["set-weight", id, "--oz", "abc"], ["set-weight", id, "--oz", "0"], ["set-weight", id, "--oz", "2400.5"], ["set-weight", id, "--oz", "1.234"],
+    ["create", "--name", "Cup", "--sku", "CUP", "--command-id", "cup", "--page", "page-cup", "--weight-oz", "heavy"]]) {
+    const refused = await cli("products", ...argv, "--dry-run", "--json");
+    assert.deepEqual([refused.code, refused.json().error.code], [2, "invalid_amount"], argv.join(" "));
+  }
   for (const argv of [["set-weight", id], ["set-identifiers", id], ["save-media", id], ["set-feeds", id], ["add-option", id, "--name", "Size", "--value", "One"], ["add-option", id, "--name", "Size", "--value", "A=SKU", "--value", "B=SKU2"]]) {
     const usage = await cli("products", ...argv, "--dry-run", "--json");
     assert.equal(usage.code, 2, argv.join(" "));

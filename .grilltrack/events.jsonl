@@ -781,3 +781,7 @@
 {"action": "focus_started", "at": "2026-11-24T22:16:18+00:00", "data": {"cadence": "sequential", "domain": "Order lookup reads only indexed orders"}, "event_id": "ac5067cb-f2cc-4ca1-ae23-39f54c8c9efb"}
 {"action": "decision_proposed", "at": "2026-11-24T22:16:18+00:00", "data": {"decision_id": "commerce-lookup-indexed-only-20261124"}, "event_id": "579a8474-27d3-4004-bec9-26d0183f645f"}
 {"action": "decision_locked", "at": "2026-11-24T22:16:19+00:00", "data": {"decision_id": "commerce-lookup-indexed-only-20261124"}, "event_id": "e50f73d4-6924-4689-b0c8-102ebf5484bd"}
+{"action": "focus_started", "at": "2026-11-24T22:28:10+00:00", "data": {"cadence": "sequential", "domain": "Checkout readiness budget"}, "event_id": "607080c8-841c-4811-ac8a-3eb5c6d2642d"}
+{"action": "decision_proposed", "at": "2026-11-24T22:28:10+00:00", "data": {"decision_id": "checkout-readiness-budget-300-20261124"}, "event_id": "5fe295cc-f687-4a0e-bd8d-94bb24200564"}
+{"action": "decision_locked", "at": "2026-11-24T22:28:10+00:00", "data": {"decision_id": "checkout-readiness-budget-300-20261124"}, "event_id": "661db128-2da2-421b-92a3-7430c2188549"}
+{"action": "decision_superseded", "at": "2026-11-24T22:28:10+00:00", "data": {"affected": [], "decision_id": "installed-checkout-readiness-bounds-001", "replacement_id": "checkout-readiness-budget-300-20261124"}, "event_id": "4e7e7ec6-df74-4141-8451-83e46ab86f1d"}

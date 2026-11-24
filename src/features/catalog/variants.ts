@@ -44,9 +44,11 @@ const id = (v: unknown, field: string) => {
   if (typeof v !== "string" || !ID.test(v)) catalogFail("INVALID_INPUT", `invalid ${field}`);
   return v;
 };
+// Measured after NFKC, as product names are: one character can grow to 18.
 const text = (v: unknown, field: string) => {
-  if (typeof v !== "string" || !v.trim() || v.length > 160) catalogFail("INVALID_INPUT", `${field} must be a non-empty string`);
-  return v.normalize("NFKC").trim();
+  const t = typeof v === "string" ? v.normalize("NFKC").trim() : "";
+  if (!t || t.length > 160) catalogFail("INVALID_INPUT", `${field} must be a non-empty string`);
+  return t;
 };
 const fill = (v: unknown): CatalogFulfillment => {
   if (v !== "physical" && v !== "digital") catalogFail("INVALID_INPUT", "fulfillment must be physical or digital");
