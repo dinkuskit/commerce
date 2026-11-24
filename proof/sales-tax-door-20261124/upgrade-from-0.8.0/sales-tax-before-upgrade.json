@@ -1,0 +1,30 @@
+{
+  "from": "v0.8.0",
+  "rows": [
+    {
+      "collection": "checkout_carts",
+      "id": "cart-tax-upgrade",
+      "data": "{\"attempts\":[{\"attemptId\":\"attempt-tax-upgrade\",\"cart\":[{\"catalogItemId\":\"item-hat\",\"quantity\":1}],\"contactSnapshot\":{\"schema\":\"dinkuskit.commerce.checkout-contact/v1\",\"requirePhoneNumber\":false,\"revision\":null,\"contact\":{\"email\":\"pat@example.test\",\"delivery\":{\"name\":\"Pat Shopper\",\"line1\":\"1 Upgrade Way\",\"city\":\"Nashville\",\"region\":\"TN\",\"postalCode\":\"37201\",\"country\":\"US\"}}},\"payment\":{\"attemptId\":\"attempt-tax-upgrade\",\"bindingRef\":\"stripe-upgrade-binding\",\"lines\":[{\"catalogItemId\":\"item-hat\",\"quantity\":1,\"name\":\"Red hat\",\"unitPrice\":{\"currency\":\"USD\",\"minor\":\"1200\"}}],\"total\":{\"currency\":\"USD\",\"minor\":\"1500\"},\"pricing\":{\"schema\":\"dinkuskit.commerce.checkout-pricing/v1\",\"merchandiseSubtotal\":{\"currency\":\"USD\",\"minor\":\"1200\"},\"couponDiscount\":{\"currency\":\"USD\",\"minor\":\"200\"},\"netMerchandise\":{\"currency\":\"USD\",\"minor\":\"1000\"},\"shipping\":{\"configurationId\":\"ship-upgrade\",\"revision\":1,\"mode\":\"flat\",\"charge\":{\"currency\":\"USD\",\"minor\":\"500\"}},\"finalTotal\":{\"currency\":\"USD\",\"minor\":\"1500\"},\"lines\":[{\"catalogItemId\":\"item-hat\",\"quantity\":1,\"unitPrice\":{\"currency\":\"USD\",\"minor\":\"1200\"},\"lineSubtotal\":{\"currency\":\"USD\",\"minor\":\"1200\"},\"discount\":{\"currency\":\"USD\",\"minor\":\"200\"},\"netAmount\":{\"currency\":\"USD\",\"minor\":\"1000\"}}]},\"paymentWindow\":{\"minSeconds\":1800,\"maxSeconds\":1860},\"paymentMethods\":[\"card\"]},\"phase\":\"released\",\"session\":{\"sessionId\":\"cs_tax_upgrade\",\"redirectUrl\":\"https://checkout.stripe.com/c/pay/cs_tax_upgrade\",\"createdAt\":1793000000,\"expiresAt\":1793001800},\"paymentReleaseReason\":\"expired-unpaid\"}]}"
+    },
+    {
+      "collection": "checkout_guest_capabilities",
+      "id": "cap-tax-upgrade",
+      "data": "{\"recordKind\":\"guest-checkout-capability\",\"capabilityId\":\"cap-tax-upgrade\",\"cartId\":\"cart-tax-upgrade\",\"verifier\":\"d91323a5298f3b9f814db29efaa271f24fbdccedfdd062491b8abc8e07b7fb69\",\"siteBinding\":\"http://127.0.0.1:64561\",\"createdAt\":\"2026-11-01T15:00:00.000Z\"}"
+    },
+    {
+      "collection": "order_numbers",
+      "id": "next",
+      "data": "{\"next\":1002}"
+    },
+    {
+      "collection": "orders",
+      "id": "order-tax-upgrade",
+      "data": "{\"paidOrder\":{\"schema\":\"dinkuskit.commerce.paid-order/v1\",\"orderId\":\"order-tax-upgrade\",\"receiptId\":\"receipt-tax-upgrade\",\"attemptId\":\"attempt-tax-paid\",\"paymentId\":\"pi_tax_upgrade\",\"paidAt\":\"2026-11-01T14:00:00.000Z\",\"mode\":\"test\",\"lines\":[{\"catalogItemId\":\"item-hat\",\"quantity\":1,\"name\":\"Red hat\",\"unitPrice\":{\"currency\":\"USD\",\"minor\":\"1200\"}}],\"total\":{\"currency\":\"USD\",\"minor\":\"1500\"},\"pricing\":{\"schema\":\"dinkuskit.commerce.checkout-pricing/v1\",\"merchandiseSubtotal\":{\"currency\":\"USD\",\"minor\":\"1200\"},\"couponDiscount\":{\"currency\":\"USD\",\"minor\":\"200\"},\"netMerchandise\":{\"currency\":\"USD\",\"minor\":\"1000\"},\"shipping\":{\"configurationId\":\"ship-upgrade\",\"revision\":1,\"mode\":\"flat\",\"charge\":{\"currency\":\"USD\",\"minor\":\"500\"}},\"finalTotal\":{\"currency\":\"USD\",\"minor\":\"1500\"},\"lines\":[{\"catalogItemId\":\"item-hat\",\"quantity\":1,\"unitPrice\":{\"currency\":\"USD\",\"minor\":\"1200\"},\"lineSubtotal\":{\"currency\":\"USD\",\"minor\":\"1200\"},\"discount\":{\"currency\":\"USD\",\"minor\":\"200\"},\"netAmount\":{\"currency\":\"USD\",\"minor\":\"1000\"}}]},\"contactSnapshot\":{\"schema\":\"dinkuskit.commerce.checkout-contact/v1\",\"requirePhoneNumber\":false,\"revision\":null,\"contact\":{\"email\":\"kim@example.test\",\"delivery\":{\"name\":\"Kim Buyer\",\"line1\":\"1 Upgrade Way\",\"city\":\"Nashville\",\"region\":\"TN\",\"postalCode\":\"37201\",\"country\":\"US\"}}}},\"emailKey\":\"kim@example.test\",\"number\":1001,\"revision\":1}"
+    },
+    {
+      "collection": "storefront_out_of_stock_listing",
+      "id": "active",
+      "data": "{\"recordKind\":\"storefront-out-of-stock-listing\",\"recordId\":\"active\",\"hideOutOfStock\":true,\"updatedAt\":\"2026-11-01T15:00:00.000Z\"}"
+    }
+  ]
+}

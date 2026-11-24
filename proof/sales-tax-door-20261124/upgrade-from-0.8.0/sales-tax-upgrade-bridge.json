@@ -1,0 +1,66 @@
+{
+  "phase": "bridge",
+  "trace": [
+    {
+      "label": "0.8.0 checkout",
+      "state": "released-retry",
+      "pricing": {
+        "merchandiseSubtotal": {
+          "currency": "USD",
+          "minor": "1200"
+        },
+        "couponDiscount": {
+          "currency": "USD",
+          "minor": "200"
+        },
+        "netMerchandise": {
+          "currency": "USD",
+          "minor": "1000"
+        },
+        "shipping": {
+          "mode": "flat",
+          "charge": {
+            "currency": "USD",
+            "minor": "500"
+          }
+        },
+        "tax": {
+          "currency": "USD",
+          "minor": "0"
+        },
+        "finalTotal": {
+          "currency": "USD",
+          "minor": "1500"
+        }
+      }
+    },
+    {
+      "label": "0.8.0 order lookup",
+      "pricing": {
+        "merchandiseSubtotal": {
+          "currency": "USD",
+          "minor": "1200"
+        },
+        "couponDiscount": {
+          "currency": "USD",
+          "minor": "200"
+        },
+        "netMerchandise": {
+          "currency": "USD",
+          "minor": "1000"
+        },
+        "shipping": {
+          "mode": "flat",
+          "charge": {
+            "currency": "USD",
+            "minor": "500"
+          }
+        },
+        "finalTotal": {
+          "currency": "USD",
+          "minor": "1500"
+        }
+      }
+    }
+  ]
+}
