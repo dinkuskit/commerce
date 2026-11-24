@@ -3,7 +3,7 @@ import test from 'node:test';
 import { validateBlockResponse } from '@emdash-cms/blocks/server';
 import { commerceAdmin, productPanel } from '../../../dist/admin/index.js';
 import { addCatalogVariantOption, createCatalogItem, linkProductPage, pageProduct, setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
-import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
+import { readPublicCatalog, readPublicCatalogItem, setProductPageOnSaleRoute } from '../../../dist/features/catalog/index.js';
 
 class Store {
   records = new Map(); revisions = new Map();
@@ -152,6 +152,19 @@ test('the publish check puts a product on sale and back to Draft, and a deleted 
   await assert.rejects(setProductPageOnSale(storage, { catalogItemId: ' ', entryId: 'page-1', onSale: true }), (error) => error.code === 'INVALID_INPUT');
   await assert.rejects(setProductPageOnSale(storage, { catalogItemId: id, onSale: true }), (error) => error.code === 'INVALID_INPUT', 'the page is required');
   assert.equal(pages.records.size, 0);
+});
+
+test('the native publish route deletes a page\'s product with its own rows, as the Registry build does', async () => {
+  const { ctx, catalog, pages } = await shop();
+  await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Tee' } } }, ctx);
+  const id = await pageProduct(pages, 'page-1');
+  const rows = ['catalog_prices', 'catalog_manual_availability', 'catalog_backorder_policies', 'catalog_media', 'product_feed_eligibility'];
+  const storage = { catalogItems: catalog, product_pages: pages };
+  for (const name of rows) { storage[name] = new Store(); await storage[name].put(id, { recordKind: name, catalogItemId: id }); }
+  const route = input => setProductPageOnSaleRoute.handler({ request: { method: 'POST' }, input, storage });
+  await route({ catalogItemId: id, entryId: 'page-1', onSale: false, deleted: true });
+  assert.equal(await catalog.get(id), null, 'the product is deleted');
+  for (const name of rows) assert.equal(await storage[name].get(id), null, `${name} is cleared with it`);
 });
 
 test('the publish check finds the page\'s product in Commerce, and the shop finds a product by its page', async () => {

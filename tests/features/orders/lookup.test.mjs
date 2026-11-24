@@ -148,16 +148,18 @@ test('a try that cannot be recorded reads no order, and a right guess gives its 
   assert.equal((await ask({ orderNumber: '1001', email: 'pat@example.test' })).error.code, 'LOOKUP_LIMITED');
 });
 
-test('an order kept before the email index (no emailKey) is still found by its number and checkout email', async () => {
+test('a lookup reads only the email\'s own orders, never an order without an emailKey', async () => {
   const { ask, ctx } = await shop();
   const orders = ctx.storage.orders;
   const [id, row] = [...orders.rows].find(([, value]) => value.value.number === 1001);
-  const legacy = structuredClone(row);
-  delete legacy.value.emailKey;
-  legacy.value.number = 1602;
-  orders.rows.set(id, legacy);
-  const answer = await ask({ orderNumber: '1602', email: 'pat@example.test' });
-  assert.equal(answer.ok, true);
-  assert.equal(answer.order.number, 1602);
-  assert.deepEqual(await ask({ orderNumber: '1602', email: 'sam@example.test' }), notFound);
+  const unindexed = structuredClone(row);
+  delete unindexed.value.emailKey;
+  unindexed.value.number = 1602;
+  orders.rows.set(id, unindexed);
+  const wheres = [];
+  const query = orders.query.bind(orders);
+  orders.query = (options) => { wheres.push(options.where); return query(options); };
+  assert.deepEqual(await ask({ orderNumber: '1602', email: 'pat@example.test' }), notFound);
+  assert.ok(wheres.length > 0);
+  assert.ok(wheres.every(where => where?.emailKey === 'pat@example.test'));
 });

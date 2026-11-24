@@ -1,7 +1,7 @@
 import { PluginRouteError, type PluginRoute, type StorageCollection } from "emdash";
 
 import { CatalogError } from "./errors.js";
-import { PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./product-pages.js";
+import { PRODUCT_PAGES_COLLECTION, PRODUCT_ROW_COLLECTIONS, setProductPageOnSale, type ProductPages } from "./product-pages.js";
 import type { CatalogStorageRecord } from "./types.js";
 
 // The native entry's one catalog route beside the Registry build's shared ones. The native-only catalog
@@ -28,7 +28,9 @@ export const setProductPageOnSaleRoute: PluginRoute = {
     if (ctx.request.method.toUpperCase() !== "POST") routeFail("METHOD_NOT_ALLOWED", "Product changes require POST", 405);
     try {
       return await setProductPageOnSale({ catalog: ctx.storage.catalogItems as StorageCollection<CatalogStorageRecord>,
-        pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages }, ctx.input);
+        pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages,
+        // A permanent delete clears the product's own rows on this build too, as on the Registry build.
+        rows: PRODUCT_ROW_COLLECTIONS.map(name => ctx.storage[name] as StorageCollection<unknown>) }, ctx.input);
     } catch (error) {
       rethrowCatalogRouteError(error);
     }

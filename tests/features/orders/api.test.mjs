@@ -146,3 +146,15 @@ test('malformed requests are refused before anything changes', async () => {
   }
   assert.equal(JSON.stringify([...kept.rows]), before);
 });
+
+test('an action that is not its own plain name is refused, so a completed order is never reopened by mistake', async () => {
+  const { call, kept } = await store(order('o1'));
+  assert.equal((await call({ action: 'complete', orderId: 'o1', version: 1, carrier: 'UPS', tracking: '1Z1' })).result, 'saved');
+  const before = JSON.stringify([...kept.rows]);
+  // ["complete"] reads as "complete" when made into text, and "toString" or "__proto__" name what every object has.
+  for (const action of [['complete'], ['address'], 'toString', 'constructor', '__proto__', 'hasOwnProperty']) {
+    await assert.rejects(call({ action, orderId: 'o1', version: 2, carrier: 'UPS', tracking: '1Z1' }), /Invalid orders request/, JSON.stringify(action));
+  }
+  assert.equal(JSON.stringify([...kept.rows]), before);
+  assert.equal((await call({ action: 'show', orderId: 'o1' })).order.completed.tracking, '1Z1');
+});

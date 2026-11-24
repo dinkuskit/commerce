@@ -4,6 +4,7 @@ import { CatalogError } from "./errors.js";
 import { normalizeProductName } from "./normalize.js";
 import { editProduct, keptChanging, named, offShop, type ProductFence } from "./product-edit.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
+import { PRODUCT_FEED_ELIGIBILITY_SANDBOX_COLLECTION } from "../feeds/kernel/index.js";
 
 /**
  * Which product page sells which Commerce product. Commerce never reads the
@@ -30,6 +31,8 @@ export type ProductPages = Pick<StorageCollection<ProductPageRecord>, "get" | "p
 type Catalog = Pick<StorageCollection<CatalogStorageRecord>, "getVersioned" | "compareAndSet" | "compareAndDelete" | "deleteMany">;
 /** A product's own rows outside catalog_items, each keyed by its item id: prices, stock, backorders, media, feeds. */
 type ProductRows = Pick<StorageCollection<unknown>, "deleteMany">[];
+/** Every collection keyed by a product id that a permanent delete clears with the product. */
+export const PRODUCT_ROW_COLLECTIONS = ["catalog_prices", "catalog_manual_availability", "catalog_backorder_policies", "catalog_media", PRODUCT_FEED_ELIGIBILITY_SANDBOX_COLLECTION];
 
 function id(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim() || value.length > 1024) throw new CatalogError("INVALID_INPUT", field + " must be a valid id");
@@ -83,7 +86,7 @@ export async function linkProductPage(storage: { catalog: Catalog; pages: Produc
  * saved in that same write.
  */
 /** `fence`, the product's revision when its sale was decided, refuses the sale once anything has changed the product since. */
-export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages; rows?: ProductRows }, input: unknown, fence?: ProductFence): Promise<{ changed: boolean }> {
+export async function setProductPageOnSale(storage: { catalog: Catalog; pages: ProductPages; rows: ProductRows }, input: unknown, fence?: ProductFence): Promise<{ changed: boolean }> {
   if (!isRecord(input)) throw new CatalogError("INVALID_INPUT", "request body must be an object");
   const { onSale, deleted } = input, entryId = id(input.entryId, "entryId"), { catalog, pages } = storage, key = "p:" + entryId;
   // Commerce holds the page's link (catalog-page-link-in-commerce-20261029): a publish sells the panel's pick, and

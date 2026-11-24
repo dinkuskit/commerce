@@ -3,12 +3,11 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": true,
-    "confirmed_at": "2026-11-24T14:55:02+00:00",
-    "domain": "Coupons as a plugin: the add-ons door",
-    "started_at": "2026-11-24T14:54:56+00:00",
-    "status": "confirmed",
-    "summary": "The owner confirmed shared understanding of each coupons-rework decision on its card on 24 Nov 2026 and said to build it."
+    "confirmed": false,
+    "domain": "Order lookup reads only indexed orders",
+    "started_at": "2026-11-24T22:16:18+00:00",
+    "status": "grilling",
+    "summary": "Audit finding: a missed lookup also read every order without an emailKey, which a script could repeat with fresh emails."
   },
   "decisions": [
     {
@@ -17780,6 +17779,47 @@
       "superseded_by": null,
       "updated_at": "2026-11-24T19:11:48+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. The public order lookup reads only the orders whose emailKey matches the typed email. The pass over orders without an emailKey and the full read when the index query fails are removed; no store kept an order before the index.",
+      "context_ref": null,
+      "created_at": "2026-11-24T22:16:18+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Order lookup reads only indexed orders",
+      "history": [
+        {
+          "at": "2026-11-24T22:16:19+00:00",
+          "choice": "No. The public order lookup reads only the orders whose emailKey matches the typed email. The pass over orders without an emailKey and the full read when the index query fails are removed; no store kept an order before the index.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-lookup-indexed-only-20261124",
+      "implementation_ref": null,
+      "question": "Should the order lookup keep reading orders saved before the emailKey index?",
+      "rationale": "The owner approved on 24 Nov 2026.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-24T22:16:19+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17816,5 +17856,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-24T19:11:48+00:00"
+  "updated_at": "2026-11-24T22:16:19+00:00"
 }
