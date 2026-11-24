@@ -249,18 +249,25 @@ async function sell(ctx: PluginContext, entryId: string, fields: Record<string, 
   if (price && !price.saved) return { ...await product(ctx, made.catalogItemId, { ...price, ...(sku ? { sku } : {}) }), toast: { type: "error", message: price.message ?? NO_PRICE } };
   return product(ctx, made.catalogItemId, undefined, "Draft made. Publish the page to sell it.");
 }
+/** The product a page sells, when Commerce still has it. */
+const linkedProduct = async (ctx: PluginContext, entryId: string) => {
+  const linked = await pageProduct(storage(ctx).pages, entryId);
+  return linked && await loadCatalogProduct(storage(ctx), linked) ? linked : null;
+};
+/** The product page a panel was opened on, or nothing for a call from anywhere else. */
+const panelEntry = (route: SandboxedRouteContext) => route.ui?.surface === "content-editor-panel" ? route.ui.entry.id : "";
 /** The Dinkus Commerce panel on a product page: that page's price, sale, SKU, variants, stock, weight and identifiers. */
 export async function productPanel(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
   ctx = { ...ctx, storage: rememberReads(ctx.storage).storage as typeof ctx.storage };
-  const entryId = route.ui?.surface === "content-editor-panel" ? route.ui.entry.id : "";
+  const entryId = panelEntry(route);
   if (!entryId) return failed("Invalid panel");
   const input = route.input as Record<string, unknown>;
   try {
     const draft = input.draft as Draft | undefined, fields = draft?.fields ?? {}, action = String(input.action_id ?? "");
     if (action.startsWith("sell")) return await sell(ctx, entryId, fields, object(input.values ?? {}), command(action));
     if (input.type === "panel_load") {
-      const linked = await pageProduct(storage(ctx).pages, entryId);
-      return linked && await loadCatalogProduct(storage(ctx), linked) ? await product(ctx, linked) : unlinked();
+      const linked = await linkedProduct(ctx, entryId);
+      return linked ? await product(ctx, linked) : unlinked();
     }
   } catch (error) {
     // A refused Save keeps what was typed, its create command and the button so the owner can retry.
@@ -270,12 +277,12 @@ export async function productPanel(route: SandboxedRouteContext, ctx: PluginCont
 }
 /** The Product image & gallery panel on a product page; its picks and changes go through productEdit like the main panel's. */
 export async function productMediaPanel(route: SandboxedRouteContext, ctx: PluginContext): Promise<BlockResponse> {
-  const entryId = route.ui?.surface === "content-editor-panel" ? route.ui.entry.id : "";
+  const entryId = panelEntry(route);
   if (!entryId) return failed("Invalid panel");
   if (object(route.input).type !== "panel_load") return productEdit(route, ctx);
   try {
-    const linked = await pageProduct(storage(ctx).pages, entryId);
-    return linked && await loadCatalogProduct(storage(ctx), linked) ? await mediaView(ctx, linked) : { blocks: [note("Save the product in the Dinkus Commerce panel first.")] };
+    const linked = await linkedProduct(ctx, entryId);
+    return linked ? await mediaView(ctx, linked) : { blocks: [note("Save the product in the Dinkus Commerce panel first.")] };
   } catch (error) {
     return failed(message(error));
   }

@@ -2,6 +2,11 @@ import { isRecord, jsonBytes } from "../../shared/record.js";
 import { catalogFail } from "./errors.js";
 import type { CatalogData, CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
+/** What the product was first made as: its kept creationPayload, or the same facts read from a record made before that was kept. */
+export const creationOf = (item: CatalogItemRecord) => item.creationPayload ?? {
+  kind: item.kind, name: item.name, sku: item.sku, skuKey: item.skuKey, manageStock: item.creationIntent?.manageStock ?? false,
+};
+
 /** What a save answers when the product moved since the form read it. */
 export const PRODUCT_MOVED = "Product changed; reload before saving";
 const BAD_DATA = "Stored product data is invalid";

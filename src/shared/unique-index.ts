@@ -1,3 +1,5 @@
+import { bytesToHex, sha256 } from "./secret.js";
+
 const rotate = (word: number, bits: number) => (word >>> bits) | (word << (32 - bits));
 
 /**
@@ -61,10 +63,8 @@ export function uniqueIndexNames(pluginId: string, collection: string, field: st
  * the script SHA-256 above would not fit its 128 KB file cap.
  */
 export async function uniqueIndexNamesAsync(pluginId: string, collection: string, field: string): Promise<string[]> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify([pluginId, collection, [field]])));
-  let name = "uidx_plugin_";
-  for (const byte of new Uint8Array(digest, 0, 16)) name += byte.toString(16).padStart(2, "0");
-  return [`uidx_plugin_${pluginId}_${collection}_${field}`, name];
+  const digest = await sha256(JSON.stringify([pluginId, collection, [field]]));
+  return [`uidx_plugin_${pluginId}_${collection}_${field}`, "uidx_plugin_" + bytesToHex(digest.subarray(0, 16))];
 }
 
 /** Whether an error's text or properties name one of `names`. */

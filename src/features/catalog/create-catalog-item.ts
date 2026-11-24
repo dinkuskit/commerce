@@ -1,5 +1,6 @@
 import { CatalogError, catalogStorage } from "./errors.js";
 import { normalizeCreateCatalogItemInput } from "./normalize.js";
+import { creationOf } from "./product-state.js";
 import {
   assertCatalogStorageConstraints,
   findUniqueViolation,
@@ -40,13 +41,7 @@ function sameCommandPayload(
   item: CatalogItemRecord,
   input: NormalizedCreateCatalogItemInput,
 ): boolean {
-  const original = item.creationPayload ?? {
-    kind: item.kind,
-    name: item.name,
-    sku: item.sku,
-    skuKey: item.skuKey,
-    manageStock: item.creationIntent?.manageStock ?? false,
-  };
+  const original = creationOf(item);
   return (
     item.commandId === input.commandId &&
     original.kind === input.kind &&
@@ -113,6 +108,8 @@ export async function createCatalogItem(
   const existing = await findCommand(storage, input.commandId);
   if (existing) return resolveExistingCommand(existing, input, options);
 
+  // What was asked for, kept on the item and, for a product with options, on its variant record.
+  const asked = { kind: input.kind, name: input.name, sku: input.sku, skuKey: input.skuKey };
   const item: CatalogItemRecord = {
     recordKind: "catalog-item",
     itemId: (options.createId ?? (() => globalThis.crypto.randomUUID()))(),
@@ -126,10 +123,7 @@ export async function createCatalogItem(
       variantFulfillment: options.variantMember.fulfillment,
     } : {}),
     creationPayload: {
-      kind: input.kind,
-      name: input.name,
-      sku: input.sku,
-      skuKey: input.skuKey,
+      ...asked,
       manageStock: input.creationIntent.manageStock,
       ...(input.fulfillment === undefined ? {} : { fulfillment: input.fulfillment }),
     } satisfies CatalogCreationPayload,
@@ -139,10 +133,7 @@ export async function createCatalogItem(
       creationPayload: JSON.stringify({
         commandId: input.commandId,
         fulfillment: input.fulfillment,
-        kind: input.kind,
-        name: input.name,
-        sku: input.sku,
-        skuKey: input.skuKey,
+        ...asked,
       }),
       schema: "dinkuskit.commerce.product-variants/v1",
       productId: item.itemId,
