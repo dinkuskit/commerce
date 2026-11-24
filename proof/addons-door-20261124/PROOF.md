@@ -15,6 +15,19 @@ Each answer line now carries the quantity the add-on saw (`qty`), beside the ite
 
 On a local store with Coupons (dinkuskit/coupons#31) and the template (dinkuskit/template-store#271) sending `qty`, a shopper applied SPRING25 to one $18 mug (`qty-1-applied.jpg`), changed it to 2 in another tab, and pressed Pay on the stale page. The store asked Coupons again, and this door priced 2 × $18.00 − $9.00 + $5.00 = $32.00 (`qty-2-sent-to-stripe.jpg`, [qty-trace.txt](qty-trace.txt)).
 
+## The left-cart email's key, after its cart ends
+
+On a fresh local store with this branch, Coupons from dinkuskit/coupons#31 and template-store#271, and Payments stood in ([emailed-trace.txt](emailed-trace.txt)), using Commerce's own lifecycle throughout:
+
+1. A shopper gave an email and pressed Pay, then left the Stripe page unpaid. The stand-in reported the session expired, and Commerce's own 5-minute check released the attempt.
+2. With the cart's `remindAt` moved into the past (standing in for the 10 hours), the same check made the left-cart email's link, `/cart/c/<cart>?key=<emailed key>`.
+3. A fresh browser opened that link, and SPRING25 applied with the emailed key (−$4.50, `emailed-1-applied.jpg`).
+4. With the cart's `cartExpires` moved into the past (standing in for the 30 days), the same check deleted the cart. Commerce still held the emailed key's record.
+5. That browser, its page still showing SPRING25, then posted Pay with SPRING25, Pay with no code (which would release holds) and Apply, and pressed Pay on the page. Each answered 422 with an empty cart and no box taking codes (`emailed-2-after-expiry.jpg`). Carts, attempts on that cart, Coupons holds and Payments calls were 0, 0, 0 and 5 before, and the same after.
+6. Add to cart from the same browser made no cart under the emailed cart's id: the store started a new cart under a new key (`emailed-3-readd.jpg`).
+
+The emailed key passes through `fenceEmailedKey` on the add-ons door as on the public start (`startGuestCheckout`), so it dies with its cart, its checkout or a cart made again under its id.
+
 ## The add-ons' size and the courier's 8 KB
 
 The courier refuses a whole batch when one item is over 8 KB, and the receiver's bookmark then never moves (`src/features/orders/courier.ts`, from cb6c51e). `fit()` can only drop item lines, so the door now bounds what it keeps of the add-ons:
