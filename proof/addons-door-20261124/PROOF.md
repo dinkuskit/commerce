@@ -27,7 +27,24 @@ Run on 24 Nov 2026 on a local template store (`scripts/dev-fresh.sh` with `DINKU
 | Anonymous, with the shopper's cart key cookie | `401 UNAUTHORIZED: Authentication required` |
 | Signed-in Administrator | `400 ROUTE_ERROR … STORE_ONLY: Only the store's own code may use this door.` |
 
-After both calls, the shopper's `/checkout` still shows the discount box, which only shows while no payment is held, so no checkout attempt was started. The store's own server code then priced the cart: Apply SPRING25 on `/checkout` showed "SPRING25 −$4.50" and the Discount row. A paid start through the door needs a store that takes payments. The compiled-runtime tests above cover the priced start, CONTENTION on a changed price and the zero-total order.
+After both calls, the shopper's `/checkout` still shows the discount box, which only shows while no payment is held, so no checkout attempt was started. The store's own server code then priced the cart: Apply SPRING25 on `/checkout` showed "SPRING25 −$4.50" and the Discount row. The paid start through the door is below.
+
+## A paid checkout through the door, from the store's own code
+
+Run on 24 Nov 2026 on fresh local template stores like the one above (this branch at 2d8927e, Coupons from dinkuskit/coupons#31, template-store#271), with Payments stood in by template-store's `tests/paired/helpers/dinkuskit-stand-in.mjs` (plus a "paid" answer in the proof's copy). Everything else is the real code. Rows were read from the store's database after each step. The logs are [paid-trace.txt](paid-trace.txt) and [edge-trace.txt](edge-trace.txt).
+
+![Each step and what the store's database held](paid-trace.jpg)
+
+1. **The allowed call.** The shopper applied SPRING25 to the $18 mug and pressed Pay on `/checkout`. The store's server code asked Coupons with `hold: true`, then called `checkout/addons/start`.
+   - The new checkout attempt keeps `addons: [{ from: "dinkus-coupons", ref: "h_b9e5….c_48ed…", codes: ["SPRING25"] }]`.
+   - Its payment request, which went to Payments' `POST /v1/checkout/session`, is priced at subtotal 1800, coupon discount 450, shipping 500 and total 1850. The shopper was sent to the session's Stripe address (`paid-sent-to-stripe.jpg`).
+2. **Forbidden callers before payment.** An anonymous caller and the Administrator called `courier/outbox` and Coupons' `courier/inbox`. They got `401` and `COURIER_ONLY`, and nothing changed.
+3. **Paid.** Payments' lookup answered paid. Commerce's own 5-minute check made order #1001: total 1850, the same `addons`, and an `order.paid` news key.
+4. **Courier.** The store's courier read that news through `courier/outbox` and handed it to Coupons, which counted one use. Repeats counted nothing.
+5. **A cart key Commerce refuses.** The shopper's own cart id, with a wrong secret, posted their checkout form with SPRING25. The store answered 422 with an empty cart (`forged-key.jpg`). Checkout attempts, Coupons holds and Payments calls were 0, 0 and 0 before and after. The real shopper's Pay right after still worked.
+6. **A payment-free order.** FREE100 (100% off) and FREESHIP on the $18 mug with $5 shipping went through the door to an attempt paid at $0.00. Payments received no call (2 calls before, 2 after), and the shopper reached the order confirmation (`zero-order.jpg`).
+
+Not proven here: a real Stripe payment. A beta store run is the next check.
 
 ## Stored data after the upgrade
 
