@@ -13,6 +13,8 @@ Run on 24 Nov 2026 with Node 24.22.0 from this branch.
 
 Each answer line now carries the quantity the add-on saw (`qty`), beside the item and unit price. The door reads the saved cart when checkout starts, so a shopper who changes a quantity in another tab after the store asked the add-on gets `CONTENTION` and the store asks again: an amount off worked out for two hats never lands on one. `registry-checkout-services.test.mjs` shows the compiled door answering `CONTENTION` for an answer naming 2 hats on a 1-hat cart, and `checkout-pricing.test.mjs` the same for the pricing step.
 
+On a local store with Coupons (dinkuskit/coupons#31) and the template (dinkuskit/template-store#271) sending `qty`, a shopper applied SPRING25 to one $18 mug (`qty-1-applied.jpg`), changed it to 2 in another tab, and pressed Pay on the stale page. The store asked Coupons again, and this door priced 2 × $18.00 − $9.00 + $5.00 = $32.00 (`qty-2-sent-to-stripe.jpg`, [qty-trace.txt](qty-trace.txt)).
+
 ## The add-ons' size and the courier's 8 KB
 
 The courier refuses a whole batch when one item is over 8 KB, and the receiver's bookmark then never moves (`src/features/orders/courier.ts`, from cb6c51e). `fit()` can only drop item lines, so the door now bounds what it keeps of the add-ons:
