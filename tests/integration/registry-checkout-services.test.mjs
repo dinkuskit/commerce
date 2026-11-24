@@ -233,6 +233,40 @@ test('an add-on answer can make shipping free, and a fully discounted order is p
   assert.equal(over.ok, false);
 });
 
+// dinkuskit/tax ledger shared-addons-door: Tax answers through the same door; Commerce takes the coupon off first, then taxes
+// each line and shipping at Tax's rates, rounding each once, halves up (round-per-line-half-up), and Payments gets the tax.
+test('the add-ons door taxes a couponed checkout after the discount, for the address Tax priced', async t => {
+  const state = await runtimeFixture({ config: configuration({ configurationId: 'shipping-synthetic', revision: 1, mode: 'flat', amount: { currency: 'USD', minor: '500' } }) });
+  t.after(() => state.close());
+  await shipHat(state);
+  const contact = physicalBasket.contact;
+  const token = (await state.invoke(PREPARE)).capability.capability;
+  assert.equal((await state.invoke('checkout/guest/cart', { lines: basket.lines, version: null }, token)).ok, true);
+  const to = ['1 Example Way', '', 'Testville', 'CA', '00000', 'US'].join('\n');
+  const tax = (extra = {}) => ({ from: 'dinkus-tax', ref: 'tax-1', to, shipRate: '92500', lines: [{ item: 'hat', price: '250', qty: 1, off: '0', rate: '92500' }], ...extra });
+  // Priced for the billing address, not where the hat ships: the store asks Tax again.
+  const billing = ['9 Billing Way', '', 'Billtown', '', '00009', 'US'].join('\n');
+  assert.equal((await state.invoke(ADDONS, { contact, addons: [answer('100'), tax({ to: billing })] }, token)).error.code, 'CONTENTION');
+  for (const bad of [[tax({ shipRate: '9.25' })], [tax({ lines: [{ item: 'hat', price: '250', qty: 1, off: '0' }] })], [answer('100', { shipRate: '92500' })]]) {
+    assert.notEqual((await state.invoke(ADDONS, { contact, addons: bad }, token)).ok, true, JSON.stringify(bad));
+  }
+  assert.equal(state.requests.length, 0);
+  const started = await state.invoke(ADDONS, { contact, addons: [answer('100'), tax()] }, token);
+  assert.equal(started.ok, true, JSON.stringify(started));
+  // $2.50 less $1.00 off is $1.50: 9.25% is 13.875¢, so 14¢. Shipping $5.00: 46.25¢, so 46¢. $1.50 + $5.00 + 60¢ = $7.10.
+  const pricing = state.requests[0].pricing;
+  assert.deepEqual(pricing.lines.map(line => [line.netAmount.minor, line.tax.minor]), [['150', '14']]);
+  assert.deepEqual([pricing.tax.minor, pricing.finalTotal.minor, state.requests[0].total.minor], ['60', '710', '710']);
+  assert.deepEqual([started.checkout.pricing.tax.minor, started.checkout.pricing.finalTotal.minor], ['60', '710']);
+  state.setPaid();
+  const paid = await state.invoke(STATUS, {}, token);
+  assert.deepEqual([paid.checkout.order.pricing.tax.minor, paid.checkout.order.total.minor], ['60', '710']);
+  const order = (await state.cartRecords())[0].attempts[0].order;
+  // The order keeps Tax's id and reference, never the address or the rates.
+  assert.deepEqual(order.addons, [{ from: 'dinkus-coupons', ref: 'hold-1', codes: ['SAVE10'] }, { from: 'dinkus-tax', ref: 'tax-1' }]);
+  assert.equal((await state.collections.orders.get(order.orderId)).paidOrder.pricing.tax.minor, '60');
+});
+
 const zeroPrice = { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat', regular: { currency: 'USD', minor: '0' } };
 
 test('actual compiled default workerd zero-priced cart writes one payment-free order', async t => {

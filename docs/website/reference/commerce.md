@@ -150,7 +150,7 @@ For guest checkout, check both the HTTP response and EmDash's JSON `success` fla
 }
 ```
 
-Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `cart` and `start`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session. On `start` and on a `cart` read (`{}`, which is also the payment status check), `data.checkout.pricing` exposes `merchandiseSubtotal`, `couponDiscount`, `netMerchandise`, `shipping`, explicit `tax: { "currency": "USD", "minor": "0" }`, and `finalTotal` in integer USD minor units for deterministic checkout and single-use virtual card sizing.
+Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `cart` and `start`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session. On `start` and on a `cart` read (`{}`, which is also the payment status check), `data.checkout.pricing` exposes `merchandiseSubtotal`, `couponDiscount`, `netMerchandise`, `shipping`, `tax` (the sales tax Commerce worked out from the Tax plugin's rates, or `{ "currency": "USD", "minor": "0" }` when nothing was taxed), and `finalTotal` in integer USD minor units for deterministic checkout and single-use virtual card sizing.
 
 Once the order is paid, `data.checkout.order.contact` carries the order's email, phone (when given) and `delivery` and `billing` addresses, as the shopper entered them at checkout, so the store's thank-you page can show them. Only a request with that cart's own capability, from the store's own origin, gets it; nothing before payment carries contact, and Payments never receives it. Treat it as personal data: draw it on the page, never cache, log or put it in a URL.
 
@@ -220,7 +220,7 @@ A shopper can finish paying after their checkout ended unpaid, for example when 
 
 ## Add-ons door
 
-Coupons and, later, sales tax are their own plugins, and EmDash plugins cannot call each other. So the store's own code asks each add-on first and then starts checkout through one private Commerce route, `checkout/addons/start`, with their answers. Like the courier's route, it refuses anyone signed in, the Administrator included, so only the store itself can use it. A shopper or agent starting checkout through the public `checkout/guest/start` cannot send add-on answers, and discount codes are typed on the store's own checkout page.
+Coupons and sales tax are their own plugins, and EmDash plugins cannot call each other. So the store's own code asks each add-on first and then starts checkout through one private Commerce route, `checkout/addons/start`, with their answers. Like the courier's route, it refuses anyone signed in, the Administrator included, so only the store itself can use it. A shopper or agent starting checkout through the public `checkout/guest/start` cannot send add-on answers, and discount codes are typed on the store's own checkout page.
 
 The door takes what `checkout/guest/start` takes, the same cart capability and origin, and `addons`: at most 4 answers, one per add-on. Each answer names the add-on (`from`, its plugin id, at most 64 characters), an optional reference of its own (`ref`, at most 200), the codes the shopper typed (`codes`, at most 6, each at most 64), `ship: "free"` when it waives shipping, and, for every checkout line in Commerce's order, the item, unit price and quantity it saw and the amount it takes off, in whole cents (`lines: [{ item, price, qty, off }]`, at most $10,000,000 a line). These names, references, codes and items are printable ASCII only, and the `from`, `ref` and codes of all answers together are at most 1,500 characters as written in JSON (`[[from, ref, codes], …]`, punctuation included), so the order's `order.paid` news always fits the courier. Commerce does the totals itself:
 
@@ -229,6 +229,14 @@ The door takes what `checkout/guest/start` takes, the same cart capability and o
 - The discount is per line, as Payments charges it, and the subtotal minus the discount decides free shipping over the owner's amount. An answer with `ship: "free"` makes shipping free.
 - While a checkout's payment is open, its add-ons and codes are frozen with its cart: asking with other codes, or none, is refused with `CHECKOUT_FROZEN`.
 - The order keeps each add-on's `from`, `ref` and `codes`, and the Orders page shows them on the discount line.
+
+Sales tax comes through the same door. The Tax plugin picks the rates and Commerce does the math, after discounts:
+
+- A tax answer adds `to`, the address it priced, and a rate for shipping (`shipRate`) and for every line (`lines[].rate`), each in millionths: `"97500"` is 9.75%, and a rate is under 100%. Anything else, or a rate on an answer without `to`, leaves checkout unavailable.
+- `to` is the delivery address, or the billing address when nothing ships, as Commerce keeps it: street line 1, line 2, city, state, ZIP and country, one to a line. An answer for any other address answers `CONTENTION`, so the store asks Tax again.
+- Each line's tax is its amount after discounts times its rate, rounded to the cent once, halves up. Shipping's tax is the shipping charge times its rate, rounded the same way. The order's tax is those added up, and it goes on the total.
+- The pricing then records `tax` for the order and for each line, Payments charges it as one **Sales tax** line, and the Orders page, the thank-you page, the order lookup and `order.paid` show it. A checkout without a tax answer records no tax at all.
+- The order keeps only Tax's `from` and `ref`. How the address matched and whether the owner typed the rate stay in Tax's own records, under that `ref`.
 
 ## Completing and correcting an order
 

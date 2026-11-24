@@ -125,7 +125,7 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     { type: 'table', page_action_id: 'orders.items', columns: [{ key: 'name', label: payment(order) }, { key: 'value', label: 'Amount' }],
       rows: [...(pricing ? [['Items subtotal', amount(pricing.merchandiseSubtotal)],
         ...(+pricing.couponDiscount.minor ? [[('Discount ' + (order.addons ?? []).flatMap(addon => addon.codes ?? []).join(', ')).trim(), '−' + amount(pricing.couponDiscount)]] : []),
-        ['Shipping', amount(pricing.shipping.charge)]] : []), ['Order total', amount(order.total)]].map(([name, value]) => ({ name, value })) } as Block,
+        ['Shipping', amount(pricing.shipping.charge)], ...(+(pricing.tax?.minor ?? 0) ? [['Sales tax', amount(pricing.tax!)]] : [])] : []), ['Order total', amount(order.total)]].map(([name, value]) => ({ name, value })) } as Block,
     { type: 'accordion', label: 'Order record', blocks: [
       text('Order ID: ' + order.orderId), text('Version: ' + (record.revision ?? 1)), text('Receipt: ' + order.receiptId),
       text('Checkout attempt: ' + order.attemptId), text('Provider payment: ' + (order.paymentId ?? notRecorded)),

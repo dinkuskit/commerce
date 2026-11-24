@@ -114,12 +114,14 @@ function assertPricing(request: PaymentRequest): void {
     const net = minor(pricing.netMerchandise);
     const shipping = minor(pricing.shipping.charge);
     const final = minor(pricing.finalTotal);
-    check(subtotal - discount === net && net + shipping === final && final > 0n && minor(request.total) === final);
+    // Sales tax, when a tax answer priced the checkout: the lines' tax plus shipping's, never less than the lines'.
+    const tax = pricing.tax ? minor(pricing.tax) : 0n;
+    check(subtotal - discount === net && net + shipping + tax === final && final > 0n && minor(request.total) === final);
     check(typeof pricing.shipping.configurationId === "string" && !!pricing.shipping.configurationId.trim() &&
       Number.isSafeInteger(pricing.shipping.revision) && pricing.shipping.revision >= 1 &&
       (pricing.shipping.mode === "flat" || pricing.shipping.mode === "free" && shipping === 0n));
     check(Array.isArray(pricing.lines) && pricing.lines.length === request.lines.length && pricing.lines.length > 0);
-    let sumSubtotal = 0n, sumDiscount = 0n, sumNet = 0n;
+    let sumSubtotal = 0n, sumDiscount = 0n, sumNet = 0n, sumTax = 0n;
     for (const [index, line] of pricing.lines.entries()) {
       const original = request.lines[index];
       check(typeof original.catalogItemId === "string" && !!original.catalogItemId.trim() &&
@@ -128,10 +130,10 @@ function assertPricing(request: PaymentRequest): void {
         minor(line.unitPrice) === minor(original.unitPrice));
       const lineSubtotal = minor(line.lineSubtotal), lineDiscount = minor(line.discount), lineNet = minor(line.netAmount);
       check(lineSubtotal === minor(original.unitPrice) * BigInt(original.quantity) &&
-        lineSubtotal - lineDiscount === lineNet && lineDiscount >= 0n && lineNet >= 0n);
-      sumSubtotal += lineSubtotal; sumDiscount += lineDiscount; sumNet += lineNet;
+        lineSubtotal - lineDiscount === lineNet && lineDiscount >= 0n && lineNet >= 0n && !line.tax === !pricing.tax);
+      sumSubtotal += lineSubtotal; sumDiscount += lineDiscount; sumNet += lineNet; sumTax += line.tax ? minor(line.tax) : 0n;
     }
-    check(sumSubtotal === subtotal && sumDiscount === discount && sumNet === net);
+    check(sumSubtotal === subtotal && sumDiscount === discount && sumNet === net && sumTax >= 0n && sumTax <= tax);
   } catch {
     throw new Error("Malformed payment pricing");
   }

@@ -285,6 +285,8 @@ export interface ShopperOrderSummary {
     couponDiscount: PaidOrder["total"];
     netMerchandise: PaidOrder["total"];
     shipping: { mode: "free" | "flat"; charge: PaidOrder["total"] };
+    /** Absent when no tax answer priced the order. */
+    tax?: PaidOrder["total"];
     finalTotal: PaidOrder["total"];
   } | null;
   delivery: CheckoutDeliveryAddress | null;
@@ -312,6 +314,7 @@ export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
           couponDiscount: p.couponDiscount,
           netMerchandise: p.netMerchandise,
           shipping: { mode: p.shipping.mode, charge: p.shipping.charge },
+          ...(p.tax ? { tax: p.tax } : {}),
           finalTotal: p.finalTotal,
         }
       : null,
