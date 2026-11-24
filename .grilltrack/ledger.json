@@ -17780,6 +17780,63 @@
       "superseded_by": null,
       "updated_at": "2026-11-24T19:11:48+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Behavior-preserving folds of repeated code, measured on the final backend.js, before attributes are added; no allowance, route, record, message, validation rule or admin block changes. (1) Connect trades the store key for a pass and reads a DinkusKit.com address through one helper, and what Connect asks for is one object repeated in its receipt in the same key order. (2) SHA-256 of text, JSON byte size and strict UTF-8 JSON parsing each have one shared helper. (3) Calls to hosted services share their no-store, no-redirect options. (4) The store's trusted web address is resolved, or checkout refused, in one place. (5) A product's first creation facts are read through one helper, and catalog create names what was asked for once. (6) The product panels share finding the page's product, Connect's refusals share their closing words, and the price message is built once. Result on main f603a05: 131,005 to 130,535 bytes, headroom 67 to 537.",
+      "context_ref": "https://github.com/dinkuskit/payments/issues/125",
+      "created_at": "2026-11-24T22:42:06+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "registry-headroom-20261031"
+      ],
+      "domain": "Coupons as a plugin: the add-ons door",
+      "history": [
+        {
+          "at": "2026-11-24T22:42:07+00:00",
+          "choice": "Behavior-preserving folds of repeated code, measured on the final backend.js, before attributes are added; no allowance, route, record, message, validation rule or admin block changes. (1) Connect trades the store key for a pass and reads a DinkusKit.com address through one helper, and what Connect asks for is one object repeated in its receipt in the same key order. (2) SHA-256 of text, JSON byte size and strict UTF-8 JSON parsing each have one shared helper. (3) Calls to hosted services share their no-store, no-redirect options. (4) The store's trusted web address is resolved, or checkout refused, in one place. (5) A product's first creation facts are read through one helper, and catalog create names what was asked for once. (6) The product panels share finding the page's product, Connect's refusals share their closing words, and the price message is built once. Result on main f603a05: 131,005 to 130,535 bytes, headroom 67 to 537.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T22:42:07+00:00",
+          "choice": "Behavior-preserving folds of repeated code, measured on the final backend.js, before attributes are added; no allowance, route, record, message, validation rule or admin block changes. (1) Connect trades the store key for a pass and reads a DinkusKit.com address through one helper, and what Connect asks for is one object repeated in its receipt in the same key order. (2) SHA-256 of text, JSON byte size and strict UTF-8 JSON parsing each have one shared helper. (3) Calls to hosted services share their no-store, no-redirect options. (4) The store's trusted web address is resolved, or checkout refused, in one place. (5) A product's first creation facts are read through one helper, and catalog create names what was asked for once. (6) The product panels share finding the page's product, Connect's refusals share their closing words, and the price message is built once. Result on main f603a05: 131,005 to 130,535 bytes, headroom 67 to 537.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "registry-headroom-20261124",
+      "implementation_ref": "fdc6c97 (pull request 305): shared helpers for the Connect pass-and-read, SHA-256, JSON byte size, UTF-8 JSON parsing, hosted-call options, trusted site origin, catalog creation facts, panel product lookup and two messages. On main f603a05 backend.js went 131,005 to 130,535 bytes; merged with main ee91ad6, which had made its own room, 130,370 to 129,900 bytes, headroom 702 to 1,172.",
+      "question": "How does the Registry backend get room for cart attributes, when main sits 67 bytes under the 131,072-byte per-file cap?",
+      "rationale": "Ronald 2026-11-24, asked whether to drop the retired Ship TEST profile allowance or to shave without changing behavior: B. Precedent registry-headroom-20261031 and commerce-connect-size-20261022 (no fixed reserve; room is found before the feature).",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-11-24T22:42:07+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17816,5 +17873,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-24T19:11:48+00:00"
+  "updated_at": "2026-11-24T22:42:07+00:00"
 }

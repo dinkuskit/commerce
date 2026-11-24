@@ -12,7 +12,7 @@ import type {
   StorefrontOutOfStockListingStorage,
 } from "../storefront-availability/kernel/index.js";
 import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
-import { GuestCheckoutError } from "./errors.js";
+import { trustedOrigin } from "./capability.js";
 import { admitGuestCheckoutWrite } from "./origin-admission.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
 import { createCheckoutPaymentAssociationPort } from "./storage.js";
@@ -134,20 +134,19 @@ export function admitBoundGuestCheckoutRuntime(
   const runtimeSiteUrl = ctx.site?.url;
   const topLevelSiteUrl = host.topLevelSiteUrl;
   const checkoutSiteUrl = host.checkoutSiteUrl;
-  const resolved = resolveTrustedSiteOrigin({
+  const origin = trustedOrigin({
     constructorSiteUrl,
     topLevelSiteUrl,
     checkoutSiteUrl,
     runtimeSiteUrl,
   });
-  if (!resolved.ok) throw new GuestCheckoutError("UNAVAILABLE");
   admitGuestCheckoutWrite({
     requestUrl: ctx.request.url,
     headers: ctx.request.headers,
-    siteOrigin: resolved.origin,
+    siteOrigin: origin,
   });
   return bindGuestCheckoutRuntime(ctx.storage, names, {
-    siteUrl: resolved.origin,
+    siteUrl: origin,
     constructorSiteUrl,
     runtimeSiteUrl,
     topLevelSiteUrl,

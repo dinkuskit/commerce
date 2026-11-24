@@ -1,6 +1,6 @@
 import type { StorageCollection } from "emdash";
 import { catalogFail } from "./errors.js";
-import { PRODUCT_MOVED } from "./product-state.js";
+import { PRODUCT_MOVED, creationOf } from "./product-state.js";
 import { normalizeProductName, normalizeSku } from "./normalize.js";
 import { findUniqueViolation } from "./storage-constraints.js";
 import type { CatalogItemRecord, CatalogStorageRecord } from "./types.js";
@@ -58,7 +58,7 @@ export async function renameCatalogProduct(catalog: Catalog, input: { catalogIte
 /** The product under a new name, keeping the first creationPayload. */
 export const named = (item: CatalogItemRecord, name: string): CatalogItemRecord => ({
   ...item, name,
-  creationPayload: item.creationPayload ?? { kind: item.kind, name: item.name, sku: item.sku, skuKey: item.skuKey, manageStock: item.creationIntent?.manageStock ?? false },
+  creationPayload: creationOf(item),
 });
 
 /** Puts a product on sale or takes it back to Draft. Only the store's publish check calls this; Commerce never reads the page. */
