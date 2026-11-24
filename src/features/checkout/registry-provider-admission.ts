@@ -22,8 +22,6 @@ export interface RegistryCheckoutConfig {
   issuer: string;
   audience: string;
   shipping: TrustedShippingConfiguration;
-  /** The hosted coupon service. Without it, coupon codes are unavailable. */
-  coupons?: { origin: string; audience: string };
   /** Ship's hosted service for Orders. Without it, Orders sends nothing to Ship. */
   ship?: { origin: string; audience: string };
 }
@@ -75,8 +73,8 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
     return null;
   }
   const record = value;
-  // Each hosted service besides Payments is optional: { origin, audience }.
-  const services = ["coupons", "ship"].filter(name => record[name] !== undefined);
+  // Ship, the one hosted service besides Payments, is optional: { origin, audience }.
+  const services = ["ship"].filter(name => record[name] !== undefined);
   const hasMode = value.mode !== undefined;
   const hasMerchant = value.authorizeNetMerchantId !== undefined;
   const providerId = value.providerId;

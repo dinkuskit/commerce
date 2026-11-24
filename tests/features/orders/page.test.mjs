@@ -93,7 +93,7 @@ test('the Checkout to Orders handoff keeps the first copy and reports repeats an
   { ...fresh, lines: [] }, { ...fresh, total: { minor: '100' } }, { ...fresh, total: usd('1.00') },
   { ...fresh, lines: [{ ...order.lines[0], quantity: 0 }] }, { ...fresh, lines: [{ ...order.lines[0], unitPrice: { currency: 'EUR', minor: '1' } }] },
   { ...fresh, lines: [{ ...order.lines[0], name: 7 }] }, { ...fresh, pricing: { ...pricing, shipping: {} } },
-  { ...fresh, pricing: { ...pricing, coupon: { code: '' } } }, { ...fresh, ticketIds: [''] }, { ...fresh, paidAt: 5 },
+  { ...fresh, ticketIds: [''] }, { ...fresh, paidAt: 5 },
   { ...fresh, contactSnapshot: 'x' }, { ...fresh, contactSnapshot: {} }, { ...fresh, contactSnapshot: { contact: {} } },
   { ...fresh, contactSnapshot: { ...snap, contact: { ...snap.contact, delivery: { name: 'A', line1: '1 Main St', city: 'X', postalCode: '1' } } } },
   { ...fresh, contactSnapshot: { contact: snap.contact } }, { ...fresh, contactSnapshot: { ...snap, schema: 'other' } },

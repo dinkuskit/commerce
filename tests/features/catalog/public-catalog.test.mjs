@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readPublicCatalog, readPublicCatalogItem } from '../../../dist/features/catalog/index.js';
 
-function context({ hasMore = false, cursor, count = 1, status = 'in-stock', managed = false, priced = true, hide = false, mixed = false, offCatalog } = {}) {
+function context({ hasMore = false, cursor, count = 1, status = 'in-stock', managed = false, priced = true, sale = true, hide = false, mixed = false, offCatalog } = {}) {
   const record = { recordKind: 'catalog-item', itemId: 'hat', name: 'Hat', sku: 'HAT',
     stockManagement: managed ? { mode: 'managed', status: 'active', inventorySkuId: 'sku' } : { mode: 'unmanaged' } };
   const empty = { async get() { return null; }, async query() { return { items: [], hasMore: false }; } };
@@ -14,7 +14,7 @@ function context({ hasMore = false, cursor, count = 1, status = 'in-stock', mana
         : [];
       return { items: rows.concat(Array.from({ length: count }, () => ({ id: 'hat', data: record }))), hasMore, cursor };
     } },
-    catalog_prices: { async get() { return priced ? { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat', regular: { currency: 'USD', minor: '400' }, sale: { currency: 'USD', minor: '300' } } : null; } },
+    catalog_prices: { async get() { return priced ? { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat', regular: { currency: 'USD', minor: '400' }, ...(sale ? { sale: { currency: 'USD', minor: '300' } } : {}) } : null; } },
     catalog_manual_availability: { async get() { return { recordKind: 'catalog-manual-availability', recordId: 'hat', catalogItemId: 'hat', status }; } },
     catalog_backorder_policies: empty, store_inventory_configurations: empty, storefront_availability_settings: empty,
     storefront_out_of_stock_listing: { async get() { return { recordKind: 'storefront-out-of-stock-listing', recordId: 'active', hideOutOfStock: hide, ...(offCatalog ? { offCatalog } : {}), updatedAt: '2026-10-07T00:00:00Z' }; } },
@@ -28,8 +28,18 @@ test('public projection preserves authoritative sale, listing and managed fail-c
   assert.deepEqual((await readPublicCatalog(context({ status: 'out-of-stock', hide: true }))).products, []);
   const managed = (await readPublicCatalog(context({ managed: true }))).products[0];
   assert.deepEqual(managed.availability, { status: 'availability-unavailable', sellable: false, listable: true });
-  assert.deepEqual(Object.keys(managed).sort(), ['availability', 'gallery', 'id', 'image', 'name', 'price', 'sku']);
+  assert.deepEqual(Object.keys(managed).sort(), ['availability', 'gallery', 'id', 'image', 'name', 'onSale', 'price', 'sku']);
   assert.deepEqual([managed.image, managed.gallery], [null, []], 'no media record and no placeholder yields no image');
+});
+
+test('the public catalog says which items are on sale and nothing for a regular price (commerce-sale-flag-20261124)', async () => {
+  const sale = (await readPublicCatalog(context())).products[0];
+  assert.deepEqual([sale.price.minor, sale.onSale], ['300', true]);
+  const regular = (await readPublicCatalog(context({ sale: false }))).products[0];
+  assert.equal(regular.price.minor, '400');
+  assert.equal('onSale' in regular, false, 'a regular price carries no flag at all');
+  assert.equal('onSale' in await readPublicCatalogItem(context({ sale: false }), 'hat'), false);
+  assert.equal('regular' in sale || 'sale' in sale, false, 'the flag replaces neither price; the regular price stays private');
 });
 
 test('the public catalog says when the owner turned the DinkusKit catalog listing off', async () => {
@@ -63,6 +73,7 @@ test('single-item lookup uses the same public projection and never exposes page 
     name: 'Hat',
     sku: 'HAT',
     price: { currency: 'USD', minor: '300' },
+    onSale: true,
     availability: { status: 'in-stock', sellable: true, listable: true },
     image: null,
     gallery: [],

@@ -1,5 +1,4 @@
 import { isRecord } from "../../shared/record.js";
-import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { reconcileCheckout } from "./orchestrate.js";
 import type { WakeProbe } from "./orchestrate.js";
 import type {
@@ -72,11 +71,9 @@ export async function reconcilePaymentWakes(
       const probe: WakeProbe = { handoff: "stored" };
       const attempt = await reconcileCheckout(execution, association.cartId, wake.attemptId, probe);
       const paid = attempt.phase === "paid";
-      // Not settled yet, its coupon not settled, or a checkout that ended unpaid that Payments has not answered
-      // unpaid again; then a paid order that is not this wake's or that Orders refused; then Orders or the ack unreachable.
-      // A late-paid order keeps the coupon its checkout already gave back: the order keeps its discount, the use is not counted again.
+      // Not settled yet, or a checkout that ended unpaid that Payments has not answered unpaid again; then a paid
+      // order that is not this wake's or that Orders refused; then Orders or the ack unreachable.
       const reason = !paid && attempt.phase !== "released" ||
-        !REGISTRY_BUILD && attempt.coupon && attempt.coupon.status !== (paid && !attempt.order?.paidAfterEnd ? "consumed" : "released") ||
         !paid && attempt.paymentReleaseReason === "expired-unpaid" && !probe.unpaid ? "unknown"
         : paid && (!attempt.order || attempt.order.attemptId !== wake.attemptId || probe.handoff === "conflict") ? "mismatch"
         : probe.handoff === "unavailable" || !await wakes.acknowledge(wake) ? "unavailable" : null;

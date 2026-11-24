@@ -1,5 +1,7 @@
 # Coupon Registry Block Kit contract and admission boundary
 
+**Retired 24 Nov 2026.** Commerce no longer carries coupon code: coupons are their own Registry plugin in the store, and their answer reaches checkout through Commerce's add-ons door. See [addons-door.md](addons-door.md) and GrillTrack `commerce-addons-door-20261124`. What follows is kept as history.
+
 Commerce exposes a host-rendered coupon page through its existing sandbox
 admin route. Products and Settings retain the `content:edit_any` level (editor
 and above). Settings compares EmDash's own `toRoleLevel` result with

@@ -27,7 +27,6 @@ const requiredFiles = [
   "src/features/storefront-availability/index.ts",
   "src/features/checkout/index.ts",
   "src/features/checkout/kernel/index.ts",
-  "src/features/coupons/index.ts",
   "src/features/orders/index.ts",
   "docs/contracts/commerce-handoffs.md",
   "src/features/structured-data/index.ts",
@@ -149,7 +148,6 @@ export async function auditFeatures(repositoryRoot = root) {
     "`src/features/storefront-availability/`",
     "`src/features/checkout/`",
     "`src/features/orders/`",
-    "`src/features/coupons/`",
     "`src/features/structured-data/`",
     "`bin/verify-commerce quick`",
     "`bin/verify-commerce full`",
@@ -188,14 +186,6 @@ export async function auditFeatures(repositoryRoot = root) {
   ) {
     findings.push(
       "package export ./features/inventory-setup must resolve to the inventory-setup public entry",
-    );
-  }
-  if (
-    manifest.exports?.["./features/coupons"]?.default !==
-    "./dist/features/coupons/index.js"
-  ) {
-    findings.push(
-      "package export ./features/coupons must resolve to the coupons public entry",
     );
   }
   // A store's policies are its EmDash pages; Commerce keeps no policy records

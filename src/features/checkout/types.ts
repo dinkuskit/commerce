@@ -3,7 +3,6 @@ import type { PaidOrderReceiver, PaidOrderStatus } from "../../handoffs/paid-ord
 import type { CatalogFulfillment, Money } from "../catalog/kernel/index.js";
 import type { InventoryProviderBinding } from "../inventory-provider/kernel/index.js";
 import type { StorefrontAvailabilityResolverStorage, ResolveStorefrontAvailabilityExecution } from "../storefront-availability/kernel/index.js";
-import type { CheckoutCouponPort, CouponNotApplicableReason, CouponQuoteSnapshot } from "../coupons/index.js";
 import type {
   CheckoutContactRequirementsLoader,
   CheckoutContactSnapshot,
@@ -12,6 +11,17 @@ import type {
 
 export const CHECKOUT_FEATURE_ID = "dinkus.checkout";
 export interface CartLine { catalogItemId: string; quantity: number }
+/**
+ * One add-on's answer, which the store's own code asked for and hands to the add-ons door (commerce-addons-door-20261124):
+ * per checkout line, in Commerce's line order, the item and unit price (minor units) it saw and the amount it takes off;
+ * `ship: "free"` waives shipping. `from` is the add-on's plugin id, `ref` its own reference and `codes` what the shopper typed.
+ */
+export interface AddonAnswer {
+  from: string; ref?: string; codes?: readonly string[]; ship?: "free";
+  lines: readonly { item: string; price: string; qty: number; off: string }[];
+}
+/** What an order keeps of each answer: who answered, its reference and the codes. */
+export type AddonUse = Pick<AddonAnswer, "from" | "ref" | "codes">;
 /** options: the frozen choices as the order page shows them ("Size: M"), one line; absent without options. */
 export interface CheckoutLine extends CartLine { name: string; unitPrice: Money; options?: string }
 export const CHECKOUT_VARIANT_SELECTION_SCHEMA =
@@ -63,7 +73,6 @@ export interface CheckoutPricingSnapshot {
   };
   finalTotal: Money;
   lines: readonly CheckoutPricingLine[];
-  coupon?: { code: string; quote: CouponQuoteSnapshot };
 }
 export interface StockRequirement { skuId: string; quantity: number; allowBackorders: boolean }
 export interface StockRequest {
@@ -191,6 +200,7 @@ interface CommerceOrderBase {
   mode?: PaymentMode;
   /** Payments confirmed the payment after Commerce had let the checkout go as ended and unpaid. */
   paidAfterEnd?: true;
+  addons?: readonly AddonUse[];
 }
 export type CommerceOrder =
   | (CommerceOrderBase & { paymentId: string })
@@ -211,13 +221,8 @@ export interface CheckoutAttempt {
   paymentMode?: PaymentMode;
   /** Durable canonical reason for releasing; host support or elapsed time is never a reason. */
   paymentReleaseReason?: "never-started" | "not-created" | "expired-unpaid";
-  coupon?: {
-    couponId: string;
-    code: string;
-    status: "unreserved" | "pending" | "released" | "consumed";
-    /** Why the coupon owner refused the hold before payment; the attempt released without a charge. */
-    refused?: CouponUnavailableReason;
-  };
+  /** The add-ons whose answers priced this checkout (commerce-addons-door-20261124), copied onto its order. */
+  addons?: readonly AddonUse[];
 }
 /** One durable aggregate per trusted cart. Preserve past attempts and paid receipts. */
 /**
@@ -278,8 +283,6 @@ export interface TrustedShippingConfiguration {
 }
 
 export interface TrustedCheckoutPricing {
-  /** Bound by the entry from its own coupon storage; absent means coupon codes are unavailable. */
-  coupons?: CheckoutCouponPort;
   resolveShippingConfiguration: () => Promise<TrustedShippingConfiguration | null>;
   paymentPricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
 }
@@ -304,21 +307,11 @@ export type GuestCheckoutState =
   | "recoverable-failure"
   | "released-retry";
 
-/**
- * Why a coupon can't be used. The storefront writes the shopper's words.
- * not-applicable is the fallback when the coupon owner gives no finer reason.
- */
-export type CouponUnavailableReason = CouponNotApplicableReason | "not-applicable" | "used-up" | "try-later";
-
-/** A coupon that can't be used, as the guest sees it; minimum comes with minimum-not-met. */
-export interface CouponUnavailable { reason: CouponUnavailableReason; minimum?: Money }
-
 export type GuestCheckoutErrorCode =
   | "CAPABILITY_DENIED"
   | "CHECKOUT_FROZEN"
   | "CHECKOUT_NOT_FOUND"
   | "CONTENTION"
-  | "COUPON_UNAVAILABLE"
   | "INVALID_CART"
   | "INVENTORY_UNAVAILABLE"
   | "ORIGIN_DENIED"
@@ -372,7 +365,7 @@ export interface GuestCheckoutProjection {
   redirectUrl: string | null;
   order: GuestCheckoutOrderSummary | null;
   retryAfter: string | null;
-  unavailable: ({ code: GuestCheckoutErrorCode; message: string } & Partial<CouponUnavailable>) | null;
+  unavailable: ({ code: GuestCheckoutErrorCode; message: string }) | null;
 }
 
 export interface GuestCapabilityPresentation {
@@ -418,8 +411,7 @@ export interface GuestCheckoutHostOptions {
   createAttemptId?: () => string;
   now?: () => number;
   loadCheckoutContactRequirements?: CheckoutContactRequirementsLoader;
-  /** Coupon storage is bound from this installation, never supplied by the host. */
-  pricing?: Omit<TrustedCheckoutPricing, "coupons">;
+  pricing?: TrustedCheckoutPricing;
 }
 
 export interface GuestCheckoutRuntime {
@@ -453,5 +445,5 @@ export type GuestCheckoutResult =
     }
   | {
       ok: false;
-      error: { code: GuestCheckoutErrorCode; message: string } & Partial<CouponUnavailable>;
+      error: { code: GuestCheckoutErrorCode; message: string };
     };
