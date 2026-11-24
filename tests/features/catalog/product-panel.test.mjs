@@ -3,7 +3,7 @@ import test from 'node:test';
 import { validateBlockResponse } from '@emdash-cms/blocks/server';
 import { commerceAdmin, productPanel } from '../../../dist/admin/index.js';
 import { addCatalogVariantOption, createCatalogItem, linkProductPage, pageProduct, setProductPageOnSale } from '../../../dist/features/catalog/kernel/index.js';
-import { readPublicCatalog, readPublicCatalogItem, setProductPageOnSaleRoute } from '../../../dist/features/catalog/index.js';
+import { CATALOG_BACKORDER_POLICIES_COLLECTION, CATALOG_COLLECTION, CATALOG_MANUAL_AVAILABILITY_COLLECTION, CATALOG_MEDIA_COLLECTION, CATALOG_PRICES_COLLECTION, PRODUCT_FEED_ELIGIBILITY_COLLECTION, readPublicCatalog, readPublicCatalogItem, setProductPageOnSaleRoute } from '../../../dist/features/catalog/index.js';
 
 class Store {
   records = new Map(); revisions = new Map();
@@ -158,8 +158,10 @@ test('the native publish route deletes a page\'s product with its own rows, as t
   const { ctx, catalog, pages } = await shop();
   await panel({ type: 'form_submit', action_id: 'sell', values: {}, draft: { fields: { title: 'Tee' } } }, ctx);
   const id = await pageProduct(pages, 'page-1');
-  const rows = ['catalog_prices', 'catalog_manual_availability', 'catalog_backorder_policies', 'catalog_media', 'product_feed_eligibility'];
-  const storage = { catalogItems: catalog, product_pages: pages };
+  // The native build's exported collection names, as a host that mounts this route supplies them.
+  const rows = [CATALOG_PRICES_COLLECTION, CATALOG_MANUAL_AVAILABILITY_COLLECTION, CATALOG_BACKORDER_POLICIES_COLLECTION, CATALOG_MEDIA_COLLECTION, PRODUCT_FEED_ELIGIBILITY_COLLECTION];
+  assert.deepEqual(rows, ['catalogPrices', 'catalogManualAvailability', 'catalogBackorderPolicies', 'catalogMedia', 'productFeedEligibility']);
+  const storage = { [CATALOG_COLLECTION]: catalog, product_pages: pages };
   for (const name of rows) { storage[name] = new Store(); await storage[name].put(id, { recordKind: name, catalogItemId: id }); }
   const route = input => setProductPageOnSaleRoute.handler({ request: { method: 'POST' }, input, storage });
   await route({ catalogItemId: id, entryId: 'page-1', onSale: false, deleted: true });
