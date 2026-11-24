@@ -2,6 +2,7 @@ import { isRecord } from "../../shared/record.js";
 import type { StorageCollection } from "emdash";
 import { CatalogError } from "./errors.js";
 import { normalizeSku } from "./normalize.js";
+import { creationOf } from "./product-state.js";
 import {
   assertCatalogStorageConstraints,
   findUniqueViolation,
@@ -67,13 +68,7 @@ export async function setCatalogItemSku(
       ...current,
       sku,
       skuKey: sku,
-      creationPayload: current.creationPayload ?? {
-        kind: current.kind,
-        name: current.name,
-        sku: current.sku,
-        skuKey: current.skuKey,
-        manageStock: current.creationIntent?.manageStock ?? false,
-      },
+      creationPayload: creationOf(current),
     };
     try {
       const result = await storage.compareAndSet(item.itemId, stored.revision, item);

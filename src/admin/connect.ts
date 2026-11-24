@@ -5,10 +5,12 @@ import { adminAuthorized, navigation } from "../shared/admin-blocks.js";
 import { button, header, note } from "./common.js";
 
 const AGAIN = "DinkusKit.com no longer knows this store key. Press Connect again.";
+/** What the owner does first, and then the button that fetches the settings again. */
+const thenGet = (first: string) => first + ", then press Get checkout settings.";
 const REFUSED: Record<string, string> = {
-  commerce_not_set_up: "Choose shipping and test or live in Set up Commerce on DinkusKit.com, then press Get checkout settings.",
-  payments_not_connected: "Connect Payments, then press Get checkout settings.",
-  payments_not_set_up: "Finish setting up Payments, then press Get checkout settings.",
+  commerce_not_set_up: thenGet("Choose shipping and test or live in Set up Commerce on DinkusKit.com"),
+  payments_not_connected: thenGet("Connect Payments"),
+  payments_not_set_up: thenGet("Finish setting up Payments"),
   invalid_store_key: AGAIN, site_mismatch: AGAIN,
 };
 const ACTIONS = ["connect", "connect.check", "connect.cancel", "connect.refresh"];

@@ -366,9 +366,9 @@ export async function loadCatalogProduct(
 }
 
 function invalidMessage(regular: ParsedClerkDollar, sale: ParsedClerkDollar): string | null {
-  const parts: string[] = [];
-  if (regular.status === "invalid") parts.push(`Regular: ${CLERK_DOLLAR_MESSAGE}`);
-  if (sale.status === "invalid") parts.push(`Sale: ${CLERK_DOLLAR_MESSAGE}`);
+  const parts: string[] = [], add = (label: string) => parts.push(`${label}: ${CLERK_DOLLAR_MESSAGE}`);
+  if (regular.status === "invalid") add("Regular");
+  if (sale.status === "invalid") add("Sale");
   return parts.length === 0 ? null : parts.join(" ");
 }
 

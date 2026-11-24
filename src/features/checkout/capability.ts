@@ -24,15 +24,20 @@ function knownSiteSource(retained: string | undefined, hosted: string | undefine
   return retained !== undefined ? retained : hosted;
 }
 
+/** The store's own web address from the sources given, or checkout is unavailable. */
+export function trustedOrigin(sources: Parameters<typeof resolveTrustedSiteOrigin>[0]): string {
+  const resolved = resolveTrustedSiteOrigin(sources);
+  if (!resolved.ok) throw new GuestCheckoutError("UNAVAILABLE");
+  return resolved.origin;
+}
+
 export function requireTrustedSiteOrigin(runtime: GuestCheckoutRuntime): string {
-  const resolved = resolveTrustedSiteOrigin({
+  return trustedOrigin({
     constructorSiteUrl: knownSiteSource(runtime.constructorSiteUrl, runtime.host.siteUrl),
     runtimeSiteUrl: runtime.runtimeSiteUrl,
     topLevelSiteUrl: knownSiteSource(runtime.topLevelSiteUrl, runtime.host.topLevelSiteUrl),
     checkoutSiteUrl: knownSiteSource(runtime.checkoutSiteUrl, runtime.host.checkoutSiteUrl),
   });
-  if (!resolved.ok) throw new GuestCheckoutError("UNAVAILABLE");
-  return resolved.origin;
 }
 
 export function hostSiteBinding(siteUrl: string | undefined): string {

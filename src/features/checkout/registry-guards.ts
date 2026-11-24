@@ -1,6 +1,8 @@
 import { sortedKeys } from "../../shared/record.js";
 import { GuestCheckoutError } from "./errors.js";
 
+/** Every call to a hosted service is fresh and follows no redirect. */
+export const DIRECT = { cache: "no-store", redirect: "error" } as const;
 /** Shared fail-closed guards for Registry checkout configuration, passes and wakes. */
 export function registryUnavailable(): never { throw new GuestCheckoutError("UNAVAILABLE"); }
 export function registryText(value: unknown, limit = 200): value is string {

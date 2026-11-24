@@ -1,6 +1,7 @@
 import type { PluginContext, StorageCollection } from "emdash";
 import { ORDERS_COLLECTION, billingOf, orderFacts, type OrderRecord, type OrdersCollection } from "./store.js";
 import { cut, lineOptions } from "../../shared/line-text.js";
+import { jsonBytes } from "../../shared/record.js";
 import type { CheckoutRecord } from "../checkout/kernel/index.js";
 
 /**
@@ -28,7 +29,7 @@ const refuse = (code: string, words: string, status: number) =>
 function fit<T extends { data: { lines: unknown[] | null; moreLines?: number } }>(item: T): T {
   const lines = item.data.lines, all = lines?.length ?? 0;
   lines?.splice(50);
-  while (lines?.length && new TextEncoder().encode(JSON.stringify(item)).length > 7500) lines.pop();
+  while (lines?.length && jsonBytes(item) > 7500) lines.pop();
   if (lines && lines.length < all) item.data.moreLines = all - lines.length;
   return item;
 }
