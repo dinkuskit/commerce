@@ -63,8 +63,6 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
   for (const label of labels) {
     if (!isRecord(label) || typeof label.eventId !== "string") unavailable();
     const record = typeof label.orderId === "string" ? await collection.get(label.orderId) : null;
-    // An order pinned by the retired isolated Ship profile never completes from Ship.
-    if (record?.shipPin) continue;
     if (!await active()) unavailable();
     // A label for an order Orders does not have, an older version or a Completed order changes nothing.
     if (record) await completeOrder(collection, label.orderId as string, label.version as number, label, new Date().toISOString());
@@ -77,7 +75,7 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
   // Oldest payment first, so the longest-waiting orders reach Ship first.
   await walkOrders(collection, async record => {
     const facts = orderFacts(record);
-    if (!facts.shipTo || record.shipPin || record.shipVersion === facts.version) return;
+    if (!facts.shipTo || record.shipVersion === facts.version) return;
     if (!room--) return false;
     const lines = [];
     for (const { catalogItemId, name, quantity, unitPrice } of record.paidOrder.lines) {

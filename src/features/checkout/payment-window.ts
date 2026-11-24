@@ -82,7 +82,8 @@ export function providerSessionWindowIsValid(session: PaymentSession, request: P
   if (!Number.isSafeInteger(session.expiresAt)) return false;
   const duration = session.expiresAt - session.createdAt;
   if (!Number.isSafeInteger(duration)) return false;
-  const bounds = readFrozenPaymentWindowBounds(request);
-  if (!bounds) return false;
-  return duration >= bounds.minSeconds && duration <= bounds.maxSeconds;
+  // Commerce only makes current requests; an attempt frozen by a release before the bounded window
+  // (paymentWindowSeconds) is refused here, and the shopper starts checkout again.
+  return isCurrentPaymentRequest(request) && isExactCurrentWindow(request.paymentWindow) &&
+    duration >= CURRENT_PAYMENT_WINDOW_MIN_SECONDS && duration <= CURRENT_PAYMENT_WINDOW_MAX_SECONDS;
 }

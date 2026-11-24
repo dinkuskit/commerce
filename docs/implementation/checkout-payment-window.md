@@ -56,7 +56,7 @@ For every non-unknown outcome with a session, Commerce requires:
 - real safe-integer `createdAt` and `expiresAt`
 - real session id
 - inclusive `1800 <= expiresAt - createdAt <= 1860` for current requests
-- exact `expiresAt - createdAt === 1800` for frozen `paymentWindowSeconds:1800`
+- a frozen `paymentWindowSeconds:1800` attempt fails this check (see below)
 - later outcomes compare `sessionId`, `redirectUrl`, `createdAt`, and
   `expiresAt` by value
 
@@ -88,13 +88,13 @@ A known session can never become `not-created`.
 
 ## Legacy exact-1800 behavior
 
-Already-frozen durable records may still contain
-`paymentWindowSeconds: 1800` and no `paymentWindow`. Replay them exactly.
-Compatible validation uses that attempt's frozen policy: the old exact-1800
-equality. A 1859-second provider duration that is valid for a new request is
-invalid for a frozen old1800 original. Type support is the public union
-above so Payments can consume the current shape while replaying old originals
-safely. Do not silently convert old durable records.
+Commerce no longer accepts a session for an attempt frozen with
+`paymentWindowSeconds: 1800` and no `paymentWindow` (removed on 24 Nov 2026 to
+make room for Tax; no store holds such an attempt). Every outcome
+for one fails `Invalid payment window`; the record is never rewritten, released
+or converted, and the shopper starts checkout again. The public union,
+`isLegacyExact1800PaymentRequest` and `paymentRequestHandoff` still name the
+old shape for readers, and Payments keeps its own copy for its stored sessions.
 
 Historical proof that documented exact 1800 remains history. This file is the
 current public contract.

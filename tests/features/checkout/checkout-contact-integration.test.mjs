@@ -255,21 +255,17 @@ test('native guest contact denies missing email and cross-cart injection, corrup
   assert.equal((await f.storage.checkoutGuestCapabilities.query()).items.length,1);
 });
 
-test('active historical original replays without new contact or a current requirements read', async t => {
+test('an active attempt frozen with the old payment window is refused without a contact or requirements read', async t => {
   const {opened,f}=checkoutFixture();t.after(()=>opened.db.close());
   let requirementReads=0;
   f.execution.loadCheckoutContactRequirements=async()=>{requirementReads++;throw Error('unavailable');};
   const legacy={attemptId:'active-legacy',cart:[{catalogItemId:'one',quantity:1}],payment:{attemptId:'active-legacy',bindingRef:'stripe-test-binding',lines:[{catalogItemId:'one',quantity:1,name:'one',unitPrice:{currency:'USD',minor:'75'}}],total:{currency:'USD',minor:'75'},paymentMethods:['card'],paymentWindowSeconds:1800},phase:'paying'};
   await opened.store.compareAndSet('active-legacy-cart',null,{attempts:[legacy]});
-  const replay=await startCheckout(f.execution,'active-legacy-cart',legacy.cart);
+  // Commerce no longer accepts the old exact-1800 window: the replay is refused before any contact work.
+  await assert.rejects(startCheckout(f.execution,'active-legacy-cart',legacy.cart),/Invalid payment window/);
   assert.equal(requirementReads,0);
-  assert.equal(replay.contactSnapshot,undefined);
-  assert.deepEqual(replay.payment,legacy.payment);
-  f.setPayment('paid');
-  const paid=await reconcileCheckout(f.execution,'active-legacy-cart',legacy.attemptId);
-  assert.equal(paid.phase,'paid');
-  assert.equal(paid.order.contactSnapshot,undefined);
-  assert.deepEqual(paid.order.total,legacy.payment.total);
+  const stored=(await opened.store.read('active-legacy-cart')).record.attempts[0];
+  assert.deepEqual([stored.phase,stored.payment],['paying',legacy.payment]);
 });
 
 import { runtimeFixture } from './registry-runtime.mjs';

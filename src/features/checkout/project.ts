@@ -1,3 +1,4 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { guestCheckoutErrorMessage } from "./errors.js";
 import {
   GUEST_CHECKOUT_PROJECTION_SCHEMA,
@@ -44,7 +45,7 @@ function unavailableOf(
   if (attempt.phase === "paid" && attempt.order) return null;
   if (attempt.phase === "released") return null;
   if (attempt.phase === "paying" && attempt.session) return null;
-  const code: GuestCheckoutErrorCode = attempt.phase === "reserving" && attempt.stock
+  const code: GuestCheckoutErrorCode = !REGISTRY_BUILD && attempt.phase === "reserving" && attempt.stock
     ? "INVENTORY_UNAVAILABLE"
     : attempt.phase === "paying"
       ? "PAYMENTS_UNAVAILABLE"

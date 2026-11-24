@@ -30,7 +30,7 @@ through `checkout-binding` for creation, and performs historical identity
 validation through `existing-binding` for lookup. It sends the original frozen
 `PaymentRequest` unchanged and preserves `unknown` on transport or malformed
 responses. Commerce still performs canonical outcome, amount, identity, and
-1800..1860 / historical exact-1800 validation.
+1800..1860 validation (an old exact-1800 attempt is refused).
 
 Descriptor `options` are JSON serialized by EmDash 1.2.0. They cannot transport
 credential or function resolvers. A dedicated native host module may export

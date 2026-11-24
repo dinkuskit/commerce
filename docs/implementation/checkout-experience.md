@@ -86,9 +86,8 @@ session creation and preserve that session's original deadline forever. New
 Commerce requests use immutable `paymentWindow: { minSeconds: 1800, maxSeconds:
 1860 }`. Commerce validates real safe-integer provider `createdAt`/`expiresAt`
 and accepts `1800 <= expiresAt - createdAt <= 1860`. It never manufactures
-creation time or omits expiry. Frozen historical `paymentWindowSeconds: 1800`
-originals stay exact and keep exact-1800 validation; retries do not rewrite
-them. See [checkout-payment-window.md](checkout-payment-window.md) for the
+creation time or omits expiry. An attempt frozen with the old
+`paymentWindowSeconds: 1800` is refused, never rewritten. See [checkout-payment-window.md](checkout-payment-window.md) for the
 public types, Payments persist-before-contact obligation, 23-hour create retry
 bound, and `requestedExpiresAtSeconds=floor(original claimedAtMs/1000)+1860`.
 Time spent reserving does not reduce the shopper's processor payment window. A
