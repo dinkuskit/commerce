@@ -1,5 +1,7 @@
 # Coupons at Registry checkout through the hosted coupon service
 
+**Retired 24 Nov 2026.** Commerce no longer carries coupon code: coupons are their own Registry plugin in the store, and their answer reaches checkout through Commerce's add-ons door. See [addons-door.md](addons-door.md) and GrillTrack `commerce-addons-door-20261124`. What follows is kept as history.
+
 **Unhooked for v1** (GrillTrack `registry-coupons-unhooked-v1`, 2026-10-10):
 to leave room under the 128 KiB backend limit, the Registry build no longer
 wires the hosted coupon port. A coupon code is refused as `COUPON_UNAVAILABLE`

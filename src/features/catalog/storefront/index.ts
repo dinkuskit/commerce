@@ -1,6 +1,6 @@
 /**
  * Sandboxed public catalog routes. They read through Checkout's guest runtime,
- * so they live outside the catalog kernel: Checkout and the coupon core import
+ * so they live outside the catalog kernel: Checkout imports
  * that kernel, and must not pull Checkout (and its settings) back in.
  */
 export {

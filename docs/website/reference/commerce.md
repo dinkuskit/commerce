@@ -29,7 +29,7 @@ The store admin uses EmDash's built-in Block Kit screens only. Commerce adds two
 
 | Page | What it does |
 | --- | --- |
-| **Orders** | Lists orders. **Inspect #N** opens one: when it was paid and its status, then **Ship to** (with **Correct address**) beside **Customer** (email and phone) and **Bill to**. Below them, a line such as "3 items ready to ship" carries **Create shipping label** (when the store has Ship) or **Complete order**. Then comes the items table, with each item's recorded variant choices (such as Size: M; later option renames do not change them), price, quantity and line total, and then items subtotal, coupon, shipping and order total. Order ID, version, receipt, checkout attempt, provider payment and catalog IDs are in the **Order record** fold. Times show in UTC. |
+| **Orders** | Lists orders. **Inspect #N** opens one: when it was paid and its status, then **Ship to** (with **Correct address**) beside **Customer** (email and phone) and **Bill to**. Below them, a line such as "3 items ready to ship" carries **Create shipping label** (when the store has Ship) or **Complete order**. Then comes the items table, with each item's recorded variant choices (such as Size: M; later option renames do not change them), price, quantity and line total, and then items subtotal, the discount with the codes the shopper used, shipping and order total. Order ID, version, receipt, checkout attempt, provider payment and catalog IDs are in the **Order record** fold. Times show in UTC. |
 | **Commerce settings** | Connect, checkout settings, and catalog choices (hide out-of-stock products, list the store's products in the DinkusKit catalog that AI shopping assistants search, a placeholder image for products without one). |
 
 There is no separate Commerce Products page. Products are managed on the site's own product pages, described next.
@@ -218,7 +218,17 @@ Commerce keeps a payment notice from Payments until Orders has stored the paid o
 
 A shopper can finish paying after their checkout ended unpaid, for example when a Stripe payment page was left open past its time. When Payments confirms that payment, Commerce makes the order anyway, with the same items and total, and the order page shows **Paid after checkout ended**. Check you can still fill it, or refund it by hand. WooCommerce does the same: a late payment moves a cancelled unpaid order to Processing. The shopper's own status check still shows the checkout as ended; only the payment notice from Payments makes the order.
 
-Coupon codes are refused at checkout on Registry stores in this release.
+## Add-ons door
+
+Coupons and, later, sales tax are their own plugins, and EmDash plugins cannot call each other. So the store's own code asks each add-on first and then starts checkout through one private Commerce route, `checkout/addons/start`, with their answers. Like the courier's route, it refuses anyone signed in, the Administrator included, so only the store itself can use it. A shopper or agent starting checkout through the public `checkout/guest/start` cannot send add-on answers, and discount codes are typed on the store's own checkout page.
+
+The door takes what `checkout/guest/start` takes, the same cart capability and origin, and `addons`: at most 4 answers, one per add-on. Each answer names the add-on (`from`, its plugin id, at most 64 characters), an optional reference of its own (`ref`, at most 200), the codes the shopper typed (`codes`, at most 6, each at most 64), `ship: "free"` when it waives shipping, and, for every checkout line in Commerce's order, the item and unit price it saw and the amount it takes off, in whole cents (`lines: [{ item, price, off }]`, at most $10,000,000 a line). Commerce does the totals itself:
+
+- A price or item the add-on did not see means the catalog changed since the store asked, and the door answers `CONTENTION`, so the store asks again.
+- The amounts off on a line, from all answers together, can never take it below $0. Anything else malformed leaves checkout unavailable, and nothing is frozen.
+- The discount is per line, as Payments charges it, and the subtotal minus the discount decides free shipping over the owner's amount. An answer with `ship: "free"` makes shipping free.
+- While a checkout's payment is open, its add-ons and codes are frozen with its cart: asking with other codes, or none, is refused with `CHECKOUT_FROZEN`.
+- The order keeps each add-on's `from`, `ref` and `codes`, and the Orders page shows them on the discount line.
 
 ## Completing and correcting an order
 
@@ -264,7 +274,7 @@ EmDash plugins cannot call each other, so Commerce hands news to the store's oth
 | `order.shipped` | An order was marked Completed, by **Complete order** or by a Ship label | Reviews, and Store emails for the shipping confirmation | `<order id>:shipped` |
 | `cart.left` | A cart was noted as left (see [Abandoned carts](#abandoned-carts)) | Store emails, for the abandoned cart email | `<cart id>:left` |
 
-- `order.paid` carries the order number, the checkout email, the name and delivery address, each item's name, chosen options (such as "Size: M"), quantity and price, and the subtotal, coupon discount, shipping and total. An order paid before the version of Commerce that added it is not news, so upgrading sends no confirmations for old orders.
+- `order.paid` carries the order number, the checkout email, the name and delivery address, each item's name, chosen options (such as "Size: M"), quantity and price, the subtotal, discount, shipping and total, and `addons`: each add-on whose answer priced the order, with its reference and the codes the shopper used, so the Coupons plugin can count each use. An order paid before the version of Commerce that added it is not news, so upgrading sends no confirmations for old orders.
 - `order.shipped` carries the order number, the time it was marked Completed, the checkout email, the name on the delivery address (or the billing address), the carrier and tracking number when the owner gave them, and each product's catalog ID, name and quantity. Moving an order back to Processing and completing it again sends the same id again, which a receiving plugin already has. An order Completed before the version of Commerce that added this is not news.
 - `cart.left` carries the checkout email, whether the shopper ticked the box, the cart link and its stop link, and the items when the cart still holds what went to checkout. All of these come from the checkout the cart was noted for. A later checkout of the same cart under another email changes neither the address in the news nor the address its stop link stops.
 - An item of any topic lists at most 50 items, and drops items from the end while the whole item is over 7,500 bytes, so it stays under the courier's 8 KB; `moreLines` counts the ones left out.

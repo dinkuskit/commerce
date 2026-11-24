@@ -15,7 +15,7 @@ try {
  await expect(page.getByRole('button', { name: 'Inspect synthetic-order-paid-001', exact: true })).toBeFocused();
  await page.keyboard.press('Enter');
  await expect(page.getByText('Receipt: synthetic-receipt-paid-001')).toBeVisible();
- await expect(page.getByText('SYNTHETIC5', { exact: true })).toBeVisible();
+ await expect(page.getByText('Discount SYNTHETIC5', { exact: true })).toBeVisible();
  await page.screenshot({ path: output + '/desktop-detail.png', fullPage: true, animations: 'disabled' });
  await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Back to orders' })).toBeFocused();
  await page.keyboard.press('Enter');

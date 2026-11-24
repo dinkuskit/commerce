@@ -1,5 +1,7 @@
 # Native Coupons admin v1
 
+**Retired 24 Nov 2026.** Commerce no longer carries coupon code: coupons are their own Registry plugin in the store, and their answer reaches checkout through Commerce's add-ons door. See [addons-door.md](addons-door.md) and GrillTrack `commerce-addons-door-20261124`. What follows is kept as history.
+
 This source slice is the coordinator-assigned native React admin surface for
 Coupons-v1. It is intentionally unmounted: the central Commerce descriptor,
 storage registration, route dispatcher, and manifest remain core-owned and were

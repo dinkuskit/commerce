@@ -9,7 +9,7 @@ function jwtPart(encoded: string): unknown {
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, c => c.charCodeAt(0))));
 }
 
-/** Admits a pass for Payments, or with a scope and audience, for the coupon service. */
+/** Admits a pass for Payments, or with a scope and audience, for another hosted service (Ship). */
 export function admitCredential(
   token: unknown,
   config: RegistryCheckoutConfig,

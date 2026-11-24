@@ -6,9 +6,8 @@ import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./pay
 import { composeCheckoutPricing } from "./pricing.js";
 import { handOffPaidOrder, type PaidOrderHandoffResult } from "./paid-orders.js";
 import { cut, lineOptions } from "../../shared/line-text.js";
-import { CouponRedemptionError, normalizeCouponCode, type CouponQuote } from "../coupons/index.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
-import type { CartLine, CheckoutAttempt, CheckoutExecution, CheckoutRecord, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
+import type { AddonAnswer, AddonUse, CartLine, CheckoutAttempt, CheckoutExecution, CheckoutRecord, CheckoutLine, CheckoutVariantSelectionSnapshot, PaymentOutcome, PaymentSession, StockRequest } from "./types.js";
 import {
   captureCheckoutContact,
   CheckoutContactError,
@@ -41,7 +40,7 @@ export function cartInput(raw: unknown): CartLine[] {
 async function freeze(
   cart: CartLine[],
   e: CheckoutExecution,
-  couponCode?: string,
+  addons?: AddonAnswer[],
   rawContact?: unknown,
 ): Promise<CheckoutAttempt> {
   if (!e.loadCheckoutContactRequirements) throw new CheckoutContactError("REQUIREMENTS_UNAVAILABLE");
@@ -77,11 +76,10 @@ async function freeze(
       } else stock.requirements.push({ skuId: quoted.stock.skuId, quantity: line.quantity, allowBackorders: quoted.stock.allowBackorders });
     }
   }
-  let pricing;
-  if (e.pricing) pricing = await composeCheckoutPricing(lines, cart, attemptId, couponCode, e, shipsGoods);
-  else if (couponCode !== undefined) fail("Pricing composition is unavailable");
+  const pricing = e.pricing ? await composeCheckoutPricing(lines, e, shipsGoods, addons)
+    : addons ? fail("Pricing composition is unavailable") : undefined;
   const minor = lines.reduce((sum, line) => sum + parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity), 0n).toString();
-  const total = pricing?.snapshot.finalTotal ?? normalizeMoney({ currency: "USD", minor });
+  const total = pricing?.finalTotal ?? normalizeMoney({ currency: "USD", minor });
   return {
     attemptId,
     cart,
@@ -90,19 +88,35 @@ async function freeze(
     ...(selections.length ? { variantSelections: selections } : {}),
     payment: createCurrentPaymentRequest({
     attemptId, bindingRef: e.paymentBindingRef, lines, total,
-    ...(pricing ? { pricing: pricing.snapshot } : {}),
+    ...(pricing ? { pricing } : {}),
     }),
     ...(stock ? { stock } : {}),
-    // Pricing never quotes a coupon in the Registry build, so no attempt there carries one.
-    ...(!REGISTRY_BUILD && pricing?.couponId ? { coupon: { couponId: pricing.couponId, code: pricing.couponCode!, status: "unreserved" as const } } : {}),
+    ...(addons ? { addons: addons.map(({ from, ref, codes }) => ({ from, ref, codes })) } : {}),
     phase: "reserving",
   };
 }
 
 
 
-// The Registry build refuses every coupon at pricing (registry-coupons-unhooked-v1), so it keeps the code as sent.
-const normalizedCoupon = (code: string) => REGISTRY_BUILD ? code : normalizeCouponCode(code);
+const TEXT = (value: unknown, max: number) => typeof value === "string" && value.length > 0 && value.length <= max;
+const CENTS = (value: unknown) => typeof value === "string" && /^\d{1,10}$/.test(value) && +value <= 1e9;
+
+/**
+ * The add-ons' answers, as the store's own code hands them to the add-ons door (commerce-addons-door-20261124):
+ * at most 4, one per add-on, each naming at most 100 lines and 6 codes; amounts are whole cents up to $10,000,000.
+ * Anything malformed, including what makes a check throw, leaves checkout unavailable.
+ */
+function addonAnswers(list: AddonAnswer[]): AddonAnswer[] {
+  if (!list.length || list.length > 4 || new Set(list.map(answer => answer.from)).size < list.length ||
+    !list.every(answer => /^(codes,)?from,lines(,ref)?(,ship)?$/.test(sortedKeys(answer)) && TEXT(answer.from, 64) &&
+      (answer.ref === undefined || TEXT(answer.ref, 200)) && (answer.ship ?? "free") === "free" &&
+      (answer.codes ?? []).length <= 6 && (answer.codes ?? []).every(code => TEXT(code, 64)) && answer.lines.length <= 100 &&
+      answer.lines.every(line => sortedKeys(line) === "item,off,price" && TEXT(line.item, 200) && CENTS(line.price) && CENTS(line.off)))) {
+    fail("Invalid add-on answer");
+  }
+  return list;
+}
+const chosen = (addons?: readonly AddonUse[]) => JSON.stringify(addons?.map(({ from, codes }) => [from, codes]) ?? []);
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 /** `saved`: the lines were read from the saved cart, which must still hold them (the guest route). */
@@ -110,24 +124,17 @@ const normalizedCoupon = (code: string) => REGISTRY_BUILD ? code : normalizeCoup
 export async function startCheckout(e: CheckoutExecution, cartId: string, rawCart: unknown, retryAfter?: string, saved?: boolean,
   remind?: Pick<CheckoutRecord, "remindAt" | "news">, fence?: (record?: CheckoutRecord) => void): Promise<CheckoutAttempt> {
   if (!cartId.trim()) fail("Invalid cart identity");
-  if (!Array.isArray(rawCart) && (!rawCart || typeof rawCart !== "object")) fail("Invalid cart");
-  const requestedCouponCode = rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
-    ? (["contact,couponCode,lines", "contact,lines", "couponCode,lines", "lines"].includes(sortedKeys(rawCart)))
-      ? (Object.prototype.hasOwnProperty.call(rawCart, "couponCode")
-        ? typeof (rawCart as { couponCode?: unknown }).couponCode === "string"
-          ? normalizedCoupon((rawCart as { couponCode: string }).couponCode) : fail("Invalid cart coupon")
-        : undefined)
-      : fail("Invalid cart")
-    : undefined;
-  const cart = cartInput(Array.isArray(rawCart) ? rawCart : (rawCart as { lines: unknown }).lines);
+  const body = isRecord(rawCart) ? rawCart as { lines: unknown; contact?: unknown; addons?: AddonAnswer[] } : undefined;
+  if (!Array.isArray(rawCart) && !body || body && !/^(addons,)?(contact,)?lines$/.test(sortedKeys(body))) fail("Invalid cart");
+  const requested = body && "addons" in body ? addonAnswers(body.addons!) : undefined;
+  const cart = cartInput(body ? body.lines : rawCart);
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
     fence?.(stored?.record);
     const previous = stored?.record.attempts.at(-1);
     if (previous && previous.phase !== "released") {
-      if (JSON.stringify(previous.cart) !== JSON.stringify(cart)) fail("Active checkout cart is frozen");
-      const requested = requestedCouponCode === undefined ? undefined : normalizedCoupon(requestedCouponCode);
-      if ((previous.coupon?.code ?? undefined) !== requested) fail("Active checkout coupon selection is frozen");
+      // Its cart and its add-ons' codes are both frozen.
+      if (JSON.stringify(previous.cart) + chosen(previous.addons) !== JSON.stringify(cart) + chosen(requested)) fail("Active checkout cart is frozen");
       return drive(e, cartId, previous.attemptId, true);
     }
     // Checkout buys the saved cart: one changed, or deleted by expiry cleanup, since it was read is contention.
@@ -137,10 +144,8 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
     const attempt = await freeze(
       cart,
       e,
-      requestedCouponCode,
-      rawCart && typeof rawCart === "object" && !Array.isArray(rawCart)
-        ? (rawCart as { contact?: unknown }).contact
-        : undefined,
+      requested,
+      body?.contact,
     );
     if (e.paymentAssociations && !await e.paymentAssociations.claim({
       recordKind: "checkout-payment-association",
@@ -197,81 +202,6 @@ function validateOutcome(value: PaymentOutcome, attempt: CheckoutAttempt): void 
   if (value.outcome === "paid" && !value.paymentId) fail("Missing payment identity");
 }
 
-function couponOwner(e: CheckoutExecution) {
-  if (!e.pricing?.coupons) throw new Error("Coupon owner unavailable");
-  return e.pricing.coupons.owner();
-}
-
-async function reconcileCoupon(
-  e: CheckoutExecution,
-  attempt: CheckoutAttempt,
-  result: "paid" | "released",
-): Promise<void> {
-  if (!attempt.coupon) return;
-  const owner = couponOwner(e);
-  if (result === "paid") {
-    if (attempt.payment.total.currency === "USD" && attempt.payment.total.minor === "0") {
-      const quote = attempt.payment.pricing?.coupon?.quote;
-      if (!quote || !attempt.order || attempt.order.paymentId !== undefined) {
-        throw new Error("Free checkout lacks canonical coupon proof");
-      }
-      await owner.reconcileFreeOrder({
-        couponId: attempt.coupon.couponId,
-        attemptId: attempt.attemptId,
-        proof: {
-          kind: "verified-free-order",
-          attemptId: attempt.attemptId,
-          couponId: attempt.coupon.couponId,
-          ruleId: quote.ruleId,
-          ruleVersion: quote.ruleVersion,
-          quoteId: quote.quoteId,
-          orderId: attempt.order.orderId,
-          receiptId: attempt.order.receiptId,
-          overallPayableTotal: { currency: "USD", minor: "0" },
-        },
-      });
-      return;
-    }
-    if (!attempt.session) throw new Error("Paid checkout has no payment session");
-    await owner.reconcile(attempt.coupon.couponId, attempt.attemptId, {
-      kind: "verified-success",
-      providerSessionId: attempt.session.sessionId,
-    });
-    return;
-  }
-  if (attempt.paymentReleaseReason === "never-started") {
-    await owner.releaseUnstarted({ couponId: attempt.coupon.couponId, attemptId: attempt.attemptId,
-      quote: attempt.payment.pricing!.coupon!.quote, overallPayableTotal: attempt.payment.total });
-    return;
-  }
-  await owner.reconcile(attempt.coupon.couponId, attempt.attemptId,
-    attempt.session
-      ? { kind: "confirmed-cancel", providerSessionId: attempt.session.sessionId }
-      : { kind: "verified-not-created" });
-}
-
-async function persistCouponStatus(
-  e: CheckoutExecution,
-  cartId: string,
-  attemptId: string,
-  status: "released" | "consumed",
-): Promise<CheckoutAttempt | null> {
-  for (let retry = 0; retry < 20; retry += 1) {
-    const stored = await e.store.read(cartId);
-    if (!stored) return null;
-    const index = stored.record.attempts.findIndex((candidate) => candidate.attemptId === attemptId);
-    if (index < 0) return null;
-    const current = stored.record.attempts[index];
-    if (!current.coupon || current.coupon.status !== "pending") return current;
-    const next = structuredClone(current);
-    next.coupon!.status = status;
-    const attempts = [...stored.record.attempts];
-    attempts[index] = next;
-    if (await e.store.compareAndSet(cartId, stored.version, { ...stored.record, attempts })) return next;
-  }
-  return null;
-}
-
 async function finishPaid(
   e: CheckoutExecution,
   cartId: string,
@@ -280,12 +210,6 @@ async function finishPaid(
 ): Promise<CheckoutAttempt> {
   const handoff = await handOffPaidOrder(e, attempt);
   if (wake) wake.handoff = handoff;
-  if (!REGISTRY_BUILD && attempt.coupon?.status === "pending") {
-    try {
-      await reconcileCoupon(e, attempt, "paid");
-      return await persistCouponStatus(e, cartId, attempt.attemptId, "consumed") ?? attempt;
-    } catch { return attempt; }
-  }
   return attempt;
 }
 
@@ -318,6 +242,7 @@ function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: Che
     ...(attempt.ticketIds ? { ticketIds: [...attempt.ticketIds] } : {}),
     ...(next.contactSnapshot ? { contactSnapshot: next.contactSnapshot } : {}),
     ...(attempt.phase === "released" ? { paidAfterEnd: true as const } : {}),
+    ...(attempt.addons ? { addons: attempt.addons } : {}),
   };
 }
 
@@ -350,47 +275,14 @@ async function drive(
         const ticketIds = reserveTicketIds(result, attempt.stock.requirements.length);
         if (ticketIds === "unknown") return attempt;
         if (ticketIds === "rejected") {
-          next.phase = next.coupon ? "releasing" : "released";
+          next.phase = "released";
           next.paymentReleaseReason = "never-started";
         } else {
           if (ticketIds) next.ticketIds = ticketIds;
           next.phase = "paying";
         }
       } else next.phase = "paying";
-      if (!REGISTRY_BUILD && next.phase === "paying" && next.coupon?.status === "unreserved") {
-        try {
-          const owner = couponOwner(e);
-          const reservation = await owner.reserve({
-            couponId: next.coupon.couponId,
-            attemptId: next.attemptId,
-            quote: next.payment.pricing!.coupon!.quote as CouponQuote,
-            overallPayableTotal: next.payment.total as { currency: "USD"; minor: string },
-            now: new Date((e.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
-          });
-          if (reservation.state !== "pending") {
-            release(next, "never-started");
-            next.coupon.refused = "not-applicable";
-          } else next.coupon.status = "pending";
-        } catch (error) {
-          if (error instanceof CouponRedemptionError &&
-              ["CAPACITY_EXHAUSTED", "INVALID_INPUT", "CONFLICTING_ATTEMPT", "TERMINAL_CONFLICT"].includes(error.code)) {
-            release(next, "never-started");
-            next.coupon.refused = error.code === "CAPACITY_EXHAUSTED" ? "used-up"
-              : error.code === "INVALID_INPUT" ? "not-applicable" : "try-later";
-          } else {
-            return attempt;
-          }
-        }
-      }
     } else if (attempt.phase === "releasing") {
-      if (!REGISTRY_BUILD && next.coupon && next.coupon.status !== "released") {
-        try {
-          await reconcileCoupon(e, next, "released");
-          next.coupon.status = "released";
-        } catch {
-          return attempt;
-        }
-      }
       if (!REGISTRY_BUILD && attempt.stock) {
         const provider = await e.resolveInventory(attempt.stock.binding);
         if (!provider) return attempt;
@@ -423,14 +315,6 @@ async function drive(
           release(next, "not-created");
         }
         else {
-          if (!REGISTRY_BUILD && attempt.coupon) {
-            try {
-              const owner = couponOwner(e);
-              await owner.attachProviderSession(attempt.coupon.couponId, attempt.attemptId, outcome.session.sessionId);
-            } catch {
-              if (outcome.outcome !== "paid") return attempt;
-            }
-          }
           next.session = outcome.session;
           if (outcome.outcome === "paid") {
             completeOrder(e, next, attempt, attemptId, outcome.paymentId);

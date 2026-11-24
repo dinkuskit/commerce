@@ -137,7 +137,7 @@ test('order.paid gives each order this version stored, with what the order confi
     assert.deepEqual(paid.items[0], { id: 'order-5:paid', at: paidAt, data: {
       orderId: 'order-5', number: 1005, test: true, email: 'ana@buyer.test', name: 'Ana Buyer', shipTo: delivery('Ana Buyer'),
       lines: [{ name: 'Smoky Mountain Tee', options: 'Size: M', quantity: 2, unitPrice: usd('2400') }],
-      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400') } });
+      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400'), addons: [] } });
     const bytes = item => new TextEncoder().encode(JSON.stringify(item)).length;
     const big = paid.items[1].data;
     assert.ok(big.lines.length >= 1 && big.lines.length + big.moreLines === 60, JSON.stringify({ kept: big.lines.length, more: big.moreLines }));
@@ -163,6 +163,23 @@ test('order.paid gives each order this version stored, with what the order confi
   }
 });
 
+test('order.paid names the discount and the add-ons whose answers priced the order, with their codes', async () => {
+  const shop = await store();
+  try {
+    skew = 0;
+    const paidAt = new Date(Date.now() - 120_000).toISOString();
+    const pricing = { schema: 'dinkuskit.commerce.checkout-pricing/v1', merchandiseSubtotal: usd('900'), couponDiscount: usd('300'), netMerchandise: usd('600'),
+      shipping: { configurationId: 'flat', revision: 1, mode: 'free', charge: usd('0') }, finalTotal: usd('600'), lines: [] };
+    const addons = [{ from: 'dinkus-coupons', ref: 'hold-8', codes: ['SAVE3', 'FREESHIP'] }];
+    await shop.keep('order-8', 'ana@buyer.test', 'Ana Buyer', [['mug', 'Mug']], { paidKey: `${paidAt} order-8` });
+    await shop.orders.put('order-8', { ...(await shop.orders.get('order-8')), paidOrder: { ...(await shop.orders.get('order-8')).paidOrder, total: usd('600'), pricing, addons } });
+    const [item] = (await shop.since(null, 50, { topic: 'order.paid' })).data.items;
+    assert.deepEqual([item.data.subtotal, item.data.discount, item.data.shipping, item.data.total, item.data.addons], [usd('900'), usd('300'), usd('0'), usd('600'), addons]);
+  } finally {
+    await shop.stop();
+  }
+});
+
 test('anyone signed in, the store\'s administrator included, and a request that is not the courier\'s are refused', async () => {
   const shop = await store();
   try {
@@ -176,6 +193,11 @@ test('anyone signed in, the store\'s administrator included, and a request that 
     assert.match(`${notCourier.error.code} ${notCourier.error.message}`, /BAD_COURIER_REQUEST/);
     // The door is private and says POST, so the courier finds it and nobody outside the store can reach it.
     assert.deepEqual(shop.runtime.getPluginRouteMeta(ID, 'courier/outbox'), { public: false, permission: 'plugins:manage', methods: ['POST'] });
+    // The add-ons door is the same: the store's own code only (commerce-addons-door-20261124).
+    const addons = await shop.call('checkout/addons/start', { addons: [] }, admin);
+    assert.equal(addons.success, false);
+    assert.match(`${addons.error.code} ${addons.error.message}`, /STORE_ONLY/);
+    assert.equal(shop.runtime.getPluginRouteMeta(ID, 'checkout/addons/start').public, false);
   } finally {
     await shop.stop();
   }

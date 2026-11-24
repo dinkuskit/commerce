@@ -2,13 +2,13 @@
   "closeout": null,
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
-    "cadence": "frontier-batch",
+    "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-11-15T03:30:25+00:00",
-    "domain": "Server-side cart",
-    "started_at": "2026-11-15T03:30:24+00:00",
+    "confirmed_at": "2026-11-24T14:55:02+00:00",
+    "domain": "Coupons as a plugin: the add-ons door",
+    "started_at": "2026-11-24T14:54:56+00:00",
     "status": "confirmed",
-    "summary": "Ronald answered each cart question in the cart thread on 13 Nov 2026: server cart in Commerce 'agreed' (16:08 UTC), agents on the same cart 'yeah' with the Shopify check (14:06), 30 days 'agreed' (16:10), build before the first real order (14:05). Store-site parts (forms, cookie, size picker, count cookie, thank-you page, agent links) are in template-store's ledger."
+    "summary": "The owner confirmed shared understanding of each coupons-rework decision on its card on 24 Nov 2026 and said to build it."
   },
   "decisions": [
     {
@@ -2958,6 +2958,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Implement only a reusable trusted-owner reservation core under src/features/coupons. Coupon stable identity owns a global cap across immutable rule versions. Reservations persist before any payable session, keyed by immutable original checkout attempt identity and carrying coupon/rule/quote identity; duplicate reserve is idempotent, conflicting reuse fails closed. CAS coordinates concurrent processes and prevents last-slot oversubscription; pending and consumed count toward capacity. Verified success consumes once; confirmed failure/cancel/not-created releases only after authoritative provider reconciliation; unknown outcome never releases based on elapsed time. Terminal attempts stay fenced; release cannot re-reserve a frozen attempt; duplicate/stale/contradictory events cannot double transition; provider session id may attach once immutably. Refund never restores consumed capacity. Expose only trusted-owner ports, with no browser route accepting cap/outcome/amount. Cap is an internal trusted rule/owner snapshot; no production host mount claim. Public handoff context: https://github.com/dinkuskit/coupons/blob/3b6e3fc20ee6d8af61df50f662058e6dfcd0bbda/docs/basic-v1-handoff.md",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/composition.ts; file:tests/features/coupons/acceptance.test.mjs",
+          "note": "Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "coupons-redemption-core-001",
@@ -3041,9 +3055,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-addons-door-20261124",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
@@ -3706,6 +3720,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Keep one stable coupon aggregate and atomically CAS current rule plus usage; new attempts fence against current disabled/expired/cap/rule state, while duplicate existing attempts reuse their frozen identity and frozen quote; cap edits preserve pending/consumed counts across rule versions.",
+          "from": "verified",
+          "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
+          "note": "Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "coupons-v1-cap-fence-001",
@@ -3816,9 +3844,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-addons-door-20261124",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
@@ -4149,6 +4177,34 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Add a durable trusted verified-free-order reconciliation requiring Commerce order, receipt, attempt, coupon, rule, and quote identities; consume exactly once without provider session/payment ID, hold unknown completion, reject nonzero or payment-bound free proofs, and never restore after refund.",
+          "from": "verified",
+          "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
+          "note": "dependency coupons-v1-cap-fence-001 changed: Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Add a durable trusted verified-free-order reconciliation requiring Commerce order, receipt, attempt, coupon, rule, and quote identities; consume exactly once without provider session/payment ID, hold unknown completion, reject nonzero or payment-bound free proofs, and never restore after refund.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:.grilltrack/work/coupon-redemption-run/PROOF.md",
+          "note": "Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "coupons-v1-free-reconcile-001",
@@ -4250,9 +4306,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-addons-door-20261124",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
@@ -4611,6 +4667,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Build stable coupon aggregate CRUD with revision CAS, normalized-code uniqueness, explicit timezone/ISO dates, canonical catalog Money validation, and a trusted evaluator that resolves catalog prices itself; expose storage/index declarations and an unmounted permission seam, with no browser admin route or UI claim.",
+          "from": "verified",
+          "implementation_ref": "file:src/features/coupons/admin.ts; file:tests/features/coupons/coupons-v1.test.mjs; file:proof/coupon-redemption-v1/PROOF.md",
+          "note": "Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
         }
       ],
       "id": "coupons-v1-independent-001",
@@ -4721,9 +4791,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
-      "superseded_by": null,
-      "updated_at": "2026-10-06T20:35:44+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-addons-door-20261124",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-compact-20261006-PROOF.md; captured implementation ee94303e04f9d4f82d48a0270ebb4c73a7253ba0; fresh cumulative local acceptance only"
     },
     {
@@ -6650,6 +6720,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": "file:.grilltrack/proof/checkout-totals-20261006-PROOF.md"
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Integrate the existing coupon evaluator and durable attempt owner with trusted merchant-configured free or flat USD shipping. Freeze subtotal, existing per-line discount allocations, net merchandise, shipping configuration identity and revision, and final total in a versioned checkout/payment/order snapshot. Preserve originals across retries, recovery and provider reconciliation; one order and applicable redemption. Reserve coupon capacity before any payable provider session, consume only after canonical paid order, and release only when the canonical owner has a terminal failure or not-created fence. No browser amounts, new tax policy, stacking, advanced promotions, second money writer, silent Inventory fallback or implicit provider activation. Publish a versioned handoff for the existing Payments owner and fail closed when a payment port does not explicitly support the new pricing schema. Existing merchandise requests and payment windows retain their original shapes. Zero-total order orchestration remains separately scoped pending existing authority clarification.",
+          "from": "verified",
+          "implementation_ref": "file:docs/implementation/checkout-pricing-payments-handoff.md",
+          "note": "dependency coupons-redemption-core-001 changed: Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": "file:.grilltrack/proof/checkout-totals-20261006-PROOF.md",
+          "review_result": "clean",
+          "review_source_identity": "git:4c3d4e8675f8d500e12694f358964895e0356975",
+          "to": "needs_reverification",
+          "verification_ref": "file:.grilltrack/proof/checkout-totals-20261006-PROOF.md"
         }
       ],
       "id": "checkout-totals-composition-001",
@@ -6692,12 +6776,12 @@
           "source_identity": "git:4c3d4e8675f8d500e12694f358964895e0356975"
         }
       ],
-      "review_ref": "file:.grilltrack/proof/checkout-totals-20261006-PROOF.md",
-      "review_result": "clean",
-      "review_source_identity": "git:4c3d4e8675f8d500e12694f358964895e0356975",
-      "status": "verified",
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-06T23:10:15+00:00",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": "file:.grilltrack/proof/checkout-totals-20261006-PROOF.md"
     },
     {
@@ -6755,6 +6839,22 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Use a package-owned per-invocation resolver over the original installed context settings, declared storage and scoped HTTP. Validate versioned trusted configuration, site and TEST Payments binding with explicit pricing/v1, use owned shipping configuration and existing canonical catalog/coupon/order writers, and bounded wake transport where supported. Keep shipped grants empty and default unavailable; reject missing/invalid/expired authority, preserve managed Inventory binding and unavailable behavior without a local ledger. Identity issuance/renewal, Inventory checkout HTTP transport, real configuration/activation, publication/deployment and zero-payable orders remain separate gates.",
+          "from": "verified",
+          "implementation_ref": "src/features/checkout/registry-services.ts",
+          "note": "dependency coupons-redemption-core-001 changed: Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [
+            "defer"
+          ],
+          "review_ref": ".grilltrack/proof/registry-services-20261006-PROOF.md",
+          "review_result": "findings",
+          "review_source_identity": "sha256:695672c4d1e516e0d47cf5ecca7d3f3bb31c40c5bc8c9dc3c8e1154e63d276d6",
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/registry-services-20261006-PROOF.md"
         }
       ],
       "id": "installed-checkout-service-assembly-001",
@@ -6762,9 +6862,7 @@
       "question": "How does the default Registry checkout assemble canonical services without injected descriptor callbacks?",
       "rationale": "",
       "repair_required": false,
-      "review_classifications": [
-        "defer"
-      ],
+      "review_classifications": [],
       "review_history": [
         {
           "classifications": [
@@ -6776,12 +6874,12 @@
           "source_identity": "sha256:695672c4d1e516e0d47cf5ecca7d3f3bb31c40c5bc8c9dc3c8e1154e63d276d6"
         }
       ],
-      "review_ref": ".grilltrack/proof/registry-services-20261006-PROOF.md",
-      "review_result": "findings",
-      "review_source_identity": "sha256:695672c4d1e516e0d47cf5ecca7d3f3bb31c40c5bc8c9dc3c8e1154e63d276d6",
-      "status": "verified",
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-07T02:20:32+00:00",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": ".grilltrack/proof/registry-services-20261006-PROOF.md"
     },
     {
@@ -6840,6 +6938,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Extend the existing canonical checkout/order writer for authoritative zero USD final totals, writing one stable Commerce order and receipt without provider session or payment identity. Reserve the existing coupon aggregate and consume only using verified-free-order proof after durable canonical order persistence; retain unknown completion and recover idempotently. Preserve current installation/site/capability authorization, frozen pricing, one Inventory binding and managed-stock fail-closed behavior. Positive shipping or other positive final totals retain current Payments flow. No new tax, refund, expiry, shipping, identity issuance, provider transport or activation policy.",
+          "from": "verified",
+          "implementation_ref": "src/features/checkout/orchestrate.ts;docs/implementation/checkout-zero-payable-orders.md",
+          "note": "dependency coupons-redemption-core-001 changed: Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md",
+          "review_result": "clean",
+          "review_source_identity": "sha256:3eddb2bba65f311f0762dc72f05bcf88cfeb4ae5181a8430e07e03ada43f5a4a",
+          "to": "needs_reverification",
+          "verification_ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md"
         }
       ],
       "id": "checkout-zero-payable-order-composition-001",
@@ -6857,12 +6969,12 @@
           "source_identity": "sha256:3eddb2bba65f311f0762dc72f05bcf88cfeb4ae5181a8430e07e03ada43f5a4a"
         }
       ],
-      "review_ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md",
-      "review_result": "clean",
-      "review_source_identity": "sha256:3eddb2bba65f311f0762dc72f05bcf88cfeb4ae5181a8430e07e03ada43f5a4a",
-      "status": "verified",
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-07T12:09:54+00:00",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": ".grilltrack/proof/zero-payable-orders-20261007-PROOF.md"
     },
     {
@@ -10168,6 +10280,20 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": "file:tests/features/checkout/checkout-pricing-recovery.test.mjs file:tests/features/checkout/checkout-pricing-hosted.test.mjs file:tests/features/checkout/registry-coupons.test.mjs file:tests/features/coupons/acceptance.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
+        },
+        {
+          "at": "2026-11-24T14:54:57+00:00",
+          "choice": "COUPON_UNAVAILABLE carries a reason (and, for minimum-not-met, the minimum as USD minor units) that the storefront words for the shopper: not-found (unknown or turned-off code), not-started, expired, minimum-not-met, no-qualifying-items (no cart line qualifies, so the coupon is refused instead of applying at zero), used-up (capacity refused at hold), try-later (service unreachable, unconfigured, or a quote whose arithmetic disagrees with Commerce's prices), and not-applicable only as the fallback when the coupon owner gives no finer reason. The reason comes from Commerce's coupon evaluator (CouponAdminError.notApplicable) in process and from the coupon service's NOT_APPLICABLE body (reason, minimum) over HTTP; Commerce checks both before using them. Refused holds record the reason on the attempt and the released projection reports it. Raw service messages never reach shoppers, and no reason ever continues checkout at full price on its own.",
+          "from": "needs_reverification",
+          "implementation_ref": "file:src/features/coupons/evaluator.ts file:src/features/checkout/pricing.ts file:src/features/checkout/registry-coupons.ts file:src/features/checkout/guest.ts file:src/features/checkout/project.ts file:src/features/checkout/orchestrate.ts file:src/features/checkout/route.ts",
+          "note": "Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": "file:tests/features/checkout/checkout-pricing-recovery.test.mjs file:tests/features/checkout/checkout-pricing-hosted.test.mjs file:tests/features/checkout/registry-coupons.test.mjs file:tests/features/coupons/acceptance.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
         }
       ],
       "id": "guest-checkout-coupon-reasons-035",
@@ -10180,9 +10306,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-10T22:30:28+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-addons-door-20261124",
+      "updated_at": "2026-11-24T14:54:57+00:00",
       "verification_ref": "file:tests/features/checkout/checkout-pricing-recovery.test.mjs file:tests/features/checkout/checkout-pricing-hosted.test.mjs file:tests/features/checkout/registry-coupons.test.mjs file:tests/features/coupons/acceptance.test.mjs file:tests/integration/registry-checkout-services.test.mjs"
     },
     {
@@ -14601,6 +14727,20 @@
           "review_source_identity": null,
           "to": "locked",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Coupons stay out of Commerce: they are their own Registry plugin and hosted service, and Commerce carries no coupon-specific code. Because EmDash plugins cannot call each other, an add-on that must change a checkout (coupons first, later others) reaches it through one generic Commerce door that asks DinkusKit add-ons for changes to the cart. The door is after v1, and no bytes are reserved for it.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "The door is built now, with coupons as a plugin and the store's own code carrying their answers (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": null
         }
       ],
       "id": "commerce-addons-door-20261022",
@@ -14613,9 +14753,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "locked",
-      "superseded_by": null,
-      "updated_at": "2026-10-22T13:25:04+00:00",
+      "status": "superseded",
+      "superseded_by": "commerce-addons-door-20261124",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": null
     },
     {
@@ -15806,6 +15946,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Pin emdash, auth and blocks 1.4.0, plugin CLI 0.13.5 and sandbox-workerd 0.9.6 (plugin-types stays 0.6.0); record emdash@1.4.0's npm integrity; keep the peer exact; preserve checkout semantics, storage and the 128 KiB backend cap. No migration shims: no store runs Commerce yet.",
+          "from": "verified",
+          "implementation_ref": "file:package.json file:scripts/repo-contract.mjs file:scripts/check-features.mjs file:scripts/coupon-build-transform.mjs file:tests/sandbox/product-page.mjs file:docs/implementation/emdash-1-4-compatibility.md",
+          "note": "dependency coupons-redemption-core-001 changed: Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:docs/implementation/emdash-1-4-compatibility.md"
         }
       ],
       "id": "emdash-1-4-compatibility-20261030",
@@ -15818,9 +15972,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-30T12:59:57+00:00",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": "file:docs/implementation/emdash-1-4-compatibility.md"
     },
     {
@@ -16312,6 +16466,20 @@
           "review_source_identity": null,
           "to": "implemented",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "No. A checkout whose lines are all digital charges 0 shipping and records the shipping as free, whatever the flat charge or Free shipping over amount. A basket with at least one physical item (an item with no fulfillment marked counts as physical, as in commerce-delivery-address-001) keeps the existing free or flat charge, once per checkout, and Free shipping over still applies. Payments charges the frozen snapshot unchanged, so a 0 charge adds no Shipping line. Checkouts already started keep their frozen totals.",
+          "from": "implemented",
+          "implementation_ref": "c83231a: composeCheckoutPricing waives shipping when no checkout line is physical (orchestrate passes the same flag that asks for a delivery address); tests checkout-pricing.test.mjs digital-only/mixed/free-over/bad-config and registry-checkout-services compiled digital-only; typecheck, audit:repo, unit 839/840 (packaged-consumers teardown fails on main too in this sandbox), integration 111/111; headroom 2772",
+          "note": "dependency coupons-redemption-core-001 changed: Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": null
         }
       ],
       "id": "checkout-digital-only-no-shipping-20261031",
@@ -16324,9 +16492,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "implemented",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-10-31T20:34:02+00:00",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": null
     },
     {
@@ -17186,6 +17354,20 @@
           "review_source_identity": null,
           "to": "verified",
           "verification_ref": null
+        },
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "Pin emdash, auth and blocks 1.5.0, plugin CLI 0.13.6, plugin-types 0.6.1 and sandbox-workerd 0.9.7; record emdash@1.5.0's npm integrity; keep the peer exact; preserve checkout semantics, storage declarations and the 128 KiB backend cap. No migration shims: no real store runs Commerce yet; the store database steps 092 and 095 run in the template and beta store's maintenance window.",
+          "from": "verified",
+          "implementation_ref": "file:package.json file:scripts/repo-contract.mjs file:scripts/check-features.mjs file:docs/implementation/emdash-1-5-compatibility.md",
+          "note": "dependency coupons-redemption-core-001 changed: Commerce's own coupon code is deleted: coupons are their own Registry plugin, which owns codes, holds, uses and refusal reasons, and reaches checkout through the add-ons door (owner approved 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "needs_reverification",
+          "verification_ref": "file:docs/implementation/emdash-1-5-compatibility.md;test:tests/features/catalog/catalog.test.mjs;test:tests/features/inventory-provider/registration-claim-storage.test.mjs;cmd:npm test;cmd:npm run test:integration;cmd:npx playwright test"
         }
       ],
       "id": "emdash-1-5-compatibility-20261122",
@@ -17198,9 +17380,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "verified",
+      "status": "needs_reverification",
       "superseded_by": null,
-      "updated_at": "2026-11-22T14:55:13+00:00",
+      "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": "file:docs/implementation/emdash-1-5-compatibility.md;test:tests/features/catalog/catalog.test.mjs;test:tests/features/inventory-provider/registration-claim-storage.test.mjs;cmd:npm test;cmd:npm run test:integration;cmd:npx playwright test"
     },
     {
@@ -17514,6 +17696,47 @@
       "superseded_by": null,
       "updated_at": "2026-11-23T05:15:12+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "The store's own code asks each add-on first and starts checkout through one private Commerce route, checkout/addons/start (plugins:manage, the guest headers; any signed-in caller is refused with STORE_ONLY), which runs the guest start with up to 4 answers {from, ref?, codes? (at most 6), ship?: free, lines: [{item, price, off}] for every frozen line in Commerce's order, whole cents at most 1,000,000,000}. Commerce checks each answer saw its own items and unit prices (otherwise CONTENTION, so the store asks again), that the amounts off on a line never take it below 0, and does every sum itself: discount per line, couponDiscount, net, then shipping (an answer with ship free waives it); the v1 pricing snapshot keeps its shape. While the payment is open the add-ons' from and codes are frozen with the cart. The attempt and order keep addons [{from, ref, codes}]; Orders shows the codes on the discount line; the courier's order.paid news carries discount and addons so Coupons counts each use. The public checkout/guest/start refuses add-on answers and couponCode. Tax keys are refused until the Tax build adds them.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanJKJBaZKw5FupVroiwMK1fx",
+      "created_at": "2026-11-24T14:54:56+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Coupons as a plugin: the add-ons door",
+      "history": [
+        {
+          "at": "2026-11-24T14:54:56+00:00",
+          "choice": "The store's own code asks each add-on first and starts checkout through one private Commerce route, checkout/addons/start (plugins:manage, the guest headers; any signed-in caller is refused with STORE_ONLY), which runs the guest start with up to 4 answers {from, ref?, codes? (at most 6), ship?: free, lines: [{item, price, off}] for every frozen line in Commerce's order, whole cents at most 1,000,000,000}. Commerce checks each answer saw its own items and unit prices (otherwise CONTENTION, so the store asks again), that the amounts off on a line never take it below 0, and does every sum itself: discount per line, couponDiscount, net, then shipping (an answer with ship free waives it); the v1 pricing snapshot keeps its shape. While the payment is open the add-ons' from and codes are frozen with the cart. The attempt and order keep addons [{from, ref, codes}]; Orders shows the codes on the discount line; the courier's order.paid news carries discount and addons so Coupons counts each use. The public checkout/guest/start refuses add-on answers and couponCode. Tax keys are refused until the Tax build adds them.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-addons-door-20261124",
+      "implementation_ref": null,
+      "question": "How does an add-on such as Coupons (and later Tax) change a checkout, now that coupons are their own plugin and plugins cannot call each other?",
+      "rationale": "The owner approved this on 24 Nov 2026 (decision 4: one shared door, checked). EmDash plugins cannot call each other, Commerce's Registry backend is at the 128 KiB cap, and Shopify and WooCommerce both keep the order's totals in the platform while discounts come from rules; one checked door keeps Commerce small and the totals trustworthy.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-24T14:54:56+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17550,5 +17773,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-23T05:15:12+00:00"
+  "updated_at": "2026-11-24T14:55:02+00:00"
 }

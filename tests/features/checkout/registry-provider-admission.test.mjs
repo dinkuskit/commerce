@@ -101,8 +101,8 @@ test("optional mode test or live is admitted for both providers and reaches the 
   assert.equal(trustedPaymentsHostConfig(admitRegistryCheckoutConfig(legacyStripe(), SITE), SITE).mode, undefined);
 });
 
-test("an optional hosted coupon or Ship service needs exactly an https origin and an audience", () => {
-  for (const name of ["coupons", "ship"]) {
+test("the optional hosted Ship service needs exactly an https origin and an audience; the retired coupon service is refused", () => {
+  for (const name of ["ship"]) {
     const service = { origin: `https://${name}.example.test`, audience: `${name}-aud` };
     const config = changes => legacyStripe({ [name]: { ...service, ...changes } });
     assert.deepEqual(admitRegistryCheckoutConfig(config(), SITE)[name], service);
@@ -115,11 +115,14 @@ test("an optional hosted coupon or Ship service needs exactly an https origin an
     rejects(config({ origin: `https://${name}.example.test/v1` }));
     rejects(config({ audience: "" }));
   }
+  // Coupons are a plugin in the store now (commerce-addons-door-20261124), so no setting names a coupon service.
   const coupons = { origin: "https://coupons.example.test", audience: "coupons-aud" };
   const ship = { origin: "https://ship.example.test", audience: "ship-aud" };
-  const both = admitRegistryCheckoutConfig(legacyStripe({ mode: "live", coupons, ship }), SITE);
-  assert.deepEqual([both.mode, both.coupons, both.ship], ["live", coupons, ship]);
-  rejects(legacyStripe({ coupons, ship, shipping2: ship }));
+  rejects(legacyStripe({ coupons }));
+  rejects(legacyStripe({ mode: "live", coupons, ship }));
+  const live = admitRegistryCheckoutConfig(legacyStripe({ mode: "live", ship }), SITE);
+  assert.deepEqual([live.mode, live.ship], ["live", ship]);
+  rejects(legacyStripe({ ship, shipping2: ship }));
 });
 
 

@@ -16,6 +16,7 @@ import {
   GUEST_CHECKOUT_READINESS_ROUTE,
   GUEST_CHECKOUT_START_ROUTE,
   GUEST_CHECKOUT_CART_ROUTE,
+  CHECKOUT_ADDONS_ROUTE,
   cancelKey,
   refreshCheckoutSettings,
   refuseStoppedCartEmail,
@@ -23,7 +24,7 @@ import {
   storeProof,
   withBackgroundCheck,
 } from "./features/checkout/kernel/index.js";
-import { COURIER_OUTBOX_ROUTE, courierOutbox, ORDER_LOOKUP_ROUTE, ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, clearOldLookupGuesses, createPaidOrderReceiver, lookUpOrder, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
+import { COURIER_OUTBOX_ROUTE, courierOutbox, refuse, ORDER_LOOKUP_ROUTE, ORDER_NUMBERS_COLLECTION, ORDERS_API_ROUTE, ORDERS_COLLECTION, clearOldLookupGuesses, createPaidOrderReceiver, lookUpOrder, ordersApi, type OrderNumbers, type OrdersCollection } from "./features/orders/index.js";
 
 const guestRequest = {
   body: "json" as const,
@@ -186,6 +187,12 @@ const plugin: SandboxedPlugin = {
     [GUEST_CHECKOUT_PREPARE_ROUTE]: guestRoute(installedCheckout.prepare),
     [GUEST_CHECKOUT_START_ROUTE]: guestRoute(installedCheckout.start),
     [GUEST_CHECKOUT_CART_ROUTE]: guestRoute(installedCheckout.cart),
+    // The store's own code starts checkout here with the add-ons' answers (commerce-addons-door-20261124); it refuses anyone signed in.
+    [CHECKOUT_ADDONS_ROUTE]: pluginRoute({ public: false, permission: "plugins:manage", methods: ["POST"], request: guestRequest,
+      handler: (route, ctx) => {
+        if (route.user) throw refuse("STORE_ONLY", "Only the store's own code may use this door.", 403);
+        return installedCheckout.start(route as never, ctx, true);
+      } }),
     [GUEST_CHECKOUT_READINESS_ROUTE]: publicRead((route, ctx) => installedCheckout.readiness(route, ctx), ["origin"]),
     // The order lookup page: order number plus checkout email, from the store's own server page.
     // The store's courier reads shipped orders here for Reviews (order-shipped-outbox-20261122); it refuses anyone signed in.
