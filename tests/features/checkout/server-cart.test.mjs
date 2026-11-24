@@ -434,3 +434,68 @@ test("a checkout saved before the server cart (attempts only) still reads, repla
   assert.equal(paid.checkout.state, "paid");
   assert.ok(paid.checkout.order.orderId);
 });
+
+// commerce-cart-attributes-order-paid-20261123: the store's own facts ride on the cart and are frozen onto its order.
+test("a cart keeps the store's attributes within their limits, and checkout freezes them onto the paid order, never onto the payment", async (t) => {
+  const f = await setup(t);
+  const orders = memory();
+  const rt = { ...f.runtime, paidOrders: createPaidOrderReceiver(orders) };
+  const lines = [{ catalogItemId: "hat", quantity: 1 }];
+  const attributes = { account_id: "acct_42", "credit.sku": "compute-100" };
+
+  // Anything outside the limits refuses the whole write, and nothing is saved.
+  const many = Object.fromEntries(Array.from({ length: 11 }, (_, i) => ["k" + i, "v"]));
+  const heavy = Object.fromEntries(Array.from({ length: 8 }, (_, i) => ["k" + i, "x".repeat(255)]));
+  const refused = [many, heavy, { dinkus_site: "x" }, { _hidden: "x" }, { Account: "x" }, { "a b": "x" }, { ["k".repeat(41)]: "x" }, { "": "x" },
+    { count: 3 }, { nested: { a: "b" } }, { note: "x".repeat(256) }, ["account_id"], "account_id", null];
+  for (const bad of refused) {
+    const answer = await f.cart({ version: null, lines, attributes: bad }, rt);
+    assert.equal(answer.error?.code, "INVALID_CART", JSON.stringify(bad));
+  }
+  assert.equal((await f.cart({ attributes }, rt)).error.code, "INVALID_CART", "attributes ride only on a cart replace");
+  assert.equal((await f.cart({ stop: true, attributes }, rt)).error.code, "INVALID_CART");
+  assert.deepEqual((await f.storage[CHECKOUT_COLLECTION].query()).items, []);
+
+  // The largest bag allowed: 10 attributes, a 40-character key, a 255-character value.
+  const widest = { ...Object.fromEntries(Array.from({ length: 9 }, (_, i) => ["k" + i, "v"])), ["k".repeat(40)]: "x".repeat(255) };
+  const wide = await f.cart({ version: null, lines, attributes: widest }, rt);
+  assert.deepEqual(wide.cart.attributes, widest);
+
+  // A named bag replaces the last one whole; a write that names none keeps it; {} leaves none.
+  const set = await f.cart({ version: wide.cart.version, lines, attributes, key: "agent-1" }, rt);
+  assert.deepEqual(set.cart.attributes, attributes);
+  const more = await f.cart({ version: set.cart.version, lines: [{ catalogItemId: "hat", quantity: 2 }] }, rt);
+  assert.deepEqual(more.cart.attributes, attributes);
+  assert.deepEqual((await f.cart({}, rt)).cart.attributes, attributes);
+  const cleared = await f.cart({ version: more.cart.version, lines, attributes: {} }, rt);
+  assert.deepEqual(cleared.cart.attributes, {});
+  const again = await f.cart({ version: cleared.cart.version, lines, attributes }, rt);
+
+  // Checkout start freezes them; the payment request carries none of them.
+  const started = await startGuestCheckout(rt, { contact }, f.headers);
+  assert.equal(started.ok, true, JSON.stringify(started));
+  assert.equal((await f.cart({ version: again.cart.version, lines, attributes: { account_id: "acct_99" } }, rt)).error.code, "CHECKOUT_FROZEN");
+  const [{ data: record }] = (await f.storage[CHECKOUT_COLLECTION].query()).items;
+  assert.deepEqual(record.attempts[0].attributes, attributes);
+  assert.equal(JSON.stringify(record.attempts[0].payment).includes("acct_42"), false);
+
+  f.synth.setPayment("paid");
+  const paid = await f.cart({}, rt);
+  assert.equal(paid.checkout.state, "paid");
+  assert.equal(JSON.stringify(paid.checkout).includes("acct_42"), false, "the guest receipt does not repeat them");
+  assert.deepEqual((await orders.get(paid.checkout.order.orderId)).paidOrder.attributes, attributes);
+});
+
+test("a cart with no attributes, or with them cleared, makes an order with none", async (t) => {
+  const f = await setup(t);
+  const orders = memory();
+  const rt = { ...f.runtime, paidOrders: createPaidOrderReceiver(orders) };
+  const lines = [{ catalogItemId: "hat", quantity: 1 }];
+  const set = await f.cart({ version: null, lines, attributes: { account_id: "acct_42" } }, rt);
+  await f.cart({ version: set.cart.version, lines, attributes: {} }, rt);
+  assert.equal((await startGuestCheckout(rt, { contact }, f.headers)).ok, true);
+  f.synth.setPayment("paid");
+  const paid = await f.cart({}, rt);
+  const kept = (await orders.get(paid.checkout.order.orderId)).paidOrder;
+  assert.equal("attributes" in kept, false);
+});

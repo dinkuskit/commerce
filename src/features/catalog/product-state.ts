@@ -1,4 +1,4 @@
-import { isRecord } from "../../shared/record.js";
+import { isRecord, jsonBytes } from "../../shared/record.js";
 import { catalogFail } from "./errors.js";
 import type { CatalogData, CatalogItemRecord, CatalogStorageRecord } from "./types.js";
 
@@ -80,7 +80,7 @@ export async function saveProductData<T>(catalog: CatalogWriter, id: string,
   if (JSON.stringify(data) === JSON.stringify(before) && JSON.stringify(root) === original) return result;
   const next = { ...root, catalogData: data };
   productData(next);
-  if (new TextEncoder().encode(JSON.stringify(next)).byteLength > 1024 * 1024)
+  if (jsonBytes(next) > 1024 * 1024)
     catalogFail("INVALID_INPUT", "Product is too large to save");
   let applied;
   try { applied = await catalog.compareAndSet(root.itemId, stored!.revision, next); }

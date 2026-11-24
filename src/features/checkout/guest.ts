@@ -1,4 +1,4 @@
-import { isRecord, sortedKeys } from "../../shared/record.js";
+import { isRecord, jsonBytes, sortedKeys } from "../../shared/record.js";
 import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
 import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
@@ -15,6 +15,7 @@ import {
   type CheckoutContactRequirements,
 } from "../checkout-contact/index.js";
 import type {
+  CartAttributes,
   CartLine,
   CheckoutAttempt,
   CheckoutRecord,
@@ -60,6 +61,13 @@ export function cartLines(record: CheckoutRecord | undefined, now: number): Cart
   return record?.cart && now < +record.cartExpires! && record.attempts.at(-1)?.phase !== "paid" ? record.cart.lines : [];
 }
 
+/** The cart's attributes within their limits (commerce-cart-attributes-order-paid-20261123), or the whole write is refused. */
+function cartAttributes(bag: unknown): CartAttributes {
+  if (!isRecord(bag) || Object.keys(bag).length > 10 || jsonBytes(bag) > 2000 ||
+      !Object.entries(bag).every(([key, value]) => /^(?!dinkus_|_)[a-z0-9_.-]{1,40}$/.test(key) && typeof value === "string" && value.length < 256)) fail("INVALID_CART");
+  return bag as CartAttributes;
+}
+
 async function cartLine(runtime: GuestCheckoutRuntime, line: unknown): Promise<CartLine> {
   if (!isRecord(line)) fail("INVALID_CART");
   const keys = sortedKeys(line);
@@ -74,8 +82,8 @@ async function cartLine(runtime: GuestCheckoutRuntime, line: unknown): Promise<C
 }
 
 /**
- * Read the cart (`{}`) or replace it whole (`{lines, version}`, plus `key` for an agent retry).
- * A stale version changes nothing (commerce-cart-agent-writes-20261113).
+ * Read the cart (`{}`) or replace it whole (`{lines, version}`, plus `key` for an agent retry and `attributes`
+ * for the store's own facts). A stale version changes nothing (commerce-cart-agent-writes-20261113).
  */
 export async function cartGuestCheckout(
   runtime: GuestCheckoutRuntime,
@@ -85,7 +93,8 @@ export async function cartGuestCheckout(
 ): Promise<GuestCheckoutResult> {
   try {
     const raw = input === undefined ? {} : asObject(input);
-    const keys = sortedKeys(raw);
+    // `attributes` rides only on a replace: the pattern drops it before `key` or `lines`, never before `stop`.
+    const keys = sortedKeys(raw).replace(/^attributes,(?!s)/, "");
     if (!["", "stop", "lines,version", "key,lines,version"].includes(keys) || keys === "stop" && raw.stop !== true) fail("INVALID_CART");
     const authorized = await authorizeGuestCapability(runtime, readGuestCapabilityHeader(headers));
     const store = createCheckoutStore(runtime.carts);
@@ -93,7 +102,7 @@ export async function cartGuestCheckout(
     const stored = await store.read(authorized.cartId);
     // The cart email's key answers and writes only for the record read here; its writes are conditional on it.
     fenceEmailedKey(authorized, stored?.record, now);
-    const { lines, version, key } = raw as { lines: unknown; version: unknown; key?: unknown };
+    const { lines, version, key, attributes } = raw as { lines: unknown; version: unknown; key?: unknown; attributes?: unknown };
     let attempt = stored?.record.attempts.at(-1);
     if (!keys) {
       // A read is also the status check: it runs Commerce's payment check on the current attempt.
@@ -104,13 +113,14 @@ export async function cartGuestCheckout(
     } else if (key === undefined || key !== stored?.record.cart?.key) {
       if (attempt && attempt.phase !== "released") fail("CHECKOUT_FROZEN");
       if (!Array.isArray(lines) || key !== undefined && (typeof key !== "string" || key.length > 128)) fail("INVALID_CART");
+      const bag = attributes === undefined ? undefined : cartAttributes(attributes);
       if (version !== (stored?.version ?? null)) fail("CONTENTION");
       const merged = lines.length ? cartInput(await Promise.all(lines.map(line => cartLine(runtime, line)))) : [];
       // Stock is checked again when checkout starts; any refusal here reads as unavailable.
       if (!(await quoteCatalogBasket(runtime.catalog, merged.map(line => line.catalogItemId),
         { resolveProvider: runtime.host.resolveAvailabilityProvider })).ok) fail("PRODUCT_UNAVAILABLE");
       if (!await store.compareAndSet(authorized.cartId, stored?.version ?? null, {
-        ...stored?.record, attempts: stored?.record.attempts ?? [], cart: { lines: merged, ...(key ? { key } : {}) }, cartExpires: String(now + CART_SECONDS),
+        ...stored?.record, attempts: stored?.record.attempts ?? [], cart: { lines: merged, ...(key ? { key } : {}) }, ...(bag ? { attributes: bag } : {}), cartExpires: String(now + CART_SECONDS),
       })) fail("CONTENTION");
     }
     const saved = await store.read(authorized.cartId);
@@ -121,7 +131,7 @@ export async function cartGuestCheckout(
     if (kept) Object.assign(checkout.order!, kept);
     return {
       ok: true, capabilityId: authorized.capabilityId, checkout,
-      cart: { lines: cartLines(saved?.record, now), version: saved?.version ?? null, expiresAt: +(saved?.record.cartExpires ?? now + CART_SECONDS) },
+      cart: { lines: cartLines(saved?.record, now), ...(saved?.record.attributes ? { attributes: saved.record.attributes } : {}), version: saved?.version ?? null, expiresAt: +(saved?.record.cartExpires ?? now + CART_SECONDS) },
     };
   } catch (error) {
     return guestSafeResult(error);

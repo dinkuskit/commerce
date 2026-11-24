@@ -44,6 +44,8 @@ export interface PaidOrder {
   mode?: "test" | "live";
   /** The payment was confirmed after Checkout had let the checkout go as ended and unpaid. */
   paidAfterEnd?: true;
+  /** The store's own facts from the cart, frozen at checkout start (commerce-cart-attributes-order-paid-20261123). */
+  attributes?: Readonly<Record<string, string>>;
 }
 
 /**

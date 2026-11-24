@@ -125,21 +125,29 @@ test('order.paid gives each order this version stored, with what the order confi
     // Two size M tees, paid on this version: a paid-news key and the pricing the checkout froze.
     await shop.keep('order-5', 'ana@buyer.test', 'Ana Buyer', [['tee-m', 'Smoky Mountain Tee']], { variant: { productId: 'tee', catalogItemId: 'tee-m' }, paidKey: `${paidAt} order-5` });
     await shop.orders.put('order-5', { ...(await shop.orders.get('order-5')), paidOrder: { ...(await shop.orders.get('order-5')).paidOrder,
-      lines: [{ catalogItemId: 'tee-m', quantity: 2, name: 'Smoky Mountain Tee', unitPrice: usd('2400') }], total: usd('5400'), pricing } });
+      lines: [{ catalogItemId: 'tee-m', quantity: 2, name: 'Smoky Mountain Tee', unitPrice: usd('2400') }], total: usd('5400'), pricing,
+      // The store's own facts, frozen from the cart (commerce-cart-attributes-order-paid-20261123).
+      attributes: { account_id: 'acct_42', 'credit.sku': 'compute-100' } } });
     // Paid on a version before this one: no paid-news key, so no confirmation is ever sent for it.
     await shop.keep('order-6', 'bo@buyer.test', 'Bo Buyer', [['mug', 'Mug']]);
     // A 60-line order: 50 lines and a count of the rest, so the item stays under the courier's 8 KB.
     // Long names in a script of three bytes a character are the worst case the courier's 8 KB sees.
     await shop.keep('order-7', 'cy@buyer.test', 'Cy Buyer', Array.from({ length: 60 }, (_, i) => ['item-' + i, 'Item ' + i + ' ' + '茶'.repeat(300)]), { paidKey: `${paidAt} order-7` });
+    // Its attributes are as large as a cart allows (just under 2,000 bytes), and are never the part left out.
+    const fullBag = Object.fromEntries(Array.from({ length: 8 }, (_, i) => ['fact_' + i, '茶'.repeat(78)]));
+    await shop.orders.put('order-7', { ...(await shop.orders.get('order-7')), paidOrder: { ...(await shop.orders.get('order-7')).paidOrder, attributes: fullBag } });
 
     const paid = (await shop.since(null, 50, { topic: 'order.paid' })).data;
     assert.deepEqual(paid.items.map(item => item.id), ['order-5:paid', 'order-7:paid']);
     assert.deepEqual(paid.items[0], { id: 'order-5:paid', at: paidAt, data: {
       orderId: 'order-5', number: 1005, test: true, email: 'ana@buyer.test', name: 'Ana Buyer', shipTo: delivery('Ana Buyer'),
       lines: [{ name: 'Smoky Mountain Tee', options: 'Size: M', quantity: 2, unitPrice: usd('2400') }],
-      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400') } });
+      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400'),
+      attributes: { account_id: 'acct_42', 'credit.sku': 'compute-100' } } });
     const bytes = item => new TextEncoder().encode(JSON.stringify(item)).length;
     const big = paid.items[1].data;
+    assert.ok(bytes(fullBag) > 1900 && bytes(fullBag) <= 2000, String(bytes(fullBag)));
+    assert.deepEqual(big.attributes, fullBag);
     assert.ok(big.lines.length >= 1 && big.lines.length + big.moreLines === 60, JSON.stringify({ kept: big.lines.length, more: big.moreLines }));
     assert.equal(big.lines[0].name.length, 200, 'a name is cut to 200 characters');
     assert.ok(bytes(paid.items[1]) <= 7500, String(bytes(paid.items[1])));

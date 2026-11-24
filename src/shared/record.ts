@@ -8,6 +8,9 @@ export function sortedKeys(value: object): string {
   return Object.keys(value).sort().join();
 }
 
+/** How many bytes the value takes as JSON, for size limits. */
+export const jsonBytes = (value: unknown): number => new TextEncoder().encode(JSON.stringify(value)).length;
+
 /** JSON with object keys sorted, so the same contents compare equal whatever their key order. */
 export function canonical(value: unknown): string {
   return JSON.stringify(value, (_key, v) => isRecord(v)

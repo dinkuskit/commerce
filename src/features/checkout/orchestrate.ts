@@ -142,6 +142,9 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
         ? (rawCart as { contact?: unknown }).contact
         : undefined,
     );
+    // The saved cart's attributes are frozen with the attempt (commerce-cart-attributes-order-paid-20261123).
+    const attributes = stored?.record.attributes;
+    if (attributes && Object.keys(attributes).length) attempt.attributes = attributes;
     if (e.paymentAssociations && !await e.paymentAssociations.claim({
       recordKind: "checkout-payment-association",
       attemptId: attempt.attemptId,
@@ -318,6 +321,7 @@ function completeOrder(e: CheckoutExecution, next: CheckoutAttempt, attempt: Che
     ...(attempt.ticketIds ? { ticketIds: [...attempt.ticketIds] } : {}),
     ...(next.contactSnapshot ? { contactSnapshot: next.contactSnapshot } : {}),
     ...(attempt.phase === "released" ? { paidAfterEnd: true as const } : {}),
+    ...(attempt.attributes ? { attributes: attempt.attributes } : {}),
   };
 }
 
