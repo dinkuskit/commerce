@@ -32,6 +32,10 @@ distinct `from`:
 | `lines` | `[{ item, price, off }]` for every checkout line, in Commerce's line order (cart lines sorted by catalog item id) | at most 100 |
 
 `price` and `off` are whole cents as decimal strings, at most 1,000,000,000.
+`from`, `ref`, codes and `item` are printable ASCII (`!` to `~`), and the
+`from`, `ref` and codes of all answers together are at most 1,500 characters.
+The order keeps those, and its `order.paid` news must stay under the courier's
+8 KB beside the longest address Commerce takes (about 6.5 KB at most).
 Any other key, or a value out of bounds, leaves checkout unavailable before
 anything is frozen. Sales tax will add its own keys when the Tax plugin is
 built; until then they are refused.
