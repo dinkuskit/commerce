@@ -31,6 +31,22 @@ export interface ProductAiProjection {
   readonly returnPolicySummary?: string;
 }
 
+/**
+ * A product's one standard category from Shopify's Standard Product Taxonomy,
+ * which the store resolves from its own field (template-product-category-feeds-20261124).
+ */
+export interface ProductStandardCategory {
+  readonly taxonomy: "shopify";
+  /** The taxonomy release the id belongs to, such as "2026-11". */
+  readonly version: string;
+  /** Bare Shopify id, such as "aa-2-17". */
+  readonly id: string;
+  /** The category's own name, such as "Hats". */
+  readonly name: string;
+  /** Google product category id from Shopify's own mapping; absent when Shopify maps none. */
+  readonly googleId?: string;
+}
+
 export interface ProductFeedContent {
   /** The host's published, canonical product page URL. */
   canonicalUrl: string;
@@ -40,6 +56,10 @@ export interface ProductFeedContent {
   description?: string;
   imageUrls?: readonly string[];
   aiProjection?: ProductAiProjection;
+  /** Absent means Uncategorized: the feeds send no standard category. */
+  standardCategory?: ProductStandardCategory;
+  /** The store's own category for the product, sent to Google and Meta as product_type. */
+  productType?: string;
 }
 
 export interface ProductFeedFacts {
@@ -113,6 +133,7 @@ export interface AgentCatalogProductEntry {
   readonly brand?: string;
   readonly gtin?: string;
   readonly mpn?: string;
+  readonly category?: Readonly<{ taxonomy: "shopify"; version: string; id: string; name: string }>;
   readonly aiProjection?: ProductAiProjection;
 }
 
