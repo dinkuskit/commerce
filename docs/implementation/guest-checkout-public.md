@@ -330,8 +330,8 @@ Unmanaged baskets never resolve Inventory and do not require Inventory
 configuration. Managed baskets stay fail-closed without an authoritative
 provider. Accepted window is the provider-reported inclusive 1800..1860-second
 hosted card session (`paymentWindow:{minSeconds:1800;maxSeconds:1860}`),
-card/USD, positive totals. An attempt frozen with the old
-`paymentWindowSeconds: 1800` is refused. See [checkout-payment-window.md](checkout-payment-window.md).
+card/USD, positive totals. Frozen `paymentWindowSeconds: 1800` originals stay
+exact. See [checkout-payment-window.md](checkout-payment-window.md).
 
 ## Fixture versus production
 

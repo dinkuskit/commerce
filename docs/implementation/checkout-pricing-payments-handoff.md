@@ -56,8 +56,8 @@ reads or binding/session HTTP. An unknown schema is rejected.
 
 New priced requests keep `paymentWindow:{minSeconds:1800,maxSeconds:1860}` and
 `paymentMethods:["card"]`. Historical merchandise-only requests retain their
-original shape and fingerprint; an attempt frozen with the old
-`paymentWindowSeconds:1800` is refused. Never add pricing or migrate a window on replay. Pricing-bearing
+original shape and fingerprint, including frozen `paymentWindowSeconds:1800`
+originals. Never add pricing or migrate a window on replay. Pricing-bearing
 legacy-window construction is not part of this version.
 
 ## Trusted input, redemption and recovery

@@ -118,8 +118,7 @@ test('current policy accepts 1800, 1859 and 1860 and rejects 1799, 1861, non-int
   assert.equal(providerSessionWindowIsValid(session(Number.MAX_SAFE_INTEGER + 1, Number.MAX_SAFE_INTEGER + 1 + 1800), request), false);
   assert.equal(providerSessionWindowIsValid({ sessionId: 'session-test', redirectUrl: 'https://checkout.stripe.com/test', expiresAt: 2800 }, request), false);
   assert.equal(providerSessionWindowIsValid({ sessionId: 'session-test', redirectUrl: 'https://checkout.stripe.com/test', createdAt: 1000 }, request), false);
-  // Commerce no longer accepts a session for an attempt frozen with the old exact-1800 shape.
-  assert.equal(providerSessionWindowIsValid(session(1000, 2800), legacyRequest()), false);
+  assert.equal(providerSessionWindowIsValid(session(1000, 2800), legacyRequest()), true);
   assert.equal(providerSessionWindowIsValid(session(1000, 2859), legacyRequest()), false);
 });
 
@@ -213,18 +212,23 @@ test('later outcomes reject altered immutable session fields while the hold stay
   }
 });
 
-test('an attempt frozen with the old paymentWindowSeconds:1800 is refused, never rewritten and never released', async t => {
+test('frozen old paymentWindowSeconds:1800 remains exact across retry and restart', async t => {
   const f = setup(t);
-  await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
+  const a = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
   const legacyPayment = await persistLegacyPaying(f);
-  await assert.rejects(startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart)), /Invalid payment window/);
+  const retry = await startCheckout(f.execution, 'guest-cart', withSyntheticCheckoutContact(cart));
+  assert.equal(retry.attemptId, a.attemptId);
   const afterRetry = (await f.execution.store.read('guest-cart')).record.attempts[0].payment;
   assert.deepEqual(afterRetry, legacyPayment);
   assert.equal(afterRetry.paymentWindowSeconds, LEGACY_EXACT_PAYMENT_WINDOW_SECONDS);
   assert.equal('paymentWindow' in afterRetry, false);
-  assert.equal(f.counts().releaseCalls, 0);
-  // The handoff still names the old shape for anyone reading the frozen record.
-  assert.equal(paymentRequestHandoff(afterRetry).kind, 'legacy-exact-1800');
+  const restarted = openStore(f.path);
+  t.after(() => restarted.db.close());
+  const afterRestart = await startCheckout({ ...f.execution, store: restarted.store }, 'guest-cart', withSyntheticCheckoutContact(cart));
+  assert.equal(afterRestart.attemptId, a.attemptId);
+  const persisted = (await restarted.store.read('guest-cart')).record.attempts[0].payment;
+  assert.deepEqual(persisted, legacyPayment);
+  assert.equal(paymentRequestHandoff(persisted).kind, 'legacy-exact-1800');
 });
 
 test('legacy exact-1800 rejects a 1859 window that the current policy would accept', async t => {

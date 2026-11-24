@@ -36,7 +36,7 @@ export async function commerceAdmin(route: SandboxedRouteContext, ctx: PluginCon
     labelPage: async id => {
       const ship = await resolveRegistryShip(ctx);
       const record = await (ctx.storage['orders'] as OrdersCollection).get(id);
-      if (!ship || !record) return undefined;
+      if (!ship || !record || record.shipPin) return undefined;
       return shipLabelPage(ship, id);
     },
   });

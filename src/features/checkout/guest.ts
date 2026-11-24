@@ -190,7 +190,8 @@ export function executionOf(runtime: GuestCheckoutRuntime) {
     store: createCheckoutStore(runtime.carts),
     catalog: runtime.catalog,
     availability: { resolveProvider: runtime.host.resolveAvailabilityProvider },
-    resolveInventory: runtime.host.resolveInventory ?? (async () => null),
+    // Checkout reserves stock only for a managed item, which the Registry build never has.
+    resolveInventory: !REGISTRY_BUILD && runtime.host.resolveInventory || (async () => null),
     paymentAssociations: runtime.paymentAssociations,
     paymentBindingRef: runtime.host.paymentBindingRef!.trim(),
     paymentMode: runtime.host.paymentMode,

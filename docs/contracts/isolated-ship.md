@@ -3,7 +3,8 @@
 > **Retired before 0.3.0** (GrillTrack `isolated-ship-cohort-retired-001`). Commerce no longer
 > lists `ship.sm0ky.dev` in its allowed hosts. Since the Tax trim (24 Nov 2026) the exact isolated shape
 > below is refused like any other form of it, so checkout stays closed until the store connects again
-> through DinkusKit.com, and Orders no longer reads an order's `shipPin`; no store held either. Every
+> through DinkusKit.com; no store held it. An order that carries a pin is still never sent to Ship and
+> never completed from it. Every
 > store uses Ship at `ship.dinkuskit.com`. The owner admission actions (`ship.admit`, `cohort.disable`),
 > sandbox pass claims and recipient headers are removed. The text below is kept as the record of what
 > 0.3.0-beta.0 to beta.2 accepted.

@@ -28,6 +28,8 @@ export interface OrderRecord {
   paidKey?: string;
   /** The version Ship last took, or refused for good. Recording it never raises the version. */
   shipVersion?: number;
+  /** Left by the retired isolated Ship TEST profile (0.3.0-beta.0 to beta.2): such an order never goes to Ship. */
+  shipPin?: unknown;
 }
 
 export interface OrderCompletion {

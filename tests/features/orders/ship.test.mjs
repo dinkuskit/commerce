@@ -227,6 +227,18 @@ test('Ship\'s label page for an order is on Ship\'s origin under the store\'s id
   assert.equal(shipLabelPage({ origin: 'https://ship.example.test', site: 'site/1' }, 'o1'), 'https://ship.example.test/stores/site%2F1/orders/o1');
 });
 
+test('an order pinned by the retired isolated Ship profile never goes to Ship or completes from it', async () => {
+  const kept = await store(order('o1'), order('o2'));
+  const row = await kept.getVersioned('o2');
+  await kept.compareAndSet('o2', row.revision, { ...row.value, shipPin: { recipient: 'ship-sandbox', generation: 'fixture-generation-1', site: 'site', enabled: false } });
+  const before = await kept.get('o2');
+  const { state, connection } = ship([{ eventId: 'lbl_2', orderId: 'o2', version: 1, carrier: 'USPS', tracking: '9400 SYNTHETIC 2' }]);
+  await syncShip(kept, connection, item);
+  assert.deepEqual(state.sent.map(sent => sent.orderId), ['o1']);
+  assert.deepEqual(state.acks, []);
+  assert.deepEqual(await kept.get('o2'), before);
+});
+
 test('settings that stop naming this Ship mid-sync stop it before the next call or record', async () => {
   for (const at of ['labels', 'order']) {
     const kept = await store(order('o1'));
