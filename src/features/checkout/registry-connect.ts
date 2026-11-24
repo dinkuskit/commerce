@@ -2,7 +2,8 @@ import type { PluginContext } from "emdash";
 import { pluginResponse } from "emdash/plugin";
 import { isRecord as object } from "../../shared/record.js";
 import { COMMERCE_BETA_REGISTRY_RUNTIME_ID, COMMERCE_REGISTRY_RUNTIME_ID } from "../../shared/plugin-identity.js";
-import { registryText as text } from "./registry-guards.js";
+import { sha256 } from "../../shared/secret.js";
+import { DIRECT, registryText as text } from "./registry-guards.js";
 import { admitRegistryCheckoutConfig } from "./registry-provider-admission.js";
 import { resolveTrustedSiteOrigin } from "./site-scope.js";
 
@@ -35,10 +36,17 @@ const random = (size: number) => b64(crypto.getRandomValues(new Uint8Array(size)
 const origin = (ctx: PluginContext) => { const site = resolveTrustedSiteOrigin({ runtimeSiteUrl: ctx.site?.url }); return site.ok ? site.origin : null; };
 const installed = (ctx: PluginContext) => [COMMERCE_REGISTRY_RUNTIME_ID, COMMERCE_BETA_REGISTRY_RUNTIME_ID].find(id => id === ctx.plugin?.id);
 const post = async (ctx: PluginContext, url: string, body: unknown, key?: string) => {
-  const response = await ctx.http!.fetch(url, { method: "POST", cache: "no-store", redirect: "error",
+  const response = await ctx.http!.fetch(url, { method: "POST", ...DIRECT,
     headers: { accept: "application/json", "content-type": "application/json", ...(key ? { authorization: "Bearer " + key } : {}) }, body: JSON.stringify(body) });
   const value: unknown = await response.json().catch(() => null);
   return { ok: response.ok, body: object(value) ? value : {} };
+};
+/** Trades the store key for a pass of one scope and reads a DinkusKit.com address with it. A refused trade answers what DinkusKit.com gave as its error. */
+const read = async (ctx: PluginContext, found: { siteId: string; key: string }, scope: string, path: string): Promise<{ response?: Response; error?: unknown }> => {
+  const { ok, body } = await post(ctx, DINKUS + "/api/store-passes", { site_id: found.siteId, scope, audience: "dinkuskit" }, found.key);
+  return ok && text(body.access_token, 16384)
+    ? { response: await ctx.http!.fetch(DINKUS + path, { ...DIRECT, headers: { accept: "application/json", authorization: "Bearer " + body.access_token } }) }
+    : { error: body.error };
 };
 
 async function saved(ctx: PluginContext) {
@@ -100,11 +108,11 @@ export async function startConnect(ctx: PluginContext): Promise<ConnectState> {
   }
   const { value, revision } = await saved(ctx);
   const verifier = random(32), callback = `${site}/_emdash/admin/plugins/${id}/settings`;
-  const challenge = b64(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))));
+  // What Connect asks for is also what its receipt repeats, in the same order.
+  const asked = { client_id: CLIENT_ID, service: "commerce", site_origin: site, callback_uri: callback, code_challenge: b64(await sha256(verifier)) };
   let answer;
   try {
-    answer = await post(ctx, CONNECT, { protocol_version: 2, client_id: CLIENT_ID, service: "commerce", site_origin: site,
-      callback_uri: callback, code_challenge: challenge, code_challenge_method: "S256" });
+    answer = await post(ctx, CONNECT, { protocol_version: 2, ...asked, code_challenge_method: "S256" });
   } catch { return { state: "disconnected", failure: "DinkusKit.com could not be reached. Try again in a moment." }; }
   const { ok, body } = answer, { site_id: siteId, connection_id: connectionId, expires_at: expiresAt, interval } = body;
   const uri = `${DINKUS}/account/connect?connection_id=${encodeURIComponent(String(connectionId))}`, now = Date.now();
@@ -115,8 +123,7 @@ export async function startConnect(ctx: PluginContext): Promise<ConnectState> {
   const flowId = random(18);
   // The waiting record goes first, so the flow is never saved without it; the proof route vouches for it only once the flow is saved.
   await ctx.kv.set(CONTROL(flowId), { flowId, expiresAt, interval, nextPollAt: now + interval * 1000, uri,
-    receipt: { version: 2, site_id: siteId, connection_id: connectionId, challenge: body.challenge, client_id: CLIENT_ID, service: "commerce",
-      site_origin: site, callback_uri: callback, code_challenge: challenge, expires_at: expiresAt } } satisfies Control);
+    receipt: { version: 2, site_id: siteId, connection_id: connectionId, challenge: body.challenge, ...asked, expires_at: expiresAt } } satisfies Control);
   if (!(await write(ctx, revision, { ...value, flow: { id: flowId, verifier } })).applied) {
     await ctx.kv.delete(CONTROL(flowId));
     return { state: "disconnected", failure: FIRST };
@@ -150,10 +157,8 @@ export async function storeProof(input: unknown, ctx: PluginContext) {
 /** What DinkusKit.com has this store under (connect-shows-siblings-133): the business and its plugins here, or nothing on any failure. */
 export async function connectedTo(ctx: PluginContext, found: { siteId: string; key: string }): Promise<{ business: string; plugins: string[] } | undefined> {
   try {
-    const pass = await post(ctx, DINKUS + "/api/store-passes", { site_id: found.siteId, scope: "store:connection", audience: "dinkuskit" }, found.key);
-    if (!pass.ok || !text(pass.body.access_token, 16384)) return;
-    const response = await ctx.http!.fetch(DINKUS + "/api/store-connection", { cache: "no-store", redirect: "error",
-      headers: { accept: "application/json", authorization: "Bearer " + pass.body.access_token } });
+    const { response } = await read(ctx, found, "store:connection", "/api/store-connection");
+    if (!response) return;
     const body: unknown = response.ok ? await response.json() : null;
     if (object(body) && text(body.business, 200) && Array.isArray(body.plugins) && body.plugins.every(p => ["commerce", "payments", "ship"].includes(p))) {
       return { business: body.business, plugins: body.plugins };
@@ -180,10 +185,8 @@ export async function refreshCheckoutSettings(ctx: PluginContext, known?: { site
   try {
     // The revision is read before fetching, so a newer save made meanwhile is never overwritten by these settings.
     const current = await ctx.settings!.getVersioned<unknown>(CHECKOUT_SETTING);
-    const pass = await post(ctx, DINKUS + "/api/store-passes", { site_id: found.siteId, scope: "commerce:settings", audience: "dinkuskit" }, found.key);
-    if (!pass.ok || !text(pass.body.access_token, 16384)) return typeof pass.body.error === "string" ? pass.body.error : "unavailable";
-    const response = await ctx.http!.fetch(DINKUS + "/api/commerce-settings?shipping=free-over", { cache: "no-store", redirect: "error",
-      headers: { accept: "application/json", authorization: "Bearer " + pass.body.access_token } });
+    const { response, error } = await read(ctx, found, "commerce:settings", "/api/commerce-settings?shipping=free-over");
+    if (!response) return typeof error === "string" ? error : "unavailable";
     const settings = (await response.text()).slice(0, 16385);
     if (!response.ok) { try { return String(JSON.parse(settings).error); } catch { return "unavailable"; } }
     // The settings must be this store's; the documented turned-off form (admitted as null) is saved as it is.

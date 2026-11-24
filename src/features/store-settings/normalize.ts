@@ -1,4 +1,4 @@
-import { isRecord } from "../../shared/record.js";
+import { isRecord, jsonBytes } from "../../shared/record.js";
 import {
   MAX_COUNTRIES,
   MAX_SETTINGS_BYTES,
@@ -49,7 +49,7 @@ function countries(value: unknown, field: string): readonly CountryCode[] {
 }
 
 function ensureSize(settings: MerchantStoreSettings): void {
-  if (new TextEncoder().encode(JSON.stringify(settings)).byteLength > MAX_SETTINGS_BYTES) {
+  if (jsonBytes(settings) > MAX_SETTINGS_BYTES) {
     invalid("merchant store settings payload is too large");
   }
 }
