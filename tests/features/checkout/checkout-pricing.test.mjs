@@ -16,7 +16,7 @@ async function setup() {
 
 /** An add-on's answer as the store's own code hands it in (commerce-addons-door-20261124): one is $0.50 a line off "one", $0.50 off "two". */
 const answer = (offs = ["50", "50"], extra = {}) => ({ from: "dinkus-coupons", ref: "hold-1", codes: ["SAVE10"],
-  lines: [{ item: "one", price: "75", off: offs[0] }, { item: "two", price: "100", off: offs[1] }], ...extra });
+  lines: [{ item: "one", price: "75", qty: 2, off: offs[0] }, { item: "two", price: "100", qty: 1, off: offs[1] }], ...extra });
 
 test("add-on answers price the lines, flat shipping, conservation, and replay immutability", async (t) => {
   const state = await setup();
@@ -233,11 +233,13 @@ test("add-on answers that saw other prices, take a line below zero or break the 
   };
   state.execution.resolvePayments = async () => { calls += 1; throw new Error("must not resolve"); };
   const start = (addons) => startCheckout(state.execution, "bad-answers", withSyntheticCheckoutContact({ lines: cart, addons }));
-  await assert.rejects(() => start([answer(undefined, { lines: [{ item: "one", price: "100", off: "0" }, { item: "two", price: "100", off: "0" }] })]), /contention/);
-  await assert.rejects(() => start([answer(undefined, { lines: [{ item: "two", price: "100", off: "0" }, { item: "one", price: "75", off: "0" }] })]), /contention/);
-  await assert.rejects(() => start([answer(undefined, { lines: [{ item: "one", price: "75", off: "0" }] })]), /contention/);
+  await assert.rejects(() => start([answer(undefined, { lines: [{ item: "one", price: "100", qty: 2, off: "0" }, { item: "two", price: "100", qty: 1, off: "0" }] })]), /contention/);
+  await assert.rejects(() => start([answer(undefined, { lines: [{ item: "two", price: "100", qty: 1, off: "0" }, { item: "one", price: "75", qty: 2, off: "0" }] })]), /contention/);
+  await assert.rejects(() => start([answer(undefined, { lines: [{ item: "one", price: "75", qty: 2, off: "0" }] })]), /contention/);
+  // A quantity the add-on did not see (the shopper changed the cart since the store asked) is contention too.
+  await assert.rejects(() => start([answer(undefined, { lines: [{ item: "one", price: "75", qty: 1, off: "50" }, { item: "two", price: "100", qty: 1, off: "0" }] })]), /contention/);
   await assert.rejects(() => start([answer(["151", "0"])]), /Invalid add-on answer/);
-  await assert.rejects(() => start([answer(["100", "0"]), { from: "other", lines: [{ item: "one", price: "75", off: "51" }, { item: "two", price: "100", off: "0" }] }]), /Invalid add-on answer/);
+  await assert.rejects(() => start([answer(["100", "0"]), { from: "other", lines: [{ item: "one", price: "75", qty: 2, off: "51" }, { item: "two", price: "100", qty: 1, off: "0" }] }]), /Invalid add-on answer/);
   for (const bad of [[], [answer(), answer()], Array(5).fill(0).map((_, i) => answer(undefined, { from: "a" + i })), [answer(["-1", "0"])],
     [answer(["1.5", "0"])], [answer(["1000000001", "0"])], [answer(undefined, { ship: true })], [answer(undefined, { codes: Array(7).fill("X") })],
     [answer(undefined, { codes: ["x".repeat(65)] })], [answer(undefined, { ref: "" })], [answer(undefined, { from: "x".repeat(65) })], [answer(undefined, { rate: "0.07" })]]) {

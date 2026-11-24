@@ -2,12 +2,16 @@
 
 Run on 24 Nov 2026 with Node 24.22.0 from this branch.
 
-- `npm run build`: `registry_bundle=pass backend_bytes=131061 headroom_bytes=11` (main before this change: 131,045 bytes, 27 free). Commerce's coupon code is gone, so the door fits. The add-on size bound below costs 58 bytes.
+- `npm run build`: `registry_bundle=pass backend_bytes=131064 headroom_bytes=8` (main before this change: 131,045 bytes, 27 free). Commerce's coupon code is gone, so the door fits. The add-on size bound below costs 58 bytes, and checking each line's quantity 3 more.
 - Unit suite (`node --test` over every `test:unit` glob): 852 tests, 852 pass.
 - Integration suite (`node --test tests/integration/*.test.mjs`): 112 tests, 112 pass, including the three add-ons door cases in `registry-checkout-services.test.mjs`, which run the compiled Registry backend in workerd.
 - `tests/features/orders/courier-outbox-runtime.test.mjs` (EmDash's own route dispatch): 4 pass, including `STORE_ONLY` for a signed-in Administrator and `order.paid` carrying the discount and the add-ons.
 
 `orders-discount-line.png`: the Orders page renderer (`tools/orders-preview`) showing a synthetic order priced by the Coupons plugin. The discount line names the code the shopper used: "Discount SYNTHETIC5 −$5.00".
+
+## An answer worked out for another quantity
+
+Each answer line now carries the quantity the add-on saw (`qty`), beside the item and unit price. The door reads the saved cart when checkout starts, so a shopper who changes a quantity in another tab after the store asked the add-on gets `CONTENTION` and the store asks again: an amount off worked out for two hats never lands on one. `registry-checkout-services.test.mjs` shows the compiled door answering `CONTENTION` for an answer naming 2 hats on a 1-hat cart, and `checkout-pricing.test.mjs` the same for the pricing step.
 
 ## The add-ons' size and the courier's 8 KB
 

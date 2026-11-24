@@ -113,7 +113,7 @@ function addonAnswers(list: AddonAnswer[]): AddonAnswer[] {
     !list.every(answer => /^(codes,)?from,lines(,ref)?(,ship)?$/.test(sortedKeys(answer)) && TEXT(answer.from, 64) &&
       (answer.ref === undefined || TEXT(answer.ref, 200)) && (answer.ship ?? "free") === "free" &&
       (answer.codes ?? []).length <= 6 && (answer.codes ?? []).every(code => TEXT(code, 64)) && answer.lines.length <= 100 &&
-      answer.lines.every(line => sortedKeys(line) === "item,off,price" && TEXT(line.item, 200) && CENTS(line.price) && CENTS(line.off))) ||
+      answer.lines.every(line => sortedKeys(line) === "item,off,price,qty" && TEXT(line.item, 200) && CENTS(line.price) && CENTS(line.off))) ||
     JSON.stringify(list.map(answer => [answer.from, answer.ref, answer.codes])).length > 1500) {
     fail("Invalid add-on answer");
   }

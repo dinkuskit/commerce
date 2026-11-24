@@ -137,7 +137,7 @@ test('EmDash 1.5 SDK storage preserves checkout records across runtime restart w
 
 // commerce-addons-door-20261124: Commerce carries no coupon code; the store's own code hands add-on answers to one private door.
 const ADDONS = 'checkout/addons/start';
-const answer = (off = '100', extra = {}) => ({ from: 'dinkus-coupons', ref: 'hold-1', codes: ['SAVE10'], lines: [{ item: 'hat', price: '250', off }], ...extra });
+const answer = (off = '100', extra = {}) => ({ from: 'dinkus-coupons', ref: 'hold-1', codes: ['SAVE10'], lines: [{ item: 'hat', price: '250', qty: 1, off }], ...extra });
 
 test('compiled Registry runtime ships no coupon code, and the public start refuses coupon codes and add-on answers', async t => {
   const state = await runtimeFixture();
@@ -170,11 +170,13 @@ test('the add-ons door prices checkout with an add-on answer, and the order and 
   const { lines, contact } = basket;
   assert.equal((await state.invoke('checkout/guest/cart', { lines, version: null }, token)).ok, true);
   // A price the add-on did not see (the catalog changed since the store asked) is contention: the store asks again.
-  assert.equal((await state.invoke(ADDONS, { contact, addons: [{ ...answer(), lines: [{ item: 'hat', price: '249', off: '100' }] }] }, token)).error.code, 'CONTENTION');
+  assert.equal((await state.invoke(ADDONS, { contact, addons: [{ ...answer(), lines: [{ item: 'hat', price: '249', qty: 1, off: '100' }] }] }, token)).error.code, 'CONTENTION');
+  // So is a quantity it did not see (the cart changed since the store asked): an amount off for two hats never lands on one.
+  assert.equal((await state.invoke(ADDONS, { contact, addons: [{ ...answer(), lines: [{ item: 'hat', price: '250', qty: 2, off: '100' }] }] }, token)).error.code, 'CONTENTION');
   // Nothing malformed or out of bounds prices a checkout.
   for (const bad of [[], [answer('251')], [answer('1.5')], [answer('100', { ship: 'half' })], [answer('100', { tax: '1' })],
     [answer('100', { codes: Array(7).fill('X') })], [answer('100', { from: '' })], [answer(), answer()], [answer('100', { lines: [] })],
-    [answer('100', { lines: [{ item: 'hat', price: '250', off: '1', extra: 1 }] })], [answer('1000000001')], null,
+    [answer('100', { lines: [{ item: 'hat', price: '250', qty: 1, off: '1', extra: 1 }] })], [answer('1000000001')], null,
     // Only printable ASCII, and at most 1,500 characters of from, ref and codes in all, so the paid news fits the courier's 8 KB.
     [answer('100', { ref: 'h\u00e9' })], [answer('100', { codes: ['SAVE 10'] })],
     ['a', 'b', 'c', 'd'].map(from => answer('0', { from, ref: 'r'.repeat(200), codes: Array(6).fill('C'.repeat(64)) }))]) {
@@ -222,12 +224,12 @@ test('an add-on answer can make shipping free, and a fully discounted order is p
   assert.equal(state.requests[0].total.minor, '250');
   // Two add-ons' amounts add up on the line; all of it off and free shipping leaves nothing to pay.
   const token = await shopper();
-  const free = await state.invoke(ADDONS, { contact, addons: [answer('200', { ship: 'free' }), { from: 'another-addon', lines: [{ item: 'hat', price: '250', off: '50' }] }] }, token);
+  const free = await state.invoke(ADDONS, { contact, addons: [answer('200', { ship: 'free' }), { from: 'another-addon', lines: [{ item: 'hat', price: '250', qty: 1, off: '50' }] }] }, token);
   assert.equal(free.checkout.state, 'paid', JSON.stringify(free));
   assert.equal(free.checkout.order.total.minor, '0');
   assert.equal(state.requests.length, 1);
   // More than the line costs, together, is refused.
-  const over = await state.invoke(ADDONS, { contact, addons: [answer('200'), { from: 'another-addon', lines: [{ item: 'hat', price: '250', off: '51' }] }] }, await shopper());
+  const over = await state.invoke(ADDONS, { contact, addons: [answer('200'), { from: 'another-addon', lines: [{ item: 'hat', price: '250', qty: 1, off: '51' }] }] }, await shopper());
   assert.equal(over.ok, false);
 });
 

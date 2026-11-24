@@ -18,7 +18,7 @@ export interface CartLine { catalogItemId: string; quantity: number }
  */
 export interface AddonAnswer {
   from: string; ref?: string; codes?: readonly string[]; ship?: "free";
-  lines: readonly { item: string; price: string; off: string }[];
+  lines: readonly { item: string; price: string; qty: number; off: string }[];
 }
 /** What an order keeps of each answer: who answered, its reference and the codes. */
 export type AddonUse = Pick<AddonAnswer, "from" | "ref" | "codes">;

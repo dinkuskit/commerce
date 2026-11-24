@@ -47,8 +47,8 @@ const NOT_SHIPPED: TrustedShippingConfiguration = { configurationId: "not-shippe
 
 /**
  * Prices the frozen lines with the add-ons' answers (commerce-addons-door-20261124). Each answer names every line with
- * the item and unit price it saw: a different one means the catalog changed since the store asked, so the store asks
- * again. Amounts off are whole cents and never take a line below zero.
+ * the item, unit price and quantity it saw: a different one means the cart or catalog changed since the store asked,
+ * so the store asks again (an amount off worked out for ten mugs never lands on one). Amounts off are whole cents and never take a line below zero.
  */
 export async function composeCheckoutPricing(
   lines: readonly CheckoutLine[],
@@ -62,14 +62,15 @@ export async function composeCheckoutPricing(
   // configuration is neither read nor needed (checkout-digital-only-no-shipping-20261031, issue 302).
   const config = shipsGoods ? await pricing.resolveShippingConfiguration() : NOT_SHIPPED;
   if (!config) fail("Pricing configuration unavailable");
-  if (addons.some(answer => answer.lines.length !== lines.length)) fail("Checkout contention; retry");
   const pricingLines: CheckoutPricingLine[] = lines.map((line, index) => {
     const unit = normalizeMoney(line.unitPrice);
     const subtotal = parseMinorUnits(unit.minor) * BigInt(line.quantity);
     let off = 0n;
     for (const answer of addons) {
       const said = answer.lines[index];
-      if (said.item !== line.catalogItemId || said.price !== unit.minor) fail("Checkout contention; retry");
+      if (answer.lines.length !== lines.length || said.item !== line.catalogItemId || said.price !== unit.minor || said.qty !== line.quantity) {
+        fail("Checkout contention; retry");
+      }
       off += parseMinorUnits(said.off);
     }
     if (off > subtotal) fail("Invalid add-on answer");

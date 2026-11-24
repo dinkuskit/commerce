@@ -29,7 +29,7 @@ distinct `from`:
 | `ref` | the add-on's own reference, such as a hold id | 1 to 200, optional |
 | `codes` | the codes the shopper typed | at most 6, each 1 to 64, optional |
 | `ship` | `"free"` waives shipping | optional |
-| `lines` | `[{ item, price, off }]` for every checkout line, in Commerce's line order (cart lines sorted by catalog item id) | at most 100 |
+| `lines` | `[{ item, price, qty, off }]` for every checkout line, in Commerce's line order (cart lines sorted by catalog item id) | at most 100 |
 
 `price` and `off` are whole cents as decimal strings, at most 1,000,000,000.
 `from`, `ref`, codes and `item` are printable ASCII (`!` to `~`), and the
@@ -42,8 +42,8 @@ built; until then they are refused.
 
 ## What Commerce checks
 
-- Every answer names every line with the item and unit price Commerce froze.
-  A different one means the catalog changed after the store asked:
+- Every answer names every line with the item, unit price and quantity Commerce froze.
+  A different one means the catalog or the cart changed after the store asked:
   `CONTENTION`, and the store asks the add-on again.
 - The amounts off on one line, from all answers, never exceed that line's
   subtotal, so no line goes below $0.
