@@ -85,17 +85,8 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
       !text(value.bindingRef) || value.pricingSchema !== CHECKOUT_PRICING_SCHEMA ||
       !https(value.issuer, false) || !text(value.audience) || !obj(value.shipping)) fail();
   if (hasMode && value.mode !== "test" && value.mode !== "live") fail();
-  let retiredShip = false;
   for (const name of services) {
     const service = record[name];
-    // The isolated Ship TEST profile that 0.3.0-beta.0 to beta.2 accepted is retired: a store still
-    // saving its exact shape keeps checkout and has no Ship, so pinned orders go nowhere. Anything else is refused.
-    if (name === 'ship' && obj(service) && keys(service, 'audience,generation,mode,origin,recipient') &&
-        service.origin === 'https://ship.sm0ky.dev' && service.audience === 'dinkus-ship-sandbox' && service.recipient === 'ship-sandbox' &&
-        service.mode === 'test' && typeof service.generation === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(service.generation) && value.mode !== 'live') {
-      retiredShip = true;
-      continue;
-    }
     if (!obj(service) || !keys(service, "audience,origin") || !https(service.origin) || !text(service.audience)) fail();
     if (name === 'ship' && (new URL(service.origin).hostname === 'ship.sm0ky.dev' || service.audience === 'dinkus-ship-sandbox')) fail();
   }
@@ -105,9 +96,7 @@ export function admitRegistryCheckoutConfig(value: unknown, site: string): Regis
     fail();
   }
   admitShipping(value.shipping);
-  const admitted = structuredClone(value);
-  if (retiredShip) delete admitted.ship;
-  return admitted as unknown as RegistryCheckoutConfig;
+  return structuredClone(value) as unknown as RegistryCheckoutConfig;
 }
 
 export function trustedPaymentsHostConfig(config: RegistryCheckoutConfig, commerceOrigin: string) {

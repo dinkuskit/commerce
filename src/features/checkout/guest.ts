@@ -1,3 +1,4 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { isRecord, sortedKeys } from "../../shared/record.js";
 import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
 import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
@@ -173,7 +174,7 @@ function mapCheckoutError(error: unknown): never {
   if (/Retry requires/i.test(message)) fail("RETRY_REQUIRED");
   if (/Retry checkout not found|Checkout not found/i.test(message)) fail("CHECKOUT_NOT_FOUND");
   if (/Product unavailable|Product unpriced/i.test(message)) fail("PRODUCT_UNAVAILABLE");
-  if (/Inventory/i.test(message)) fail("INVENTORY_UNAVAILABLE");
+  if (!REGISTRY_BUILD && /Inventory/i.test(message)) fail("INVENTORY_UNAVAILABLE");
   if (/Payment binding/i.test(message)) fail("PAYMENTS_UNAVAILABLE");
   if (/contention/i.test(message)) fail("CONTENTION");
   fail("UNAVAILABLE");
@@ -189,7 +190,8 @@ export function executionOf(runtime: GuestCheckoutRuntime) {
     store: createCheckoutStore(runtime.carts),
     catalog: runtime.catalog,
     availability: { resolveProvider: runtime.host.resolveAvailabilityProvider },
-    resolveInventory: runtime.host.resolveInventory ?? (async () => null),
+    // Checkout reserves stock only for a managed item, which the Registry build never has.
+    resolveInventory: !REGISTRY_BUILD && runtime.host.resolveInventory || (async () => null),
     paymentAssociations: runtime.paymentAssociations,
     paymentBindingRef: runtime.host.paymentBindingRef!.trim(),
     paymentMode: runtime.host.paymentMode,

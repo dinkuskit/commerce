@@ -20,9 +20,9 @@ function fail(message: string): never { throw new CheckoutError(message); }
 const QUOTE_FAILURES = {
   unavailable: "Product unavailable",
   unpriced: "Product unpriced",
-  "inventory-setup": "Inventory setup required",
-  "inventory-unavailable": "Inventory unavailable",
-};
+  // Catalog quotes these only for a managed item, which the Registry build never has.
+  ...REGISTRY_BUILD ? {} : { "inventory-setup": "Inventory setup required", "inventory-unavailable": "Inventory unavailable" },
+} as Record<string, string>;
 export function cartInput(raw: unknown): CartLine[] {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > 100) fail("Invalid cart");
   const quantities = new Map<string, number>();
@@ -54,7 +54,7 @@ async function freeze(
     fail("Payments pricing schema unsupported");
   }
   const quote = await quoteCatalogBasket(e.catalog, cart.map(line => line.catalogItemId), e.availability);
-  if (!quote.ok) fail(QUOTE_FAILURES[quote.reason]);
+  if (!quote.ok) fail(QUOTE_FAILURES[quote.reason]!);
   const shipsGoods = quote.lines.some(line => line.fulfillment === "physical");
   const contactSnapshot = await captureCheckoutContact(rawContact, e.loadCheckoutContactRequirements, shipsGoods);
   for (const [index, quoted] of quote.lines.entries()) {
