@@ -11,7 +11,6 @@ import type {
   StorefrontAvailabilitySettingsStorage,
   StorefrontOutOfStockListingStorage,
 } from "../storefront-availability/kernel/index.js";
-import type { CheckoutCouponPort } from "../coupons/index.js";
 import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
 import { trustedOrigin } from "./capability.js";
 import { admitGuestCheckoutWrite } from "./origin-admission.js";
@@ -74,8 +73,6 @@ export function bindGuestCheckoutRuntime(
     topLevelSiteUrl?: string;
     checkoutSiteUrl?: string;
     host?: GuestCheckoutHostOptions;
-    /** Entry-bound coupon support; the host cannot supply it. */
-    coupons?: CheckoutCouponPort;
     /** Entry-bound Orders receiver for the paid-order handoff. */
     paidOrders?: PaidOrderReceiver;
   } = {},
@@ -114,10 +111,7 @@ export function bindGuestCheckoutRuntime(
     checkoutSiteUrl,
     host: options.host ?? {},
     ...(options.paidOrders ? { paidOrders: options.paidOrders } : {}),
-    ...(options.host?.pricing ? { pricing: {
-      ...options.host.pricing,
-      coupons: options.coupons,
-    } } : {}),
+    ...(options.host?.pricing ? { pricing: options.host.pricing } : {}),
     ...(names.paymentAssociations && storage[names.paymentAssociations]
       ? { paymentAssociations: createCheckoutPaymentAssociationPort(
         storage[names.paymentAssociations] as StorageCollection<CheckoutPaymentAssociation>,
@@ -134,7 +128,6 @@ export function admitBoundGuestCheckoutRuntime(
   },
   names: GuestCheckoutStorageNames,
   host: GuestCheckoutHostOptions = {},
-  coupons?: CheckoutCouponPort,
   paidOrders?: PaidOrderReceiver,
 ): GuestCheckoutRuntime {
   const constructorSiteUrl = host.siteUrl;
@@ -159,7 +152,6 @@ export function admitBoundGuestCheckoutRuntime(
     topLevelSiteUrl,
     checkoutSiteUrl,
     host,
-    coupons,
     paidOrders,
   });
 }

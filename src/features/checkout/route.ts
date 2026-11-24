@@ -1,7 +1,6 @@
 import { PluginRouteError, type PluginRoute } from "emdash";
 import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
 
-import { COUPONS_COLLECTION, createCheckoutCouponPort, type CouponCollection } from "../coupons/index.js";
 import { GuestCheckoutError } from "./errors.js";
 import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
 import { cartGuestCheckout, prepareGuestCheckout, startGuestCheckout, statusGuestCheckout } from "./guest.js";
@@ -43,7 +42,6 @@ function nativeRuntime(
   paidOrders?: NativePaidOrders,
 ) {
   const storage = ctx.storage as Record<string, unknown>;
-  const coupons = storage[COUPONS_COLLECTION] as CouponCollection | undefined;
   return admitBoundGuestCheckoutRuntime(
     {
       storage,
@@ -56,16 +54,14 @@ function nativeRuntime(
       loadCheckoutContactRequirements: () =>
         loadCheckoutContactRequirements(ctx.settings),
     },
-    coupons ? createCheckoutCouponPort(coupons) : undefined,
     paidOrders?.(storage),
   );
 }
 
 function throwIfDenied(result: GuestCheckoutResult): GuestCheckoutResult {
   if (result.ok) return result;
-  const { code, message, reason, minimum } = result.error;
-  throw new PluginRouteError(code, message, new GuestCheckoutError(code).status,
-    reason ? { reason, ...(minimum ? { minimum } : {}) } : undefined);
+  const { code, message } = result.error;
+  throw new PluginRouteError(code, message, new GuestCheckoutError(code).status);
 }
 
 async function runNative(

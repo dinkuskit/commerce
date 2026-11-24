@@ -1,5 +1,7 @@
 # Coupons v1 implementation contract
 
+**Retired 24 Nov 2026.** Commerce no longer carries coupon code: coupons are their own Registry plugin in the store, and their answer reaches checkout through Commerce's add-ons door. See [addons-door.md](addons-door.md) and GrillTrack `commerce-addons-door-20261124`. What follows is kept as history.
+
 This is a trusted, unmounted Commerce feature. Checkout, payment, order
 creation, browser/admin UI, and shopper UI adoption remain pending.
 

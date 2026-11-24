@@ -27,7 +27,6 @@ import {
   type GuestCheckoutResult,
 } from "./types.js";
 import type { CommercePaymentWakePort, WakeReconciliationResult } from "./wake.js";
-import type { CheckoutCouponPort } from "../coupons/index.js";
 import type { PaidOrderReceiver } from "../../handoffs/paid-order.js";
 import { admitRegistryCheckoutConfig } from "./registry-provider-admission.js";
 import { REGISTRY_CHECKOUT_SETTINGS_KEY } from "./registry-services.js";
@@ -72,8 +71,6 @@ type InstalledContext = Pick<PluginContext, "plugin" | "storage" | "site" | "set
 export interface InstalledCheckoutServices {
   host: GuestCheckoutHostOptions;
   wakes?: CommercePaymentWakePort;
-  /** Bound by the entry's own resolver; the host options cannot carry it. */
-  coupons?: CheckoutCouponPort;
 }
 
 export type InstalledCheckoutServiceResolver = (
@@ -82,7 +79,8 @@ export type InstalledCheckoutServiceResolver = (
 
 export interface InstalledCheckoutHandlers {
   prepare(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
-  start(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
+  /** `door`: the add-ons door, which alone takes add-on answers (commerce-addons-door-20261124). */
+  start(route: InstalledGuestCheckoutRequest, ctx: PluginContext, door?: boolean): Promise<GuestCheckoutResult>;
   cart(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<GuestCheckoutResult>;
   readiness(route: InstalledGuestCheckoutRequest, ctx: PluginContext): Promise<CheckoutReadinessResponse>;
   reconcileWakes(ctx: PluginContext): Promise<InstalledWakeResult>;
@@ -155,7 +153,6 @@ function runtimeFor(ctx: PluginContext, services: InstalledCheckoutServices, pai
   return bindGuestCheckoutRuntime(storage, SANDBOX_GUEST_CHECKOUT_STORAGE, {
     runtimeSiteUrl: origin,
     host,
-    coupons: services.coupons,
     paidOrders: paidOrders?.(ctx),
   });
 }
@@ -256,7 +253,7 @@ export function createInstalledCheckoutHandlers(
 
   return {
     prepare: (route, ctx) => guest(route, ctx, runtime => prepareGuestCheckout(runtime, route.input)),
-    start: (route, ctx) => guest(route, ctx, runtime => startGuestCheckout(runtime, route.input, route.request.headers)),
+    start: (route, ctx, door) => guest(route, ctx, runtime => startGuestCheckout(runtime, route.input, route.request.headers, door)),
     cart: (route, ctx) => guest(route, ctx, runtime => cartGuestCheckout(runtime, route.input, route.request.headers, ctx.storage[CART_EMAIL_STOPS] as never)),
     readiness,
     reconcileWakes,

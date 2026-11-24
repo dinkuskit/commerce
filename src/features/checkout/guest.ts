@@ -1,9 +1,9 @@
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { isRecord, sortedKeys } from "../../shared/record.js";
 import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
 import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
-import { CouponUnavailableError } from "./pricing.js";
 import { authorizeGuestCapability, fenceEmailedKey, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
@@ -41,14 +41,11 @@ export function admitGuestCheckoutPrepareInput(raw: unknown): void {
 
 /** Checkout starts from the cart record; the browser sends no lines (commerce-server-cart-20261113). */
 /** `news`: the shopper ticked "Email me with news and offers" (commerce-abandoned-cart-email-20261122). */
-export function admitGuestCheckoutStartInput(raw: unknown, pricing?: boolean): { couponCode?: string } {
+/** `addons`: only the store's own code sends add-on answers, through the add-ons door (commerce-addons-door-20261124). */
+export function admitGuestCheckoutStartInput(raw: unknown, door?: boolean): void {
   const { news, ...input } = asObject(raw);
   if (news !== undefined && news !== true ||
-      !["", "contact", ...(pricing ? ["couponCode", "contact,couponCode"] : [])].includes(sortedKeys(input))) fail("INVALID_CART");
-  if (!Object.hasOwn(input, "couponCode")) return {};
-  if (typeof input.couponCode !== "string" || !input.couponCode.trim() ||
-      input.couponCode.length > 128) fail("INVALID_CART");
-  return { couponCode: input.couponCode.trim() };
+      !["", "contact", ...(door ? ["addons", "addons,contact"] : [])].includes(sortedKeys(input))) fail("INVALID_CART");
 }
 
 const CART_SECONDS = 30 * 86_400;
@@ -171,18 +168,13 @@ function mapCheckoutError(error: unknown): never {
     if (/^(DELIVERY|BILLING)_/.test(error.code)) throw new GuestCheckoutError("INVALID_CART", error.message);
     fail("INVALID_CART");
   }
-  if (error instanceof CouponUnavailableError) {
-    const mapped = new GuestCheckoutError("COUPON_UNAVAILABLE");
-    mapped.coupon = error.coupon;
-    throw mapped;
-  }
   const message = error instanceof Error ? error.message : "";
   if (/Invalid cart|Invalid quantity|Zero-total/i.test(message)) fail("INVALID_CART");
   if (/frozen/i.test(message)) fail("CHECKOUT_FROZEN");
   if (/Retry requires/i.test(message)) fail("RETRY_REQUIRED");
   if (/Retry checkout not found|Checkout not found/i.test(message)) fail("CHECKOUT_NOT_FOUND");
   if (/Product unavailable|Product unpriced/i.test(message)) fail("PRODUCT_UNAVAILABLE");
-  if (/Inventory/i.test(message)) fail("INVENTORY_UNAVAILABLE");
+  if (!REGISTRY_BUILD && /Inventory/i.test(message)) fail("INVENTORY_UNAVAILABLE");
   if (/Payment binding/i.test(message)) fail("PAYMENTS_UNAVAILABLE");
   if (/contention/i.test(message)) fail("CONTENTION");
   fail("UNAVAILABLE");
@@ -198,7 +190,8 @@ export function executionOf(runtime: GuestCheckoutRuntime) {
     store: createCheckoutStore(runtime.carts),
     catalog: runtime.catalog,
     availability: { resolveProvider: runtime.host.resolveAvailabilityProvider },
-    resolveInventory: runtime.host.resolveInventory ?? (async () => null),
+    // Checkout reserves stock only for a managed item, which the Registry build never has.
+    resolveInventory: !REGISTRY_BUILD && runtime.host.resolveInventory || (async () => null),
     paymentAssociations: runtime.paymentAssociations,
     paymentBindingRef: runtime.host.paymentBindingRef!.trim(),
     paymentMode: runtime.host.paymentMode,
@@ -241,7 +234,7 @@ function currentAttempt(attempts: CheckoutAttempt[]): CheckoutAttempt | undefine
 }
 
 function guestSafeError(error: GuestCheckoutError): GuestCheckoutResult {
-  return { ok: false, error: { code: error.code, message: error.message, ...structuredClone(error.coupon) } };
+  return { ok: false, error: { code: error.code, message: error.message } };
 }
 
 function guestSafeResult(error: unknown): GuestCheckoutResult {
@@ -282,9 +275,10 @@ export async function startGuestCheckout(
   runtime: GuestCheckoutRuntime,
   input: unknown,
   headers?: Headers | Record<string, string>,
+  door?: boolean,
 ): Promise<GuestCheckoutResult> {
   try {
-    admitGuestCheckoutStartInput(input, Boolean(runtime.host.pricing));
+    admitGuestCheckoutStartInput(input, door);
     const { news, ...rest } = input as Record<string, unknown>;
     const authorized = await authorizeGuestCapability(
       runtime,

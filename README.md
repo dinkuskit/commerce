@@ -51,14 +51,13 @@ default export and the `dinkusCommerce` descriptor) is gone
 mounted it installs the Registry build instead. Native camelCase storage gets no
 migration to the Registry build's snake_case.
 
-Coupons: the coupon library stays in the package, but no Commerce build binds it
-yet. The Registry build leaves coupon storage and admin out to stay under the
-Registry's per-file size limit
-([registry-coupons-deferred](docs/implementation/registry-coupons-deferred.md)),
-and its checkout refuses coupon codes in v1: its port to the hosted DinkusKit
-coupon service is unhooked to leave room under that limit, and comes back when
-there is room
-([registry-hosted-coupons](docs/implementation/registry-hosted-coupons.md)).
+Coupons: Commerce carries no coupon code. Coupons are their own Registry plugin
+in the store (`dinkus-coupons`), and the store's own code hands its answer to
+Commerce's private add-ons door, `checkout/addons/start`, which checks it against
+Commerce's own prices and does the totals
+([addons-door](docs/implementation/addons-door.md),
+`commerce-addons-door-20261124`). The coupon library, the hosted coupon port and
+the `./features/coupons` export are removed.
 
 ## Status
 
@@ -210,11 +209,8 @@ leaves out the paths it cannot reach (`src/shared/registry-build.ts`): Manage
 stock cannot be turned on there and no Inventory provider is wired, so the
 managed-stock availability read, checkout stock reservation and the order Pack
 command are dropped from `backend.js` to stay under the Registry's per-file
-size limit. The same switch leaves out checkout's coupon quoting, reservation
-and reconciliation: the Registry build binds no coupon port, so a coupon code
-is refused as `COUPON_UNAVAILABLE` (`try-later`) before anything is frozen,
-exactly as before. The library build (`dist/`, which host apps import) keeps
-them all.
+size limit. The library build (`dist/`, which host apps import) keeps them
+all.
 
 The released CLI requires lowercase storage collection names. Fresh sandbox
 installs use snake_case names, preserving the kernel record shapes and actual
