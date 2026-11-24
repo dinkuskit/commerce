@@ -33,7 +33,7 @@ distinct `from`:
 
 `price` and `off` are whole cents as decimal strings, at most 1,000,000,000.
 `from`, `ref`, codes and `item` are printable ASCII (`!` to `~`), and the
-`from`, `ref` and codes of all answers together are at most 1,500 characters.
+`from`, `ref` and codes of all answers together are at most 1,500 characters as Commerce writes them (a JSON list of `[from, ref, codes]`, quotes, commas and brackets included), so the bound is a little tighter than the bare strings.
 The order keeps those, and its `order.paid` news must stay under the courier's
 8 KB beside the longest address Commerce takes (about 6.5 KB at most).
 Any other key, or a value out of bounds, leaves checkout unavailable before

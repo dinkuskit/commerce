@@ -105,7 +105,7 @@ const CENTS = (value: unknown) => typeof value === "string" && /^\d{1,10}$/.test
 /**
  * The add-ons' answers, as the store's own code hands them to the add-ons door (commerce-addons-door-20261124):
  * at most 4, one per add-on, each naming at most 100 lines and 6 codes; amounts are whole cents up to $10,000,000.
- * What the order keeps of them (each one's from, ref and codes) is at most 1,500 characters, so the paid news fits the
+ * What the order keeps of them (each one's from, ref and codes) is at most 1,500 characters as JSON (punctuation counted), so the paid news fits the
  * courier's 8 KB beside the largest address. Anything malformed, including what makes a check throw, leaves checkout unavailable.
  */
 function addonAnswers(list: AddonAnswer[]): AddonAnswer[] {

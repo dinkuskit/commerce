@@ -33,7 +33,7 @@ The emailed key passes through `fenceEmailedKey` on the add-ons door as on the p
 The courier refuses a whole batch when one item is over 8 KB, and the receiver's bookmark then never moves (`src/features/orders/courier.ts`, from cb6c51e). `fit()` can only drop item lines, so the door now bounds what it keeps of the add-ons:
 
 - Each add-on's `from`, `ref`, codes and line items are printable ASCII only, so a character is a byte.
-- The `from`, `ref` and codes of all answers together are at most 1,500 characters.
+- The `from`, `ref` and codes of all answers together are at most 1,500 characters, counted as Commerce writes them in JSON (`[[from, ref, codes], …]`, punctuation included).
 
 `tests/features/orders/courier-outbox-runtime.test.mjs` puts the most the door accepts (4 add-ons, 1,500 characters) beside the longest address Commerce takes, with every address field 200 three-byte characters and a 200-character three-byte line name. The `order.paid` item is 6,491 bytes, with every ref and code kept and the line still in it. `registry-checkout-services.test.mjs` shows the compiled door refusing a non-ASCII ref, a code with a space, and four answers over 1,500 characters. The base commit checked only lengths, so it had neither check.
 
