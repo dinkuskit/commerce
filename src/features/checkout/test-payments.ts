@@ -1,4 +1,5 @@
-import { isRecord } from "../../shared/record.js";
+import { isRecord, parseUtf8Json } from "../../shared/record.js";
+import { DIRECT } from "./registry-guards.js";
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import { isCurrentPaymentRequest } from "./payment-window.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
@@ -216,7 +217,7 @@ export async function readBoundedPaymentsJson(response: Response): Promise<unkno
   }
 
   try {
-    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(await new Blob(chunks as BlobPart[]).arrayBuffer()));
+    return parseUtf8Json(await new Blob(chunks as BlobPart[]).arrayBuffer());
   } catch {
     malformedResponse();
   }
@@ -235,8 +236,7 @@ export function fetchPayments(
       "x-dinkus-site": siteId,
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
-    cache: "no-store",
-    redirect: "error",
+    ...DIRECT,
   });
 }
 

@@ -1,12 +1,12 @@
-import { isRecord as object } from "../../shared/record.js";
-import { registryUnavailable as unavailable, registryText as text } from "./registry-guards.js";
+import { isRecord as object, parseUtf8Json } from "../../shared/record.js";
+import { DIRECT, registryUnavailable as unavailable, registryText as text } from "./registry-guards.js";
 import { readBoundedPaymentsJson } from "./test-payments.js";
 import type { RegistryCheckoutConfig } from "./registry-provider-admission.js";
 
 
 function jwtPart(encoded: string): unknown {
   const binary = atob(encoded.replaceAll("-", "+").replaceAll("_", "/"));
-  return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, c => c.charCodeAt(0))));
+  return parseUtf8Json(Uint8Array.from(binary, c => c.charCodeAt(0)));
 }
 
 /** Admits a pass for Payments, or with a scope and audience, for another hosted service (Ship). */
@@ -48,7 +48,7 @@ export async function tradeStoreKey(
   audience: string,
 ): Promise<string> {
   const response = await fetch("https://dinkuskit.com/api/store-passes", {
-    method: "POST", cache: "no-store", redirect: "error",
+    method: "POST", ...DIRECT,
     headers: { accept: "application/json", authorization: "Bearer " + key, "content-type": "application/json" },
     body: JSON.stringify({ site_id: config.siteId, scope, audience }),
   });

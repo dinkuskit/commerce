@@ -4,6 +4,7 @@ import type { CronEvent } from "emdash/plugin";
 import { loadCheckoutContactRequirements } from "../store-settings/kernel/index.js";
 
 import { GuestCheckoutError } from "./errors.js";
+import { trustedOrigin } from "./capability.js";
 import { clearExpiredCarts } from "./storage.js";
 import { CART_EMAIL_STOPS, remindCarts } from "./remind.js";
 import {
@@ -131,9 +132,7 @@ function installedStorage(ctx: InstalledContext): InstalledStorage {
 }
 
 function siteOrigin(ctx: InstalledContext) {
-  const resolved = resolveTrustedSiteOrigin({ runtimeSiteUrl: ctx.site.url });
-  if (!resolved.ok) throw new GuestCheckoutError("UNAVAILABLE");
-  return resolved.origin;
+  return trustedOrigin({ runtimeSiteUrl: ctx.site.url });
 }
 
 function runtimeFor(ctx: PluginContext, services: InstalledCheckoutServices, paidOrders?: InstalledPaidOrders) {

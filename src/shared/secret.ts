@@ -13,9 +13,14 @@ export function timingSafeEqual(left: string, right: string): boolean {
   return mismatch === 0;
 }
 
+/** SHA-256 of the UTF-8 text. */
+export async function sha256(value: string): Promise<Uint8Array> {
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
+}
+
 /** SHA-256 of the UTF-8 text, as lowercase hex. */
 export async function sha256Hex(value: string): Promise<string> {
-  return bytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))));
+  return bytesToHex(await sha256(value));
 }
 
 /** 32 random bytes as lowercase hex. */
