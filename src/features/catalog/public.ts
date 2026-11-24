@@ -35,6 +35,9 @@ function optionalIds(item: { gtin?: string; mpn?: string; brand?: string; pageId
   };
 }
 
+/** A sale price (commerce-sale-flag-20261124) is the one fact add-ons such as Coupons need to tell a sale item. */
+const onSale = (price: { sale?: unknown }): { onSale?: true } => price.sale ? { onSale: true } : {};
+
 export const PUBLIC_CATALOG_ROUTE = "catalog/public";
 export const PUBLIC_CATALOG_ITEM_ROUTE = "catalog/public/item";
 export interface PublicCatalogProduct {
@@ -42,6 +45,8 @@ export interface PublicCatalogProduct {
   readonly name: string;
   readonly sku: string;
   readonly price?: { readonly currency: "USD"; readonly minor: string };
+  /** True when the price is the item's sale price (commerce-sale-flag-20261124), so add-ons can tell a sale item. */
+  readonly onSale?: true;
   readonly availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable">;
   /** Primary image, the store placeholder (placeholder: true), or null when neither resolves. The host maps ids to URLs. */
   readonly image: PublicCatalogImage | null;
@@ -64,6 +69,7 @@ export interface PublicCatalogProduct {
       sku?: string;
       selections: readonly ReturnType<typeof variantSelections>[number][];
       price: { readonly currency: "USD"; readonly minor: string } | null;
+      onSale?: true;
       availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable">;
       fulfillment: "physical" | "digital";
     }[];
@@ -131,6 +137,7 @@ async function projectPublicCatalogProduct(
         sku: memberItem.item.sku,
         selections: variantSelections(variant.product, member),
         price: memberPrice.customerPays ?? null,
+        ...onSale(memberPrice),
         availability: {
           status: memberAvailability.status,
           sellable: memberAvailability.sellable,
@@ -144,7 +151,7 @@ async function projectPublicCatalogProduct(
       id: variant.product.productId,
       name: item.name,
       sku: item.sku,
-      ...(!variant.product.options.length && price.customerPays ? { price: price.customerPays } : {}),
+      ...(!variant.product.options.length && price.customerPays ? { price: price.customerPays, ...onSale(price) } : {}),
       availability: { status: availability.status, sellable: !variant.product.options.length && availability.sellable, listable: members.some((member) => member.availability.listable) },
       image,
       gallery,
@@ -164,6 +171,7 @@ async function projectPublicCatalogProduct(
     name: item.name,
     sku: item.sku,
     price: price.customerPays,
+    ...onSale(price),
     availability: {
       status: availability.status,
       sellable: availability.sellable,

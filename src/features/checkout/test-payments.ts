@@ -106,7 +106,8 @@ function assertPricing(request: PaymentRequest): void {
   const pricing = request.pricing;
   if (!pricing) return;
   const minor = (value: unknown) => BigInt(normalizeMoney(value).minor);
-  const check = (valid: boolean) => { if (!valid) throw new Error("Malformed payment pricing"); };
+  // Any failed check lands in the catch below, which names it.
+  const check = (valid: boolean) => { if (!valid) throw 0; };
   try {
     const subtotal = minor(pricing.merchandiseSubtotal);
     const discount = minor(pricing.couponDiscount);
@@ -167,7 +168,7 @@ function normalizedConfig(
   if (mode !== "test" && mode !== "live") invalid("mode must be test or live");
   const stripe = input.providerId === "stripe";
   if (stripe ? input.authorizeNetMerchantId !== undefined : input.stripeAccountId !== undefined) {
-    invalid(stripe ? "stripe must not set authorizeNetMerchantId" : "authorize_net must not set stripeAccountId");
+    invalid(`${input.providerId} must not set ${stripe ? "authorizeNetMerchantId" : "stripeAccountId"}`);
   }
   return Object.freeze({
     paymentsOrigin: bareOrigin(input.paymentsOrigin, "paymentsOrigin"),

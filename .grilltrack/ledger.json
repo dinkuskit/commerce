@@ -17737,6 +17737,49 @@
       "superseded_by": null,
       "updated_at": "2026-11-24T14:54:56+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "The public catalog (catalog/public and catalog/public/item) adds onSale: true to a product, and to each variant member, whose customer-facing price is its Sale price; a Regular price carries no flag. The Regular price behind a sale stays private. The store's own code reads the flag and sends it to Coupons as each line's sale fact.",
+      "context_ref": "https://claude.ai/code/project/chan_01JLcLQeD34rfoMic23aaman?thread=cmsg_01JLcLQeD34rfoMic23aamanJKJBaZKw5FupVroiwMK1fx",
+      "created_at": "2026-11-24T19:11:48+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-addons-door-20261124"
+      ],
+      "domain": "Coupons as a plugin: the add-ons door",
+      "history": [
+        {
+          "at": "2026-11-24T19:11:48+00:00",
+          "choice": "The public catalog (catalog/public and catalog/public/item) adds onSale: true to a product, and to each variant member, whose customer-facing price is its Sale price; a Regular price carries no flag. The Regular price behind a sale stays private. The store's own code reads the flag and sends it to Coupons as each line's sale fact.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-sale-flag-20261124",
+      "implementation_ref": null,
+      "question": "How does the store tell an add-on such as Coupons which cart items are on sale, for a coupon that excludes sale items?",
+      "rationale": "The owner chose on 24 Nov 2026 to add the flag in Commerce now rather than hide the Coupons 'Exclude sale items' checkbox; without it the store could not tell a sale item, so that checkbox did nothing.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-24T19:11:48+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17773,5 +17816,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-24T14:55:02+00:00"
+  "updated_at": "2026-11-24T19:11:48+00:00"
 }

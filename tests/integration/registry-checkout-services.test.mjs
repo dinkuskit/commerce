@@ -343,8 +343,9 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   const catalog = await publicList();
   // Add price and stock makes a physical product, which carries its one-member variant group.
   const { variants } = catalog.products[0] ?? {};
-  assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment]), [[id, 'physical']]);
-  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], page: 'page-public-hat', variants };
+  assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment, member.onSale]), [[id, 'physical', true]]);
+  // A 3.00 sale under 4.00 regular is flagged on the product and its member (commerce-sale-flag-20261124).
+  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, onSale: true, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], page: 'page-public-hat', variants };
   assert.deepEqual(catalog, { products: [expectedProduct] });
   assert.deepEqual(await publicItem(), expectedProduct);
   assert.deepEqual(await publicItem('pageId=page-public-hat'), expectedProduct, 'the storefront finds a product by its page');

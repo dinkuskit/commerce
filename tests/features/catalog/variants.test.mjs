@@ -79,6 +79,22 @@ test('public variant group retains priced members and excludes an unpriced sibli
     'even when the requested id equals the family id, its unpriced default member stays absent');
 });
 
+test('each public variant member says whether its own price is a sale price (commerce-sale-flag-20261124)', async () => {
+  const catalog = new Catalog(), prices = new Catalog(); await catalog.put('product', base);
+  await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
+  prices.records.set('product', { recordKind: 'catalog-price', recordId: 'product', catalogItemId: 'product', regular: { currency: 'USD', minor: '2000' } });
+  prices.records.set('large-item', { recordKind: 'catalog-price', recordId: 'large-item', catalogItemId: 'large-item',
+    regular: { currency: 'USD', minor: '2400' }, sale: { currency: 'USD', minor: '1800' } });
+  const ctx = publicContext(catalog, prices);
+  for (const product of [(await readPublicCatalog(ctx)).products[0], await readPublicCatalogItem(ctx, 'large-item')]) {
+    assert.deepEqual(product.variants.members.map(m => [m.catalogItemId, m.price.minor, m.onSale ?? null]), [
+      ['product', '2000', null], ['large-item', '1800', true],
+    ]);
+    assert.equal('onSale' in product.variants.members[0], false);
+    assert.equal(Object.hasOwn(product, 'onSale'), false, 'a family with options has no top-level flag');
+  }
+});
+
 test('public members carry their own current SKU through list and grouped item lookups without writes', async () => {
   const catalog = new Catalog(), prices = new Catalog(); await catalog.put('product', base);
   await addCatalogVariantOption({ catalog }, input, { createId: () => 'large-item' });
