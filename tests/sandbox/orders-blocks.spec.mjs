@@ -492,7 +492,11 @@ test('installed Orders shows the sales tax of a taxed order on desktop and phone
     expect([attempt.order.pricing.tax.minor, attempt.order.total.minor]).toEqual(['66', '766']);
     const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
     expect(await createPaidOrderReceiver(kept, new PluginStorageRepository(db, pluginId, 'order_numbers', [])).receive({ schema: 'dinkuskit.commerce.paid-order/v1', mode: 'test', ...attempt.order })).toBe('stored');
-    const inspectLabel = 'Inspect #' + (await kept.get(attempt.order.orderId)).number + ' (TEST)';
+    // The big-store scenario above leaves 10,050 orders paid in 2091 in this same database; Orders lists the newest
+    // first, so this order is dated after them to sit on the first page whichever tests ran before it.
+    const stored = await kept.get(attempt.order.orderId);
+    await kept.put(attempt.order.orderId, { ...stored, paidKey: '2099-01-01T00:00:00.000Z ' + attempt.order.orderId });
+    const inspectLabel = 'Inspect #' + stored.number + ' (TEST)';
     await page.goto('/_emdash/api/auth/dev-bypass?redirect=' + path);
     const welcome = page.getByRole('button', { name: 'Get Started', exact: true });
     const inspect = page.getByRole('button', { name: inspectLabel, exact: true });
