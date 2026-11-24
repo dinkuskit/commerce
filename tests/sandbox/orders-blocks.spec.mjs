@@ -465,3 +465,54 @@ test('installed Orders opens a store with more than 10,000 orders on desktop and
     }
   } finally { database.close(); }
 });
+
+// dinkuskit/tax ledger tax-picks-rate-commerce-does-math: a checkout priced through the add-ons door with a coupon's and
+// Tax's answers, received by the installed Orders, shows its discount and sales tax above the total.
+test('installed Orders shows the sales tax of a taxed order on desktop and phone', async ({ page, request }) => {
+  expect((await request.get('/_emdash/api/setup/dev-bypass')).status()).toBe(200);
+  expect((await request.post('/__proof/install')).status()).toBe(200);
+  const pluginId = process.env.COMMERCE_COUPON_PLUGIN_ID;
+  const database = new Database(process.env.COMMERCE_PROOF_DB.slice(5));
+  const db = new Kysely({ dialect: new SqliteDialect({ database }) });
+  const path = `/_emdash/admin/plugins/${pluginId}/orders`;
+  try {
+    const f = fixture(createCheckoutStore(new PluginStorageRepository(db, pluginId, 'checkout_carts', [])), false);
+    for (const [id, name] of [['one', 'Synthetic mug'], ['two', 'Synthetic tote']]) f.execution.catalog.catalog.records.get(id).name = name;
+    f.execution.pricing = { paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+      resolveShippingConfiguration: async () => ({ configurationId: 'ship-1', revision: 1, mode: 'flat', amount: { currency: 'USD', minor: '500' } }) };
+    f.execution.payments.pricingSchema = 'dinkuskit.commerce.checkout-pricing/v1';
+    f.setPayment('paid');
+    const seen = [{ item: 'one', price: '75', qty: 2 }, { item: 'two', price: '100', qty: 1 }];
+    const coupon = { from: 'dinkus-coupons', ref: 'hold-1', codes: ['SAVE10'], lines: seen.map((line, i) => ({ ...line, off: ['50', '0'][i] })) };
+    const tax = { from: 'dinkus-tax', ref: 'tax-1', to: '1 Example Way\n\nTestville\nCA\n00000\nUS', shipRate: '97500',
+      lines: seen.map((line, i) => ({ ...line, off: '0', rate: ['97500', '70000'][i] })) };
+    const attempt = await startCheckout(f.execution, 'orders-taxed', withSyntheticCheckoutContact({ lines: cart, addons: [coupon, tax] }));
+    expect(attempt.phase).toBe('paid');
+    // Mugs $1.50 less 50¢ is $1.00 at 9.75%: 10¢. Tote $1.00 at 7%: 7¢. Shipping $5.00 at 9.75%: 48.75¢, so 49¢. Tax 66¢: $2.00 + $5.00 + 66¢.
+    expect([attempt.order.pricing.tax.minor, attempt.order.total.minor]).toEqual(['66', '766']);
+    const kept = new PluginStorageRepository(db, pluginId, 'orders', []);
+    expect(await createPaidOrderReceiver(kept, new PluginStorageRepository(db, pluginId, 'order_numbers', [])).receive({ schema: 'dinkuskit.commerce.paid-order/v1', mode: 'test', ...attempt.order })).toBe('stored');
+    const inspectLabel = 'Inspect #' + (await kept.get(attempt.order.orderId)).number + ' (TEST)';
+    await page.goto('/_emdash/api/auth/dev-bypass?redirect=' + path);
+    const welcome = page.getByRole('button', { name: 'Get Started', exact: true });
+    const inspect = page.getByRole('button', { name: inspectLabel, exact: true });
+    await expect(welcome.or(inspect)).toBeVisible({ timeout: 60000 });
+    if (await welcome.isVisible()) await welcome.click();
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(path);
+      await expect(inspect).toBeVisible({ timeout: 60000 });
+      await inspect.focus(); await page.keyboard.press('Enter');
+      const taxRow = page.getByRole('cell', { name: 'Sales tax', exact: true });
+      await expect(taxRow).toBeVisible();
+      const rows = await page.getByRole('cell', { name: 'Order total', exact: true }).evaluate(cell =>
+        [...cell.closest('tbody').children].map(row => [...row.children].map(c => c.innerText)));
+      await taxRow.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: resolve(process.env.COMMERCE_PROOF_ARTIFACTS, `orders-sales-tax-${width}.png`), fullPage: true, animations: 'disabled' });
+      const evidence = { width, inspectLabel, rows, addons: attempt.order.addons, pricing: attempt.order.pricing };
+      console.log('ORDER_SALES_TAX_PROOF ' + JSON.stringify({ width, rows }));
+      await test.info().attach(`orders-sales-tax-${width}.json`, { body: JSON.stringify(evidence, null, 2), contentType: 'application/json' });
+      expect(rows).toEqual([['Items subtotal', '$2.50'], ['Discount SAVE10', '−$0.50'], ['Shipping', '$5.00'], ['Sales tax', '$0.66'], ['Order total', '$7.66']]);
+    }
+  } finally { await db.destroy(); }
+});
