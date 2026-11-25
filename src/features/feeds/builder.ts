@@ -129,6 +129,10 @@ export function pageProductFeedRows(
   };
 }
 
+// Google takes a category id or a path, not both; the id comes from Shopify's own map.
+const googleCategory = (row: FeedRow) => row.content.standardCategory?.googleId?.trim() ?? "";
+const productType = (row: FeedRow) => row.content.productType?.trim() ?? "";
+
 export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], now = new Date()): string {
   // Google requires availability_date on a backorder row, so one with no usable date is left out, as
   // WooCommerce refuses to sync it (feeds-facts-consistency-060, google-backorder-ship-date-20261124).
@@ -160,6 +164,8 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], n
       // Google's no-identifier signal: neither a GTIN nor brand plus MPN is on file.
       product.product.gtin || (product.product.brand && product.product.mpn) ? "" : "<g:identifier_exists>no</g:identifier_exists>",
       product.shipping ? `<g:shipping>${escapeXml(product.shipping)}</g:shipping>` : "",
+      googleCategory(product) ? `<g:google_product_category>${escapeXml(googleCategory(product))}</g:google_product_category>` : "",
+      productType(product) ? `<g:product_type>${escapeXml(productType(product))}</g:product_type>` : "",
       "</item>",
     ].filter(Boolean).join("");
   }).join("");
@@ -169,7 +175,12 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], n
 export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): string {
   const projected = channelRows(products, "meta-catalog");
   const variantColumns = projected.some((row) => row.groupId) ? ["item_group_id", ...VARIANT_ATTRIBUTES] : [];
-  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "additional_image_link", "brand", "gtin", "mpn", "shipping", ...variantColumns];
+  // Meta recommends Google's category; both columns appear only when a row has a value, as the variant ones do.
+  const categoryColumns = [
+    ...(projected.some((row) => googleCategory(row)) ? ["google_product_category"] : []),
+    ...(projected.some((row) => productType(row)) ? ["product_type"] : []),
+  ];
+  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "additional_image_link", "brand", "gtin", "mpn", "shipping", ...categoryColumns, ...variantColumns];
   const rows = projected.map((product) => [
     product.product.id,
     product.product.id,
@@ -185,6 +196,7 @@ export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): str
     product.product.gtin ?? "",
     product.product.mpn ?? "",
     product.shipping ?? "",
+    ...categoryColumns.map((key) => key === "product_type" ? productType(product) : googleCategory(product)),
     ...variantColumns.map((key) => key === "item_group_id" ? product.groupId ?? "" : product.attributes?.get(key) ?? ""),
   ].map(csv).join(","));
   return [columns.map(csv).join(","), ...rows].join("\n") + "\n";
@@ -256,6 +268,8 @@ export function buildAgentCatalogFeed(options: StorefrontAgentFeedOptions): Agen
       const aiProjection = normalizeAiProjection(row.content.aiProjection);
       const description = row.content.description?.trim();
       const fulfillment = resolveProductFulfillment(row);
+      const category = row.content.standardCategory?.id.trim() && row.content.standardCategory.name.trim()
+        ? row.content.standardCategory : undefined;
       const variantMembers = (row.product.variants?.members ?? [])
         .filter((member) => member.availability.listable && member.price !== null && member.price !== undefined)
         .map((member) => ({
@@ -305,6 +319,7 @@ export function buildAgentCatalogFeed(options: StorefrontAgentFeedOptions): Agen
         ...(row.product.brand ? { brand: row.product.brand } : {}),
         ...(row.product.gtin ? { gtin: row.product.gtin } : {}),
         ...(row.product.mpn ? { mpn: row.product.mpn } : {}),
+        ...(category ? { category: { taxonomy: category.taxonomy, version: category.version, id: category.id, name: category.name } } : {}),
         ...(aiProjection ? { aiProjection } : {}),
       };
     });
@@ -420,6 +435,7 @@ export function buildStorefrontLlmsFullTxt(options: StorefrontAgentFeedOptions):
       }
     }
     if (item.brand) lines.push(`- Brand: ${item.brand}`);
+    if (item.category) lines.push(`- Category: ${item.category.name} (Shopify \`${item.category.id}\`)`);
     if (item.gtin) lines.push(`- GTIN: \`${item.gtin}\``);
     if (item.mpn) lines.push(`- MPN: \`${item.mpn}\``);
     if (item.aiProjection?.summary) {
