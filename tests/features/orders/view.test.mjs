@@ -171,3 +171,13 @@ test('orders stored before the late-payment flag show no alert; a late-paid orde
  assert.equal(validateBlocks(detail.blocks).valid, true);
  assert.ok(detail.blocks.some(b => b.type === 'banner' && b.variant === 'alert' && b.title === 'Paid after checkout ended'));
 });
+// dinkuskit/tax ledger tax-picks-rate-commerce-does-math: a taxed order shows its sales tax above the total; an untaxed one shows no row.
+test('a taxed order shows its sales tax between shipping and the order total', () => {
+ const usd = minor => ({ currency: 'USD', minor });
+ const taxed = { ...paid, orderId: 'synthetic-order-taxed', total: usd('2700'), pricing: { ...paid.pricing, tax: usd('200'), finalTotal: usd('2700') } };
+ const detail = ordersView({ status: 'available', orders: [kept(taxed)] }, taxed.orderId);
+ assert.equal(validateBlocks(detail.blocks).valid, true);
+ assert.deepEqual(Object.entries(payment(detail)), [['Items subtotal', '$25.00'], ['Discount SYNTHETIC5', '−$5.00'], ['Shipping', '$5.00'], ['Sales tax', '$2.00'], ['Order total', '$27.00']]);
+ const none = { ...taxed, pricing: { ...taxed.pricing, tax: usd('0') } };
+ assert.equal('Sales tax' in payment(ordersView({ status: 'available', orders: [kept(none)] }, none.orderId)), false);
+});

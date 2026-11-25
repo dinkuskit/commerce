@@ -15,10 +15,12 @@ export interface CartLine { catalogItemId: string; quantity: number }
  * One add-on's answer, which the store's own code asked for and hands to the add-ons door (commerce-addons-door-20261124):
  * per checkout line, in Commerce's line order, the item and unit price (minor units) it saw and the amount it takes off;
  * `ship: "free"` waives shipping. `from` is the add-on's plugin id, `ref` its own reference and `codes` what the shopper typed.
+ * A tax answer (dinkuskit/tax ledger shared-addons-door) also names the address it priced, `to` (see `taxAddress`),
+ * shipping's rate `shipRate` and every line's `rate`, each in millionths ("97500" is 9.75%).
  */
 export interface AddonAnswer {
-  from: string; ref?: string; codes?: readonly string[]; ship?: "free";
-  lines: readonly { item: string; price: string; qty: number; off: string }[];
+  from: string; ref?: string; codes?: readonly string[]; ship?: "free"; to?: string; shipRate?: string;
+  lines: readonly { item: string; price: string; qty: number; off: string; rate?: string }[];
 }
 /** What an order keeps of each answer: who answered, its reference and the codes. */
 export type AddonUse = Pick<AddonAnswer, "from" | "ref" | "codes">;
@@ -59,6 +61,8 @@ export interface CheckoutPricingLine {
   lineSubtotal: Money;
   discount: Money;
   netAmount: Money;
+  /** The line's sales tax, on its amount after discounts; present only when a tax answer priced the checkout. */
+  tax?: Money;
 }
 export interface CheckoutPricingSnapshot {
   schema: typeof CHECKOUT_PRICING_SCHEMA;
@@ -71,6 +75,8 @@ export interface CheckoutPricingSnapshot {
     mode: "free" | "flat";
     charge: Money;
   };
+  /** All sales tax, the lines' and shipping's; present only when a tax answer priced the checkout. */
+  tax?: Money;
   finalTotal: Money;
   lines: readonly CheckoutPricingLine[];
 }
