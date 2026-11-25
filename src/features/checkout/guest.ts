@@ -1,7 +1,7 @@
 import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { isRecord, jsonBytes, sortedKeys } from "../../shared/record.js";
 import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
-import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
+import { cartInput, currentAttempt, startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
 import { authorizeGuestCapability, fenceEmailedKey, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
@@ -55,7 +55,7 @@ export const stopKey = (email: string) => sha256Hex(email.trim().toLowerCase());
 
 /** Live lines: none once the cart is 30 days untouched (commerce-cart-expiry-20261113) or its order is paid. */
 export function cartLines(record: CheckoutRecord | undefined, now: number): CartLine[] {
-  return record?.cart && now < +record.cartExpires! && record.attempts.at(-1)?.phase !== "paid" ? record.cart.lines : [];
+  return record?.cart && now < +record.cartExpires! && currentAttempt(record.attempts)?.phase !== "paid" ? record.cart.lines : [];
 }
 
 /** The cart's attributes within their limits (commerce-cart-attributes-order-paid-20261123), or the whole write is refused. */
@@ -100,7 +100,7 @@ export async function cartGuestCheckout(
     // The cart email's key answers and writes only for the record read here; its writes are conditional on it.
     fenceEmailedKey(authorized, stored?.record, now);
     const { lines, version, key, attributes } = raw as { lines: unknown; version: unknown; key?: unknown; attributes?: unknown };
-    let attempt = stored?.record.attempts.at(-1);
+    let attempt = currentAttempt(stored?.record.attempts);
     if (!keys) {
       // A read is also the status check: it runs Commerce's payment check on the current attempt.
       if (attempt && paymentsReady(runtime.host)) attempt = await reconcileCheckout(executionOf(runtime), authorized.cartId, attempt.attemptId);
@@ -237,10 +237,6 @@ export async function reconcileGuestPaymentWakes(
 
 function nowSeconds(runtime: GuestCheckoutRuntime): number {
   return runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
-}
-
-function currentAttempt(attempts: CheckoutAttempt[]): CheckoutAttempt | undefined {
-  return attempts[attempts.length - 1];
 }
 
 function guestSafeError(error: GuestCheckoutError): GuestCheckoutResult {

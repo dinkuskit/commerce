@@ -120,6 +120,8 @@ function addonAnswers(list: AddonAnswer[]): AddonAnswer[] {
   return list;
 }
 const chosen = (addons?: readonly AddonUse[]) => JSON.stringify(addons?.map(({ from, codes }) => [from, codes]) ?? []);
+/** Prefer a paid attempt over later ones (a late payment wake can revive an earlier expired attempt). */
+export const currentAttempt = (attempts?: readonly CheckoutAttempt[]) => attempts?.filter(a => a.phase === "paid").at(-1) ?? attempts?.at(-1);
 
 /** cartId is a server-owned, tenant-scoped guest capability; never accept arbitrary browser IDs. */
 /** `saved`: the lines were read from the saved cart, which must still hold them (the guest route). */
@@ -134,7 +136,7 @@ export async function startCheckout(e: CheckoutExecution, cartId: string, rawCar
   for (let tries = 0; tries < 20; tries++) {
     const stored = await e.store.read(cartId);
     fence?.(stored?.record);
-    const previous = stored?.record.attempts.at(-1);
+    const previous = currentAttempt(stored?.record.attempts);
     if (previous && previous.phase !== "released") {
       // Its cart and its add-ons' codes are both frozen.
       if (JSON.stringify(previous.cart) + chosen(previous.addons) !== JSON.stringify(cart) + chosen(requested)) fail("Active checkout cart is frozen");

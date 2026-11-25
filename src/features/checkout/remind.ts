@@ -1,6 +1,7 @@
 import type { EmailBeforeSendEvent, EmailMessage, PluginContext, StorageCollection } from "emdash";
 import { mintGuestCapability } from "./capability.js";
 import { cartLines, stopKey } from "./guest.js";
+import { currentAttempt } from "./orchestrate.js";
 import { canonicalizeHttpOrigin } from "./site-scope.js";
 import type { CheckoutRecord } from "./types.js";
 
@@ -25,7 +26,7 @@ export async function remindCarts(ctx: PluginContext, now: number): Promise<void
     const record = found?.value;
     if (!found || !record?.remindAt || +record.remindAt > now) continue;
     const { remindAt: _, ...rest } = record;
-    const attempt = record.attempts.at(-1);
+    const attempt = currentAttempt(record.attempts);
     if (attempt?.phase !== "released" && attempt?.phase !== "paid") {
       await carts.compareAndSet(id, found.revision, { ...record, remindAt: String(now + 3600) });
       continue;
