@@ -311,7 +311,7 @@ test('real session field changes remain rejected while paying holds stay',async 
   }
 });
 
-test('late payment on an earlier attempt closes cart, surfaces paid status, blocks new attempts, and suppresses reminders',async t => {
+async function lateAttemptCart(t) {
   const {
     cartGuestCheckout,
     prepareGuestCheckout,
@@ -383,6 +383,12 @@ test('late payment on an earlier attempt closes cart, surfaces paid status, bloc
   const headers = { [prep.capability.header]: prep.capability.capability };
   const savedCart = await cartGuestCheckout(runtime, { lines: [{ catalogItemId: 'one', quantity: 1 }], version: null }, headers);
   assert.equal(savedCart.ok, true);
+  return { cartGuestCheckout, prepareGuestCheckout, reconcileGuestPaymentWakes, startGuestCheckout, statusGuestCheckout, remindCarts, carts, capabilities, stops, payByAttempt, runtime, headers, clock: () => clock };
+}
+
+test('late payment on an earlier attempt closes cart, surfaces paid status, blocks new attempts, and suppresses reminders',async t => {
+  const { cartGuestCheckout, reconcileGuestPaymentWakes, startGuestCheckout, statusGuestCheckout, remindCarts, carts, capabilities, stops, payByAttempt, runtime, headers, clock: now } = await lateAttemptCart(t);
+  const clock = now();
 
   // Attempt 1 starts and expires unpaid.
   const first = await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
@@ -434,4 +440,26 @@ test('late payment on an earlier attempt closes cart, surfaces paid status, bloc
   const afterRemind = [...carts.map.values()][0].value;
   assert.equal(afterRemind.remindAt, undefined);
   assert.equal(afterRemind.leftKey, undefined);
+});
+
+test('a cart read still checks the newest attempt after an earlier one was paid late', async t => {
+  const { cartGuestCheckout, reconcileGuestPaymentWakes, startGuestCheckout, statusGuestCheckout, carts, payByAttempt, runtime, headers, clock: now } = await lateAttemptCart(t);
+  const clock = now();
+  await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
+  payByAttempt.set('att_1', 'expired-unpaid');
+  assert.equal((await statusGuestCheckout(runtime, {}, headers)).checkout.state, 'released-retry');
+  // The shopper retries; attempt 2 is still on its payment page when attempt 1's late payment arrives.
+  const second = await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
+  assert.equal(second.checkout.attemptId, 'att_2');
+  payByAttempt.set('att_1', 'paid');
+  const wakes = [{ eventId: 'evt_late_1', attemptId: 'att_1', bindingRef: 'stripe-test-binding', deliveryGeneration: 1, wokeAt: clock }];
+  await reconcileGuestPaymentWakes(runtime, { async list() { return [...wakes]; }, async acknowledge() { wakes.length = 0; return true; } });
+  const phases = () => [...carts.map.values()][0].value.attempts.map(attempt => attempt.phase);
+  assert.deepEqual(phases(), ['paid', 'paying']);
+  // Attempt 2 then ends unpaid at the provider, and its wake never comes: the cart read is what notices.
+  payByAttempt.set('att_2', 'expired-unpaid');
+  const read = await cartGuestCheckout(runtime, {}, headers);
+  assert.equal(read.checkout.attemptId, 'att_1');
+  assert.equal(read.checkout.state, 'paid');
+  assert.deepEqual(phases(), ['paid', 'released']);
 });

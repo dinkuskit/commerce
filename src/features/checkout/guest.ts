@@ -101,8 +101,8 @@ export async function cartGuestCheckout(
     const { lines, version, key, attributes } = raw as { lines: unknown; version: unknown; key?: unknown; attributes?: unknown };
     let attempt = currentAttempt(stored?.record.attempts);
     if (!keys) {
-      // A read is also the status check: it runs Commerce's payment check on the current attempt.
-      if (attempt && paymentsReady(runtime.host)) attempt = await reconcileCheckout(executionOf(runtime), authorized.cartId, attempt.attemptId);
+      // A read is also the status check: it runs Commerce's payment check on the newest attempt.
+      if (attempt && paymentsReady(runtime.host)) attempt = await checkNewest(runtime, authorized.cartId, stored!.record.attempts);
     } else if (keys === "stop") {
       // The reminder email's stop link: no more cart reminders to the address that email went to.
       await stops!.put(authorized.emailHash ?? fail("CHECKOUT_NOT_FOUND"), { at: String(now) });
@@ -239,6 +239,13 @@ function nowSeconds(runtime: GuestCheckoutRuntime): number {
   return runtime.host.now?.() ?? Math.floor(Date.now() / 1000);
 }
 
+/**
+ * Checks the newest attempt, which may still hold a payment session, then answers with the current one: an earlier
+ * attempt paid late stays the current one. The checked copy goes last, so it wins over its stale stored self.
+ */
+const checkNewest = async (runtime: GuestCheckoutRuntime, cartId: string, attempts: CheckoutAttempt[]) =>
+  currentAttempt([...attempts, await reconcileCheckout(executionOf(runtime), cartId, attempts.at(-1)!.attemptId)])!;
+
 function guestSafeError(error: GuestCheckoutError): GuestCheckoutResult {
   return { ok: false, error: { code: error.code, message: error.message } };
 }
@@ -343,11 +350,7 @@ export async function statusGuestCheckout(
     if (hinted && !stored?.record.attempts.some((attempt) => attempt.attemptId === hinted)) {
       fail("CHECKOUT_NOT_FOUND");
     }
-    const attempt = await reconcileCheckout(
-      executionOf(runtime),
-      authorized.cartId,
-      hinted || current.attemptId,
-    );
+    const attempt = hinted ? await reconcileCheckout(executionOf(runtime), authorized.cartId, hinted) : await checkNewest(runtime, authorized.cartId, stored!.record.attempts);
     return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {
     return guestSafeResult(error);
