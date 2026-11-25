@@ -27,6 +27,17 @@ offer, even if the caller supplied a root price. Older host projections that
 omit option definitions but retain member selections are also recognized.
 Optional GTIN, MPN, brand, shipping, description, and images are never invented.
 
+A host may also pass the product's standard category as
+`content.standardCategory` (`taxonomy: "shopify"`, `version`, the Shopify `id`
+and `name`, and `googleId`, Google's number from Shopify's own map) and the
+store's own category as `content.productType`. Google gets
+`g:google_product_category` (the number) and `g:product_type`; Meta gets
+`google_product_category` and `product_type` columns, present only when a row
+has a value; the agent feed and `/llms-full.txt` get the Shopify id and name.
+A product with no standard category sends none of these, and a category with
+no Google number sends only the agent fields. Stores pick the category in the
+**Product category** panel (product-category-box-20261125).
+
 For a complete RSS 2.0 document, call `buildGoogleMerchantFeed(rows, { channel })`
 with the public store's `title`, canonical home `link`, and `description`. These
 three escaped elements appear directly in `<channel>`, even if no rows qualify.
@@ -34,6 +45,7 @@ The title and description must contain only XML 1.0 characters. Use `now` in
 the options to supply a clock for date-based tests. The former
 `(rows, now?)` call still returns its original item-only channel for compatibility;
 update public feeds to supply metadata rather than guessing it from a product.
+
 Every item carries `g:condition` `new` (Commerce has no used or refurbished
 condition, and the Meta CSV already sends `new`). When an item has neither a
 GTIN nor a brand plus MPN, it carries `g:identifier_exists` `no`, the channel's
@@ -46,8 +58,12 @@ expected ship date (`backorderShipDate`: still ahead and at most a year away);
 a backorder row without one is left out of the Google feed, which requires it.
 The
 first image URL is the main image; the rest are sent as additional image links
-(up to 10 for Google, 20 for Meta, the channels' limits). `pageProductFeedRows` provides
-a bounded cursor contract for hosts that page their catalog reads. These
+(up to 10 for Google, 20 for Meta, the channels' limits). Both feeds drop characters
+XML 1.0 cannot hold (C0 controls other than tab, line feed and carriage return, U+FFFE,
+U+FFFF and unpaired surrogates), so one product's pasted text cannot make Google reject
+the whole feed. `pageProductFeedRows` provides a bounded cursor contract for hosts that
+page their catalog reads; a `cursor` or `pageSize` that is not a whole number throws a
+`RangeError`, and a whole `pageSize` is held to 1 to 500. These
 builders are host-side exports and are intentionally not imported by
 `src/plugin.ts`, keeping them outside the Registry backend size cap.
 

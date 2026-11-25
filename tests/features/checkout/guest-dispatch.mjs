@@ -67,7 +67,7 @@ export function openGuestCollections(path) {
       storefrontOutOfStockListing: collection("storefrontOutOfStockListing"),
       managedSkuClaims: collection("managedSkuClaims"),
       [CHECKOUT_COLLECTION]: collection(CHECKOUT_COLLECTION, ["cartExpires", "remindAt", "leftKey"]),
-      [CHECKOUT_GUEST_CAPABILITY_COLLECTION]: collection(CHECKOUT_GUEST_CAPABILITY_COLLECTION),
+      [CHECKOUT_GUEST_CAPABILITY_COLLECTION]: collection(CHECKOUT_GUEST_CAPABILITY_COLLECTION, ["expiresAt"]),
       [CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION]: collection(CHECKOUT_PAYMENT_ASSOCIATIONS_COLLECTION),
       cart_email_stops: collection("cart_email_stops"),
     },

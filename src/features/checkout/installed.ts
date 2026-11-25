@@ -259,7 +259,8 @@ export function createInstalledCheckoutHandlers(
     reconcileWakes,
     cron: async (event, ctx) => {
       if (event.name !== COMMERCE_CHECKOUT_WAKES_TASK) return;
-      await clearExpiredCarts(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts] as never, Math.floor(Date.now() / 1000)).catch(() => {});
+      await clearExpiredCarts(ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.carts] as never, Math.floor(Date.now() / 1000),
+        ctx.storage[SANDBOX_GUEST_CHECKOUT_STORAGE.capabilities] as never).catch(() => {});
       await reconcileWakes(ctx);
       await remindCarts(ctx, Math.floor(Date.now() / 1000)).catch(() => {});
     },

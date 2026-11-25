@@ -137,12 +137,15 @@ test('only a real calendar day is kept, from the panel or the prices API', async
   assert.equal((await readPublicCatalogItem(ctx, id)).availability.shipBy, leap);
 });
 
-test('a refused save keeps the typed date, and an empty box never says passed', async () => {
-  const { ctx } = await hat();
+test('a refused price keeps the backorder choice and date as a draft', async () => {
+  const { ctx, id } = await hat('in-stock');
   const date = day(25);
   const refused = await save(ctx, { regular: '', sale: '5', stockStatus: 'on-backorder', shipBy: date });
   assert.equal(refused.toast.type, 'error');
-  const box = pricing(refused).fields.find((field) => field.action_id === 'shipBy');
+  const fields = pricing(refused).fields;
+  assert.equal(fields.find((field) => field.action_id === 'stockStatus').initial_value, 'on-backorder');
+  assert.deepEqual((await readPublicCatalogItem(ctx, id)).availability, { status: 'in-stock', sellable: true, listable: true });
+  const box = fields.find((field) => field.action_id === 'shipBy');
   assert.deepEqual([box.label, box.initial_value], ['Expected ship date', date], 'the typed date comes back');
   const blank = await save(ctx, { regular: '', sale: '5', stockStatus: 'on-backorder', shipBy: '' });
   assert.equal(pricing(blank).fields.find((field) => field.action_id === 'shipBy').label, 'Expected ship date');

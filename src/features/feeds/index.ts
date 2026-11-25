@@ -29,6 +29,7 @@ export type {
   ProductFeedEligibilityStorage,
   ProductFeedFacts,
   ProductFeedPage,
+  ProductStandardCategory,
   SetProductFeedEligibilityInput,
   StorefrontAgentFeedOptions,
   StorefrontPolicySummary,

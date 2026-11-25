@@ -1,5 +1,6 @@
 import { catalogValue, saveProductData, type CatalogReader } from "./product-state.js";
 import { isRecord } from "../../shared/record.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import { CatalogError, catalogStorage } from "./errors.js";
 import {
@@ -87,7 +88,8 @@ export async function setCatalogItemManualAvailability(
 ): Promise<SetCatalogItemManualAvailabilityResult> {
   const input = normalizeInput(rawInput);
   return saveProductData(storage.catalog, input.catalogItemId, async (data, item) => {
-    if (normalizeStoredStockManagement(item.stockManagement).mode === "managed")
+    // The Registry build never sets stock up, so only the library build can hold a managed item.
+    if (!REGISTRY_BUILD && normalizeStoredStockManagement(item.stockManagement).mode === "managed")
       throw new CatalogError("MANAGE_STOCK_ENABLED", "manual availability requires Manage Stock off");
     const values = data.items[input.catalogItemId] ?? {};
     const availability = values.availability ?? await loadCatalogItemManualAvailability(storage.availability, input.catalogItemId, storage.catalog);

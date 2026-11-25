@@ -1,6 +1,7 @@
 import type { EmailBeforeSendEvent, EmailMessage, PluginContext, StorageCollection } from "emdash";
 import { mintGuestCapability } from "./capability.js";
 import { cartLines, stopKey } from "./guest.js";
+import { currentAttempt } from "./orchestrate.js";
 import { canonicalizeHttpOrigin } from "./site-scope.js";
 import type { CheckoutRecord } from "./types.js";
 
@@ -25,7 +26,7 @@ export async function remindCarts(ctx: PluginContext, now: number): Promise<void
     const record = found?.value;
     if (!found || !record?.remindAt || +record.remindAt > now) continue;
     const { remindAt: _, ...rest } = record;
-    const attempt = record.attempts.at(-1);
+    const attempt = currentAttempt(record.attempts);
     if (attempt?.phase !== "released" && attempt?.phase !== "paid") {
       await carts.compareAndSet(id, found.revision, { ...record, remindAt: String(now + 3600) });
       continue;
@@ -38,7 +39,7 @@ export async function remindCarts(ctx: PluginContext, now: number): Promise<void
         capabilities: ctx.storage.checkout_guest_capabilities } as never, { emailHash: hash, emailAttempt: attempt.attemptId })).presentation.capability.split(".");
       link = `${origin}/cart/c/${capabilityId}?key=${key}`;
     }
-    // A lost write leaves only an unused key behind, which dies with the cart.
+    // A lost write leaves only an unused key behind, which the background check deletes once its cart is gone.
     await carts.compareAndSet(id, found.revision, { ...rest, ...link && { leftKey: `${new Date(now * 1000).toISOString()} ${id}`, leftLink: link, leftAttempt: attempt.attemptId } });
   }
 }

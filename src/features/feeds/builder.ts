@@ -20,8 +20,6 @@ const DEFAULT_PAGE_SIZE = 100;
 const GOOGLE_ADDITIONAL_IMAGES = 10;
 const META_ADDITIONAL_IMAGES = 20;
 const MAX_PAGE_SIZE = 500;
-// XML 1.0 Char production; the Unicode flag also rejects unpaired surrogates.
-const INVALID_XML_CHARACTER = /[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u;
 
 function isDate(value: unknown): value is Date {
   try {
@@ -33,8 +31,15 @@ function isDate(value: unknown): value is Date {
   }
 }
 
+/**
+ * Characters XML 1.0 cannot hold even as a reference: C0 controls other than tab, line feed and carriage return,
+ * U+FFFE, U+FFFF and unpaired surrogates (with the u flag a surrogate pair is one character, so only a lone one
+ * matches). One in a product's text would make Google reject the whole feed, so both feeds drop them.
+ */
+const NOT_XML = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\uD800-\uDFFF]/gu;
+
 function escapeXml(value: string): string {
-  return value.replace(/[<>&'"]/g, (character) => ({
+  return value.replace(NOT_XML, "").replace(/[<>&'"]/g, (character) => ({
     "<": "&lt;",
     ">": "&gt;",
     "&": "&amp;",
@@ -44,7 +49,7 @@ function escapeXml(value: string): string {
 }
 
 function csv(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
+  return `"${value.replace(NOT_XML, "").replace(/"/g, '""')}"`;
 }
 
 type FeedRow = Pick<ProductFeedFacts, "content" | "shipping"> & {
@@ -123,15 +128,21 @@ export function pageProductFeedRows(
   products: readonly ProductFeedFacts[],
   options: ProductFeedBuildOptions = {},
 ): ProductFeedPage {
-  const pageSize = Math.min(Math.max(options.pageSize ?? DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
-  const cursor = options.cursor ?? 0;
+  const cursor = options.cursor ?? 0, size = options.pageSize ?? DEFAULT_PAGE_SIZE;
   if (!Number.isSafeInteger(cursor) || cursor < 0) throw new RangeError("invalid feed cursor");
+  // A page size that is not a whole number (NaN from a bad query string, say) would hand back the same cursor.
+  if (!Number.isSafeInteger(size)) throw new RangeError("invalid feed page size");
+  const pageSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
   const rows = products.slice(cursor, cursor + pageSize);
   return {
     rows,
     ...(cursor + rows.length < products.length ? { nextCursor: cursor + rows.length } : {}),
   };
 }
+
+// Google takes a category id or a path, not both; the id comes from Shopify's own map.
+const googleCategory = (row: FeedRow) => row.content.standardCategory?.googleId?.trim() ?? "";
+const productType = (row: FeedRow) => row.content.productType?.trim() ?? "";
 
 /** Build an RSS 2.0 document using public channel metadata supplied by the host. */
 export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], options: GoogleMerchantFeedOptions): string;
@@ -152,7 +163,7 @@ export function buildGoogleMerchantFeed(
         !url || !["http:", "https:"].includes(url.protocol) || url.username || url.password) {
       throw new TypeError("Google Merchant RSS needs a title, a public HTTP(S) link, and a description");
     }
-    if (INVALID_XML_CHARACTER.test(title) || INVALID_XML_CHARACTER.test(description)) {
+    if (title.search(NOT_XML) !== -1 || description.search(NOT_XML) !== -1) {
       throw new TypeError("Google Merchant RSS title and description must contain valid XML 1.0 characters");
     }
     now = options.now ?? new Date();
@@ -188,6 +199,8 @@ export function buildGoogleMerchantFeed(
       // Google's no-identifier signal: neither a GTIN nor brand plus MPN is on file.
       product.product.gtin || (product.product.brand && product.product.mpn) ? "" : "<g:identifier_exists>no</g:identifier_exists>",
       product.shipping ? `<g:shipping>${escapeXml(product.shipping)}</g:shipping>` : "",
+      googleCategory(product) ? `<g:google_product_category>${escapeXml(googleCategory(product))}</g:google_product_category>` : "",
+      productType(product) ? `<g:product_type>${escapeXml(productType(product))}</g:product_type>` : "",
       "</item>",
     ].filter(Boolean).join("");
   }).join("");
@@ -197,7 +210,12 @@ export function buildGoogleMerchantFeed(
 export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): string {
   const projected = channelRows(products, "meta-catalog");
   const variantColumns = projected.some((row) => row.groupId) ? ["item_group_id", ...VARIANT_ATTRIBUTES] : [];
-  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "additional_image_link", "brand", "gtin", "mpn", "shipping", ...variantColumns];
+  // Meta recommends Google's category; both columns appear only when a row has a value, as the variant ones do.
+  const categoryColumns = [
+    ...(projected.some((row) => googleCategory(row)) ? ["google_product_category"] : []),
+    ...(projected.some((row) => productType(row)) ? ["product_type"] : []),
+  ];
+  const columns = ["id", "retailer_id", "title", "description", "availability", "condition", "price", "link", "image_link", "additional_image_link", "brand", "gtin", "mpn", "shipping", ...categoryColumns, ...variantColumns];
   const rows = projected.map((product) => [
     product.product.id,
     product.product.id,
@@ -213,6 +231,7 @@ export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): str
     product.product.gtin ?? "",
     product.product.mpn ?? "",
     product.shipping ?? "",
+    ...categoryColumns.map((key) => key === "product_type" ? productType(product) : googleCategory(product)),
     ...variantColumns.map((key) => key === "item_group_id" ? product.groupId ?? "" : product.attributes?.get(key) ?? ""),
   ].map(csv).join(","));
   return [columns.map(csv).join(","), ...rows].join("\n") + "\n";
@@ -284,6 +303,8 @@ export function buildAgentCatalogFeed(options: StorefrontAgentFeedOptions): Agen
       const aiProjection = normalizeAiProjection(row.content.aiProjection);
       const description = row.content.description?.trim();
       const fulfillment = resolveProductFulfillment(row);
+      const category = row.content.standardCategory?.id.trim() && row.content.standardCategory.name.trim()
+        ? row.content.standardCategory : undefined;
       const variantMembers = (row.product.variants?.members ?? [])
         .filter((member) => member.availability.listable && member.price !== null && member.price !== undefined)
         .map((member) => ({
@@ -333,6 +354,7 @@ export function buildAgentCatalogFeed(options: StorefrontAgentFeedOptions): Agen
         ...(row.product.brand ? { brand: row.product.brand } : {}),
         ...(row.product.gtin ? { gtin: row.product.gtin } : {}),
         ...(row.product.mpn ? { mpn: row.product.mpn } : {}),
+        ...(category ? { category: { taxonomy: category.taxonomy, version: category.version, id: category.id, name: category.name } } : {}),
         ...(aiProjection ? { aiProjection } : {}),
       };
     });
@@ -448,6 +470,7 @@ export function buildStorefrontLlmsFullTxt(options: StorefrontAgentFeedOptions):
       }
     }
     if (item.brand) lines.push(`- Brand: ${item.brand}`);
+    if (item.category) lines.push(`- Category: ${item.category.name} (Shopify \`${item.category.id}\`)`);
     if (item.gtin) lines.push(`- GTIN: \`${item.gtin}\``);
     if (item.mpn) lines.push(`- MPN: \`${item.mpn}\``);
     if (item.aiProjection?.summary) {

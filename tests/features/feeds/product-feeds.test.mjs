@@ -174,11 +174,58 @@ test("identifiers come from the catalog public product, including MPN", () => {
   assert.equal(buildMetaCatalogFeed([hostOnly]).includes("Host Brand"), false);
 });
 
+// template-product-category-feeds-20261124: Google and Meta get Google's category id from Shopify's
+// map and the store's own category as product_type; the agent feed gets Shopify's id and name.
+test("a standard category reaches every feed, and Uncategorized sends none", () => {
+  const hats = { taxonomy: "shopify", version: "2026-11", id: "aa-2-17", name: "Hats", googleId: "173" };
+  const row = facts({ content: { ...facts().content, standardCategory: hats, productType: "Winter & hats" } });
+  const google = buildGoogleMerchantFeed([row]);
+  assert.match(google, /<g:google_product_category>173<\/g:google_product_category>/);
+  assert.match(google, /<g:product_type>Winter &amp; hats<\/g:product_type>/);
+  const [header, line] = buildMetaCatalogFeed([row]).trim().split("\n");
+  const columns = header.split(",").map((cell) => cell.replaceAll('"', ""));
+  const cells = line.split(",").map((cell) => cell.replaceAll('"', ""));
+  assert.equal(cells[columns.indexOf("google_product_category")], "173");
+  assert.equal(cells[columns.indexOf("product_type")], "Winter & hats");
+  const agent = buildAgentCatalogFeed({ storeName: "Shop", siteOrigin: "https://shop.example.test", products: [row] });
+  assert.deepEqual(agent.products[0].category, { taxonomy: "shopify", version: "2026-11", id: "aa-2-17", name: "Hats" });
+  assert.match(buildStorefrontLlmsFullTxt({ storeName: "Shop", siteOrigin: "https://shop.example.test", products: [row] }), /- Category: Hats \(Shopify `aa-2-17`\)/);
+
+  // A category Shopify maps to nothing keeps its agent entry and sends Google nothing, never a guess.
+  const seeds = { taxonomy: "shopify", version: "2026-11", id: "fb-4-3-2", name: "Non-Viable Seeds" };
+  const unmapped = facts({ content: { ...facts().content, standardCategory: seeds } });
+  assert.equal(buildGoogleMerchantFeed([unmapped]).includes("google_product_category"), false);
+  assert.equal(buildMetaCatalogFeed([unmapped]).includes("google_product_category"), false);
+
+  // Uncategorized: no category anywhere, and Meta's header is what it was.
+  const plain = facts();
+  assert.equal(/google_product_category|product_type/.test(buildGoogleMerchantFeed([plain])), false);
+  assert.equal(buildMetaCatalogFeed([plain]).split("\n")[0].includes("product_type"), false);
+  assert.equal("category" in buildAgentCatalogFeed({ storeName: "Shop", siteOrigin: "https://shop.example.test", products: [plain] }).products[0], false);
+});
+
 test("feed paging is bounded and deterministic", () => {
   const rows = [facts({ product: product({ id: "one" }) }), facts({ product: product({ id: "two" }) })];
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1 }), { rows: [rows[0]], nextCursor: 1 });
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1, cursor: 1 }), { rows: [rows[1]] });
   assert.equal(pageProductFeedRows(rows, { pageSize: 9999 }).rows.length, 2);
+  // A page size that is not a whole number is refused rather than handing back the same cursor forever.
+  for (const pageSize of [Number("abc"), 1.5, Infinity, "2"]) {
+    assert.throws(() => pageProductFeedRows(rows, { pageSize }), /invalid feed page size/, String(pageSize));
+  }
+});
+
+test("XML-illegal characters in product text are dropped, so one product cannot break the whole feed", () => {
+  const bad = facts({ content: { ...facts().content, title: "Wool\u0000 hat\u000B\uD800", description: "Warm\u001F and \uD83E\uDDE2 useful\uFFFF" } });
+  const google = buildGoogleMerchantFeed([bad, facts({ product: product({ id: "item-scarf" }) })]);
+  assert.doesNotMatch(google, /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
+  assert.doesNotMatch(google, /[\uD800-\uDFFF]/u, "no lone surrogate is left");
+  assert.match(google, /Wool hat/);
+  assert.match(google, /Warm and \uD83E\uDDE2 useful/, "a real emoji (a surrogate pair) is kept");
+  assert.match(google, /item-scarf/, "the next product is still in the feed");
+  const meta = buildMetaCatalogFeed([bad]);
+  assert.doesNotMatch(meta, /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
+  assert.match(meta, /Wool hat/);
 });
 
 test("storefront agent feeds project aiProjection, policies, and virtual-card minor-unit sizing deterministically", () => {
