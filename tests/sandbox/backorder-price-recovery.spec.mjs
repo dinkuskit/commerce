@@ -69,6 +69,7 @@ for (const width of [1440, 390]) {
       await test.info().attach('Panel HTML', { body: '<!doctype html>' + html, contentType: 'text/html' });
     }
     await expect(backorder).toBeChecked();
+    await expect(date).toBeVisible();
     await expect(date).toHaveValue(shipBy);
 
     // The clerk fixes only the invalid price. Stock and date must not need re-entry.
