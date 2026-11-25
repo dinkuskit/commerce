@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import { buildGoogleMerchantFeed } from "../../../dist/features/feeds/index.js";
 
 const channel = {
@@ -32,8 +33,18 @@ test("channel metadata precedes unchanged product rows and respects the supplied
   assert.equal(buildGoogleMerchantFeed([row], { channel, now }), old.replace("<channel>", `<channel>${metadata}`));
 });
 
+test("the channel serializes the same absolute link that was validated", () => {
+  const xml = buildGoogleMerchantFeed([], { channel: { ...channel, link: "https:shop.example.test?a=1&b=2" } });
+  assert.match(xml, /<link>https:\/\/shop\.example\.test\/\?a=1&amp;b=2<\/link>/);
+});
+
+test("the legacy overload accepts a Date from another realm without changing the feed", () => {
+  const foreignDate = runInNewContext("new Date('2026-11-25T01:00:00Z')");
+  assert.equal(buildGoogleMerchantFeed([row], foreignDate), buildGoogleMerchantFeed([row], now));
+});
+
 test("supplied channel metadata must have text and an absolute web link", () => {
-  for (const fields of [{ title: " " }, { description: "" }, { link: "/" }, { link: "ftp://shop.example.test" }]) {
+  for (const fields of [{ title: " " }, { description: "" }, { link: "/" }, { link: "ftp://shop.example.test" }, { link: "https://user:pass@shop.example.test" }]) {
     assert.throws(() => buildGoogleMerchantFeed([], { channel: { ...channel, ...fields } }), /Google Merchant RSS needs/);
   }
 });

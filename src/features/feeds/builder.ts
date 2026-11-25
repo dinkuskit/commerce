@@ -129,15 +129,16 @@ export function buildGoogleMerchantFeed(
   products: readonly ProductFeedFacts[],
   options: GoogleMerchantFeedOptions | Date = new Date(),
 ): string {
-  const now = options instanceof Date ? options : options.now ?? new Date();
+  const hasChannel = "channel" in options;
+  const now = hasChannel ? options.now ?? new Date() : options;
   let channel = "";
-  if (!(options instanceof Date)) {
+  if (hasChannel) {
     const { title, link, description } = options.channel;
     const url = URL.parse(link);
     if (!title.trim() || !description.trim() || !url || !["http:", "https:"].includes(url.protocol) || url.username || url.password) {
       throw new TypeError("Google Merchant RSS needs a title, a public HTTP(S) link, and a description");
     }
-    channel = `<title>${escapeXml(title)}</title><link>${escapeXml(link)}</link><description>${escapeXml(description)}</description>`;
+    channel = `<title>${escapeXml(title)}</title><link>${escapeXml(url.href)}</link><description>${escapeXml(description)}</description>`;
   }
   // Google requires availability_date on a backorder row, so one with no usable date is left out, as
   // WooCommerce refuses to sync it (feeds-facts-consistency-060, google-backorder-ship-date-20261124).
