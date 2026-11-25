@@ -468,7 +468,7 @@ test('installed Orders opens a store with more than 10,000 orders on desktop and
 
 // dinkuskit/tax ledger tax-picks-rate-commerce-does-math: a checkout priced through the add-ons door with a coupon's and
 // Tax's answers, received by the installed Orders, shows its discount and sales tax above the total.
-test('installed Orders shows the sales tax of a taxed order on desktop and phone', async ({ page, request }) => {
+test("installed Orders shows the sales tax of a taxed order, with Tax's note, on desktop and phone", async ({ page, request }) => {
   expect((await request.get('/_emdash/api/setup/dev-bypass')).status()).toBe(200);
   expect((await request.post('/__proof/install')).status()).toBe(200);
   const pluginId = process.env.COMMERCE_COUPON_PLUGIN_ID;
@@ -484,7 +484,8 @@ test('installed Orders shows the sales tax of a taxed order on desktop and phone
     f.setPayment('paid');
     const seen = [{ item: 'one', price: '75', qty: 2 }, { item: 'two', price: '100', qty: 1 }];
     const coupon = { from: 'dinkus-coupons', ref: 'hold-1', codes: ['SAVE10'], lines: seen.map((line, i) => ({ ...line, off: ['50', '0'][i] })) };
-    const tax = { from: 'dinkus-tax', ref: 'tax-1', to: '1 Example Way\n\nTestville\nCA\n00000\nUS', shipRate: '97500',
+    // Tax's Orders note travels as its one code (dinkuskit/tax ledger address-fallback-flag-order).
+    const tax = { from: 'dinkus-tax', ref: 'tax-1', codes: ['by-ZIP,-check-address'], to: '1 Example Way\n\nTestville\nCA\n00000\nUS', shipRate: '97500',
       lines: seen.map((line, i) => ({ ...line, off: '0', rate: ['97500', '70000'][i] })) };
     const attempt = await startCheckout(f.execution, 'orders-taxed', withSyntheticCheckoutContact({ lines: cart, addons: [coupon, tax] }));
     expect(attempt.phase).toBe('paid');
@@ -507,7 +508,7 @@ test('installed Orders shows the sales tax of a taxed order on desktop and phone
       await page.goto(path);
       await expect(inspect).toBeVisible({ timeout: 60000 });
       await inspect.focus(); await page.keyboard.press('Enter');
-      const taxRow = page.getByRole('cell', { name: 'Sales tax', exact: true });
+      const taxRow = page.getByRole('cell', { name: 'Sales tax · by ZIP, check address', exact: true });
       await expect(taxRow).toBeVisible();
       const rows = await page.getByRole('cell', { name: 'Order total', exact: true }).evaluate(cell =>
         [...cell.closest('tbody').children].map(row => [...row.children].map(c => c.innerText)));
@@ -516,7 +517,7 @@ test('installed Orders shows the sales tax of a taxed order on desktop and phone
       const evidence = { width, inspectLabel, rows, addons: attempt.order.addons, pricing: attempt.order.pricing };
       console.log('ORDER_SALES_TAX_PROOF ' + JSON.stringify({ width, rows }));
       await test.info().attach(`orders-sales-tax-${width}.json`, { body: JSON.stringify(evidence, null, 2), contentType: 'application/json' });
-      expect(rows).toEqual([['Items subtotal', '$2.50'], ['Discount SAVE10', '−$0.50'], ['Shipping', '$5.00'], ['Sales tax', '$0.66'], ['Order total', '$7.66']]);
+      expect(rows).toEqual([['Items subtotal', '$2.50'], ['Discount SAVE10', '−$0.50'], ['Shipping', '$5.00'], ['Sales tax · by ZIP, check address', '$0.66'], ['Order total', '$7.66']]);
     }
   } finally { await db.destroy(); }
 });
