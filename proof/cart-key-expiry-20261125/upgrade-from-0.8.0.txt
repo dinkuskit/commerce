@@ -1,0 +1,21 @@
+## from 0.8.0 onto main (7806454)
+✔ a cart key, checkout and paid order from 0.8.0 keep working with no attributes, beside a new cart that carries them
+✔ a checkout open on the payment page when the store upgrades is paid on this build, with its saved settings kept
+✔ an attempt frozen with the old exact 1800-second window still settles after the upgrade, and a longer session is refused
+ℹ pass 3
+ℹ fail 0
+
+## from 0.8.0 onto the first reviewed head (4ca8f22)
+✖ a cart key, checkout and paid order from 0.8.0 keep working with no attributes, beside a new cart that carries them
+✖ a checkout open on the payment page when the store upgrades is paid on this build, with its saved settings kept
+✖ an attempt frozen with the old exact 1800-second window still settles after the upgrade, and a longer session is refused
+ℹ pass 0
+ℹ fail 3
+
+
+## from 0.8.0 onto this branch
+✔ a cart key, checkout and paid order from 0.8.0 keep working with no attributes, beside a new cart that carries them
+✔ a checkout open on the payment page when the store upgrades is paid on this build, with its saved settings kept
+✔ an attempt frozen with the old exact 1800-second window still settles after the upgrade, and a longer session is refused
+ℹ pass 3
+ℹ fail 0
