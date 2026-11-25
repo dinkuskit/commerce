@@ -1,0 +1,43 @@
+✔ a cart left unpaid 10 hours after the email was given is cart.left news once, and its link opens the same cart
+✔ a cart emailed by a 0.9.0 beta is never left again
+✔ the stop link stops cart news for that email, for every later cart
+✔ every left cart is news, ticked or not: Store emails applies the owner's choice
+✔ a paid, emptied or still-open checkout is not left
+✔ the tick must be true, and a cart change keeps the news but names no items
+✔ a store that saved the 0.9.0 beta cart email setting still loads its settings, and the next save drops it
+✖ the email's key lasts only as long as its cart, and its stop link stops the address it went to
+✖ the email's key is checked against the cart each request reads, so cleanup in between changes nothing
+✔ a new cart reads empty, saves lines merged and sorted, and starts checkout from the saved cart
+✔ an empty cart cannot start checkout and makes no payment
+✔ a stale version changes nothing; a repeated idempotency key answers the current cart
+✔ unknown, unpriced and malformed lines are refused and nothing changes
+✖ a cart lasts 30 days from its last change, and every change restarts the clock
+✔ an open checkout freezes the cart, a read is the status check, and a paid cart reads empty
+✔ a paid cart reads where Orders has the order now: Processing, Completed with tracking, and Processing again after reopening
+✔ authorized paid cart reads expose canonical Orders short number and frozen test/live fact without renumbering or leaking
+✔ the cart needs the shopper's own key
+✔ the background check deletes carts past their 30 days and keeps paid orders
+✖ a cart key works only while its cart lives, and before the cart is made only for its own 30 days
+✖ the background check deletes keys past their date whose cart is gone, and moves a living cart's key to the cart's date
+✖ a cart cleared mid-checkout never renews its key: the cleanup's retry date is for payments, not for the shopper
+✖ a key made before keys had a date counts its 30 days from when it was made
+✖ a cart of more than 100 lines is refused before any catalog read
+✔ a cart changed while checkout starts is contention, never a purchase of the old lines
+✔ a cart deleted by expiry cleanup while checkout starts is contention, never a purchase
+✔ a checkout saved before the server cart (attempts only) still reads, replays and pays
+✔ a cart keeps the store's attributes within their limits, and checkout freezes them onto the paid order, never onto the payment
+✔ a cart with no attributes, or with them cleared, makes an order with none
+✔ new products are not eligible until explicitly opted in
+✔ opt-in and opt-out are reflected in both deterministic feeds
+✔ catalog facts, JSON-LD and feeds share price and availability
+✔ backorder rows keep backorder availability, matching JSON-LD BackOrder
+✔ secondary images are kept as additional image links in both feeds
+✔ optional identifiers and images are not invented
+✔ identifiers come from the catalog public product, including MPN
+✖ feed paging is bounded and deterministic
+✔ storefront agent feeds project aiProjection, policies, and virtual-card minor-unit sizing deterministically
+✔ agent guide sizes cards from frozen start pricing, not optional DOM estimates
+✔ agent guide distinguishes an unresolved attempt from an authoritative release
+✖ installed routes: a live key reads its checkout; once the cart is past its date the cleared cart never renews the key, before any Payments call
+ℹ pass 33
+ℹ fail 11

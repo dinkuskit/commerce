@@ -70,6 +70,8 @@ export function completeForm(record: OrderRecord, failure?: string, typed?: Reco
     ['tracking', 'Tracking number (optional)', String(typed?.tracking ?? '')]], 'Complete order', 'complete');
 }
 const notRecorded = 'Not recorded';
+/** The Tax plugin's add-on name (dinkuskit/tax); its codes are notes such as "by-ZIP,-check-address", shown on the Sales tax row. */
+const TAX = 'dinkus-tax';
 const back = action('Back to orders', 'orders.list');
 /** Selection is the exact canonical order ID, never a row offset or payment ID. `labelPage` is Ship's page for the selected order. */
 export function ordersView(input: OrdersInspection, selectedOrderId?: string, labelPage?: string): BlockResponse {
@@ -90,6 +92,8 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
     if (matches.length !== 1) return { blocks: [...blocks, unavailable('Order unavailable', 'The selected order could not be identified.')] };
     const record = matches[0], order = record.paidOrder, done = record.completed, contact = order.contactSnapshot?.contact, billing = billingOf(record), ship = deliveryOf(record);
     const id = encodeURIComponent(order.orderId), version = (record.revision ?? 1) + ':' + id, pricing = order.pricing;
+    // The codes shoppers typed (0), or Tax's notes (1): 0 and 1 compare loosely with false and true, a few bytes under the cap.
+    const codes = (tax: unknown) => (order.addons ?? []).flatMap(addon => addon.from == TAX == tax && addon.codes || []);
     // Who and where first (like WooCommerce's order screen), then what to pack and the action that finishes it.
     const shipToColumn: Block[] = [{ type: 'header', text: 'Ship to' }, ...(ship ? lines(ship) : [text('No ship-to address')]),
       ...(record.delivery ? [{ type: 'context', text: 'Corrected after checkout' } as Block] : []),
@@ -124,8 +128,10 @@ export function ordersView(input: OrdersInspection, selectedOrderId?: string, la
       total: amount(BigInt(normalizeMoney(line.unitPrice).minor) * BigInt(line.quantity)) })) } as Block,
     { type: 'table', page_action_id: 'orders.items', columns: [{ key: 'name', label: payment(order) }, { key: 'value', label: 'Amount' }],
       rows: [...(pricing ? [['Items subtotal', amount(pricing.merchandiseSubtotal)],
-        ...(+pricing.couponDiscount.minor ? [[('Discount ' + (order.addons ?? []).flatMap(addon => addon.codes ?? []).join(', ')).trim(), '−' + amount(pricing.couponDiscount)]] : []),
-        ['Shipping', amount(pricing.shipping.charge)], ...(+(pricing.tax?.minor ?? 0) ? [['Sales tax', amount(pricing.tax!)]] : [])] : []), ['Order total', amount(order.total)]].map(([name, value]) => ({ name, value })) } as Block,
+        ...(+pricing.couponDiscount.minor ? [[('Discount ' + codes(0).join(', ')).trim(), '−' + amount(pricing.couponDiscount)]] : []),
+        // Tax's notes follow the row: "Sales tax · by ZIP, check address" or "· rate typed by owner" (dinkuskit/tax ledger
+        // address-fallback-flag-order, owner-typed-rate-uncovered-states). A taxed order shows the row even at $0.
+        ['Shipping', amount(pricing.shipping.charge)], ...(pricing.tax ? [[['Sales tax', ...codes(1)].join(' · ').replace(/-/g, ' '), amount(pricing.tax)]] : [])] : []), ['Order total', amount(order.total)]].map(([name, value]) => ({ name, value })) } as Block,
     { type: 'accordion', label: 'Order record', blocks: [
       text('Order ID: ' + order.orderId), text('Version: ' + (record.revision ?? 1)), text('Receipt: ' + order.receiptId),
       text('Checkout attempt: ' + order.attemptId), text('Provider payment: ' + (order.paymentId ?? notRecorded)),

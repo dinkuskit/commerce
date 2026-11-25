@@ -178,6 +178,23 @@ test('a taxed order shows its sales tax between shipping and the order total', (
  const detail = ordersView({ status: 'available', orders: [kept(taxed)] }, taxed.orderId);
  assert.equal(validateBlocks(detail.blocks).valid, true);
  assert.deepEqual(Object.entries(payment(detail)), [['Items subtotal', '$25.00'], ['Discount SYNTHETIC5', '−$5.00'], ['Shipping', '$5.00'], ['Sales tax', '$2.00'], ['Order total', '$27.00']]);
- const none = { ...taxed, pricing: { ...taxed.pricing, tax: usd('0') } };
+ // Taxed at $0 (a coupon took everything off) still says so, as Shopify's order page does; untaxed has no row.
+ const zero = { ...taxed, pricing: { ...taxed.pricing, tax: usd('0') } };
+ assert.equal(payment(ordersView({ status: 'available', orders: [kept(zero)] }, zero.orderId))['Sales tax'], '$0.00');
+ const { tax, ...untaxed } = taxed.pricing;
+ const none = { ...taxed, pricing: untaxed };
  assert.equal('Sales tax' in payment(ordersView({ status: 'available', orders: [kept(none)] }, none.orderId)), false);
+});
+// dinkuskit/tax ledger address-fallback-flag-order and owner-typed-rate-uncovered-states: Tax's code is a note on the
+// Sales tax row, with each dash a space; the Discount row keeps only the codes the shopper typed.
+test("Tax's note follows the Sales tax row, and stays out of the Discount row", () => {
+ const usd = minor => ({ currency: 'USD', minor });
+ const pricing = { ...paid.pricing, tax: usd('200'), finalTotal: usd('2700') };
+ const note = code => ({ ...paid, orderId: 'synthetic-order-' + code, total: usd('2700'), pricing,
+  addons: [...(paid.addons ?? []), { from: 'dinkus-tax', ref: 'synthetic-tax-ref', codes: [code] }] });
+ for (const [code, row] of [['by-ZIP,-check-address', 'Sales tax · by ZIP, check address'], ['rate-typed-by-owner', 'Sales tax · rate typed by owner']]) {
+  const order = note(code), detail = ordersView({ status: 'available', orders: [kept(order)] }, order.orderId);
+  assert.equal(validateBlocks(detail.blocks).valid, true);
+  assert.deepEqual(Object.entries(payment(detail)), [['Items subtotal', '$25.00'], ['Discount SYNTHETIC5', '−$5.00'], ['Shipping', '$5.00'], [row, '$2.00'], ['Order total', '$27.00']]);
+ }
 });
