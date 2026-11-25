@@ -36,6 +36,10 @@ export async function loadMerchantStoreSettings(
   }
 }
 
+export function assertCurrentMerchantStoreSettings(isCurrent: boolean): asserts isCurrent {
+  if (!isCurrent) throw new StoreSettingsError("CONFLICT", "settings changed elsewhere; reload before retrying");
+}
+
 export async function saveMerchantStoreSettings(
   settings: SettingsAccess,
   raw: SaveMerchantStoreSettingsInput,
@@ -47,9 +51,7 @@ export async function saveMerchantStoreSettings(
     throw new StoreSettingsError("INVALID_INPUT", "expectedRevision must be an opaque string or null");
   }
   const current = await loadMerchantStoreSettings(settings);
-  if (current.revision !== raw.expectedRevision) {
-    throw new StoreSettingsError("CONFLICT", "settings changed elsewhere; reload before retrying");
-  }
+  assertCurrentMerchantStoreSettings(current.revision === raw.expectedRevision);
   const { expectedRevision: _expectedRevision, ...settingsInput } = raw;
   const next = normalizeSettingsInput(settingsInput, current.settings);
   let result;
@@ -58,7 +60,7 @@ export async function saveMerchantStoreSettings(
   } catch (error) {
     throw storageError("merchant store settings could not be saved", error);
   }
-  if (!result.applied) throw new StoreSettingsError("CONFLICT", "settings changed elsewhere; reload before retrying");
+  assertCurrentMerchantStoreSettings(result.applied);
   return { settings: next, revision: result.revision ?? null };
 }
 

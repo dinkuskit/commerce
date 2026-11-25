@@ -152,6 +152,24 @@ test("conflict UI retains old CAS token and draft through repeated retries, expl
   assert.equal(form(reloaded).fields[0].initial_value, "NZ");
 });
 
+test("a phone-only draft drawn before country setup gets conflict recovery, not country validation", async t => {
+  const f = fixture(); t.after(() => f.db.destroy());
+  const first = await saveMerchantStoreSettings(f.settings, { expectedRevision: null, requirePhoneNumber: true });
+  const latest = await saveMerchantStoreSettings(f.settings, { expectedRevision: first.revision, storeCountry: "US" });
+  const stale = submit(first.revision, values("", "", false));
+  const refused = await merchantStoreSettingsBlocks(route(stale), { settings: f.settings });
+  assert.equal(validateBlockResponse(refused).valid, true);
+  assert.equal(refused.blocks.find(block => block.type === "banner").title, "settings changed elsewhere; reload before retrying");
+  assert.equal(refused.blocks.find(block => block.type === "actions").elements[0].label, "Reload saved settings");
+  assert.equal(form(refused).block_id, stale.block_id);
+  assert.deepEqual(form(refused).fields.map(field => field.initial_value), ["", "", false]);
+
+  const currentBlank = await merchantStoreSettingsBlocks(route(submit(latest.revision, stale.values)), { settings: f.settings });
+  assert.equal(currentBlank.blocks.find(block => block.type === "banner").title, "Store country is required");
+  assert.equal(currentBlank.blocks.some(block => block.type === "actions"), false);
+  assert.deepEqual(await loadMerchantStoreSettings(f.settings), latest);
+});
+
 test("actual SDK permission rejects absent/invalid/low roles and client privilege claims before settings access", async () => {
   const ctx = { get settings() { throw new Error("settings must not be accessed"); } };
   for (const denied of [{ user: undefined }, { user: { role: 30 } }, { user: { role: "40" } }, { ui: undefined }]) {

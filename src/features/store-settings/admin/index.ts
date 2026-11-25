@@ -2,7 +2,7 @@ import { isRecord } from "../../../shared/record.js";
 import type { Block, BlockResponse } from "@emdash-cms/blocks/server";
 import type { PluginContext, SandboxedRouteContext } from "emdash/plugin";
 
-import { loadMerchantStoreSettings, saveMerchantStoreSettings } from "../operations.js";
+import { assertCurrentMerchantStoreSettings, loadMerchantStoreSettings, saveMerchantStoreSettings } from "../operations.js";
 import { merchantStoreSettingsAuthorized } from "../authorization.js";
 import { StoreSettingsError, type MerchantStoreSettings } from "../types.js";
 import { DEFAULT_SETTINGS } from "../normalize.js";
@@ -86,6 +86,9 @@ export async function merchantStoreSettingsBlocks(route: SandboxedRouteContext, 
     return response(DEFAULT_SETTINGS, revision, { title: error.message, variant: "error" }, draft);
   }
   try {
+    // Country becomes required after setup. A form drawn before that change
+    // needs conflict recovery, not validation against the newer settings.
+    assertCurrentMerchantStoreSettings(current.revision === revision);
     const countryValue = text(draft.storeCountry, "storeCountry").trim();
     if (!countryValue && current.settings.storeCountry !== null) {
       throw new StoreSettingsError("INVALID_INPUT", "Store country is required");
