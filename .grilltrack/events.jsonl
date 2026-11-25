@@ -795,3 +795,6 @@
 {"action": "shared_understanding_confirmed", "at": "2026-11-25T03:59:08+00:00", "data": {"summary": "The owner answered each point on 24 Nov 2026: a WooCommerce-style date box, one date per variant, a passed date counts as none with a note in the panel, and no email, to save bytes."}, "event_id": "bc01a712-f953-47e6-b19d-a350fb651a93"}
 {"action": "decision_proposed", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "d999eda3-7f21-4eed-8b3f-080a4fe6558f"}
 {"action": "decision_locked", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "7518611f-f06f-4860-93dc-7eb4976f5cb3"}
+{"action": "focus_started", "at": "2026-11-25T04:33:07+00:00", "data": {"cadence": "sequential", "domain": "Cart key expiry"}, "event_id": "0be47950-897b-4355-a07a-2806c8381bab"}
+{"action": "decision_proposed", "at": "2026-11-25T04:33:07+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "31973822-71a7-49ee-a238-77c3b388f6cd"}
+{"action": "decision_locked", "at": "2026-11-25T04:33:07+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "1a6a905d-7465-45b9-a135-1bc08a2faa41"}

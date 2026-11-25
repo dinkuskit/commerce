@@ -4,6 +4,7 @@ import type {
   CheckoutPaymentAssociationPort,
   CheckoutRecord,
   CheckoutStore,
+  GuestCapabilityRecord,
 } from "./types.js";
 
 export const CHECKOUT_COLLECTION = "checkoutCarts";
@@ -36,10 +37,13 @@ export function createCheckoutStore(collection: Pick<StorageCollection<CheckoutR
  * The background check's cleanup, WooCommerce-style (commerce-cart-expiry-20261113): up to 100 carts past
  * their 30 days per run. A cart with no checkout, or only released ones, is deleted. A paid cart keeps its
  * order record and loses only the cart. A cart mid-checkout loses its lines and is looked at again a day on.
+ * Then up to 100 cart keys past their date (commerce-cart-key-expiry-20261125): a key whose cart still lives
+ * moves to the cart's date, and the rest are deleted, so keys never pile up after their carts.
  */
 export async function clearExpiredCarts(
-  carts: Pick<StorageCollection<CheckoutRecord>, "query" | "getVersioned" | "compareAndSet" | "compareAndDelete">,
+  carts: Pick<StorageCollection<CheckoutRecord>, "query" | "get" | "getVersioned" | "compareAndSet" | "compareAndDelete">,
   now: number,
+  keys: Pick<StorageCollection<GuestCapabilityRecord>, "query" | "put" | "delete">,
 ): Promise<void> {
   for (const { id } of (await carts.query({ where: { cartExpires: { lt: String(now) } }, limit: 100 })).items) {
     const found = await carts.getVersioned(id);
@@ -50,6 +54,10 @@ export async function clearExpiredCarts(
     // Past its 30 days the cart's lines are gone either way. A cart mid-checkout keeps its attempts and is
     // looked at again a day on, so it never holds the page and starves carts behind it.
     else await carts.compareAndSet(id, found.revision, { attempts: record.attempts, ...phases.includes("paid") ? {} : { cartExpires: String(now + 86400) } });
+  }
+  for (const { id, data } of (await keys.query({ where: { expiresAt: { lt: String(now) } }, limit: 100 })).items) {
+    const until = (await carts.get(data.cartId))?.cartExpires;
+    await (now < +until! ? keys.put(id, { ...data, expiresAt: until }) : keys.delete(id));
   }
 }
 

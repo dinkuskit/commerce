@@ -66,6 +66,7 @@ export async function mintGuestCapability(
   const capabilityId = (runtime.host.createCapabilityId ?? (() => crypto.randomUUID()))();
   const cartId = (runtime.host.createCartId ?? (() => crypto.randomUUID()))();
   const secret = (runtime.host.createCapabilitySecret ?? randomSecret)();
+  const now = Math.floor((runtime.host.now ?? (() => Date.now() / 1000))());
   if (!capabilityId.trim() || !cartId.trim() || !secret.trim()) {
     throw new GuestCheckoutError("UNAVAILABLE");
   }
@@ -75,7 +76,9 @@ export async function mintGuestCapability(
     cartId,
     verifier: await hashGuestCapabilitySecret(secret),
     siteBinding,
-    createdAt: new Date((runtime.host.now ?? (() => Date.now() / 1000))() * 1000).toISOString(),
+    createdAt: new Date(now * 1000).toISOString(),
+    // A key lives as long as its cart; until the cart is made, 30 days. The background check deletes it after.
+    expiresAt: String(now + 2_592_000),
     ...email,
   };
   if (!(await runtime.capabilities.compareAndSet(capabilityId, null, record)).applied) {
@@ -100,32 +103,30 @@ export async function authorizeGuestCapability(
   if (!presented) throw new GuestCheckoutError("CAPABILITY_DENIED");
   const { capabilityId, secret } = parsePresentedCapability(presented);
   const stored = await runtime.capabilities.get(capabilityId);
+  // The request's own site is never empty, so a record with no site binding fails the match.
   if (
     !stored ||
     stored.recordKind !== "guest-checkout-capability" ||
     stored.capabilityId !== capabilityId ||
     !stored.cartId ||
     !stored.verifier ||
-    !stored.siteBinding
+    stored.siteBinding !== requestSite ||
+    !timingSafeEqual(stored.verifier, await hashGuestCapabilitySecret(secret))
   ) {
-    throw new GuestCheckoutError("CAPABILITY_DENIED");
-  }
-  if (stored.siteBinding !== requestSite) {
-    throw new GuestCheckoutError("CAPABILITY_DENIED");
-  }
-  if (!timingSafeEqual(stored.verifier, await hashGuestCapabilitySecret(secret))) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }
   return stored;
 }
 
 /**
- * The cart email's key lasts only while its cart lives and still holds the emailed checkout: never past the
- * cart's 30 days, never for a missing cart, and never for a cart made again under the same id. Checked against
- * the very record an operation reads, answers from and conditionally writes.
+ * A cart key lasts only while its cart lives (commerce-cart-key-expiry-20261125): never past the cart's 30 days.
+ * Where the record has no cart date (no cart made yet, a paid cart the background check cleared, or a checkout saved
+ * before the server cart), the key's own 30 days from minting apply. The cart email's key also needs the cart and
+ * the emailed checkout, so a cart made again under the same id never revives it. Checked against the very record an
+ * operation reads, answers from and conditionally writes.
  */
-export function fenceEmailedKey(capability: GuestCapabilityRecord, record: CheckoutRecord | undefined, now: number): void {
-  if (capability.emailHash && !(record?.cart && now < +record.cartExpires! &&
+export function fenceCartKey(capability: GuestCapabilityRecord, record: CheckoutRecord | undefined, now: number): void {
+  if (!(now < +(record?.cartExpires ?? capability.expiresAt)!) || capability.emailHash && !(record?.cart &&
     record.attempts.some(attempt => attempt.attemptId === capability.emailAttempt))) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }

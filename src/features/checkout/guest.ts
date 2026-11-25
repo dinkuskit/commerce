@@ -4,7 +4,7 @@ import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
 import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
-import { authorizeGuestCapability, fenceEmailedKey, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
+import { authorizeGuestCapability, fenceCartKey, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
 import { sha256Hex } from "../../shared/secret.js";
@@ -98,7 +98,7 @@ export async function cartGuestCheckout(
     const now = nowSeconds(runtime);
     const stored = await store.read(authorized.cartId);
     // The cart email's key answers and writes only for the record read here; its writes are conditional on it.
-    fenceEmailedKey(authorized, stored?.record, now);
+    fenceCartKey(authorized, stored?.record, now);
     const { lines, version, key, attributes } = raw as { lines: unknown; version: unknown; key?: unknown; attributes?: unknown };
     let attempt = stored?.record.attempts.at(-1);
     if (!keys) {
@@ -109,7 +109,8 @@ export async function cartGuestCheckout(
       await stops!.put(authorized.emailHash ?? fail("CHECKOUT_NOT_FOUND"), { at: String(now) });
     } else if (key === undefined || key !== stored?.record.cart?.key) {
       if (attempt && attempt.phase !== "released") fail("CHECKOUT_FROZEN");
-      if (!Array.isArray(lines) || key !== undefined && (typeof key !== "string" || key.length > 128)) fail("INVALID_CART");
+      // The 100-line cap comes before any catalog read.
+      if (!Array.isArray(lines) || lines.length > 100 || key !== undefined && (typeof key !== "string" || key.length > 128)) fail("INVALID_CART");
       const bag = attributes === undefined ? undefined : cartAttributes(attributes);
       if (version !== (stored?.version ?? null)) fail("CONTENTION");
       const merged = lines.length ? cartInput(await Promise.all(lines.map(line => cartLine(runtime, line)))) : [];
@@ -121,7 +122,7 @@ export async function cartGuestCheckout(
       })) fail("CONTENTION");
     }
     const saved = await store.read(authorized.cartId);
-    fenceEmailedKey(authorized, saved?.record, now);
+    fenceCartKey(authorized, saved?.record, now);
     const checkout = attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout();
     // The cart key's holder also sees where Orders has the order now (commerce-guest-order-status-20261115).
     const kept = checkout.order && await runtime.paidOrders?.status?.(checkout.order.orderId).catch(() => null);
@@ -311,7 +312,7 @@ export async function startGuestCheckout(
       retryAfter,
       true,
       { remindAt: String(currentNow + 36_000), news: news as true | undefined },
-      record => fenceEmailedKey(authorized, record, currentNow),
+      record => fenceCartKey(authorized, record, currentNow),
     );
     return projected(authorized.capabilityId, attempt, currentNow);
   } catch (error) {
@@ -332,7 +333,7 @@ export async function statusGuestCheckout(
     );
     const currentNow = nowSeconds(runtime);
     const stored = await createCheckoutStore(runtime.carts).read(authorized.cartId);
-    fenceEmailedKey(authorized, stored?.record, currentNow);
+    fenceCartKey(authorized, stored?.record, currentNow);
     if (!paymentsReady(runtime.host)) {
       return projected(authorized.capabilityId, currentAttempt(stored?.record.attempts ?? []), currentNow);
     }

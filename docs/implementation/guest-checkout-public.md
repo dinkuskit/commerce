@@ -117,7 +117,12 @@ browser cannot choose tenant, site, cart, or attempt authority.
    only guest authority.
 
 A lost prepare response may leave an unused capability record. It does not
-create attempts, sessions, or holds. A lost first `start` response after a
+create attempts, sessions, or holds. A capability lasts as long as its cart:
+never past the cart's 30 days from its last change, and, while no cart date
+exists, 30 days from minting (its indexed `expiresAt`). The background check
+deletes up to 100 capabilities past their date per run, moving one whose cart
+still lives to the cart's date (GrillTrack `commerce-cart-key-expiry-20261125`).
+A refused capability means the host asks `prepare` for a new one. A lost first `start` response after a
 pre-retained capability retries or restarts the same frozen attempt and
 provider operation.
 

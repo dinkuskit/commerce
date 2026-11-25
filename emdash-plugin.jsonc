@@ -105,7 +105,7 @@
       "uniqueIndexes": []
     },
     "checkout_guest_capabilities": {
-      "indexes": [],
+      "indexes": ["expiresAt"],
       "uniqueIndexes": []
     },
     "checkout_payment_associations": {

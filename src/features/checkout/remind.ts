@@ -38,7 +38,7 @@ export async function remindCarts(ctx: PluginContext, now: number): Promise<void
         capabilities: ctx.storage.checkout_guest_capabilities } as never, { emailHash: hash, emailAttempt: attempt.attemptId })).presentation.capability.split(".");
       link = `${origin}/cart/c/${capabilityId}?key=${key}`;
     }
-    // A lost write leaves only an unused key behind, which dies with the cart.
+    // A lost write leaves only an unused key behind, which the background check deletes once its cart is gone.
     await carts.compareAndSet(id, found.revision, { ...rest, ...link && { leftKey: `${new Date(now * 1000).toISOString()} ${id}`, leftLink: link, leftAttempt: attempt.attemptId } });
   }
 }

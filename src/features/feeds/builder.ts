@@ -20,8 +20,15 @@ const GOOGLE_ADDITIONAL_IMAGES = 10;
 const META_ADDITIONAL_IMAGES = 20;
 const MAX_PAGE_SIZE = 500;
 
+/**
+ * Characters XML 1.0 cannot hold even as a reference: C0 controls other than tab, line feed and carriage return,
+ * U+FFFE, U+FFFF and unpaired surrogates (with the u flag a surrogate pair is one character, so only a lone one
+ * matches). One in a product's text would make Google reject the whole feed, so both feeds drop them.
+ */
+const NOT_XML = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\uD800-\uDFFF]/gu;
+
 function escapeXml(value: string): string {
-  return value.replace(/[<>&'"]/g, (character) => ({
+  return value.replace(NOT_XML, "").replace(/[<>&'"]/g, (character) => ({
     "<": "&lt;",
     ">": "&gt;",
     "&": "&amp;",
@@ -31,7 +38,7 @@ function escapeXml(value: string): string {
 }
 
 function csv(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
+  return `"${value.replace(NOT_XML, "").replace(/"/g, '""')}"`;
 }
 
 type FeedRow = Pick<ProductFeedFacts, "content" | "shipping"> & {
@@ -110,9 +117,11 @@ export function pageProductFeedRows(
   products: readonly ProductFeedFacts[],
   options: ProductFeedBuildOptions = {},
 ): ProductFeedPage {
-  const pageSize = Math.min(Math.max(options.pageSize ?? DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
-  const cursor = options.cursor ?? 0;
+  const cursor = options.cursor ?? 0, size = options.pageSize ?? DEFAULT_PAGE_SIZE;
   if (!Number.isSafeInteger(cursor) || cursor < 0) throw new RangeError("invalid feed cursor");
+  // A page size that is not a whole number (NaN from a bad query string, say) would hand back the same cursor.
+  if (!Number.isSafeInteger(size)) throw new RangeError("invalid feed page size");
+  const pageSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
   const rows = products.slice(cursor, cursor + pageSize);
   return {
     rows,

@@ -400,6 +400,8 @@ export interface GuestCapabilityRecord {
   verifier: string;
   siteBinding: string;
   createdAt: string;
+  /** Unix seconds as a string, indexed: the background check deletes the key after this unless its cart still lives. */
+  expiresAt?: string;
   /**
    * Set on the cart email's key: the emailed address's stop key and the checkout the email was about. That key
    * lasts only while its cart lives and still holds that checkout, so a cart made again under the same id never

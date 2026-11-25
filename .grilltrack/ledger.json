@@ -3,12 +3,11 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": true,
-    "confirmed_at": "2026-11-25T03:59:08+00:00",
-    "domain": "Google backorder ship date",
-    "started_at": "2026-11-25T03:59:08+00:00",
-    "status": "confirmed",
-    "summary": "The owner answered each point on 24 Nov 2026: a WooCommerce-style date box, one date per variant, a passed date counts as none with a note in the panel, and no email, to save bytes."
+    "confirmed": false,
+    "domain": "Cart key expiry",
+    "started_at": "2026-11-25T04:33:07+00:00",
+    "status": "grilling",
+    "summary": "A guest cart key lives as long as its cart; the background check deletes it after."
   },
   "decisions": [
     {
@@ -18037,6 +18036,47 @@
       "superseded_by": null,
       "updated_at": "2026-11-25T03:59:08+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where the record has no cart date (no cart made yet, a paid cart the background check cleared, or a checkout saved before the server cart), the key's own 30 days from minting apply. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
+      "context_ref": null,
+      "created_at": "2026-11-25T04:33:07+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Cart key expiry",
+      "history": [
+        {
+          "at": "2026-11-25T04:33:07+00:00",
+          "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where the record has no cart date (no cart made yet, a paid cart the background check cleared, or a checkout saved before the server cart), the key's own 30 days from minting apply. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-cart-key-expiry-20261125",
+      "implementation_ref": null,
+      "question": "Should a guest cart key keep working, and stay stored, after its cart is gone?",
+      "rationale": "The owner approved on 25 Nov 2026. WooCommerce sessions expire and a daily cleanup deletes them.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T04:33:07+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -18073,5 +18113,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-25T03:59:08+00:00"
+  "updated_at": "2026-11-25T04:33:07+00:00"
 }
