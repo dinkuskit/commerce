@@ -27,6 +27,17 @@ offer, even if the caller supplied a root price. Older host projections that
 omit option definitions but retain member selections are also recognized.
 Optional GTIN, MPN, brand, shipping, description, and images are never invented.
 
+A host may also pass the product's standard category as
+`content.standardCategory` (`taxonomy: "shopify"`, `version`, the Shopify `id`
+and `name`, and `googleId`, Google's number from Shopify's own map) and the
+store's own category as `content.productType`. Google gets
+`g:google_product_category` (the number) and `g:product_type`; Meta gets
+`google_product_category` and `product_type` columns, present only when a row
+has a value; the agent feed and `/llms-full.txt` get the Shopify id and name.
+A product with no standard category sends none of these, and a category with
+no Google number sends only the agent fields. Stores pick the category in the
+**Product category** panel (product-category-box-20261125).
+
 `buildGoogleMerchantFeed` emits deterministic RSS 2.0 with Google `g:` fields.
 Every item carries `g:condition` `new` (Commerce has no used or refurbished
 condition, and the Meta CSV already sends `new`). When an item has neither a

@@ -36,12 +36,14 @@
     "hooks.email-events:register",
     "media:read",
     "network:request",
-    "admin.editor-draft:read"
+    "admin.editor-draft:read",
+    "admin.editor-draft:patch"
   ],
   "allowedHosts": [
     "payments.dinkuskit.com",
     "ship.dinkuskit.com",
-    "dinkuskit.com"
+    "dinkuskit.com",
+    "catalog.dinkuskit.com"
   ],
   "storage": {
     "catalog_items": {
@@ -181,6 +183,16 @@
         "title": "Product image & gallery",
         "route": "product-media-panel",
         "collections": ["products"]
+      },
+      {
+        "id": "product-category",
+        "title": "Product category",
+        "route": "product-category-panel",
+        "collections": ["products"],
+        "draft": {
+          "read": { "fields": ["title", "description", "product_category"] },
+          "patch": { "fields": ["product_category"] }
+        }
       }
     ]
   }

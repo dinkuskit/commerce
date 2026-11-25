@@ -1,5 +1,5 @@
 import { pluginRoute, type SandboxedPlugin } from "emdash/plugin";
-import { CATALOG_API_ROUTE, catalogApi, commerceAdmin, productMediaPanel, productPanel, syncOrdersWithShip } from "./admin/index.js";
+import { CATALOG_API_ROUTE, catalogApi, commerceAdmin, productCategoryPanel, productMediaPanel, productPanel, syncOrdersWithShip } from "./admin/index.js";
 import { pageProduct, PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, PRODUCT_ROW_COLLECTIONS, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
@@ -173,6 +173,7 @@ const plugin: SandboxedPlugin = {
     // The Dinkus Commerce panel on each Content > Products page.
     "product-panel": privatePost("content:edit_any", productPanel),
     "product-media-panel": privatePost("content:edit_any", productMediaPanel),
+    "product-category-panel": privatePost("content:edit_any", productCategoryPanel),
     // The store's publish check: a published product page puts its product on sale (catalog-product-states-20261023).
     [PRODUCT_PAGE_ON_SALE_ROUTE]: privatePost("content:publish_any", (route, ctx) => setProductPageOnSale(shelf(ctx as never), route.input)),
     // Agents and the CLI manage products here with an EmDash API token (catalog-api-20261027).
