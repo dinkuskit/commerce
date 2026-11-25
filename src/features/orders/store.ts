@@ -285,6 +285,8 @@ export interface ShopperOrderSummary {
     couponDiscount: PaidOrder["total"];
     netMerchandise: PaidOrder["total"];
     shipping: { mode: "free" | "flat"; charge: PaidOrder["total"] };
+    /** Absent when no tax answer priced the order. */
+    tax?: PaidOrder["total"];
     finalTotal: PaidOrder["total"];
   } | null;
   delivery: CheckoutDeliveryAddress | null;
@@ -312,6 +314,7 @@ export function projectShopperOrder(record: OrderRecord): ShopperOrderSummary {
           couponDiscount: p.couponDiscount,
           netMerchandise: p.netMerchandise,
           shipping: { mode: p.shipping.mode, charge: p.shipping.charge },
+          ...(p.tax ? { tax: p.tax } : {}),
           finalTotal: p.finalTotal,
         }
       : null,
@@ -335,12 +338,8 @@ export async function findOrderByNumberAndEmail(
     const record = checkOrder(item);
     if (record.number === number && emailKeyOf(record.paidOrder) === emailKey) found = record;
   };
-  try {
-    // Orders kept before the email index have no emailKey; their checkout email still matches (commerce#248).
-    for (const where of [{ emailKey }, { emailKey: null }]) if (!found) await scanAll(collection, match, where);
-  } catch (error) {
-    if ((error as { name?: unknown })?.name !== "StorageQueryError") throw error;
-    await scanAll(collection, match);
-  }
+  // Only the email's own orders: every order since commerce#248 has its emailKey, and no store kept one before it
+  // (the owner approved on 2026-11-24), so a missed lookup never reads any other order.
+  await scanAll(collection, match, { emailKey });
   return found;
 }

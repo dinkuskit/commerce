@@ -11,7 +11,7 @@ version_scope: "Commerce {{version}}"
 
 Commerce adds products, prices, cart and checkout orchestration, receipts, orders and an order lookup to an EmDash site. The storefront supplies the customer-facing pages; installing Commerce does not create those pages automatically. Commerce owns product identity and the amount a customer pays. [Payments](/docs/reference/payments) owns processor connections, [Ship](/docs/reference/ship) owns shipping labels, and [Inventory](/docs/reference/inventory) owns physical stock when a product is managed.
 
-This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It requires EmDash `1.5.0`. Changes merged after that release are not described here until they ship in a stable release.
+This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It is built and tested on EmDash `1.6.0` and also runs on `1.5.0`. Changes merged after that release are not described here until they ship in a stable release.
 
 ## Connect to DinkusKit
 
@@ -95,6 +95,10 @@ new names, so they refuse to add a product ("uniqueness unproven"). This
 release accepts both names, and its upgrade proof checks a duplicate SKU is
 still refused before and after the EmDash upgrade.
 
+Moving from EmDash 1.5 to 1.6 needs nothing from Commerce, in either order. The
+Registry build is the same on both, and 1.6's only database step adds a column
+to EmDash's own users table.
+
 For direct kernel consumers, price, manual-availability and feed-eligibility
 readers now require the catalog reader as their third argument. Use these
 readers or the catalog API, rather than reading the legacy collections directly;
@@ -115,6 +119,8 @@ Public catalog list and item responses also carry the feed channels the merchant
 ## Availability
 
 Unmanaged products use Commerce's manual availability: `in-stock`, `out-of-stock`, or `available-on-backorder`. They do not require an Inventory connection or expose an invented quantity.
+
+When **Stock status** is On backorder, an **Expected ship date** box appears under it, one for each variant (or one for a product with no options). The public catalog sends the date as `availability.shipBy` (YYYY-MM-DD) on that variant while it is on backorder. `backorderShipDate(availability)` from `@dinkuskit/commerce/features/feeds` gives the date while it is still ahead and at most a year away, and nothing once it has passed: the Google feed sends it as `availability_date`, and leaves out a backorder row with no such date, because Google requires one. The Meta feed is unchanged. Once the date passes, the box's label says so; there is no email.
 
 Inventory is planned after v1, and the Registry build has no Manage stock switch. Begin with unmanaged products. Missing setup, malformed provider results, or an unavailable provider must not be interpreted as zero stock or silently replaced with local stock. Treat `availability-unavailable` as unavailable and respect the separate `sellable` and `listable` facts. See the [Inventory reference](/docs/reference/inventory).
 
@@ -150,7 +156,7 @@ For guest checkout, check both the HTTP response and EmDash's JSON `success` fla
 }
 ```
 
-Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `cart` and `start`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session. On `start` and on a `cart` read (`{}`, which is also the payment status check), `data.checkout.pricing` exposes `merchandiseSubtotal`, `couponDiscount`, `netMerchandise`, `shipping`, explicit `tax: { "currency": "USD", "minor": "0" }`, and `finalTotal` in integer USD minor units for deterministic checkout and single-use virtual card sizing.
+Retain the token at `data.capability.capability` privately and send that string in the `x-commerce-guest-capability` header on `cart` and `start`. Do not send the presentation object or `capabilityId` as the header value, or put the token in a URL or log. Read `data.contactRequirements.requirePhoneNumber` when preparing the contact form. Preparation only issues a capability; it does not attest Payments readiness or create a payment session. On `start` and on a `cart` read (`{}`, which is also the payment status check), `data.checkout.pricing` exposes `merchandiseSubtotal`, `couponDiscount`, `netMerchandise`, `shipping`, `tax` (the sales tax Commerce worked out from the Tax plugin's rates, or `{ "currency": "USD", "minor": "0" }` when nothing was taxed), and `finalTotal` in integer USD minor units for deterministic checkout and single-use virtual card sizing.
 
 Once the order is paid, `data.checkout.order.contact` carries the order's email, phone (when given) and `delivery` and `billing` addresses, as the shopper entered them at checkout, so the store's thank-you page can show them. Only a request with that cart's own capability, from the store's own origin, gets it; nothing before payment carries contact, and Payments never receives it. Treat it as personal data: draw it on the page, never cache, log or put it in a URL.
 
@@ -220,7 +226,7 @@ A shopper can finish paying after their checkout ended unpaid, for example when 
 
 ## Add-ons door
 
-Coupons and, later, sales tax are their own plugins, and EmDash plugins cannot call each other. So the store's own code asks each add-on first and then starts checkout through one private Commerce route, `checkout/addons/start`, with their answers. Like the courier's route, it refuses anyone signed in, the Administrator included, so only the store itself can use it. A shopper or agent starting checkout through the public `checkout/guest/start` cannot send add-on answers, and discount codes are typed on the store's own checkout page.
+Coupons and sales tax are their own plugins, and EmDash plugins cannot call each other. So the store's own code asks each add-on first and then starts checkout through one private Commerce route, `checkout/addons/start`, with their answers. Like the courier's route, it refuses anyone signed in, the Administrator included, so only the store itself can use it. A shopper or agent starting checkout through the public `checkout/guest/start` cannot send add-on answers, and discount codes are typed on the store's own checkout page.
 
 The door takes what `checkout/guest/start` takes, the same cart capability and origin, and `addons`: at most 4 answers, one per add-on. Each answer names the add-on (`from`, its plugin id, at most 64 characters), an optional reference of its own (`ref`, at most 200), the codes the shopper typed (`codes`, at most 6, each at most 64), `ship: "free"` when it waives shipping, and, for every checkout line in Commerce's order, the item, unit price and quantity it saw and the amount it takes off, in whole cents (`lines: [{ item, price, qty, off }]`, at most $10,000,000 a line). These names, references, codes and items are printable ASCII only, and the `from`, `ref` and codes of all answers together are at most 1,500 characters as written in JSON (`[[from, ref, codes], …]`, punctuation included), so the order's `order.paid` news always fits the courier. Commerce does the totals itself:
 
@@ -229,6 +235,14 @@ The door takes what `checkout/guest/start` takes, the same cart capability and o
 - The discount is per line, as Payments charges it, and the subtotal minus the discount decides free shipping over the owner's amount. An answer with `ship: "free"` makes shipping free.
 - While a checkout's payment is open, its add-ons and codes are frozen with its cart: asking with other codes, or none, is refused with `CHECKOUT_FROZEN`.
 - The order keeps each add-on's `from`, `ref` and `codes`, and the Orders page shows them on the discount line.
+
+Sales tax comes through the same door. The Tax plugin picks the rates and Commerce does the math, after discounts:
+
+- A tax answer adds `to`, the address it priced, and a rate for shipping (`shipRate`) and for every line (`lines[].rate`), each in millionths: `"97500"` is 9.75%, and a rate is under 100%. Anything else, or a rate on an answer without `to`, leaves checkout unavailable.
+- `to` is the delivery address, or the billing address when nothing ships, as Commerce keeps it: street line 1, line 2, city, state, ZIP and country, one to a line. An answer for any other address answers `CONTENTION`, so the store asks Tax again.
+- Each line's tax is its amount after discounts times its rate, rounded to the cent once, halves up. Shipping's tax is the shipping charge times its rate, rounded the same way. The order's tax is those added up, and it goes on the total.
+- The pricing then records `tax` for the order and for each line, Payments charges it as one **Sales tax** line, and the Orders page, the thank-you page, the order lookup and `order.paid` show it. A checkout without a tax answer records no tax at all.
+- The order keeps only Tax's `from` and `ref`. How the address matched and whether the owner typed the rate stay in Tax's own records, under that `ref`.
 
 ## Completing and correcting an order
 

@@ -139,8 +139,10 @@ test("the earlier release stocks a Registry store", async ({ page, request }) =>
   database.close();
 });
 
-const withoutMemberSku = (products) => products.map((product) => product.variants
-  ? { ...product, variants: { ...product.variants, members: product.variants.members.map(({ sku: _sku, ...member }) => member) } } : product);
+// This build also says each variant member's own SKU and, since the public catalog names items on sale, onSale;
+// the earlier release said neither.
+const withoutMemberSku = (products) => products.map(({ onSale: _onSale, ...product }) => product.variants
+  ? { ...product, variants: { ...product.variants, members: product.variants.members.map(({ sku: _sku, onSale: _memberOnSale, ...member }) => member) } } : product);
 
 // Another page tries the hat's SKU: refused as a duplicate, which needs the unique-index proof to pass first.
 async function duplicateSkuRefused(page, rows, title) {
@@ -181,7 +183,7 @@ test("this build keeps the upgraded store's products, settings, page and sellabi
   }
   expect(rows("product_pages")).toEqual({});
   // 2. Products sold before the upgrade stay on sale with the same prices; hidden ones stay off.
-  // This build also says each variant member's own SKU, which the earlier release did not; nothing else may differ.
+  // Apart from the member SKU and onSale flags above, nothing may differ.
   expect(withoutMemberSku(await publicCatalog(page.request))).toEqual(before.shop);
 
   // 3. Commerce settings keeps the saved setting; every product is made for its page, so there is no list of

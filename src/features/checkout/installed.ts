@@ -55,7 +55,7 @@ function isReadinessState(value: unknown, now: number): value is CachedReadiness
     typeof value.lastAttemptAt === "number" && Number.isSafeInteger(value.lastAttemptAt) &&
     value.lastAttemptAt >= 0 && value.lastAttemptAt <= now &&
     value.expiresAt === value.lastAttemptAt + 900 &&
-    Array.isArray(value.attempts) && value.attempts.length > 0 && value.attempts.length <= 100 &&
+    Array.isArray(value.attempts) && value.attempts.length > 0 && value.attempts.length <= 300 &&
     value.attempts.includes(value.lastAttemptAt) &&
     value.attempts.every(t => Number.isSafeInteger(t) && t >= 0 && t <= (value.lastAttemptAt as number));
 }
@@ -213,7 +213,7 @@ export function createInstalledCheckoutHandlers(
       const old = snapshot?.value;
       if (old?.generation === gen && now < old.expiresAt) return old.status === "supported" ? supported : unavailable;
       const attempts = old ? old.attempts.filter(t => t > now - 86400) : [];
-      if (old && now - old.lastAttemptAt < 60 || attempts.length >= 100) return unavailable;
+      if (old && now - old.lastAttemptAt < 60 || attempts.length >= 300) return unavailable;
       // One durable claim, charged before upstream work. Its unavailable value also
       // supplies the failure/crash cooldown; a generation change never resets its budget.
       const claim: CachedReadinessState = { version: 1, generation: gen, status: "unavailable",

@@ -1,6 +1,6 @@
 import { pluginRoute, type SandboxedPlugin } from "emdash/plugin";
 import { CATALOG_API_ROUTE, catalogApi, commerceAdmin, productMediaPanel, productPanel, syncOrdersWithShip } from "./admin/index.js";
-import { pageProduct, PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
+import { pageProduct, PRODUCT_PAGE_ON_SALE_ROUTE, PRODUCT_PAGES_COLLECTION, PRODUCT_ROW_COLLECTIONS, setProductPageOnSale, type ProductPages } from "./features/catalog/kernel/index.js";
 import {
   PUBLIC_CATALOG_ROUTE,
   PUBLIC_CATALOG_ITEM_ROUTE,
@@ -60,7 +60,7 @@ const schedules = (ctx: SaleContext) => ctx.storage["scheduled_sales"] as {
   query(options: { where: Partial<ScheduledSale>; limit: number }): Promise<{ items: { id: string; data: ScheduledSale }[] }>;
 };
 const shelf = (ctx: SaleContext) => ({ catalog: ctx.storage["catalog_items"] as Parameters<typeof setProductPageOnSale>[0]["catalog"], pages: ctx.storage[PRODUCT_PAGES_COLLECTION] as ProductPages,
-  rows: ["catalog_prices", "catalog_manual_availability", "catalog_backorder_policies", "catalog_media", "product_feed_eligibility"].map(name => ctx.storage[name]!) as never });
+  rows: PRODUCT_ROW_COLLECTIONS.map(name => ctx.storage[name]!) as never });
 const EDITOR = 40;
 const moment = (at: unknown) => `@${Date.parse(String(at))}:`;
 /**

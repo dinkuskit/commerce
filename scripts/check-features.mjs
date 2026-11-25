@@ -205,8 +205,8 @@ export async function auditFeatures(repositoryRoot = root) {
   if (manifest.exports?.["./features/customers"] !== undefined) {
     findings.push("package export ./features/customers is retired: shopper accounts live in DinkusKit Accounts");
   }
-  if (manifest.devDependencies?.emdash !== "1.5.0") {
-    findings.push("catalog pilot must remain pinned to exact emdash 1.5.0");
+  if (manifest.devDependencies?.emdash !== "1.6.0") {
+    findings.push("catalog pilot must remain pinned to exact emdash 1.6.0");
   }
 
   // Every folder under src/features is a feature, so a new one is covered the day it lands.

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { openStore, fixture, cart } from "./fixture.mjs";
 import { createTrustedTestPaymentPort, startCheckout } from "../../../dist/features/checkout/index.js";
+import { projectGuestCheckout } from "../../../dist/index.js";
 
 // What a checkout with nothing to ship freezes as its shipping, whatever the store's configuration says.
 const NOT_SHIPPED = { configurationId: "not-shipped", revision: 1, mode: "free", charge: { currency: "USD", minor: "0" } };
@@ -294,4 +295,101 @@ test("the Payments adapter sends an add-on priced checkout unchanged and refuses
   await port.ensureSession(a.payment);
   assert.deepEqual(JSON.parse(calls.at(-1).body), a.payment);
   assert.equal(JSON.parse(calls.at(-1).body).total.minor, '200');
+});
+
+// dinkuskit/tax ledger: Tax picks each line's rate and shipping's (tax-picks-rate-commerce-does-math), through the add-ons door
+// beside Coupons (shared-addons-door); Commerce takes discounts off first, then rounds each line's tax once, halves up (round-per-line-half-up).
+const TO = "1 Example Way\n\nTestville\nCA\n00000\nUS";
+const taxAnswer = (rates = ["97500", "70000"], extra = {}) => ({ from: "dinkus-tax", ref: "tax-1", to: TO, shipRate: "97500",
+  lines: [{ item: "one", price: "75", qty: 2, off: "0", rate: rates[0] }, { item: "two", price: "100", qty: 1, off: "0", rate: rates[1] }], ...extra });
+const flatPricing = () => ({
+  resolveShippingConfiguration: async () => ({ configurationId: "ship-1", revision: 1, mode: "flat", amount: { currency: "USD", minor: "50" } }),
+  paymentPricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+});
+const openPayments = () => ({ pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+  ensureSession: async (request) => ({ outcome: "open", attemptId: request.attemptId, total: request.total,
+    session: { sessionId: `session-${request.attemptId}`, redirectUrl: "https://pay.example/session", createdAt: 1000, expiresAt: 2800 } }),
+  lookup: async () => ({ outcome: "unknown" }) });
+
+test("a tax answer taxes each line after discounts and shipping, rounding each line once, halves up", async (t) => {
+  const state = await setup();
+  t.after(() => state.opened.db.close());
+  state.execution.pricing = flatPricing();
+  state.execution.resolvePayments = async () => openPayments();
+  const a = await startCheckout(state.execution, "taxed", withSyntheticCheckoutContact({ lines: cart, addons: [answer(), taxAnswer()] }));
+  const p = a.payment.pricing;
+  // "one" is $1.50 less $0.50 off: 9.75% of $1.00 is 9.75¢, so 10¢. "two" is $1.00 less $0.50: 7% of 50¢ is 3.5¢, so 4¢.
+  assert.deepEqual(p.lines.map(line => [line.netAmount.minor, line.tax.minor]), [["100", "10"], ["50", "4"]]);
+  // Shipping: 9.75% of 50¢ is 4.875¢, so 5¢. All tax is 19¢: $1.50 of goods + 50¢ shipping + 19¢.
+  assert.deepEqual([p.tax.minor, p.finalTotal.minor, a.payment.total.minor], ["19", "219", "219"]);
+  // The order keeps who answered and their references, never the address or the rates.
+  assert.deepEqual(a.addons, [{ from: "dinkus-coupons", ref: "hold-1", codes: ["SAVE10"] }, { from: "dinkus-tax", ref: "tax-1" }]);
+  // The thank-you page shows the tax the shopper paid.
+  const shown = projectGuestCheckout({ ...a, phase: "paid", order: { orderId: "order-taxed", receiptId: "receipt-taxed", total: a.payment.total, pricing: p } }, 2000);
+  assert.deepEqual([shown.order.pricing.tax, shown.order.pricing.finalTotal], [{ currency: "USD", minor: "19" }, { currency: "USD", minor: "219" }]);
+
+  // A rate of zero on every line and on shipping still records tax, at zero.
+  const zero = await startCheckout(state.execution, "untaxed", withSyntheticCheckoutContact({ lines: cart, addons: [taxAnswer(["0", "0"], { shipRate: "0" })] }));
+  assert.deepEqual([zero.payment.pricing.tax.minor, zero.payment.pricing.finalTotal.minor], ["0", "300"]);
+  // Without a tax answer the pricing carries no tax at all, so a Payments service that knows no tax still takes it.
+  const plain = await startCheckout(state.execution, "plain", withSyntheticCheckoutContact({ lines: cart, addons: [answer()] }));
+  assert.equal("tax" in plain.payment.pricing, false);
+  assert.equal(plain.payment.pricing.lines.some(line => "tax" in line), false);
+});
+
+test("a tax answer for another address, or with a missing or malformed rate, freezes nothing", async (t) => {
+  const state = await setup();
+  t.after(() => state.opened.db.close());
+  let calls = 0;
+  state.execution.pricing = flatPricing();
+  state.execution.resolvePayments = async () => { calls += 1; throw new Error("must not resolve"); };
+  const start = (addons) => startCheckout(state.execution, "bad-tax", withSyntheticCheckoutContact({ lines: cart, addons }));
+  // Priced for another street: the shopper changed the address since the store asked Tax.
+  await assert.rejects(() => start([taxAnswer(undefined, { to: TO.replace("1 Example", "2 Example") })]), /contention/);
+  const noRate = taxAnswer();
+  delete noRate.lines[1].rate;
+  for (const bad of [[noRate], [taxAnswer(["1000000", "0"])], [taxAnswer(["9.75", "0"])], [taxAnswer(["-1", "0"])],
+    [taxAnswer(undefined, { shipRate: "0.0975" })], [taxAnswer(undefined, { shipRate: undefined })], [taxAnswer(undefined, { to: 7 })],
+    // A rate only counts beside the address it was priced for.
+    [answer(undefined, { lines: taxAnswer().lines })], [answer(undefined, { shipRate: "97500" })]]) {
+    await assert.rejects(() => start(bad), JSON.stringify(bad).slice(0, 80));
+  }
+  assert.equal(calls, 0);
+  assert.equal(await state.execution.store.read("bad-tax"), null);
+});
+
+test("the Payments adapter sends a taxed checkout unchanged and refuses tax that does not add up", async (t) => {
+  const state = await setup();
+  t.after(() => state.opened.db.close());
+  state.execution.pricing = flatPricing();
+  state.execution.resolvePayments = async () => ({ pricingSchema: 'dinkuskit.commerce.checkout-pricing/v1',
+    ensureSession: async () => ({ outcome: "unknown" }), lookup: async () => ({ outcome: "unknown" }) });
+  const a = await startCheckout(state.execution, "taxed-adapter", withSyntheticCheckoutContact({ lines: cart, addons: [answer(), taxAnswer()] }));
+  const calls = [];
+  const port = createTrustedTestPaymentPort({
+    paymentsOrigin: 'https://payments.example', commerceOrigin: 'https://store.example', siteId: 'synthetic-site',
+    bindingRef: a.payment.bindingRef, providerId: 'stripe', stripeAccountId: 'synthetic-account', pricingSchema: a.payment.pricing.schema,
+    credentialResolver: async () => 'synthetic-test-token',
+    fetch: async (url, init) => {
+      calls.push({ url, body: init.body });
+      return new Response(JSON.stringify(init.method === 'GET' ? {
+        bindingRef: a.payment.bindingRef, providerId: 'stripe', stripeAccountId: 'synthetic-account', mode: 'test', ready: true,
+      } : { outcome: 'unknown' }));
+    },
+  });
+  const mutations = [
+    r => { r.pricing.tax.minor = '20'; },
+    r => { delete r.pricing.tax; },
+    r => { delete r.pricing.lines[0].tax; },
+    r => { r.pricing.lines[0].tax.minor = '16'; },
+  ];
+  for (const mutate of mutations) {
+    const request = structuredClone(a.payment);
+    mutate(request);
+    await assert.rejects(port.ensureSession(request), /Malformed payment pricing|Invalid/);
+  }
+  assert.equal(calls.length, 0);
+  await port.ensureSession(a.payment);
+  assert.deepEqual(JSON.parse(calls.at(-1).body), a.payment);
+  assert.equal(JSON.parse(calls.at(-1).body).pricing.tax.minor, '19');
 });

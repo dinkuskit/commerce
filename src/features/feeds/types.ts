@@ -88,6 +88,7 @@ export interface AgentCatalogProductEntry {
   readonly availability: {
     readonly status: PublicCatalogProduct["availability"]["status"];
     readonly sellable: boolean;
+    readonly shipBy?: string;
   };
   readonly fulfillment?: "physical" | "digital";
   readonly variants?: {
@@ -104,6 +105,7 @@ export interface AgentCatalogProductEntry {
       readonly availability: {
         readonly status: PublicCatalogProduct["availability"]["status"];
         readonly sellable: boolean;
+        readonly shipBy?: string;
       };
       readonly fulfillment: "physical" | "digital";
     }[];

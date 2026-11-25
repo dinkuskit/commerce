@@ -13,6 +13,13 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+/** An amount times a rate in millionths, to the cent, halves up. */
+const cents = (amount: bigint, rate: bigint) => (amount * rate + 500_000n) / 1_000_000n;
+
+/** The address a tax answer names: the delivery address, or billing for a checkout with nothing to ship, one field a line. */
+export const taxAddress = (a?: { line1: string; line2?: string; city: string; region?: string; postalCode: string; country: string }) =>
+  a && [a.line1, a.line2, a.city, a.region, a.postalCode, a.country].join("\n");
+
 function usd(minor: bigint): Money {
   return normalizeMoney({ currency: "USD", minor: minor.toString() });
 }
@@ -49,12 +56,15 @@ const NOT_SHIPPED: TrustedShippingConfiguration = { configurationId: "not-shippe
  * Prices the frozen lines with the add-ons' answers (commerce-addons-door-20261124). Each answer names every line with
  * the item, unit price and quantity it saw: a different one means the cart or catalog changed since the store asked,
  * so the store asks again (an amount off worked out for ten mugs never lands on one). Amounts off are whole cents and never take a line below zero.
+ * Tax comes after discounts (dinkuskit/tax ledger shared-addons-door): a tax answer must have priced `to`, the checkout's
+ * own address, and each line's tax is its net amount times its rate, rounded to the cent once, halves up (round-per-line-half-up).
  */
 export async function composeCheckoutPricing(
   lines: readonly CheckoutLine[],
   execution: CheckoutExecution,
   shipsGoods = true,
   addons: readonly AddonAnswer[] = [],
+  to?: string,
 ): Promise<CheckoutPricingSnapshot> {
   const pricing = execution.pricing;
   if (!pricing) fail("Pricing composition is unavailable");
@@ -62,21 +72,25 @@ export async function composeCheckoutPricing(
   // configuration is neither read nor needed (checkout-digital-only-no-shipping-20261031, issue 302).
   const config = shipsGoods ? await pricing.resolveShippingConfiguration() : NOT_SHIPPED;
   if (!config) fail("Pricing configuration unavailable");
+  const taxed = addons.some(answer => answer.to !== undefined);
   const pricingLines: CheckoutPricingLine[] = lines.map((line, index) => {
     const unit = normalizeMoney(line.unitPrice);
     const subtotal = parseMinorUnits(unit.minor) * BigInt(line.quantity);
-    let off = 0n;
+    let off = 0n, rate = 0n;
     for (const answer of addons) {
       const said = answer.lines[index];
-      if (answer.lines.length !== lines.length || said.item !== line.catalogItemId || said.price !== unit.minor || said.qty !== line.quantity) {
+      if (answer.lines.length !== lines.length || said.item !== line.catalogItemId || said.price !== unit.minor || said.qty !== line.quantity ||
+        answer.to !== undefined && answer.to !== to) {
         fail("Checkout contention; retry");
       }
       off += parseMinorUnits(said.off);
+      rate += BigInt(said.rate ?? 0);
     }
     if (off > subtotal) fail("Invalid add-on answer");
     return {
       catalogItemId: line.catalogItemId, quantity: line.quantity, unitPrice: unit,
       lineSubtotal: usd(subtotal), discount: usd(off), netAmount: usd(subtotal - off),
+      ...(taxed ? { tax: usd(cents(subtotal - off, rate)) } : {}),
     };
   });
   const sum = (key: "lineSubtotal" | "discount") => usd(pricingLines.reduce((total, line) => total + BigInt(line[key].minor), 0n));
@@ -86,6 +100,8 @@ export async function composeCheckoutPricing(
   const free = addons.some(answer => answer.ship);
   let charge = shippingCharge(config, BigInt(netMerchandise.minor));
   if (free) charge = usd(0n);
+  const tax = pricingLines.reduce((total, line) => total + BigInt(line.tax?.minor ?? 0),
+    cents(BigInt(charge.minor), addons.reduce((total, answer) => total + BigInt(answer.shipRate ?? 0), 0n)));
   return Object.freeze({
     schema: CHECKOUT_PRICING_SCHEMA,
     merchandiseSubtotal,
@@ -97,7 +113,8 @@ export async function composeCheckoutPricing(
       mode: free || config.freeOver && charge.minor === "0" ? "free" : config.mode,
       charge,
     },
-    finalTotal: usd(BigInt(netMerchandise.minor) + BigInt(charge.minor)),
+    ...(taxed ? { tax: usd(tax) } : {}),
+    finalTotal: usd(BigInt(netMerchandise.minor) + BigInt(charge.minor) + tax),
     lines: Object.freeze(pricingLines),
   });
 }

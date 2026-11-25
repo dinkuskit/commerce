@@ -191,7 +191,7 @@ test('Add options makes a variant for each comma-separated value, and each varia
   // Each variant's card saves its price, stock status and SKU; a SKU another product has is refused first.
   const medium = tee.variantProduct.members[1];
   const priceForm = forms(added).find((form) => form.submit.action_id.startsWith('variant:["price"') && JSON.parse(form.submit.action_id.slice(8))[2] === medium.catalogItemId);
-  assert.deepEqual(priceForm.fields.map((f) => f.action_id), ['regular', 'sale', 'sku', 'stockStatus']);
+  assert.deepEqual(priceForm.fields.map((f) => f.action_id), ['regular', 'sale', 'sku', 'stockStatus', 'shipBy']);
   const priced = await commerceAdmin({ input: { type: 'form_submit', action_id: priceForm.submit.action_id, values: { regular: '22', sale: '', sku: 'tee-m', stockStatus: 'in-stock' } } }, ctx);
   assert.deepEqual(priced.toast, { type: 'success', message: 'Changes saved' });
   const after = await product(store, id);

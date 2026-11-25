@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-11-24T14:55:02+00:00",
-    "domain": "Coupons as a plugin: the add-ons door",
-    "started_at": "2026-11-24T14:54:56+00:00",
+    "confirmed_at": "2026-11-25T04:36:46+00:00",
+    "domain": "EmDash 1.6 compatibility",
+    "started_at": "2026-11-25T04:36:46+00:00",
     "status": "confirmed",
-    "summary": "The owner confirmed shared understanding of each coupons-rework decision on its card on 24 Nov 2026 and said to build it."
+    "summary": "The owner approved starting the EmDash 1.6 upgrade on 25 Nov 2026: version PRs with proof; each deploy and journeys run still needs the owner's go."
   },
   "decisions": [
     {
@@ -13117,6 +13117,20 @@
           "review_source_identity": null,
           "to": "needs_reverification",
           "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
+        },
+        {
+          "at": "2026-11-25T01:45:40+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 100 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "needs_reverification",
+          "implementation_ref": "docs/implementation/installed-checkout-services.md",
+          "note": "Daily budget raised from 100 to 300 (the owner approved on 24 Nov 2026).",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "superseded",
+          "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
         }
       ],
       "id": "installed-checkout-readiness-bounds-001",
@@ -13139,9 +13153,9 @@
       "review_ref": null,
       "review_result": null,
       "review_source_identity": null,
-      "status": "needs_reverification",
-      "superseded_by": null,
-      "updated_at": "2026-10-22T13:25:04+00:00",
+      "status": "superseded",
+      "superseded_by": "checkout-readiness-budget-300-20261124",
+      "updated_at": "2026-11-25T01:45:40+00:00",
       "verification_ref": ".grilltrack/proof/installed-checkout-readiness-20261012/PROOF.md"
     },
     {
@@ -17898,6 +17912,200 @@
       "superseded_by": null,
       "updated_at": "2026-11-25T01:11:22+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. The public order lookup reads only the orders whose emailKey matches the typed email. The pass over orders without an emailKey and the full read when the index query fails are removed; no store kept an order before the index.",
+      "context_ref": null,
+      "created_at": "2026-11-25T01:45:40+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Order lookup reads only indexed orders",
+      "history": [
+        {
+          "at": "2026-11-25T01:45:40+00:00",
+          "choice": "No. The public order lookup reads only the orders whose emailKey matches the typed email. The pass over orders without an emailKey and the full read when the index query fails are removed; no store kept an order before the index.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-lookup-indexed-only-20261124",
+      "implementation_ref": null,
+      "question": "Should the order lookup keep reading orders saved before the emailKey index?",
+      "rationale": "The owner approved on 24 Nov 2026.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T01:45:40+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 300 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+      "context_ref": null,
+      "created_at": "2026-11-25T01:45:40+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Checkout readiness budget",
+      "history": [
+        {
+          "at": "2026-11-25T01:45:40+00:00",
+          "choice": "Use one versioned non-secret record in the original installation checkout_readiness collection and a fixed key. Supported and unavailable results expire at most 15 minutes after the refresh attempt. Admit at most 300 attempts per rolling 24 hours and at least 60 seconds between attempts, retaining the budget across owner configuration/key revision changes. Claim with durable CAS before upstream I/O, charge failures/crashes, and publish supported only within a 30-second lease using the exact acquired revision and unchanged owner generation. Invalid/expired/contended state fails closed; no credentials are cached. Genuine checkout start/status/reconciliation bypass this advisory cache and budget. This mitigates one installed store; it does not allocate or guarantee shared Stripe platform quota.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "checkout-readiness-budget-300-20261124",
+      "implementation_ref": null,
+      "question": "How many readiness attempts may one store make in a rolling 24 hours?",
+      "rationale": "The owner approved on 24 Nov 2026.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T01:45:40+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "Like WooCommerce, the Commerce panel has an Expected ship date box under Stock status, shown only when On backorder is picked: one per variant, or one for a product with no options. It is stored with the variant's stock status (shipBy, YYYY-MM-DD) and the public catalog sends it on that variant's availability while it is on backorder. The storefront and the feeds treat a date that has passed, or one more than a year ahead (Google's limit), as no date. Google rows send it as availability_date, and a backorder row with no date stays out of Google, as WooCommerce refuses to sync one; Meta is unchanged. The product page shows the picked variant's date beside its backorder text and stops once it passes. Once a date has passed, the box's label in the panel says so and asks for a new one. There is no email, dashboard box or other notice.",
+      "context_ref": "https://github.com/dinkuskit/commerce/issues/308",
+      "created_at": "2026-11-25T03:59:08+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "feeds-facts-consistency-060"
+      ],
+      "domain": "Google backorder ship date",
+      "history": [
+        {
+          "at": "2026-11-25T03:59:08+00:00",
+          "choice": "Like WooCommerce, the Commerce panel has an Expected ship date box under Stock status, shown only when On backorder is picked: one per variant, or one for a product with no options. It is stored with the variant's stock status (shipBy, YYYY-MM-DD) and the public catalog sends it on that variant's availability while it is on backorder. The storefront and the feeds treat a date that has passed, or one more than a year ahead (Google's limit), as no date. Google rows send it as availability_date, and a backorder row with no date stays out of Google, as WooCommerce refuses to sync one; Meta is unchanged. The product page shows the picked variant's date beside its backorder text and stops once it passes. Once a date has passed, the box's label in the panel says so and asks for a new one. There is no email, dashboard box or other notice.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "google-backorder-ship-date-20261124",
+      "implementation_ref": null,
+      "question": "How does a backorder variant get the availability_date Google requires, and what happens when that date passes?",
+      "rationale": "The owner approved on 24 Nov 2026. The owner rejected leaving backorder items out of Google with no way to date them, picked one date per variant because options are not always sizes, and chose the option with the fewest Commerce bytes over an owner email or a dashboard box. Built on main 6a87a05 with its own trims (the Registry build drops a stock refusal it can never reach, and the store settings notes are shorter), it adds 125 B to the Registry backend: 130,406 of 131,072.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T03:59:08+00:00",
+      "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:7806454",
+      "candidate_refs": [],
+      "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+      "context_ref": null,
+      "created_at": "2026-11-25T04:36:46+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "EmDash 1.6 compatibility",
+      "history": [
+        {
+          "at": "2026-11-25T04:36:46+00:00",
+          "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-25T04:36:56+00:00",
+          "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-25T04:36:56+00:00",
+          "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+          "from": "implemented",
+          "implementation_ref": "git:0a5ed30",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-1-6-compatibility-20261125",
+      "implementation_ref": "git:0a5ed30",
+      "question": "Which EmDash release do Commerce development, tests and the runtime peer pin before v1 launch?",
+      "rationale": "The owner approved the 1.6 upgrade on 25 Nov 2026. 1.6 adds no plugin capabilities, hooks or index renames; its only database step adds users.last_login_at.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T04:36:56+00:00",
+      "verification_ref": "file:docs/implementation/emdash-1-6-compatibility.md;cmd:bin/verify-commerce full"
     }
   ],
   "last_activation": {
@@ -17934,5 +18142,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-25T01:11:22+00:00"
+  "updated_at": "2026-11-25T04:36:56+00:00"
 }

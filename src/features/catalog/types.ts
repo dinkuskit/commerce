@@ -189,6 +189,8 @@ export interface CatalogManualAvailabilityRecord {
   recordId: string;
   catalogItemId: string;
   status: CatalogManualAvailabilityStatus;
+  /** Expected ship date (YYYY-MM-DD) of a variant on backorder; Google's availability_date. */
+  shipBy?: string;
 }
 
 export type CatalogManualAvailabilityStorage = Pick<
