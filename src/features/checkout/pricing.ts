@@ -1,14 +1,10 @@
-import { normalizeCouponCode, validateCouponQuoteSnapshot } from "../coupons/index.js";
-import type { CouponQuote, CouponQuoteSnapshot } from "../coupons/index.js";
-import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { normalizeMoney, parseMinorUnits, type Money } from "../catalog/kernel/index.js";
 import type {
-  CartLine,
+  AddonAnswer,
   CheckoutLine,
   CheckoutPricingLine,
   CheckoutPricingSnapshot,
   CheckoutExecution,
-  CouponUnavailable,
   TrustedShippingConfiguration,
 } from "./types.js";
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
@@ -17,27 +13,8 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
-const REASONS: readonly string[] = ["not-found", "not-started", "expired", "minimum-not-met", "no-qualifying-items"];
-
-/** Thrown before anything is frozen; the guest error map reads `coupon`. */
-export class CouponUnavailableError extends Error {
-  constructor(readonly coupon: CouponUnavailable) {
-    super(`Coupon unavailable: ${coupon.reason}`);
-  }
-}
-
-function couponUnavailable(reason: CouponUnavailable["reason"], minimum?: Money): never {
-  let shown: Money | undefined;
-  try { shown = minimum && normalizeMoney(minimum); } catch { /* a malformed minimum is left out */ }
-  throw new CouponUnavailableError({ reason, ...(shown?.currency === "USD" ? { minimum: shown } : {}) });
-}
-
 function usd(minor: bigint): Money {
   return normalizeMoney({ currency: "USD", minor: minor.toString() });
-}
-
-function sameMoney(a: Money, b: Money): boolean {
-  return a.currency === b.currency && a.minor === b.minor;
 }
 
 function shippingCharge(config: TrustedShippingConfiguration, goods: bigint): Money {
@@ -62,124 +39,54 @@ function shippingCharge(config: TrustedShippingConfiguration, goods: bigint): Mo
   return over && goods >= BigInt(over.minor) ? usd(0n) : amount;
 }
 
-function quoteSnapshot(quote: CouponQuote, total: Money): CouponQuoteSnapshot {
-  return Object.freeze({
-    ...structuredClone(quote),
-    merchandiseTotal: normalizeMoney({
-      currency: "USD",
-      minor: quote.lines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n).toString(),
-    }),
-    overallPayableTotal: total,
-  });
-}
+/**
+ * What a checkout with nothing to ship records as its shipping: free, under an id no store's
+ * configuration uses, so the frozen pricing keeps its shape for Payments.
+ */
+const NOT_SHIPPED: TrustedShippingConfiguration = { configurationId: "not-shipped", revision: 1, mode: "free" };
 
-function couponLine(quote: CouponQuote | undefined, line: CheckoutLine, index: number): CheckoutPricingLine {
-  const found = quote?.lines[index];
-  const subtotal = normalizeMoney(found?.lineSubtotal ?? {
-    currency: "USD",
-    minor: (parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity)).toString(),
-  });
-  const discount = normalizeMoney(found?.discount ?? { currency: "USD", minor: "0" });
-  return {
-    catalogItemId: line.catalogItemId,
-    quantity: line.quantity,
-    unitPrice: normalizeMoney(line.unitPrice),
-    lineSubtotal: subtotal,
-    discount,
-    netAmount: usd(BigInt(subtotal.minor) - BigInt(discount.minor)),
-  };
-}
-
-export interface ComposedPricing {
-  snapshot: CheckoutPricingSnapshot;
-  couponId?: string;
-  couponCode?: string;
-}
-
-interface QuotedCoupon { couponId: string; code: string; quote: CouponQuote }
-
-/** Prices the cart with a coupon through the entry's coupon port; without a port the code is unavailable. */
-async function quoteCoupon(
-  code: string,
-  lines: readonly CheckoutLine[],
-  cart: readonly CartLine[],
-  attemptId: string,
-  execution: CheckoutExecution,
-): Promise<QuotedCoupon> {
-  const pricing = execution.pricing!;
-  let quoted;
-  try {
-    quoted = await pricing.coupons?.quote(code, {
-      catalog: execution.catalog.catalog,
-      prices: execution.catalog.prices,
-    }, {
-      quoteId: `${attemptId}:coupon`,
-      lines: cart.map((line) => ({ productId: line.catalogItemId, quantity: line.quantity })),
-      now: new Date((execution.now?.() ?? Date.now() / 1000) * 1000).toISOString(),
-    });
-  } catch (error) {
-    // An unknown, expired or unreachable coupon never prices the cart; the
-    // shopper removes it to accept the full price (issue 34).
-    if (error instanceof Error && /Product un/.test(error.message)) throw error;
-    // The coupon owner answers INVALID_INPUT in process and NOT_APPLICABLE
-    // over HTTP when a coupon does not apply, with a reason when it has one.
-    const { code, notApplicable } = (error ?? {}) as {
-      code?: unknown; notApplicable?: { reason?: unknown; minimum?: Money };
-    };
-    if (code !== "INVALID_INPUT" && code !== "NOT_APPLICABLE") couponUnavailable("try-later");
-    const reason = notApplicable?.reason;
-    if (typeof reason !== "string" || !REASONS.includes(reason)) couponUnavailable("not-applicable");
-    couponUnavailable(reason as CouponUnavailable["reason"],
-      reason === "minimum-not-met" ? notApplicable!.minimum : undefined);
-  }
-  if (pricing.coupons && !quoted) couponUnavailable("not-found");
-  if (!quoted) couponUnavailable("try-later");
-  const quote = quoted.quote;
-  if (quote.lines.length !== lines.length || quote.lines.some((line, index) =>
-    line.productId !== lines[index].catalogItemId ||
-    line.quantity !== lines[index].quantity ||
-    !sameMoney(line.unitPrice, lines[index].unitPrice))) {
-    fail("Catalog changed during pricing");
-  }
-  // A quote whose arithmetic disagrees with Commerce's own prices never
-  // freezes, wherever it was evaluated.
-  try {
-    validateCouponQuoteSnapshot(quoteSnapshot(quote, quote.payableMerchandiseTotal), "coupon quote");
-  } catch { couponUnavailable("try-later"); }
-  return { couponId: quoted.couponId, code, quote };
-}
-
+/**
+ * Prices the frozen lines with the add-ons' answers (commerce-addons-door-20261124). Each answer names every line with
+ * the item, unit price and quantity it saw: a different one means the cart or catalog changed since the store asked,
+ * so the store asks again (an amount off worked out for ten mugs never lands on one). Amounts off are whole cents and never take a line below zero.
+ */
 export async function composeCheckoutPricing(
   lines: readonly CheckoutLine[],
-  cart: readonly CartLine[],
-  attemptId: string,
-  couponCode: string | undefined,
   execution: CheckoutExecution,
   shipsGoods = true,
-): Promise<ComposedPricing> {
+  addons: readonly AddonAnswer[] = [],
+): Promise<CheckoutPricingSnapshot> {
   const pricing = execution.pricing;
   if (!pricing) fail("Pricing composition is unavailable");
-  const config = await pricing.resolveShippingConfiguration();
-  if (!config) fail(couponCode ? "Shipping configuration unavailable" : "Pricing configuration unavailable");
-  let quoted: QuotedCoupon | undefined;
-  if (couponCode !== undefined) {
-    const code = REGISTRY_BUILD ? couponUnavailable("try-later") : normalizeCouponCode(couponCode);
-    // The Registry build binds no coupon port (GrillTrack registry-coupons-unhooked-v1),
-    // so it refuses the code here exactly as the native entry does without a
-    // port, and Rolldown leaves the quote path and its validation out.
-    quoted = REGISTRY_BUILD ? couponUnavailable("try-later") : await quoteCoupon(code, lines, cart, attemptId, execution);
-  }
-  const quote = quoted?.quote;
-  const pricingLines = lines.map((line, index) => couponLine(quote, line, index));
-  const merchandiseSubtotal = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.lineSubtotal.minor), 0n));
-  const couponDiscount = usd(pricingLines.reduce((sum, line) => sum + BigInt(line.discount.minor), 0n));
+  // A checkout with nothing physical ships nothing: it pays no shipping, and the store's shipping
+  // configuration is neither read nor needed (checkout-digital-only-no-shipping-20261031, issue 302).
+  const config = shipsGoods ? await pricing.resolveShippingConfiguration() : NOT_SHIPPED;
+  if (!config) fail("Pricing configuration unavailable");
+  const pricingLines: CheckoutPricingLine[] = lines.map((line, index) => {
+    const unit = normalizeMoney(line.unitPrice);
+    const subtotal = parseMinorUnits(unit.minor) * BigInt(line.quantity);
+    let off = 0n;
+    for (const answer of addons) {
+      const said = answer.lines[index];
+      if (answer.lines.length !== lines.length || said.item !== line.catalogItemId || said.price !== unit.minor || said.qty !== line.quantity) {
+        fail("Checkout contention; retry");
+      }
+      off += parseMinorUnits(said.off);
+    }
+    if (off > subtotal) fail("Invalid add-on answer");
+    return {
+      catalogItemId: line.catalogItemId, quantity: line.quantity, unitPrice: unit,
+      lineSubtotal: usd(subtotal), discount: usd(off), netAmount: usd(subtotal - off),
+    };
+  });
+  const sum = (key: "lineSubtotal" | "discount") => usd(pricingLines.reduce((total, line) => total + BigInt(line[key].minor), 0n));
+  const merchandiseSubtotal = sum("lineSubtotal");
+  const couponDiscount = sum("discount");
   const netMerchandise = usd(BigInt(merchandiseSubtotal.minor) - BigInt(couponDiscount.minor));
-  // A checkout with nothing physical ships nothing, so it pays no shipping
-  // (checkout-digital-only-no-shipping-20261031); the configuration is still checked.
-  const owed = shippingCharge(config, BigInt(netMerchandise.minor));
-  const charge = shipsGoods ? owed : usd(0n);
-  const finalTotal = usd(BigInt(netMerchandise.minor) + BigInt(charge.minor));
-  const snapshot: CheckoutPricingSnapshot = Object.freeze({
+  const free = addons.some(answer => answer.ship);
+  let charge = shippingCharge(config, BigInt(netMerchandise.minor));
+  if (free) charge = usd(0n);
+  return Object.freeze({
     schema: CHECKOUT_PRICING_SCHEMA,
     merchandiseSubtotal,
     couponDiscount,
@@ -187,15 +94,10 @@ export async function composeCheckoutPricing(
     shipping: {
       configurationId: config.configurationId.trim(),
       revision: config.revision,
-      mode: !shipsGoods || config.freeOver && charge.minor === "0" ? "free" : config.mode,
+      mode: free || config.freeOver && charge.minor === "0" ? "free" : config.mode,
       charge,
     },
-    finalTotal,
+    finalTotal: usd(BigInt(netMerchandise.minor) + BigInt(charge.minor)),
     lines: Object.freeze(pricingLines),
-    ...(!REGISTRY_BUILD && quoted ? { coupon: { code: quoted.code, quote: quoteSnapshot(quoted.quote, finalTotal) } } : {}),
   });
-  if (!REGISTRY_BUILD && quoted && BigInt(snapshot.couponDiscount.minor) !== BigInt(quoted.quote.discount.minor)) {
-    fail("Coupon allocation is not conserved");
-  }
-  return { snapshot, ...(!REGISTRY_BUILD && quoted ? { couponId: quoted.couponId, couponCode: quoted.code } : {}) };
 }

@@ -1,12 +1,11 @@
 import { REGISTRY_BUILD } from "../../shared/registry-build.js";
-import type { CouponUnavailable, GuestCheckoutErrorCode } from "./types.js";
+import type { GuestCheckoutErrorCode } from "./types.js";
 
 const STATUS_BY_CODE: Record<GuestCheckoutErrorCode, number> = {
   CAPABILITY_DENIED: 403,
   CHECKOUT_FROZEN: 409,
   CHECKOUT_NOT_FOUND: 404,
   CONTENTION: 409,
-  COUPON_UNAVAILABLE: 409,
   INVALID_CART: 400,
   INVENTORY_UNAVAILABLE: 409,
   ORIGIN_DENIED: 403,
@@ -21,7 +20,6 @@ const MESSAGE_BY_CODE: Record<GuestCheckoutErrorCode, string> = {
   CHECKOUT_FROZEN: "Active checkout cart is frozen",
   CHECKOUT_NOT_FOUND: "Checkout not found",
   CONTENTION: "Checkout contention; retry",
-  COUPON_UNAVAILABLE: "Coupon can't be used; remove it to check out at full price",
   INVALID_CART: "Invalid cart",
   INVENTORY_UNAVAILABLE: "Inventory unavailable",
   ORIGIN_DENIED: "Guest checkout origin is missing or invalid",
@@ -34,8 +32,6 @@ const MESSAGE_BY_CODE: Record<GuestCheckoutErrorCode, string> = {
 export class GuestCheckoutError extends Error {
   readonly code: GuestCheckoutErrorCode;
   readonly status: number;
-  /** Set only with COUPON_UNAVAILABLE. */
-  coupon?: CouponUnavailable;
 
   constructor(code: GuestCheckoutErrorCode, message = MESSAGE_BY_CODE[code], options?: ErrorOptions) {
     super(message, options);

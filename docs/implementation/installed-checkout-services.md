@@ -73,6 +73,11 @@ explicit paired `pricing/v1` support. Shipping is free or flat with a positive
 configuration revision; flat requires canonical nonnegative USD `amount`,
 and a supplied free amount must be zero. The shipping reader supplies this
 trusted snapshot to the existing evaluator. Browser amounts are never read.
+A checkout with nothing physical in it does not read the shipping
+configuration at all: its frozen pricing records shipping as
+`{ "configurationId": "not-shipped", "revision": 1, "mode": "free" }` with a
+zero charge, so a host that ships nothing may answer the shipping reader with
+`null`. One physical item brings the configuration, and its checks, back.
 
 The configuration is scoped by the runtime plugin ID. Native and Registry
 IDs have different settings namespaces; no automatic migration or foreign

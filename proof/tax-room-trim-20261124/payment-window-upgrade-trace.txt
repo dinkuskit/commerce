@@ -1,0 +1,15 @@
+✔ a checkout open on the payment page when the store upgrades is paid on this build, with its saved settings kept (409.639927ms)
+ℹ release attempt 8ce5f153-b357-4349-9726-59aceda7e9ad phase=paying window={"minSeconds":1800,"maxSeconds":1860} session=1830s
+ℹ after upgrade: state=paid order=order:8ce5f153-b357-4349-9726-59aceda7e9ad total=250
+ℹ new checkout on the kept settings: state=pending
+✔ an attempt frozen with the old exact 1800-second window still settles after the upgrade, and a longer session is refused (306.959339ms)
+ℹ 1830-second session for the old attempt: state=UNAVAILABLE
+ℹ exact 1800-second session: state=paid order=order:56483d3c-0cb5-4291-8051-3187324a291d
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1249.49832

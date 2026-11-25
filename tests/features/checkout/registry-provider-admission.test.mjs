@@ -12,12 +12,9 @@ const SITE = "https://shop.example.test";
 const shipping = { configurationId: "ship", revision: 1, mode: "free" };
 const isolatedShip = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
 
-test('a saved retired isolated Ship TEST profile keeps checkout and drops Ship; any other form is refused', () => {
-  for (const extra of [{}, { mode: 'test' }]) {
-    const admitted = admitRegistryCheckoutConfig(legacyStripe({ ...extra, ship: isolatedShip }), SITE);
-    assert.equal(admitted.ship, undefined);
-    assert.deepEqual(admitted, admitRegistryCheckoutConfig(legacyStripe(extra), SITE));
-  }
+test('the retired isolated Ship TEST profile, and any form of it, is refused', () => {
+  // No store holds it: a store connected again through DinkusKit.com gets the real Ship service.
+  for (const extra of [{}, { mode: 'test' }]) rejects(legacyStripe({ ...extra, ship: isolatedShip }));
   for (const change of [{ origin: 'https://other.test' }, { audience: 'production' }, { recipient: 'other' }, { generation: '' }, { mode: 'live' }]) rejects(legacyStripe({ ship: { ...isolatedShip, ...change } }));
   for (const key of ['recipient','generation','mode']) rejects(legacyStripe({ ship: { origin: 'https://ship.dinkuskit.com', audience: 'dinkus-ship', [key]: isolatedShip[key] } }));
   rejects(legacyStripe({ ship: { origin: isolatedShip.origin, audience: isolatedShip.audience, recipient: 'ship-sandbox', generation: 'g' } }));
@@ -101,8 +98,8 @@ test("optional mode test or live is admitted for both providers and reaches the 
   assert.equal(trustedPaymentsHostConfig(admitRegistryCheckoutConfig(legacyStripe(), SITE), SITE).mode, undefined);
 });
 
-test("an optional hosted coupon or Ship service needs exactly an https origin and an audience", () => {
-  for (const name of ["coupons", "ship"]) {
+test("the optional hosted Ship service needs exactly an https origin and an audience; the retired coupon service is refused", () => {
+  for (const name of ["ship"]) {
     const service = { origin: `https://${name}.example.test`, audience: `${name}-aud` };
     const config = changes => legacyStripe({ [name]: { ...service, ...changes } });
     assert.deepEqual(admitRegistryCheckoutConfig(config(), SITE)[name], service);
@@ -115,11 +112,14 @@ test("an optional hosted coupon or Ship service needs exactly an https origin an
     rejects(config({ origin: `https://${name}.example.test/v1` }));
     rejects(config({ audience: "" }));
   }
+  // Coupons are a plugin in the store now (commerce-addons-door-20261124), so no setting names a coupon service.
   const coupons = { origin: "https://coupons.example.test", audience: "coupons-aud" };
   const ship = { origin: "https://ship.example.test", audience: "ship-aud" };
-  const both = admitRegistryCheckoutConfig(legacyStripe({ mode: "live", coupons, ship }), SITE);
-  assert.deepEqual([both.mode, both.coupons, both.ship], ["live", coupons, ship]);
-  rejects(legacyStripe({ coupons, ship, shipping2: ship }));
+  rejects(legacyStripe({ coupons }));
+  rejects(legacyStripe({ mode: "live", coupons, ship }));
+  const live = admitRegistryCheckoutConfig(legacyStripe({ mode: "live", ship }), SITE);
+  assert.deepEqual([live.mode, live.ship], ["live", ship]);
+  rejects(legacyStripe({ ship, shipping2: ship }));
 });
 
 

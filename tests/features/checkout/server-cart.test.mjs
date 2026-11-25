@@ -445,7 +445,8 @@ test("a cart keeps the store's attributes within their limits, and checkout free
 
   // Anything outside the limits refuses the whole write, and nothing is saved.
   const many = Object.fromEntries(Array.from({ length: 11 }, (_, i) => ["k" + i, "v"]));
-  const heavy = Object.fromEntries(Array.from({ length: 8 }, (_, i) => ["k" + i, "x".repeat(255)]));
+  // Four full values are just over the 1,000 bytes a bag may take as JSON.
+  const heavy = Object.fromEntries(Array.from({ length: 4 }, (_, i) => ["k" + i, "x".repeat(255)]));
   const refused = [many, heavy, { dinkus_site: "x" }, { _hidden: "x" }, { Account: "x" }, { "a b": "x" }, { ["k".repeat(41)]: "x" }, { "": "x" },
     { count: 3 }, { nested: { a: "b" } }, { note: "x".repeat(256) }, ["account_id"], "account_id", null];
   for (const bad of refused) {

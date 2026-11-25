@@ -99,6 +99,7 @@ export {
   GUEST_CHECKOUT_CART_ROUTE,
   GUEST_CHECKOUT_STATUS_ROUTE,
   GUEST_CHECKOUT_READINESS_ROUTE,
+  CHECKOUT_ADDONS_ROUTE,
 } from "../route-ids.js";
 export {
   CHECKOUT_FEATURE_ID,
@@ -125,6 +126,8 @@ export type {
   CheckoutAttempt,
   CheckoutPricingLine,
   CheckoutPricingSnapshot,
+  AddonAnswer,
+  AddonUse,
   CheckoutPaymentAssociation,
   CheckoutPaymentAssociationPort,
   CheckoutExecution,
@@ -176,8 +179,6 @@ export {
 } from "../registry-services.js";
 export type { RegistryCheckoutConfig } from "../registry-services.js";
 export { cancelConnect, cancelKey, connectedTo, connectState, refreshCheckoutSettings, startConnect, storeProof, type ConnectState } from "../registry-connect.js";
-export { createHostedCouponPort } from "../registry-coupons.js";
-export type { HostedCouponServiceConfig } from "../registry-coupons.js";
 export {
   admitRegistryCheckoutConfig,
   trustedPaymentsHostConfig,

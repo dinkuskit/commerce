@@ -3,8 +3,6 @@ import { DIRECT } from "./registry-guards.js";
 import { CHECKOUT_PRICING_SCHEMA } from "./types.js";
 import { isCurrentPaymentRequest } from "./payment-window.js";
 import { normalizeMoney } from "../catalog/kernel/index.js";
-import { normalizeCouponCode } from "../coupons/index.js";
-import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import type {
   CheckoutPaymentPort,
   CurrentPaymentRequest,
@@ -36,11 +34,6 @@ export interface TrustedTestPaymentsConfig {
   credentialResolver: () => Promise<string>;
   fetch: ScopedPaymentFetch;
   pricingSchema?: typeof CHECKOUT_PRICING_SCHEMA;
-  /**
-   * Coupon quote validation for entries that bind coupon support. Without
-   * it, a request carrying a coupon is malformed.
-   */
-  validateCouponQuoteSnapshot?: (value: unknown, name: string) => void;
 }
 
 interface PaymentBinding {
@@ -109,14 +102,13 @@ function outcome(value: unknown): PaymentOutcome {
   return result;
 }
 
-function assertPricing(
-  request: PaymentRequest,
-  validateCouponQuoteSnapshot: TrustedTestPaymentsConfig["validateCouponQuoteSnapshot"],
-): void {
+/** Add-ons' amounts off arrive per line (commerce-addons-door-20261124); the sums must still agree. */
+function assertPricing(request: PaymentRequest): void {
   const pricing = request.pricing;
   if (!pricing) return;
   const minor = (value: unknown) => BigInt(normalizeMoney(value).minor);
-  const check = (valid: boolean) => { if (!valid) throw new Error("Malformed payment pricing"); };
+  // Any failed check lands in the catch below, which names it.
+  const check = (valid: boolean) => { if (!valid) throw 0; };
   try {
     const subtotal = minor(pricing.merchandiseSubtotal);
     const discount = minor(pricing.couponDiscount);
@@ -137,35 +129,17 @@ function assertPricing(
         minor(line.unitPrice) === minor(original.unitPrice));
       const lineSubtotal = minor(line.lineSubtotal), lineDiscount = minor(line.discount), lineNet = minor(line.netAmount);
       check(lineSubtotal === minor(original.unitPrice) * BigInt(original.quantity) &&
-        lineSubtotal - lineDiscount === lineNet);
+        lineSubtotal - lineDiscount === lineNet && lineDiscount >= 0n && lineNet >= 0n);
       sumSubtotal += lineSubtotal; sumDiscount += lineDiscount; sumNet += lineNet;
     }
     check(sumSubtotal === subtotal && sumDiscount === discount && sumNet === net);
-    if (pricing.coupon) {
-      // The Registry services bind no validator, so a coupon there is malformed before any check.
-      if (REGISTRY_BUILD || !validateCouponQuoteSnapshot) throw new Error("Coupon validation unavailable");
-      check(normalizeCouponCode(pricing.coupon.code) === pricing.coupon.code);
-      const quote = pricing.coupon.quote;
-      validateCouponQuoteSnapshot(quote, "payment pricing coupon");
-      check(minor(quote.merchandiseTotal) === subtotal && minor(quote.discount) === discount &&
-        minor(quote.payableMerchandiseTotal) === net && minor(quote.overallPayableTotal) === final &&
-        quote.lines.length === pricing.lines.length);
-      for (const [index, line] of quote.lines.entries()) {
-        const priced = pricing.lines[index];
-        check(line.productId === priced.catalogItemId && line.quantity === priced.quantity &&
-          minor(line.unitPrice) === minor(priced.unitPrice) && minor(line.lineSubtotal) === minor(priced.lineSubtotal) &&
-          minor(line.discount) === minor(priced.discount));
-      }
-    } else check(discount === 0n);
   } catch {
     throw new Error("Malformed payment pricing");
   }
 }
-
 function exactRequest(
   request: PaymentRequest,
   bindingRef: string,
-  validateCouponQuoteSnapshot?: TrustedTestPaymentsConfig["validateCouponQuoteSnapshot"],
 ): PaymentRequest {
   const copy = structuredClone(request);
   if (copy.bindingRef !== request.bindingRef ||
@@ -178,7 +152,7 @@ function exactRequest(
   if (copy.pricing && (copy.pricing.schema !== CHECKOUT_PRICING_SCHEMA || !isCurrentPaymentRequest(copy))) {
     throw new Error("Unsupported payment pricing request");
   }
-  assertPricing(copy, validateCouponQuoteSnapshot);
+  assertPricing(copy);
   return copy;
 }
 
@@ -195,7 +169,7 @@ function normalizedConfig(
   if (mode !== "test" && mode !== "live") invalid("mode must be test or live");
   const stripe = input.providerId === "stripe";
   if (stripe ? input.authorizeNetMerchantId !== undefined : input.stripeAccountId !== undefined) {
-    invalid(stripe ? "stripe must not set authorizeNetMerchantId" : "authorize_net must not set stripeAccountId");
+    invalid(`${input.providerId} must not set ${stripe ? "authorizeNetMerchantId" : "stripeAccountId"}`);
   }
   return Object.freeze({
     paymentsOrigin: bareOrigin(input.paymentsOrigin, "paymentsOrigin"),
@@ -212,7 +186,6 @@ function normalizedConfig(
     credentialResolver: input.credentialResolver,
     fetch: input.fetch,
     pricingSchema: input.pricingSchema,
-    ...(REGISTRY_BUILD ? {} : { validateCouponQuoteSnapshot: input.validateCouponQuoteSnapshot }),
   });
 }
 
@@ -296,7 +269,7 @@ function createPaymentPort(
   }
 
   async function requestOutcome(request: PaymentRequest, create: boolean): Promise<PaymentOutcome> {
-    const exact = exactRequest(request, config.bindingRef, REGISTRY_BUILD ? undefined : config.validateCouponQuoteSnapshot);
+    const exact = exactRequest(request, config.bindingRef);
     if (exact.pricing && config.pricingSchema !== CHECKOUT_PRICING_SCHEMA) {
       throw new Error("Payments pricing schema unsupported");
     }

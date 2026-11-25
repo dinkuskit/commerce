@@ -1,0 +1,5 @@
+# 1. Commerce's saved checkout setting names the retired isolated Ship TEST profile (0.3.0-beta.0 to beta.2)
+checkout page: ["Checkout Back to cart The cart is unavailable right now."]
+
+# 2. The same store connected normally (no isolated Ship profile)
+checkout page: the checkout form (Contact & Delivery, Pay button) is shown

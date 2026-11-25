@@ -57,8 +57,7 @@ function line(v: unknown): boolean {
 }
 function pricing(v: unknown): boolean {
   return isRecord(v) && money(v.merchandiseSubtotal) && money(v.couponDiscount) && money(v.netMerchandise) &&
-    money(v.finalTotal) && isRecord(v.shipping) && money(v.shipping.charge) &&
-    optional(v.coupon, c => isRecord(c) && text(c.code));
+    money(v.finalTotal) && isRecord(v.shipping) && money(v.shipping.charge);
 }
 /**
  * Everything Orders shows or packs from must be well formed before a copy is kept for good.

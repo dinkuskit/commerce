@@ -1,12 +1,13 @@
 # Isolated Ship TEST cohort v1
 
 > **Retired before 0.3.0** (GrillTrack `isolated-ship-cohort-retired-001`). Commerce no longer
-> lists `ship.sm0ky.dev` in its allowed hosts. A store still saving the exact isolated shape below keeps
-> checkout but has no Ship (Orders sends nothing and shows no label link, so pinned orders go nowhere);
-> any other form of it is refused. Every store uses Ship at `ship.dinkuskit.com`. The owner admission
-> actions (`ship.admit`, `cohort.disable`), sandbox pass claims and recipient headers are removed; an
-> order that already carries a pin is never sent to Ship and never completed from it. The text below
-> is kept as the record of what 0.3.0-beta.0 to beta.2 accepted.
+> lists `ship.sm0ky.dev` in its allowed hosts. Since the Tax trim (24 Nov 2026) the exact isolated shape
+> below is refused like any other form of it, so checkout stays closed until the store connects again
+> through DinkusKit.com; no store held it. An order that carries a pin is still never sent to Ship and
+> never completed from it. Every
+> store uses Ship at `ship.dinkuskit.com`. The owner admission actions (`ship.admit`, `cohort.disable`),
+> sandbox pass claims and recipient headers are removed. The text below is kept as the record of what
+> 0.3.0-beta.0 to beta.2 accepted.
 
 This optional profile admits one explicitly approved fresh TEST order to a separate recipient. It preserves existing paid orders and production Ship configuration. Source support does not activate a deployment, grant, key, payment or order.
 

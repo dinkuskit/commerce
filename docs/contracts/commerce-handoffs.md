@@ -2,8 +2,9 @@
 
 Commerce is three areas: **Catalog** (products, prices, whether an item can be
 sold), **Checkout** (cart, totals, payment handoff) and **Orders** (paid orders,
-packing, shipping). Payments, Inventory and Coupons are hosted services
-outside the plugin. This document names the three messages that cross between
+packing, shipping). Payments and Inventory are hosted services outside the
+plugin; Coupons is its own plugin in the store, whose answer reaches Checkout
+through the add-ons door. This document names the three messages that cross between
 the areas, so each area can change on its own and the same messages survive
 however Commerce is packaged later.
 
@@ -74,7 +75,10 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   `live` only when the store's checkout setting and Payments' binding were
   both live then and when the payment was looked up; `test`, or no `mode` on
   orders paid before it was recorded, is a test order: no money moved, Orders
-  shows it as TEST and Ship must not buy postage for it.
+  shows it as TEST and Ship must not buy postage for it. `addons` names each
+  add-on whose answer priced the order (`from`, its `ref`, and the `codes` the
+  shopper used; GrillTrack `commerce-addons-door-20261124`); orders priced by
+  no add-on have none.
 - **Receiving:** Orders first checks the whole record; a contact snapshot
   must be exactly what Checkout freezes, judged by Checkout-contact's own
   rules (`isCheckoutContactSnapshot`), so nothing Checkout would refuse is

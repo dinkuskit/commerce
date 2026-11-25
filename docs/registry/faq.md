@@ -4,7 +4,7 @@ No. Commerce provides product, checkout and order behavior; your site provides t
 
 **Do I need every DinkusKit plugin?**
 
-[Payments](https://dinkuskit.com/docs/reference/payments) supplies the payment connection. [Ship](https://dinkuskit.com/docs/reference/ship) is optional for testing labels; orders can be marked shipped by hand. Inventory and coupon checkout are not available in the current Registry build.
+[Payments](https://dinkuskit.com/docs/reference/payments) supplies the payment connection. [Ship](https://dinkuskit.com/docs/reference/ship) is optional for testing labels; orders can be marked shipped by hand. Managed inventory is not available in the current Registry build; discount codes come from the DinkusKit Coupons plugin.
 
 **Does a test order mean my store can accept live payments?**
 

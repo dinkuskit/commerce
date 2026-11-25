@@ -14,7 +14,6 @@ import { syntheticDelivery } from '../features/checkout/fixture.mjs';
 import {
   authorizeNetConfiguration,
   configuration,
-  COUPONS,
   COUPONS_ORIGIN,
   couponCredential,
   credential,
@@ -28,12 +27,8 @@ import {
   connectionFor,
   TRADE_URL,
   TRANSPORT_ORIGIN,
-  verifyCouponPass,
   verifyShipPass,
 } from '../features/checkout/registry-runtime.mjs';
-import { couponCollection } from '../features/checkout/pricing-fixture.mjs';
-import { couponServiceFake } from '../features/checkout/coupon-service-fake.mjs';
-import { createCouponAdmin } from '../../dist/features/coupons/index.js';
 import {
   BACKGROUND_CHECK_REGISTER_BUDGET_MS,
   COMMERCE_CHECKOUT_WAKES_TASK,
@@ -136,82 +131,106 @@ test('EmDash 1.5 SDK storage preserves checkout records across runtime restart w
   assert.equal(replay.checkout.order.total.minor, '250');
   assert.equal((await restarted.collections.catalog_items.get('hat')).sku, 'HAT');
   const persistedAttempt = (await restarted.cartRecords())[0].attempts[0];
-  assert.equal(persistedAttempt.coupon, undefined);
   assert.equal(persistedAttempt.order.orderId, replay.checkout.order.orderId);
   assert.equal(persistedAttempt.order.total.minor, replay.checkout.order.total.minor);
 });
 
-test('compiled Registry runtime ships no coupon storage or evaluator, and without a coupon service rejects coupon codes before attempts or Payments', async t => {
+// commerce-addons-door-20261124: Commerce carries no coupon code; the store's own code hands add-on answers to one private door.
+const ADDONS = 'checkout/addons/start';
+const answer = (off = '100', extra = {}) => ({ from: 'dinkus-coupons', ref: 'hold-1', codes: ['SAVE10'], lines: [{ item: 'hat', price: '250', qty: 1, off }], ...extra });
+
+test('compiled Registry runtime ships no coupon code, and the public start refuses coupon codes and add-on answers', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
   assert.equal(Object.hasOwn(state.artifact.storage, 'coupons'), false);
   assert.equal(state.artifact.admin.pages.some(page => page.path === '/coupons'), false);
-  // Coupon evaluation and redemption code is absent from the shipped backend, not merely unreachable.
   const backend = await readFile(new URL('../../dist/sandbox/plugin.mjs', import.meta.url), 'utf8');
-  for (const marker of ['browser totals are not authority', 'coupon CAS contention did not settle', 'normalized-code uniqueness']) {
+  for (const marker of ['COUPON_UNAVAILABLE', 'couponCode', '/quotes', '/redemptions', 'coupons:checkout']) {
     assert.equal(backend.includes(marker), false, marker);
   }
   const prepared = await state.invoke(PREPARE);
   const token = prepared.capability.capability;
-  for (const couponCode of ['SAVE10', 'save10']) {
-    const rejected = await state.invoke(START, { ...basket, couponCode }, token);
-    assert.equal(rejected.ok, false);
-    assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
-    assert.equal(rejected.error.reason, 'try-later');
+  for (const extra of [{ couponCode: 'SAVE10' }, { addons: [answer()] }]) {
+    const rejected = await state.invoke(START, { ...basket, ...extra }, token);
+    assert.equal(rejected.error.code, 'INVALID_CART');
   }
   assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
   assert.equal(state.requests.length, 0);
-  // The same capability still checks out without a coupon.
-  const plain = await state.invoke(START, basket, token);
-  assert.equal(plain.ok, true);
-  assert.equal(state.requests.length, 1);
-  assert.equal(state.requests[0].pricing.couponDiscount.minor, '0');
-  assert.equal(Object.hasOwn(state.requests[0].pricing, 'coupon'), false);
-  assertOnlyBackgroundCheck(state);
+  // A setting that still names the retired coupon service is refused like any unknown key.
+  await state.settings.set('installedCheckout', JSON.stringify({ ...configuration(), coupons: { origin: 'https://coupons.example', audience: 'x' } }));
+  assert.equal((await state.invoke(START, basket, token)).ok, false);
+  assert.equal(state.requests.length, 0);
 });
 
-async function hostedCoupons() {
-  const coupons = couponCollection();
-  await createCouponAdmin(coupons).create({
-    code: 'SAVE10', globalCap: 5,
-    rule: { ruleId: 'synthetic-rule', version: 1, discount: { kind: 'fixed', amount: { currency: 'USD', minor: '100' } },
-      appliesTo: 'all-merchandise', selectedProductIds: [], includeSaleItems: true,
-      minimumEligibleMerchandise: { currency: 'USD', minor: '0' },
-      startsAt: '2026-01-01T00:00:00Z', endsAt: '2100-01-01T00:00:00Z', timeZone: 'UTC' },
-  });
-  const service = couponServiceFake(coupons, { siteId: 'synthetic-site', origin: COUPONS_ORIGIN, authorize: verifyCouponPass });
-  return { service };
-}
-
-test('coupons are unhooked from the Registry build: a coupon code is refused before any call, even with the coupon service in the settings', async () => {
-  const hosted = await hostedCoupons();
-  // The hosted coupon port and its pass are absent from the shipped backend, not merely unused.
-  const backend = await readFile(new URL('../../dist/sandbox/plugin.mjs', import.meta.url), 'utf8');
-  for (const marker of ['/quotes', '/redemptions', 'coupons:checkout']) assert.equal(backend.includes(marker), false, marker);
-  for (const couponPass of [await couponCredential(), null, await credential(), await couponCredential({ site_id: 'another-site' })]) {
-    const state = await runtimeFixture({ config: { ...configuration(), coupons: COUPONS },
-      couponPass, couponService: hosted.service.fetch });
-    try {
-      const prepared = await state.invoke(PREPARE);
-      const capability = prepared.capability.capability;
-      for (const couponCode of ['SAVE10', 'save10']) {
-        const rejected = await state.invoke(START, { ...basket, couponCode }, capability);
-        assert.equal(rejected.error.code, 'COUPON_UNAVAILABLE');
-        assert.equal(rejected.error.reason, 'try-later');
-      }
-      assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
-      assert.equal(state.counts.coupons, 0);
-      assert.equal(state.requests.length, 0);
-      // The same capability still checks out without a coupon, trading only for Payments.
-      const plain = await state.invoke(START, basket, capability);
-      assert.equal(plain.ok, true);
-      assert.equal(state.requests.length, 1);
-      assert.deepEqual(state.trades.map(trade => trade.body.scope), ['payments:checkout']);
-    } finally {
-      await state.close();
-    }
+test('the add-ons door prices checkout with an add-on answer, and the order and its paid news keep the codes', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const prepared = await state.invoke(PREPARE);
+  const token = prepared.capability.capability;
+  const { lines, contact } = basket;
+  assert.equal((await state.invoke('checkout/guest/cart', { lines, version: null }, token)).ok, true);
+  // A price the add-on did not see (the catalog changed since the store asked) is contention: the store asks again.
+  assert.equal((await state.invoke(ADDONS, { contact, addons: [{ ...answer(), lines: [{ item: 'hat', price: '249', qty: 1, off: '100' }] }] }, token)).error.code, 'CONTENTION');
+  // So is a quantity it did not see (the cart changed since the store asked): an amount off for two hats never lands on one.
+  assert.equal((await state.invoke(ADDONS, { contact, addons: [{ ...answer(), lines: [{ item: 'hat', price: '250', qty: 2, off: '100' }] }] }, token)).error.code, 'CONTENTION');
+  // Nothing malformed or out of bounds prices a checkout.
+  for (const bad of [[], [answer('251')], [answer('1.5')], [answer('100', { ship: 'half' })], [answer('100', { tax: '1' })],
+    [answer('100', { codes: Array(7).fill('X') })], [answer('100', { from: '' })], [answer(), answer()], [answer('100', { lines: [] })],
+    [answer('100', { lines: [{ item: 'hat', price: '250', qty: 1, off: '1', extra: 1 }] })], [answer('1000000001')], null,
+    // Only printable ASCII, and at most 1,500 characters of from, ref and codes in all, so the paid news fits the courier's 8 KB.
+    [answer('100', { ref: 'h\u00e9' })], [answer('100', { codes: ['SAVE 10'] })],
+    ['a', 'b', 'c', 'd'].map(from => answer('0', { from, ref: 'r'.repeat(200), codes: Array(6).fill('C'.repeat(64)) }))]) {
+    assert.notEqual((await state.invoke(ADDONS, { contact, addons: bad }, token)).ok, true, JSON.stringify(bad));
   }
-  assert.equal(hosted.service.calls.length, 0);
+  assert.deepEqual((await state.cartRecords()).flatMap(record => record.attempts), []);
+  assert.equal(state.requests.length, 0);
+
+  const started = await state.invoke(ADDONS, { contact, addons: [answer('100')] }, token);
+  assert.equal(started.ok, true, JSON.stringify(started));
+  assert.equal(state.requests.length, 1);
+  const pricing = state.requests[0].pricing;
+  assert.deepEqual([pricing.merchandiseSubtotal.minor, pricing.couponDiscount.minor, pricing.netMerchandise.minor, pricing.finalTotal.minor], ['250', '100', '150', '150']);
+  assert.deepEqual(pricing.lines.map(line => [line.discount.minor, line.netAmount.minor]), [['100', '150']]);
+  assert.equal(Object.hasOwn(pricing, 'coupon'), false);
+  assert.equal(state.requests[0].total.minor, '150');
+  assert.equal(started.checkout.pricing.couponDiscount.minor, '100');
+  // While its payment is open, the checkout keeps its add-ons: other codes are refused, the same codes replay it.
+  assert.equal((await state.invoke(ADDONS, { contact, addons: [{ ...answer(), codes: ['OTHER'] }] }, token)).error.code, 'CHECKOUT_FROZEN');
+  assert.equal((await state.invoke(START, { contact }, token)).error.code, 'CHECKOUT_FROZEN');
+  assert.equal((await state.invoke(ADDONS, { contact, addons: [answer('100')] }, token)).checkout.attemptId, started.checkout.attemptId);
+  state.setPaid();
+  const paid = await state.invoke(STATUS, {}, token);
+  assert.equal(paid.checkout.state, 'paid');
+  assert.equal(paid.checkout.order.total.minor, '150');
+  const order = (await state.cartRecords())[0].attempts[0].order;
+  assert.deepEqual(order.addons, [{ from: 'dinkus-coupons', ref: 'hold-1', codes: ['SAVE10'] }]);
+  const kept = await state.collections.orders.get(order.orderId);
+  assert.deepEqual(kept.paidOrder.addons, order.addons);
+});
+
+test('an add-on answer can make shipping free, and a fully discounted order is paid without Payments', async t => {
+  const state = await runtimeFixture({ config: configuration({ configurationId: 'shipping-synthetic', revision: 1, mode: 'flat', amount: { currency: 'USD', minor: '500' } }) });
+  t.after(() => state.close());
+  await shipHat(state);
+  const contact = physicalBasket.contact;
+  const shopper = async () => {
+    const token = (await state.invoke(PREPARE)).capability.capability;
+    assert.equal((await state.invoke('checkout/guest/cart', { lines: basket.lines, version: null }, token)).ok, true);
+    return token;
+  };
+  const shipped = await state.invoke(ADDONS, { contact, addons: [answer('0', { ship: 'free', codes: ['FREESHIP'] })] }, await shopper());
+  assert.equal(shipped.ok, true, JSON.stringify(shipped));
+  assert.deepEqual(state.requests[0].pricing.shipping, { configurationId: 'shipping-synthetic', revision: 1, mode: 'free', charge: { currency: 'USD', minor: '0' } });
+  assert.equal(state.requests[0].total.minor, '250');
+  // Two add-ons' amounts add up on the line; all of it off and free shipping leaves nothing to pay.
+  const token = await shopper();
+  const free = await state.invoke(ADDONS, { contact, addons: [answer('200', { ship: 'free' }), { from: 'another-addon', lines: [{ item: 'hat', price: '250', qty: 1, off: '50' }] }] }, token);
+  assert.equal(free.checkout.state, 'paid', JSON.stringify(free));
+  assert.equal(free.checkout.order.total.minor, '0');
+  assert.equal(state.requests.length, 1);
+  // More than the line costs, together, is refused.
+  const over = await state.invoke(ADDONS, { contact, addons: [answer('200'), { from: 'another-addon', lines: [{ item: 'hat', price: '250', qty: 1, off: '51' }] }] }, await shopper());
+  assert.equal(over.ok, false);
 });
 
 const zeroPrice = { recordKind: 'catalog-price', recordId: 'hat', catalogItemId: 'hat', regular: { currency: 'USD', minor: '0' } };
@@ -262,7 +281,8 @@ test('compiled digital-only basket pays no flat shipping and Payments gets no sh
   assert.equal(result.checkout.total.minor, '250');
   assert.equal(state.requests.length, 1);
   assert.equal(state.requests[0].total.minor, '250');
-  assert.deepEqual(state.requests[0].pricing.shipping, { configurationId: 'ship-flat', revision: 2, mode: 'free',
+  // The store's flat configuration is not read for it (issue 302), so its id is not the one frozen.
+  assert.deepEqual(state.requests[0].pricing.shipping, { configurationId: 'not-shipped', revision: 1, mode: 'free',
     charge: { currency: 'USD', minor: '0' } });
 });
 
@@ -323,8 +343,9 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   const catalog = await publicList();
   // Add price and stock makes a physical product, which carries its one-member variant group.
   const { variants } = catalog.products[0] ?? {};
-  assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment]), [[id, 'physical']]);
-  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], page: 'page-public-hat', variants };
+  assert.deepEqual(variants?.members.map(member => [member.catalogItemId, member.fulfillment, member.onSale]), [[id, 'physical', true]]);
+  // A 3.00 sale under 4.00 regular is flagged on the product and its member (commerce-sale-flag-20261124).
+  const expectedProduct = { id, name: 'Public Hat', sku: 'PUBLIC-HAT', price: { currency: 'USD', minor: '300' }, onSale: true, availability: { status: 'in-stock', sellable: true, listable: true }, image: null, gallery: [], feedChannels: [], page: 'page-public-hat', variants };
   assert.deepEqual(catalog, { products: [expectedProduct] });
   assert.deepEqual(await publicItem(), expectedProduct);
   assert.deepEqual(await publicItem('pageId=page-public-hat'), expectedProduct, 'the storefront finds a product by its page');
@@ -358,7 +379,6 @@ test('public installed catalog reads an admin-created product, feed eligibility 
   assert.deepEqual(replay.checkout.order, receipt);
   const stored = (await state.cartRecords())[0];
   assert.equal(stored.attempts.length, 1);
-  assert.equal(stored.attempts[0].coupon, undefined);
   assert.equal(state.requests.length, 1);
   assert.equal(typeof paid.checkout.order.receiptId, 'string');
   assert.deepEqual(stored.attempts[0].order.total, state.requests[0].total);
@@ -634,25 +654,16 @@ test('malformed or copied configuration is rejected before encrypted credential/
 });
 
 
-test('a store still saving the retired isolated Ship TEST profile keeps checkout and sends nothing to Ship', async () => {
+test('a store still saving the retired isolated Ship TEST profile has checkout refused and calls nothing', async () => {
+  // No store holds this profile any more; connecting again through DinkusKit.com writes the real Ship service.
   const retired = { origin: 'https://ship.sm0ky.dev', audience: 'dinkus-ship-sandbox', recipient: 'ship-sandbox', generation: 'fixture-generation-1', mode: 'test' };
   const ship = shipStandIn();
   const state = await runtimeFixture({ config: { ...configuration(), ship: retired }, shipPass: await credential(), shipService: ship.service });
   try {
-    assert.equal((await start(state)).result.checkout.state, 'pending');
-    await physicalShipOrder(state);
-    const [{ id }] = (await state.collections.orders.query()).items;
-    const pinned = await state.collections.orders.get(id);
-    await state.collections.orders.put(id, { ...pinned, shipPin: { recipient: retired.recipient, generation: retired.generation, site: 'site', enabled: true } });
-    const page = JSON.stringify(await shipAdmin(state, { type: 'page_load', page: '/orders' }));
-    assert.match(page, /\(TEST\)/);
-    const detail = JSON.stringify(await shipAdmin(state, { type: 'block_action', action_id: 'orders.open:' + encodeURIComponent(id) }));
-    assert.equal(detail.includes('Create shipping label'), false);
+    assert.equal((await state.invoke(PREPARE)).error.code, 'UNAVAILABLE');
     await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
     assert.deepEqual([ship.state.calls, state.counts.ship], [0, 0]);
     assert.ok(state.outbound.every(request => new URL(request.url).hostname !== 'ship.sm0ky.dev'));
-    const kept = await state.collections.orders.get(id);
-    assert.deepEqual([kept.shipPin.enabled, kept.shipVersion, kept.completed], [true, undefined, undefined]);
   } finally { await state.close(); }
 });
 

@@ -18,7 +18,7 @@ const SETTLED_MS = 60_000;
 const KEYS: Record<string, "shippedKey" | "paidKey" | "leftKey"> = { "order.shipped": "shippedKey", "order.paid": "paidKey", "cart.left": "leftKey" };
 
 /** A refusal in the shape of EmDash's route error, its code leading the words, which are all a sandbox passes on. */
-const refuse = (code: string, words: string, status: number) =>
+export const refuse = (code: string, words: string, status: number) =>
   Object.assign(new Error(`${code}: ${words}`), { name: "PluginRouteError", code, status });
 
 /**
@@ -49,8 +49,8 @@ function paid(record: OrderRecord) {
   return fit({ id: `${order.orderId}:paid`, at: record.paidKey!.split(" ")[0]!, data: {
     orderId: order.orderId, number, test, email, name: (shipTo ?? billingOf(record))?.name ?? null, shipTo,
     lines: order.lines.map(line => ({ name: cut(line.name), options: cut(lineOptions(order, line.catalogItemId)), quantity: line.quantity, unitPrice: line.unitPrice })),
-    subtotal: pricing?.merchandiseSubtotal ?? null, discount: pricing?.coupon ? pricing.couponDiscount : null,
-    shipping: pricing?.shipping.charge ?? null, total: order.total, attributes: order.attributes ?? null,
+    subtotal: pricing?.merchandiseSubtotal ?? null, discount: +(pricing?.couponDiscount.minor ?? 0) ? pricing!.couponDiscount : null,
+    shipping: pricing?.shipping.charge ?? null, total: order.total, addons: order.addons ?? [], attributes: order.attributes ?? null,
   } as { lines: unknown[]; moreLines?: number } });
 }
 

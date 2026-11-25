@@ -23,7 +23,7 @@ test('inspection preserves canonical IDs, recorded amounts and independent fulfi
  assert.equal(record.label, 'Order record');
  assert.deepEqual(record.blocks.map(b => b.text).slice(0, 5), ['Order ID: synthetic-order-paid-001', 'Version: 1', 'Receipt: synthetic-receipt-paid-001',
    'Checkout attempt: synthetic-attempt-paid-001', 'Provider payment: synthetic-payment-001']);
- assert.deepEqual(payment(detail), { 'Items subtotal': '$25.00', 'Coupon SYNTHETIC5': '−$5.00', Shipping: '$5.00', 'Order total': '$25.00' });
+ assert.deepEqual(payment(detail), { 'Items subtotal': '$25.00', 'Discount SYNTHETIC5': '−$5.00', Shipping: '$5.00', 'Order total': '$25.00' });
  assert.equal(tables(detail)[1].columns[0].label, 'Paid');
  assert.equal(detail.blocks[1].elements[0].action_id, 'orders.list');
  assert.equal(tables(ordersView(input, zero.orderId))[1].columns[0].label, 'Nothing to pay');

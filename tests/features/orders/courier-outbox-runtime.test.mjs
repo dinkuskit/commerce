@@ -133,8 +133,8 @@ test('order.paid gives each order this version stored, with what the order confi
     // A 60-line order: 50 lines and a count of the rest, so the item stays under the courier's 8 KB.
     // Long names in a script of three bytes a character are the worst case the courier's 8 KB sees.
     await shop.keep('order-7', 'cy@buyer.test', 'Cy Buyer', Array.from({ length: 60 }, (_, i) => ['item-' + i, 'Item ' + i + ' ' + '茶'.repeat(300)]), { paidKey: `${paidAt} order-7` });
-    // Its attributes are as large as a cart allows (just under 2,000 bytes), and are never the part left out.
-    const fullBag = Object.fromEntries(Array.from({ length: 8 }, (_, i) => ['fact_' + i, '茶'.repeat(78)]));
+    // Its attributes are as large as a cart allows (just under 1,000 bytes), and are never the part left out.
+    const fullBag = Object.fromEntries(Array.from({ length: 4 }, (_, i) => ['fact_' + i, '茶'.repeat(78)]));
     await shop.orders.put('order-7', { ...(await shop.orders.get('order-7')), paidOrder: { ...(await shop.orders.get('order-7')).paidOrder, attributes: fullBag } });
 
     const paid = (await shop.since(null, 50, { topic: 'order.paid' })).data;
@@ -142,11 +142,11 @@ test('order.paid gives each order this version stored, with what the order confi
     assert.deepEqual(paid.items[0], { id: 'order-5:paid', at: paidAt, data: {
       orderId: 'order-5', number: 1005, test: true, email: 'ana@buyer.test', name: 'Ana Buyer', shipTo: delivery('Ana Buyer'),
       lines: [{ name: 'Smoky Mountain Tee', options: 'Size: M', quantity: 2, unitPrice: usd('2400') }],
-      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400'),
+      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400'), addons: [],
       attributes: { account_id: 'acct_42', 'credit.sku': 'compute-100' } } });
     const bytes = item => new TextEncoder().encode(JSON.stringify(item)).length;
     const big = paid.items[1].data;
-    assert.ok(bytes(fullBag) > 1900 && bytes(fullBag) <= 2000, String(bytes(fullBag)));
+    assert.ok(bytes(fullBag) > 950 && bytes(fullBag) <= 1000, String(bytes(fullBag)));
     assert.deepEqual(big.attributes, fullBag);
     assert.ok(big.lines.length >= 1 && big.lines.length + big.moreLines === 60, JSON.stringify({ kept: big.lines.length, more: big.moreLines }));
     assert.equal(big.lines[0].name.length, 200, 'a name is cut to 200 characters');
@@ -171,6 +171,42 @@ test('order.paid gives each order this version stored, with what the order confi
   }
 });
 
+test('order.paid names the discount and the add-ons whose answers priced the order, with their codes', async () => {
+  const shop = await store();
+  try {
+    skew = 0;
+    const paidAt = new Date(Date.now() - 120_000).toISOString();
+    const pricing = { schema: 'dinkuskit.commerce.checkout-pricing/v1', merchandiseSubtotal: usd('900'), couponDiscount: usd('300'), netMerchandise: usd('600'),
+      shipping: { configurationId: 'flat', revision: 1, mode: 'free', charge: usd('0') }, finalTotal: usd('600'), lines: [] };
+    const addons = [{ from: 'dinkus-coupons', ref: 'hold-8', codes: ['SAVE3', 'FREESHIP'] }];
+    await shop.keep('order-8', 'ana@buyer.test', 'Ana Buyer', [['mug', 'Mug']], { paidKey: `${paidAt} order-8` });
+    await shop.orders.put('order-8', { ...(await shop.orders.get('order-8')), paidOrder: { ...(await shop.orders.get('order-8')).paidOrder, total: usd('600'), pricing, addons } });
+    // The most the add-ons door keeps (1,500 characters of from, ref and codes, ASCII) beside the longest address Commerce
+    // takes, in a script of three bytes a character: the item still fits the courier's 8 KB with every code and ref.
+    const most = ['a', 'b', 'c', 'd'].map(from => ({ from: from.repeat(64), ref: 'r'.repeat(150), codes: Array(2).fill('C'.repeat(64)) }));
+    assert.ok(JSON.stringify(most.map(a => [a.from, a.ref, a.codes])).length <= 1500);
+    const far = '茶'.repeat(200);
+    // And the most a cart's attributes hold (1,000 bytes): they are kept whole too, and only the item list gives way.
+    const mostFacts = Object.fromEntries(Array.from({ length: 4 }, (_, i) => ['fact_' + i, '茶'.repeat(78)]));
+    const longest = { name: far, line1: far, line2: far, city: far, region: 'DISTRICT OF COLUMBIA', postalCode: far, country: 'US' };
+    await shop.keep('order-9', 'a'.repeat(64) + '@' + 'b'.repeat(185) + '.test', far, [['mug', far]], { paidKey: `${paidAt} order-9` });
+    const nine = (await shop.orders.get('order-9')).paidOrder;
+    await shop.orders.put('order-9', { ...(await shop.orders.get('order-9')), paidOrder: { ...nine, pricing, addons: most, attributes: mostFacts,
+      contactSnapshot: { ...nine.contactSnapshot, contact: { ...nine.contactSnapshot.contact, delivery: longest } } } });
+    const [item, biggest] = (await shop.since(null, 50, { topic: 'order.paid' })).data.items;
+    assert.deepEqual([item.data.subtotal, item.data.discount, item.data.shipping, item.data.total, item.data.addons], [usd('900'), usd('300'), usd('0'), usd('600'), addons]);
+    assert.equal(biggest.id, 'order-9:paid');
+    assert.deepEqual(biggest.data.addons, most);
+    assert.equal(biggest.data.shipTo.line2, far);
+    const size = new TextEncoder().encode(JSON.stringify(biggest)).length;
+    assert.deepEqual(biggest.data.attributes, mostFacts);
+    assert.ok(size <= 7500 && biggest.data.lines.length + (biggest.data.moreLines ?? 0) === 1, String(size));
+    console.log('largest add-ons paid news', JSON.stringify({ bytes: size, addons: most.length, attributeBytes: new TextEncoder().encode(JSON.stringify(mostFacts)).length, lines: biggest.data.lines.length }));
+  } finally {
+    await shop.stop();
+  }
+});
+
 test('anyone signed in, the store\'s administrator included, and a request that is not the courier\'s are refused', async () => {
   const shop = await store();
   try {
@@ -184,6 +220,11 @@ test('anyone signed in, the store\'s administrator included, and a request that 
     assert.match(`${notCourier.error.code} ${notCourier.error.message}`, /BAD_COURIER_REQUEST/);
     // The door is private and says POST, so the courier finds it and nobody outside the store can reach it.
     assert.deepEqual(shop.runtime.getPluginRouteMeta(ID, 'courier/outbox'), { public: false, permission: 'plugins:manage', methods: ['POST'] });
+    // The add-ons door is the same: the store's own code only (commerce-addons-door-20261124).
+    const addons = await shop.call('checkout/addons/start', { addons: [] }, admin);
+    assert.equal(addons.success, false);
+    assert.match(`${addons.error.code} ${addons.error.message}`, /STORE_ONLY/);
+    assert.equal(shop.runtime.getPluginRouteMeta(ID, 'checkout/addons/start').public, false);
   } finally {
     await shop.stop();
   }

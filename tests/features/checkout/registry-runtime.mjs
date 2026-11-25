@@ -229,7 +229,8 @@ export async function runtimeFixture({
       return couponService(url, init);
     }
     counts.transport++;
-    assert.equal(new URL(url).origin, config.paymentsOrigin);
+    // config null leaves the store's saved setting as it was; it then names the default Payments origin.
+    assert.equal(new URL(url).origin, (config ?? configuration()).paymentsOrigin);
     assert.equal(init.redirect, 'manual'); // EmDash enforces redirect policy itself.
     const headers = new Headers(init.headers);
     const bearer = headers.get('authorization')?.replace(/^Bearer /, '');
@@ -240,7 +241,8 @@ export async function runtimeFixture({
     assert.equal(headers.get('x-dinkus-site'), SITE_ID);
     assert.ok(payload.scope.split(' ').includes('payments:checkout'));
     const path = new URL(url).pathname;
-    if (override) return override(path, init);
+    // An override answering undefined leaves that call to the synthetic Payments below.
+    if (override) { const answer = await override(path, init); if (answer !== undefined) return answer; }
     if (path.endsWith('-binding')) {
       // Payments' binding wire response has no ready property.
       const providerId = config?.providerId === 'authorize_net' ? 'authorize_net' : 'stripe';
