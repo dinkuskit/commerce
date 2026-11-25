@@ -174,6 +174,36 @@ test("identifiers come from the catalog public product, including MPN", () => {
   assert.equal(buildMetaCatalogFeed([hostOnly]).includes("Host Brand"), false);
 });
 
+// template-product-category-feeds-20261124: Google and Meta get Google's category id from Shopify's
+// map and the store's own category as product_type; the agent feed gets Shopify's id and name.
+test("a standard category reaches every feed, and Uncategorized sends none", () => {
+  const hats = { taxonomy: "shopify", version: "2026-11", id: "aa-2-17", name: "Hats", googleId: "173" };
+  const row = facts({ content: { ...facts().content, standardCategory: hats, productType: "Winter & hats" } });
+  const google = buildGoogleMerchantFeed([row]);
+  assert.match(google, /<g:google_product_category>173<\/g:google_product_category>/);
+  assert.match(google, /<g:product_type>Winter &amp; hats<\/g:product_type>/);
+  const [header, line] = buildMetaCatalogFeed([row]).trim().split("\n");
+  const columns = header.split(",").map((cell) => cell.replaceAll('"', ""));
+  const cells = line.split(",").map((cell) => cell.replaceAll('"', ""));
+  assert.equal(cells[columns.indexOf("google_product_category")], "173");
+  assert.equal(cells[columns.indexOf("product_type")], "Winter & hats");
+  const agent = buildAgentCatalogFeed({ storeName: "Shop", siteOrigin: "https://shop.example.test", products: [row] });
+  assert.deepEqual(agent.products[0].category, { taxonomy: "shopify", version: "2026-11", id: "aa-2-17", name: "Hats" });
+  assert.match(buildStorefrontLlmsFullTxt({ storeName: "Shop", siteOrigin: "https://shop.example.test", products: [row] }), /- Category: Hats \(Shopify `aa-2-17`\)/);
+
+  // A category Shopify maps to nothing keeps its agent entry and sends Google nothing, never a guess.
+  const seeds = { taxonomy: "shopify", version: "2026-11", id: "fb-4-3-2", name: "Non-Viable Seeds" };
+  const unmapped = facts({ content: { ...facts().content, standardCategory: seeds } });
+  assert.equal(buildGoogleMerchantFeed([unmapped]).includes("google_product_category"), false);
+  assert.equal(buildMetaCatalogFeed([unmapped]).includes("google_product_category"), false);
+
+  // Uncategorized: no category anywhere, and Meta's header is what it was.
+  const plain = facts();
+  assert.equal(/google_product_category|product_type/.test(buildGoogleMerchantFeed([plain])), false);
+  assert.equal(buildMetaCatalogFeed([plain]).split("\n")[0].includes("product_type"), false);
+  assert.equal("category" in buildAgentCatalogFeed({ storeName: "Shop", siteOrigin: "https://shop.example.test", products: [plain] }).products[0], false);
+});
+
 test("feed paging is bounded and deterministic", () => {
   const rows = [facts({ product: product({ id: "one" }) }), facts({ product: product({ id: "two" }) })];
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1 }), { rows: [rows[0]], nextCursor: 1 });
