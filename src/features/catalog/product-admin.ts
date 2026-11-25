@@ -468,9 +468,13 @@ export async function saveCatalogProductPrices(
       return refused(input, MANAGED_STOCK_STATUS_MESSAGE, true, null);
     if (!nextManaged && input.stockStatus !== undefined && !isClerkStockStatus(input.stockStatus))
       return refused(input, CLERK_STOCK_STATUS_MESSAGE, nextManaged, managed ? null : status);
+    const nextStatus = nextManaged ? null : input.stockStatus as ClerkStockStatus | undefined ?? status;
+    // A refused price redraw is a draft, not a read-back of stock. Keep the valid
+    // submitted choice so its conditional ship-date field stays visible.
+    const formStatus = managed ? null : nextStatus;
     const regular = parseClerkDollar(input.regular), sale = parseClerkDollar(input.sale);
     const invalid = invalidMessage(regular, sale);
-    if (invalid) return refused(input, invalid, nextManaged, managed ? null : status);
+    if (invalid) return refused(input, invalid, nextManaged, formStatus);
     const targetRegular = regular.status === "amount" ? regular.amount : null;
     const targetSale = sale.status === "amount" ? sale.amount : null;
     const existing = await resolveCatalogItemPrice(storage.prices, id, snapshot);
@@ -479,16 +483,15 @@ export async function saveCatalogProductPrices(
         catalogFail("COMMAND_CONFLICT", "Price changed; reload before saving");
     }
     if (targetSale && !targetRegular)
-      return refused(input, existing?.regular ? CLERK_END_SALE_MESSAGE : CLERK_SALE_NEEDS_REGULAR_MESSAGE, nextManaged, managed ? null : status);
+      return refused(input, existing?.regular ? CLERK_END_SALE_MESSAGE : CLERK_SALE_NEEDS_REGULAR_MESSAGE, nextManaged, formStatus);
     if (targetSale && targetRegular && !saleIsStrictlyLower(targetSale, targetRegular))
-      return refused(input, CLERK_SALE_LOWER_MESSAGE, nextManaged, managed ? null : status);
+      return refused(input, CLERK_SALE_LOWER_MESSAGE, nextManaged, formStatus);
     if (nextManaged !== managed) {
       if (REGISTRY_BUILD) catalogFail("MANAGE_STOCK_UNAVAILABLE", MANAGE_STOCK_UNAVAILABLE_MESSAGE);
       if (root.itemId === item.itemId) root.stockManagement = setManageStock(management, nextManaged);
       else current.stockManagement = setManageStock(management, nextManaged);
     }
 
-    const nextStatus = nextManaged ? null : input.stockStatus as ClerkStockStatus | undefined ?? status;
     data.items[id] = { ...current, price: targetRegular ? catalogPriceRecord(id, targetRegular, targetSale) : null,
       availability: { ...availability, status: toStoredStockStatus(nextStatus ?? status), ...(input.shipBy === undefined ? {} : { shipBy: input.shipBy }) } };
     if (input.feedChannels !== undefined) data.feedChannels = input.feedChannels;
