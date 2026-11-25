@@ -4,9 +4,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 // Run by scripts/registry-upgrade-proof.mjs with COMMERCE_UPGRADE_SPEC=registry-upgrade-order-lookup.spec.mjs.
-// "old": an earlier release (0.8.0 or later) keeps paid orders, one of them from before the emailKey index, plus
+// "old": an earlier release (0.8.0 or later) keeps paid orders, each with its emailKey, plus
 // its shopper accounts. "bridge": this build on that release's EmDash finds the orders and locks one order number
-// after 5 wrong tries. "new": this build on this checkout's EmDash keeps every row as it was, still finds both
+// after 5 wrong tries. "new": this build on this checkout's EmDash keeps every row as it was, still finds the
 // orders, and the lock made before the EmDash upgrade still holds (commerce-order-lookup-20261122).
 const phase = process.env.COMMERCE_UPGRADE_PHASE;
 const LOOKUP = "/_emdash/api/plugins/dinkus-commerce/orders/lookup";
@@ -25,15 +25,14 @@ const paidOrder = (orderId, email, name) => ({
   contactSnapshot: { schema: "dinkuskit.commerce.checkout-contact/v1", requirePhoneNumber: false, revision: null,
     contact: { email, phone: "555-0100", delivery: delivery(name) } },
 });
-// Rows as 0.8.0's paid-order receiver stores them ({ paidOrder, emailKey, number, revision }), and one order kept
-// before the emailKey index existed, which has no emailKey at all.
+// Rows as 0.8.0's paid-order receiver stores them ({ paidOrder, emailKey, number, revision }). No store kept an
+// order before the emailKey index (the owner approved on 2026-11-24), so lookups read only the email's own orders.
 const orderRows = () => ({
   orders: {
     "ord-pat": { paidOrder: paidOrder("ord-pat", "Pat@Example.test", "Pat Shopper"), emailKey: "pat@example.test", number: 1001, revision: 1 },
     "ord-sam": { paidOrder: paidOrder("ord-sam", "sam@example.test", "Sam Shopper"), emailKey: "sam@example.test", number: 1002, revision: 1 },
-    "ord-legacy": { paidOrder: paidOrder("ord-legacy", "lee@example.test", "Lee Shopper"), number: 1003, revision: 1 },
   },
-  order_numbers: { next: { next: 1004 } },
+  order_numbers: { next: { next: 1003 } },
 });
 const accountRows = () => ({
   customers: { "pat@example.test": { recordKind: "commerce-customer", emailKey: "pat@example.test", email: "Pat@Example.test",
@@ -84,7 +83,7 @@ test("the earlier release keeps paid orders and shopper accounts", async ({ requ
     }
   }
   const snapshot = { from: process.env.COMMERCE_UPGRADE_FROM, orders: rawRows(database, ORDER_COLLECTIONS), accounts: rawRows(database, ACCOUNT_COLLECTIONS) };
-  expect(snapshot.orders).toHaveLength(4);
+  expect(snapshot.orders).toHaveLength(3);
   expect(snapshot.accounts).toHaveLength(3);
   writeFileSync(snapshotFile(), JSON.stringify(snapshot, null, 2));
   // The earlier release has no lookup route.
@@ -106,7 +105,6 @@ test("this build finds the earlier orders on the earlier EmDash and locks a gues
     return answer;
   };
   expect(summary(await ask("#1001", "PAT@example.test"))).toEqual({ ok: true, number: 1001, status: "processing", recipient: "Pat Shopper" });
-  expect(summary(await ask("1003", "lee@example.test"))).toEqual({ ok: true, number: 1003, status: "processing", recipient: "Lee Shopper" });
   expect(summary(await ask("1003", "pat@example.test"))).toEqual({ ok: false, code: "ORDER_NOT_FOUND" });
   // Five wrong emails for Sam's order number lock that number.
   for (const guess of ["a", "b", "c", "d", "e"]) expect(summary(await ask("1002", guess + "@example.test"))).toEqual({ ok: false, code: "ORDER_NOT_FOUND" });
@@ -136,9 +134,9 @@ test("after the EmDash upgrade the orders are unchanged, still found, and the lo
   expect(rawRows(database, ACCOUNT_COLLECTIONS)).toEqual(before.accounts);
   // 2. The lock made on the earlier EmDash still refuses even the right email.
   expect(summary(await ask("1002", "sam@example.test"))).toEqual({ ok: false, code: "LOOKUP_LIMITED" });
-  // 3. The indexed order and the order from before the index are both found; a wrong pair is not.
+  // 3. An order is found by its number and email in any letter case; a wrong pair is not.
   expect(summary(await ask("1001", "pat@example.test"))).toEqual({ ok: true, number: 1001, status: "processing", recipient: "Pat Shopper" });
-  expect(summary(await ask("1003", "LEE@example.test"))).toEqual({ ok: true, number: 1003, status: "processing", recipient: "Lee Shopper" });
+  expect(summary(await ask("1001", "PAT@example.test"))).toEqual({ ok: true, number: 1001, status: "processing", recipient: "Pat Shopper" });
   expect(summary(await ask("1001", "lee@example.test"))).toEqual({ ok: false, code: "ORDER_NOT_FOUND" });
   // 4. The removed account routes answer nothing.
   const oldRoute = await request.get("/_emdash/api/plugins/dinkus-commerce/account/orders");

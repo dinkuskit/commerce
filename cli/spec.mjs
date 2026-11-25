@@ -200,6 +200,11 @@ async function productsList(ctx) {
 const productState = (current) => createHash("sha256").update(JSON.stringify(current)).digest("hex").slice(0, 12);
 const stateWord = (product) => (product.offSale ? "Draft" : "On sale");
 const DOLLARS = /^\d{1,7}(\.\d{1,2})?$/;
+// The weight Commerce accepts: ounces above 0 and up to 2400, at most two decimals.
+const ounces = (value, flag) => {
+	if (!/^\d{1,4}(\.\d{1,2})?$/.test(value) || !(+value > 0 && +value <= 2400)) throw usageError(`${flag} must be ounces above 0 and up to 2400, such as 12.5.`, "invalid_amount");
+	return value;
+};
 const STOCK_STATUSES = ["in-stock", "out-of-stock", "on-backorder"];
 
 async function loadProduct(client, itemId) {
@@ -251,6 +256,7 @@ async function productsCreate(ctx) {
 	const pageSlug = ctx.flags.page === undefined ? slugFlag ?? slug(ctx.flags.name, "--name") : undefined;
 	const f = ctx.flags;
 	for (const [flag, value] of [["--regular", f.regular], ["--sale", f.sale]]) if (value !== undefined && !DOLLARS.test(value)) throw usageError(`${flag} must be dollars such as 19.99.`, "invalid_amount");
+	if (f["weight-oz"] !== undefined) ounces(f["weight-oz"], "--weight-oz");
 	if (f["stock-status"] !== undefined && !["in-stock", "out-of-stock", "on-backorder"].includes(f["stock-status"])) throw usageError("--stock-status must be in-stock, out-of-stock or on-backorder.", "invalid_argument");
 	const body = { op: "create", commandId: f["command-id"], name: f.name, sku: f.sku, entryId: f.page,
 		...(f.digital ? { fulfillment: "digital" } : {}),
@@ -339,7 +345,7 @@ const PRODUCT_CHANGES = {
 	"set-weight": {
 		check: (ctx) => {
 			if ((ctx.flags.oz === undefined) === !ctx.flags.clear) throw usageError("Give --oz <decimal> or --clear.", "missing_flag");
-			return ctx.flags.clear ? "" : ctx.flags.oz;
+			return ctx.flags.clear ? "" : ounces(ctx.flags.oz, "--oz");
 		},
 		request: (product, oz) => ({
 			body: { op: "weight", catalogItemId: product.catalogItemId, weightOz: oz },

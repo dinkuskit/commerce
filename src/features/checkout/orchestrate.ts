@@ -3,7 +3,7 @@ import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { normalizeMoney, parseMinorUnits } from "../catalog/kernel/index.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { createCurrentPaymentRequest, providerSessionWindowIsValid } from "./payment-window.js";
-import { composeCheckoutPricing } from "./pricing.js";
+import { composeCheckoutPricing, taxAddress } from "./pricing.js";
 import { handOffPaidOrder, type PaidOrderHandoffResult } from "./paid-orders.js";
 import { cut, lineOptions } from "../../shared/line-text.js";
 import { CHECKOUT_PRICING_SCHEMA, CHECKOUT_VARIANT_SELECTION_SCHEMA } from "./types.js";
@@ -76,7 +76,8 @@ async function freeze(
       } else stock.requirements.push({ skuId: quoted.stock.skuId, quantity: line.quantity, allowBackorders: quoted.stock.allowBackorders });
     }
   }
-  const pricing = e.pricing ? await composeCheckoutPricing(lines, e, shipsGoods, addons)
+  const { delivery, billing } = contactSnapshot.contact;
+  const pricing = e.pricing ? await composeCheckoutPricing(lines, e, shipsGoods, addons, taxAddress(delivery ?? billing))
     : addons ? fail("Pricing composition is unavailable") : undefined;
   const minor = lines.reduce((sum, line) => sum + parseMinorUnits(line.unitPrice.minor) * BigInt(line.quantity), 0n).toString();
   const total = pricing?.finalTotal ?? normalizeMoney({ currency: "USD", minor });
@@ -101,6 +102,8 @@ async function freeze(
 /** Printable ASCII only, so a character is a byte and the paid news stays under the courier's 8 KB. */
 const TEXT = (value: unknown, max: number) => typeof value === "string" && /^[!-~]+$/.test(value) && value.length <= max;
 const CENTS = (value: unknown) => typeof value === "string" && /^\d{1,10}$/.test(value) && +value <= 1e9;
+/** A tax rate in millionths, under 100%. */
+const RATE = (value: unknown) => typeof value === "string" && /^\d{1,6}$/.test(value);
 
 /**
  * The add-ons' answers, as the store's own code hands them to the add-ons door (commerce-addons-door-20261124):
@@ -110,10 +113,11 @@ const CENTS = (value: unknown) => typeof value === "string" && /^\d{1,10}$/.test
  */
 function addonAnswers(list: AddonAnswer[]): AddonAnswer[] {
   if (!list.length || list.length > 4 || new Set(list.map(answer => answer.from)).size < list.length ||
-    !list.every(answer => /^(codes,)?from,lines(,ref)?(,ship)?$/.test(sortedKeys(answer)) && TEXT(answer.from, 64) &&
-      (answer.ref === undefined || TEXT(answer.ref, 200)) && (answer.ship ?? "free") === "free" &&
+    !list.every(answer => /^(codes,)?from,lines(,ref)?(,ship)?(,shipRate,to)?$/.test(sortedKeys(answer)) && TEXT(answer.from, 64) &&
+      (answer.ref === undefined || TEXT(answer.ref, 200)) && (answer.ship ?? "free") === "free" && (answer.to === undefined || RATE(answer.shipRate)) &&
       (answer.codes ?? []).length <= 6 && (answer.codes ?? []).every(code => TEXT(code, 64)) && answer.lines.length <= 100 &&
-      answer.lines.every(line => sortedKeys(line) === "item,off,price,qty" && TEXT(line.item, 200) && CENTS(line.price) && CENTS(line.off))) ||
+      answer.lines.every(line => sortedKeys(line) === (answer.to === undefined ? "item,off,price,qty" : "item,off,price,qty,rate") &&
+        TEXT(line.item, 200) && CENTS(line.price) && CENTS(line.off) && (answer.to === undefined || RATE(line.rate)))) ||
     JSON.stringify(list.map(answer => [answer.from, answer.ref, answer.codes])).length > 1500) {
     fail("Invalid add-on answer");
   }

@@ -538,13 +538,13 @@ test('readiness: corrupted cache record fails closed without erasing storage or 
   assert.equal(record.corrupted, true);
 });
 
-test('readiness: 100-attempt rolling budget exhaustion fails closed', async t => {
+test('readiness: 300-attempt rolling budget exhaustion fails closed', async t => {
   const state = await runtimeFixture({ config: configuration() });
   t.after(() => state.close());
 
-  // Seed 100 attempts within the last 24h
+  // Seed 300 attempts within the last 24h
   const now = Math.floor(Date.now() / 1000);
-  const attempts = Array.from({ length: 100 }, (_, i) => now - 1000 - i * 60);
+  const attempts = Array.from({ length: 300 }, (_, i) => now - 1000 - i * 60);
   await seedReadiness(state, {
     version: 1,
     generation: 'different-generation',
@@ -559,13 +559,25 @@ test('readiness: 100-attempt rolling budget exhaustion fails closed', async t =>
   assert.equal(state.counts.trades, 0, 'budget exhaustion prevents any trade');
 });
 
+test('readiness: a busy day of 15-minute refreshes plus settings changes stays under the budget', async t => {
+  const state = await runtimeFixture({ config: configuration() });
+  t.after(() => state.close());
+  // 96 refreshes a day at the 15-minute cache, plus 24 more after settings changes: over the old 100, under 300.
+  const now = Math.floor(Date.now() / 1000);
+  const attempts = Array.from({ length: 120 }, (_, i) => now - 1000 - i * 600);
+  await seedReadiness(state, { version: 1, generation: 'different-generation', status: 'unavailable', expiresAt: now - 100,
+    lastAttemptAt: now - 1000, attempts });
+  assert.deepEqual(await state.invokeReadiness(), SUPPORTED_TEST);
+  assert.equal((await readinessRecord(state)).attempts.length, 121);
+});
+
 test('readiness: genuine checkout start and status remain fresh and succeed even when readiness budget is exhausted', async t => {
   const state = await runtimeFixture({ config: configuration() });
   t.after(() => state.close());
 
   // Exhaust readiness budget completely
   const now = Math.floor(Date.now() / 1000);
-  const attempts = Array.from({ length: 100 }, (_, i) => now - 1000 - i * 60);
+  const attempts = Array.from({ length: 300 }, (_, i) => now - 1000 - i * 60);
   await seedReadiness(state, {
     version: 1,
     generation: 'any-gen',
@@ -632,7 +644,7 @@ test('readiness: malformed times, history and schemas cannot extend a cached res
     { ...baseline, expiresAt: baseline.expiresAt + 1 },
     { ...baseline, lastAttemptAt: now + 100, expiresAt: now + 1000, attempts: [now + 100] },
     { ...baseline, attempts: ['not-a-time'] },
-    { ...baseline, attempts: Array(101).fill(baseline.lastAttemptAt) },
+    { ...baseline, attempts: Array(301).fill(baseline.lastAttemptAt) },
     { ...baseline, version: 2 },
   ]) {
     await seedReadiness(state, invalid);
@@ -702,7 +714,7 @@ test('readiness: budget survives restart and does not affect another installed s
     await first.invokeReadiness();
     const old = await readinessRecord(first), at = Math.floor(Date.now() / 1000) - 1000;
     await seedReadiness(first, { ...old, status: 'unavailable', lastAttemptAt: at,
-      expiresAt: at + 900, attempts: Array.from({ length: 100 }, (_, i) => at - i * 60) });
+      expiresAt: at + 900, attempts: Array.from({ length: 300 }, (_, i) => at - i * 60) });
   } finally { await first.close(); }
   const other = await runtimeFixture({ databasePath: join(directory, 'store-b.db') });
   try {
@@ -713,7 +725,7 @@ test('readiness: budget survives restart and does not affect another installed s
   try {
     assert.deepEqual(await reopened.invokeReadiness(), UNAVAILABLE);
     assert.equal(reopened.counts.trades, 0);
-    assert.equal((await readinessRecord(reopened)).attempts.length, 100);
+    assert.equal((await readinessRecord(reopened)).attempts.length, 300);
   } finally { await reopened.close(); }
 });
 
@@ -724,7 +736,7 @@ test('readiness: slow storage cannot serve a result past its TTL', { timeout: 10
   const cached = await readinessRecord(state);
   const expiresAt = Math.floor(Date.now() / 1000) + 2, at = expiresAt - 900;
   await seedReadiness(state, { ...cached, expiresAt, lastAttemptAt: at,
-    attempts: Array.from({ length: 100 }, (_, i) => at - i * 60) });
+    attempts: Array.from({ length: 300 }, (_, i) => at - i * 60) });
   const original = PluginStorageRepository.prototype.getVersioned;
   let release, entered, timeout;
   const gate = new Promise(resolve => { release = resolve; });

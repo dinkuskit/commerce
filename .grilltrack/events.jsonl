@@ -784,7 +784,14 @@
 {"action": "decision_proposed", "at": "2026-11-24T23:55:02+00:00", "data": {"decision_id": "commerce-cart-attributes-order-paid-20261123"}, "event_id": "3f940a9a-bdb9-439b-a63c-cbcc0adcb224"}
 {"action": "decision_locked", "at": "2026-11-25T01:11:14+00:00", "data": {"decision_id": "commerce-cart-attributes-order-paid-20261123"}, "event_id": "e2496182-7025-44d3-9d0e-19a9cc7f0134"}
 {"action": "decision_implemented", "at": "2026-11-25T01:11:22+00:00", "data": {"decision_id": "commerce-cart-attributes-order-paid-20261123"}, "event_id": "effb4874-4981-40d7-a83f-aa9d04db66ec"}
-{"action": "focus_started", "at": "2026-11-25T02:16:08+00:00", "data": {"cadence": "sequential", "domain": "Google backorder ship date"}, "event_id": "bc659326-bf51-4ef6-a8c6-9067ffab5530"}
-{"action": "shared_understanding_confirmed", "at": "2026-11-25T02:16:13+00:00", "data": {"summary": "The owner answered each point on 24 Nov 2026: a WooCommerce-style date box, one date per variant, a passed date counts as none with a note in the panel, and no email, to save bytes."}, "event_id": "3d5494f1-6c25-4193-a8c2-e895ee4d6a44"}
-{"action": "decision_proposed", "at": "2026-11-25T02:16:13+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "8712a0dd-409a-4ed6-baa6-98078d73747b"}
-{"action": "decision_locked", "at": "2026-11-25T02:16:15+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "98fd822d-9dab-46c5-8f5d-eeeb297b2a4d"}
+{"action": "focus_started", "at": "2026-11-25T01:45:39+00:00", "data": {"cadence": "sequential", "domain": "Order lookup reads only indexed orders"}, "event_id": "8b2b133c-e508-414a-90a1-13e7018c968b"}
+{"action": "decision_proposed", "at": "2026-11-25T01:45:40+00:00", "data": {"decision_id": "commerce-lookup-indexed-only-20261124"}, "event_id": "91ed3ed0-c0e5-4722-b159-4d20d387ba88"}
+{"action": "decision_locked", "at": "2026-11-25T01:45:40+00:00", "data": {"decision_id": "commerce-lookup-indexed-only-20261124"}, "event_id": "21e83749-7644-4c48-87a5-6b6cffa937f3"}
+{"action": "focus_started", "at": "2026-11-25T01:45:40+00:00", "data": {"cadence": "sequential", "domain": "Checkout readiness budget"}, "event_id": "e50ab10a-179d-42d0-aad4-68f99979eaa6"}
+{"action": "decision_proposed", "at": "2026-11-25T01:45:40+00:00", "data": {"decision_id": "checkout-readiness-budget-300-20261124"}, "event_id": "507b528d-9fe3-4af0-9174-218c7716574d"}
+{"action": "decision_locked", "at": "2026-11-25T01:45:40+00:00", "data": {"decision_id": "checkout-readiness-budget-300-20261124"}, "event_id": "ef108964-fd6c-43bb-b97c-58224edf3d05"}
+{"action": "decision_superseded", "at": "2026-11-25T01:45:40+00:00", "data": {"affected": [], "decision_id": "installed-checkout-readiness-bounds-001", "replacement_id": "checkout-readiness-budget-300-20261124"}, "event_id": "77061c3c-da87-40f2-8fc5-75f854e6de82"}
+{"action": "focus_started", "at": "2026-11-25T03:59:08+00:00", "data": {"cadence": "sequential", "domain": "Google backorder ship date"}, "event_id": "a4a43ca0-af77-43dd-9f2d-fcbe52464bf9"}
+{"action": "shared_understanding_confirmed", "at": "2026-11-25T03:59:08+00:00", "data": {"summary": "The owner answered each point on 24 Nov 2026: a WooCommerce-style date box, one date per variant, a passed date counts as none with a note in the panel, and no email, to save bytes."}, "event_id": "bc01a712-f953-47e6-b19d-a350fb651a93"}
+{"action": "decision_proposed", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "d999eda3-7f21-4eed-8b3f-080a4fe6558f"}
+{"action": "decision_locked", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "7518611f-f06f-4860-93dc-7eb4976f5cb3"}

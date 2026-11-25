@@ -37,8 +37,16 @@ distinct `from`:
 The order keeps those, and its `order.paid` news must stay under the courier's
 8 KB beside the longest address Commerce takes (about 6.5 KB at most).
 Any other key, or a value out of bounds, leaves checkout unavailable before
-anything is frozen. Sales tax will add its own keys when the Tax plugin is
-built; until then they are refused.
+anything is frozen.
+
+A tax answer (dinkuskit/tax ledger `shared-addons-door`, `tax-picks-rate-commerce-does-math`
+and `round-per-line-half-up`, which the owner approved on 24 Nov 2026) adds:
+
+| Field | Meaning | Bound |
+| --- | --- | --- |
+| `to` | the address it priced: `line1`, `line2`, `city`, `region`, `postalCode`, `country` of the delivery address (billing when nothing ships), as Commerce normalizes them, joined with `\n` (an absent field is empty) | must equal Commerce's own |
+| `shipRate` | shipping's rate in millionths | `0` to `999999`, required with `to` |
+| `lines[].rate` | each line's rate in millionths | `0` to `999999`, required on every line with `to`, refused without it |
 
 ## What Commerce checks
 
@@ -52,15 +60,26 @@ built; until then they are refused.
   amount is judged on `netMerchandise`; an answer with `ship: "free"` makes the
   charge 0 and the mode `free`. The pricing snapshot keeps its v1 shape, so
   Payments needs no new schema.
+- Tax comes after the discounts. A tax answer whose `to` is not the checkout's
+  own address is `CONTENTION`. Each line's tax is `(net × rate + 500,000) ÷
+  1,000,000` in whole cents (once per line, halves up); shipping's is the same
+  on the charge with `shipRate`. Rates from several answers add up before
+  rounding. With a tax answer the snapshot adds `tax` (lines' plus shipping's)
+  and `lines[].tax`, and `finalTotal` is `netMerchandise + shipping + tax`;
+  without one neither key is written, so a Payments service that knows no tax
+  takes it unchanged, and one that does not know tax refuses a taxed checkout
+  rather than charging less.
 - A checkout whose payment is open keeps its add-ons' `from` and `codes` frozen
   with its cart: other codes, or none, answer `CHECKOUT_FROZEN`; the same codes
   replay it (the reference may differ).
 
 ## What is kept
 
-The attempt and its order keep `addons: [{ from, ref, codes }]`. Orders shows
+The attempt and its order keep `addons: [{ from, ref, codes }]`; a tax
+answer's address and rates are not kept (Tax keeps its match level and its
+owner-typed flag in its own records, under its `ref`). Orders shows
 the codes on the discount line ("Discount SAVE10"). The courier's `order.paid`
-news carries `discount` whenever it is above 0, and `addons`, so the Coupons
+news carries `discount` whenever it is above 0, `tax` (null when untaxed), and `addons`, so the Coupons
 plugin turns its hold into a use when the order is paid, including a payment
 that arrives after the checkout ended.
 

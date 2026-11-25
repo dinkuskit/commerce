@@ -529,3 +529,15 @@ test('native choice tracking and price share one commit, preserve dormant status
   assert.equal(choice.manageStock, false);
   assert.equal(choice.regular, '29.00');
 });
+
+test('option and value labels are measured after NFKC, so a short label cannot grow past 160 characters', async () => {
+  const catalog = new Catalog(); await catalog.put('product', base);
+  const before = JSON.stringify([...catalog.records]);
+  // U+FDFA becomes 18 characters under NFKC: 9 of them pass a raw 160 check and store 162.
+  for (const grow of [{ optionLabel: 'ﷺ'.repeat(9) }, { values: [{ ...input.values[0], label: 'ﷺ'.repeat(9) }, input.values[1]] }]) {
+    await assert.rejects(addCatalogVariantOption({ catalog }, { ...input, ...grow }, { createId: () => 'large-item' }), error => error.code === 'INVALID_INPUT');
+  }
+  assert.equal(JSON.stringify([...catalog.records]), before);
+  // A label that is 160 characters once normalized is still accepted.
+  await addCatalogVariantOption({ catalog }, { ...input, optionLabel: 'S'.repeat(160) }, { createId: () => 'large-item' });
+});

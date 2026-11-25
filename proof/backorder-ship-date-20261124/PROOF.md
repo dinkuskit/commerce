@@ -14,8 +14,8 @@ Chromium, driving Commerce's own `productPanel` over a disposable in-memory cata
 | `5-public-catalog-and-google-feed.png` | The public catalog carries `availability.shipBy`; the Google feed sends `g:availability_date`; the same row with a passed date is left out of Google; the Meta CSV is unchanged. |
 | `6-variant-L-has-its-own-date.png` | A product with Size M and L: only L is on backorder and only L has a box and a date. The public catalog gives M none and L its date. |
 
-Registry backend (`npm run build`): 130,281 bytes on main 6a87a05, 130,422 with this change (650 free).
-Merged locally with #309 (Tax) and #310 (audit fixes) as well: 131,010 bytes (62 free).
+Registry backend (`npm run build`): 130,281 bytes on main 6a87a05, 130,422 with this change on 6a87a05 (650 free).
+On main 8ee7ca0 (#309 Tax and #310 audit fixes merged): 131,010 bytes (62 free).
 
 Data from 0.8.0 (stock status with no date, in the product's own data or in an older manual availability row)
 loads, sells and saves as before: `tests/features/catalog/ship-date.test.mjs`, "products saved before ship dates".

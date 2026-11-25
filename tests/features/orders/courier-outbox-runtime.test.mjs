@@ -142,7 +142,7 @@ test('order.paid gives each order this version stored, with what the order confi
     assert.deepEqual(paid.items[0], { id: 'order-5:paid', at: paidAt, data: {
       orderId: 'order-5', number: 1005, test: true, email: 'ana@buyer.test', name: 'Ana Buyer', shipTo: delivery('Ana Buyer'),
       lines: [{ name: 'Smoky Mountain Tee', options: 'Size: M', quantity: 2, unitPrice: usd('2400') }],
-      subtotal: usd('4800'), discount: null, shipping: usd('600'), total: usd('5400'), addons: [],
+      subtotal: usd('4800'), discount: null, shipping: usd('600'), tax: null, total: usd('5400'), addons: [],
       attributes: { account_id: 'acct_42', 'credit.sku': 'compute-100' } } });
     const bytes = item => new TextEncoder().encode(JSON.stringify(item)).length;
     const big = paid.items[1].data;
@@ -171,16 +171,16 @@ test('order.paid gives each order this version stored, with what the order confi
   }
 });
 
-test('order.paid names the discount and the add-ons whose answers priced the order, with their codes', async () => {
+test('order.paid names the discount, the sales tax and the add-ons whose answers priced the order, with their codes', async () => {
   const shop = await store();
   try {
     skew = 0;
     const paidAt = new Date(Date.now() - 120_000).toISOString();
     const pricing = { schema: 'dinkuskit.commerce.checkout-pricing/v1', merchandiseSubtotal: usd('900'), couponDiscount: usd('300'), netMerchandise: usd('600'),
-      shipping: { configurationId: 'flat', revision: 1, mode: 'free', charge: usd('0') }, finalTotal: usd('600'), lines: [] };
+      shipping: { configurationId: 'flat', revision: 1, mode: 'free', charge: usd('0') }, tax: usd('42'), finalTotal: usd('642'), lines: [] };
     const addons = [{ from: 'dinkus-coupons', ref: 'hold-8', codes: ['SAVE3', 'FREESHIP'] }];
     await shop.keep('order-8', 'ana@buyer.test', 'Ana Buyer', [['mug', 'Mug']], { paidKey: `${paidAt} order-8` });
-    await shop.orders.put('order-8', { ...(await shop.orders.get('order-8')), paidOrder: { ...(await shop.orders.get('order-8')).paidOrder, total: usd('600'), pricing, addons } });
+    await shop.orders.put('order-8', { ...(await shop.orders.get('order-8')), paidOrder: { ...(await shop.orders.get('order-8')).paidOrder, total: usd('642'), pricing, addons } });
     // The most the add-ons door keeps (1,500 characters of from, ref and codes, ASCII) beside the longest address Commerce
     // takes, in a script of three bytes a character: the item still fits the courier's 8 KB with every code and ref.
     const most = ['a', 'b', 'c', 'd'].map(from => ({ from: from.repeat(64), ref: 'r'.repeat(150), codes: Array(2).fill('C'.repeat(64)) }));
@@ -194,7 +194,8 @@ test('order.paid names the discount and the add-ons whose answers priced the ord
     await shop.orders.put('order-9', { ...(await shop.orders.get('order-9')), paidOrder: { ...nine, pricing, addons: most, attributes: mostFacts,
       contactSnapshot: { ...nine.contactSnapshot, contact: { ...nine.contactSnapshot.contact, delivery: longest } } } });
     const [item, biggest] = (await shop.since(null, 50, { topic: 'order.paid' })).data.items;
-    assert.deepEqual([item.data.subtotal, item.data.discount, item.data.shipping, item.data.total, item.data.addons], [usd('900'), usd('300'), usd('0'), usd('600'), addons]);
+    // The sales tax rides along for Tax's report (dinkuskit/tax ledger tax-picks-rate-commerce-does-math).
+    assert.deepEqual([item.data.subtotal, item.data.discount, item.data.shipping, item.data.tax, item.data.total, item.data.addons], [usd('900'), usd('300'), usd('0'), usd('42'), usd('642'), addons]);
     // An order from a cart that carried no attributes says so plainly.
     assert.equal(item.data.attributes, null);
     assert.equal(biggest.id, 'order-9:paid');
