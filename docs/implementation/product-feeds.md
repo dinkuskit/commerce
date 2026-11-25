@@ -40,8 +40,12 @@ expected ship date (`backorderShipDate`: still ahead and at most a year away);
 a backorder row without one is left out of the Google feed, which requires it.
 The
 first image URL is the main image; the rest are sent as additional image links
-(up to 10 for Google, 20 for Meta, the channels' limits). `pageProductFeedRows` provides
-a bounded cursor contract for hosts that page their catalog reads. These
+(up to 10 for Google, 20 for Meta, the channels' limits). Both feeds drop characters
+XML 1.0 cannot hold (C0 controls other than tab, line feed and carriage return, U+FFFE,
+U+FFFF and unpaired surrogates), so one product's pasted text cannot make Google reject
+the whole feed. `pageProductFeedRows` provides a bounded cursor contract for hosts that
+page their catalog reads; a `cursor` or `pageSize` that is not a whole number throws a
+`RangeError`, and a whole `pageSize` is held to 1 to 500. These
 builders are host-side exports and are intentionally not imported by
 `src/plugin.ts`, keeping them outside the Registry backend size cap.
 

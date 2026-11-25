@@ -3,12 +3,11 @@
   "created_at": "2026-10-06T13:54:15+00:00",
   "current_focus": {
     "cadence": "sequential",
-    "confirmed": true,
-    "confirmed_at": "2026-11-25T04:36:46+00:00",
-    "domain": "EmDash 1.6 compatibility",
-    "started_at": "2026-11-25T04:36:46+00:00",
-    "status": "confirmed",
-    "summary": "The owner approved starting the EmDash 1.6 upgrade on 25 Nov 2026: version PRs with proof; each deploy and journeys run still needs the owner's go."
+    "confirmed": false,
+    "domain": "Cart key expiry",
+    "started_at": "2026-11-25T05:48:01+00:00",
+    "status": "grilling",
+    "summary": ""
   },
   "decisions": [
     {
@@ -18106,6 +18105,47 @@
       "superseded_by": null,
       "updated_at": "2026-11-25T04:36:56+00:00",
       "verification_ref": "file:docs/implementation/emdash-1-6-compatibility.md;cmd:bin/verify-commerce full"
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where there is no cart (none made yet, or one the background check cleared, paid or mid-checkout), the key's own 30 days from minting apply; the retry date the background check puts on a cleared cart with an unfinished payment never renews the key, and a key minted before keys had a date counts from its createdAt. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
+      "context_ref": null,
+      "created_at": "2026-11-25T05:48:01+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "Cart key expiry",
+      "history": [
+        {
+          "at": "2026-11-25T05:48:01+00:00",
+          "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where there is no cart (none made yet, or one the background check cleared, paid or mid-checkout), the key's own 30 days from minting apply; the retry date the background check puts on a cleared cart with an unfinished payment never renews the key, and a key minted before keys had a date counts from its createdAt. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-cart-key-expiry-20261125",
+      "implementation_ref": null,
+      "question": "Should a guest cart key keep working, and stay stored, after its cart is gone?",
+      "rationale": "The owner approved on 25 Nov 2026. WooCommerce sessions expire and a daily cleanup deletes them.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T05:48:01+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -18142,5 +18182,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-25T04:36:56+00:00"
+  "updated_at": "2026-11-25T05:48:01+00:00"
 }

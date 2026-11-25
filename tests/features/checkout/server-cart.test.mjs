@@ -180,9 +180,10 @@ test("a cart lasts 30 days from its last change, and every change restarts the c
   assert.equal(changed.cart.expiresAt, 1000 + 59 * DAY);
   f.synth.setNow(1000 + 58 * DAY);
   assert.deepEqual((await f.cart()).cart.lines, [{ catalogItemId: "hat", quantity: 2 }]);
+  // Past those 30 days the cart's key goes with it (commerce-cart-key-expiry-20261125); the storefront asks for a new one.
   f.synth.setNow(1000 + 59 * DAY);
-  assert.deepEqual((await f.cart()).cart.lines, []);
-  assert.equal((await f.start()).error.code, "INVALID_CART");
+  assert.equal((await f.cart()).error.code, "CAPABILITY_DENIED");
+  assert.equal((await f.start()).ok, false);
 });
 
 test("an open checkout freezes the cart, a read is the status check, and a paid cart reads empty", async (t) => {
@@ -357,7 +358,7 @@ test("the background check deletes carts past their 30 days and keeps paid order
   await carts.put("old-paid", { attempts: [paidAttempt], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "2000" });
   await carts.put("old-paying", { attempts: [{ attemptId: "p-1", phase: "paying" }], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "2000" });
   await carts.put("fresh", { attempts: [], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "9000" });
-  await clearExpiredCarts(carts, 5000);
+  await clearExpiredCarts(carts, 5000, f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION]);
   assert.equal(await carts.get("old-empty"), null);
   assert.equal(await carts.get("old-released"), null);
   assert.deepEqual(await carts.get("old-paid"), { attempts: [paidAttempt] });
@@ -365,6 +366,101 @@ test("the background check deletes carts past their 30 days and keeps paid order
   // at again a day on, so the next run's page of 100 never stalls behind it.
   assert.deepEqual(await carts.get("old-paying"), { attempts: [{ attemptId: "p-1", phase: "paying" }], cartExpires: String(5000 + DAY) });
   assert.ok((await carts.get("fresh")).cart);
+});
+
+// commerce-cart-key-expiry-20261125: a cart key lives as long as its cart, and the background check deletes it after.
+test("a cart key works only while its cart lives, and before the cart is made only for its own 30 days", async (t) => {
+  const f = await setup(t);
+  const at = (now) => ({ ...f.runtime, host: { ...f.runtime.host, now: () => now } });
+  const keyId = f.headers[GUEST_CAPABILITY_HEADER].split(".")[0];
+  assert.equal((await f.runtime.capabilities.get(keyId)).expiresAt, String(1000 + 30 * DAY));
+  // No cart yet: the key's own 30 days from minting.
+  assert.equal((await f.cart({}, at(1000 + 30 * DAY - 1))).ok, true);
+  assert.equal((await f.cart({}, at(1000 + 30 * DAY))).error.code, "CAPABILITY_DENIED");
+  // A cart made on day 20 lives 30 days from that change, and the key with it, past the key's own date.
+  const made = await f.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, at(1000 + 20 * DAY));
+  assert.equal(made.ok, true, JSON.stringify(made));
+  assert.equal((await f.cart({}, at(1000 + 50 * DAY - 1))).ok, true);
+  assert.equal((await f.cart({}, at(1000 + 50 * DAY))).error.code, "CAPABILITY_DENIED");
+  // Start has nothing to buy once the cart is gone, so it refuses too, before any payment.
+  assert.equal((await startGuestCheckout(at(1000 + 50 * DAY), { contact }, f.headers)).ok, false);
+  assert.equal(f.synth.counts().paymentCreates, 0);
+});
+
+test("the background check deletes keys past their date whose cart is gone, and moves a living cart's key to the cart's date", async (t) => {
+  const { clearExpiredCarts } = await import("../../../dist/features/checkout/storage.js");
+  const f = await setup(t);
+  const keys = f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION], carts = f.storage[CHECKOUT_COLLECTION];
+  const key = (cartId, expiresAt) => ({ recordKind: "guest-checkout-capability", capabilityId: cartId, cartId, verifier: "v", siteBinding: TRUSTED_SITE, createdAt: "2026-01-01T00:00:00.000Z", expiresAt });
+  await keys.put("never-used", key("cart-never-made", "4000"));
+  await keys.put("old-cart", key("cart-old", "4000"));
+  await keys.put("live-cart", key("cart-live", "4000"));
+  await keys.put("fresh", key("cart-fresh", "9000"));
+  await carts.put("cart-old", { attempts: [{ attemptId: "r-1", phase: "released" }], cart: { lines: [] }, cartExpires: "3000" });
+  await carts.put("cart-live", { attempts: [], cart: { lines: [{ catalogItemId: "hat", quantity: 1 }] }, cartExpires: "8000" });
+  await clearExpiredCarts(carts, 5000, keys);
+  assert.equal(await keys.get("never-used"), null);
+  assert.equal(await keys.get("old-cart"), null);
+  assert.equal((await keys.get("live-cart")).expiresAt, "8000", "a living cart's key moves to the cart's date");
+  assert.equal((await keys.get("fresh")).expiresAt, "9000");
+  // The moved key is not picked up again until the cart's date passes.
+  await clearExpiredCarts(carts, 7000, keys);
+  assert.ok(await keys.get("live-cart"));
+});
+
+test("a cart cleared mid-checkout never renews its key: the cleanup's retry date is for payments, not for the shopper", async (t) => {
+  const { clearExpiredCarts } = await import("../../../dist/features/checkout/storage.js");
+  const f = await setup(t);
+  const at = (now) => ({ ...f.runtime, host: { ...f.runtime.host, now: () => now } });
+  const keys = f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION], carts = f.storage[CHECKOUT_COLLECTION];
+  const keyId = f.headers[GUEST_CAPABILITY_HEADER].split(".")[0];
+  const end = 1000 + 50 * DAY;
+  assert.equal((await f.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, at(1000 + 20 * DAY))).ok, true);
+  assert.equal((await startGuestCheckout(at(1000 + 21 * DAY), { contact }, f.headers)).ok, true);
+  // The key's own date passed while the cart lived, so the background check moved it to the cart's date.
+  await clearExpiredCarts(carts, end - 1, keys);
+  assert.equal((await keys.get(keyId)).expiresAt, String(end));
+  const key = await keys.get(keyId);
+  // Past the cart's date the cart is cleared but its unfinished payment is kept and looked at again a day on.
+  await clearExpiredCarts(carts, end + 1, keys);
+  const [{ data: kept }] = (await carts.query()).items;
+  assert.equal(kept.cart, undefined);
+  assert.equal(kept.cartExpires, String(end + 1 + DAY));
+  assert.equal(await keys.get(keyId), null, "the key is deleted, not moved to the payment retry date");
+  // Even a key the check has not reached yet stays refused before any payment lookup.
+  await keys.put(keyId, key);
+  const lookups = f.synth.counts().paymentLookups;
+  assert.equal((await f.cart({}, at(end + 2))).error.code, "CAPABILITY_DENIED");
+  assert.equal((await startGuestCheckout(at(end + 2), { contact }, f.headers)).error.code, "CAPABILITY_DENIED");
+  assert.equal(f.synth.counts().paymentLookups, lookups);
+});
+
+test("a key made before keys had a date counts its 30 days from when it was made", async (t) => {
+  const f = await setup(t);
+  const at = (now) => ({ ...f.runtime, host: { ...f.runtime.host, now: () => now } });
+  const keys = f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION];
+  const keyId = f.headers[GUEST_CAPABILITY_HEADER].split(".")[0];
+  const { expiresAt: _dropped, ...legacy } = await keys.get(keyId);
+  await keys.put(keyId, legacy);
+  assert.equal(legacy.createdAt, new Date(1000 * 1000).toISOString());
+  assert.equal((await f.cart({}, at(1000 + DAY))).ok, true);
+  assert.equal((await f.cart({}, at(1000 + 30 * DAY - 1))).ok, true);
+  assert.equal((await f.cart({}, at(1000 + 30 * DAY))).error.code, "CAPABILITY_DENIED");
+});
+
+test("a cart of more than 100 lines is refused before any catalog read", async (t) => {
+  const f = await setup(t);
+  let reads = 0;
+  const catalog = new Proxy(f.runtime.catalog.catalog, { get(target, name) {
+    const value = Reflect.get(target, name, target);
+    if (typeof value !== "function") return value;
+    return (...args) => { reads++; return value.apply(target, args); };
+  } });
+  const rt = { ...f.runtime, catalog: { ...f.runtime.catalog, catalog } };
+  const lines = Array.from({ length: 101 }, () => ({ productId: "hat", options: {}, quantity: 1 }));
+  const refused = await f.cart({ version: null, lines }, rt);
+  assert.equal(refused.error.code, "INVALID_CART");
+  assert.equal(reads, 0);
 });
 
 test("a cart changed while checkout starts is contention, never a purchase of the old lines", async (t) => {
@@ -399,7 +495,7 @@ test("a cart deleted by expiry cleanup while checkout starts is contention, neve
     const value = Reflect.get(target, name, target);
     if (name !== "getVersioned") return typeof value === "function" ? value.bind(target) : value;
     return async (...args) => {
-      if (++reads === 2) await clearExpiredCarts(f.storage[CHECKOUT_COLLECTION], 9_999_999_999);
+      if (++reads === 2) await clearExpiredCarts(f.storage[CHECKOUT_COLLECTION], 9_999_999_999, f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION]);
       return value.apply(target, args);
     };
   } });
@@ -427,7 +523,7 @@ test("a checkout saved before the server cart (attempts only) still reads, repla
   // Start replays the saved attempt's own frozen purchase; it prices nothing new.
   assert.equal(replay.checkout.attemptId, started.checkout.attemptId, JSON.stringify(replay));
   assert.equal(replay.checkout.total.minor, started.checkout.total.minor);
-  await clearExpiredCarts(carts, 10 ** 12);
+  await clearExpiredCarts(carts, 10 ** 12, f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION]);
   assert.ok(await carts.get(id), "cleanup never touches a record with no cart expiry");
   f.synth.setPayment("paid");
   const paid = await f.cart();

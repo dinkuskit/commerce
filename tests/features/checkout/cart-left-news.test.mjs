@@ -80,7 +80,7 @@ async function setup(t) {
   const sweep = at => remindCarts(ctx, at);
   /** What the store's courier reads from Commerce's outbox for cart.left, from the start. */
   const left = async () => (await courierOutbox({ input: { courier: 1, op: "since", topic: "cart.left", after: null, limit: 100 } }, ctx)).items;
-  return { runtime, synth, ctx, stops, stopped, abandoned, release, sweep, left, carts: opened.storage[CHECKOUT_COLLECTION] };
+  return { runtime, synth, ctx, stops, stopped, abandoned, release, sweep, left, carts: opened.storage[CHECKOUT_COLLECTION], capabilities: opened.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION] };
 }
 
 /** The pick-up link's capability, as the store's /cart/c/ page sets it in the cart cookie. */
@@ -258,21 +258,24 @@ test("the email's key lasts only as long as its cart, and its stop link stops th
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, emailed, f.stops)).ok, true);
   const stoppedAfterRetry = await f.stopped();
   assert.deepEqual(stoppedAfterRetry, [await stopKey(contact.email)]);
-  // Past the cart's 30 days the emailed key is refused, while the shopper's own key still answers.
+  // Past the cart's 30 days the emailed key is refused, and so is the shopper's own key (commerce-cart-key-expiry-20261125).
   const expires = +(await f.carts.get(cartId)).cartExpires;
   const at = now => ({ ...f.runtime, host: { ...f.runtime.host, now: () => now } });
   assert.equal((await cartGuestCheckout(at(expires - 1), {}, emailed)).ok, true);
   assert.equal((await cartGuestCheckout(at(expires), {}, emailed)).error.code, "CAPABILITY_DENIED");
   assert.equal((await cartGuestCheckout(at(expires), { stop: true }, emailed, f.stops)).error.code, "CAPABILITY_DENIED");
-  assert.equal((await cartGuestCheckout(at(expires), {}, headers)).ok, true);
+  assert.equal((await cartGuestCheckout(at(expires), {}, headers)).error.code, "CAPABILITY_DENIED");
   // Once the cleanup deletes the cart, the emailed key cannot bring it back.
-  await clearExpiredCarts(f.carts, expires + 1);
+  await clearExpiredCarts(f.carts, expires + 1, f.capabilities);
   assert.equal(await f.carts.get(cartId), null);
   const recreate = await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, emailed);
   assert.equal(recreate.error.code, "CAPABILITY_DENIED");
   assert.equal(await f.carts.get(cartId), null);
-  // The shopper's own key makes a new cart under the same id; the old emailed key stays refused for it.
-  assert.equal((await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, headers)).ok, true);
+  // The same cleanup deleted the shopper's own key, past its date with its cart gone, so nothing can make that cart
+  // again; the storefront asks for a new key. The old emailed key stays refused.
+  assert.equal(await f.capabilities.get(headers[GUEST_CAPABILITY_HEADER].split(".")[0]), null);
+  assert.equal((await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, headers)).error.code, "CAPABILITY_DENIED");
+  assert.equal(await f.carts.get(cartId), null);
   assert.equal((await cartGuestCheckout(f.runtime, {}, emailed)).error.code, "CAPABILITY_DENIED");
   assert.equal((await cartGuestCheckout(f.runtime, { stop: true }, emailed, f.stops)).error.code, "CAPABILITY_DENIED");
   assert.deepEqual(await f.stopped(), stoppedAfterRetry, "a refused key writes nothing");
@@ -296,13 +299,15 @@ test("the email's key is checked against the cart each request reads, so cleanup
   };
   const racing = { ...f.runtime, carts, host: { ...f.runtime.host, now: () => expires - 1 } };
   assert.equal((await cartGuestCheckout(racing, {}, emailed)).ok, true);
-  race = () => clearExpiredCarts(f.carts, expires + 1);
+  race = () => clearExpiredCarts(f.carts, expires + 1, f.capabilities);
   // A write sent as if the cart were new (version null) must not make the deleted cart again.
   const write = await cartGuestCheckout(racing, { version: null, lines: [{ catalogItemId: "hat", quantity: 2 }] }, emailed);
   assert.equal(write.ok, false, JSON.stringify(write));
   assert.equal(await f.carts.get(cartId), null, "the deleted cart is not made again");
-  // A cart the shopper's own key makes again between the email key's read and its answer is never shown to it.
-  assert.equal((await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, headers)).ok, true);
+  // The cleanup also deleted the shopper's own key (past its date, cart gone), so it cannot make the cart again
+  // either; the emailed key stays refused.
+  assert.equal((await cartGuestCheckout(f.runtime, { version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, headers)).error.code, "CAPABILITY_DENIED");
+  assert.equal(await f.carts.get(cartId), null);
   assert.equal((await cartGuestCheckout(racing, {}, emailed)).error.code, "CAPABILITY_DENIED");
   f.synth.setPayment("open");
   assert.equal((await startGuestCheckout({ ...racing, host: { ...racing.host, now: () => 1000 } }, { contact }, emailed)).error.code, "CAPABILITY_DENIED");

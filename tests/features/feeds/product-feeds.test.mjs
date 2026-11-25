@@ -179,6 +179,23 @@ test("feed paging is bounded and deterministic", () => {
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1 }), { rows: [rows[0]], nextCursor: 1 });
   assert.deepEqual(pageProductFeedRows(rows, { pageSize: 1, cursor: 1 }), { rows: [rows[1]] });
   assert.equal(pageProductFeedRows(rows, { pageSize: 9999 }).rows.length, 2);
+  // A page size that is not a whole number is refused rather than handing back the same cursor forever.
+  for (const pageSize of [Number("abc"), 1.5, Infinity, "2"]) {
+    assert.throws(() => pageProductFeedRows(rows, { pageSize }), /invalid feed page size/, String(pageSize));
+  }
+});
+
+test("XML-illegal characters in product text are dropped, so one product cannot break the whole feed", () => {
+  const bad = facts({ content: { ...facts().content, title: "Wool\u0000 hat\u000B\uD800", description: "Warm\u001F and \uD83E\uDDE2 useful\uFFFF" } });
+  const google = buildGoogleMerchantFeed([bad, facts({ product: product({ id: "item-scarf" }) })]);
+  assert.doesNotMatch(google, /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
+  assert.doesNotMatch(google, /[\uD800-\uDFFF]/u, "no lone surrogate is left");
+  assert.match(google, /Wool hat/);
+  assert.match(google, /Warm and \uD83E\uDDE2 useful/, "a real emoji (a surrogate pair) is kept");
+  assert.match(google, /item-scarf/, "the next product is still in the feed");
+  const meta = buildMetaCatalogFeed([bad]);
+  assert.doesNotMatch(meta, /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/);
+  assert.match(meta, /Wool hat/);
 });
 
 test("storefront agent feeds project aiProjection, policies, and virtual-card minor-unit sizing deterministically", () => {
