@@ -11,6 +11,7 @@ import {
   type StorefrontShippingQuoteInput,
 } from "./types.js";
 import { formatMinorUnitsAsDecimal } from "../structured-data/index.js";
+import { isCalendarDay } from "../../shared/calendar-day.js";
 
 const DEFAULT_PAGE_SIZE = 100;
 // Channel caps on secondary images: Google takes 10 additional_image_link
@@ -61,7 +62,7 @@ const AVAILABILITY_VALUES: Record<ProductFeedChannel, { inStock: string; backord
  */
 export function backorderShipDate(availability: { status: string; shipBy?: string }, now = new Date()): string | undefined {
   const today = now.toISOString().slice(0, 10), date = availability.shipBy;
-  if (availability.status !== "available-on-backorder" || !date || !/^\d{4}-\d\d-\d\d$/.test(date)) return undefined;
+  if (availability.status !== "available-on-backorder" || !isCalendarDay(date)) return undefined;
   return date > today && date <= `${Number(today.slice(0, 4)) + 1}${today.slice(4)}` ? date : undefined;
 }
 

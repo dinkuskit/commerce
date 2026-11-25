@@ -69,7 +69,7 @@ function productForm(id: string, values: ProductFields, action = "save:" + id): 
       ...(values.sku === undefined ? [] : [input("sku", "SKU", values.sku)]),
       ...(values.manageStock === false ? [radio("stockStatus", "Stock status", STOCK_OPTIONS, values.stockStatus ?? undefined),
         // Google needs it for a backorder; a passed one counts as none (google-backorder-ship-date-20261124).
-        { type: "date_input" as const, action_id: "shipBy", label: "Expected ship date" + ((values.shipBy ?? "z") < new Date().toISOString().slice(0, 10) ? " (passed: pick a new one)" : ""),
+        { type: "date_input" as const, action_id: "shipBy", label: "Expected ship date" + ((values.shipBy || "z") < new Date().toISOString().slice(0, 10) ? " (passed: pick a new one)" : ""),
           initial_value: values.shipBy, condition: { field: "stockStatus", eq: "on-backorder" } }] : []),
       ...feedFields(values.feedChannels),
     ], "Save", action);
@@ -172,7 +172,7 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
     ...(unpriced ? [note(NO_PRICE)] : []),
     ...(form?.message ? [alert(form.message)] : []),
     ...(simple ? [header("Pricing & stock"), manageStockNotice(values.manageStock),
-      productForm(id, { ...values, sku: form?.sku ?? selected.sku, stockStatus: values.stockStatus ?? status, shipBy: selected.shipBy }, "save:" + JSON.stringify([id, selected.revision]))] : []),
+      productForm(id, { ...values, sku: form?.sku ?? selected.sku, stockStatus: values.stockStatus ?? status, shipBy: form?.shipBy ?? selected.shipBy }, "save:" + JSON.stringify([id, selected.revision]))] : []),
     variantsCard(id, selected, focus),
     ...(!simple && feedChannels ? [card("feeds:" + id, "Feeds", [panelForm(feedFields(feedChannels),
       "Save feeds", "variant:" + JSON.stringify(["feeds", id, selected.revision]))], focus === "feeds")] : []),

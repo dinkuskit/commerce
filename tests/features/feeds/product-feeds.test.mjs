@@ -117,6 +117,7 @@ test("Google needs a ship date on a backorder row: none, a passed one or one ove
   for (const shipBy of [undefined, "2026-11-24"]) assert.match(buildMetaCatalogFeed([row(shipBy)]), /"available for order"/, "Meta needs no date");
   assert.equal(backorderShipDate({ status: "in-stock", shipBy: "2026-12-12" }, now), undefined, "a date on an item no longer on backorder is not shown");
   assert.equal(backorderShipDate({ status: "available-on-backorder", shipBy: "2026-12-12" }, now), "2026-12-12");
+  for (const shipBy of ["2027-02-31", "2026-13-01", "12/12/2026", ["2026-12-12"]]) assert.equal(backorderShipDate({ status: "available-on-backorder", shipBy }, now), undefined, `${shipBy} is not a calendar day`);
   assert.equal(buildGoogleMerchantFeed([facts()], now).includes("availability_date"), false, "an in-stock row carries no date");
 });
 

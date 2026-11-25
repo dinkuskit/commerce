@@ -111,3 +111,52 @@ test('each variant keeps its own date', async () => {
   const reopened = forms(saved).find((form) => form.submit.action_id.startsWith('variant:["price"') && JSON.parse(form.submit.action_id.slice(8))[2] === cherryId);
   assert.equal(reopened.fields.find((field) => field.action_id === 'shipBy').initial_value, date);
 });
+
+test('only a real calendar day is kept, from the panel or the prices API', async () => {
+  const { ctx, id } = await hat();
+  for (const shipBy of ['2027-02-31', '2026-13-01', '2026-12-1', '2026-12-15T00:00:00Z']) {
+    const refused = await save(ctx, { stockStatus: 'on-backorder', shipBy });
+    assert.equal(refused.toast.type, 'error', shipBy);
+    assert.equal((await readPublicCatalogItem(ctx, id)).availability.shipBy, undefined, `${shipBy} is not stored`);
+  }
+  const { saveCatalogProductPrices } = await import('../../../dist/features/catalog/kernel/index.js');
+  const store = { catalog: ctx.storage.catalog_items, prices: ctx.storage.catalog_prices, availability: ctx.storage.catalog_manual_availability };
+  await assert.rejects(saveCatalogProductPrices(store, { catalogItemId: id, regular: '25', sale: '', stockStatus: 'on-backorder', shipBy: ['2026-12-15'] }), /ship date/);
+  const leap = '2028-02-29';
+  assert.equal((await save(ctx, { stockStatus: 'on-backorder', shipBy: leap })).toast.type, 'success');
+  assert.equal((await readPublicCatalogItem(ctx, id)).availability.shipBy, leap);
+});
+
+test('a refused save keeps the typed date, and an empty box never says passed', async () => {
+  const { ctx } = await hat();
+  const date = day(25);
+  const refused = await save(ctx, { regular: '', sale: '5', stockStatus: 'on-backorder', shipBy: date });
+  assert.equal(refused.toast.type, 'error');
+  const box = pricing(refused).fields.find((field) => field.action_id === 'shipBy');
+  assert.deepEqual([box.label, box.initial_value], ['Expected ship date', date], 'the typed date comes back');
+  const blank = await save(ctx, { regular: '', sale: '5', stockStatus: 'on-backorder', shipBy: '' });
+  assert.equal(pricing(blank).fields.find((field) => field.action_id === 'shipBy').label, 'Expected ship date');
+});
+
+test('products saved before ship dates (0.8.0 data) load, sell and save as before', async () => {
+  const { ctx, id, catalog } = await hat();
+  // 0.8.0 kept stock status in the product's own data with no date, or in the older manual availability rows.
+  const before = await readPublicCatalogItem(ctx, id);
+  assert.deepEqual(before.availability, { status: 'available-on-backorder', sellable: true, listable: true }, 'no shipBy key at all');
+  const record = await catalog.get(id);
+  assert.equal(Object.hasOwn(record.catalogData.items[id].availability, 'shipBy'), false);
+  delete record.catalogData.items[id].availability;
+  await catalog.put(id, record);
+  await ctx.storage.catalog_manual_availability.put(id, { recordKind: 'catalog-manual-availability', recordId: id, catalogItemId: id, status: 'available-on-backorder' });
+  assert.deepEqual((await readPublicCatalogItem(ctx, id)).availability, before.availability, 'an older manual availability row reads the same');
+  const opened = await commerceAdmin({ input: { type: 'panel_load' } }, ctx);
+  assert.deepEqual(pricing(opened).fields.find((field) => field.action_id === 'shipBy').initial_value, undefined, 'the box opens empty');
+  const { saveCatalogProductPrices } = await import('../../../dist/features/catalog/kernel/index.js');
+  const store = { catalog, prices: ctx.storage.catalog_prices, availability: ctx.storage.catalog_manual_availability };
+  // An API caller written for 0.8.0 sends no shipBy: it saves, and never clears a date the owner set.
+  assert.equal((await saveCatalogProductPrices(store, { catalogItemId: id, regular: '26', sale: '', stockStatus: 'on-backorder' })).saved, true);
+  const date = day(10);
+  await save(ctx, { stockStatus: 'on-backorder', shipBy: date });
+  assert.equal((await saveCatalogProductPrices(store, { catalogItemId: id, regular: '27', sale: '', stockStatus: 'on-backorder' })).saved, true);
+  assert.equal((await readPublicCatalogItem(ctx, id)).availability.shipBy, date);
+});

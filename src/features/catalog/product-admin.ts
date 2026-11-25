@@ -2,6 +2,7 @@ import { catalogItemState, productData, saveProductData } from "./product-state.
 import { normalizeProductFeedChannels } from "../feeds/kernel/index.js";
 import { isRecord } from "../../shared/record.js";
 import { REGISTRY_BUILD } from "../../shared/registry-build.js";
+import { isCalendarDay } from "../../shared/calendar-day.js";
 import {
   normalizeStoredStockManagement,
   setManageStock,
@@ -390,6 +391,8 @@ function refused(
     sale: input.sale,
     manageStock,
     stockStatus,
+    // The typed date comes back with the rest of a refused form, so fixing the price does not lose it.
+    shipBy: input.shipBy,
     message,
   };
 }
@@ -424,7 +427,7 @@ function normalizeSaveInput(value: unknown): SaveCatalogProductPricesInput {
   if (input.stockStatus !== undefined && typeof input.stockStatus !== "string") {
     catalogFail("INVALID_INPUT", "stock status must be a string");
   }
-  if (input.shipBy !== undefined && !/^(\d{4}-\d\d-\d\d)?$/.test(input.shipBy as string)) {
+  if (input.shipBy !== undefined && input.shipBy !== "" && !isCalendarDay(input.shipBy)) {
     catalogFail("INVALID_INPUT", "Invalid ship date");
   }
   if (input.manageStock !== undefined && typeof input.manageStock !== "boolean") {
@@ -487,7 +490,7 @@ export async function saveCatalogProductPrices(
 
     const nextStatus = nextManaged ? null : input.stockStatus as ClerkStockStatus | undefined ?? status;
     data.items[id] = { ...current, price: targetRegular ? catalogPriceRecord(id, targetRegular, targetSale) : null,
-      availability: { ...availability, status: toStoredStockStatus(nextStatus ?? status), shipBy: input.shipBy ?? availability.shipBy } };
+      availability: { ...availability, status: toStoredStockStatus(nextStatus ?? status), ...(input.shipBy === undefined ? {} : { shipBy: input.shipBy }) } };
     if (input.feedChannels !== undefined) data.feedChannels = input.feedChannels;
     return displayForm(targetRegular, targetSale, nextManaged, nextStatus);
   }, input.expectedRevision?.startsWith("catalog:") ? input.expectedRevision : undefined);

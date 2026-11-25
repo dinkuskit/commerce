@@ -59,7 +59,7 @@ function response(settings: MerchantStoreSettings, revision: string | null, noti
     block_id: `${BLOCK_PREFIX}${revision ?? "null"}`,
     fields: [
       { type: "text_input", action_id: "storeCountry", label: "Store country (ISO alpha-2 code)", placeholder: "e.g. CA", initial_value: String(values.storeCountry ?? "") },
-      { type: "text_input", action_id: "shippingCountries", label: "Allowed physical shipping destinations (comma-separated codes)", placeholder: "Leave empty for no enabled destinations", initial_value: String(values.shippingCountries ?? "") },
+      { type: "text_input", action_id: "shippingCountries", label: "Allowed physical shipping destinations (comma-separated codes)", initial_value: String(values.shippingCountries ?? "") },
       { type: "toggle", action_id: "requirePhoneNumber", label: "Require a phone number", description: "Require customers to include a phone number at checkout.", initial_value: values.requirePhoneNumber === true },
     ],
     submit: { label: "Save merchant settings", action_id: ACTION },
