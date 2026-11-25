@@ -1,4 +1,5 @@
 import { isRecord } from "../../shared/record.js";
+import { REGISTRY_BUILD } from "../../shared/registry-build.js";
 import { CatalogError } from "./errors.js";
 import { normalizeStoredStockManagement } from "../inventory-provider/kernel/index.js";
 import type { CatalogStorageRecord } from "./types.js";
@@ -15,10 +16,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
+/** The Registry build never sets stock up, so no item there is managed. */
 export function isManagedCatalogRecord(
   item: CatalogStorageRecord | null | undefined,
 ): boolean {
   return (
+    !REGISTRY_BUILD &&
     item !== null &&
     item !== undefined &&
     item.recordKind === "catalog-item" &&
@@ -59,7 +62,8 @@ export function admitV1CatalogPriceSaveInput(
     const { manageStock: _ignored, ...rest } = input;
     return rest;
   }
-  if (input.manageStock === true) {
+  // No Registry item is managed, so there a change can only be turning it on.
+  if (REGISTRY_BUILD || input.manageStock === true) {
     throw new CatalogError(
       "MANAGE_STOCK_UNAVAILABLE",
       MANAGE_STOCK_UNAVAILABLE_MESSAGE,

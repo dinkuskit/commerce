@@ -230,7 +230,7 @@ async function describeCatalogProducts(
   revisionFor?: (id: string) => string | undefined,
 ): Promise<CatalogProductListItem[]> {
   const managed = (record: CatalogItemRecord) =>
-    normalizeStoredStockManagement(record.stockManagement).mode === "managed";
+    !REGISTRY_BUILD && normalizeStoredStockManagement(record.stockManagement).mode === "managed";
   const resolved = new Map<string, Awaited<ReturnType<typeof resolveCatalogVariantMember>>>();
   for (const record of records) {
     for (const member of record.variantProduct?.members ?? []) {
@@ -456,7 +456,7 @@ export async function saveCatalogProductPrices(
   const id = input.catalogItemId.trim();
   const saved = await saveProductData(storage.catalog, id, async (data, item, root) => {
     const management = normalizeStoredStockManagement(item.stockManagement);
-    const managed = management.mode === "managed", nextManaged = input.manageStock ?? managed;
+    const managed = !REGISTRY_BUILD && management.mode === "managed", nextManaged = input.manageStock ?? managed;
     const current = data.items[id] ?? {};
     const snapshot = { get: async (key: string) => key === id ? item : key === root.itemId ? root : null };
     const availability = await loadCatalogItemManualAvailability(storage.availability, id, snapshot);
@@ -464,6 +464,8 @@ export async function saveCatalogProductPrices(
     // The Registry build never sets stock up, so no item there is ever setup-pending.
     if (!REGISTRY_BUILD && !nextManaged && management.mode === "managed" && management.status === "setup-pending")
       return refused(input, MANAGE_STOCK_SETUP_PENDING_MESSAGE, true, null);
+    // Nor does it ever hold a managed item (`managed` is false there), so only the library build can refuse a
+    // status on one.
     if (nextManaged && managed && input.stockStatus !== undefined)
       return refused(input, MANAGED_STOCK_STATUS_MESSAGE, true, null);
     if (!nextManaged && input.stockStatus !== undefined && !isClerkStockStatus(input.stockStatus))

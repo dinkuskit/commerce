@@ -801,3 +801,6 @@
 {"action": "decision_locked", "at": "2026-11-25T04:36:46+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "f539cf2d-d80c-4645-9901-a92444ede35f"}
 {"action": "decision_implemented", "at": "2026-11-25T04:36:56+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "89baf522-5c39-4353-b793-2732ac83d208"}
 {"action": "decision_verified", "at": "2026-11-25T04:36:56+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "6f4a0f92-7caf-442f-8ea0-492b40b840f4"}
+{"action": "focus_started", "at": "2026-11-25T05:48:01+00:00", "data": {"cadence": "sequential", "domain": "Cart key expiry"}, "event_id": "d84acb32-621c-485a-bda1-0cd36e7cb8cb"}
+{"action": "decision_proposed", "at": "2026-11-25T05:48:01+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "b67f28b1-a0ae-42bb-a306-da5413f832b5"}
+{"action": "decision_locked", "at": "2026-11-25T05:48:01+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "e3240c86-afab-42aa-b75b-3e202d71dc3d"}
