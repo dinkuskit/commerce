@@ -40,11 +40,25 @@ test("the channel serializes the same absolute link that was validated", () => {
 
 test("the legacy overload accepts a Date from another realm without changing the feed", () => {
   const foreignDate = runInNewContext("new Date('2026-11-25T01:00:00Z')");
-  assert.equal(buildGoogleMerchantFeed([row], foreignDate), buildGoogleMerchantFeed([row], now));
+  assert.equal(buildGoogleMerchantFeed([row], Object.assign(foreignDate, { channel: 'retail' })), buildGoogleMerchantFeed([row], now));
 });
 
 test("supplied channel metadata must have text and an absolute web link", () => {
   for (const fields of [{ title: " " }, { description: "" }, { link: "/" }, { link: "ftp://shop.example.test" }, { link: "https://user:pass@shop.example.test" }]) {
     assert.throws(() => buildGoogleMerchantFeed([], { channel: { ...channel, ...fields } }), /Google Merchant RSS needs/);
   }
+  for (const options of [{ now }, { now, channel: null }, { now, channel: { ...channel, description: 42 } }]) {
+    assert.throws(() => buildGoogleMerchantFeed([], options), /Google Merchant RSS needs/);
+  }
+});
+
+test("channel text only contains XML 1.0 characters, including when the feed is empty", () => {
+  for (const unusable of ["\u0000", "\u000b", "\ufffe", "\uffff", "\ud800"]) {
+    for (const field of ["title", "description"]) {
+      assert.throws(() => buildGoogleMerchantFeed([], { channel: { ...channel, [field]: `Field${unusable}Camp` } }), /valid XML/);
+    }
+  }
+  const description = "Café\t\n𐍈 🏕️ & gear";
+  assert.match(buildGoogleMerchantFeed([], { channel: { ...channel, description } }),
+    /<description>Café\t\n𐍈 🏕️ &amp; gear<\/description>/);
 });

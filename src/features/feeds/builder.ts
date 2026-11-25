@@ -20,6 +20,18 @@ const DEFAULT_PAGE_SIZE = 100;
 const GOOGLE_ADDITIONAL_IMAGES = 10;
 const META_ADDITIONAL_IMAGES = 20;
 const MAX_PAGE_SIZE = 500;
+// XML 1.0 Char production; the Unicode flag also rejects unpaired surrogates.
+const INVALID_XML_CHARACTER = /[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u;
+
+function isDate(value: unknown): value is Date {
+  try {
+    // Date's internal brand works across realms and ignores properties added by callers.
+    Date.prototype.getTime.call(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function escapeXml(value: string): string {
   return value.replace(/[<>&'"]/g, (character) => ({
@@ -129,15 +141,21 @@ export function buildGoogleMerchantFeed(
   products: readonly ProductFeedFacts[],
   options: GoogleMerchantFeedOptions | Date = new Date(),
 ): string {
-  const hasChannel = "channel" in options;
-  const now = hasChannel ? options.now ?? new Date() : options;
+  let now: Date;
   let channel = "";
-  if (hasChannel) {
-    const { title, link, description } = options.channel;
-    const url = URL.parse(link);
-    if (!title.trim() || !description.trim() || !url || !["http:", "https:"].includes(url.protocol) || url.username || url.password) {
+  if (isDate(options)) {
+    now = options;
+  } else {
+    const { title, link, description } = options?.channel ?? {};
+    const url = typeof link === "string" ? URL.parse(link) : null;
+    if (typeof title !== "string" || !title.trim() || typeof description !== "string" || !description.trim() ||
+        !url || !["http:", "https:"].includes(url.protocol) || url.username || url.password) {
       throw new TypeError("Google Merchant RSS needs a title, a public HTTP(S) link, and a description");
     }
+    if (INVALID_XML_CHARACTER.test(title) || INVALID_XML_CHARACTER.test(description)) {
+      throw new TypeError("Google Merchant RSS title and description must contain valid XML 1.0 characters");
+    }
+    now = options.now ?? new Date();
     channel = `<title>${escapeXml(title)}</title><link>${escapeXml(url.href)}</link><description>${escapeXml(description)}</description>`;
   }
   // Google requires availability_date on a backorder row, so one with no usable date is left out, as
