@@ -782,3 +782,5 @@
 {"action": "decision_locked", "at": "2026-11-24T22:42:07+00:00", "data": {"decision_id": "registry-headroom-20261124"}, "event_id": "33d7e9aa-7f47-40d4-a314-6045d8294844"}
 {"action": "decision_implemented", "at": "2026-11-24T22:42:07+00:00", "data": {"decision_id": "registry-headroom-20261124"}, "event_id": "98257e11-7c5a-4522-9310-a9a6bd046613"}
 {"action": "decision_proposed", "at": "2026-11-24T23:55:02+00:00", "data": {"decision_id": "commerce-cart-attributes-order-paid-20261123"}, "event_id": "3f940a9a-bdb9-439b-a63c-cbcc0adcb224"}
+{"action": "decision_locked", "at": "2026-11-25T01:11:14+00:00", "data": {"decision_id": "commerce-cart-attributes-order-paid-20261123"}, "event_id": "e2496182-7025-44d3-9d0e-19a9cc7f0134"}
+{"action": "decision_implemented", "at": "2026-11-25T01:11:22+00:00", "data": {"decision_id": "commerce-cart-attributes-order-paid-20261123"}, "event_id": "effb4874-4981-40d7-a83f-aa9d04db66ec"}
