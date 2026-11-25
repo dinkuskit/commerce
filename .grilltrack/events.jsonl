@@ -799,3 +799,5 @@
 {"action": "shared_understanding_confirmed", "at": "2026-11-25T04:36:46+00:00", "data": {"summary": "The owner approved starting the EmDash 1.6 upgrade on 25 Nov 2026: version PRs with proof; each deploy and journeys run still needs the owner's go."}, "event_id": "02446fed-166c-4b72-b86c-441003137204"}
 {"action": "decision_proposed", "at": "2026-11-25T04:36:46+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "4ecdc207-27c0-42f4-826e-9bec7ce9454a"}
 {"action": "decision_locked", "at": "2026-11-25T04:36:46+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "f539cf2d-d80c-4645-9901-a92444ede35f"}
+{"action": "decision_implemented", "at": "2026-11-25T04:36:56+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "89baf522-5c39-4353-b793-2732ac83d208"}
+{"action": "decision_verified", "at": "2026-11-25T04:36:56+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "6f4a0f92-7caf-442f-8ea0-492b40b840f4"}
