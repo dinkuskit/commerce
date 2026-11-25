@@ -1,0 +1,90 @@
+{
+  "phase": "new",
+  "guessRows": [
+    {
+      "id": "email:16cf3de9fd08355b5c5d128e2ab1051836fe3c6ce88c76de8d2ad17649c3e3a7",
+      "tries": 1,
+      "expiresAt": 1795587488
+    },
+    {
+      "id": "email:41625189475acca4142800707589913658a92365029d118cd616cffb4078f189",
+      "tries": 1,
+      "expiresAt": 1795587488
+    },
+    {
+      "id": "email:5aa8df94a4d25f16d8141700f225ce7d3284ce3a63b3dcd3dd9817109a81161d",
+      "tries": 1,
+      "expiresAt": 1795587500
+    },
+    {
+      "id": "email:80f575734f4fd400fc0e7356b86b00c620ee6195bf65570d4f1b471706293bfb",
+      "tries": 1,
+      "expiresAt": 1795587488
+    },
+    {
+      "id": "email:aa1ad847a26b4c04f136ad89726f0ca641e6c5c4f1cc8a85fb9be718dadbc558",
+      "tries": 1,
+      "expiresAt": 1795587500
+    },
+    {
+      "id": "email:b2bfa4c94d77de96e5730913d9b3073739cdd5ba77abe985cc5c8555f393fedd",
+      "tries": 0,
+      "expiresAt": 1795587500
+    },
+    {
+      "id": "email:cbac796e94d01cd5f971bb13610c2fe272bbf4565b685b5245e5a44a3bc08080",
+      "tries": 1,
+      "expiresAt": 1795587488
+    },
+    {
+      "id": "email:e953f9782929c8ad605239601a45b0057f0ae11fb347a306408069de0e9a6745",
+      "tries": 1,
+      "expiresAt": 1795587488
+    },
+    {
+      "id": "number:1001",
+      "tries": 1,
+      "expiresAt": 1795587500
+    },
+    {
+      "id": "number:1002",
+      "tries": 5,
+      "expiresAt": 1795587488
+    },
+    {
+      "id": "number:1003",
+      "tries": 1,
+      "expiresAt": 1795587488
+    }
+  ],
+  "trace": [
+    {
+      "orderNumber": "1002",
+      "email": "sam@example.test",
+      "ok": false,
+      "code": "LOOKUP_LIMITED"
+    },
+    {
+      "orderNumber": "1001",
+      "email": "pat@example.test",
+      "ok": true,
+      "number": 1001,
+      "status": "processing",
+      "recipient": "Pat Shopper"
+    },
+    {
+      "orderNumber": "1001",
+      "email": "PAT@example.test",
+      "ok": true,
+      "number": 1001,
+      "status": "processing",
+      "recipient": "Pat Shopper"
+    },
+    {
+      "orderNumber": "1001",
+      "email": "lee@example.test",
+      "ok": false,
+      "code": "ORDER_NOT_FOUND"
+    }
+  ]
+}
