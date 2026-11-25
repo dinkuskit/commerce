@@ -19,3 +19,19 @@ Merged locally with #309 (Tax) and #310 (audit fixes) as well: 131,026 bytes (46
 
 Data from 0.8.0 (stock status with no date, in the product's own data or in an older manual availability row)
 loads, sells and saves as before: `tests/features/catalog/ship-date.test.mjs`, "products saved before ship dates".
+
+## Installed upgrade from 0.8.0
+
+`tests/upgrade/ship-date-upgrade.test.mjs` runs a real EmDash runtime on one SQLite file, twice:
+
+1. Commerce **v0.8.0**'s own Registry bundle, on 0.8.0's own EmDash 1.4.0, creates a simple hat on backorder and a tee
+   with sizes M (in stock) and L (on backorder), and publishes both. Nothing stores a date.
+2. This build's Registry bundle, on EmDash 1.5.0, opens the same file. Every availability the public catalog gives for
+   the hat, the tee, M and L equals what 0.8.0 gave, with no `shipBy` anywhere; the undated backorder stays out of Google;
+   the product panel (through EmDash's own editor dispatch) opens the 0.8.0 hat with an empty Expected ship date box; an
+   API save without `shipBy` still works; dates then go on the hat and on L only; a later save without `shipBy` keeps the
+   hat's date; the public catalog gives M none and L its date; the Google feed carries both `g:availability_date` lines.
+
+Run: `npm run build`, build a v0.8.0 worktree, then
+`COMMERCE_UPGRADE_FROM_SANDBOX=<v0.8.0 worktree>/dist/sandbox node --test tests/upgrade/ship-date-upgrade.test.mjs`.
+Output: `upgrade-trace.txt`. No store, CMS or provider was contacted.
