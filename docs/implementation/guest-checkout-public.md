@@ -118,10 +118,14 @@ browser cannot choose tenant, site, cart, or attempt authority.
 
 A lost prepare response may leave an unused capability record. It does not
 create attempts, sessions, or holds. A capability lasts as long as its cart:
-never past the cart's 30 days from its last change, and, while no cart date
-exists, 30 days from minting (its indexed `expiresAt`). The background check
-deletes up to 100 capabilities past their date per run, moving one whose cart
-still lives to the cart's date (GrillTrack `commerce-cart-key-expiry-20261125`).
+never past the cart's 30 days from its last change, and, while there is no
+cart (none made yet, or one the background check cleared), 30 days from
+minting (its indexed `expiresAt`; a capability minted before that field
+existed counts from its `createdAt`). The retry date the background check puts
+on a cleared cart that still holds an unfinished payment is for reconciling
+that payment and never renews the capability. The background check deletes up
+to 100 capabilities past their date per run, moving one whose cart still lives
+to the cart's date (GrillTrack `commerce-cart-key-expiry-20261125`).
 A refused capability means the host asks `prepare` for a new one. A lost first `start` response after a
 pre-retained capability retries or restarts the same frozen attempt and
 provider operation.

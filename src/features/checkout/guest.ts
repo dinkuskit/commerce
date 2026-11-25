@@ -4,7 +4,7 @@ import { GuestCheckoutError, guestCheckoutErrorMessage } from "./errors.js";
 import { cartInput, startCheckout, reconcileCheckout } from "./orchestrate.js";
 import { quoteCatalogBasket } from "../storefront-availability/kernel/index.js";
 import { resolveCatalogVariantMember, variantSelections } from "../catalog/kernel/index.js";
-import { authorizeGuestCapability, fenceCartKey, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
+import { authorizeGuestCapability, CART_SECONDS, fenceCartKey, mintGuestCapability, readGuestCapabilityHeader } from "./capability.js";
 import { projectGuestCheckout, projectPreparedGuestCheckout } from "./project.js";
 import { createCheckoutStore } from "./storage.js";
 import { sha256Hex } from "../../shared/secret.js";
@@ -49,7 +49,6 @@ export function admitGuestCheckoutStartInput(raw: unknown, door?: boolean): void
       !["", "contact", ...(door ? ["addons", "addons,contact"] : [])].includes(sortedKeys(input))) fail("INVALID_CART");
 }
 
-const CART_SECONDS = 30 * 86_400;
 /** A shopper who stopped cart reminder emails is kept by their email's hash. */
 export const stopKey = (email: string) => sha256Hex(email.trim().toLowerCase());
 

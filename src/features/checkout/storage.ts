@@ -56,7 +56,7 @@ export async function clearExpiredCarts(
     else await carts.compareAndSet(id, found.revision, { attempts: record.attempts, ...phases.includes("paid") ? {} : { cartExpires: String(now + 86400) } });
   }
   for (const { id, data } of (await keys.query({ where: { expiresAt: { lt: String(now) } }, limit: 100 })).items) {
-    const until = (await carts.get(data.cartId))?.cartExpires;
+    const cart = await carts.get(data.cartId), until = cart?.cart && cart.cartExpires;
     await (now < +until! ? keys.put(id, { ...data, expiresAt: until }) : keys.delete(id));
   }
 }

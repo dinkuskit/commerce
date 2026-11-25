@@ -11,6 +11,8 @@ import {
 } from "./types.js";
 
 export const hashGuestCapabilitySecret = sha256Hex;
+/** A cart, and a key with no cart yet, lasts 30 days. */
+export const CART_SECONDS = 30 * 86_400;
 
 function knownOriginsAgree(left: string, right: string): boolean {
   const leftOrigin = canonicalizeHttpOrigin(left);
@@ -78,7 +80,7 @@ export async function mintGuestCapability(
     siteBinding,
     createdAt: new Date(now * 1000).toISOString(),
     // A key lives as long as its cart; until the cart is made, 30 days. The background check deletes it after.
-    expiresAt: String(now + 2_592_000),
+    expiresAt: String(now + CART_SECONDS),
     ...email,
   };
   if (!(await runtime.capabilities.compareAndSet(capabilityId, null, record)).applied) {
@@ -120,13 +122,15 @@ export async function authorizeGuestCapability(
 
 /**
  * A cart key lasts only while its cart lives (commerce-cart-key-expiry-20261125): never past the cart's 30 days.
- * Where the record has no cart date (no cart made yet, a paid cart the background check cleared, or a checkout saved
- * before the server cart), the key's own 30 days from minting apply. The cart email's key also needs the cart and
+ * Where the record has no cart (none made yet, or one the background check cleared, whose retry date is for
+ * reconciling payments and never renews the key), the key's own 30 days from minting apply; a key minted before
+ * keys had a date counts them from when it was made. The cart email's key also needs the cart and
  * the emailed checkout, so a cart made again under the same id never revives it. Checked against the very record an
  * operation reads, answers from and conditionally writes.
  */
 export function fenceCartKey(capability: GuestCapabilityRecord, record: CheckoutRecord | undefined, now: number): void {
-  if (!(now < +(record?.cartExpires ?? capability.expiresAt)!) || capability.emailHash && !(record?.cart &&
+  if (!(now < +(record?.cart ? record.cartExpires! : capability.expiresAt ?? Date.parse(capability.createdAt) / 1e3 + CART_SECONDS)) ||
+    capability.emailHash && !(record?.cart &&
     record.attempts.some(attempt => attempt.attemptId === capability.emailAttempt))) {
     throw new GuestCheckoutError("CAPABILITY_DENIED");
   }

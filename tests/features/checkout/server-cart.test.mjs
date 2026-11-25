@@ -408,6 +408,46 @@ test("the background check deletes keys past their date whose cart is gone, and 
   assert.ok(await keys.get("live-cart"));
 });
 
+test("a cart cleared mid-checkout never renews its key: the cleanup's retry date is for payments, not for the shopper", async (t) => {
+  const { clearExpiredCarts } = await import("../../../dist/features/checkout/storage.js");
+  const f = await setup(t);
+  const at = (now) => ({ ...f.runtime, host: { ...f.runtime.host, now: () => now } });
+  const keys = f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION], carts = f.storage[CHECKOUT_COLLECTION];
+  const keyId = f.headers[GUEST_CAPABILITY_HEADER].split(".")[0];
+  const end = 1000 + 50 * DAY;
+  assert.equal((await f.cart({ version: null, lines: [{ catalogItemId: "hat", quantity: 1 }] }, at(1000 + 20 * DAY))).ok, true);
+  assert.equal((await startGuestCheckout(at(1000 + 21 * DAY), { contact }, f.headers)).ok, true);
+  // The key's own date passed while the cart lived, so the background check moved it to the cart's date.
+  await clearExpiredCarts(carts, end - 1, keys);
+  assert.equal((await keys.get(keyId)).expiresAt, String(end));
+  const key = await keys.get(keyId);
+  // Past the cart's date the cart is cleared but its unfinished payment is kept and looked at again a day on.
+  await clearExpiredCarts(carts, end + 1, keys);
+  const [{ data: kept }] = (await carts.query()).items;
+  assert.equal(kept.cart, undefined);
+  assert.equal(kept.cartExpires, String(end + 1 + DAY));
+  assert.equal(await keys.get(keyId), null, "the key is deleted, not moved to the payment retry date");
+  // Even a key the check has not reached yet stays refused before any payment lookup.
+  await keys.put(keyId, key);
+  const lookups = f.synth.counts().paymentLookups;
+  assert.equal((await f.cart({}, at(end + 2))).error.code, "CAPABILITY_DENIED");
+  assert.equal((await startGuestCheckout(at(end + 2), { contact }, f.headers)).error.code, "CAPABILITY_DENIED");
+  assert.equal(f.synth.counts().paymentLookups, lookups);
+});
+
+test("a key made before keys had a date counts its 30 days from when it was made", async (t) => {
+  const f = await setup(t);
+  const at = (now) => ({ ...f.runtime, host: { ...f.runtime.host, now: () => now } });
+  const keys = f.storage[CHECKOUT_GUEST_CAPABILITY_COLLECTION];
+  const keyId = f.headers[GUEST_CAPABILITY_HEADER].split(".")[0];
+  const { expiresAt: _dropped, ...legacy } = await keys.get(keyId);
+  await keys.put(keyId, legacy);
+  assert.equal(legacy.createdAt, new Date(1000 * 1000).toISOString());
+  assert.equal((await f.cart({}, at(1000 + DAY))).ok, true);
+  assert.equal((await f.cart({}, at(1000 + 30 * DAY - 1))).ok, true);
+  assert.equal((await f.cart({}, at(1000 + 30 * DAY))).error.code, "CAPABILITY_DENIED");
+});
+
 test("a cart of more than 100 lines is refused before any catalog read", async (t) => {
   const f = await setup(t);
   let reads = 0;
