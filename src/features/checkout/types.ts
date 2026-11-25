@@ -14,7 +14,7 @@ export interface CartLine { catalogItemId: string; quantity: number }
 /**
  * One add-on's answer, which the store's own code asked for and hands to the add-ons door (commerce-addons-door-20261124):
  * per checkout line, in Commerce's line order, the item and unit price (minor units) it saw and the amount it takes off;
- * `ship: "free"` waives shipping. `from` is the add-on's plugin id, `ref` its own reference and `codes` what the shopper typed.
+ * `ship: "free"` waives shipping. `from` is the add-on's plugin id, `ref` its own reference and `codes` what the shopper typed (for Tax, its Orders note).
  * A tax answer (dinkuskit/tax ledger shared-addons-door) also names the address it priced, `to` (see `taxAddress`),
  * shipping's rate `shipRate` and every line's `rate`, each in millionths ("97500" is 9.75%).
  */
