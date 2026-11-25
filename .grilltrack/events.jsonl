@@ -795,3 +795,7 @@
 {"action": "shared_understanding_confirmed", "at": "2026-11-25T03:59:08+00:00", "data": {"summary": "The owner answered each point on 24 Nov 2026: a WooCommerce-style date box, one date per variant, a passed date counts as none with a note in the panel, and no email, to save bytes."}, "event_id": "bc01a712-f953-47e6-b19d-a350fb651a93"}
 {"action": "decision_proposed", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "d999eda3-7f21-4eed-8b3f-080a4fe6558f"}
 {"action": "decision_locked", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "7518611f-f06f-4860-93dc-7eb4976f5cb3"}
+{"action": "focus_started", "at": "2026-11-25T04:36:46+00:00", "data": {"cadence": "sequential", "domain": "EmDash 1.6 compatibility"}, "event_id": "040f27b4-cf73-48c0-abde-84d1a354eca0"}
+{"action": "shared_understanding_confirmed", "at": "2026-11-25T04:36:46+00:00", "data": {"summary": "The owner approved starting the EmDash 1.6 upgrade on 25 Nov 2026: version PRs with proof; each deploy and journeys run still needs the owner's go."}, "event_id": "02446fed-166c-4b72-b86c-441003137204"}
+{"action": "decision_proposed", "at": "2026-11-25T04:36:46+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "4ecdc207-27c0-42f4-826e-9bec7ce9454a"}
+{"action": "decision_locked", "at": "2026-11-25T04:36:46+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "f539cf2d-d80c-4645-9901-a92444ede35f"}

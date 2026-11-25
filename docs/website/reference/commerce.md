@@ -11,7 +11,7 @@ version_scope: "Commerce {{version}}"
 
 Commerce adds products, prices, cart and checkout orchestration, receipts, orders and an order lookup to an EmDash site. The storefront supplies the customer-facing pages; installing Commerce does not create those pages automatically. Commerce owns product identity and the amount a customer pays. [Payments](/docs/reference/payments) owns processor connections, [Ship](/docs/reference/ship) owns shipping labels, and [Inventory](/docs/reference/inventory) owns physical stock when a product is managed.
 
-This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It requires EmDash `1.5.0`. Changes merged after that release are not described here until they ship in a stable release.
+This reference describes Commerce `{{version}}`, released on the EmDash Registry as `dinkus-commerce` on {{release_date}} (tag `v{{version}}`). It is built and tested on EmDash `1.6.0` and also runs on `1.5.0`. Changes merged after that release are not described here until they ship in a stable release.
 
 ## Connect to DinkusKit
 
@@ -94,6 +94,10 @@ the store's unique indexes, and earlier Commerce releases cannot recognize the
 new names, so they refuse to add a product ("uniqueness unproven"). This
 release accepts both names, and its upgrade proof checks a duplicate SKU is
 still refused before and after the EmDash upgrade.
+
+Moving from EmDash 1.5 to 1.6 needs nothing from Commerce, in either order. The
+Registry build is the same on both, and 1.6's only database step adds a column
+to EmDash's own users table.
 
 For direct kernel consumers, price, manual-availability and feed-eligibility
 readers now require the catalog reader as their third argument. Use these

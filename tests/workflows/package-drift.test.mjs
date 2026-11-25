@@ -22,7 +22,7 @@ const PKG = {
 	engines: { node: ">=24.15.0 <25" },
 	bin: { "dinkus-commerce": "./bin/dinkus-commerce.mjs" },
 	devDependencies: { kysely: "0.29.5" },
-	peerDependencies: { emdash: "1.5.0" },
+	peerDependencies: { emdash: "1.6.0" },
 	dinkuskit: { emdashCompatibility: { nodeEngine: ">=24.15.0 <25" } },
 };
 

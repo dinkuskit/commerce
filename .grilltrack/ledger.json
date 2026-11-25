@@ -4,11 +4,11 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-11-25T03:59:08+00:00",
-    "domain": "Google backorder ship date",
-    "started_at": "2026-11-25T03:59:08+00:00",
+    "confirmed_at": "2026-11-25T04:36:46+00:00",
+    "domain": "EmDash 1.6 compatibility",
+    "started_at": "2026-11-25T04:36:46+00:00",
     "status": "confirmed",
-    "summary": "The owner answered each point on 24 Nov 2026: a WooCommerce-style date box, one date per variant, a passed date counts as none with a note in the panel, and no email, to save bytes."
+    "summary": "The owner approved starting the EmDash 1.6 upgrade on 25 Nov 2026: version PRs with proof; each deploy and journeys run still needs the owner's go."
   },
   "decisions": [
     {
@@ -18037,6 +18037,47 @@
       "superseded_by": null,
       "updated_at": "2026-11-25T03:59:08+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": "git:7806454",
+      "candidate_refs": [],
+      "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+      "context_ref": null,
+      "created_at": "2026-11-25T04:36:46+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "EmDash 1.6 compatibility",
+      "history": [
+        {
+          "at": "2026-11-25T04:36:46+00:00",
+          "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-1-6-compatibility-20261125",
+      "implementation_ref": null,
+      "question": "Which EmDash release do Commerce development, tests and the runtime peer pin before v1 launch?",
+      "rationale": "The owner approved the 1.6 upgrade on 25 Nov 2026. 1.6 adds no plugin capabilities, hooks or index renames; its only database step adds users.last_login_at.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "locked",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T04:36:46+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -18073,5 +18114,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-25T03:59:08+00:00"
+  "updated_at": "2026-11-25T04:36:46+00:00"
 }
