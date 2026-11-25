@@ -33,8 +33,9 @@ export async function ordersApi(route: SandboxedRouteContext, ctx: PluginContext
   if (typeof role !== "number" || role < 40) throw new Error("Orders require an Editor or Administrator");
   const input = route.input;
   if (!isRecord(input)) invalid();
-  const allowed = { list: "action,status,offset", show: "action,orderId", complete: "action,orderId,version,carrier,tracking", reopen: "action,orderId,version", address: "action,orderId,version,address" }[String(input.action)];
-  if (!allowed || Object.keys(input).some(key => !allowed.split(",").includes(key))) invalid();
+  const allowed = { list: "action,status,offset", show: "action,orderId", complete: "action,orderId,version,carrier,tracking", reopen: "action,orderId,version", address: "action,orderId,version,address" }[typeof input.action == "string" ? input.action : ""];
+  // Only the action's own name: ["complete"] or "toString" would pick a key set and then fall through to reopen.
+  if (typeof allowed != "string" || Object.keys(input).some(key => !allowed.split(",").includes(key))) invalid();
   const collection = ctx.storage[ORDERS_COLLECTION] as OrdersCollection;
   if (input.action === "list") {
     const { status, offset = 0 } = input;
