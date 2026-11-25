@@ -533,6 +533,26 @@ test("unchecking Manage stock honors an explicit status over dormant availabilit
   assert.equal((await listCatalogProducts(stores)).products[0].stockStatus, "out-of-stock");
 });
 
+test("a refused price keeps the manual backorder draft when turning off Manage stock", async () => {
+  const stores = storage([
+    item({ stockManagement: { mode: "managed", status: "setup-required" }, creationIntent: { manageStock: true } }),
+  ]);
+  const draft = { catalogItemId: "item-bag", regular: "20", sale: "25", manageStock: false,
+    stockStatus: "on-backorder", shipBy: "2027-01-15" };
+  const refused = await saveCatalogProductPrices(stores, draft);
+  assert.equal(refused.saved, false);
+  assert.equal(refused.message, "Sale must be lower than Regular.");
+  const persisted = (await listCatalogProducts(stores)).products[0];
+  assert.equal(persisted.manageStock, true);
+  assert.equal(persisted.shipBy, undefined);
+  assert.deepEqual([refused.manageStock, refused.stockStatus, refused.shipBy], [false, "on-backorder", draft.shipBy]);
+
+  const saved = await saveCatalogProductPrices(stores, { ...draft, sale: "15", stockStatus: refused.stockStatus, shipBy: refused.shipBy });
+  assert.equal(saved.saved, true);
+  const product = (await listCatalogProducts(stores)).products[0];
+  assert.deepEqual([product.manageStock, product.stockStatus, product.shipBy, product.sale], [false, "on-backorder", draft.shipBy, "15.00"]);
+});
+
 test("unchecking Manage stock is refused while Inventory setup is pending", async () => {
   const stores = storage([
     item({
