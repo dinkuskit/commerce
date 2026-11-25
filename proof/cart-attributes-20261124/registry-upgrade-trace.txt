@@ -1,0 +1,7 @@
+  ✓  1 tests/sandbox/registry-upgrade-cart-email.spec.mjs:65:1 › Commerce 0.8.0 keeps a cart key, its unpaid checkout and a catalog setting (90ms)
+  1 passed (16.3s)
+  ✓  2 tests/sandbox/registry-upgrade-cart-email.spec.mjs:86:3 › this build on 0.8.0's EmDash keeps the 0.8.0 cart and setting as they were (150ms)
+  1 passed (10.9s)
+  ✓  3 tests/sandbox/registry-upgrade-cart-email.spec.mjs:86:3 › this build on this checkout's EmDash keeps the 0.8.0 cart and setting as they were (56.7s)
+  1 passed (1.2m)
+registry_upgrade=pass from=v0.8.0 phases=old,bridge,new
