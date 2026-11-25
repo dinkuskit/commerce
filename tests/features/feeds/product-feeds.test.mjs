@@ -7,6 +7,7 @@ import {
   buildStorefrontAgentsMd,
   buildStorefrontLlmsFullTxt,
   buildStorefrontLlmsTxt,
+  backorderShipDate,
   loadProductFeedEligibility,
   pageProductFeedRows,
   setProductFeedEligibility,
@@ -92,19 +93,32 @@ test("catalog facts, JSON-LD and feeds share price and availability", () => {
 
 test("backorder rows keep backorder availability, matching JSON-LD BackOrder", () => {
   const row = facts({
-    product: product({ availability: { status: "available-on-backorder", sellable: true, listable: true } }),
+    product: product({ availability: { status: "available-on-backorder", sellable: true, listable: true, shipBy: "2026-12-12" } }),
   });
   const jsonLd = buildProductJsonLd({
     product: { id: row.product.id, name: row.product.name, sku: row.product.sku, price: row.product.price, availability: row.product.availability },
     page: { url: row.content.canonicalUrl, name: row.content.title },
   });
   assert.equal(jsonLd.offers.availability, "https://schema.org/BackOrder");
-  const google = buildGoogleMerchantFeed([row]);
+  const google = buildGoogleMerchantFeed([row], new Date("2026-11-25T01:00:00Z"));
   const meta = buildMetaCatalogFeed([row]);
-  assert.match(google, /<g:availability>backorder<\/g:availability>/);
+  assert.match(google, /<g:availability>backorder<\/g:availability><g:availability_date>2026-12-12T00:00:00Z<\/g:availability_date>/);
   assert.equal(google.includes("preorder"), false);
   assert.match(meta, /"available for order"/);
   assert.equal(meta.includes("preorder"), false);
+});
+
+test("Google needs a ship date on a backorder row: none, a passed one or one over a year ahead leaves the row out of Google only", () => {
+  const now = new Date("2026-11-25T01:00:00Z");
+  const row = shipBy => facts({ product: product({ availability: { status: "available-on-backorder", sellable: true, listable: true, ...(shipBy ? { shipBy } : {}) } }) });
+  const sent = shipBy => buildGoogleMerchantFeed([row(shipBy)], now).includes("<g:id>item-hat</g:id>");
+  assert.deepEqual([undefined, "2026-11-24", "2026-11-25", "2026-11-26", "2027-11-25", "2027-11-26", "12/12/2026"].map(sent),
+    [false, false, false, true, true, false, false], "only tomorrow up to a year from today counts");
+  for (const shipBy of [undefined, "2026-11-24"]) assert.match(buildMetaCatalogFeed([row(shipBy)]), /"available for order"/, "Meta needs no date");
+  assert.equal(backorderShipDate({ status: "in-stock", shipBy: "2026-12-12" }, now), undefined, "a date on an item no longer on backorder is not shown");
+  assert.equal(backorderShipDate({ status: "available-on-backorder", shipBy: "2026-12-12" }, now), "2026-12-12");
+  for (const shipBy of ["2027-02-31", "2026-13-01", "12/12/2026", ["2026-12-12"]]) assert.equal(backorderShipDate({ status: "available-on-backorder", shipBy }, now), undefined, `${shipBy} is not a calendar day`);
+  assert.equal(buildGoogleMerchantFeed([facts()], now).includes("availability_date"), false, "an in-stock row carries no date");
 });
 
 test("secondary images are kept as additional image links in both feeds", () => {

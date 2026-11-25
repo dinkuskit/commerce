@@ -264,9 +264,12 @@ function availableResult(
 
 function manualResult(
   catalogItemId: string,
-  status: "in-stock" | "out-of-stock" | "available-on-backorder",
+  { status, shipBy }: { status: "in-stock" | "out-of-stock" | "available-on-backorder"; shipBy?: string },
 ): StorefrontAvailabilityResult {
-  return availabilityResult(catalogItemId, status, status !== "out-of-stock");
+  const result = availabilityResult(catalogItemId, status, status !== "out-of-stock");
+  // The storefront and feeds treat a passed date, or one over a year ahead, as none (google-backorder-ship-date-20261124).
+  if (status === "available-on-backorder" && shipBy) result.shipBy = shipBy;
+  return result;
 }
 
 async function resolveManagedItem(
@@ -390,7 +393,7 @@ export async function resolveStorefrontAvailability(
     );
     return applyOutOfStockListing(
       storage,
-      manualResult(item.itemId, availability.status),
+      manualResult(item.itemId, availability),
     );
   } catch {
     return unavailable(item.itemId);

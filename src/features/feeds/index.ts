@@ -1,5 +1,6 @@
 export {
   buildAgentCatalogFeed,
+  backorderShipDate,
   buildGoogleMerchantFeed,
   buildMetaCatalogFeed,
   buildStorefrontAgentsMd,
