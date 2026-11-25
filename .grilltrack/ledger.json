@@ -5,9 +5,9 @@
     "cadence": "sequential",
     "confirmed": false,
     "domain": "Cart key expiry",
-    "started_at": "2026-11-25T04:33:07+00:00",
+    "started_at": "2026-11-25T05:48:01+00:00",
     "status": "grilling",
-    "summary": "A guest cart key lives as long as its cart; the background check deletes it after."
+    "summary": ""
   },
   "decisions": [
     {
@@ -18038,19 +18038,88 @@
       "verification_ref": null
     },
     {
+      "baseline_ref": "git:7806454",
+      "candidate_refs": [],
+      "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+      "context_ref": null,
+      "created_at": "2026-11-25T04:36:46+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [],
+      "domain": "EmDash 1.6 compatibility",
+      "history": [
+        {
+          "at": "2026-11-25T04:36:46+00:00",
+          "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-25T04:36:56+00:00",
+          "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-25T04:36:56+00:00",
+          "choice": "Pin emdash, auth and blocks 1.6.0, plugin CLI 0.13.7, plugin-types 0.6.1 and sandbox-workerd 0.9.8; record emdash@1.6.0's npm integrity; keep the peer exact; no Commerce code change: the Registry build stays byte-identical and within the 128 KiB backend cap.",
+          "from": "implemented",
+          "implementation_ref": "git:0a5ed30",
+          "note": "verification recorded in cumulative context",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "verified",
+          "verification_ref": null
+        }
+      ],
+      "id": "emdash-1-6-compatibility-20261125",
+      "implementation_ref": "git:0a5ed30",
+      "question": "Which EmDash release do Commerce development, tests and the runtime peer pin before v1 launch?",
+      "rationale": "The owner approved the 1.6 upgrade on 25 Nov 2026. 1.6 adds no plugin capabilities, hooks or index renames; its only database step adds users.last_login_at.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "verified",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T04:36:56+00:00",
+      "verification_ref": "file:docs/implementation/emdash-1-6-compatibility.md;cmd:bin/verify-commerce full"
+    },
+    {
       "baseline_ref": null,
       "candidate_refs": [],
-      "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where the record has no cart date (no cart made yet, a paid cart the background check cleared, or a checkout saved before the server cart), the key's own 30 days from minting apply. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
+      "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where there is no cart (none made yet, or one the background check cleared, paid or mid-checkout), the key's own 30 days from minting apply; the retry date the background check puts on a cleared cart with an unfinished payment never renews the key, and a key minted before keys had a date counts from its createdAt. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
       "context_ref": null,
-      "created_at": "2026-11-25T04:33:07+00:00",
+      "created_at": "2026-11-25T05:48:01+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Cart key expiry",
       "history": [
         {
-          "at": "2026-11-25T04:33:07+00:00",
-          "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where the record has no cart date (no cart made yet, a paid cart the background check cleared, or a checkout saved before the server cart), the key's own 30 days from minting apply. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
+          "at": "2026-11-25T05:48:01+00:00",
+          "choice": "No. A cart key lasts only while its cart lives: never past the cart's 30 days from its last change. Where there is no cart (none made yet, or one the background check cleared, paid or mid-checkout), the key's own 30 days from minting apply; the retry date the background check puts on a cleared cart with an unfinished payment never renews the key, and a key minted before keys had a date counts from its createdAt. Each key carries an indexed expiresAt; the 5-minute background check deletes up to 100 keys past it per run, except a key whose cart still lives, which moves to the cart's date. No limit on minting keys and no hiding of a paid order's contact; the storefront asks for a new key when one is refused.",
           "from": "proposed",
           "implementation_ref": null,
           "note": "user accepted the scoped decision",
@@ -18075,7 +18144,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-25T04:33:07+00:00",
+      "updated_at": "2026-11-25T05:48:01+00:00",
       "verification_ref": null
     }
   ],
@@ -18113,5 +18182,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-25T04:33:07+00:00"
+  "updated_at": "2026-11-25T05:48:01+00:00"
 }

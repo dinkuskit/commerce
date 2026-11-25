@@ -795,6 +795,12 @@
 {"action": "shared_understanding_confirmed", "at": "2026-11-25T03:59:08+00:00", "data": {"summary": "The owner answered each point on 24 Nov 2026: a WooCommerce-style date box, one date per variant, a passed date counts as none with a note in the panel, and no email, to save bytes."}, "event_id": "bc01a712-f953-47e6-b19d-a350fb651a93"}
 {"action": "decision_proposed", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "d999eda3-7f21-4eed-8b3f-080a4fe6558f"}
 {"action": "decision_locked", "at": "2026-11-25T03:59:08+00:00", "data": {"decision_id": "google-backorder-ship-date-20261124"}, "event_id": "7518611f-f06f-4860-93dc-7eb4976f5cb3"}
-{"action": "focus_started", "at": "2026-11-25T04:33:07+00:00", "data": {"cadence": "sequential", "domain": "Cart key expiry"}, "event_id": "0be47950-897b-4355-a07a-2806c8381bab"}
-{"action": "decision_proposed", "at": "2026-11-25T04:33:07+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "31973822-71a7-49ee-a238-77c3b388f6cd"}
-{"action": "decision_locked", "at": "2026-11-25T04:33:07+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "1a6a905d-7465-45b9-a135-1bc08a2faa41"}
+{"action": "focus_started", "at": "2026-11-25T04:36:46+00:00", "data": {"cadence": "sequential", "domain": "EmDash 1.6 compatibility"}, "event_id": "040f27b4-cf73-48c0-abde-84d1a354eca0"}
+{"action": "shared_understanding_confirmed", "at": "2026-11-25T04:36:46+00:00", "data": {"summary": "The owner approved starting the EmDash 1.6 upgrade on 25 Nov 2026: version PRs with proof; each deploy and journeys run still needs the owner's go."}, "event_id": "02446fed-166c-4b72-b86c-441003137204"}
+{"action": "decision_proposed", "at": "2026-11-25T04:36:46+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "4ecdc207-27c0-42f4-826e-9bec7ce9454a"}
+{"action": "decision_locked", "at": "2026-11-25T04:36:46+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "f539cf2d-d80c-4645-9901-a92444ede35f"}
+{"action": "decision_implemented", "at": "2026-11-25T04:36:56+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "89baf522-5c39-4353-b793-2732ac83d208"}
+{"action": "decision_verified", "at": "2026-11-25T04:36:56+00:00", "data": {"decision_id": "emdash-1-6-compatibility-20261125"}, "event_id": "6f4a0f92-7caf-442f-8ea0-492b40b840f4"}
+{"action": "focus_started", "at": "2026-11-25T05:48:01+00:00", "data": {"cadence": "sequential", "domain": "Cart key expiry"}, "event_id": "d84acb32-621c-485a-bda1-0cd36e7cb8cb"}
+{"action": "decision_proposed", "at": "2026-11-25T05:48:01+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "b67f28b1-a0ae-42bb-a306-da5413f832b5"}
+{"action": "decision_locked", "at": "2026-11-25T05:48:01+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "e3240c86-afab-42aa-b75b-3e202d71dc3d"}

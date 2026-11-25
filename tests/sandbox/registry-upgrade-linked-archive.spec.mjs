@@ -116,7 +116,8 @@ test("this build ignores 0.8.0's archive mark: the product sells again, and the 
   test.skip(phase !== "new");
   const before = JSON.parse(readFileSync(snapshotFile(), "utf8"));
   const { id, pageId } = before;
-  const sameAsBefore = (listed) => ({ ...listed, variants: { ...listed.variants, members: listed.variants.members.map(({ sku: _sku, ...member }) => member) } });
+  // This build also says each variant member's own SKU and, since the public catalog names items on sale, onSale.
+  const sameAsBefore = ({ onSale: _onSale, ...listed }) => ({ ...listed, variants: { ...listed.variants, members: listed.variants.members.map(({ sku: _sku, onSale: _memberOnSale, ...member }) => member) } });
   await signIn(page, request);
   const { database, rows } = storage();
   // 1. The upgrade rewrites nothing 0.8.0 stored: the product (archivedAt included), its prices, its page link, the settings.
@@ -129,6 +130,7 @@ test("this build ignores 0.8.0's archive mark: the product sells again, and the 
   // shop again exactly as 0.8.0 sold it (this build also says each variant member's own SKU, which 0.8.0 did not).
   const listed = (await publicCatalog(page.request)).find((item) => item.id === id);
   expect(listed.variants.members.map((member) => member.sku)).toEqual(["LINKED-CAP"]);
+  expect([listed.onSale, ...listed.variants.members.map((member) => member.onSale)]).toEqual([true, true]);
   expect(sameAsBefore(listed)).toEqual(before.sold);
 
   // 3. The page's panel says On sale with 0.8.0's prices, and has no Archive or Restore of Commerce's own.

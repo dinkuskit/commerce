@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 // Run by scripts/registry-upgrade-proof.mjs with COMMERCE_UPGRADE_SPEC=registry-upgrade-order-lookup.spec.mjs.
-// "old": an earlier release (0.8.0 or later) keeps paid orders, each with its emailKey, plus
+// "old": an earlier release (0.8.0 or later, 0.9.0-beta.5 for a store already on EmDash 1.5) keeps paid orders, each with its emailKey, plus
 // its shopper accounts. "bridge": this build on that release's EmDash finds the orders and locks one order number
 // after 5 wrong tries. "new": this build on this checkout's EmDash keeps every row as it was, still finds the
 // orders, and the lock made before the EmDash upgrade still holds (commerce-order-lookup-20261122).
@@ -86,9 +86,12 @@ test("the earlier release keeps paid orders and shopper accounts", async ({ requ
   expect(snapshot.orders).toHaveLength(3);
   expect(snapshot.accounts).toHaveLength(3);
   writeFileSync(snapshotFile(), JSON.stringify(snapshot, null, 2));
-  // The earlier release has no lookup route.
-  const before = await request.post(LOOKUP, { data: { orderNumber: "1001", email: "pat@example.test" }, headers: { origin: "http://127.0.0.1:" + (process.env.COMMERCE_PROOF_PORT ?? 64561) } });
-  expect(before.ok()).toBe(false);
+  // A release before the order lookup (0.8.0) has no lookup route; a later one (0.9.0-beta.5, on EmDash 1.5) proves
+  // this build first on that EmDash, then on this checkout's.
+  if (!existsSync(resolve(process.env.COMMERCE_UPGRADE_FROM_HOST, "src/features/orders/lookup.ts"))) {
+    const before = await request.post(LOOKUP, { data: { orderNumber: "1001", email: "pat@example.test" }, headers: { origin: "http://127.0.0.1:" + (process.env.COMMERCE_PROOF_PORT ?? 64561) } });
+    expect(before.ok()).toBe(false);
+  }
   database.close();
 });
 

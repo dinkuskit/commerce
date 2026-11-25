@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { dispatchPluginApiRequest } from 'emdash/internal/plugin-test-runtime';
 
 const trace = globalThis[Symbol.for('commerce:coupon-proof-access')] ??= { count: 0, methods: [] };
@@ -55,6 +55,12 @@ export async function onRequest(context, next) {
   await runtime.db.insertInto('_plugin_state').values(row).onConflict(oc => oc.column('plugin_id').doNothing()).execute();
   const state = await runtime.db.selectFrom('_plugin_state').select(['version', 'source']).where('plugin_id', '=', pluginId).executeTakeFirst();
   if (state?.version !== manifest.version || state?.source !== 'registry') throw new Error('Installed profile identity drift');
+  // EmDash 1.6 reloads plugin state only when its generation option moves, as its own installs do.
+  const generationName = 'emdash:plugins:generation';
+  const generation = await runtime.db.selectFrom('options').select('value').where('name', '=', generationName).executeTakeFirst();
+  const nextGeneration = String(BigInt(generation?.value ?? '0') + 1n);
+  await runtime.db.insertInto('options').values({ name: generationName, value: nextGeneration, revision: randomUUID() })
+    .onConflict(oc => oc.column('name').doUpdateSet({ value: nextGeneration, revision: randomUUID() })).execute();
   await runtime.syncRegistryPlugins();
   // Astro locals expose a runtime facade. This pinned test-only observer uses
   // the host's documented source singleton to invoke its genuine index sync.

@@ -51,8 +51,10 @@ export async function openProductPage(page, title) {
 /** Opens the Dinkus Commerce panel on the editor already showing and returns its container. */
 export async function openPanel(page) {
   const trigger = page.getByLabel("Settings", { exact: true }).getByRole("button", { name: "Dinkus Commerce", exact: true });
-  // On a phone the editor's settings sidebar opens from its Settings button.
-  const settings = page.getByRole("main").getByRole("button", { name: "Settings", exact: true });
+  // On a phone the editor's settings sidebar opens from a button in its bar: Settings on EmDash 1.5,
+  // Show settings on 1.6.
+  const settings = page.getByRole("main").getByRole("button", { name: "Settings", exact: true })
+    .or(page.getByRole("button", { name: "Show settings", exact: true }));
   await expect(trigger.or(settings).first()).toBeVisible({ timeout: 60000 });
   if (!(await trigger.isVisible())) await settings.click();
   await trigger.click({ timeout: 60000 });
@@ -64,7 +66,8 @@ export async function openPanel(page) {
 /** Opens the Product image & gallery panel beside the Dinkus Commerce one (catalog-media-panel-20261027). */
 export async function openMediaPanel(page) {
   const trigger = page.getByLabel("Settings", { exact: true }).getByRole("button", { name: "Product image & gallery", exact: true });
-  const settings = page.getByRole("main").getByRole("button", { name: "Settings", exact: true });
+  const settings = page.getByRole("main").getByRole("button", { name: "Settings", exact: true })
+    .or(page.getByRole("button", { name: "Show settings", exact: true }));
   await expect(trigger.or(settings).first()).toBeVisible({ timeout: 60000 });
   if (!(await trigger.isVisible())) await settings.click();
   await trigger.click({ timeout: 60000 });

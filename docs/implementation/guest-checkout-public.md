@@ -15,7 +15,7 @@ Native plugin: `createPlugin()` / `dinkusCommerce()`.
 Registry/sandbox entry: `@dinkuskit/commerce/sandbox` built from
 `emdash-plugin.jsonc` + `src/plugin.ts`.
 Runtime slug: `dinkus-commerce`.
-EmDash API peer: `1.5.0`.
+EmDash API peer: `1.6.0`.
 
 ## Routes
 
