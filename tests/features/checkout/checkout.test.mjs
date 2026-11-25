@@ -310,3 +310,156 @@ test('real session field changes remain rejected while paying holds stay',async 
     assert.equal(f.holds.get(a.attemptId).state,'reserved');assert.equal(f.counts().releaseCalls,0);
   }
 });
+
+async function lateAttemptCart(t) {
+  const {
+    cartGuestCheckout,
+    prepareGuestCheckout,
+    reconcileGuestPaymentWakes,
+    startGuestCheckout,
+    statusGuestCheckout,
+  } = await import('../../../dist/features/checkout/index.js');
+  const { remindCarts } = await import('../../../dist/features/checkout/remind.js');
+  const makeCol = () => {
+    const map = new Map();
+    let rev = 0;
+    return {
+      map,
+      async get(id) { return structuredClone(map.get(id)?.value ?? null); },
+      async put(id, value) { map.set(id, { revision: String(++rev), value: structuredClone(value) }); },
+      async getVersioned(id) { const e = map.get(id); return e ? { revision: e.revision, value: structuredClone(e.value) } : null; },
+      async compareAndSet(id, revision, value) {
+        const cur = map.get(id);
+        if ((cur?.revision ?? null) !== revision) return { applied: false };
+        map.set(id, { revision: String(++rev), value: structuredClone(value) });
+        return { applied: true };
+      },
+      async query() { return { items: [...map].map(([id, e]) => ({ id, data: structuredClone(e.value) })), hasMore: false }; },
+    };
+  };
+  const opened = openStore(':memory:');
+  t.after(() => opened.db.close());
+  const f = fixture(opened.store, false);
+  const carts = makeCol(), capabilities = makeCol(), stops = makeCol();
+  const assoc = new Map(), sessions = new Map(), payByAttempt = new Map();
+  let clock = 10_000, seq = 0;
+  const payments = {
+    async ensureSession(req) {
+      let entry = sessions.get(req.attemptId);
+      if (!entry) {
+        entry = { request: structuredClone(req), session: { sessionId: `sess-${req.attemptId}`, redirectUrl: 'https://checkout.stripe.com/test', createdAt: clock, expiresAt: clock + 1800 } };
+        sessions.set(req.attemptId, entry);
+      }
+      const out = payByAttempt.get(req.attemptId) ?? 'open';
+      return { outcome: out, attemptId: req.attemptId, total: entry.request.total, session: entry.session, ...(out === 'paid' ? { paymentId: `pay-${req.attemptId}` } : {}) };
+    },
+    async lookup(req) {
+      const entry = sessions.get(req.attemptId);
+      if (!entry) return { outcome: 'unknown' };
+      const out = payByAttempt.get(req.attemptId) ?? 'open';
+      return { outcome: out, attemptId: req.attemptId, total: entry.request.total, session: entry.session, ...(out === 'paid' ? { paymentId: `pay-${req.attemptId}` } : {}) };
+    },
+  };
+  const runtime = {
+    siteUrl: 'https://shop.example',
+    carts, capabilities,
+    catalog: f.execution.catalog,
+    paymentAssociations: {
+      async claim(rec) { if (assoc.has(rec.attemptId)) return false; assoc.set(rec.attemptId, structuredClone(rec)); return true; },
+      async get(id) { return structuredClone(assoc.get(id) ?? null); },
+    },
+    paidOrders: { async receive() { return 'stored'; } },
+    host: {
+      siteUrl: 'https://shop.example',
+      paymentBindingRef: 'stripe-test-binding',
+      resolvePayments: async () => payments,
+      resolveAvailabilityProvider: f.execution.availability.resolveProvider,
+      loadCheckoutContactRequirements: f.execution.loadCheckoutContactRequirements,
+      createAttemptId: () => `att_${++seq}`,
+      now: () => clock,
+    },
+  };
+  const prep = await prepareGuestCheckout(runtime, {});
+  const headers = { [prep.capability.header]: prep.capability.capability };
+  const savedCart = await cartGuestCheckout(runtime, { lines: [{ catalogItemId: 'one', quantity: 1 }], version: null }, headers);
+  assert.equal(savedCart.ok, true);
+  return { cartGuestCheckout, prepareGuestCheckout, reconcileGuestPaymentWakes, startGuestCheckout, statusGuestCheckout, remindCarts, carts, capabilities, stops, payByAttempt, runtime, headers, clock: () => clock };
+}
+
+test('late payment on an earlier attempt closes cart, surfaces paid status, blocks new attempts, and suppresses reminders',async t => {
+  const { cartGuestCheckout, reconcileGuestPaymentWakes, startGuestCheckout, statusGuestCheckout, remindCarts, carts, capabilities, stops, payByAttempt, runtime, headers, clock: now } = await lateAttemptCart(t);
+  const clock = now();
+
+  // Attempt 1 starts and expires unpaid.
+  const first = await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
+  assert.equal(first.checkout.attemptId, 'att_1');
+  payByAttempt.set('att_1', 'expired-unpaid');
+  assert.equal((await statusGuestCheckout(runtime, {}, headers)).checkout.state, 'released-retry');
+
+  // Shopper retries -> Attempt 2 starts and also expires unpaid.
+  const second = await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
+  assert.equal(second.checkout.attemptId, 'att_2');
+  payByAttempt.set('att_2', 'expired-unpaid');
+  assert.equal((await statusGuestCheckout(runtime, {}, headers)).checkout.state, 'released-retry');
+
+  // Late payment wake arrives for Attempt 1 -> revives Attempt 1 as paid (paidAfterEnd).
+  payByAttempt.set('att_1', 'paid');
+  const wakes = [{ eventId: 'evt_late_1', attemptId: 'att_1', bindingRef: 'stripe-test-binding', deliveryGeneration: 1, wokeAt: clock }];
+  const wakeRes = await reconcileGuestPaymentWakes(runtime, {
+    async list() { return [...wakes]; },
+    async acknowledge() { wakes.length = 0; return true; },
+  });
+  assert.equal(wakeRes[0].status, 'acknowledged');
+  assert.equal(wakeRes[0].attempt.phase, 'paid');
+  assert.equal(wakeRes[0].attempt.order.paidAfterEnd, true);
+
+  // 1. Default status surfaces the paid order (att_1), not released att_2.
+  const status = await statusGuestCheckout(runtime, {}, headers);
+  assert.equal(status.ok, true);
+  assert.equal(status.checkout.state, 'paid');
+  assert.equal(status.checkout.attemptId, 'att_1');
+
+  // 2. Cart read returns empty lines, and cart write refuses mutation.
+  const read = await cartGuestCheckout(runtime, {}, headers);
+  assert.equal(read.ok, true);
+  assert.deepEqual(read.cart.lines, []);
+  const mutated = await cartGuestCheckout(runtime, { lines: [{ catalogItemId: 'one', quantity: 2 }], version: read.cart.version }, headers);
+  assert.equal(mutated.ok, false);
+  assert.equal(mutated.error.code, 'CHECKOUT_FROZEN');
+
+  // 3. Starting checkout again replays paid att_1 and never mints att_3.
+  const again = await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
+  assert.equal(again.ok, true);
+  assert.equal(again.checkout.state, 'paid');
+  assert.equal(again.checkout.attemptId, 'att_1');
+  const storedRecord = [...carts.map.values()][0].value;
+  assert.equal(storedRecord.attempts.length, 2);
+
+  // 4. Abandoned-cart reminder clears remindAt without emitting leftKey for a paid cart.
+  await remindCarts({ site: { url: 'https://shop.example' }, storage: { checkout_carts: carts, checkout_guest_capabilities: capabilities, cart_email_stops: stops } }, clock + 40_000);
+  const afterRemind = [...carts.map.values()][0].value;
+  assert.equal(afterRemind.remindAt, undefined);
+  assert.equal(afterRemind.leftKey, undefined);
+});
+
+test('a cart read still checks the newest attempt after an earlier one was paid late', async t => {
+  const { cartGuestCheckout, reconcileGuestPaymentWakes, startGuestCheckout, statusGuestCheckout, carts, payByAttempt, runtime, headers, clock: now } = await lateAttemptCart(t);
+  const clock = now();
+  await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
+  payByAttempt.set('att_1', 'expired-unpaid');
+  assert.equal((await statusGuestCheckout(runtime, {}, headers)).checkout.state, 'released-retry');
+  // The shopper retries; attempt 2 is still on its payment page when attempt 1's late payment arrives.
+  const second = await startGuestCheckout(runtime, withSyntheticCheckoutContact({}), headers);
+  assert.equal(second.checkout.attemptId, 'att_2');
+  payByAttempt.set('att_1', 'paid');
+  const wakes = [{ eventId: 'evt_late_1', attemptId: 'att_1', bindingRef: 'stripe-test-binding', deliveryGeneration: 1, wokeAt: clock }];
+  await reconcileGuestPaymentWakes(runtime, { async list() { return [...wakes]; }, async acknowledge() { wakes.length = 0; return true; } });
+  const phases = () => [...carts.map.values()][0].value.attempts.map(attempt => attempt.phase);
+  assert.deepEqual(phases(), ['paid', 'paying']);
+  // Attempt 2 then ends unpaid at the provider, and its wake never comes: the cart read is what notices.
+  payByAttempt.set('att_2', 'expired-unpaid');
+  const read = await cartGuestCheckout(runtime, {}, headers);
+  assert.equal(read.checkout.attemptId, 'att_1');
+  assert.equal(read.checkout.state, 'paid');
+  assert.deepEqual(phases(), ['paid', 'released']);
+});
