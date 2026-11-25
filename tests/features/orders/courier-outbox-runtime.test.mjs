@@ -195,6 +195,8 @@ test('order.paid names the discount and the add-ons whose answers priced the ord
       contactSnapshot: { ...nine.contactSnapshot, contact: { ...nine.contactSnapshot.contact, delivery: longest } } } });
     const [item, biggest] = (await shop.since(null, 50, { topic: 'order.paid' })).data.items;
     assert.deepEqual([item.data.subtotal, item.data.discount, item.data.shipping, item.data.total, item.data.addons], [usd('900'), usd('300'), usd('0'), usd('600'), addons]);
+    // An order from a cart that carried no attributes says so plainly.
+    assert.equal(item.data.attributes, null);
     assert.equal(biggest.id, 'order-9:paid');
     assert.deepEqual(biggest.data.addons, most);
     assert.equal(biggest.data.shipTo.line2, far);
