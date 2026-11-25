@@ -50,7 +50,7 @@ function paid(record: OrderRecord) {
     orderId: order.orderId, number, test, email, name: (shipTo ?? billingOf(record))?.name ?? null, shipTo,
     lines: order.lines.map(line => ({ name: cut(line.name), options: cut(lineOptions(order, line.catalogItemId)), quantity: line.quantity, unitPrice: line.unitPrice })),
     subtotal: pricing?.merchandiseSubtotal ?? null, discount: +(pricing?.couponDiscount.minor ?? 0) ? pricing!.couponDiscount : null,
-    shipping: pricing?.shipping.charge ?? null, tax: pricing?.tax ?? null, total: order.total, addons: order.addons ?? [],
+    shipping: pricing?.shipping.charge ?? null, tax: pricing?.tax ?? null, total: order.total, addons: order.addons ?? [], attributes: order.attributes ?? null,
   } as { lines: unknown[]; moreLines?: number } });
 }
 

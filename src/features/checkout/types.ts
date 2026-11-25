@@ -189,7 +189,15 @@ export interface CheckoutPaymentPort {
   /** Verifies existing owner-controlled Payments binding without starting a checkout session. */
   verifyBinding?(): Promise<{ ready?: boolean; mode?: string }>;
 }
+/**
+ * A store's own facts on a cart, such as an account to credit (commerce-cart-attributes-order-paid-20261123): at most 10,
+ * each key 1 to 40 of a-z 0-9 _ . - and never starting `dinkus_` or `_`, each value text of at most 255 characters, the
+ * whole bag at most 1,000 bytes as JSON, so the paid news fits the courier beside the largest address and add-ons. Frozen onto the attempt at checkout start and copied onto its order; never sent to Payments.
+ */
+export type CartAttributes = Readonly<Record<string, string>>;
 interface CommerceOrderBase {
+  /** The cart's attributes as checkout start froze them. */
+  attributes?: CartAttributes;
   orderId: string;
   receiptId: string;
   attemptId: string;
@@ -214,6 +222,8 @@ export type CommerceOrder =
 export interface CheckoutAttempt {
   attemptId: string;
   cart: CartLine[];
+  /** The saved cart's attributes when this attempt started. */
+  attributes?: CartAttributes;
   payment: PaymentRequest;
   stock?: StockRequest;
   phase: "reserving" | "paying" | "releasing" | "released" | "paid";
@@ -237,6 +247,8 @@ export interface CheckoutAttempt {
  */
 export interface CheckoutRecord {
   attempts: CheckoutAttempt[]; cart?: { lines: CartLine[]; key?: string }; cartExpires?: string;
+  /** The store's own facts on this cart. A cart write that names none keeps them; `{}` clears them. */
+  attributes?: CartAttributes;
   /**
    * The left cart (store-emails-plugin-20261122): when to look (Unix seconds, indexed) and the shopper's tick. Once left,
    * `leftKey` (`<time> <cartId>`, indexed) orders the courier's `cart.left` news, `leftLink` is the cart link made for it and
@@ -447,7 +459,7 @@ export type GuestCheckoutResult =
       capability?: GuestCapabilityPresentation;
       contactRequirements?: { requirePhoneNumber: boolean };
       checkout: GuestCheckoutProjection;
-      cart?: { lines: CartLine[]; version: string | null; expiresAt: number };
+      cart?: { lines: CartLine[]; attributes?: CartAttributes; version: string | null; expiresAt: number };
     }
   | {
       ok: false;

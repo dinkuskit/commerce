@@ -125,21 +125,29 @@ test('order.paid gives each order this version stored, with what the order confi
     // Two size M tees, paid on this version: a paid-news key and the pricing the checkout froze.
     await shop.keep('order-5', 'ana@buyer.test', 'Ana Buyer', [['tee-m', 'Smoky Mountain Tee']], { variant: { productId: 'tee', catalogItemId: 'tee-m' }, paidKey: `${paidAt} order-5` });
     await shop.orders.put('order-5', { ...(await shop.orders.get('order-5')), paidOrder: { ...(await shop.orders.get('order-5')).paidOrder,
-      lines: [{ catalogItemId: 'tee-m', quantity: 2, name: 'Smoky Mountain Tee', unitPrice: usd('2400') }], total: usd('5400'), pricing } });
+      lines: [{ catalogItemId: 'tee-m', quantity: 2, name: 'Smoky Mountain Tee', unitPrice: usd('2400') }], total: usd('5400'), pricing,
+      // The store's own facts, frozen from the cart (commerce-cart-attributes-order-paid-20261123).
+      attributes: { account_id: 'acct_42', 'credit.sku': 'compute-100' } } });
     // Paid on a version before this one: no paid-news key, so no confirmation is ever sent for it.
     await shop.keep('order-6', 'bo@buyer.test', 'Bo Buyer', [['mug', 'Mug']]);
     // A 60-line order: 50 lines and a count of the rest, so the item stays under the courier's 8 KB.
     // Long names in a script of three bytes a character are the worst case the courier's 8 KB sees.
     await shop.keep('order-7', 'cy@buyer.test', 'Cy Buyer', Array.from({ length: 60 }, (_, i) => ['item-' + i, 'Item ' + i + ' ' + '茶'.repeat(300)]), { paidKey: `${paidAt} order-7` });
+    // Its attributes are as large as a cart allows (just under 1,000 bytes), and are never the part left out.
+    const fullBag = Object.fromEntries(Array.from({ length: 4 }, (_, i) => ['fact_' + i, '茶'.repeat(78)]));
+    await shop.orders.put('order-7', { ...(await shop.orders.get('order-7')), paidOrder: { ...(await shop.orders.get('order-7')).paidOrder, attributes: fullBag } });
 
     const paid = (await shop.since(null, 50, { topic: 'order.paid' })).data;
     assert.deepEqual(paid.items.map(item => item.id), ['order-5:paid', 'order-7:paid']);
     assert.deepEqual(paid.items[0], { id: 'order-5:paid', at: paidAt, data: {
       orderId: 'order-5', number: 1005, test: true, email: 'ana@buyer.test', name: 'Ana Buyer', shipTo: delivery('Ana Buyer'),
       lines: [{ name: 'Smoky Mountain Tee', options: 'Size: M', quantity: 2, unitPrice: usd('2400') }],
-      subtotal: usd('4800'), discount: null, shipping: usd('600'), tax: null, total: usd('5400'), addons: [] } });
+      subtotal: usd('4800'), discount: null, shipping: usd('600'), tax: null, total: usd('5400'), addons: [],
+      attributes: { account_id: 'acct_42', 'credit.sku': 'compute-100' } } });
     const bytes = item => new TextEncoder().encode(JSON.stringify(item)).length;
     const big = paid.items[1].data;
+    assert.ok(bytes(fullBag) > 950 && bytes(fullBag) <= 1000, String(bytes(fullBag)));
+    assert.deepEqual(big.attributes, fullBag);
     assert.ok(big.lines.length >= 1 && big.lines.length + big.moreLines === 60, JSON.stringify({ kept: big.lines.length, more: big.moreLines }));
     assert.equal(big.lines[0].name.length, 200, 'a name is cut to 200 characters');
     assert.ok(bytes(paid.items[1]) <= 7500, String(bytes(paid.items[1])));
@@ -178,20 +186,25 @@ test('order.paid names the discount, the sales tax and the add-ons whose answers
     const most = ['a', 'b', 'c', 'd'].map(from => ({ from: from.repeat(64), ref: 'r'.repeat(150), codes: Array(2).fill('C'.repeat(64)) }));
     assert.ok(JSON.stringify(most.map(a => [a.from, a.ref, a.codes])).length <= 1500);
     const far = '茶'.repeat(200);
+    // And the most a cart's attributes hold (1,000 bytes): they are kept whole too, and only the item list gives way.
+    const mostFacts = Object.fromEntries(Array.from({ length: 4 }, (_, i) => ['fact_' + i, '茶'.repeat(78)]));
     const longest = { name: far, line1: far, line2: far, city: far, region: 'DISTRICT OF COLUMBIA', postalCode: far, country: 'US' };
     await shop.keep('order-9', 'a'.repeat(64) + '@' + 'b'.repeat(185) + '.test', far, [['mug', far]], { paidKey: `${paidAt} order-9` });
     const nine = (await shop.orders.get('order-9')).paidOrder;
-    await shop.orders.put('order-9', { ...(await shop.orders.get('order-9')), paidOrder: { ...nine, pricing, addons: most,
+    await shop.orders.put('order-9', { ...(await shop.orders.get('order-9')), paidOrder: { ...nine, pricing, addons: most, attributes: mostFacts,
       contactSnapshot: { ...nine.contactSnapshot, contact: { ...nine.contactSnapshot.contact, delivery: longest } } } });
     const [item, biggest] = (await shop.since(null, 50, { topic: 'order.paid' })).data.items;
     // The sales tax rides along for Tax's report (dinkuskit/tax ledger tax-picks-rate-commerce-does-math).
     assert.deepEqual([item.data.subtotal, item.data.discount, item.data.shipping, item.data.tax, item.data.total, item.data.addons], [usd('900'), usd('300'), usd('0'), usd('42'), usd('642'), addons]);
+    // An order from a cart that carried no attributes says so plainly.
+    assert.equal(item.data.attributes, null);
     assert.equal(biggest.id, 'order-9:paid');
     assert.deepEqual(biggest.data.addons, most);
     assert.equal(biggest.data.shipTo.line2, far);
     const size = new TextEncoder().encode(JSON.stringify(biggest)).length;
-    assert.ok(size <= 7500 && biggest.data.lines.length === 1, String(size));
-    console.log('largest add-ons paid news', JSON.stringify({ bytes: size, addons: most.length, lines: biggest.data.lines.length }));
+    assert.deepEqual(biggest.data.attributes, mostFacts);
+    assert.ok(size <= 7500 && biggest.data.lines.length + (biggest.data.moreLines ?? 0) === 1, String(size));
+    console.log('largest add-ons paid news', JSON.stringify({ bytes: size, addons: most.length, attributeBytes: new TextEncoder().encode(JSON.stringify(mostFacts)).length, lines: biggest.data.lines.length }));
   } finally {
     await shop.stop();
   }

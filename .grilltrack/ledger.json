@@ -17837,6 +17837,67 @@
       "superseded_by": null,
       "updated_at": "2026-11-24T22:42:07+00:00",
       "verification_ref": null
+    },
+    {
+      "baseline_ref": null,
+      "candidate_refs": [],
+      "choice": "In Commerce, not Payments. A cart carries an optional attributes bag: at most 10 attributes, each key 1 to 40 characters of a-z, 0-9, underscore, dot and hyphen, never starting with dinkus_ or an underscore, each value text of at most 255 characters, the whole bag at most 1,000 bytes as JSON, so the paid news fits the courier's 8 KB beside the largest address and the most the add-ons door keeps. It is set only on the whole-cart replace under the cart version (commerce-cart-agent-writes-20261113), by whoever holds the cart, as with Shopify's cart attributes; Commerce does not verify the values. A replace that names attributes replaces them all (an empty bag leaves none), a replace that names none keeps them, and a cart read returns them. Anything outside the limits refuses the whole write as INVALID_CART. Checkout start, through the public start or the add-ons door, freezes the cart's attributes onto the attempt, and a paid attempt copies them onto its order unchanged. They are never sent to Payments and are not on the shopper's receipt, so they are the same under Stripe, Authorize.Net and agent checkouts. The existing order.paid courier item (id <orderId>:paid, given once the order is durably stored) carries them as attributes, null when there are none. No webhook on Payments and no outbound HTTP webhook from Commerce; the self-hosted Payments adapter stays in payments#97.",
+      "context_ref": "https://github.com/dinkuskit/payments/issues/125",
+      "created_at": "2026-11-24T23:55:02+00:00",
+      "deferred_reason": null,
+      "delivery_ref": null,
+      "dependencies": [
+        "commerce-server-cart-20261113",
+        "commerce-cart-agent-writes-20261113",
+        "order-shipped-outbox-20261122",
+        "registry-headroom-20261124",
+        "commerce-addons-door-20261124"
+      ],
+      "domain": "Coupons as a plugin: the add-ons door",
+      "history": [
+        {
+          "at": "2026-11-25T01:11:14+00:00",
+          "choice": "In Commerce, not Payments. A cart carries an optional attributes bag: at most 10 attributes, each key 1 to 40 characters of a-z, 0-9, underscore, dot and hyphen, never starting with dinkus_ or an underscore, each value text of at most 255 characters, the whole bag at most 1,000 bytes as JSON, so the paid news fits the courier's 8 KB beside the largest address and the most the add-ons door keeps. It is set only on the whole-cart replace under the cart version (commerce-cart-agent-writes-20261113), by whoever holds the cart, as with Shopify's cart attributes; Commerce does not verify the values. A replace that names attributes replaces them all (an empty bag leaves none), a replace that names none keeps them, and a cart read returns them. Anything outside the limits refuses the whole write as INVALID_CART. Checkout start, through the public start or the add-ons door, freezes the cart's attributes onto the attempt, and a paid attempt copies them onto its order unchanged. They are never sent to Payments and are not on the shopper's receipt, so they are the same under Stripe, Authorize.Net and agent checkouts. The existing order.paid courier item (id <orderId>:paid, given once the order is durably stored) carries them as attributes, null when there are none. No webhook on Payments and no outbound HTTP webhook from Commerce; the self-hosted Payments adapter stays in payments#97.",
+          "from": "proposed",
+          "implementation_ref": null,
+          "note": "user accepted the scoped decision",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "locked",
+          "verification_ref": null
+        },
+        {
+          "at": "2026-11-25T01:11:22+00:00",
+          "choice": "In Commerce, not Payments. A cart carries an optional attributes bag: at most 10 attributes, each key 1 to 40 characters of a-z, 0-9, underscore, dot and hyphen, never starting with dinkus_ or an underscore, each value text of at most 255 characters, the whole bag at most 1,000 bytes as JSON, so the paid news fits the courier's 8 KB beside the largest address and the most the add-ons door keeps. It is set only on the whole-cart replace under the cart version (commerce-cart-agent-writes-20261113), by whoever holds the cart, as with Shopify's cart attributes; Commerce does not verify the values. A replace that names attributes replaces them all (an empty bag leaves none), a replace that names none keeps them, and a cart read returns them. Anything outside the limits refuses the whole write as INVALID_CART. Checkout start, through the public start or the add-ons door, freezes the cart's attributes onto the attempt, and a paid attempt copies them onto its order unchanged. They are never sent to Payments and are not on the shopper's receipt, so they are the same under Stripe, Authorize.Net and agent checkouts. The existing order.paid courier item (id <orderId>:paid, given once the order is durably stored) carries them as attributes, null when there are none. No webhook on Payments and no outbound HTTP webhook from Commerce; the self-hosted Payments adapter stays in payments#97.",
+          "from": "locked",
+          "implementation_ref": null,
+          "note": "bounded implementation recorded",
+          "repair_required": false,
+          "review_classifications": [],
+          "review_ref": null,
+          "review_result": null,
+          "review_source_identity": null,
+          "to": "implemented",
+          "verification_ref": null
+        }
+      ],
+      "id": "commerce-cart-attributes-order-paid-20261123",
+      "implementation_ref": "f82e364 (pull request 312): cart replace takes a bounded attributes bag, checkout start freezes it onto the attempt and the paid order, and the courier's order.paid carries it beside the add-ons; never sent to Payments or shown on the guest receipt. Tests server-cart.test.mjs (limits, refusals, keep, replace, clear, frozen, absent from payment and receipt) and courier-outbox-runtime.test.mjs through the compiled Registry bundle (largest paid news 7,490 bytes with the largest address, four add-on answers and a 985-byte bag). Typecheck and audit:repo clean, unit 855/856 (one scheduled-sale timing test, 3 of 3 alone), integration 112/112, backend.js 130,281 bytes, 791 free.",
+      "question": "How does a store attach its own facts to an order, such as an account ID to credit, and learn that the order was paid (payments#125)?",
+      "rationale": "Ronald 2026-11-24, shown the limits (at most 10 attributes, 1,000 bytes in all, names of 1 to 40 characters never starting dinkus_ or an underscore, text values up to 255 characters), the keep-unless-named rule and that the shopper's cart sets them unverified: lock it. Checked the same day against Shopify cart attributes and orders/paid, WooCommerce order meta_data and woocommerce_payment_complete, BigCommerce cart metafields, and the REA synthesis.",
+      "repair_required": false,
+      "review_classifications": [],
+      "review_history": [],
+      "review_ref": null,
+      "review_result": null,
+      "review_source_identity": null,
+      "status": "implemented",
+      "superseded_by": null,
+      "updated_at": "2026-11-25T01:11:22+00:00",
+      "verification_ref": null
     }
   ],
   "last_activation": {
@@ -17873,5 +17934,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-24T22:42:07+00:00"
+  "updated_at": "2026-11-25T01:11:22+00:00"
 }

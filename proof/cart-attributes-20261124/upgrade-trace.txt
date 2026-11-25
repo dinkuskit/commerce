@@ -1,0 +1,20 @@
+✔ a cart key, checkout and paid order from 0.8.0 keep working with no attributes, beside a new cart that carries them (326.542208ms)
+ℹ 0.8.0 wrote cart ee2d30d5-ab20-4a43-84b5-b7dfae659ba1: attempt a947af89-0781-43ab-85af-b220e0b193d5 phase=paying, no attributes on the record or the attempt
+ℹ after upgrade: the 0.8.0 key reads attempt a947af89-0781-43ab-85af-b220e0b193d5; adding attributes to its open checkout answers CHECKOUT_FROZEN
+ℹ paid after upgrade: order:a947af89-0781-43ab-85af-b220e0b193d5 total=250, kept by Orders with no attributes
+ℹ new cart on this build: attributes {"account_id":"acct_42","credit.sku":"compute-100"} frozen on attempt 079e322a-80ab-4efe-b50f-d916ead73e37; carts in the database: 2
+✔ a checkout open on the payment page when the store upgrades is paid on this build, with its saved settings kept (302.284167ms)
+ℹ release attempt e84bb32b-9a03-423a-b2e9-23fdeb2bd6b4 phase=paying window={"minSeconds":1800,"maxSeconds":1860} session=1830s
+ℹ after upgrade: state=paid order=order:e84bb32b-9a03-423a-b2e9-23fdeb2bd6b4 total=250
+ℹ new checkout on the kept settings: state=pending
+✔ an attempt frozen with the old exact 1800-second window still settles after the upgrade, and a longer session is refused (194.578ms)
+ℹ 1830-second session for the old attempt: state=UNAVAILABLE
+ℹ exact 1800-second session: state=paid order=order:22c93dbf-d375-4cbd-91e0-57d075317d83
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 913.3545
