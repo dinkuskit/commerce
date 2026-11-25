@@ -52,7 +52,7 @@ export type {
 } from "../product-admin.js";
 export { normalizeCreateCatalogItemInput, normalizeSku } from "../normalize.js";
 export { offShop, renameCatalogProduct, setCatalogProductOnSale, editProduct, named, changeCatalogItemSku } from "../product-edit.js";
-export { PRODUCT_PAGES_COLLECTION, claimProductPage, linkProductPage, pageProduct, productNotFound, setProductPageOnSale } from "../product-pages.js";
+export { PRODUCT_PAGES_COLLECTION, PRODUCT_ROW_COLLECTIONS, claimProductPage, linkProductPage, pageProduct, productNotFound, setProductPageOnSale } from "../product-pages.js";
 export type { ProductPageRecord, ProductPages } from "../product-pages.js";
 export { PRODUCT_PAGE_ON_SALE_ROUTE } from "../route-ids.js";
 export {
