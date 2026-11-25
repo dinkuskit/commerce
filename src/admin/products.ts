@@ -42,6 +42,7 @@ type ProductFields = {
   sku?: string;
   manageStock: boolean | null;
   stockStatus: CatalogProductPriceForm["stockStatus"];
+  shipBy?: string;
   feedChannels?: readonly ProductFeedChannel[];
 };
 type Form = Extract<Block, { type: "form" }>;
@@ -66,7 +67,10 @@ function productForm(id: string, values: ProductFields, action = "save:" + id): 
       input("regular", "Regular", values.regular),
       input("sale", "Sale", values.sale),
       ...(values.sku === undefined ? [] : [input("sku", "SKU", values.sku)]),
-      ...(values.manageStock === false ? [radio("stockStatus", "Stock status", STOCK_OPTIONS, values.stockStatus ?? undefined)] : []),
+      ...(values.manageStock === false ? [radio("stockStatus", "Stock status", STOCK_OPTIONS, values.stockStatus ?? undefined),
+        // Google needs it for a backorder; a passed one counts as none (google-backorder-ship-date-20261124).
+        { type: "date_input" as const, action_id: "shipBy", label: "Expected ship date" + ((values.shipBy ?? "z") < new Date().toISOString().slice(0, 10) ? " (passed: pick a new one)" : ""),
+          initial_value: values.shipBy, condition: { field: "stockStatus", eq: "on-backorder" } }] : []),
       ...feedFields(values.feedChannels),
     ], "Save", action);
 }
@@ -168,7 +172,7 @@ async function product(ctx: PluginContext, id: string, form?: PriceForm, toast?:
     ...(unpriced ? [note(NO_PRICE)] : []),
     ...(form?.message ? [alert(form.message)] : []),
     ...(simple ? [header("Pricing & stock"), manageStockNotice(values.manageStock),
-      productForm(id, { ...values, sku: form?.sku ?? selected.sku, stockStatus: values.stockStatus ?? status }, "save:" + JSON.stringify([id, selected.revision]))] : []),
+      productForm(id, { ...values, sku: form?.sku ?? selected.sku, stockStatus: values.stockStatus ?? status, shipBy: selected.shipBy }, "save:" + JSON.stringify([id, selected.revision]))] : []),
     variantsCard(id, selected, focus),
     ...(!simple && feedChannels ? [card("feeds:" + id, "Feeds", [panelForm(feedFields(feedChannels),
       "Save feeds", "variant:" + JSON.stringify(["feeds", id, selected.revision]))], focus === "feeds")] : []),
@@ -342,7 +346,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         const wasManaged = isManagedCatalogRecord(item);
         const payload: Record<string, unknown> = { catalogItemId: id, regular: text(values.regular), sale: text(values.sale) };
         if (Object.hasOwn(values, "manageStock")) payload.manageStock = values.manageStock;
-        if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus);
+        if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus), payload.shipBy = text(values.shipBy ?? "");
         const channels = feeds();
         if (channels) payload.feedChannels = channels;
         await resku(id, (item as { sku?: string } | null)?.sku ?? "", fence);
@@ -407,7 +411,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         } else if (operation === "price") {
           const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]) ?? productNotFound();
           const shown = args[2] ?? member.sku, fence = fenceOf(args[1], shown), regular = text(values.regular), sale = text(values.sale);
-          const stock = !member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus) } : {};
+          const stock = !member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus), shipBy: text(values.shipBy ?? "") } : {};
           await resku(args[0], shown, fence);
           const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: fence?.revision ?? args[1], regular, sale, ...stock });
           // A price refused after the fence held is this request's own doing: the typing comes back on a form that reads the product as it now is.

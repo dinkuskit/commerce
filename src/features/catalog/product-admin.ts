@@ -85,6 +85,7 @@ export interface CatalogProductListItem {
   sale: string | null;
   manageStock: boolean;
   stockStatus: ClerkStockStatus | null;
+  shipBy?: string;
   gtin?: string;
   mpn?: string;
   brand?: string;
@@ -108,6 +109,7 @@ export interface CatalogProductVariantListItem {
   sale: string | null;
   manageStock: boolean;
   stockStatus: ClerkStockStatus | null;
+  shipBy?: string;
   fulfillment: "physical" | "digital";
   priceRevision: string | null;
   weightOz?: number;
@@ -119,6 +121,7 @@ export interface SaveCatalogProductPricesInput {
   sale: string;
   manageStock?: boolean;
   stockStatus?: string;
+  shipBy?: string;
   expectedRevision?: string | null;
   feedChannels?: string[];
 }
@@ -129,6 +132,7 @@ export interface CatalogProductPriceForm {
   sale: string;
   manageStock: boolean;
   stockStatus: ClerkStockStatus | null;
+  shipBy?: string;
   message: string | null;
 }
 
@@ -259,6 +263,7 @@ async function describeCatalogProducts(
       sale: price.sale === undefined ? null : formatClerkDollar(price.sale),
       manageStock: itemManaged,
       stockStatus: stock === null ? null : toClerkStockStatus(stock.status),
+      ...(stock?.shipBy ? { shipBy: stock.shipBy } : {}),
       ...(record.gtin ? { gtin: record.gtin } : {}),
       ...(record.mpn ? { mpn: record.mpn } : {}),
       ...(record.brand ? { brand: record.brand } : {}),
@@ -287,6 +292,7 @@ async function describeCatalogProducts(
           sale: memberPrice.sale ? formatClerkDollar(memberPrice.sale) : null,
           manageStock: memberManaged,
           stockStatus: memberAvailability ? toClerkStockStatus(memberAvailability.status) : null,
+          ...(memberAvailability?.shipBy ? { shipBy: memberAvailability.shipBy } : {}),
           fulfillment: member.fulfillment,
           priceRevision: priceState?.revision ?? null,
           ...(memberRecord.item.weightOz ? { weightOz: memberRecord.item.weightOz } : {}),
@@ -418,6 +424,9 @@ function normalizeSaveInput(value: unknown): SaveCatalogProductPricesInput {
   if (input.stockStatus !== undefined && typeof input.stockStatus !== "string") {
     catalogFail("INVALID_INPUT", "stock status must be a string");
   }
+  if (input.shipBy !== undefined && !/^(\d{4}-\d\d-\d\d)?$/.test(input.shipBy as string)) {
+    catalogFail("INVALID_INPUT", "Invalid ship date");
+  }
   if (input.manageStock !== undefined && typeof input.manageStock !== "boolean") {
     catalogFail("INVALID_INPUT", "manageStock must be a boolean");
   }
@@ -430,6 +439,7 @@ function normalizeSaveInput(value: unknown): SaveCatalogProductPricesInput {
     sale: input.sale,
     manageStock: input.manageStock,
     stockStatus: input.stockStatus,
+    shipBy: input.shipBy as string | undefined,
     expectedRevision: input.expectedRevision as string | null | undefined,
     ...(input.feedChannels === undefined ? {} : { feedChannels: normalizeProductFeedChannels(input.feedChannels) }),
   };
@@ -448,7 +458,8 @@ export async function saveCatalogProductPrices(
     const snapshot = { get: async (key: string) => key === id ? item : key === root.itemId ? root : null };
     const availability = await loadCatalogItemManualAvailability(storage.availability, id, snapshot);
     const status = toClerkStockStatus(availability.status);
-    if (!nextManaged && management.mode === "managed" && management.status === "setup-pending")
+    // The Registry build never sets stock up, so no item there is ever setup-pending.
+    if (!REGISTRY_BUILD && !nextManaged && management.mode === "managed" && management.status === "setup-pending")
       return refused(input, MANAGE_STOCK_SETUP_PENDING_MESSAGE, true, null);
     if (nextManaged && managed && input.stockStatus !== undefined)
       return refused(input, MANAGED_STOCK_STATUS_MESSAGE, true, null);
@@ -476,7 +487,7 @@ export async function saveCatalogProductPrices(
 
     const nextStatus = nextManaged ? null : input.stockStatus as ClerkStockStatus | undefined ?? status;
     data.items[id] = { ...current, price: targetRegular ? catalogPriceRecord(id, targetRegular, targetSale) : null,
-      availability: { ...availability, status: toStoredStockStatus(nextStatus ?? status) } };
+      availability: { ...availability, status: toStoredStockStatus(nextStatus ?? status), shipBy: input.shipBy ?? availability.shipBy } };
     if (input.feedChannels !== undefined) data.feedChannels = input.feedChannels;
     return displayForm(targetRegular, targetSale, nextManaged, nextStatus);
   }, input.expectedRevision?.startsWith("catalog:") ? input.expectedRevision : undefined);

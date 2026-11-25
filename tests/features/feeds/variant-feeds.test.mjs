@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildGoogleMerchantFeed, buildMetaCatalogFeed } from "../../../dist/features/feeds/index.js";
 
-const stock = (status = "in-stock", listable = true) => ({ status, listable, sellable: status !== "out-of-stock" });
+// A backorder carries an expected ship date a month ahead, as Google requires (google-backorder-ship-date-20261124).
+const SHIP_BY = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+const stock = (status = "in-stock", listable = true) => ({ status, listable, sellable: status !== "out-of-stock",
+  ...(status === "available-on-backorder" ? { shipBy: SHIP_BY } : {}) });
 const member = (id, size, minor, status = "in-stock") => ({
   catalogItemId: id, sku: `SKU-${size}`, price: { currency: "USD", minor },
   availability: stock(status), fulfillment: "physical",
@@ -55,6 +58,10 @@ test("option families export each concrete member once, using its own price and 
   assert.deepEqual(google.map(item => field(item, "id")), ["tee-m", "tee-l", "tee-xl"]);
   assert.deepEqual(google.map(item => field(item, "price")), ["14.00 USD", "16.00 USD", "18.00 USD"]);
   assert.deepEqual(google.map(item => field(item, "availability")), ["in stock", "backorder", "out of stock"]);
+  assert.deepEqual(google.map(item => field(item, "availability_date")), [undefined, `${SHIP_BY}T00:00:00Z`, undefined], "each variant carries its own date");
+  delete row.product.variants.members[1].availability.shipBy;
+  assert.deepEqual(items(buildGoogleMerchantFeed([row])).map(item => field(item, "id")), ["tee-m", "tee-xl"], "an undated backorder variant leaves Google alone");
+  assert.deepEqual(csvRows(buildMetaCatalogFeed([row])).map(item => item.id), ["tee-m", "tee-l", "tee-xl"]);
   assert.deepEqual(meta.map(item => item.id), ["tee-m", "tee-l", "tee-xl"]);
   assert.deepEqual(meta.map(item => item.retailer_id), meta.map(item => item.id));
   assert.deepEqual(meta.map(item => item.price), ["14.00 USD", "16.00 USD", "18.00 USD"]);

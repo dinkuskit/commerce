@@ -37,6 +37,8 @@ function optionalIds(item: { gtin?: string; mpn?: string; brand?: string; pageId
 
 /** A sale price (commerce-sale-flag-20261124) is the one fact add-ons such as Coupons need to tell a sale item. */
 const onSale = (price: { sale?: unknown }): { onSale?: true } => price.sale ? { onSale: true } : {};
+/** The availability a shopper sees; shipBy is only set on a backorder (google-backorder-ship-date-20261124). */
+const shown = ({ status, sellable, listable, shipBy }: StorefrontAvailabilityResult) => ({ status, sellable, listable, ...(shipBy ? { shipBy } : {}) });
 
 export const PUBLIC_CATALOG_ROUTE = "catalog/public";
 export const PUBLIC_CATALOG_ITEM_ROUTE = "catalog/public/item";
@@ -47,7 +49,7 @@ export interface PublicCatalogProduct {
   readonly price?: { readonly currency: "USD"; readonly minor: string };
   /** True when the price is the item's sale price (commerce-sale-flag-20261124), so add-ons can tell a sale item. */
   readonly onSale?: true;
-  readonly availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable">;
+  readonly availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable" | "shipBy">;
   /** Primary image, the store placeholder (placeholder: true), or null when neither resolves. The host maps ids to URLs. */
   readonly image: PublicCatalogImage | null;
   readonly gallery: readonly PublicCatalogImage[];
@@ -70,7 +72,7 @@ export interface PublicCatalogProduct {
       selections: readonly ReturnType<typeof variantSelections>[number][];
       price: { readonly currency: "USD"; readonly minor: string } | null;
       onSale?: true;
-      availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable">;
+      availability: Pick<StorefrontAvailabilityResult, "status" | "sellable" | "listable" | "shipBy">;
       fulfillment: "physical" | "digital";
     }[];
   };
@@ -138,11 +140,7 @@ async function projectPublicCatalogProduct(
         selections: variantSelections(variant.product, member),
         price: memberPrice.customerPays ?? null,
         ...onSale(memberPrice),
-        availability: {
-          status: memberAvailability.status,
-          sellable: memberAvailability.sellable,
-          listable: memberAvailability.listable,
-        },
+        availability: shown(memberAvailability),
         fulfillment: member.fulfillment,
       });
     }
@@ -152,7 +150,7 @@ async function projectPublicCatalogProduct(
       name: item.name,
       sku: item.sku,
       ...(!variant.product.options.length && price.customerPays ? { price: price.customerPays, ...onSale(price) } : {}),
-      availability: { status: availability.status, sellable: !variant.product.options.length && availability.sellable, listable: members.some((member) => member.availability.listable) },
+      availability: { ...shown(availability), sellable: !variant.product.options.length && availability.sellable, listable: members.some((member) => member.availability.listable) },
       image,
       gallery,
       ...optionalIds(item),
@@ -172,11 +170,7 @@ async function projectPublicCatalogProduct(
     sku: item.sku,
     price: price.customerPays,
     ...onSale(price),
-    availability: {
-      status: availability.status,
-      sellable: availability.sellable,
-      listable: availability.listable,
-    },
+    availability: shown(availability),
     image,
     gallery,
     ...optionalIds(item),

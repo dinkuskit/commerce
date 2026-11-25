@@ -54,6 +54,17 @@ const AVAILABILITY_VALUES: Record<ProductFeedChannel, { inStock: string; backord
   "meta-catalog": { inStock: "in stock", backorder: "available for order", outOfStock: "out of stock" },
 };
 
+/**
+ * A backorder's expected ship date (YYYY-MM-DD) while it is still ahead and at most a year away, which
+ * is Google's limit; a passed or far date counts as none (google-backorder-ship-date-20261124). The
+ * storefront uses the same rule to show the date on the product page.
+ */
+export function backorderShipDate(availability: { status: string; shipBy?: string }, now = new Date()): string | undefined {
+  const today = now.toISOString().slice(0, 10), date = availability.shipBy;
+  if (availability.status !== "available-on-backorder" || !date || !/^\d{4}-\d\d-\d\d$/.test(date)) return undefined;
+  return date > today && date <= `${Number(today.slice(0, 4)) + 1}${today.slice(4)}` ? date : undefined;
+}
+
 function availability(product: FeedRow, channel: ProductFeedChannel): string {
   const values = AVAILABILITY_VALUES[channel];
   switch (product.product.availability.status) {
@@ -108,10 +119,13 @@ export function pageProductFeedRows(
   };
 }
 
-export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): string {
-  const rows = channelRows(products, "google-merchant");
+export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], now = new Date()): string {
+  // Google requires availability_date on a backorder row, so one with no usable date is left out, as
+  // WooCommerce refuses to sync it (feeds-facts-consistency-060, google-backorder-ship-date-20261124).
+  const rows = channelRows(products, "google-merchant").filter((row) =>
+    row.product.availability.status !== "available-on-backorder" || backorderShipDate(row.product.availability, now));
   const items = rows.map((product) => {
-    const image = product.content.imageUrls?.[0];
+    const image = product.content.imageUrls?.[0], shipBy = backorderShipDate(product.product.availability, now);
     return [
       "<item>",
       `<g:id>${escapeXml(product.product.id)}</g:id>`,
@@ -128,6 +142,7 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[]): 
         .map((url) => `<g:additional_image_link>${escapeXml(url)}</g:additional_image_link>`),
       `<g:price>${escapeXml(price(product))}</g:price>`,
       `<g:availability>${availability(product, "google-merchant")}</g:availability>`,
+      shipBy ? `<g:availability_date>${shipBy}T00:00:00Z</g:availability_date>` : "",
       "<g:condition>new</g:condition>",
       product.product.gtin ? `<g:gtin>${escapeXml(product.product.gtin)}</g:gtin>` : "",
       product.product.mpn ? `<g:mpn>${escapeXml(product.product.mpn)}</g:mpn>` : "",

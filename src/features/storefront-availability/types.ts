@@ -169,4 +169,6 @@ export type StorefrontAvailabilityResult = {
   sellable: boolean;
   listable: boolean;
   displayQuantity?: ExactQuantity;
+  /** A backorder's expected ship date while it is still ahead and within a year (Google's rule). */
+  shipBy?: string;
 };

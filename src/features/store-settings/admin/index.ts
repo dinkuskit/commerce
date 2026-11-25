@@ -51,7 +51,7 @@ function response(settings: MerchantStoreSettings, revision: string | null, noti
   const blocks: Block[] = [
     { type: "header", text: "Merchant store settings" },
     { type: "context", text: "Checkout refuses a physical delivery outside your shipping destinations." },
-    { type: "context", text: settings.storeCountry === null ? "Choose your store country. On the first country save, blank destinations default to that country. Extra destinations must be added explicitly. You can save the phone setting before choosing a country." : "Changing the store country preserves your destinations. A blank list means no enabled destinations." },
+    { type: "context", text: settings.storeCountry === null ? "Choose your store country first; blank destinations then default to it." : "A blank list means no enabled destinations." },
   ];
   if (notice) blocks.push({ type: "banner", title: notice.title, variant: notice.variant });
   blocks.push({
