@@ -4,9 +4,9 @@
   "current_focus": {
     "cadence": "sequential",
     "confirmed": true,
-    "confirmed_at": "2026-11-25T14:49:21+00:00",
+    "confirmed_at": "2026-11-25T15:36:58+00:00",
     "domain": "Product category box",
-    "started_at": "2026-11-25T14:49:21+00:00",
+    "started_at": "2026-11-25T15:36:58+00:00",
     "status": "confirmed",
     "summary": "The owner chose on 24 Nov 2026 to put the Product category box inside Commerce and for its PR to carry its own behaviour-preserving trim."
   },
@@ -18153,14 +18153,14 @@
       "candidate_refs": [],
       "choice": "Inside Commerce, as its own Product category panel on Content > Products pages beside Dinkus Commerce and Product image & gallery. It reads the page's title, description and product_category, may patch only product_category, and asks catalog.dinkuskit.com for matches and names. The room comes from a behaviour-preserving build step: the Registry build writes top-level functions that cannot tell the difference as arrow functions, which frees about 3,800 bytes.",
       "context_ref": null,
-      "created_at": "2026-11-25T14:49:21+00:00",
+      "created_at": "2026-11-25T15:36:58+00:00",
       "deferred_reason": null,
       "delivery_ref": null,
       "dependencies": [],
       "domain": "Product category box",
       "history": [
         {
-          "at": "2026-11-25T14:49:21+00:00",
+          "at": "2026-11-25T15:36:58+00:00",
           "choice": "Inside Commerce, as its own Product category panel on Content > Products pages beside Dinkus Commerce and Product image & gallery. It reads the page's title, description and product_category, may patch only product_category, and asks catalog.dinkuskit.com for matches and names. The room comes from a behaviour-preserving build step: the Registry build writes top-level functions that cannot tell the difference as arrow functions, which frees about 3,800 bytes.",
           "from": "proposed",
           "implementation_ref": null,
@@ -18186,7 +18186,7 @@
       "review_source_identity": null,
       "status": "locked",
       "superseded_by": null,
-      "updated_at": "2026-11-25T14:49:21+00:00",
+      "updated_at": "2026-11-25T15:36:58+00:00",
       "verification_ref": null
     }
   ],
@@ -18224,5 +18224,5 @@
   "status": "active",
   "title": "Installed checkout and guarded coupon composition",
   "track_id": "gt-join-1df678b7d46eb74d8c3624fd751d1dcf",
-  "updated_at": "2026-11-25T14:49:21+00:00"
+  "updated_at": "2026-11-25T15:36:58+00:00"
 }

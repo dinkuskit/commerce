@@ -804,7 +804,7 @@
 {"action": "focus_started", "at": "2026-11-25T05:48:01+00:00", "data": {"cadence": "sequential", "domain": "Cart key expiry"}, "event_id": "d84acb32-621c-485a-bda1-0cd36e7cb8cb"}
 {"action": "decision_proposed", "at": "2026-11-25T05:48:01+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "b67f28b1-a0ae-42bb-a306-da5413f832b5"}
 {"action": "decision_locked", "at": "2026-11-25T05:48:01+00:00", "data": {"decision_id": "commerce-cart-key-expiry-20261125"}, "event_id": "e3240c86-afab-42aa-b75b-3e202d71dc3d"}
-{"action": "focus_started", "at": "2026-11-25T14:49:21+00:00", "data": {"cadence": "sequential", "domain": "Product category box"}, "event_id": "533f1511-8202-4ef3-8e43-7b53128cca82"}
-{"action": "shared_understanding_confirmed", "at": "2026-11-25T14:49:21+00:00", "data": {"summary": "The owner chose on 24 Nov 2026 to put the Product category box inside Commerce and for its PR to carry its own behaviour-preserving trim."}, "event_id": "267cca70-bf47-4d72-9829-53e23c58b95f"}
-{"action": "decision_proposed", "at": "2026-11-25T14:49:21+00:00", "data": {"decision_id": "product-category-box-20261125"}, "event_id": "c335c84b-9bff-4b1b-b211-a3edf1e217f3"}
-{"action": "decision_locked", "at": "2026-11-25T14:49:21+00:00", "data": {"decision_id": "product-category-box-20261125"}, "event_id": "75ad97c6-6c53-4684-8e13-9f519e907c88"}
+{"action": "focus_started", "at": "2026-11-25T15:36:58+00:00", "data": {"cadence": "sequential", "domain": "Product category box"}, "event_id": "0c919b34-27a7-4c4c-a078-fa386730ca42"}
+{"action": "shared_understanding_confirmed", "at": "2026-11-25T15:36:58+00:00", "data": {"summary": "The owner chose on 24 Nov 2026 to put the Product category box inside Commerce and for its PR to carry its own behaviour-preserving trim."}, "event_id": "d937ea73-2bc2-49fa-a0d7-f1860ae6a8de"}
+{"action": "decision_proposed", "at": "2026-11-25T15:36:58+00:00", "data": {"decision_id": "product-category-box-20261125"}, "event_id": "99edd4fd-d222-4e81-bf83-74f154a723f4"}
+{"action": "decision_locked", "at": "2026-11-25T15:36:58+00:00", "data": {"decision_id": "product-category-box-20261125"}, "event_id": "f49e2db1-00ab-45ba-b7eb-42257ba3397c"}
