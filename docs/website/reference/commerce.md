@@ -42,7 +42,8 @@ In **Commerce settings**, choose the store country and the physical
 shipping destinations. On the first country save, blank destinations default
 to that country. Later changes to the store country preserve the destinations;
 a saved empty list enables none. The phone requirement can be saved before a
-country is chosen.
+country is chosen. If another tab saves settings after you open the form,
+your form keeps its draft and offers **Reload saved settings**.
 
 Checkout checks the shipping destinations for a new physical checkout. With no
 destinations enabled, a physical basket cannot proceed to payment. There is no
