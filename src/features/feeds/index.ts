@@ -19,6 +19,7 @@ export {
 export type {
   AgentCatalogFeed,
   AgentCatalogProductEntry,
+  GoogleMerchantFeedOptions,
   ProductAiProjection,
   ProductFeedBuildOptions,
   ProductFeedChannel,

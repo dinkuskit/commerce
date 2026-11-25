@@ -120,6 +120,8 @@ Public catalog list and item responses also carry the feed channels the merchant
 
 Unmanaged products use Commerce's manual availability: `in-stock`, `out-of-stock`, or `available-on-backorder`. They do not require an Inventory connection or expose an invented quantity.
 
+For a complete Google Merchant RSS document, pass `buildGoogleMerchantFeed(rows, { channel: { title, link, description } })` using public store metadata and the canonical home link. The channel fields remain present even with no eligible products. The older call without `channel` retains its item-only output for existing callers. The Meta CSV contract is unchanged.
+
 When **Stock status** is On backorder, an **Expected ship date** box appears under it, one for each variant (or one for a product with no options). The public catalog sends the date as `availability.shipBy` (YYYY-MM-DD) on that variant while it is on backorder. `backorderShipDate(availability)` from `@dinkuskit/commerce/features/feeds` gives the date while it is still ahead and at most a year away, and nothing once it has passed: the Google feed sends it as `availability_date`, and leaves out a backorder row with no such date, because Google requires one. The Meta feed is unchanged. Once the date passes, the box's label says so; there is no email.
 
 Inventory is planned after v1, and the Registry build has no Manage stock switch. Begin with unmanaged products. Missing setup, malformed provider results, or an unavailable provider must not be interpreted as zero stock or silently replaced with local stock. Treat `availability-unavailable` as unavailable and respect the separate `sellable` and `listable` facts. See the [Inventory reference](/docs/reference/inventory).

@@ -2,6 +2,7 @@ import {
   PRODUCT_FEED_CHANNELS,
   type AgentCatalogFeed,
   type AgentCatalogProductEntry,
+  type GoogleMerchantFeedOptions,
   type ProductAiProjection,
   type ProductFeedBuildOptions,
   type ProductFeedFacts,
@@ -120,7 +121,24 @@ export function pageProductFeedRows(
   };
 }
 
-export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], now = new Date()): string {
+/** Build an RSS 2.0 document using public channel metadata supplied by the host. */
+export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], options: GoogleMerchantFeedOptions): string;
+/** @deprecated Supply `{ channel, now? }` for the required RSS channel elements. */
+export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], now?: Date): string;
+export function buildGoogleMerchantFeed(
+  products: readonly ProductFeedFacts[],
+  options: GoogleMerchantFeedOptions | Date = new Date(),
+): string {
+  const now = options instanceof Date ? options : options.now ?? new Date();
+  let channel = "";
+  if (!(options instanceof Date)) {
+    const { title, link, description } = options.channel;
+    const url = URL.parse(link);
+    if (!title.trim() || !description.trim() || !url || !["http:", "https:"].includes(url.protocol) || url.username || url.password) {
+      throw new TypeError("Google Merchant RSS needs a title, a public HTTP(S) link, and a description");
+    }
+    channel = `<title>${escapeXml(title)}</title><link>${escapeXml(link)}</link><description>${escapeXml(description)}</description>`;
+  }
   // Google requires availability_date on a backorder row, so one with no usable date is left out, as
   // WooCommerce refuses to sync it (feeds-facts-consistency-060, google-backorder-ship-date-20261124).
   const rows = channelRows(products, "google-merchant").filter((row) =>
@@ -154,7 +172,7 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], n
       "</item>",
     ].filter(Boolean).join("");
   }).join("");
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>${items}</channel></rss>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>${channel}${items}</channel></rss>`;
 }
 
 export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): string {

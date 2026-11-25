@@ -132,6 +132,16 @@ export interface AgentCatalogFeed {
   readonly policies: readonly StorefrontPolicySummary[];
 }
 
+export interface GoogleMerchantFeedOptions {
+  /** Public storefront metadata, independent of which products are eligible. */
+  readonly channel: {
+    readonly title: string;
+    readonly link: string;
+    readonly description: string;
+  };
+  readonly now?: Date;
+}
+
 export interface ProductFeedBuildOptions {
   readonly pageSize?: number;
   readonly cursor?: number;

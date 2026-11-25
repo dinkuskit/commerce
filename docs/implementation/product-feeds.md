@@ -27,7 +27,12 @@ offer, even if the caller supplied a root price. Older host projections that
 omit option definitions but retain member selections are also recognized.
 Optional GTIN, MPN, brand, shipping, description, and images are never invented.
 
-`buildGoogleMerchantFeed` emits deterministic RSS 2.0 with Google `g:` fields.
+For a complete RSS 2.0 document, call `buildGoogleMerchantFeed(rows, { channel })`
+with the public store's `title`, canonical home `link`, and `description`. These
+three escaped elements appear directly in `<channel>`, even if no rows qualify.
+Use `now` in the options to supply a clock for date-based tests. The former
+`(rows, now?)` call still returns its original item-only channel for compatibility;
+update public feeds to supply metadata rather than guessing it from a product.
 Every item carries `g:condition` `new` (Commerce has no used or refurbished
 condition, and the Meta CSV already sends `new`). When an item has neither a
 GTIN nor a brand plus MPN, it carries `g:identifier_exists` `no`, the channel's
