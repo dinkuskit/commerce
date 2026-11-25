@@ -127,6 +127,11 @@ if (process.env.SHIP_DATE_UPGRADE_PHASE === 'old') {
   assert.equal((await shop.catalog({ op: 'prices', catalogItemId: hat, regular: '26', sale: '', stockStatus: 'on-backorder', shipBy: hatDate })).saved, true);
   assert.equal((await shop.catalog({ op: 'prices', catalogItemId: large, regular: '22', sale: '', stockStatus: 'on-backorder', shipBy: largeDate })).saved, true);
   assert.equal((await shop.catalog({ op: 'prices', catalogItemId: hat, regular: '27', sale: '', stockStatus: 'on-backorder' })).saved, true, 'a save with no shipBy keeps the date');
+  // The panel, through EmDash's dispatch: its form now starts with the date; a submit that leaves the key out keeps it.
+  const form = blocksOf((await shop.panel('page-hat', { type: 'panel_load' })).blocks).find(b => b.type === 'form' && b.submit.action_id.startsWith('save:'));
+  assert.equal(dateBoxes({ blocks: [form] })[0].initial_value, hatDate);
+  const kept = await shop.panel('page-hat', { type: 'form_submit', action_id: form.submit.action_id, values: { regular: '27', sale: '', sku: 'HAT', stockStatus: 'on-backorder' } });
+  assert.equal(kept.toast.type, 'success', JSON.stringify(kept.toast));
   const newHat = (await shop.item(hat)), newTee = (await shop.item(tee));
   assert.equal(newHat.availability.shipBy, hatDate);
   assert.deepEqual(newTee.variants.members.map(m => [m.sku, m.availability.status, m.availability.shipBy]),

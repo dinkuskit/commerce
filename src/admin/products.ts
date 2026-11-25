@@ -346,7 +346,8 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         const wasManaged = isManagedCatalogRecord(item);
         const payload: Record<string, unknown> = { catalogItemId: id, regular: text(values.regular), sale: text(values.sale) };
         if (Object.hasOwn(values, "manageStock")) payload.manageStock = values.manageStock;
-        if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus), payload.shipBy = text(values.shipBy ?? "");
+        // An omitted date keeps the saved one and "" clears it; the save owner refuses anything but a calendar day.
+        if (!wasManaged && values.stockStatus !== undefined) payload.stockStatus = text(values.stockStatus), payload.shipBy = values.shipBy;
         const channels = feeds();
         if (channels) payload.feedChannels = channels;
         await resku(id, (item as { sku?: string } | null)?.sku ?? "", fence);
@@ -411,7 +412,7 @@ async function productEdit(route: SandboxedRouteContext, ctx: PluginContext): Pr
         } else if (operation === "price") {
           const member = selected.variantProduct?.members.find(m => m.catalogItemId === args[0]) ?? productNotFound();
           const shown = args[2] ?? member.sku, fence = fenceOf(args[1], shown), regular = text(values.regular), sale = text(values.sale);
-          const stock = !member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus), shipBy: text(values.shipBy ?? "") } : {};
+          const stock = !member.manageStock && values.stockStatus !== undefined ? { stockStatus: text(values.stockStatus), shipBy: values.shipBy as string } : {};
           await resku(args[0], shown, fence);
           const saved = await saveCatalogProductPrices(store, { catalogItemId: args[0], expectedRevision: fence?.revision ?? args[1], regular, sale, ...stock });
           // A price refused after the fence held is this request's own doing: the typing comes back on a form that reads the product as it now is.

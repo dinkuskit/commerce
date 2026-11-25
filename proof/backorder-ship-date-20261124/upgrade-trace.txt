@@ -1,8 +1,8 @@
-# Commerce 0.8.0 (v0.8.0, its own EmDash 1.4.0) -> this build 03e4e02 (EmDash 1.5.0), 2026-11-25T02:50:01Z
+# Commerce 0.8.0 (v0.8.0, its own EmDash 1.4.0) -> this build (EmDash 1.5.0, source as committed with this trace), 2026-11-25T02:57:16Z
 TAP version 13
 # Subtest: products made on 0.8.0 read, sell and save as before, and take a ship date per variant after the upgrade
 ok 1 - products made on 0.8.0 read, sell and save as before, and take a ship date per variant after the upgrade
-# 0.8.0 wrote hat f3a20330-4d4b-43cd-be79-77d88ae7647e (available-on-backorder) and tee 753c0fa9-09a4-4683-bdbf-078771d0d257 with L 0fbc84db-5430-4c19-8f48-0e5613d0f10c
+# 0.8.0 wrote hat 4571b9ba-f122-4b4f-b57f-336bf2ac2673 (available-on-backorder) and tee 39bb969a-43e1-4cdd-8895-7d92ce4d0587 with L 3862e986-fc82-4c00-962d-72dc6caefad9
 # after upgrade: hat shipBy=2026-12-15; tee L shipBy=2027-01-04, M none; Google rows 3 with availability_date 2
 1..1
 # tests 1

@@ -14,8 +14,8 @@ Chromium, driving Commerce's own `productPanel` over a disposable in-memory cata
 | `5-public-catalog-and-google-feed.png` | The public catalog carries `availability.shipBy`; the Google feed sends `g:availability_date`; the same row with a passed date is left out of Google; the Meta CSV is unchanged. |
 | `6-variant-L-has-its-own-date.png` | A product with Size M and L: only L is on backorder and only L has a box and a date. The public catalog gives M none and L its date. |
 
-Registry backend (`npm run build`): 130,281 bytes on main 6a87a05, 130,438 with this change (634 free).
-Merged locally with #309 (Tax) and #310 (audit fixes) as well: 131,026 bytes (46 free).
+Registry backend (`npm run build`): 130,281 bytes on main 6a87a05, 130,422 with this change (650 free).
+Merged locally with #309 (Tax) and #310 (audit fixes) as well: 131,010 bytes (62 free).
 
 Data from 0.8.0 (stock status with no date, in the product's own data or in an older manual availability row)
 loads, sells and saves as before: `tests/features/catalog/ship-date.test.mjs`, "products saved before ship dates".
@@ -29,8 +29,8 @@ loads, sells and saves as before: `tests/features/catalog/ship-date.test.mjs`, "
 2. This build's Registry bundle, on EmDash 1.5.0, opens the same file. Every availability the public catalog gives for
    the hat, the tee, M and L equals what 0.8.0 gave, with no `shipBy` anywhere; the undated backorder stays out of Google;
    the product panel (through EmDash's own editor dispatch) opens the 0.8.0 hat with an empty Expected ship date box; an
-   API save without `shipBy` still works; dates then go on the hat and on L only; a later save without `shipBy` keeps the
-   hat's date; the public catalog gives M none and L its date; the Google feed carries both `g:availability_date` lines.
+   API save without `shipBy` still works; dates then go on the hat and on L only; a later API save without `shipBy`, and a
+   panel submit that leaves the date key out, both keep the hat's date; the public catalog gives M none and L its date; the Google feed carries both `g:availability_date` lines.
 
 Run: `npm run build`, build a v0.8.0 worktree, then
 `COMMERCE_UPGRADE_FROM_SANDBOX=<v0.8.0 worktree>/dist/sandbox node --test tests/upgrade/ship-date-upgrade.test.mjs`.

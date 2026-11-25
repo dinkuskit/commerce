@@ -75,6 +75,8 @@ test('the ship date box shows under Stock status only for a backorder, and saves
   const typo = await save(ctx, { stockStatus: 'on-backorder', shipBy: '12/12/2026' });
   assert.equal(typo.toast.type, 'error');
   assert.equal((await readPublicCatalogItem(ctx, id)).availability.shipBy, date, 'a refused date changes nothing');
+  assert.equal((await save(ctx, { stockStatus: 'on-backorder' })).toast.type, 'success');
+  assert.equal((await readPublicCatalogItem(ctx, id)).availability.shipBy, date, 'a submit without the date keeps the saved one');
 
   await save(ctx, { stockStatus: 'in-stock' });
   assert.equal((await readPublicCatalogItem(ctx, id)).availability.shipBy, undefined, 'back in stock, the shop shows no date');
@@ -110,6 +112,14 @@ test('each variant keeps its own date', async () => {
     [['mint', 'in-stock', undefined], ['cherry', 'available-on-backorder', date]]);
   const reopened = forms(saved).find((form) => form.submit.action_id.startsWith('variant:["price"') && JSON.parse(form.submit.action_id.slice(8))[2] === cherryId);
   assert.equal(reopened.fields.find((field) => field.action_id === 'shipBy').initial_value, date);
+  const cherryDate = async () => (await readPublicCatalogItem(ctx, id)).variants.members.find((member) => member.catalogItemId === cherryId).availability.shipBy;
+  const again = (values) => commerceAdmin({ input: { type: 'form_submit', action_id: reopened.submit.action_id, values: { regular: '26', sale: '', sku: 'HAT-CHERRY', stockStatus: 'on-backorder', ...values } } }, ctx);
+  const kept = await again({});
+  assert.equal(kept.toast.type, 'success', JSON.stringify(kept.toast));
+  assert.equal(await cherryDate(), date, 'a variant submit without the date keeps the saved one');
+  const reread = forms(kept).find((form) => form.submit.action_id.startsWith('variant:["price"') && JSON.parse(form.submit.action_id.slice(8))[2] === cherryId);
+  assert.equal((await commerceAdmin({ input: { type: 'form_submit', action_id: reread.submit.action_id, values: { regular: '26', sale: '', sku: 'HAT-CHERRY', stockStatus: 'on-backorder', shipBy: '' } } }, ctx)).toast.type, 'success');
+  assert.equal(await cherryDate(), undefined, 'an empty variant box clears it');
 });
 
 test('only a real calendar day is kept, from the panel or the prices API', async () => {
