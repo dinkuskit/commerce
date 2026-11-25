@@ -234,15 +234,15 @@ The door takes what `checkout/guest/start` takes, the same cart capability and o
 - The amounts off on a line, from all answers together, can never take it below $0. Anything else malformed leaves checkout unavailable, and nothing is frozen.
 - The discount is per line, as Payments charges it, and the subtotal minus the discount decides free shipping over the owner's amount. An answer with `ship: "free"` makes shipping free.
 - While a checkout's payment is open, its add-ons and codes are frozen with its cart: asking with other codes, or none, is refused with `CHECKOUT_FROZEN`.
-- The order keeps each add-on's `from`, `ref` and `codes`, and the Orders page shows them on the discount line.
+- The order keeps each add-on's `from`, `ref` and `codes`. The Orders page shows the codes shoppers typed on the discount line; Tax's code is its note on the Sales tax row instead.
 
 Sales tax comes through the same door. The Tax plugin picks the rates and Commerce does the math, after discounts:
 
 - A tax answer adds `to`, the address it priced, and a rate for shipping (`shipRate`) and for every line (`lines[].rate`), each in millionths: `"97500"` is 9.75%, and a rate is under 100%. Anything else, or a rate on an answer without `to`, leaves checkout unavailable.
 - `to` is the delivery address, or the billing address when nothing ships, as Commerce keeps it: street line 1, line 2, city, state, ZIP and country, one to a line. An answer for any other address answers `CONTENTION`, so the store asks Tax again.
 - Each line's tax is its amount after discounts times its rate, rounded to the cent once, halves up. Shipping's tax is the shipping charge times its rate, rounded the same way. The order's tax is those added up, and it goes on the total.
-- The pricing then records `tax` for the order and for each line, Payments charges it as one **Sales tax** line, and the Orders page, the thank-you page, the order lookup and `order.paid` show it. A checkout without a tax answer records no tax at all.
-- The order keeps only Tax's `from` and `ref`. How the address matched and whether the owner typed the rate stay in Tax's own records, under that `ref`.
+- The pricing then records `tax` for the order and for each line, Payments charges it as one **Sales tax** line, and the Orders page, the thank-you page, the order lookup and `order.paid` show it. A checkout without a tax answer records no tax at all. On the Orders page, the Sales tax row also shows Tax's note, kept with the order as its code, with each dash as a space: "by ZIP, check address" when the address matched only its ZIP, or "rate typed by owner". Tax's code never joins the Discount row's codes. An order taxed at $0 still shows the row.
+- The order keeps Tax's `from`, `ref` and, when there is a note, its one code. The districts, the rates and the match level stay in Tax's own records, under that `ref`.
 
 ## Completing and correcting an order
 

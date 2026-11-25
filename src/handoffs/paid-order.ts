@@ -45,7 +45,7 @@ export interface PaidOrder {
   mode?: "test" | "live";
   /** The payment was confirmed after Checkout had let the checkout go as ended and unpaid. */
   paidAfterEnd?: true;
-  /** The add-ons whose answers priced the order, with their references and the codes the shopper typed. */
+  /** The add-ons whose answers priced the order, with their references and the codes the shopper typed (for Tax, its Orders note). */
   addons?: readonly AddonUse[];
   /** The store's own facts from the cart, frozen at checkout start (commerce-cart-attributes-order-paid-20261123). */
   attributes?: Readonly<Record<string, string>>;

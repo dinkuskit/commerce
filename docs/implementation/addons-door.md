@@ -27,7 +27,7 @@ distinct `from`:
 | --- | --- | --- |
 | `from` | the add-on's plugin id | 1 to 64 characters |
 | `ref` | the add-on's own reference, such as a hold id | 1 to 200, optional |
-| `codes` | the codes the shopper typed | at most 6, each 1 to 64, optional |
+| `codes` | the codes the shopper typed; for Tax, its Orders note (`by-ZIP,-check-address` or `rate-typed-by-owner`) | at most 6, each 1 to 64, optional |
 | `ship` | `"free"` waives shipping | optional |
 | `lines` | `[{ item, price, qty, off }]` for every checkout line, in Commerce's line order (cart lines sorted by catalog item id) | at most 100 |
 
@@ -76,9 +76,10 @@ and `round-per-line-half-up`, which the owner approved on 24 Nov 2026) adds:
 ## What is kept
 
 The attempt and its order keep `addons: [{ from, ref, codes }]`; a tax
-answer's address and rates are not kept (Tax keeps its match level and its
-owner-typed flag in its own records, under its `ref`). Orders shows
-the codes on the discount line ("Discount SAVE10"). The courier's `order.paid`
+answer's address and rates are not kept (Tax keeps its districts, rates and
+match level in its own records, under its `ref`). Orders shows the shoppers'
+codes on the discount line ("Discount SAVE10") and Tax's code on the Sales tax
+row, each dash as a space ("Sales tax · by ZIP, check address"). The courier's `order.paid`
 news carries `discount` whenever it is above 0, `tax` (null when untaxed), and `addons`, so the Coupons
 plugin turns its hold into a use when the order is paid, including a payment
 that arrives after the checkout ended.

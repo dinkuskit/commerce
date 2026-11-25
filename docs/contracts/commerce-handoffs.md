@@ -77,7 +77,7 @@ GrillTrack decision `commerce-paid-order-handoff-001`.
   orders paid before it was recorded, is a test order: no money moved, Orders
   shows it as TEST and Ship must not buy postage for it. `addons` names each
   add-on whose answer priced the order (`from`, its `ref`, and the `codes` the
-  shopper used; GrillTrack `commerce-addons-door-20261124`); orders priced by
+  shopper used, or for Tax its one Orders note code; GrillTrack `commerce-addons-door-20261124`); orders priced by
   no add-on have none.
 - **Receiving:** Orders first checks the whole record; a contact snapshot
   must be exactly what Checkout freezes, judged by Checkout-contact's own
