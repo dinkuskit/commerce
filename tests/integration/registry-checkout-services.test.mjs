@@ -816,6 +816,64 @@ test('real workerd cron wake applies canonical paid order before exact ACK and r
   assertOnlyBackgroundCheck(state);
 });
 
+test('a cart read returns the paid receipt when a wake settles an earlier attempt during the retry lookup', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const cart = 'checkout/guest/cart';
+  const attempts = async () => (await state.cartRecords())[0].attempts;
+  const outcome = (attempt, kind) => Response.json({ outcome: kind, attemptId: attempt.attemptId,
+    session: attempt.session, total: attempt.payment.total, ...(kind === 'paid' ? { paymentId: 'pi_synthetic_late' } : {}) });
+  const { token, result: first } = await start(state);
+  assert.equal(first.checkout.state, 'pending');
+  const [original] = await attempts();
+  state.setTransportOverride(path => path === '/v1/checkout/lookup' ? outcome(original, 'expired-unpaid') : undefined);
+  assert.equal((await state.invoke(cart, {}, token)).checkout.state, 'released-retry');
+
+  const retry = await state.invoke(START, { contact: basket.contact }, token);
+  assert.equal(retry.checkout.state, 'pending');
+  assert.ok(retry.checkout.redirectUrl);
+  const [, newest] = await attempts();
+  assert.notEqual(newest.attemptId, original.attemptId);
+
+  const lookupEntered = Promise.withResolvers(), resumeLookup = Promise.withResolvers();
+  state.setTransportOverride(async (path, init) => {
+    if (path !== '/v1/checkout/lookup') return;
+    const { attemptId } = JSON.parse(new TextDecoder().decode(init.body));
+    if (attemptId === original.attemptId) return outcome(original, 'paid');
+    assert.equal(attemptId, newest.attemptId);
+    lookupEntered.resolve();
+    await resumeLookup.promise;
+    return outcome(newest, 'open');
+  });
+  const read = state.invoke(cart, {}, token);
+  try {
+    // Prove the cart checked the newest attempt instead of skipping payment reconciliation.
+    await Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]);
+    state.setWakes([{ eventId: 'evt_syntheticlate', attemptId: original.attemptId,
+      bindingRef: configuration().bindingRef, deliveryGeneration: 1, wokeAt: Date.now() }]);
+    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    assert.equal(state.counts.acknowledgments, 1);
+    const [paid, stillPaying] = await attempts();
+    assert.equal(paid.order.paidAfterEnd, true);
+    assert.equal(stillPaying.phase, 'paying');
+    assert.equal((await state.collections.orders.query()).items.length, 1);
+
+    resumeLookup.resolve();
+    const response = await read;
+    assert.equal(response.ok, true);
+    assert.deepEqual(response.cart.lines, []);
+    assert.equal(response.checkout.state, 'paid');
+    assert.equal(response.checkout.attemptId, original.attemptId);
+    assert.equal(response.checkout.order.orderId, paid.order.orderId);
+    assert.equal(response.checkout.order.receiptId, paid.order.receiptId);
+    assert.equal(response.checkout.redirectUrl, null);
+    assert.equal(state.requests.length, 2, 'the read did not start another session');
+  } finally {
+    resumeLookup.resolve();
+    await read.catch(() => undefined);
+  }
+});
+
 test('switching Commerce on registers its 5-minute background check with the site scheduler', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());

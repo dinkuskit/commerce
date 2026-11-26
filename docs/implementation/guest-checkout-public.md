@@ -154,10 +154,11 @@ never creates the Inventory store-identity record.
 not tenant, cart, or payment authority.
 
 `POST checkout/guest/cart` holds the shopper's cart on the server
-(GrillTrack `commerce-server-cart-20261113`). An empty body `{}` reads it; a
-read also runs Commerce's payment check on the cart's current attempt, as
-status does. A write replaces the whole cart and must quote the version it
-read (`null` for a cart never saved):
+(GrillTrack `commerce-server-cart-20261113`). An empty body `{}` reads it and
+checks the newest attempt with Payments. If the final cart read already sees
+a paid attempt, the response shows its receipt, with no payment link and no
+cart lines, even if a newer retry is still open. A write replaces the whole
+cart and must quote the version it read (`null` for a cart never saved):
 
 ```json
 {
