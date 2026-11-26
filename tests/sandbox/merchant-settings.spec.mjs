@@ -42,10 +42,30 @@ test("merchant settings persist independently and reject stale or unauthorized w
   await reloadSettings();
   await expect(store).toHaveValue("");
   await expect(phone).toBeChecked();
+  // While one tab finishes country setup, another can still be editing the
+  // phone-only form that was valid before a country had been selected.
+  const other = await page.context().newPage();
+  await other.goto(adminPath);
+  const otherStore = other.getByRole("textbox", { name: "Store country (ISO alpha-2 code)", exact: true });
+  await expect(otherStore).toHaveValue("", { timeout: 60000 });
+  const otherPhone = other.getByRole("switch", { name: /Require a phone number/ });
+  await otherPhone.uncheck();
   await store.fill("ca");
   await save();
   await expect(store).toHaveValue("CA");
   await expect(shipping).toHaveValue("CA");
+  const staleSave = other.waitForResponse(r => r.url().endsWith(endpoint) && r.request().method() === "POST");
+  await other.getByRole("button", { name: "Save merchant settings", exact: true }).click();
+  expect((await staleSave).status()).toBe(200);
+  const reloadSaved = other.getByRole("button", { name: "Reload saved settings", exact: true });
+  await expect(other.getByText(/settings changed elsewhere/i)).toBeVisible();
+  await expect(otherStore).toHaveValue("");
+  await expect(otherPhone).not.toBeChecked();
+  await reloadSaved.focus();
+  await reloadSaved.press("Enter");
+  await expect(otherStore).toHaveValue("CA");
+  await expect(otherPhone).toBeChecked();
+  await other.close();
   await shipping.fill("GB");
   const stale = (await save()).input;
   await store.fill("GB");
