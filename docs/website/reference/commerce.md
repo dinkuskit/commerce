@@ -262,9 +262,11 @@ and are marked **TEST**; do not use them for real fulfillment or postage.
   delivery address. The corrected country must be one of the store's shipping
   destinations. This changes where the order goes, not its frozen checkout or
   billing address.
-- With Ship, each item's variant choices (such as Size: M) go to Ship with the
-  order, so two sizes of one product show apart when you pack there. Orders Ship
-  already has get them the next time the order changes.
+- With Ship, each physical item's variant choices (such as Size: M) go with the
+  order, so two sizes of one product show apart when you pack there. For lines
+  with a saved variant choice, later catalog edits do not change whether the
+  paid item goes in the box. Ship still gets the current catalog weight, when set.
+  Orders Ship already has are not resent until the order changes.
 - Without Ship, use **Complete order** to record shipment by hand. Carrier and
   tracking number are optional, at most 64 characters each. Commerce records the
   completion time and shows the order as Completed; this does not buy a label.

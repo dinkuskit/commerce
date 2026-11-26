@@ -81,11 +81,14 @@ export async function syncShip(collection: OrdersCollection, ship: ShipConnectio
     if (!room--) return false;
     const lines = [];
     for (const { catalogItemId, name, quantity, unitPrice } of record.paidOrder.lines) {
-      // Digital items never go in the box; an item since removed from the catalog goes without a weight.
-      // Each line carries what the shopper paid for one of it, for insurance and packing slips, and the
-      // options they chose ("Size: M"), the same text as the order page, so two sizes never look alike.
-      const found = await item(catalogItemId), options = cut(lineOptions(record.paidOrder, catalogItemId));
-      if (found?.physical !== false) lines.push({ catalogItemId, name: oneLine(name), quantity, unitPrice, ...(options ? { options } : {}), ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
+      // The paid variant decides what goes in the box. The catalog still supplies current weight
+      // (none if removed) and decides fulfillment for older lines without a snapshot.
+      const fulfillment = record.paidOrder.variantSelections?.find(choice => choice.catalogItemId === catalogItemId)?.fulfillment;
+      if (fulfillment === "digital") continue;
+      const found = await item(catalogItemId);
+      if (fulfillment !== "physical" && found?.physical === false) continue;
+      const options = cut(lineOptions(record.paidOrder, catalogItemId));
+      lines.push({ catalogItemId, name: oneLine(name), quantity, unitPrice, ...(options ? { options } : {}), ...(found?.weightOz ? { weightOz: found.weightOz } : {}) });
     }
     // What people typed (the address, item names, carrier and tracking number) goes as one line, and an
     // address field, carrier or tracking number with nothing left is left out. The order keeps what was typed.
