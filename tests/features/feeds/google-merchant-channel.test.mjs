@@ -44,7 +44,10 @@ test("the legacy overload accepts a Date from another realm without changing the
 });
 
 test("supplied channel metadata must have text and an absolute web link", () => {
-  for (const fields of [{ title: " " }, { description: "" }, { link: "/" }, { link: "ftp://shop.example.test" }, { link: "https://user:pass@shop.example.test" }]) {
+  const linkWithUserInfo = new URL("https://shop.example.test");
+  linkWithUserInfo.username = "fixture";
+  linkWithUserInfo.password = "fixture";
+  for (const fields of [{ title: " " }, { description: "" }, { link: "/" }, { link: "ftp://shop.example.test" }, { link: linkWithUserInfo.href }]) {
     assert.throws(() => buildGoogleMerchantFeed([], { channel: { ...channel, ...fields } }), /Google Merchant RSS needs/);
   }
   for (const options of [{ now }, { now, channel: null }, { now, channel: { ...channel, description: 42 } }]) {
