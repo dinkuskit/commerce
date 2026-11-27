@@ -845,27 +845,32 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
     await resumeLookup.promise;
     return outcome(newest, 'open');
   });
-  let waitingOn = 'cart did not reach the retry lookup';
+  let waitingOn;
   const deadline = Promise.withResolvers();
   const timer = setTimeout(() => deadline.reject(new Error(waitingOn)), 10_000);
-  const within = pending => Promise.race([pending, deadline.promise]);
+  // Every async step while the lookup is held must race the same deadline, including storage reads.
+  const within = (phase, pending) => {
+    waitingOn = phase;
+    return Promise.race([pending, deadline.promise]);
+  };
   const read = state.invoke(cart, {}, token);
   try {
     // Prove the cart checked the newest attempt instead of skipping payment reconciliation.
-    await within(Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]));
-    waitingOn = 'payment wake did not finish while the retry lookup was held';
+    await within('cart did not reach the retry lookup',
+      Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]));
     state.setWakes([{ eventId: 'evt_syntheticlate', attemptId: original.attemptId,
       bindingRef: configuration().bindingRef, deliveryGeneration: 1, wokeAt: Date.now() }]);
-    await within(state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK }));
+    await within('payment wake did not finish while the retry lookup was held',
+      state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK }));
     assert.equal(state.counts.acknowledgments, 1);
-    const [paid, stillPaying] = await attempts();
+    const [paid, stillPaying] = await within('attempts could not be read while the retry lookup was held', attempts());
     assert.equal(paid.order.paidAfterEnd, true);
     assert.equal(stillPaying.phase, 'paying');
-    assert.equal((await state.collections.orders.query()).items.length, 1);
+    const orders = await within('orders could not be read while the retry lookup was held', state.collections.orders.query());
+    assert.equal(orders.items.length, 1);
 
-    waitingOn = 'cart read did not finish after the retry lookup resumed';
     resumeLookup.resolve();
-    const response = await within(read);
+    const response = await within('cart read did not finish after the retry lookup resumed', read);
     assert.equal(response.ok, true);
     assert.deepEqual(response.cart.lines, []);
     assert.equal(response.checkout.state, 'paid');
