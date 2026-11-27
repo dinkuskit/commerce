@@ -695,6 +695,7 @@ export const spec = {
 					list: {
 						summary: "List listable products, one page at a time or --all.",
 						usage: "catalog list [--cursor <cursor>] [--all]",
+						read_only: true,
 						description: "Reads GET catalog/public. Pages hold up to 50 products and may be shorter or empty; follow the cursor until it is absent.",
 						flags: {
 							cursor,
@@ -709,6 +710,7 @@ export const spec = {
 					show: {
 						summary: "Show one listable product by its permanent item id.",
 						usage: "catalog show <item-id>",
+						read_only: true,
 						description: "Reads GET catalog/public/item?itemId=<item-id>. Exits 1 when the product is missing or not listable.",
 						args: [{ name: "item-id" }],
 						examples: ["dinkus-commerce --url https://shop.example catalog show item_demo --json"],
@@ -722,6 +724,7 @@ export const spec = {
 					list: {
 						summary: "List products: ids, names and SKUs (archive a product by trashing its page: emdash content delete).",
 						usage: "products list",
+						read_only: true,
 						description: `Sends {op: list} to POST catalog with ${TOKEN_ENV} (Commerce 0.7.0+); use products show for one product's prices and stock.`,
 						examples: ["dinkus-commerce --url https://shop.example products list --json"],
 						run: productsList,
@@ -729,6 +732,7 @@ export const spec = {
 					show: {
 						summary: "Show one product with its prices, stock, variants and pictures.",
 						usage: "products show <item-id>",
+						read_only: true,
 						description: "Sends {op: get} to POST catalog (Commerce 0.7.0+). Exits 1 when no product has that id.",
 						args: [{ name: "item-id" }],
 						examples: ["dinkus-commerce --url https://shop.example products show item_demo --json"],
@@ -844,6 +848,7 @@ export const spec = {
 					list: {
 						summary: "List paid orders by order number, 50 a page or --all.",
 						usage: "orders list [--status <processing|completed>] [--cursor <cursor>] [--all]",
+						read_only: true,
 						description: "Sends {action: list} to POST orders. Orders not taken in live mode show TEST. Processing means not shipped yet.",
 						flags: {
 							status: { type: "string", value: "<processing|completed>", description: "Only Processing (not shipped) or Completed (shipped) orders." },
@@ -859,6 +864,7 @@ export const spec = {
 					show: {
 						summary: "Show one order by its permanent order id.",
 						usage: "orders show <order-id>",
+						read_only: true,
 						description: "Sends {action: show} to POST orders. Exits 1 when no order has that id.",
 						args: [{ name: "order-id" }],
 						examples: ["dinkus-commerce --url https://shop.example orders show order:demo --json"],

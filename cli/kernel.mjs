@@ -448,7 +448,7 @@ function emitError(spec, io, mode, commandName, error) {
 // ---------------------------------------------------------------------------
 // Entry point
 
-export async function runCli(spec, { argv, env = {}, cwd = ".", stdout, stderr, stdin, stdinIsTTY = false, fetchImpl = globalThis.fetch, signal, lifecycle = {} }) {
+export async function runCli(spec, { argv, env = {}, cwd = ".", stdout, stderr, stdin, stdinIsTTY = false, fetchImpl = globalThis.fetch, signal, lifecycle = {}, parseOnly }) {
 	const io = { stdout, stderr };
 	spec = { ...spec, globals: { ...BASE_GLOBAL_FLAGS, ...spec.globals } };
 	const definitions = allFlagDefinitions(spec);
@@ -511,6 +511,10 @@ export async function runCli(spec, { argv, env = {}, cwd = ".", stdout, stderr, 
 		if (positionals.length > 0) throw usageError(`Unexpected argument "${positionals[0]}" for "${path.join(" ")}".`, "unexpected_argument");
 
 		const timeoutMs = flags.timeout !== undefined ? parseDuration(flags.timeout) : DEFAULT_TIMEOUT_MS;
+		if (parseOnly) {
+			parseOnly(node, commandName);
+			return EXIT.ok;
+		}
 		const config = await loadConfig(spec, { flags, env, cwd });
 		const ctx = {
 			spec,
