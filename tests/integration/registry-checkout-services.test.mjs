@@ -845,30 +845,27 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
     await resumeLookup.promise;
     return outcome(newest, 'open');
   });
-  const within = async (pending, message) => {
-    let timer;
-    const deadline = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), 10_000); });
-    try { return await Promise.race([pending, deadline]); }
-    finally { clearTimeout(timer); }
-  };
+  let waitingOn = 'cart did not reach the retry lookup';
+  const deadline = Promise.withResolvers();
+  const timer = setTimeout(() => deadline.reject(new Error(waitingOn)), 10_000);
+  const within = pending => Promise.race([pending, deadline.promise]);
   const read = state.invoke(cart, {}, token);
-  let wake;
   try {
     // Prove the cart checked the newest attempt instead of skipping payment reconciliation.
-    await within(Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]),
-      'cart did not reach the retry lookup');
+    await within(Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]));
+    waitingOn = 'payment wake did not finish while the retry lookup was held';
     state.setWakes([{ eventId: 'evt_syntheticlate', attemptId: original.attemptId,
       bindingRef: configuration().bindingRef, deliveryGeneration: 1, wokeAt: Date.now() }]);
-    wake = state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
-    await within(wake, 'payment wake did not finish while the retry lookup was held');
+    await within(state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK }));
     assert.equal(state.counts.acknowledgments, 1);
     const [paid, stillPaying] = await attempts();
     assert.equal(paid.order.paidAfterEnd, true);
     assert.equal(stillPaying.phase, 'paying');
     assert.equal((await state.collections.orders.query()).items.length, 1);
 
+    waitingOn = 'cart read did not finish after the retry lookup resumed';
     resumeLookup.resolve();
-    const response = await read;
+    const response = await within(read);
     assert.equal(response.ok, true);
     assert.deepEqual(response.cart.lines, []);
     assert.equal(response.checkout.state, 'paid');
@@ -878,9 +875,10 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
     assert.equal(response.checkout.redirectUrl, null);
     assert.equal(state.requests.length, 2, 'the read did not start another session');
   } finally {
-    // A wake serialized behind the cart read can finish only after this release.
+    clearTimeout(timer);
     resumeLookup.resolve();
-    await Promise.allSettled(wake ? [read, wake] : [read]);
+    // If an invocation stalls outside the held lookup, let t.after close the Workerd fixture.
+    // Do not wait for the stalled invocation before reaching teardown.
   }
 });
 
