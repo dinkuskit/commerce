@@ -120,7 +120,8 @@
     "release:version": "node .github/scripts/release-version.mjs && node .github/scripts/sync-lock-version.mjs",
     "proof:release-authority": "node scripts/release-authority-proof.mjs",
     "audit:features": "node scripts/check-features.mjs",
-    "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features",
+    "audit:repo": "node scripts/repo-contract.mjs && npm run audit:features && npm run audit:commands",
+    "audit:commands": "node --permission --allow-fs-read=. tests/test_command_manifest.mjs && sh tools/ci/retired_symbols_check.sh",
     "verify:quick": "bin/verify-commerce quick",
     "verify:full": "bin/verify-commerce full",
     "build:sandbox": "emdash-plugin validate && node scripts/build-sandbox.mjs && node scripts/check-registry-bundle.mjs",
@@ -154,6 +155,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "rolldown": "1.2.6",
+    "shell-quote": "1.12.0",
     "typescript": "7.0.2",
     "typescript-api": "npm:typescript@6.0.3",
     "wrangler": "4.127.0"

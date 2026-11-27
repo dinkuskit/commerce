@@ -1,0 +1,5 @@
+scripts/check-native-consumer.mjs
+scripts/coupon-build-transform.mjs
+scripts/prove-coupon-package-boundary.mjs
+products archive
+products restore
