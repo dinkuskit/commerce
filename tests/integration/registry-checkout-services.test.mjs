@@ -836,6 +836,7 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
   assert.notEqual(newest.attemptId, original.attemptId);
 
   const lookupEntered = Promise.withResolvers(), resumeLookup = Promise.withResolvers();
+  let retryResponseReturned = false;
   state.setTransportOverride(async (path, init) => {
     if (path !== '/v1/checkout/lookup') return;
     const { attemptId } = JSON.parse(new TextDecoder().decode(init.body));
@@ -843,7 +844,9 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
     assert.equal(attemptId, newest.attemptId);
     lookupEntered.resolve();
     await resumeLookup.promise;
-    return outcome(newest, 'open');
+    const response = outcome(newest, 'open');
+    retryResponseReturned = true;
+    return response;
   });
   let waitingOn;
   const deadline = Promise.withResolvers();
@@ -853,7 +856,10 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
     waitingOn = phase;
     return Promise.race([pending, deadline.promise]);
   };
-  const read = state.invoke(cart, {}, token);
+  const read = state.invoke(cart, {}, token).then(response => {
+    assert.equal(retryResponseReturned, true, 'cart replied before Payments returned the retry lookup');
+    return response;
+  });
   try {
     // Prove the cart checked the newest attempt instead of skipping payment reconciliation.
     await within('cart did not reach the retry lookup',
