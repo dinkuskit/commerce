@@ -845,13 +845,22 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
     await resumeLookup.promise;
     return outcome(newest, 'open');
   });
+  const within = async (pending, message) => {
+    let timer;
+    const deadline = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), 10_000); });
+    try { return await Promise.race([pending, deadline]); }
+    finally { clearTimeout(timer); }
+  };
   const read = state.invoke(cart, {}, token);
+  let wake;
   try {
     // Prove the cart checked the newest attempt instead of skipping payment reconciliation.
-    await Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]);
+    await within(Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]),
+      'cart did not reach the retry lookup');
     state.setWakes([{ eventId: 'evt_syntheticlate', attemptId: original.attemptId,
       bindingRef: configuration().bindingRef, deliveryGeneration: 1, wokeAt: Date.now() }]);
-    await state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    wake = state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK });
+    await within(wake, 'payment wake did not finish while the retry lookup was held');
     assert.equal(state.counts.acknowledgments, 1);
     const [paid, stillPaying] = await attempts();
     assert.equal(paid.order.paidAfterEnd, true);
@@ -869,8 +878,9 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
     assert.equal(response.checkout.redirectUrl, null);
     assert.equal(state.requests.length, 2, 'the read did not start another session');
   } finally {
+    // A wake serialized behind the cart read can finish only after this release.
     resumeLookup.resolve();
-    await read.catch(() => undefined);
+    await Promise.allSettled(wake ? [read, wake] : [read]);
   }
 });
 
