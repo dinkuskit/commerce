@@ -38,7 +38,14 @@ A product with no standard category sends none of these, and a category with
 no Google number sends only the agent fields. Stores pick the category in the
 **Product category** panel (product-category-box-20261125).
 
-`buildGoogleMerchantFeed` emits deterministic RSS 2.0 with Google `g:` fields.
+For a complete RSS 2.0 document, call `buildGoogleMerchantFeed(rows, { channel })`
+with the public store's `title`, canonical home `link`, and `description`. These
+three escaped elements appear directly in `<channel>`, even if no rows qualify.
+The title and description must contain only XML 1.0 characters. Use `now` in
+the options to supply a clock for date-based tests. The former
+`(rows, now?)` call still returns its original item-only channel for compatibility;
+update public feeds to supply metadata rather than guessing it from a product.
+
 Every item carries `g:condition` `new` (Commerce has no used or refurbished
 condition, and the Meta CSV already sends `new`). When an item has neither a
 GTIN nor a brand plus MPN, it carries `g:identifier_exists` `no`, the channel's

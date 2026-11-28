@@ -2,6 +2,7 @@ import {
   PRODUCT_FEED_CHANNELS,
   type AgentCatalogFeed,
   type AgentCatalogProductEntry,
+  type GoogleMerchantFeedOptions,
   type ProductAiProjection,
   type ProductFeedBuildOptions,
   type ProductFeedFacts,
@@ -19,6 +20,16 @@ const DEFAULT_PAGE_SIZE = 100;
 const GOOGLE_ADDITIONAL_IMAGES = 10;
 const META_ADDITIONAL_IMAGES = 20;
 const MAX_PAGE_SIZE = 500;
+
+function isDate(value: unknown): value is Date {
+  try {
+    // Date's internal brand works across realms and ignores properties added by callers.
+    Date.prototype.getTime.call(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Characters XML 1.0 cannot hold even as a reference: C0 controls other than tab, line feed and carriage return,
@@ -133,7 +144,31 @@ export function pageProductFeedRows(
 const googleCategory = (row: FeedRow) => row.content.standardCategory?.googleId?.trim() ?? "";
 const productType = (row: FeedRow) => row.content.productType?.trim() ?? "";
 
-export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], now = new Date()): string {
+/** Build an RSS 2.0 document using public channel metadata supplied by the host. */
+export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], options: GoogleMerchantFeedOptions): string;
+/** @deprecated Supply `{ channel, now? }` for the required RSS channel elements. */
+export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], now?: Date): string;
+export function buildGoogleMerchantFeed(
+  products: readonly ProductFeedFacts[],
+  options: GoogleMerchantFeedOptions | Date = new Date(),
+): string {
+  let now: Date;
+  let channel = "";
+  if (isDate(options)) {
+    now = options;
+  } else {
+    const { title, link, description } = options?.channel ?? {};
+    const url = typeof link === "string" ? URL.parse(link) : null;
+    if (typeof title !== "string" || !title.trim() || typeof description !== "string" || !description.trim() ||
+        !url || !["http:", "https:"].includes(url.protocol) || url.username || url.password) {
+      throw new TypeError("Google Merchant RSS needs a title, a public HTTP(S) link, and a description");
+    }
+    if (title.search(NOT_XML) !== -1 || description.search(NOT_XML) !== -1) {
+      throw new TypeError("Google Merchant RSS title and description must contain valid XML 1.0 characters");
+    }
+    now = options.now ?? new Date();
+    channel = `<title>${escapeXml(title)}</title><link>${escapeXml(url.href)}</link><description>${escapeXml(description)}</description>`;
+  }
   // Google requires availability_date on a backorder row, so one with no usable date is left out, as
   // WooCommerce refuses to sync it (feeds-facts-consistency-060, google-backorder-ship-date-20261124).
   const rows = channelRows(products, "google-merchant").filter((row) =>
@@ -169,7 +204,7 @@ export function buildGoogleMerchantFeed(products: readonly ProductFeedFacts[], n
       "</item>",
     ].filter(Boolean).join("");
   }).join("");
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>${items}</channel></rss>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>${channel}${items}</channel></rss>`;
 }
 
 export function buildMetaCatalogFeed(products: readonly ProductFeedFacts[]): string {
