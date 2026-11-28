@@ -92,6 +92,37 @@ test('each line carries the options the shopper chose, as the order page shows t
   assert.equal(state.sent[1].lines[0].options, 'Note: ' + 'a'.repeat(193));
 });
 
+test('Ship keeps paid variant fulfillment on address correction but reads current weights and legacy fulfillment', async () => {
+  const choice = (catalogItemId, fulfillment) => ({ schema: 'dinkuskit.commerce.checkout-variant-selection/v1', productId: 'field-book', catalogItemId, fulfillment,
+    selections: [{ optionId: 'format', optionLabel: 'Format', valueId: catalogItemId, valueLabel: catalogItemId }] });
+  const paid = { ...order('o1', [line('printed'), line('download', 2), line('deleted'), line('legacy-box'), line('legacy-file')]),
+    variantSelections: [choice('download', 'digital'), choice('printed', 'physical'), choice('deleted', 'physical')] };
+  const entries = { printed: { physical: true, weightOz: 6 }, download: { physical: false }, deleted: { physical: true, weightOz: 3 },
+    'legacy-box': { physical: true, weightOz: 2 }, 'legacy-file': { physical: false } };
+  const lookup = async id => entries[id] ?? null;
+  const kept = await store(paid);
+  const { state, connection } = ship();
+  await syncShip(kept, connection, lookup);
+  assert.deepEqual(state.sent[0].lines.map(l => [l.catalogItemId, l.weightOz]), [['printed', 6], ['deleted', 3], ['legacy-box', 2]]);
+
+  entries.printed = { physical: false, weightOz: 8 };
+  entries.download = { physical: true, weightOz: 4 };
+  delete entries.deleted;
+  assert.equal(await correctDelivery(kept, 'o1', 1, { ...delivery, line1: '2 Corrected Road' }, ['US']), 'saved');
+  await syncShip(kept, connection, lookup);
+  assert.deepEqual(state.sent[1].lines, [
+    { ...line('printed'), options: 'Format: printed', weightOz: 8 },
+    { ...line('deleted'), options: 'Format: deleted' },
+    { ...line('legacy-box'), weightOz: 2 },
+  ]);
+  assert.deepEqual([state.sent[1].version, state.sent[1].shipTo.line1], [2, '2 Corrected Road']);
+  const row = await kept.get('o1');
+  assert.deepEqual(row.paidOrder, paid);
+  assert.equal(row.shipVersion, 2);
+  await syncShip(kept, connection, lookup);
+  assert.equal(state.sent.length, 2);
+});
+
 test('each order carries the store\'s name from the Site title, cleaned for Ship, and none when nothing is left', async () => {
   const sent = async name => {
     const { state, connection } = ship();

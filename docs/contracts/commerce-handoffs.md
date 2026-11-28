@@ -136,9 +136,11 @@ order so it can be labeled.
   quantity, the price the shopper paid for one, `unitPrice`, the options the
   shopper chose as the order page shows them, `options` such as `Size: M`,
   when the line has any (GrillTrack `commerce-ship-line-options-20261113`), and
-  each product's current shipping weight in ounces, `weightOz`, when set). Digital
-  items, order totals, the shipping charge, payment details and phone numbers
-  are never sent. Text people typed (the address, item names, carrier and
+  each product's current shipping weight in ounces, `weightOz`, when set). A
+  matching paid variant snapshot decides whether a line is physical; lines
+  without one still use the catalog's fulfillment. Digital items, order totals,
+  the shipping charge, payment details and phone numbers are never sent. Text
+  people typed (the address, item names, carrier and
   tracking number, and the store's name) goes as one line, as Ship requires:
   each run of whitespace or control characters, line breaks and the Unicode
   line and paragraph separators included, becomes one space and the ends are
