@@ -123,8 +123,12 @@ export async function cartGuestCheckout(
     const saved = await store.read(authorized.cartId);
     fenceCartKey(authorized, saved?.record, now);
     // A wake can settle an earlier attempt while the newest one's payment check is in flight.
+    // If that same attempt ended meanwhile, do not return its stale payment link.
     const keptAttempt = currentAttempt(saved?.record.attempts);
-    if (keptAttempt?.phase === "paid") attempt = keptAttempt;
+    if (keptAttempt?.phase === "paid" ||
+        (!keys && keptAttempt?.phase === "released" && keptAttempt.attemptId === attempt?.attemptId)) {
+      attempt = keptAttempt;
+    }
     const checkout = attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout();
     // The cart key's holder also sees where Orders has the order now (commerce-guest-order-status-20261115).
     const kept = checkout.order && await runtime.paidOrders?.status?.(checkout.order.orderId).catch(() => null);

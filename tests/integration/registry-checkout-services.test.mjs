@@ -893,6 +893,62 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
   }
 });
 
+test('a cart read reports a retry that another cart read released during its payment lookup', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const cart = 'checkout/guest/cart';
+  const { token, result: first } = await start(state);
+  assert.equal(first.checkout.state, 'pending');
+  const expired = attempt => Response.json({ outcome: 'expired-unpaid', attemptId: attempt.attemptId,
+    session: attempt.session, total: attempt.payment.total });
+  const [original] = (await state.cartRecords())[0].attempts;
+  state.setTransportOverride(path => path === '/v1/checkout/lookup' ? expired(original) : undefined);
+  assert.equal((await state.invoke(cart, {}, token)).checkout.state, 'released-retry');
+
+  const retry = await state.invoke(START, { contact: basket.contact }, token);
+  assert.equal(retry.checkout.state, 'pending');
+  assert.ok(retry.checkout.redirectUrl);
+  const [, newest] = (await state.cartRecords())[0].attempts;
+  assert.equal(newest.attemptId, retry.checkout.attemptId);
+
+  const entered = Promise.withResolvers(), resume = Promise.withResolvers();
+  let lookups = 0;
+  state.setTransportOverride(async (path, init) => {
+    if (path !== '/v1/checkout/lookup') return;
+    assert.equal(JSON.parse(new TextDecoder().decode(init.body)).attemptId, newest.attemptId);
+    if (++lookups === 1) {
+      entered.resolve();
+      await resume.promise;
+      return Response.json({ outcome: 'unknown' });
+    }
+    return expired(newest);
+  });
+
+  const deadline = Promise.withResolvers();
+  const timer = setTimeout(() => deadline.reject(new Error('cart reads did not finish within 10s')), 10_000);
+  const within = pending => Promise.race([pending, deadline.promise]);
+  const read = state.invoke(cart, {}, token);
+  try {
+    await within(Promise.race([entered.promise, read.then(() => assert.fail('first cart read did not wait for Payments'))]));
+    const other = await within(state.invoke(cart, {}, token));
+    assert.equal(other.checkout.state, 'released-retry');
+    assert.equal(other.checkout.retryAfter, newest.attemptId);
+    resume.resolve();
+    const response = await within(read);
+    assert.equal(response.ok, true);
+    assert.deepEqual({ state: response.checkout.state, canRetry: response.checkout.retryAfter === newest.attemptId,
+      hasPaymentLink: response.checkout.redirectUrl !== null },
+    { state: 'released-retry', canRetry: true, hasPaymentLink: false });
+    assert.equal(response.cart.version, other.cart.version);
+    assert.deepEqual(response.cart.lines, basket.lines);
+    assert.equal(lookups, 2);
+    assert.equal(state.requests.length, 2);
+  } finally {
+    clearTimeout(timer);
+    resume.resolve();
+  }
+});
+
 test('switching Commerce on registers its 5-minute background check with the site scheduler', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());
