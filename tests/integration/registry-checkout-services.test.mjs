@@ -816,6 +816,167 @@ test('real workerd cron wake applies canonical paid order before exact ACK and r
   assertOnlyBackgroundCheck(state);
 });
 
+test('a cart read returns the paid receipt when a wake settles an earlier attempt during the retry lookup', async t => {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const cart = 'checkout/guest/cart';
+  const attempts = async () => (await state.cartRecords())[0].attempts;
+  const outcome = (attempt, kind) => Response.json({ outcome: kind, attemptId: attempt.attemptId,
+    session: attempt.session, total: attempt.payment.total, ...(kind === 'paid' ? { paymentId: 'pi_synthetic_late' } : {}) });
+  const { token, result: first } = await start(state);
+  assert.equal(first.checkout.state, 'pending');
+  const [original] = await attempts();
+  state.setTransportOverride(path => path === '/v1/checkout/lookup' ? outcome(original, 'expired-unpaid') : undefined);
+  assert.equal((await state.invoke(cart, {}, token)).checkout.state, 'released-retry');
+
+  const retry = await state.invoke(START, { contact: basket.contact }, token);
+  assert.equal(retry.checkout.state, 'pending');
+  assert.ok(retry.checkout.redirectUrl);
+  const [, newest] = await attempts();
+  assert.notEqual(newest.attemptId, original.attemptId);
+
+  const lookupEntered = Promise.withResolvers(), resumeLookup = Promise.withResolvers();
+  let retryResponseReturned = false;
+  state.setTransportOverride(async (path, init) => {
+    if (path !== '/v1/checkout/lookup') return;
+    const { attemptId } = JSON.parse(new TextDecoder().decode(init.body));
+    if (attemptId === original.attemptId) return outcome(original, 'paid');
+    assert.equal(attemptId, newest.attemptId);
+    lookupEntered.resolve();
+    await resumeLookup.promise;
+    const response = outcome(newest, 'open');
+    retryResponseReturned = true;
+    return response;
+  });
+  let waitingOn;
+  const deadline = Promise.withResolvers();
+  const timer = setTimeout(() => deadline.reject(new Error(waitingOn)), 10_000);
+  // Every async step while the lookup is held must race the same deadline, including storage reads.
+  const within = (phase, pending) => {
+    waitingOn = phase;
+    return Promise.race([pending, deadline.promise]);
+  };
+  const read = state.invoke(cart, {}, token).then(response => {
+    assert.equal(retryResponseReturned, true, 'cart replied before Payments returned the retry lookup');
+    return response;
+  });
+  try {
+    // Prove the cart checked the newest attempt instead of skipping payment reconciliation.
+    await within('cart did not reach the retry lookup',
+      Promise.race([lookupEntered.promise, read.then(() => assert.fail('cart did not wait for the retry lookup'))]));
+    state.setWakes([{ eventId: 'evt_syntheticlate', attemptId: original.attemptId,
+      bindingRef: configuration().bindingRef, deliveryGeneration: 1, wokeAt: Date.now() }]);
+    await within('payment wake did not finish while the retry lookup was held',
+      state.plugin.invokeHook('cron', { name: COMMERCE_CHECKOUT_WAKES_TASK }));
+    assert.equal(state.counts.acknowledgments, 1);
+    const [paid, stillPaying] = await within('attempts could not be read while the retry lookup was held', attempts());
+    assert.equal(paid.order.paidAfterEnd, true);
+    assert.equal(stillPaying.phase, 'paying');
+    const orders = await within('orders could not be read while the retry lookup was held', state.collections.orders.query());
+    assert.equal(orders.items.length, 1);
+
+    resumeLookup.resolve();
+    const response = await within('cart read did not finish after the retry lookup resumed', read);
+    assert.equal(response.ok, true);
+    assert.deepEqual(response.cart.lines, []);
+    assert.equal(response.checkout.state, 'paid');
+    assert.equal(response.checkout.attemptId, original.attemptId);
+    assert.equal(response.checkout.order.orderId, paid.order.orderId);
+    assert.equal(response.checkout.order.receiptId, paid.order.receiptId);
+    assert.equal(response.checkout.redirectUrl, null);
+    assert.equal(state.requests.length, 2, 'the read did not start another session');
+  } finally {
+    clearTimeout(timer);
+    resumeLookup.resolve();
+    // If an invocation stalls outside the held lookup, let t.after close the Workerd fixture.
+    // Do not wait for the stalled invocation before reaching teardown.
+  }
+});
+
+async function cartReadDuringRelease(t, restart) {
+  const state = await runtimeFixture();
+  t.after(() => state.close());
+  const cart = 'checkout/guest/cart';
+  const { token, result: first } = await start(state);
+  assert.equal(first.checkout.state, 'pending');
+  const expired = attempt => Response.json({ outcome: 'expired-unpaid', attemptId: attempt.attemptId,
+    session: attempt.session, total: attempt.payment.total });
+  const [original] = (await state.cartRecords())[0].attempts;
+  state.setTransportOverride(path => path === '/v1/checkout/lookup' ? expired(original) : undefined);
+  assert.equal((await state.invoke(cart, {}, token)).checkout.state, 'released-retry');
+
+  const retry = await state.invoke(START, { contact: basket.contact }, token);
+  assert.equal(retry.checkout.state, 'pending');
+  assert.ok(retry.checkout.redirectUrl);
+  const [, newest] = (await state.cartRecords())[0].attempts;
+  assert.equal(newest.attemptId, retry.checkout.attemptId);
+
+  const entered = Promise.withResolvers(), resume = Promise.withResolvers();
+  let lookups = 0, replacementCreates = 0, lookupReturned = false;
+  state.setTransportOverride(async (path, init) => {
+    if (restart && path === '/v1/checkout/session') {
+      replacementCreates++;
+      const { attemptId, total } = JSON.parse(new TextDecoder().decode(init.body));
+      const createdAt = Math.floor(Date.now() / 1000);
+      return Response.json({ outcome: 'open', attemptId, total, session: {
+        sessionId: 'cs_synthetic_replacement', redirectUrl: 'https://pay.example.test/replacement',
+        createdAt, expiresAt: createdAt + 1830,
+      } });
+    }
+    if (path !== '/v1/checkout/lookup') return;
+    assert.equal(JSON.parse(new TextDecoder().decode(init.body)).attemptId, newest.attemptId);
+    if (++lookups === 1) {
+      entered.resolve();
+      await resume.promise;
+      lookupReturned = true;
+      return Response.json({ outcome: 'unknown' });
+    }
+    return expired(newest);
+  });
+
+  const deadline = Promise.withResolvers();
+  const timer = setTimeout(() => deadline.reject(new Error('cart reads did not finish within 10s')), 10_000);
+  const within = pending => Promise.race([pending, deadline.promise]);
+  const read = state.invoke(cart, {}, token).then(response => {
+    assert.equal(lookupReturned, true, 'cart replied before Payments returned the held lookup');
+    return response;
+  });
+  try {
+    await within(Promise.race([entered.promise, read.then(() => assert.fail('first cart read did not wait for Payments'))]));
+    const released = await within(state.invoke(cart, {}, token));
+    assert.equal(released.checkout.state, 'released-retry');
+    assert.equal(released.checkout.retryAfter, newest.attemptId);
+    let expected = released.checkout, version = released.cart.version;
+    if (restart) {
+      const replacement = await within(state.invoke(START, { contact: basket.contact }, token));
+      expected = replacement.checkout;
+      assert.equal(expected.state, 'pending');
+      assert.notEqual(expected.attemptId, newest.attemptId);
+      assert.notEqual(expected.redirectUrl, retry.checkout.redirectUrl);
+      const carts = state.collections.checkout_carts;
+      const { items: [{ id }] } = await within(carts.query());
+      ({ revision: version } = await within(carts.getVersioned(id)));
+      assert.notEqual(version, released.cart.version);
+    }
+    resume.resolve();
+    const response = await within(read);
+    assert.equal(response.ok, true);
+    assert.equal(response.checkout.redirectUrl, expected.redirectUrl, 'checkout link matches the current cart attempt');
+    assert.deepEqual(response.checkout, expected);
+    assert.equal(response.cart.version, version);
+    assert.deepEqual(response.cart.lines, basket.lines);
+    assert.equal(lookups, 2);
+    assert.equal(replacementCreates, Number(restart));
+    assert.equal(state.requests.length, 2);
+  } finally {
+    clearTimeout(timer);
+    resume.resolve();
+  }
+}
+
+test('a cart read reports the saved release after another tab ends its payment attempt', t => cartReadDuringRelease(t, false));
+test('a cart read reports the replacement retry after another tab ends its payment attempt', t => cartReadDuringRelease(t, true));
+
 test('switching Commerce on registers its 5-minute background check with the site scheduler', async t => {
   const state = await runtimeFixture();
   t.after(() => state.close());

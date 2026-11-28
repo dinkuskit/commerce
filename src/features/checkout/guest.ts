@@ -102,7 +102,8 @@ export async function cartGuestCheckout(
     let attempt = currentAttempt(stored?.record.attempts);
     if (!keys) {
       // A read is also the status check: it runs Commerce's payment check on the newest attempt.
-      if (attempt && paymentsReady(runtime.host)) attempt = await checkNewest(runtime, authorized.cartId, stored!.record.attempts);
+      const newest = stored?.record.attempts.at(-1);
+      if (newest && paymentsReady(runtime.host)) await reconcileCheckout(executionOf(runtime), authorized.cartId, newest.attemptId);
     } else if (keys === "stop") {
       // The reminder email's stop link: no more cart reminders to the address that email went to.
       await stops!.put(authorized.emailHash ?? fail("CHECKOUT_NOT_FOUND"), { at: String(now) });
@@ -122,7 +123,11 @@ export async function cartGuestCheckout(
     }
     const saved = await store.read(authorized.cartId);
     fenceCartKey(authorized, saved?.record, now);
-    const checkout = attempt ? projectGuestCheckout(attempt, now) : projectPreparedGuestCheckout();
+    // Reads project checkout and cart version from the same record after reconciling.
+    // A wake may have paid an earlier attempt, or another tab may have started a new retry.
+    const keptAttempt = currentAttempt(saved?.record.attempts);
+    if (!keys || keptAttempt?.phase === "paid") attempt = keptAttempt;
+    const checkout = attempt ? projectGuestCheckout(attempt, !keys ? nowSeconds(runtime) : now) : projectPreparedGuestCheckout();
     // The cart key's holder also sees where Orders has the order now (commerce-guest-order-status-20261115).
     const kept = checkout.order && await runtime.paidOrders?.status?.(checkout.order.orderId).catch(() => null);
     if (kept) Object.assign(checkout.order!, kept);
