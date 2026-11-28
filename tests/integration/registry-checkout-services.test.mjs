@@ -893,7 +893,7 @@ test('a cart read returns the paid receipt when a wake settles an earlier attemp
   }
 });
 
-test('a cart read reports a retry that another cart read released during its payment lookup', async t => {
+async function cartReadDuringRelease(t, restart) {
   const state = await runtimeFixture();
   t.after(() => state.close());
   const cart = 'checkout/guest/cart';
@@ -912,13 +912,23 @@ test('a cart read reports a retry that another cart read released during its pay
   assert.equal(newest.attemptId, retry.checkout.attemptId);
 
   const entered = Promise.withResolvers(), resume = Promise.withResolvers();
-  let lookups = 0;
+  let lookups = 0, replacementCreates = 0, lookupReturned = false;
   state.setTransportOverride(async (path, init) => {
+    if (restart && path === '/v1/checkout/session') {
+      replacementCreates++;
+      const { attemptId, total } = JSON.parse(new TextDecoder().decode(init.body));
+      const createdAt = Math.floor(Date.now() / 1000);
+      return Response.json({ outcome: 'open', attemptId, total, session: {
+        sessionId: 'cs_synthetic_replacement', redirectUrl: 'https://pay.example.test/replacement',
+        createdAt, expiresAt: createdAt + 1830,
+      } });
+    }
     if (path !== '/v1/checkout/lookup') return;
     assert.equal(JSON.parse(new TextDecoder().decode(init.body)).attemptId, newest.attemptId);
     if (++lookups === 1) {
       entered.resolve();
       await resume.promise;
+      lookupReturned = true;
       return Response.json({ outcome: 'unknown' });
     }
     return expired(newest);
@@ -927,27 +937,45 @@ test('a cart read reports a retry that another cart read released during its pay
   const deadline = Promise.withResolvers();
   const timer = setTimeout(() => deadline.reject(new Error('cart reads did not finish within 10s')), 10_000);
   const within = pending => Promise.race([pending, deadline.promise]);
-  const read = state.invoke(cart, {}, token);
+  const read = state.invoke(cart, {}, token).then(response => {
+    assert.equal(lookupReturned, true, 'cart replied before Payments returned the held lookup');
+    return response;
+  });
   try {
     await within(Promise.race([entered.promise, read.then(() => assert.fail('first cart read did not wait for Payments'))]));
-    const other = await within(state.invoke(cart, {}, token));
-    assert.equal(other.checkout.state, 'released-retry');
-    assert.equal(other.checkout.retryAfter, newest.attemptId);
+    const released = await within(state.invoke(cart, {}, token));
+    assert.equal(released.checkout.state, 'released-retry');
+    assert.equal(released.checkout.retryAfter, newest.attemptId);
+    let expected = released.checkout, version = released.cart.version;
+    if (restart) {
+      const replacement = await within(state.invoke(START, { contact: basket.contact }, token));
+      expected = replacement.checkout;
+      assert.equal(expected.state, 'pending');
+      assert.notEqual(expected.attemptId, newest.attemptId);
+      assert.notEqual(expected.redirectUrl, retry.checkout.redirectUrl);
+      const carts = state.collections.checkout_carts;
+      const { items: [{ id }] } = await within(carts.query());
+      ({ revision: version } = await within(carts.getVersioned(id)));
+      assert.notEqual(version, released.cart.version);
+    }
     resume.resolve();
     const response = await within(read);
     assert.equal(response.ok, true);
-    assert.deepEqual({ state: response.checkout.state, canRetry: response.checkout.retryAfter === newest.attemptId,
-      hasPaymentLink: response.checkout.redirectUrl !== null },
-    { state: 'released-retry', canRetry: true, hasPaymentLink: false });
-    assert.equal(response.cart.version, other.cart.version);
+    assert.equal(response.checkout.redirectUrl, expected.redirectUrl, 'checkout link matches the current cart attempt');
+    assert.deepEqual(response.checkout, expected);
+    assert.equal(response.cart.version, version);
     assert.deepEqual(response.cart.lines, basket.lines);
     assert.equal(lookups, 2);
+    assert.equal(replacementCreates, Number(restart));
     assert.equal(state.requests.length, 2);
   } finally {
     clearTimeout(timer);
     resume.resolve();
   }
-});
+}
+
+test('a cart read reports the saved release after another tab ends its payment attempt', t => cartReadDuringRelease(t, false));
+test('a cart read reports the replacement retry after another tab ends its payment attempt', t => cartReadDuringRelease(t, true));
 
 test('switching Commerce on registers its 5-minute background check with the site scheduler', async t => {
   const state = await runtimeFixture();

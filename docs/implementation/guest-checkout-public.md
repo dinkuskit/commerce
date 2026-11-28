@@ -159,9 +159,11 @@ When Payments is available, a cart read reconciles the current pending payment
 attempt, whether it is the first attempt or a retry. If an earlier attempt
 settles during that check, the response shows the paid attempt's receipt with
 no payment link or cart lines, even if the newer retry is still open. If the
-same attempt was released during the check, the cart instead offers a retry
-without the old payment link. A write replaces the whole cart and must quote
-the version it read (`null` for a cart never saved):
+same attempt was released during the check, the cart offers a retry without
+the old payment link; if a new retry already started, it shows that retry
+instead. The checkout and cart version come from the same saved record. A
+write replaces the whole cart and must quote the version it read (`null` for a
+cart never saved):
 
 ```json
 {
