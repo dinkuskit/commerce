@@ -155,11 +155,12 @@ not tenant, cart, or payment authority.
 
 `POST checkout/guest/cart` holds the shopper's cart on the server
 (GrillTrack `commerce-server-cart-20261113`). An empty body `{}` reads it.
-When the read starts with a pending retry and Payments is available, Commerce
-runs payment reconciliation on that retry. If the final cart read sees a paid attempt, the response
-shows its receipt, with no payment link and no cart lines, even if a newer
-retry is still open. A write replaces the whole
-cart and must quote the version it read (`null` for a cart never saved):
+When Payments is available, a cart read reconciles the current pending payment
+attempt, whether it is the first attempt or a retry. If an earlier attempt
+settles during that check, the response shows the paid attempt's receipt with
+no payment link or cart lines, even if the newer retry is still open. A write
+replaces the whole cart and must quote the version it read (`null` for a cart
+never saved):
 
 ```json
 {
